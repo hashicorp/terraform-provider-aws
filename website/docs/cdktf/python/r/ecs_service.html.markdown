@@ -369,4 +369,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0c2dba4511f8b41de16532abefaed14f7708fa06b49a3887e0b136935976402d -->
+<!-- cache-key: cdktf-0.19.0 input-0c2dba4511f8b41de16532abefaed14f7708fa06b49a3887e0b136935976402d -->

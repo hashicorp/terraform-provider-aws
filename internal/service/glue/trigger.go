@@ -258,11 +258,17 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("start_on_creation"); ok {
 		input.StartOnCreation = aws.Bool(v.(bool))
 	}
+
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateTriggerWithContext(ctx, input)
 		if err != nil {
+			// Retry IAM propagation errors
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+				return retry.RetryableError(err)
+			}
+			// Retry concurrent workflow modification errors
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeConcurrentModificationException, "was modified while adding trigger") {
 				return retry.RetryableError(err)
 			}
 

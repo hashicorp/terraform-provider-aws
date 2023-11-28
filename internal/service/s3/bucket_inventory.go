@@ -179,7 +179,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("name").(string)
 	inventoryConfiguration := &types.InventoryConfiguration{
 		Id:        aws.String(name),
-		IsEnabled: d.Get("enabled").(bool),
+		IsEnabled: aws.Bool(d.Get("enabled").(bool)),
 	}
 
 	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

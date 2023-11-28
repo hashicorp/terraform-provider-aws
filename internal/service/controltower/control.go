@@ -6,24 +6,26 @@ package controltower
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/controltower"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_controltower_control")
-func ResourceControl() *schema.Resource {
+// @SDKResource("aws_controltower_control", name="Control")
+func resourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlCreate,
 		ReadWithoutTimeout:   resourceControlRead,
@@ -56,17 +58,17 @@ func ResourceControl() *schema.Resource {
 }
 
 func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
-	id := ControlCreateResourceID(targetIdentifier, controlIdentifier)
+	id := errs.Must(flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false))
 	input := &controltower.EnableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
 	}
 
-	output, err := conn.EnableControlWithContext(ctx, input)
+	output, err := conn.EnableControl(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating ControlTower Control (%s): %s", id, err)
@@ -74,7 +76,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(id)
 
-	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for ControlTower Control (%s) create: %s", d.Id(), err)
 	}
 
@@ -82,15 +84,15 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	output, err := FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+	targetIdentifier, controlIdentifier := parts[0], parts[1]
+	output, err := findEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ControlTower Control %s not found, removing from state", d.Id())
@@ -109,16 +111,17 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	targetIdentifier, controlIdentifier := parts[0], parts[1]
+
 	log.Printf("[DEBUG] Deleting ControlTower Control: %s", d.Id())
-	output, err := conn.DisableControlWithContext(ctx, &controltower.DisableControlInput{
+	output, err := conn.DisableControl(ctx, &controltower.DisableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
 	})
@@ -127,84 +130,74 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting ControlTower Control (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for ControlTower Control (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-const controlResourceIDSeparator = ","
+const (
+	controlResourceIDPartCount = 2
+)
 
-func ControlCreateResourceID(targetIdentifier, controlIdentifier string) string {
-	parts := []string{targetIdentifier, controlIdentifier}
-	id := strings.Join(parts, controlResourceIDSeparator)
-
-	return id
-}
-
-func ControlParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, controlResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TargetIdentifier%[2]sControlIdentifier", id, controlResourceIDSeparator)
-}
-
-func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.ControlTower, targetIdentifier, controlIdentifier string) (*controltower.EnabledControlSummary, error) {
+func findEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Client, targetIdentifier, controlIdentifier string) (*types.EnabledControlSummary, error) {
 	input := &controltower.ListEnabledControlsInput{
 		TargetIdentifier: aws.String(targetIdentifier),
 	}
-	var output *controltower.EnabledControlSummary
 
-	err := conn.ListEnabledControlsPagesWithContext(ctx, input, func(page *controltower.ListEnabledControlsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.EnabledControls {
-			if v == nil {
-				continue
-			}
-
-			if aws.StringValue(v.ControlIdentifier) == controlIdentifier {
-				output = v
-
-				return false
-			}
-		}
-
-		return !lastPage
+	return findEnabledControl(ctx, conn, input, func(v *types.EnabledControlSummary) bool {
+		return aws.ToString(v.ControlIdentifier) == controlIdentifier
 	})
+}
 
-	if tfawserr.ErrCodeEquals(err, controltower.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findEnabledControl(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) (*types.EnabledControlSummary, error) {
+	output, err := findEnabledControls(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEnabledControls(ctx context.Context, conn *controltower.Client, input *controltower.ListEnabledControlsInput, filter tfslices.Predicate[*types.EnabledControlSummary]) ([]*types.EnabledControlSummary, error) {
+	var output []*types.EnabledControlSummary
+
+	pages := controltower.NewListEnabledControlsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.EnabledControls {
+			v := v
+			if v := &v; filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func findControlOperationByID(ctx context.Context, conn *controltower.ControlTower, id string) (*controltower.ControlOperation, error) {
+func findControlOperationByID(ctx context.Context, conn *controltower.Client, id string) (*types.ControlOperation, error) {
 	input := &controltower.GetControlOperationInput{
 		OperationIdentifier: aws.String(id),
 	}
 
-	output, err := conn.GetControlOperationWithContext(ctx, input)
+	output, err := conn.GetControlOperation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, controltower.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -222,7 +215,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.ControlTow
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.ControlTower, id string) retry.StateRefreshFunc {
+func statusControlOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
@@ -234,26 +227,24 @@ func statusControlOperation(ctx context.Context, conn *controltower.ControlTower
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString((*string)(&output.Status)), nil
 	}
 }
 
-func waitOperationSucceeded(ctx context.Context, conn *controltower.ControlTower, id string, timeout time.Duration) (*controltower.ControlOperation, error) { //nolint:unparam
+func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.ControlOperation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{controltower.ControlOperationStatusInProgress},
-		Target:  []string{controltower.ControlOperationStatusSucceeded},
+		Pending: enum.Slice(types.ControlOperationStatusInProgress),
+		Target:  enum.Slice(types.ControlOperationStatusSucceeded),
 		Refresh: statusControlOperation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*controltower.ControlOperation); ok {
-		if status := aws.StringValue(output.Status); status == controltower.ControlOperationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
-		}
+	if output, ok := outputRaw.(*controltower.GetControlOperationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
 
-		return output, err
+		return output.ControlOperation, err
 	}
 
 	return nil, err

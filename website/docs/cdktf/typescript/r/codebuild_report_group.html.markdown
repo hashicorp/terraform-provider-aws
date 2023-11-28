@@ -93,14 +93,14 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of a Report Group.
-* `type` - (Required) The type of the Report Group. Valid value are `test` and `codeCoverage`.
+* `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `exportConfig` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
 * `deleteReports` - (Optional) If `true`, deletes any reports that belong to a report group before deleting the report group. If `false`, you must delete any reports in the report group before deleting it. Default value is `false`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Export Config
 
-* `type` - (Required) The export configuration type. Valid values are `s3` and `noExport`.
+* `type` - (Required) The export configuration type. Valid values are `S3` and `NO_EXPORT`.
 * `s3Destination` - (Required) contains information about the S3 bucket where the run of a report is exported. see [S3 Destination](#s3-destination) documented below.
 
 #### S3 Destination
@@ -109,7 +109,7 @@ This resource supports the following arguments:
 * `encryptionKey` - (Required) The encryption key for the report's encrypted raw data. The KMS key ARN.
 * `encryptionDisabled`- (Optional) A boolean value that specifies if the results of a report are encrypted.
  **Note: the API does not currently allow setting encryption as disabled**
-* `packaging` - (Optional) The type of build output artifact to create. Valid values are: `none` (default) and `zip`.
+* `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.
 * `path` - (Optional) The path to the exported report's raw data results.
 
 ## Attribute Reference
@@ -119,7 +119,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of Report Group.
 * `arn` - The ARN of Report Group.
 * `created` - The date and time this Report Group was created.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -143,4 +143,4 @@ Using `terraform import`, import CodeBuild Report Group using the CodeBuild Repo
 % terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8ad57ea33f51d8c292612a210a7b0152c2dbf1d07a6f6d7699514cc614c46f5d -->
+<!-- cache-key: cdktf-0.19.0 input-8ad57ea33f51d8c292612a210a7b0152c2dbf1d07a6f6d7699514cc614c46f5d -->

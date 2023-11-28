@@ -105,4 +105,4 @@ Using `terraform import`, import EventBridge permissions using the `event_bus_na
 % terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61e6e8cd01bf17093c7daf47be3dce1db556b13575a6c0f84dd9556644d63f94 -->
+<!-- cache-key: cdktf-0.19.0 input-61e6e8cd01bf17093c7daf47be3dce1db556b13575a6c0f84dd9556644d63f94 -->

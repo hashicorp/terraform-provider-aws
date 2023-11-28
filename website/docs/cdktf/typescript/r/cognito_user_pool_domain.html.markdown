@@ -103,8 +103,8 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `awsAccountId` - The AWS account ID for the user pool owner.
-* `cloudfrontDistribution` - The Amazon CloudFront endpoint (e.g. `dpp0Gtxikpq3YCloudfrontNet`) that you use as the target of the alias that you set up with your Domain Name Service (DNS) provider.
-* `cloudfrontDistributionArn` - The URL of the CloudFront distribution. This is required to generate the ALIAS `awsRoute53Record`
+* `cloudfrontDistribution` - The Amazon CloudFront endpoint (e.g. `dpp0gtxikpq3y.cloudfront.net`) that you use as the target of the alias that you set up with your Domain Name Service (DNS) provider.
+* `cloudfrontDistributionArn` - The URL of the CloudFront distribution. This is required to generate the ALIAS `aws_route53_record`
 * `cloudfrontDistributionZoneId` - The Route 53 hosted zone ID of the CloudFront distribution.
 * `s3Bucket` - The S3 bucket where the static files for this domain are stored.
 * `version` - The app version.
@@ -131,4 +131,4 @@ Using `terraform import`, import Cognito User Pool Domains using the `domain`. F
 % terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-733a59c8cc009e81485e84116993b875f945dcad026524678e85b20d84780cc3 -->
+<!-- cache-key: cdktf-0.19.0 input-733a59c8cc009e81485e84116993b875f945dcad026524678e85b20d84780cc3 -->

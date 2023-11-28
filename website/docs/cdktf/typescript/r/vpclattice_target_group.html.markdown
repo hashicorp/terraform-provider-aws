@@ -147,21 +147,21 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - (Required) The name of the target group. The name must be unique within the account. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
-* `type` - (Required) The type of target group. Valid Values are `ip` | `lambda` | `instance` | `alb`
+* `type` - (Required) The type of target group. Valid Values are `IP` | `LAMBDA` | `INSTANCE` | `ALB`
 
 The following arguments are optional:
 
 * `config` - (Optional) The target group configuration.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Config (`config`) supports the following:
 
 * `healthCheck` - (Optional) The health check configuration.
-* `ipAddressType` - (Optional) The type of IP address used for the target group. Valid values: `ipv4` | `ipv6`.
-* `lambdaEventStructureVersion` - (Optional) The version of the event structure that the Lambda function receives. Supported only if `type` is `lambda`. Valid Values are `v1` | `v2`.
+* `ipAddressType` - (Optional) The type of IP address used for the target group. Valid values: `IPV4` | `IPV6`.
+* `lambdaEventStructureVersion` - (Optional) The version of the event structure that the Lambda function receives. Supported only if `type` is `LAMBDA`. Valid Values are `V1` | `V2`.
 * `port` - (Optional) The port on which the targets are listening.
-* `protocol` - (Optional) The protocol to use for routing traffic to the targets. Valid Values are `http` | `https`.
-* `protocolVersion` - (Optional) The protocol version. Valid Values are `http1` | `http2` | `grpc`. Default value is `http1`.
+* `protocol` - (Optional) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`.
+* `protocolVersion` - (Optional) The protocol version. Valid Values are `HTTP1` | `HTTP2` | `GRPC`. Default value is `HTTP1`.
 * `vpcIdentifier` - (Optional) The ID of the VPC.
 
 Health Check (`healthCheck`) supports the following:
@@ -174,8 +174,8 @@ Health Check (`healthCheck`) supports the following:
     * `value` - (Optional) The HTTP codes to use when checking for a successful response from a target.
 * `path` - (Optional) The destination for health checks on the targets. If the protocol version is HTTP/1.1 or HTTP/2, specify a valid URI (for example, /path?query). The default path is `/`. Health checks are not supported if the protocol version is gRPC, however, you can choose HTTP/1.1 or HTTP/2 and specify a valid URI.
 * `port` - (Optional) The port used when performing health checks on targets. The default setting is the port that a target receives traffic on.
-* `protocol` - (Optional) The protocol used when performing health checks on targets. The possible protocols are `http` and `https`.
-* `protocolVersion` - (Optional) The protocol version used when performing health checks on targets. The possible protocol versions are `http1` and `http2`. The default is `http1`.
+* `protocol` - (Optional) The protocol used when performing health checks on targets. The possible protocols are `HTTP` and `HTTPS`.
+* `protocolVersion` - (Optional) The protocol version used when performing health checks on targets. The possible protocol versions are `HTTP1` and `HTTP2`. The default is `HTTP1`.
 * `unhealthyThresholdCount` - (Optional) The number of consecutive failed health checks required before considering a target unhealthy. The range is 2–10. The default is 2.
 
 ## Attribute Reference
@@ -185,14 +185,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the target group.
 * `id` - Unique identifier for the target group.
 * `status` - Status of the target group.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -216,4 +216,4 @@ Using `terraform import`, import VPC Lattice Target Group using the `id`. For ex
 % terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8b0f63dce846bb387e0c2e47e763aeda9a0b71702c33c2b21f0f39c8cf773e37 -->
+<!-- cache-key: cdktf-0.19.0 input-8b0f63dce846bb387e0c2e47e763aeda9a0b71702c33c2b21f0f39c8cf773e37 -->

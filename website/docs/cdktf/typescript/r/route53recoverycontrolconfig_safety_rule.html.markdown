@@ -98,20 +98,20 @@ The following arguments are optional:
 
 * `assertedControls` - (Optional) Routing controls that are part of transactions that are evaluated to determine if a request to change a routing control state is allowed.
 * `gatingControls` - (Optional) Gating controls for the new gating rule. That is, routing controls that are evaluated by the rule configuration that you specify.
-* `targetControls` - (Optional) Routing controls that can only be set or unset if the specified `ruleConfig` evaluates to true for the specified `gatingControls`.
+* `targetControls` - (Optional) Routing controls that can only be set or unset if the specified `rule_config` evaluates to true for the specified `gating_controls`.
 
 ### rule_config
 
 * `inverted` - (Required) Logical negation of the rule.
-* `threshold` - (Required) Number of controls that must be set when you specify an `atleast` type rule.
-* `type` - (Required) Rule type. Valid values are `atleast`, `and`, and `or`.
+* `threshold` - (Required) Number of controls that must be set when you specify an `ATLEAST` type rule.
+* `type` - (Required) Rule type. Valid values are `ATLEAST`, `AND`, and `OR`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the safety rule.
-* `status` - Status of the safety rule. `pending` when it is being created/updated, `pendingDeletion` when it is being deleted, and `deployed` otherwise.
+* `status` - Status of the safety rule. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import Route53 Recovery Control Config Safety Rule usi
 % terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7fff1efee90763bc95e5e1aa7048eaa46466d5f09d9ca28fd68052bc48898c54 -->
+<!-- cache-key: cdktf-0.19.0 input-7fff1efee90763bc95e5e1aa7048eaa46466d5f09d9ca28fd68052bc48898c54 -->

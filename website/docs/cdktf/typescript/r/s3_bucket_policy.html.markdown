@@ -73,7 +73,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to which to apply the policy.
-* `policy` - (Required) Text of the policy. Although this is a bucket policy rather than an IAM policy, the [`awsIamPolicyDocument`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) data source may be used, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
+* `policy` - (Required) Text of the policy. Although this is a bucket policy rather than an IAM policy, the [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) data source may be used, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
 
 ## Attribute Reference
 
@@ -101,4 +101,4 @@ Using `terraform import`, import S3 bucket policies using the bucket name. For e
 % terraform import aws_s3_bucket_policy.allow_access_from_another_account my-tf-test-bucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-78dda90d0687f88ff8f30cf20c2b7dab5c85cc20a65eb0998240609b14380055 -->
+<!-- cache-key: cdktf-0.19.0 input-78dda90d0687f88ff8f30cf20c2b7dab5c85cc20a65eb0998240609b14380055 -->

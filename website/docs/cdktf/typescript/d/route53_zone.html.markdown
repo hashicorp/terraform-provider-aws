@@ -75,7 +75,7 @@ The following attribute is additionally exported:
 * `nameServers` - List of DNS name servers for the Hosted Zone.
 * `primaryNameServer` - The Route 53 name server that created the SOA record.
 * `resourceRecordSetCount` - The number of Record Set in the Hosted Zone.
-* `linkedServicePrincipal` - The service that created the Hosted Zone (e.g., `servicediscoveryAmazonawsCom`).
-* `linkedServiceDescription` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:usEast1:1234567890:namespace/nsXxxxxxxxxxxxxxxx`).
+* `linkedServicePrincipal` - The service that created the Hosted Zone (e.g., `servicediscovery.amazonaws.com`).
+* `linkedServiceDescription` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).
 
-<!-- cache-key: cdktf-0.18.0 input-1a22cb50fe32eb087fe481e2a504db0755c6d63fe989e4c8e5bb2e37f803debb -->
+<!-- cache-key: cdktf-0.19.0 input-1a22cb50fe32eb087fe481e2a504db0755c6d63fe989e4c8e5bb2e37f803debb -->

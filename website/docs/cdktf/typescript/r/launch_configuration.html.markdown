@@ -196,17 +196,17 @@ The following arguments are optional:
 * `iamInstanceProfile` - (Optional) The name attribute of the IAM instance profile to associate with launched instances.
 * `keyName` - (Optional) The key name that should be used for the instance.
 * `metadataOptions` - The metadata options for the instance.
-    * `httpEndpoint` - The state of the metadata service: `enabled`, `disabled`.
-    * `httpTokens` - If session tokens are required: `optional`, `required`.
-    * `httpPutResponseHopLimit` - The desired HTTP PUT response hop limit for instance metadata requests.
-* `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `namePrefix`.
+    * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
+    * `http_tokens` - If session tokens are required: `optional`, `required`.
+    * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+* `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `securityGroups` - (Optional) A list of associated security group IDS.
 * `placementTenancy` - (Optional) The tenancy of the instance. Valid values are `default` or `dedicated`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html) for more details.
 * `rootBlockDevice` - (Optional) Customize details about the root block device of the instance. See [Block Devices](#block-devices) below for details.
 * `spotPrice` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
-* `userData` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `userDataBase64` instead.
-* `userDataBase64` - (Optional) Can be used instead of `userData` to pass base64-encoded binary data directly. Use this instead of `userData` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
+* `userData` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
+* `userDataBase64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 
 ## Block devices
 
@@ -236,7 +236,7 @@ Modifying any of the `ebsBlockDevice` settings requires resource replacement.
 * `volumeSize` - (Optional) The size of the volume in gigabytes.
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volumeType` of `"io1"`.
+  This must be set with a `volume_type` of `"io1"`.
 * `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
@@ -255,7 +255,7 @@ Modifying any of the `ebsBlockDevice` settings requires resource replacement.
 
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
 * `encrypted` - (Optional) Whether the volume should be encrypted or not. Defaults to `false`.
-* `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volumeType` of `io1`.
+* `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
 * `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
 * `volumeSize` - (Optional) The size of the volume in gigabytes.
 * `volumeType` - (Optional) The type of volume. Can be `standard`, `gp2`, `gp3`, `st1`, `sc1` or `io1`.
@@ -294,4 +294,4 @@ Using `terraform import`, import launch configurations using the `name`. For exa
 % terraform import aws_launch_configuration.as_conf terraform-lg-123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1afc8a9c3b0aae557f61ece671e34889248cace0f6b278c49774c6baa830fa60 -->
+<!-- cache-key: cdktf-0.19.0 input-1afc8a9c3b0aae557f61ece671e34889248cace0f6b278c49774c6baa830fa60 -->

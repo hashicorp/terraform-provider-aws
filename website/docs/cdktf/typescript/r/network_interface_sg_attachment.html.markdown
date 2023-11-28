@@ -144,4 +144,4 @@ Using `terraform import`, import Network Interface Security Group attachments us
 % terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-42a38bfce28cae01d1d650740e7e33388caa9a68bec2272acf8014a3939bb8a8 -->
+<!-- cache-key: cdktf-0.19.0 input-42a38bfce28cae01d1d650740e7e33388caa9a68bec2272acf8014a3939bb8a8 -->

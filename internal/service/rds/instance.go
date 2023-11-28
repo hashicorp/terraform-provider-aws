@@ -1120,6 +1120,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
@@ -1326,6 +1336,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("max_allocated_storage"); ok {
 			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("monitoring_interval"); ok {
@@ -1799,7 +1819,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"skip_final_snapshot",
 		"tags", "tags_all",
 	) {
-		if d.Get("blue_green_update.0.enabled").(bool) {
+		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
+			"allow_major_version_upgrade",
+			"blue_green_update",
+			"delete_automated_backups",
+			"final_snapshot_identifier",
+			"replicate_source_db",
+			"skip_final_snapshot",
+			"tags", "tags_all",
+			"deletion_protection",
+			"password",
+		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
 			handler := newInstanceHandler(conn)
 			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
@@ -2792,6 +2822,7 @@ func dbInstanceValidBlueGreenEngines() []string {
 	return []string{
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
+		InstanceEnginePostgres,
 	}
 }
 

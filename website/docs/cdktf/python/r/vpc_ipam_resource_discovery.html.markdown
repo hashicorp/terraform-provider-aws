@@ -84,4 +84,4 @@ Using `terraform import`, import IPAMs using the IPAM resource discovery `id`. F
 % terraform import aws_vpc_ipam_resource_discovery.example ipam-res-disco-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e397380d953ebd30e61a0c3d1b2b84c946cea9f478b02e0627708ce5f413dc35 -->
+<!-- cache-key: cdktf-0.19.0 input-e397380d953ebd30e61a0c3d1b2b84c946cea9f478b02e0627708ce5f413dc35 -->

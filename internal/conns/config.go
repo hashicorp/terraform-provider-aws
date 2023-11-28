@@ -35,10 +35,12 @@ type Config struct {
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
 	ForbiddenAccountIds            []string
-	HTTPProxy                      string
+	HTTPProxy                      *string
+	HTTPSProxy                     *string
 	IgnoreTagsConfig               *tftags.IgnoreConfig
 	Insecure                       bool
 	MaxRetries                     int
+	NoProxy                        string
 	Profile                        string
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
@@ -77,14 +79,18 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		Insecure:                      c.Insecure,
 		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
+		HTTPSProxy:                    c.HTTPSProxy,
+		HTTPProxyMode:                 awsbase.HTTPProxyModeLegacy,
 		Logger:                        logger,
 		MaxRetries:                    c.MaxRetries,
+		NoProxy:                       c.NoProxy,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
 		RetryMode:                     c.RetryMode,
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		SsoEndpoint:                   c.Endpoints[names.SSO],
 		StsEndpoint:                   c.Endpoints[names.STS],
 		SuppressDebugLog:              c.SuppressDebugLog,
 		Token:                         c.Token,
@@ -166,7 +172,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
 			Severity: baseSeverityToSdkSeverity(d.Severity()),
-			Summary:  fmt.Sprintf("retrieving AWS account details: %s", d.Summary()),
+			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
 	}
@@ -174,7 +180,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if accountID == "" {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
-			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
+			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
 	}
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)

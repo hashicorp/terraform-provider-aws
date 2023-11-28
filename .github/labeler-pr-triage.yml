@@ -109,6 +109,9 @@ service/appconfig:
 service/appconfigdata:
   - 'internal/service/appconfigdata/**/*'
   - 'website/**/appconfigdata_*'
+service/appfabric:
+  - 'internal/service/appfabric/**/*'
+  - 'website/**/appfabric_*'
 service/appflow:
   - 'internal/service/appflow/**/*'
   - 'website/**/appflow_*'
@@ -281,6 +284,9 @@ service/configservice:
 service/connect:
   - 'internal/service/connect/**/*'
   - 'website/**/connect_*'
+service/connectcases:
+  - 'internal/service/connectcases/**/*'
+  - 'website/**/connectcases_*'
 service/connectcontactlens:
   - 'internal/service/connectcontactlens/**/*'
   - 'website/**/connectcontactlens_*'
@@ -775,6 +781,9 @@ service/opsworkscm:
 service/organizations:
   - 'internal/service/organizations/**/*'
   - 'website/**/organizations_*'
+service/osis:
+  - 'internal/service/osis/**/*'
+  - 'website/**/osis_*'
 service/outposts:
   - 'internal/service/outposts/**/*'
   - 'website/**/outposts_*'

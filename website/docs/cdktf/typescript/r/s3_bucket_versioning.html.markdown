@@ -148,7 +148,7 @@ This resource supports the following arguments:
 * `bucket` - (Required, Forces new resource) Name of the S3 bucket.
 * `versioningConfiguration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
-* `mfa` - (Optional, Required if `versioningConfiguration` `mfaDelete` is enabled) Concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
+* `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) Concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
 
 ### versioning_configuration
 
@@ -157,14 +157,14 @@ Updating the value from `enabled` or `suspended` to `disabled` will result in er
 
 The `versioningConfiguration` configuration block supports the following arguments:
 
-* `status` - (Required) Versioning state of the bucket. Valid values: `enabled`, `suspended`, or `disabled`. `disabled` should only be used when creating or importing resources that correspond to unversioned S3 buckets.
-* `mfaDelete` - (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: `enabled` or `disabled`.
+* `status` - (Required) Versioning state of the bucket. Valid values: `Enabled`, `Suspended`, or `Disabled`. `Disabled` should only be used when creating or importing resources that correspond to unversioned S3 buckets.
+* `mfaDelete` - (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: `Enabled` or `Disabled`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -212,4 +212,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3f84c98fe9b700bccf273478828122f05fe2e305acb212ed114e7d70a9c33251 -->
+<!-- cache-key: cdktf-0.19.0 input-3f84c98fe9b700bccf273478828122f05fe2e305acb212ed114e7d70a9c33251 -->

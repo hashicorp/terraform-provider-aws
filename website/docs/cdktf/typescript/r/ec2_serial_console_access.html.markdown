@@ -68,4 +68,4 @@ Using `terraform import`, import serial console access state. For example:
 % terraform import aws_ec2_serial_console_access.example default
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a8751aa6eb0a3b96c3378b69be9c857d11be1b4723fc3142c82967475affbbbc -->
+<!-- cache-key: cdktf-0.19.0 input-a8751aa6eb0a3b96c3378b69be9c857d11be1b4723fc3142c82967475affbbbc -->

@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the namespace.
 * `vpc` - (Required) The ID of VPC that you want to associate the namespace with.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
-* `tags` - (Optional) A map of tags to assign to the namespace. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the namespace. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of a namespace.
 * `arn` - The ARN that Amazon Route 53 assigns to the namespace when you create it.
 * `hostedZone` - The ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import Service Discovery Private DNS Namespace using t
 % terraform import aws_service_discovery_private_dns_namespace.example 0123456789:vpc-123345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f146701ebde1d502a5742b49eee835afec6daf02f5ca55955ff340c638c7c5b -->
+<!-- cache-key: cdktf-0.19.0 input-6f146701ebde1d502a5742b49eee835afec6daf02f5ca55955ff340c638c7c5b -->

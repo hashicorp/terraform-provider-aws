@@ -73,4 +73,4 @@ Using `terraform import`, import CloudWatch query definitions using the query de
 % terraform import aws_cloudwatch_query_definition.example arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a122b619c0de2afa7a8b5aa10fde4e196df14477d2ae2e40ef733a9bc5105e18 -->
+<!-- cache-key: cdktf-0.19.0 input-a122b619c0de2afa7a8b5aa10fde4e196df14477d2ae2e40ef733a9bc5105e18 -->

@@ -301,7 +301,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", flex.FlattenStringMap(resp.StageVariables))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage_variables: %s", err)
 	}

@@ -49,24 +49,24 @@ This resource supports the following arguments:
 * `region` - (Required) The name of the region where the stack will exist.
 * `serviceRoleArn` - (Required) The ARN of an IAM role that the OpsWorks service will act as.
 * `defaultInstanceProfileArn` - (Required) The ARN of an IAM Instance Profile that created instances will have by default.
-* `agentVersion` - (Optional) If set to `"latest"`, OpsWorks will automatically install the latest version.
-* `berkshelfVersion` - (Optional) If `manageBerkshelf` is enabled, the version of Berkshelf to use.
+* `agentVersion` - (Optional) If set to `"LATEST"`, OpsWorks will automatically install the latest version.
+* `berkshelfVersion` - (Optional) If `manage_berkshelf` is enabled, the version of Berkshelf to use.
 * `color` - (Optional) Color to paint next to the stack's resources in the OpsWorks console.
 * `configurationManagerName` - (Optional) Name of the configuration manager to use. Defaults to "Chef".
 * `configurationManagerVersion` - (Optional) Version of the configuration manager to use. Defaults to "11.4".
-* `customCookbooksSource` - (Optional) When `useCustomCookbooks` is set, provide this sub-object as described below.
+* `customCookbooksSource` - (Optional) When `use_custom_cookbooks` is set, provide this sub-object as described below.
 * `customJson` - (Optional) User defined JSON passed to "Chef". Use a "here doc" for multiline JSON.
 * `defaultAvailabilityZone` - (Optional) Name of the availability zone where instances will be created by default.
-  Cannot be set when `vpcId` is set.
+  Cannot be set when `vpc_id` is set.
 * `defaultOs` - (Optional) Name of OS that will be installed on instances by default.
 * `defaultRootDeviceType` - (Optional) Name of the type of root device instances will have by default.
 * `defaultSshKeyName` - (Optional) Name of the SSH keypair that instances will have by default.
 * `defaultSubnetId` - (Optional) ID of the subnet in which instances will be created by default.
-  Required if `vpcId` is set to a VPC other than the default VPC, and forbidden if it isn't.
+  Required if `vpc_id` is set to a VPC other than the default VPC, and forbidden if it isn't.
 * `hostnameTheme` - (Optional) Keyword representing the naming scheme that will be used for instance hostnames within this stack.
 * `manageBerkshelf` - (Optional) Boolean value controlling whether Opsworks will run Berkshelf for this stack.
 * `tags` - (Optional) A map of tags to assign to the resource.
-  If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `useCustomCookbooks` - (Optional) Boolean value controlling whether the custom cookbook settings are enabled.
 * `useOpsworksSecurityGroups` - (Optional) Boolean value controlling whether the standard OpsWorks security groups apply to created instances.
 * `vpcId` - (Optional) ID of the VPC that this stack belongs to.
@@ -87,7 +87,7 @@ The `customCookbooksSource` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The id of the stack.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -111,4 +111,4 @@ Using `terraform import`, import OpsWorks stacks using the `id`. For example:
 % terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cbf03513c58946c4bc846b656ee35719904926d5e3f1cfba67219305564f8a4f -->
+<!-- cache-key: cdktf-0.19.0 input-cbf03513c58946c4bc846b656ee35719904926d5e3f1cfba67219305564f8a4f -->

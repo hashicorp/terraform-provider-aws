@@ -275,7 +275,7 @@ func expandBucketServerSideEncryptionConfigurationRules(l []interface{}) []types
 		}
 
 		if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
-			rule.BucketKeyEnabled = v
+			rule.BucketKeyEnabled = aws.Bool(v)
 		}
 		rules = append(rules, rule)
 	}

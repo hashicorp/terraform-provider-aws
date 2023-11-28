@@ -370,7 +370,7 @@ which take the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The transit gateway route table id suffixed by `routes`
+* `id` - The transit gateway route table id suffixed by `-routes`
 * `routes` - List of Transit Gateway Routes.
 
 #### Routes list Attributes Reference
@@ -381,4 +381,4 @@ In addition to all arguments above, the following attributes are exported:
 * `transitGatewayRouteTableAnnouncementId` - The id of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.
 
-<!-- cache-key: cdktf-0.18.0 input-5fba265cc145ada0235efec26c10c79f01ec5384ee918cc84a3f6d087ffa07e0 -->
+<!-- cache-key: cdktf-0.19.0 input-5fba265cc145ada0235efec26c10c79f01ec5384ee918cc84a3f6d087ffa07e0 -->

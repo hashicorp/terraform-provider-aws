@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -185,15 +185,11 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	var instanceID string
-	if v, ok := d.GetOk("identifier"); ok {
-		instanceID = v.(string)
-	} else if v, ok := d.GetOk("identifier_prefix"); ok {
-		instanceID = id.PrefixedUniqueId(v.(string))
-	} else {
-		instanceID = id.PrefixedUniqueId("tf-")
-	}
-
+	instanceID := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
 	input := &neptune.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
@@ -271,6 +267,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_arn", db.KmsKeyId)
 	if len(db.DBParameterGroups) > 0 {
@@ -471,21 +468,21 @@ func statusDBInstance(ctx context.Context, conn *neptune.Neptune, id string) ret
 func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"backing-up",
-			"configuring-enhanced-monitoring",
-			"configuring-iam-database-auth",
-			"configuring-log-exports",
-			"creating",
-			"maintenance",
-			"modifying",
-			"rebooting",
-			"renaming",
-			"resetting-master-credentials",
-			"starting",
-			"storage-optimization",
-			"upgrading",
+			dbInstanceStatusBackingUp,
+			dbInstanceStatusConfiguringEnhancedMonitoring,
+			dbInstanceStatusConfiguringIAMDatabaseAuth,
+			dbInstanceStatusConfiguringLogExports,
+			dbInstanceStatusCreating,
+			dbInstanceStatusMaintenance,
+			dbInstanceStatusModifying,
+			dbInstanceStatusRebooting,
+			dbInstanceStatusRenaming,
+			dbInstanceStatusResettingMasterCredentials,
+			dbInstanceStatusStarting,
+			dbInstanceStatusStorageOptimization,
+			dbInstanceStatusUpgrading,
 		},
-		Target:     []string{"available"},
+		Target:     []string{dbInstanceStatusAvailable},
 		Refresh:    statusDBInstance(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -504,8 +501,8 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id stri
 func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"modifying",
-			"deleting",
+			dbInstanceStatusModifying,
+			dbInstanceStatusDeleting,
 		},
 		Target:     []string{},
 		Refresh:    statusDBInstance(ctx, conn, id),

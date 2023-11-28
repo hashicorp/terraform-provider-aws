@@ -56,9 +56,9 @@ train the machine learning model about the values that it resolves for a slot.
 * `lastUpdatedDate` - Date when the $LATEST version of this slot type was updated.
 * `name` - Name of the slot type. The name is not case sensitive.
 * `valueSelectionStrategy` - Determines the slot resolution strategy that Amazon Lex
-uses to return slot type values. `originalValue` returns the value entered by the user if the user
-value is similar to the slot value. `topResolution` returns the first value in the resolution list
+uses to return slot type values. `ORIGINAL_VALUE` returns the value entered by the user if the user
+value is similar to the slot value. `TOP_RESOLUTION` returns the first value in the resolution list
 if there is a resolution list for the slot, otherwise null is returned.
 * `version` - Version of the slot type.
 
-<!-- cache-key: cdktf-0.18.0 input-49d6a5803a0366ff33a06d9d299d17bb3b22f57aa09b8faad79c4b2c1781df65 -->
+<!-- cache-key: cdktf-0.19.0 input-49d6a5803a0366ff33a06d9d299d17bb3b22f57aa09b8faad79c4b2c1781df65 -->

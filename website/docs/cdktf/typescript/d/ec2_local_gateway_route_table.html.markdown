@@ -76,6 +76,6 @@ which take the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-659f40a3728960d4574b77039ecbc60a549c25ba6a774b2467023fef557a755a -->
+<!-- cache-key: cdktf-0.19.0 input-659f40a3728960d4574b77039ecbc60a549c25ba6a774b2467023fef557a755a -->

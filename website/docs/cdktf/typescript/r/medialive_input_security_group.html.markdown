@@ -51,7 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the InputSecurityGroup. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the InputSecurityGroup. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Whitelist Rules
 
@@ -69,9 +69,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import MediaLive InputSecurityGroup using the `id`. Fo
 % terraform import aws_medialive_input_security_group.example 123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9f6c1160cb47fd911bf8108f99b94f58136c37097f8518ea694bbfb001e3a753 -->
+<!-- cache-key: cdktf-0.19.0 input-9f6c1160cb47fd911bf8108f99b94f58136c37097f8518ea694bbfb001e3a753 -->

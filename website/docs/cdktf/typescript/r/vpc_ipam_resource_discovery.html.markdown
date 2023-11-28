@@ -52,7 +52,7 @@ This resource supports the following arguments:
 
 * `description` - (Optional) A description for the IPAM Resource Discovery.
 * `operatingRegions` - (Required) Determines which regions the Resource Discovery will enable IPAM features for usage and monitoring. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM Resource Discovery. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. **You must set your provider block region as an operating_region.**
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### operating_regions
 
@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `isDefault` - A boolean to identify if the Resource Discovery is the accounts default resource discovery
 * `ownerId` - The account ID for the account that manages the Resource Discovery
 * `ipamResourceDiscoveryRegion` - The home region of the Resource Discovery
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -91,4 +91,4 @@ Using `terraform import`, import IPAMs using the IPAM resource discovery `id`. F
 % terraform import aws_vpc_ipam_resource_discovery.example ipam-res-disco-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e397380d953ebd30e61a0c3d1b2b84c946cea9f478b02e0627708ce5f413dc35 -->
+<!-- cache-key: cdktf-0.19.0 input-e397380d953ebd30e61a0c3d1b2b84c946cea9f478b02e0627708ce5f413dc35 -->

@@ -56,4 +56,4 @@ This data source supports the following arguments:
 See the [`aws_globalaccelerator_accelerator` resource](/docs/providers/aws/r/globalaccelerator_accelerator.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.18.0 input-cb1337cef607f58a3c97dc590b01ec464124ea11b4eae120be4bb79fd188c55c -->
+<!-- cache-key: cdktf-0.19.0 input-cb1337cef607f58a3c97dc590b01ec464124ea11b4eae120be4bb79fd188c55c -->

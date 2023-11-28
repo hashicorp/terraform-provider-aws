@@ -150,7 +150,7 @@ This resource supports the following arguments:
 
 ### Replication Configuration
 
-* `rule` - (Required) The replication rules for a replication configuration. A maximum of 10 are allowed per `replicationConfiguration`. See [Rule](#rule)
+* `rule` - (Required) The replication rules for a replication configuration. A maximum of 10 are allowed per `replication_configuration`. See [Rule](#rule)
 
 ### Rule
 
@@ -165,7 +165,7 @@ This resource supports the following arguments:
 ### Repository Filter
 
 * `filter` - (Required) The repository filter details.
-* `filterType` - (Required) The repository filter type. The only supported value is `prefixMatch`, which is a repository name prefix specified with the filter parameter.
+* `filterType` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
 ## Attribute Reference
 
@@ -195,4 +195,4 @@ Using `terraform import`, import ECR Replication Configuration using the `regist
 % terraform import aws_ecr_replication_configuration.service 012345678912
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e720b09bffb1410913da15b1daa4aaef042cc175055603ba3335ca4406730fc -->
+<!-- cache-key: cdktf-0.19.0 input-1e720b09bffb1410913da15b1daa4aaef042cc175055603ba3335ca4406730fc -->

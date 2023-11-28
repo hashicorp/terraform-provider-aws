@@ -363,7 +363,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			o, n := expandObjectDate(oraw.(string)), expandObjectDate(nraw.(string))
 
 			if n == nil || (o != nil && n.Before(*o)) {
-				input.BypassGovernanceRetention = true
+				input.BypassGovernanceRetention = aws.Bool(true)
 			}
 		}
 
@@ -485,7 +485,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		input.BucketKeyEnabled = v.(bool)
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {

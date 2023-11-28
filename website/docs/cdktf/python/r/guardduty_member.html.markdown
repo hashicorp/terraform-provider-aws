@@ -89,4 +89,4 @@ Using `terraform import`, import GuardDuty members using the primary GuardDuty d
 % terraform import aws_guardduty_member.MyMember 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8c795e9bdb95e2477dec1e7c539b60d6a51b31c90c42c663ecd2ece13c210023 -->
+<!-- cache-key: cdktf-0.19.0 input-8c795e9bdb95e2477dec1e7c539b60d6a51b31c90c42c663ecd2ece13c210023 -->
