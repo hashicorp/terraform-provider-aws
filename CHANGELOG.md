@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_s3control_access_grants_instance: Add `identity_center_arn` argument and `identity_center_application_arn` attribute ([#34582](https://github.com/hashicorp/terraform-provider-aws/issues/34582))
 
+BUG FIXES:
+
+* resource/aws_elaticache_replication_group: Fix regression caused by the introduction of the `auth_token_update_strategy` argument with a default value ([#34600](https://github.com/hashicorp/terraform-provider-aws/issues/34600))
+
 ## 5.27.0 (November 27, 2023)
 
 NOTES:
