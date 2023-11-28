@@ -14,10 +14,10 @@ Provides an Amazon S3 Express directory bucket resource.
 
 ```terraform
 resource "aws_s3_directory_bucket" "example" {
-  bucket = "example--usw2-az2--x-s3"
+  bucket = "example--usw2-az1--x-s3"
 
   location {
-    name = "usw2-az2"
+    name = "usw2-az1"
   }
 }
 ```
@@ -53,12 +53,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_s3_directory_bucket.example
-  id = "example--usw2-az2--x-s3"
+  id = "example--usw2-az1--x-s3"
 }
 ```
 
 Using `terraform import`, import S3 bucket using `bucket`. For example:
 
 ```console
-% terraform import aws_s3_directory_bucket.example example--usw2-az2--x-s3
+% terraform import aws_s3_directory_bucket.example example--usw2-az1--x-s3
 ```
