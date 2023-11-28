@@ -286,7 +286,7 @@ func testAccClusterConfig_basic(rName string) string {
 		testAccClusterBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdbelastic_cluster" "test" {
-  name   = %[1]q
+  name           = %[1]q
   shard_capacity = 2
   shard_count    = 1
 
@@ -313,7 +313,7 @@ func testAccClusterConfig_update(rName string, shardCapacity int) string {
 		testAccClusterBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdbelastic_cluster" "test" {
-  name   = %[1]q
+  name           = %[1]q
   shard_capacity = %[2]d
   shard_count    = 1
 
@@ -340,7 +340,7 @@ func testAccClusterConfig_tags1(rName, key1, value1 string) string {
 		testAccClusterBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdbelastic_cluster" "test" {
-  name   = %[1]q
+  name           = %[1]q
   shard_capacity = 2
   shard_count    = 1
 
@@ -371,7 +371,7 @@ func testAccClusterConfig_tags2(rName, key1, value1, key2, value2 string) string
 		testAccClusterBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdbelastic_cluster" "test" {
-  name   = %[1]q
+  name           = %[1]q
   shard_capacity = 2
   shard_count    = 1
 

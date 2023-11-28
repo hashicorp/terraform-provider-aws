@@ -152,8 +152,6 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	response.Schema = s
 }
 
-// Create is called when the provider must create a new resource.
-// Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
 func (r *resourceCluster) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
 	var plan resourceClusterData
@@ -219,8 +217,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-// Read is called when the provider must read resource values in order to update state.
-// Planned state values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
 	var state resourceClusterData
@@ -251,8 +247,6 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-// Update is called to update the state of the resource.
-// Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
 	var state, plan resourceClusterData
