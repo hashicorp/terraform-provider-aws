@@ -381,6 +381,21 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccClusterInstanceConfig_publiclyAccessible(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+				),
+			},
 		},
 	})
 }
@@ -1343,14 +1358,53 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+`, rName, 2),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   apply_immediately   = true
-  engine              = data.aws_rds_engine_version.default.engine
   cluster_identifier  = aws_rds_cluster.test.id
   identifier          = %[1]q
+  engine              = aws_rds_cluster.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   publicly_accessible = %[2]t
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  database_name        = "mydb"
+  master_username      = "foo"
+  master_password      = "mustbeeightcharacters"
+  skip_final_snapshot  = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName, publiclyAccessible))
 }
