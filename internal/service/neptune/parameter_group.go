@@ -266,34 +266,81 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	deleteOpts := neptune.DeleteDBParameterGroupInput{
-		DBParameterGroupName: aws.String(d.Id()),
-	}
-	err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
-		_, err := conn.DeleteDBParameterGroupWithContext(ctx, &deleteOpts)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-				return nil
-			}
-			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBParameterGroupStateFault) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBParameterGroupWithContext(ctx, &deleteOpts)
-	}
+	log.Printf("[DEBUG] Deleting Neptune Parameter Group: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
+		return conn.DeleteDBParameterGroupWithContext(ctx, &neptune.DeleteDBParameterGroupInput{
+			DBParameterGroupName: aws.String(d.Id()),
+		})
+	}, neptune.ErrCodeInvalidDBParameterGroupStateFault)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Neptune Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindDBParameterGroupByName(ctx context.Context, conn *neptune.Neptune, name string) (*neptune.DBParameterGroup, error) {
+	input := &neptune.DescribeDBParameterGroupsInput{
+		DBParameterGroupName: aws.String(name),
+	}
+	output, err := findDBParameterGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBParameterGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBParameterGroup(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBParameterGroupsInput) (*neptune.DBParameterGroup, error) {
+	output, err := findDBParameterGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBParameterGroups(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBParameterGroupsInput) ([]*neptune.DBParameterGroup, error) {
+	var output []*neptune.DBParameterGroup
+
+	err := conn.DescribeDBParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBParameterGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBParameterGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
