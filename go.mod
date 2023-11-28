@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.9.2
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.32.4
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.2
