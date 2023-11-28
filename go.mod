@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.19.5
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.28.3
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.9.1
