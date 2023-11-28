@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -25,7 +28,7 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReportPlanDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`reading Backup Report Plan`),
+				ExpectError: regexache.MustCompile(`reading Backup Report Plan`),
 			},
 			{
 				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),

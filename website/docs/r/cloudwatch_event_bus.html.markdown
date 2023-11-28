@@ -33,23 +33,32 @@ resource "aws_cloudwatch_event_bus" "examplepartner" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure the `name` matches the `event_source_name`.
 * `event_source_name` (Optional) The partner event source that the new event bus will be matched with. Must match `name`.
 * `tags` - (Optional)  A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the event bus.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-EventBridge event buses can be imported using the `name` (which can also be a partner event source name), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_bus.messenger
+  id = "chat-messages"
+}
+```
+
+Using `terraform import`, import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_bus.messenger chat-messages
+% terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```

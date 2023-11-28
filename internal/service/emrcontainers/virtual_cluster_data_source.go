@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrcontainers
 
 import (
@@ -78,7 +81,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 }
 
 func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("virtual_cluster_id").(string)

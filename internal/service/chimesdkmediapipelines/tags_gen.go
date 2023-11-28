@@ -5,24 +5,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines/chimesdkmediapipelinesiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists chimesdkmediapipelines service tags.
+// listTags lists chimesdkmediapipelines service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn chimesdkmediapipelinesiface.ChimeSDKMediaPipelinesAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *chimesdkmediapipelines.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &chimesdkmediapipelines.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn chimesdkmediapipelinesiface.ChimeSDKMedi
 // ListTags lists chimesdkmediapipelines service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -50,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns chimesdkmediapipelines service tags.
-func Tags(tags tftags.KeyValueTags) []*chimesdkmediapipelines.Tag {
-	result := make([]*chimesdkmediapipelines.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &chimesdkmediapipelines.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -66,19 +68,19 @@ func Tags(tags tftags.KeyValueTags) []*chimesdkmediapipelines.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from chimesdkmediapipelines service tags.
-func KeyValueTags(ctx context.Context, tags []*chimesdkmediapipelines.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns chimesdkmediapipelines service tags from Context.
+// getTagsIn returns chimesdkmediapipelines service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*chimesdkmediapipelines.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,29 +90,31 @@ func GetTagsIn(ctx context.Context) []*chimesdkmediapipelines.Tag {
 	return nil
 }
 
-// SetTagsOut sets chimesdkmediapipelines service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*chimesdkmediapipelines.Tag) {
+// setTagsOut sets chimesdkmediapipelines service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates chimesdkmediapipelines service tags.
+// updateTags updates chimesdkmediapipelines service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn chimesdkmediapipelinesiface.ChimeSDKMediaPipelinesAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *chimesdkmediapipelines.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ChimeSDKMediaPipelines)
 	if len(removedTags) > 0 {
 		input := &chimesdkmediapipelines.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -125,7 +129,7 @@ func UpdateTags(ctx context.Context, conn chimesdkmediapipelinesiface.ChimeSDKMe
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -138,5 +142,5 @@ func UpdateTags(ctx context.Context, conn chimesdkmediapipelinesiface.ChimeSDKMe
 // UpdateTags updates chimesdkmediapipelines service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx), identifier, oldTags, newTags)
 }

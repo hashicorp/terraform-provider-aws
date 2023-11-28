@@ -125,6 +125,6 @@ The following arguments are optional:
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 * `excluded_column_names` - (Optional) Set of column names for the table to exclude. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

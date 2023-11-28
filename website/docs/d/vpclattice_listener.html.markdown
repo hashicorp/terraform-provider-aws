@@ -26,9 +26,9 @@ The following arguments are required:
 * `service_identifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
 * `listener_identifier` - (Required) ID or Amazon Resource Name (ARN) of the listener
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the listener.
 * `created_at` - The date and time that the listener was created.

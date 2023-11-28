@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2
 
 import (
@@ -53,6 +56,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"lambda_code": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -75,7 +83,7 @@ func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 
@@ -99,7 +107,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	update := false
 
@@ -123,7 +131,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Get("auto_enable.0.lambda_code").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
@@ -131,16 +139,17 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
 	defer conns.GlobalMutexKV.Unlock(orgConfigMutex)
 
 	in := &inspector2.UpdateOrganizationConfigurationInput{
 		AutoEnable: &types.AutoEnable{
-			Ec2:    aws.Bool(false),
-			Ecr:    aws.Bool(false),
-			Lambda: aws.Bool(false),
+			Ec2:        aws.Bool(false),
+			Ecr:        aws.Bool(false),
+			Lambda:     aws.Bool(false),
+			LambdaCode: aws.Bool(false),
 		},
 	}
 
@@ -150,25 +159,33 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	return nil
 }
 
-func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda bool, timeout time.Duration) error {
-	needle := fmt.Sprintf("%t:%t:%t", ec2, ecr, lambda)
+func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda, lambda_code bool, timeout time.Duration) error {
+	needle := fmt.Sprintf("%t:%t:%t:%t", ec2, ecr, lambda, lambda_code)
 
 	all := []string{
-		fmt.Sprintf("%t:%t:%t", false, false, false),
-		fmt.Sprintf("%t:%t:%t", false, true, false),
-		fmt.Sprintf("%t:%t:%t", false, false, true),
-		fmt.Sprintf("%t:%t:%t", false, true, true),
-		fmt.Sprintf("%t:%t:%t", true, false, false),
-		fmt.Sprintf("%t:%t:%t", true, false, true),
-		fmt.Sprintf("%t:%t:%t", true, true, false),
-		fmt.Sprintf("%t:%t:%t", true, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, true, true),
 	}
 
 	for i, v := range all {
@@ -204,7 +221,7 @@ func statusOrganizationConfiguration(ctx context.Context, conn *inspector2.Clien
 			return nil, "", err
 		}
 
-		return out, fmt.Sprintf("%t:%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr), aws.ToBool(out.AutoEnable.Lambda)), nil
+		return out, fmt.Sprintf("%t:%t:%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr), aws.ToBool(out.AutoEnable.Lambda), aws.ToBool(out.AutoEnable.LambdaCode)), nil
 	}
 }
 
@@ -227,6 +244,10 @@ func flattenAutoEnable(apiObject *types.AutoEnable) map[string]interface{} {
 		m["lambda"] = aws.ToBool(v)
 	}
 
+	if v := apiObject.LambdaCode; v != nil {
+		m["lambda_code"] = aws.ToBool(v)
+	}
+
 	return m
 }
 
@@ -247,6 +268,10 @@ func expandAutoEnable(tfMap map[string]interface{}) *types.AutoEnable {
 
 	if v, ok := tfMap["lambda"].(bool); ok {
 		a.Lambda = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["lambda_code"].(bool); ok {
+		a.LambdaCode = aws.Bool(v)
 	}
 
 	return a

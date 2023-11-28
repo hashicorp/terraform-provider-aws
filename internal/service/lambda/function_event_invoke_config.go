@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -99,7 +102,7 @@ func ResourceFunctionEventInvokeConfig() *schema.Resource {
 
 func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -159,7 +162,7 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 
 func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
@@ -201,7 +204,7 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 
 func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
@@ -257,7 +260,7 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 
 func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
@@ -291,7 +294,7 @@ func FunctionEventInvokeConfigParseID(id string) (string, string, error) {
 		parsedARN, err := arn.Parse(id)
 
 		if err != nil {
-			return "", "", fmt.Errorf("error parsing ARN (%s): %s", id, err)
+			return "", "", fmt.Errorf("parsing ARN (%s): %s", id, err)
 		}
 
 		function := strings.TrimPrefix(parsedARN.Resource, "function:")

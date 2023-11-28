@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -43,7 +46,7 @@ func ResourceDevEndpoint() *schema.Resource {
 			"arguments": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -61,7 +64,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -171,13 +174,13 @@ func ResourceDevEndpoint() *schema.Resource {
 
 func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
@@ -270,7 +273,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	endpoint, err := FindDevEndpointByName(ctx, conn, d.Id())
 
@@ -389,7 +392,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateDevEndpointInput{
 		EndpointName: aws.String(d.Get("name").(string)),
@@ -488,7 +491,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
 	_, err := conn.DeleteDevEndpointWithContext(ctx, &glue.DeleteDevEndpointInput{

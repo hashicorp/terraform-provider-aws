@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -98,7 +101,7 @@ func ResourcePortfolioShare() *schema.Resource {
 
 func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreatePortfolioShareInput{
 		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
@@ -178,7 +181,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	portfolioID, shareType, principalID, err := PortfolioShareParseResourceID(d.Id())
 
@@ -216,7 +219,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdatePortfolioShareInput{
 		PortfolioId:    aws.String(d.Get("portfolio_id").(string)),
@@ -274,7 +277,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DeletePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),

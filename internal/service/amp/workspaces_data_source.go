@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -7,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_prometheus_workspaces")
@@ -39,13 +43,15 @@ func DataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 }
 
 func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	alias_prefix := d.Get("alias_prefix").(string)
 	workspaces, err := FindWorkspaces(ctx, conn, alias_prefix)
 
 	if err != nil {
-		return diag.Errorf("reading AMP Workspaces: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading AMP Workspaces: %s", err)
 	}
 
 	var arns, aliases, workspace_ids []string
@@ -60,5 +66,5 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arns", arns)
 	d.Set("workspace_ids", workspace_ids)
 
-	return nil
+	return diags
 }

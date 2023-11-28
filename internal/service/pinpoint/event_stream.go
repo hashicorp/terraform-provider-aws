@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
@@ -49,7 +52,7 @@ func ResourceEventStream() *schema.Resource {
 
 func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	applicationId := d.Get("application_id").(string)
 
@@ -93,7 +96,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
 
@@ -120,7 +123,7 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceEventStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStreamWithContext(ctx, &pinpoint.DeleteEventStreamInput{

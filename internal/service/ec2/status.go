@@ -1,9 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
 	"strconv"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -350,6 +355,38 @@ func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.
 	}
 }
 
+func StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 const (
 	RouteStatusReady = "ready"
 )
@@ -466,6 +503,22 @@ func StatusSpotFleetRequestState(ctx context.Context, conn *ec2.EC2, id string) 
 		}
 
 		return output, aws.StringValue(output.SpotFleetRequestState), nil
+	}
+}
+
+func StatusSpotInstanceRequest(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSpotInstanceRequestByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 
@@ -744,9 +797,9 @@ func StatusTransitGatewayPrefixListReferenceState(ctx context.Context, conn *ec2
 	}
 }
 
-func StatusTransitGatewayRouteState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
+func StatusTransitGatewayStaticRouteState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayRoute(ctx, conn, transitGatewayRouteTableID, destination)
+		output, err := FindTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1428,5 +1481,53 @@ func StatusIPAMScopeState(ctx context.Context, conn *ec2.EC2, id string) retry.S
 		}
 
 		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusInstanceConnectEndpointState(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceConnectEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func StatusImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImageBlockPublicAccessState(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws_sdkv2.ToString(output), nil
+	}
+}
+
+func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
 	}
 }

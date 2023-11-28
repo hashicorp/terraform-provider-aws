@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -335,6 +339,10 @@ func ResourceEndpoint() *schema.Resource {
 				Sensitive:     true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
+			"pause_replication_tasks": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"port": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -567,11 +575,10 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
-						"ignore_headers_row": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntInSlice([]int{0, 1}),
-							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"ignore_header_rows": {
 							Type:         schema.TypeInt,
@@ -697,14 +704,14 @@ func ResourceEndpoint() *schema.Resource {
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -868,7 +875,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input.RedshiftSettings = settings
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.MicrosoftSQLServerSettings = &dms.MicrosoftSQLServerSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -906,7 +913,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -948,7 +955,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -962,10 +969,8 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = resourceEndpointSetState(d, endpoint)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
+	if err := resourceEndpointSetState(d, endpoint); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -973,7 +978,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -1204,7 +1209,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					}
 				}
 			}
-		case engineNameSQLServer:
+		case engineNameSQLServer, engineNameBabelfish:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1252,7 +1257,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
-		case engineNameDB2:
+		case engineNameDB2, engineNameDB2zOS:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1303,10 +1308,24 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		_, err := conn.ModifyEndpointWithContext(ctx, input)
+		var tasks []*dms.ReplicationTask
+		if v, ok := d.GetOk("pause_replication_tasks"); ok && v.(bool) {
+			var err error
+			tasks, err = stopEndpointReplicationTasks(ctx, conn, d.Get("endpoint_arn").(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "pausing replication tasks before updating DMS Endpoint (%s): %s", d.Id(), err)
+			}
+		}
 
+		_, err := conn.ModifyEndpointWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s): %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("pause_replication_tasks"); ok && v.(bool) && len(tasks) > 0 {
+			if err := startEndpointReplicationTasks(ctx, conn, d.Get("endpoint_arn").(string), tasks); err != nil {
+				return sdkdiag.AppendErrorf(diags, "starting replication tasks after updating DMS Endpoint (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -1315,7 +1334,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
@@ -1430,7 +1449,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	d.Set("endpoint_arn", endpoint.EndpointArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	// For some reason the AWS API only accepts lowercase type but returns it as uppercase
-	d.Set("endpoint_type", strings.ToLower(*endpoint.EndpointType))
+	d.Set("endpoint_type", strings.ToLower(aws.StringValue(endpoint.EndpointType)))
 	d.Set("engine_name", endpoint.EngineName)
 	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 
@@ -1530,7 +1549,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		if err := d.Set("redshift_settings", flattenRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
 			return fmt.Errorf("setting redshift_settings: %w", err)
 		}
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if endpoint.MicrosoftSQLServerSettings != nil {
 			d.Set("username", endpoint.MicrosoftSQLServerSettings.Username)
 			d.Set("server_name", endpoint.MicrosoftSQLServerSettings.ServerName)
@@ -1552,7 +1571,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if endpoint.IBMDb2Settings != nil {
 			d.Set("username", endpoint.IBMDb2Settings.Username)
 			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
@@ -1565,7 +1584,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
@@ -1576,6 +1595,103 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 
 	d.Set("kms_key_arn", endpoint.KmsKeyId)
 	d.Set("ssl_mode", endpoint.SslMode)
+
+	return nil
+}
+
+func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) error {
+	tasks, err := FindReplicationTasksByEndpointARN(ctx, conn, arn)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		rtID := aws.StringValue(task.ReplicationTaskIdentifier)
+		switch aws.StringValue(task.Status) {
+		case replicationTaskStatusRunning, replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped:
+			continue
+		case replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting:
+			if err := waitReplicationTaskSteady(ctx, conn, rtID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) ([]*dms.ReplicationTask, error) {
+	if err := steadyEndpointReplicationTasks(ctx, conn, arn); err != nil {
+		return nil, err
+	}
+
+	tasks, err := FindReplicationTasksByEndpointARN(ctx, conn, arn)
+	if err != nil {
+		return nil, err
+	}
+
+	var stoppedTasks []*dms.ReplicationTask
+	for _, task := range tasks {
+		rtID := aws.StringValue(task.ReplicationTaskIdentifier)
+		switch aws.StringValue(task.Status) {
+		case replicationTaskStatusRunning:
+			err := stopReplicationTask(ctx, rtID, conn)
+			if tfawserr.ErrCodeEquals(err, dms.ErrCodeInvalidResourceStateFault) {
+				continue
+			}
+
+			if err != nil {
+				return stoppedTasks, err
+			}
+			stoppedTasks = append(stoppedTasks, task)
+		default:
+			continue
+		}
+	}
+
+	return stoppedTasks, nil
+}
+
+func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, tasks []*dms.ReplicationTask) error {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	if err := steadyEndpointReplicationTasks(ctx, conn, arn); err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		_, err := conn.TestConnectionWithContext(ctx, &dms.TestConnectionInput{
+			EndpointArn:            aws.String(arn),
+			ReplicationInstanceArn: task.ReplicationInstanceArn,
+		})
+
+		if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "already being tested") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("testing connection: %w", err)
+		}
+
+		err = conn.WaitUntilTestConnectionSucceedsWithContext(ctx, &dms.DescribeConnectionsInput{
+			Filters: []*dms.Filter{
+				{
+					Name:   aws.String("endpoint-arn"),
+					Values: []*string{aws.String(arn)},
+				},
+			},
+		})
+
+		if err != nil {
+			return fmt.Errorf("waiting until test connection succeeds: %w", err)
+		}
+
+		if err := startReplicationTask(ctx, conn, aws.StringValue(task.ReplicationTaskIdentifier)); err != nil {
+			return fmt.Errorf("starting replication task: %w", err)
+		}
+	}
 
 	return nil
 }
@@ -2027,6 +2143,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["external_table_definition"].(string); ok {
 		apiObject.ExternalTableDefinition = aws.String(v)
 	}
+	if v, ok := tfMap["glue_catalog_generation"].(bool); ok {
+		apiObject.GlueCatalogGeneration = aws.Bool(v)
+	}
 	if v, ok := tfMap["ignore_header_rows"].(int); ok {
 		apiObject.IgnoreHeaderRows = aws.Int64(int64(v))
 	}
@@ -2149,6 +2268,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	if v := apiObject.ExternalTableDefinition; v != nil {
 		tfMap["external_table_definition"] = aws.StringValue(v)
 	}
+	if v := apiObject.GlueCatalogGeneration; v != nil {
+		tfMap["glue_catalog_generation"] = aws.BoolValue(v)
+	}
 	if v := apiObject.IgnoreHeaderRows; v != nil {
 		tfMap["ignore_header_rows"] = aws.Int64Value(v)
 	}
@@ -2238,7 +2360,7 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 		// normalize key, from camelCase to snake_case,
 		// and value where hyphens maybe used in a config
 		// but the API returns with underscores
-		matchAllCap := regexp.MustCompile("([a-z])([A-Z])")
+		matchAllCap := regexache.MustCompile("([a-z])([A-Z])")
 		key := matchAllCap.ReplaceAllString(k, "${1}_${2}")
 		normalizedVal := strings.Replace(strings.ToLower(v), "-", "_", -1)
 
@@ -2304,4 +2426,87 @@ func flattenTopLevelConnectionInfo(d *schema.ResourceData, endpoint *dms.Endpoin
 	d.Set("server_name", endpoint.ServerName)
 	d.Set("port", endpoint.Port)
 	d.Set("database_name", endpoint.DatabaseName)
+}
+
+func FindEndpointByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+	input := &dms.DescribeEndpointsInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("endpoint-id"),
+				Values: aws.StringSlice([]string{id}),
+			},
+		},
+	}
+
+	return findEndpoint(ctx, conn, input)
+}
+
+func findEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEndpointsInput) (*dms.Endpoint, error) {
+	output, err := findEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEndpoints(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEndpointsInput) ([]*dms.Endpoint, error) {
+	var output []*dms.Endpoint
+
+	err := conn.DescribeEndpointsPagesWithContext(ctx, input, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Endpoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{endpointStatusDeleting},
+		Target:  []string{},
+		Refresh: statusEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

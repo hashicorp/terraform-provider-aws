@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2
 
 import (
@@ -57,7 +60,7 @@ const (
 )
 
 func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	in := &inspector2.EnableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Get("account_id").(string)),
@@ -84,7 +87,7 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	st, ai, err := FindDelegatedAdminAccountStatusID(ctx, conn, d.Id())
 
@@ -105,7 +108,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	log.Printf("[INFO] Deleting Inspector DelegatedAdminAccount %s", d.Id())
 
@@ -207,12 +210,11 @@ func FindDelegatedAdminAccountStatusID(ctx context.Context, conn *inspector2.Cli
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			var ve types.ValidationException
-			if errs.AsContains(err, &ve, "is the delegated admin") {
-				return string(types.RelationshipStatusEnabled), accountID, nil
-			}
+		if errs.IsAErrorMessageContains[*types.ValidationException](err, "is the delegated admin") {
+			return string(types.RelationshipStatusEnabled), accountID, nil
+		}
 
+		if err != nil {
 			return "", "", err
 		}
 

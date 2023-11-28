@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -89,7 +92,7 @@ func DataSourceTags() *schema.Resource {
 }
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),

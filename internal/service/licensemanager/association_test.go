@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
@@ -83,7 +86,7 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		return tflicensemanager.FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
 	}
@@ -91,7 +94,7 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_association" {

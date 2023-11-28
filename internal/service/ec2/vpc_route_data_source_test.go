@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -197,7 +200,7 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 			},
 			{
 				Config:      testAccVPCRouteDataSourceConfig_gatewayEndpoint(rName),
-				ExpectError: regexp.MustCompile(`No routes matching supplied arguments found in Route Table`),
+				ExpectError: regexache.MustCompile(`No routes matching supplied arguments found in Route Table`),
 			},
 		},
 	})
@@ -277,7 +280,7 @@ resource "aws_instance" "test" {
 resource "aws_route" "instance" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = "10.0.1.0/24"
-  instance_id            = aws_instance.test.id
+  network_interface_id   = aws_instance.test.primary_network_interface_id
 }
 
 data "aws_route" "by_peering_connection_id" {
@@ -510,7 +513,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

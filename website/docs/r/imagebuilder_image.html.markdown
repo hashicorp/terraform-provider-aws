@@ -33,6 +33,7 @@ The following arguments are optional:
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
+* `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_tests_configuration
@@ -42,9 +43,23 @@ The following arguments are optional:
 * `image_tests_enabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeout_minutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
 
-## Attributes Reference
+### image_scanning_configuration
 
-In addition to all arguments above, the following attributes are exported:
+The following arguments are optional:
+
+* `image_scanning_enabled` - (Optional) Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image. Defaults to `false`.
+* `ecr_configuration` - (Optional) Configuration block with ECR configuration. Detailed below.
+
+### ecr_configuration
+
+The following arguments are optional:
+
+* `repository_name` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+* `container_tags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the image.
 * `date_created` - Date the image was created.
@@ -71,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_image` resources can be imported using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_image.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1"
+}
 ```
-$ terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
+
+Using `terraform import`, import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
 ```

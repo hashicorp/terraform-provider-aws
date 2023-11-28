@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -183,12 +186,12 @@ const (
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(id.UniqueId()),
 		Name:      aws.String(d.Get("name").(string)),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 		Type:      types.InputType(d.Get("type").(string)),
 	}
 
@@ -252,7 +255,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindInputByID(ctx, conn, d.Id())
 
@@ -283,7 +286,7 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputInput{
@@ -342,7 +345,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
 

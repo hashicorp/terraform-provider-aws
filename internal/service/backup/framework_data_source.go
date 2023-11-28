@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -101,7 +104,7 @@ func DataSourceFramework() *schema.Resource {
 
 func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -110,7 +113,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		FrameworkName: aws.String(name),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Framework: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Framework: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.FrameworkName))
@@ -129,7 +132,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.FrameworkArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.FrameworkArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)

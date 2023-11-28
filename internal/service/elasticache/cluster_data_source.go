@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -10,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_elasticache_cluster")
@@ -151,12 +154,6 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_group_names": {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
-			},
 			"snapshot_retention_limit": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -176,7 +173,7 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
@@ -199,7 +196,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set("network_type", cluster.NetworkType)
 	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
-	d.Set("security_group_names", flattenSecurityGroupNames(cluster.CacheSecurityGroups))
 	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
 
 	if cluster.CacheParameterGroup != nil {
@@ -232,9 +228,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("arn", cluster.ARN)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(cluster.ARN))
+	tags, err := listTags(ctx, conn, aws.StringValue(cluster.ARN))
 
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if err != nil && !errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)
 	}
 

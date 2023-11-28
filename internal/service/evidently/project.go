@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -75,7 +79,7 @@ func ResourceProject() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexp.MustCompile(`^[-a-zA-Z0-9._/]+$`), "must be a valid CloudWatch Log Group name"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./-]+$`), "must be a valid CloudWatch Log Group name"),
 										),
 									},
 								},
@@ -95,7 +99,7 @@ func ResourceProject() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(3, 63),
-											validation.StringMatch(regexp.MustCompile(`^[a-z0-9][-a-z0-9]*[a-z0-9]$`), "must be a valid Bucket name"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
 										),
 									},
 									"prefix": {
@@ -103,7 +107,7 @@ func ResourceProject() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexp.MustCompile(`^[-a-zA-Z0-9!_.*'()/]*$`), "must be a valid prefix name"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_!.*'()/-]*$`), "must be a valid prefix name"),
 										),
 									},
 								},
@@ -139,7 +143,7 @@ func ResourceProject() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexp.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 				),
 			},
 			"status": {
@@ -155,12 +159,12 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
-	input := &cloudwatchevidently.CreateProjectInput{
+	input := &evidently.CreateProjectInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -171,13 +175,13 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DataDelivery = expandDataDelivery(v.([]interface{}))
 	}
 
-	output, err := conn.CreateProjectWithContext(ctx, input)
+	output, err := conn.CreateProject(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating CloudWatch Evidently Project (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Project.Name))
+	d.SetId(aws.ToString(output.Project.Name))
 
 	if _, err := waitProjectCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) creation: %s", d.Id(), err)
@@ -187,7 +191,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
 
@@ -208,29 +212,29 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
 	d.Set("active_launch_count", project.ActiveLaunchCount)
 	d.Set("arn", project.Arn)
-	d.Set("created_time", aws.TimeValue(project.CreatedTime).Format(time.RFC3339))
+	d.Set("created_time", aws.ToTime(project.CreatedTime).Format(time.RFC3339))
 	d.Set("description", project.Description)
 	d.Set("experiment_count", project.ExperimentCount)
 	d.Set("feature_count", project.FeatureCount)
-	d.Set("last_updated_time", aws.TimeValue(project.LastUpdatedTime).Format(time.RFC3339))
+	d.Set("last_updated_time", aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", project.LaunchCount)
 	d.Set("name", project.Name)
 	d.Set("status", project.Status)
 
-	SetTagsOut(ctx, project.Tags)
+	setTagsOut(ctx, project.Tags)
 
 	return nil
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	// Project has 2 update APIs
 	// UpdateProjectWithContext: Updates the description of an existing project.
 	// UpdateProjectDataDeliveryWithContext: Updates the data storage options for this project.
 
 	if d.HasChanges("description") {
-		_, err := conn.UpdateProjectWithContext(ctx, &cloudwatchevidently.UpdateProjectInput{
+		_, err := conn.UpdateProject(ctx, &evidently.UpdateProjectInput{
 			Description: aws.String(d.Get("description").(string)),
 			Project:     aws.String(d.Id()),
 		})
@@ -245,7 +249,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("data_delivery") {
-		input := &cloudwatchevidently.UpdateProjectDataDeliveryInput{
+		input := &evidently.UpdateProjectDataDeliveryInput{
 			Project: aws.String(d.Id()),
 		}
 
@@ -266,7 +270,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.S3Destination = expandS3Destination(v.([]interface{}))
 		}
 
-		_, err := conn.UpdateProjectDataDeliveryWithContext(ctx, input)
+		_, err := conn.UpdateProjectDataDelivery(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating CloudWatch Evidently Project (%s) data delivery: %s", d.Id(), err)
@@ -281,14 +285,14 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Project: %s", d.Id())
-	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{
+	_, err := conn.DeleteProject(ctx, &evidently.DeleteProjectInput{
 		Project: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -303,7 +307,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandDataDelivery(dataDelivery []interface{}) *cloudwatchevidently.ProjectDataDeliveryConfig {
+func expandDataDelivery(dataDelivery []interface{}) *awstypes.ProjectDataDeliveryConfig {
 	if len(dataDelivery) == 0 || dataDelivery[0] == nil {
 		return nil
 	}
@@ -313,7 +317,7 @@ func expandDataDelivery(dataDelivery []interface{}) *cloudwatchevidently.Project
 		return nil
 	}
 
-	result := &cloudwatchevidently.ProjectDataDeliveryConfig{}
+	result := &awstypes.ProjectDataDeliveryConfig{}
 
 	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
 		result.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
@@ -326,7 +330,7 @@ func expandDataDelivery(dataDelivery []interface{}) *cloudwatchevidently.Project
 	return result
 }
 
-func expandCloudWatchLogs(cloudWatchLogs []interface{}) *cloudwatchevidently.CloudWatchLogsDestinationConfig {
+func expandCloudWatchLogs(cloudWatchLogs []interface{}) *awstypes.CloudWatchLogsDestinationConfig {
 	if len(cloudWatchLogs) == 0 || cloudWatchLogs[0] == nil {
 		return nil
 	}
@@ -336,7 +340,7 @@ func expandCloudWatchLogs(cloudWatchLogs []interface{}) *cloudwatchevidently.Clo
 		return nil
 	}
 
-	result := &cloudwatchevidently.CloudWatchLogsDestinationConfig{}
+	result := &awstypes.CloudWatchLogsDestinationConfig{}
 
 	if v, ok := tfMap["log_group"].(string); ok && v != "" {
 		result.LogGroup = aws.String(v)
@@ -345,7 +349,7 @@ func expandCloudWatchLogs(cloudWatchLogs []interface{}) *cloudwatchevidently.Clo
 	return result
 }
 
-func expandS3Destination(s3Destination []interface{}) *cloudwatchevidently.S3DestinationConfig {
+func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationConfig {
 	if len(s3Destination) == 0 || s3Destination[0] == nil {
 		return nil
 	}
@@ -355,7 +359,7 @@ func expandS3Destination(s3Destination []interface{}) *cloudwatchevidently.S3Des
 		return nil
 	}
 
-	result := &cloudwatchevidently.S3DestinationConfig{}
+	result := &awstypes.S3DestinationConfig{}
 
 	if v, ok := tfMap["bucket"].(string); ok && v != "" {
 		result.Bucket = aws.String(v)
@@ -368,7 +372,7 @@ func expandS3Destination(s3Destination []interface{}) *cloudwatchevidently.S3Des
 	return result
 }
 
-func flattenDataDelivery(dataDelivery *cloudwatchevidently.ProjectDataDelivery) []interface{} {
+func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []interface{} {
 	if dataDelivery == nil {
 		return []interface{}{}
 	}
@@ -386,7 +390,7 @@ func flattenDataDelivery(dataDelivery *cloudwatchevidently.ProjectDataDelivery) 
 	return []interface{}{values}
 }
 
-func flattenCloudWatchLogs(cloudWatchLogs *cloudwatchevidently.CloudWatchLogsDestination) []interface{} {
+func flattenCloudWatchLogs(cloudWatchLogs *awstypes.CloudWatchLogsDestination) []interface{} {
 	if cloudWatchLogs == nil || cloudWatchLogs.LogGroup == nil {
 		return []interface{}{}
 	}
@@ -394,13 +398,13 @@ func flattenCloudWatchLogs(cloudWatchLogs *cloudwatchevidently.CloudWatchLogsDes
 	values := map[string]interface{}{}
 
 	if cloudWatchLogs.LogGroup != nil {
-		values["log_group"] = aws.StringValue(cloudWatchLogs.LogGroup)
+		values["log_group"] = aws.ToString(cloudWatchLogs.LogGroup)
 	}
 
 	return []interface{}{values}
 }
 
-func flattenS3Destination(s3Destination *cloudwatchevidently.S3Destination) []interface{} {
+func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 	if s3Destination == nil || s3Destination.Bucket == nil {
 		return []interface{}{}
 	}
@@ -408,11 +412,11 @@ func flattenS3Destination(s3Destination *cloudwatchevidently.S3Destination) []in
 	values := map[string]interface{}{}
 
 	if s3Destination.Bucket != nil {
-		values["bucket"] = aws.StringValue(s3Destination.Bucket)
+		values["bucket"] = aws.ToString(s3Destination.Bucket)
 	}
 
 	if s3Destination.Prefix != nil {
-		values["prefix"] = aws.StringValue(s3Destination.Prefix)
+		values["prefix"] = aws.ToString(s3Destination.Prefix)
 	}
 
 	return []interface{}{values}

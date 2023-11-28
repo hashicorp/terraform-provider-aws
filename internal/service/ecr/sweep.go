@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ecr
 
@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ecr_repository", &resource.Sweeper{
 		Name: "aws_ecr_repository",
 		F:    sweepRepositories,
@@ -25,11 +25,11 @@ func init() {
 
 func sweepRepositories(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ECRConn()
+	conn := client.ECRConn(ctx)
 
 	var errors error
 	err = conn.DescribeRepositoriesPagesWithContext(ctx, &ecr.DescribeRepositoriesInput{}, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
@@ -60,7 +60,7 @@ func sweepRepositories(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ECR repository sweep for %s: %s", region, err)
 			return nil
 		}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -44,7 +47,7 @@ func DataSourceLinks() *schema.Resource {
 }
 
 func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -67,7 +70,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := FindLinks(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Links: %s", err)
+		return diag.Errorf("listing Network Manager Links: %s", err)
 	}
 
 	var linkIDs []string

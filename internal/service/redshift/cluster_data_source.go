@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -53,6 +56,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -84,12 +91,6 @@ func DataSourceCluster() *schema.Resource {
 			"cluster_revision_number": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"cluster_security_groups": {
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the cluster_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -201,7 +202,7 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_identifier").(string)
@@ -232,44 +233,31 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
-
 	if len(rsc.ClusterParameterGroups) > 0 {
 		d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	}
-
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-
-	var csg []string
-	for _, g := range rsc.ClusterSecurityGroups {
-		csg = append(csg, aws.StringValue(g.ClusterSecurityGroupName))
-	}
-	d.Set("cluster_security_groups", csg)
-
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
-
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
-
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set("database_name", rsc.DBName)
-
 	if rsc.ElasticIpStatus != nil {
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
 	}
-
 	d.Set("encrypted", rsc.Encrypted)
-
 	if rsc.Endpoint != nil {
 		d.Set("endpoint", rsc.Endpoint.Address)
+		d.Set("port", rsc.Endpoint.Port)
 	}
-
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 
 	var iamRoles []string
@@ -282,7 +270,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("master_username", rsc.MasterUsername)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
-	d.Set("port", rsc.Endpoint.Port)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -181,7 +185,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -205,7 +209,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := ListTags(ctx, conn, arn)
+			tags, err := listTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
@@ -317,9 +321,9 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 		return diags
 	}

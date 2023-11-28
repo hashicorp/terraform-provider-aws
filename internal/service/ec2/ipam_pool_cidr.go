@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -103,7 +106,7 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 
 func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.ProvisionIpamPoolCidrInput{
@@ -147,7 +150,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
@@ -176,7 +179,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 

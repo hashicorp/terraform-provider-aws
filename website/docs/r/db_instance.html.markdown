@@ -64,6 +64,108 @@ resource "aws_db_instance" "default" {
 }
 ```
 
+### RDS Custom for Oracle Usage with Replica
+
+```terraform
+# Lookup the available instance classes for the custom engine for the region being operated in
+data "aws_rds_orderable_db_instance" "custom-oracle" {
+  engine                     = "custom-oracle-ee" # CEV engine to be used
+  engine_version             = "19.c.ee.002"      # CEV engine version to be used
+  license_model              = "bring-your-own-license"
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
+}
+
+# The RDS instance resource requires an ARN. Look up the ARN of the KMS key associated with the CEV.
+data "aws_kms_key" "by_id" {
+  key_id = "example-ef278353ceba4a5a97de6784565b9f78" # KMS key associated with the CEV
+}
+
+resource "aws_db_instance" "default" {
+  allocated_storage           = 50
+  auto_minor_version_upgrade  = false                         # Custom for Oracle does not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for Oracle. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
+  backup_retention_period     = 7
+  db_subnet_group_name        = local.db_subnet_group_name
+  engine                      = data.aws_rds_orderable_db_instance.custom-oracle.engine
+  engine_version              = data.aws_rds_orderable_db_instance.custom-oracle.engine_version
+  identifier                  = "ee-instance-demo"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-oracle.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  license_model               = data.aws_rds_orderable_db_instance.custom-oracle.license_model
+  multi_az                    = false # Custom for Oracle does not support multi-az
+  password                    = "avoid-plaintext-passwords"
+  username                    = "test"
+  storage_encrypted           = true
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+
+resource "aws_db_instance" "test-replica" {
+  replicate_source_db         = aws_db_instance.default.identifier
+  replica_mode                = "mounted"
+  auto_minor_version_upgrade  = false
+  custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for Oracle. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
+  backup_retention_period     = 7
+  identifier                  = "ee-instance-replica"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-oracle.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  multi_az                    = false # Custom for Oracle does not support multi-az
+  skip_final_snapshot         = true
+  storage_encrypted           = true
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+```
+
+### RDS Custom for SQL Server
+
+```terraform
+# Lookup the available instance classes for the custom engine for the region being operated in
+data "aws_rds_orderable_db_instance" "custom-sqlserver" {
+  engine                     = "custom-sqlserver-se" # CEV engine to be used
+  engine_version             = "15.00.4249.2.v1"     # CEV engine version to be used
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"]
+}
+
+# The RDS instance resource requires an ARN. Look up the ARN of the KMS key.
+data "aws_kms_key" "by_id" {
+  key_id = "example-ef278353ceba4a5a97de6784565b9f78" # KMS key
+}
+
+resource "aws_db_instance" "example" {
+  allocated_storage           = 500
+  auto_minor_version_upgrade  = false                               # Custom for SQL Server does not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
+  backup_retention_period     = 7
+  db_subnet_group_name        = local.db_subnet_group_name # Copy the subnet group from the RDS Console
+  engine                      = data.aws_rds_orderable_db_instance.custom-sqlserver.engine
+  engine_version              = data.aws_rds_orderable_db_instance.custom-sqlserver.engine_version
+  identifier                  = "sql-instance-demo"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-sqlserver.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  multi_az                    = false # Custom for SQL Server does support multi-az
+  password                    = "avoid-plaintext-passwords"
+  storage_encrypted           = true
+  username                    = "test"
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+```
+
 ### Storage Autoscaling
 
 To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
@@ -125,7 +227,7 @@ resource "aws_db_instance" "default" {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
@@ -145,10 +247,11 @@ Defaults to true.
   Must be greater than `0` if the database is used as a source for a [Read Replica][instance-replication],
   uses [low-downtime updates](#low-downtime-updates),
   or will use [RDS Blue/Green deployments][blue-green].
+* `backup_target` - (Optional, Forces new resource) Specifies where automated backups and manual snapshots are stored. Possible values are `region` (default) and `outposts`. See [Working with Amazon RDS on AWS Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html) for more information.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
-  See [blue_green_update](#blue_green_update) below
+  See [`blue_green_update`](#blue_green_update) below.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -163,23 +266,21 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica contraints.
+for additional read replica constraints.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
 * `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
-* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether mappings of AWS Identity and Access Management (IAM) accounts to database
 accounts is enabled.
-* `identifier` - (Optional, Forces new resource) The name of the RDS instance,
-if omitted, Terraform will assign a random, unique identifier. Required if `restore_to_point_in_time` is specified.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique
-identifier beginning with the specified prefix. Conflicts with `identifier`.
+* `identifier` - (Optional) The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier. Required if `restore_to_point_in_time` is specified.
+* `identifier_prefix` - (Optional) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1". Can only be set when `storage_type` is `"io1"` or `"gp3"`.
@@ -187,8 +288,12 @@ Cannot be specified for gp3 storage if the `allocated_storage` value is below a 
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
-SE1) License model information for this DB instance.
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
+    * RDS for MariaDB: `general-public-license`
+    * RDS for Microsoft SQL Server: `license-included`
+    * RDS for MySQL: `general-public-license`
+    * RDS for Oracle: `bring-your-own-license | license-included`
+    * RDS for PostgreSQL: `postgresql-license`
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
@@ -207,7 +312,6 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
-* `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
@@ -236,9 +340,6 @@ PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest
 for more information on using Replication.
 * `restore_to_point_in_time` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
-* `security_group_names` - (Optional/Deprecated) List of DB Security Groups to
-associate. Only used for [DB Instances on the _EC2-Classic_
-Platform](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.html#USER_VPC.FindDefaultVPC).
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is
 created before the DB instance is deleted. If true is specified, no DBSnapshot
 is created. If false is specified, a DB snapshot is created before the DB
@@ -310,9 +411,9 @@ resource "aws_db_instance" "db" {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
 
-## blue_green_update
+### `blue_green_update`
 
-* `enabled` - (Optional) Enables [low-downtime updates](#Low-Downtime Updates) when `true`.
+* `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
 
 [instance-replication]:
@@ -322,9 +423,9 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 [blue-green]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The hostname of the RDS instance. See also `endpoint` and `port`.
 * `arn` - The ARN of the RDS instance.
@@ -342,14 +443,13 @@ DB instance.
 * `engine_version_actual` - The running version of the database.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
 in a Route 53 Alias record).
-* `id` - The RDS instance ID.
+* `id` - RDS DBI resource ID.
 * `instance_class`- The RDS instance class.
 * `latest_restorable_time` - The latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
 * `listener_endpoint` - Specifies the listener connection endpoint for SQL Server Always On. See [endpoint](#endpoint) below.
 * `maintenance_window` - The instance maintenance window.
 * `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `multi_az` - If the RDS instance is multi AZ enabled.
-* `name` - The database name.
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
@@ -385,8 +485,17 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
-DB Instances can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_db_instance.default
+  id = "mydb-rds-instance"
+}
 ```
-$ terraform import aws_db_instance.default mydb-rds-instance
+
+Using `terraform import`, import DB Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_db_instance.default mydb-rds-instance
 ```

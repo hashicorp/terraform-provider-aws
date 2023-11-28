@@ -48,7 +48,9 @@ For more information about filtering, see the [EC2 API documentation](https://do
 * `name` - (Required) Name of the field to filter.
 * `values` - (Required) Set of values for filtering.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the DHCP Options Set.
 * `dhcp_options_id` - EC2 DHCP Options ID

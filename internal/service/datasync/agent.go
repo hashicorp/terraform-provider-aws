@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -62,6 +65,7 @@ func ResourceAgent() *schema.Resource {
 			"private_link_endpoint": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
@@ -96,7 +100,7 @@ func ResourceAgent() *schema.Resource {
 
 func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
@@ -174,7 +178,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -204,8 +208,9 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindAgentByARN(ctx, conn, d.Id())
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DataSync Agent (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
@@ -213,7 +218,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindAgentByARN(ctx, conn, d.Id())
 
@@ -246,7 +251,7 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChange("name") {
 		input := &datasync.UpdateAgentInput{
@@ -266,7 +271,7 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
 	_, err := conn.DeleteAgentWithContext(ctx, &datasync.DeleteAgentInput{
@@ -282,4 +287,29 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func FindAgentByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeAgentOutput, error) {
+	input := &datasync.DescribeAgentInput{
+		AgentArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeAgentWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

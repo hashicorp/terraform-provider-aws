@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -89,7 +92,7 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 
 func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(id.UniqueId()),
@@ -122,7 +125,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 
 func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindFieldLevelEncryptionProfileByID(ctx, conn, d.Id())
 
@@ -154,7 +157,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 
 func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
@@ -187,7 +190,7 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 
 func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
 	_, err := conn.DeleteFieldLevelEncryptionProfileWithContext(ctx, &cloudfront.DeleteFieldLevelEncryptionProfileInput{

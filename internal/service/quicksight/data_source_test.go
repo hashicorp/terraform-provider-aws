@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -6,12 +9,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -146,7 +150,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSource"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSourcePermissions"),
@@ -164,7 +168,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSource"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permission.*.actions.*", "quicksight:DescribeDataSourcePermissions"),
@@ -190,6 +194,49 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource quicksight.DataSource
+	resourceName := "aws_quicksight_data_source.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_basic(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_updateName(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "name", "updated-name"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", quicksight.DataSourceTypeS3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceExists(ctx context.Context, resourceName string, dataSource *quicksight.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -202,7 +249,7 @@ func testAccCheckDataSourceExists(ctx context.Context, resourceName string, data
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -227,7 +274,7 @@ func testAccCheckDataSourceExists(ctx context.Context, resourceName string, data
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_source" {
 				continue
@@ -296,6 +343,26 @@ resource "aws_s3_bucket_acl" "test" {
   acl    = "public-read"
 }
 
+resource "aws_s3_object" "test_data" {
+  depends_on = [aws_s3_bucket_acl.test]
+
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-test-data"
+  content = <<EOF
+[
+	{
+		"Column1": "aaa",
+		"Column2": 1
+	},
+	{
+		"Column1": "bbb",
+		"Column2": 1
+	}
+]
+  EOF
+  acl     = "public-read"
+}
+
 resource "aws_s3_object" "test" {
   depends_on = [aws_s3_bucket_acl.test]
 
@@ -306,7 +373,7 @@ resource "aws_s3_object" "test" {
   "fileLocations": [
       {
           "URIs": [
-              "https://${aws_s3_bucket.test.bucket}.s3.${data.aws_partition.current.dns_suffix}/%[1]s"
+              "https://${aws_s3_bucket.test.bucket}.s3.${data.aws_partition.current.dns_suffix}/%[1]s-test-data"
           ]
       }
   ],
@@ -412,6 +479,26 @@ resource "aws_quicksight_user" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
+func testAccDataSource_UserConfigMultiple(rName string, count int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_quicksight_user" "test" {
+  count = %[3]d
+
+  aws_account_id = data.aws_caller_identity.current.account_id
+  user_name      = "%[1]s-${count.index}"
+  email          = %[2]q
+  identity_type  = "QUICKSIGHT"
+  user_role      = "AUTHOR"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+`, rName, acctest.DefaultEmailAddress, count)
+}
+
 func testAccDataSourceConfig_permissions(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),
@@ -479,4 +566,27 @@ resource "aws_quicksight_data_source" "test" {
   type = "S3"
 }
 `, rId, rName))
+}
+
+func testAccDataSourceConfig_updateName(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccBaseDataSourceConfig(rName),
+		testAccDataSource_UserConfig(rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = "updated-name"
+
+  parameters {
+    s3 {
+      manifest_file_location {
+        bucket = aws_s3_bucket.test.bucket
+        key    = aws_s3_object.test.key
+      }
+    }
+  }
+
+  type = "S3"
+}
+`, rId))
 }

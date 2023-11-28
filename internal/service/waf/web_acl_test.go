@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
@@ -40,7 +43,7 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`webacl/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`webacl/.+`)),
 				),
 			},
 			{
@@ -326,7 +329,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
 				WebACLId: aws.String(rs.Primary.ID),
 			})
@@ -359,7 +362,7 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *waf.WebACL) reso
 			return fmt.Errorf("No WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
 			WebACLId: aws.String(rs.Primary.ID),
 		})
@@ -560,11 +563,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -583,15 +581,14 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   # the name must begin with aws-waf-logs-
   name        = "aws-waf-logs-%[1]s"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.test.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
@@ -631,11 +628,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -660,9 +652,9 @@ EOF
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   # the name must begin with aws-waf-logs-
   name        = "aws-waf-logs-%[1]s"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.test.arn
     bucket_arn = aws_s3_bucket.test.arn
   }

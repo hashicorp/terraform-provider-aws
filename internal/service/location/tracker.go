@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -73,10 +76,10 @@ func ResourceTracker() *schema.Resource {
 
 func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreateTrackerInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -112,7 +115,7 @@ func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribeTrackerInput{
 		TrackerName: aws.String(d.Id()),
@@ -139,7 +142,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
@@ -150,7 +153,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChanges("description", "position_filtering") {
 		input := &locationservice.UpdateTrackerInput{
@@ -177,7 +180,7 @@ func resourceTrackerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTrackerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeleteTrackerInput{
 		TrackerName: aws.String(d.Id()),

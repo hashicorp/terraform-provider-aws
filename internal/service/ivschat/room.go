@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
@@ -89,7 +92,7 @@ func ResourceRoom() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -104,10 +107,10 @@ const (
 )
 
 func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateRoomInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("logging_configuration_identifiers"); ok {
@@ -115,11 +118,11 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("maximum_message_length"); ok {
-		in.MaximumMessageLength = int32(v.(int))
+		in.MaximumMessageLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("maximum_message_rate_per_second"); ok {
-		in.MaximumMessageRatePerSecond = int32(v.(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("message_review_handler"); ok && len(v.([]interface{})) > 0 {
@@ -149,7 +152,7 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findRoomByID(ctx, conn, d.Id())
 
@@ -182,7 +185,7 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
 
@@ -196,12 +199,12 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("maximum_message_length") {
-		in.MaximumMessageLength = int32(d.Get("maximum_message_length").(int))
+		in.MaximumMessageLength = aws.Int32(int32(d.Get("maximum_message_length").(int)))
 		update = true
 	}
 
 	if d.HasChanges("maximum_message_rate_per_second") {
-		in.MaximumMessageRatePerSecond = int32(d.Get("maximum_message_rate_per_second").(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(d.Get("maximum_message_rate_per_second").(int)))
 		update = true
 	}
 
@@ -233,7 +236,7 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat Room %s", d.Id())
 

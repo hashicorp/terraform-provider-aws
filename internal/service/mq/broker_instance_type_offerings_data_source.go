@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -79,7 +82,7 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 }
 
 func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 

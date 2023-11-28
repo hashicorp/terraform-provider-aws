@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -98,7 +101,7 @@ func ResourceHostedConnection() *schema.Resource {
 
 func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.AllocateHostedConnectionInput{
@@ -123,7 +126,7 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	connection, err := FindHostedConnectionByID(ctx, conn, d.Id())
 
@@ -159,7 +162,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if err := deleteConnection(ctx, conn, d.Id(), waitHostedConnectionDeleted); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

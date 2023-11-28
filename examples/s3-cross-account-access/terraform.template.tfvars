@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # prod account
 prod_access_key = "AAAAAAAAAAAAAAAAAAA"
 prod_secret_key = "SuperSecretKeyForAccountA"

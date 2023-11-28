@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache_test
 
 import (
@@ -5,10 +8,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
@@ -300,9 +304,51 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
+func TestAccElastiCacheUser_oobModify(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user elasticache.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_tags(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			// Start to update the user out-of-band.
+			{
+				Config: testAccUserConfig_tags(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserUpdateOOB(ctx, &user),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			// Update tags.
+			{
+				Config: testAccUserConfig_tags(rName, "key1", "value1updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_user" {
@@ -337,7 +383,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 			return fmt.Errorf("No ElastiCache User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		output, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
 
@@ -348,6 +394,19 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckUserUpdateOOB(ctx context.Context, v *elasticache.User) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+
+		_, err := conn.ModifyUserWithContext(ctx, &elasticache.ModifyUserInput{
+			AccessString: aws.String("on ~* +@all"),
+			UserId:       v.UserId,
+		})
+
+		return err
 	}
 }
 

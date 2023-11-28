@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -28,7 +31,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
+					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
 				),
 			},
@@ -40,7 +43,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
+					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
 				),
 			},

@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -36,7 +39,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("account/.+")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile("account/.+")),
 				),
 			},
 			{
@@ -50,7 +53,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 
 func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_organization_admin_account" {
@@ -90,7 +93,7 @@ func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n strin
 
 		accountID := rs.Primary.ID
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 		input := &organizations.ListDelegatedAdministratorsInput{
 			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
 		}

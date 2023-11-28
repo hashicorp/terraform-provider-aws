@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -96,8 +99,8 @@ func newInstanceHandler(conn *rds_sdkv2.Client) *instanceHandler {
 func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceData) error {
 	needsPreConditions := false
 	input := &rds_sdkv2.ModifyDBInstanceInput{
-		ApplyImmediately:     true,
-		DBInstanceIdentifier: aws.String(d.Id()),
+		ApplyImmediately:     aws.Bool(true),
+		DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
 	}
 
 	// Backups must be enabled for Blue/Green Deployments. Enable them first.
@@ -113,7 +116,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if needsPreConditions {
-		err := dbInstanceModify(ctx, h.conn, input, d.Timeout(schema.TimeoutUpdate))
+		err := dbInstanceModify(ctx, h.conn, d.Id(), input, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("setting pre-conditions: %s", err)
 		}
@@ -123,7 +126,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 
 func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
 	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
-		BlueGreenDeploymentName: aws.String(d.Id()),
+		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
 		Source:                  aws.String(d.Get("arn").(string)),
 	}
 
@@ -139,7 +142,7 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv
 
 func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d *schema.ResourceData, timeout time.Duration, operation string) error {
 	modifyInput := &rds_sdkv2.ModifyDBInstanceInput{
-		ApplyImmediately:     true,
+		ApplyImmediately:     aws.Bool(true),
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
@@ -148,7 +151,7 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
-		err := dbInstanceModify(ctx, h.conn, modifyInput, timeout)
+		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
 		if err != nil {
 			return fmt.Errorf("updating Green environment: %s", err)
 		}

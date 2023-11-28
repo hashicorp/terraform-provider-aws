@@ -1,23 +1,78 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		volumeType string
+		want       bool
+	}{
+		{"empty", "", false},
+		{"gp2", elasticsearch.VolumeTypeGp2, false},
+		{"gp3", elasticsearch.VolumeTypeGp3, true},
+		{"io1", elasticsearch.VolumeTypeIo1, true},
+		{"standard", elasticsearch.VolumeTypeStandard, false},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfelasticsearch.EBSVolumeTypePermitsIopsInput(testCase.volumeType); got != testCase.want {
+				t.Errorf("EBSVolumeTypePermitsIopsInput() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		volumeType string
+		want       bool
+	}{
+		{"empty", "", false},
+		{"gp2", elasticsearch.VolumeTypeGp2, false},
+		{"gp3", elasticsearch.VolumeTypeGp3, true},
+		{"io1", elasticsearch.VolumeTypeIo1, false},
+		{"standard", elasticsearch.VolumeTypeStandard, false},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfelasticsearch.EBSVolumeTypePermitsThroughputInput(testCase.volumeType); got != testCase.want {
+				t.Errorf("EBSVolumeTypePermitsThroughputInput() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
 
 func TestAccElasticsearchDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -40,7 +95,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*es\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -357,7 +412,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
 			_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
 				DomainName: aws.String(rName),
 			})
@@ -367,7 +422,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
 					_, err := conn.CreateElasticsearchDomainWithContext(ctx, &elasticsearch.CreateElasticsearchDomainInput{
 						DomainName: aws.String(rName),
 						EBSOptions: &elasticsearch.EBSOptions{
@@ -390,7 +445,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "1.5"),
 				),
-				ExpectError: regexp.MustCompile(`Elasticsearch Domain .+ already exists`),
+				ExpectError: regexache.MustCompile(`Elasticsearch Domain .+ already exists`),
 			},
 		},
 	})
@@ -591,7 +646,7 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "6.7"),
-					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*es\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "1"),
@@ -1426,6 +1481,55 @@ func TestAccElasticsearchDomain_VolumeType_update(t *testing.T) {
 		}})
 }
 
+// Verifies that EBS volume_type can be changed from gp3 to a type which does not
+// support the throughput and iops input values (ex. gp2)
+//
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/32613
+func TestAccElasticsearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input elasticsearch.ElasticsearchDomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_clusterEBSVolumeGP2(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
+				),
+			},
+		}})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
@@ -1714,7 +1818,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *elasticsear
 			return fmt.Errorf("No ES Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
 		resp, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
@@ -1734,7 +1838,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *elasticsear
 func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
 
 			ic, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
 				DomainName: domain1.DomainName,
@@ -1772,7 +1876,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
 			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
@@ -2112,6 +2216,44 @@ resource "aws_elasticsearch_domain" "test" {
   }
 }
 `, rName, volumeSize, volumeThroughput, volumeIops)
+}
+
+func testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName string, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = %[1]q
+  elasticsearch_version = "7.10"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = %[2]d
+    volume_type = "gp3"
+  }
+
+  cluster_config {
+    instance_type = "t3.small.elasticsearch"
+  }
+}
+`, rName, volumeSize)
+}
+
+func testAccDomainConfig_clusterEBSVolumeGP2(rName string, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = %[1]q
+  elasticsearch_version = "7.10"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = %[2]d
+    volume_type = "gp2"
+  }
+
+  cluster_config {
+    instance_type = "t3.small.elasticsearch"
+  }
+}
+`, rName, volumeSize)
 }
 
 func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {
@@ -2912,16 +3054,16 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 			  master_user_password = "Barbarbarbar1!"
 			}
 	  	}
-	
+
 		domain_endpoint_options {
 	  		enforce_https       = true
 	  		tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
 		}
-	
+
 		encrypt_at_rest {
 			enabled = true
 		}
-	
+
 		node_to_node_encryption {
 			enabled = true
 		}`
@@ -3026,7 +3168,7 @@ resource "aws_elasticsearch_domain" "test" {
 }
 
 func testAccPreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -290,7 +293,7 @@ func ResourceAMI() *schema.Resource {
 
 func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ec2.RegisterImageInput{
@@ -364,7 +367,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.ImageId))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
@@ -383,9 +386,9 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -453,14 +456,14 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	SetTagsOut(ctx, image.Tags)
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
 
 func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.Get("description").(string) != "" {
 		_, err := conn.ModifyImageAttributeWithContext(ctx, &ec2.ModifyImageAttributeInput{
@@ -486,7 +489,7 @@ func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
 	_, err := conn.DeregisterImageWithContext(ctx, &ec2.DeregisterImageInput{

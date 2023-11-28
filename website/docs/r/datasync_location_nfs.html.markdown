@@ -27,7 +27,7 @@ resource "aws_datasync_location_nfs" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `mount_options` - (Optional) Configuration block containing mount options used by DataSync to access the NFS Server.
 * `on_prem_config` - (Required) Configuration block containing information for connecting to the NFS File System.
@@ -37,19 +37,19 @@ The following arguments are supported:
 
 ### mount_options Argument Reference
 
-The following arguments are supported inside the `mount_options` configuration block:
+The `mount_options` configuration block supports the following arguments:
 
 * `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
 
 ### on_prem_config Argument Reference
 
-The following arguments are supported inside the `on_prem_config` configuration block:
+The `on_prem_config` configuration block supports the following arguments:
 
 * `agent_arns` - (Required) List of Amazon Resource Names (ARNs) of the DataSync Agents used to connect to the NFS server.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
@@ -57,8 +57,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_datasync_location_nfs` can be imported by using the DataSync Task Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_nfs` using the DataSync Task Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_location_nfs.example
+  id = "arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_location_nfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
+
+Using `terraform import`, import `aws_datasync_location_nfs` using the DataSync Task Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_location_nfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```

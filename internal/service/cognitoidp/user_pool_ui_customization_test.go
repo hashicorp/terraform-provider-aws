@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
@@ -506,7 +509,7 @@ func TestAccCognitoIDPUserPoolUICustomization_UpdateAllToClient_cSS(t *testing.T
 
 func testAccCheckUserPoolUICustomizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool_ui_customization" {
@@ -561,7 +564,7 @@ func testAccCheckUserPoolUICustomizationExists(ctx context.Context, name string)
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		output, err := tfcognitoidp.FindCognitoUserPoolUICustomization(ctx, conn, userPoolId, clientId)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
@@ -60,17 +63,17 @@ func ResourceRevision() *schema.Resource {
 
 func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
 		Comment:   aws.String(d.Get("comment").(string)),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRevisionWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DataExchange Revision: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataExchange Revision: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(out.DataSetId), aws.StringValue(out.Id)))
@@ -80,7 +83,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
@@ -104,14 +107,14 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", revision.Arn)
 	d.Set("revision_id", revision.Id)
 
-	SetTagsOut(ctx, revision.Tags)
+	setTagsOut(ctx, revision.Tags)
 
 	return diags
 }
 
 func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateRevisionInput{
@@ -126,7 +129,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Updating DataExchange Revision: %s", d.Id())
 		_, err := conn.UpdateRevisionWithContext(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DataExchange Revision: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DataExchange Revision (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -135,7 +138,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.DeleteRevisionInput{
 		RevisionId: aws.String(d.Get("revision_id").(string)),
@@ -148,7 +151,7 @@ func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta in
 		if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DataExchange Revision: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataExchange Revision: %s", err)
 	}
 
 	return diags

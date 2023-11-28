@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -47,7 +50,7 @@ func ResourceEgressOnlyInternetGateway() *schema.Resource {
 
 func resourceEgressOnlyInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateEgressOnlyInternetGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
@@ -68,9 +71,9 @@ func resourceEgressOnlyInternetGatewayCreate(ctx context.Context, d *schema.Reso
 
 func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindEgressOnlyInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -92,7 +95,7 @@ func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.Resour
 		d.Set("vpc_id", nil)
 	}
 
-	SetTagsOut(ctx, ig.Tags)
+	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }
@@ -107,7 +110,7 @@ func resourceEgressOnlyInternetGatewayUpdate(ctx context.Context, d *schema.Reso
 
 func resourceEgressOnlyInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Egress-only Internet Gateway: %s", d.Id())
 	_, err := conn.DeleteEgressOnlyInternetGatewayWithContext(ctx, &ec2.DeleteEgressOnlyInternetGatewayInput{

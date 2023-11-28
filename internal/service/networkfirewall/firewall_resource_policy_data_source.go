@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -30,7 +33,7 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 }
 
 func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	resourceARN := d.Get("resource_arn").(string)
 	policy, err := FindResourcePolicy(ctx, conn, resourceARN)

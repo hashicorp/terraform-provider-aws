@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -53,16 +56,16 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 }
 
 func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	if d.IsNewResource() {
 		output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &macie2.GetClassificationExportConfigurationInput{})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("reading Macie classification export configuration failed: %w", err))
+			return diag.Errorf("reading Macie classification export configuration failed: %s", err)
 		}
 
-		if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
-			return diag.FromErr(fmt.Errorf("creating Macie classification export configuration: a configuration already exists"))
+		if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+			return diag.Errorf("creating Macie classification export configuration: a configuration already exists")
 		}
 	}
 
@@ -79,14 +82,14 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("creating Macie classification export configuration failed: %w", err))
+		return diag.Errorf("creating Macie classification export configuration failed: %s", err)
 	}
 
 	return resourceClassificationExportConfigurationRead(ctx, d, meta)
 }
 
 func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := macie2.PutClassificationExportConfigurationInput{
 		Configuration: &macie2.ClassificationExportConfiguration{},
@@ -103,27 +106,27 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("creating Macie classification export configuration failed: %w", err))
+		return diag.Errorf("creating Macie classification export configuration failed: %s", err)
 	}
 
 	return resourceClassificationExportConfigurationRead(ctx, d, meta)
 }
 
 func resourceClassificationExportConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := macie2.GetClassificationExportConfigurationInput{} // api does not have a getById() like endpoint.
 	output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("reading Macie classification export configuration failed: %w", err))
+		return diag.Errorf("reading Macie classification export configuration failed: %s", err)
 	}
 
-	if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
-		if (macie2.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep: ci.prefer-aws-go-sdk-pointer-conversion-conditional
+	if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if (macie2.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			var flattenedS3Destination = flattenClassificationExportConfigurationS3DestinationResult(output.Configuration.S3Destination)
 			if err := d.Set("s3_destination", []interface{}{flattenedS3Destination}); err != nil {
-				return diag.FromErr(fmt.Errorf("error setting Macie classification export configuration s3_destination: %w", err))
+				return diag.Errorf("setting Macie classification export configuration s3_destination: %s", err)
 			}
 		}
 		d.SetId(fmt.Sprintf("%s:%s:%s", "macie:classification_export_configuration", meta.(*conns.AWSClient).AccountID, meta.(*conns.AWSClient).Region))
@@ -133,7 +136,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 }
 
 func resourceClassificationExportConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := macie2.PutClassificationExportConfigurationInput{
 		Configuration: &macie2.ClassificationExportConfiguration{},
@@ -144,7 +147,7 @@ func resourceClassificationExportConfigurationDelete(ctx context.Context, d *sch
 	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("deleting Macie classification export configuration failed: %w", err))
+		return diag.Errorf("deleting Macie classification export configuration failed: %s", err)
 	}
 
 	return nil

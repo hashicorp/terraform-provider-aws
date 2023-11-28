@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -38,10 +41,11 @@ func resourceDataProtectionPolicy() *schema.Resource {
 				ValidateFunc: validLogGroupName,
 			},
 			"policy_document": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -52,7 +56,7 @@ func resourceDataProtectionPolicy() *schema.Resource {
 }
 
 func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	logGroupName := d.Get("log_group_name").(string)
 
@@ -81,7 +85,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	output, err := FindDataProtectionPolicyByID(ctx, conn, d.Id())
 
@@ -115,7 +119,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
 	_, err := conn.DeleteDataProtectionPolicy(ctx, &cloudwatchlogs.DeleteDataProtectionPolicyInput{

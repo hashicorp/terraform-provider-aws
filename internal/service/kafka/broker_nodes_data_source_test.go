@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kafka"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -37,17 +40,22 @@ func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 }
 
 func testAccBrokerNodesDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.2.1"
+  kafka_version          = "2.8.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.t3.small"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   tags = {

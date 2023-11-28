@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package terraform
 
 import (
@@ -37,6 +40,21 @@ type ResourceConfig struct {
 	ComputedKeys []string
 	Raw          map[string]interface{}
 	Config       map[string]interface{}
+
+	// CtyValue is the raw protocol configuration data from newer APIs.
+	//
+	// This field was only added as a targeted fix for passing raw protocol data
+	// through the existing (helper/schema.Provider).Configure() exported method
+	// and is only populated in that situation. The data could theoretically be
+	// set in the NewResourceConfigShimmed() function, however the consequences
+	// of doing this were not investigated at the time the fix was introduced.
+	//
+	// This field is ignored in the Equal() method to prevent a breaking
+	// behavior change since the entirety of the terraform package and this type
+	// are unintentionally exported in v2.
+	//
+	// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1270
+	CtyValue cty.Value
 }
 
 // NewResourceConfigRaw constructs a ResourceConfig whose content is exactly
@@ -166,6 +184,10 @@ func (c *ResourceConfig) DeepCopy() *ResourceConfig {
 }
 
 // Equal checks the equality of two resource configs.
+//
+// This method intentionally ignores the CtyValue field as a major version
+// compatibility concern, as this exported field was later added to the type.
+// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1270
 func (c *ResourceConfig) Equal(c2 *ResourceConfig) bool {
 	// If either are nil, then they're only equal if they're both nil
 	if c == nil || c2 == nil {

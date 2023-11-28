@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline_test
 
 import (
@@ -8,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
@@ -112,7 +115,7 @@ func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
 		resp, err := conn.GetPipelineDefinitionWithContext(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return fmt.Errorf("problem checking for DataPipeline Pipeline Definition existence: %w", err)
@@ -130,7 +133,7 @@ func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName stri
 
 func testAccCheckPipelineDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datapipeline_pipeline_definition" {

@@ -5,24 +5,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/aws/aws-sdk-go/service/acm/acmiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists acm service tags.
+// listTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn acmiface.ACMAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *acm.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &acm.ListTagsForCertificateInput{
 		CertificateArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForCertificateWithContext(ctx, input)
+	output, err := conn.ListTagsForCertificate(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn acmiface.ACMAPI, identifier string) (tft
 // ListTags lists acm service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ACMConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ACMClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -50,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns acm service tags.
-func Tags(tags tftags.KeyValueTags) []*acm.Tag {
-	result := make([]*acm.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &acm.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -66,19 +68,19 @@ func Tags(tags tftags.KeyValueTags) []*acm.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from acm service tags.
-func KeyValueTags(ctx context.Context, tags []*acm.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns acm service tags from Context.
+// getTagsIn returns acm service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*acm.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,19 +90,21 @@ func GetTagsIn(ctx context.Context) []*acm.Tag {
 	return nil
 }
 
-// SetTagsOut sets acm service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*acm.Tag) {
+// setTagsOut sets acm service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates acm service tags.
+// updateTags updates acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ACM)
@@ -110,7 +114,7 @@ func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, ol
 			Tags:           Tags(removedTags),
 		}
 
-		_, err := conn.RemoveTagsFromCertificateWithContext(ctx, input)
+		_, err := conn.RemoveTagsFromCertificate(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -125,7 +129,7 @@ func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, ol
 			Tags:           Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToCertificateWithContext(ctx, input)
+		_, err := conn.AddTagsToCertificate(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -138,5 +142,5 @@ func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, ol
 // UpdateTags updates acm service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ACMConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ACMClient(ctx), identifier, oldTags, newTags)
 }
