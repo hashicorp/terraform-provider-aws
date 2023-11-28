@@ -40,15 +40,14 @@ func TestAccSecurityLakeDataLake_basic(t *testing.T) {
 				Config: testAccDataLakeConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-					// 	"console_access": "false",
-					// 	"groups.#":       "0",
-					// 	"username":       "Test",
-					// 	"password":       "TestTest1234",
-					// }),
-					// acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "securitylake", regexp.MustCompile(`data-lake/:+.`)),
+					// resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_instance.test", "id"),
+					// resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
+					// resource.TestCheckResourceAttr(resourceName, "targets.0.key", "InstanceIds"),
+					// resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
+					// resource.TestCheckResourceAttrPair(resourceName, "targets.0.values.0", "aws_instance.test", "id"),
+					// resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					// resource.TestCheckResourceAttr(resourceName, "document_version", "$DEFAULT"),
+					// resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -139,27 +138,29 @@ func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *type
 
 func testAccDataLakeConfig_basic() string {
 	return fmt.Sprintf(`
-	resource "aws_securitylake_data_lake" "test" {
-		meta_store_manager_role_arn = "arn:aws:iam::182198062889:role/service-role/AmazonSecurityLakeMetaStoreManager"
-	  
-		configurations {
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = "arn:aws:iam::12345:role/service-role/AmazonSecurityLakeMetaStoreManager"
 
-			encryption_configuration {
-				kms_key_id = "S3_MANAGED_KEY"
-			  }
+  configurations {
+    region = "eu-west-1"
+    encryption_configuration {
+      kms_key_id = "S3_MANAGED_KEY"
+    }
 
-			lifecycle_configuration {
-				transitions {
-					days          = 31
-					storage_class = "STANDARD_IA"
-				  }
-				expiration {
-				  	days = 300
-				}
-			}
-			
-		  	region = "eu-west-2"
-	  	}
+    lifecycle_configuration {
+      transitions {
+        days          = 31
+        storage_class = "STANDARD_IA"
+      }
+      expiration {
+        days = 300
+      }
+    }
+	replication_configuration {
+		role_arn = "arn:aws:iam::123454:role/service-role/AmazonSecurityLakeS3ReplicationRole"
+		regions  = ["ap-south-1"]
 	}
+  }
+}
 `)
 }

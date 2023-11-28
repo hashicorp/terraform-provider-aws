@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -60,8 +61,8 @@ func (r *resourceDataLake) Metadata(_ context.Context, req resource.MetadataRequ
 func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
+			"datalake_arn": framework.ARNAttributeComputedOnly(),
+			"id":           framework.IDAttribute(),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -85,6 +86,7 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 						"encryption_configuration": schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.SizeAtLeast(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -100,11 +102,17 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"expiration": schema.ListNestedBlock{
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -171,6 +179,7 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	var configurations []dataLakeConfigurationsData
+
 	resp.Diagnostics.Append(plan.Configurations.ElementsAs(ctx, &configurations, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,24 +201,20 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
+	plan.DataLakeArn = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	waitOut, err := waitDataLakeCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
-	fmt.Println(waitOut)
+	waitOut, err := waitDataLakeCreated(ctx, conn, plan.DataLakeArn.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, plan.ARN.ValueString(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, plan.DataLakeArn.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
-	state := plan
-	fmt.Println(plan.Tags)
-	state.Tags = plan.Tags
-	state.MetaStoreManagerRoleArn = plan.MetaStoreManagerRoleArn
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, waitOut)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	resp.Diagnostics.Append(plan.refreshFromOutput(ctx, waitOut)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -480,6 +485,7 @@ func flattenDataLakeConfigurations(ctx context.Context, apiObjects []*awstypes.D
 		diags.Append(d...)
 
 		elems = append(elems, objVal)
+		fmt.Println("End of Flattener")
 	}
 
 	setVal, d := types.SetValue(elemType, elems)
@@ -617,23 +623,28 @@ func expanddataLakeConfigurations(ctx context.Context, tfList []dataLakeConfigur
 		diags.Append(tfObj.EncryptionConfiguration.ElementsAs(ctx, &encryptionConfiguration, false)...)
 		diags.Append(tfObj.LifecycleConfiguration.ElementsAs(ctx, &lifecycleConfiguration, false)...)
 		diags.Append(tfObj.ReplicationConfiguration.ElementsAs(ctx, &replicationConfiguration, false)...)
+		lifecycleConfiguration, d := expandLifecycleConfiguration(ctx, lifecycleConfiguration)
+		diags.Append(d...)
 
 		item := awstypes.DataLakeConfiguration{
 			Region: aws.String(tfObj.Region.ValueString()),
 		}
 
 		if !tfObj.EncryptionConfiguration.IsNull() {
+			fmt.Println(tfObj.EncryptionConfiguration)
 			item.EncryptionConfiguration = expandEncryptionConfiguration(encryptionConfiguration)
 		}
 
 		if !tfObj.LifecycleConfiguration.IsNull() {
-			item.LifecycleConfiguration, _ = expandLifecycleConfiguration(ctx, lifecycleConfiguration)
+			fmt.Println(tfObj.LifecycleConfiguration)
+			item.LifecycleConfiguration = lifecycleConfiguration
 		}
 
 		if !tfObj.ReplicationConfiguration.IsNull() {
+			fmt.Println(tfObj.ReplicationConfiguration)
 			item.ReplicationConfiguration = expandReplicationConfiguration(ctx, replicationConfiguration)
 		}
-
+		fmt.Println("End of Expander")
 		apiObject = append(apiObject, item)
 	}
 
@@ -641,13 +652,9 @@ func expanddataLakeConfigurations(ctx context.Context, tfList []dataLakeConfigur
 }
 
 func expandEncryptionConfiguration(tfList []dataLakeConfigurationsEncryption) *awstypes.DataLakeEncryptionConfiguration {
-	if len(tfList) == 0 {
-		return nil
-	}
 
 	tfObj := tfList[0]
 	apiObject := &awstypes.DataLakeEncryptionConfiguration{}
-
 	if !tfObj.KmsKeyID.IsNull() {
 		apiObject.KmsKeyId = aws.String(tfObj.KmsKeyID.ValueString())
 	}
@@ -775,7 +782,7 @@ var (
 // }
 
 type resourceDataLakeData struct {
-	ARN                     types.String   `tfsdk:"arn"`
+	DataLakeArn             types.String   `tfsdk:"datalake_arn"`
 	ID                      types.String   `tfsdk:"id"`
 	MetaStoreManagerRoleArn types.String   `tfsdk:"meta_store_manager_role_arn"`
 	Configurations          types.Set      `tfsdk:"configurations"`
@@ -828,10 +835,11 @@ func (rd *resourceDataLakeData) refreshFromOutput(ctx context.Context, out *awst
 		return diags
 	}
 
-	rd.ARN = flex.StringToFramework(ctx, out.DataLakeArn)
+	rd.DataLakeArn = flex.StringToFramework(ctx, out.DataLakeArn)
 	rd.ID = flex.StringToFramework(ctx, out.DataLakeArn)
 	configurations, d := flattenDataLakeConfigurations(ctx, []*awstypes.DataLakeResource{out})
 	diags.Append(d...)
+	fmt.Println(configurations)
 	rd.Configurations = configurations
 
 	return diags
