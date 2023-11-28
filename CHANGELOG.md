@@ -1,4 +1,9 @@
 ## 5.28.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_s3control_access_grants_instance: Add `identity_center_arn` argument and `identity_center_application_arn` attribute ([#34582](https://github.com/hashicorp/terraform-provider-aws/issues/34582))
+
 ## 5.27.0 (November 27, 2023)
 
 NOTES:

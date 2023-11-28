@@ -34,6 +34,8 @@ func testAccAccessGrantsInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -112,6 +114,50 @@ func testAccAccessGrantsInstance_tags(t *testing.T) {
 	})
 }
 
+func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3control_access_grants_instance.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessGrantsInstanceConfig_identityCenter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"identity_center_arn"},
+			},
+			{
+				Config: testAccAccessGrantsInstanceConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
+				),
+			},
+			{
+				Config: testAccAccessGrantsInstanceConfig_identityCenter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_center_arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
@@ -178,4 +224,14 @@ resource "aws_s3control_access_grants_instance" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAccessGrantsInstanceConfig_identityCenter() string {
+	return `
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_s3control_access_grants_instance" "test" {
+  identity_center_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+`
 }

@@ -29,7 +29,7 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
@@ -63,7 +63,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
@@ -96,7 +96,7 @@ func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
@@ -121,7 +121,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
