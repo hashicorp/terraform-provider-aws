@@ -136,7 +136,7 @@ const (
 )
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBElasticClient()
+	conn := meta.(*conns.AWSClient).DocDBElasticClient(ctx)
 
 	in := &docdbelastic.CreateClusterInput{
 		AdminUserName:     aws.String(d.Get("admin_user_name").(string)),
@@ -195,7 +195,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DocDBElasticClient()
+	conn := meta.(*conns.AWSClient).DocDBElasticClient(ctx)
 
 	out, err := findClusterByID(ctx, conn, d.Id())
 
@@ -228,28 +228,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting vpc_security_group_ids: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.DocDBElastic, create.ErrActionReading, ResNameCluster, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DocDBElastic, create.ErrActionSetting, ResNameCluster, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.DocDBElastic, create.ErrActionSetting, ResNameCluster, d.Id(), err)
-	}
-
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBElasticClient()
+	conn := meta.(*conns.AWSClient).DocDBElasticClient(ctx)
 
 	update := false
 
@@ -316,7 +299,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBElasticClient()
+	conn := meta.(*conns.AWSClient).DocDBElasticClient(ctx)
 
 	log.Printf("[INFO] Deleting DocDBElastic Cluster %s", d.Id())
 
