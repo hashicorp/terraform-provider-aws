@@ -19,21 +19,21 @@ import (
 )
 
 // @FrameworkDataSource
-func newDataSourceDirectoryBuckets(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceDirectoryBuckets{}
+func newDirectoryBucketsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &directoryBucketsDataSource{}
 
 	return d, nil
 }
 
-type dataSourceDirectoryBuckets struct {
+type directoryBucketsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDirectoryBuckets) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *directoryBucketsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_s3_directory_buckets"
 }
 
-func (d *dataSourceDirectoryBuckets) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arns": schema.ListAttribute{
@@ -49,7 +49,7 @@ func (d *dataSourceDirectoryBuckets) Schema(ctx context.Context, req datasource.
 	}
 }
 
-func (d *dataSourceDirectoryBuckets) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data directoryBucketsDataSourceModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
