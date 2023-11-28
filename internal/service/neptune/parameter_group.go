@@ -5,6 +5,7 @@ package neptune
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -18,15 +19,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// We can only modify 20 parameters at a time, so walk them until
-// we've got them all.
-const maxParams = 20
+const (
+	dbParameterGroupMaxParamsBulkEdit = 20
+)
 
 // @SDKResource("aws_neptune_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
@@ -122,9 +124,14 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
-	d.Set("arn", output.DBParameterGroup.DBParameterGroupArn)
 
-	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
+	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+		if err := addDBParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List())); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -149,7 +156,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", dbParameterGroup.DBParameterGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
 
-	// Only include user customized parameters as there's hundreds of system/default ones,
+	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &neptune.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 		Source:               aws.String("user"),
@@ -174,71 +181,18 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os).List(), os.Difference(ns).List()
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		toRemove := expandParameters(os.Difference(ns).List())
-
-		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
-
-		toAdd := expandParameters(ns.Difference(os).List())
-
-		log.Printf("[DEBUG] Parameters to add: %#v", toAdd)
-
-		for len(toRemove) > 0 {
-			var paramsToModify []*neptune.Parameter
-			if len(toRemove) <= maxParams {
-				paramsToModify, toRemove = toRemove[:], nil
-			} else {
-				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
-			}
-			resetOpts := neptune.ResetDBParameterGroupInput{
-				DBParameterGroupName: aws.String(d.Get("name").(string)),
-				Parameters:           paramsToModify,
-			}
-
-			log.Printf("[DEBUG] Reset Neptune Parameter Group: %s", resetOpts)
-			err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
-				_, err := conn.ResetDBParameterGroupWithContext(ctx, &resetOpts)
-				if err != nil {
-					if tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", " has pending changes") {
-						return retry.RetryableError(err)
-					}
-					return retry.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err = conn.ResetDBParameterGroupWithContext(ctx, &resetOpts)
-			}
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "resetting Neptune Parameter Group: %s", err)
+		if len(del) > 0 {
+			if err := delDBParameterGroupParameters(ctx, conn, d.Id(), expandParameters(del)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
-		for len(toAdd) > 0 {
-			var paramsToModify []*neptune.Parameter
-			if len(toAdd) <= maxParams {
-				paramsToModify, toAdd = toAdd[:], nil
-			} else {
-				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
-			}
-			modifyOpts := neptune.ModifyDBParameterGroupInput{
-				DBParameterGroupName: aws.String(d.Get("name").(string)),
-				Parameters:           paramsToModify,
-			}
-
-			log.Printf("[DEBUG] Modify Neptune Parameter Group: %s", modifyOpts)
-			_, err := conn.ModifyDBParameterGroupWithContext(ctx, &modifyOpts)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying Neptune Parameter Group: %s", err)
+		if len(add) > 0 {
+			if err := addDBParameterGroupParameters(ctx, conn, d.Id(), expandParameters(add)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -266,6 +220,42 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func addDBParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
+	for _, chunk := range tfslices.Chunks(parameters, dbParameterGroupMaxParamsBulkEdit) {
+		input := &neptune.ModifyDBParameterGroupInput{
+			DBParameterGroupName: aws.String(name),
+			Parameters:           chunk,
+		}
+
+		_, err := conn.ModifyDBParameterGroupWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("modifying Neptune Parameter Group (%s): %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error { // We can only modify 20 parameters at a time, so chunk them until we've got them all.
+	for _, chunk := range tfslices.Chunks(parameters, dbParameterGroupMaxParamsBulkEdit) {
+		input := &neptune.ResetDBParameterGroupInput{
+			DBParameterGroupName: aws.String(name),
+			Parameters:           chunk,
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 30*time.Second, func() (interface{}, error) {
+			return conn.ResetDBParameterGroupWithContext(ctx, input)
+		}, neptune.ErrCodeInvalidDBParameterGroupStateFault, "has pending changes")
+
+		if err != nil {
+			return fmt.Errorf("resetting Neptune Parameter Group (%s): %w", name, err)
+		}
+	}
+
+	return nil
 }
 
 func FindDBParameterGroupByName(ctx context.Context, conn *neptune.Neptune, name string) (*neptune.DBParameterGroup, error) {
