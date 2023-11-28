@@ -219,7 +219,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
 	}
 

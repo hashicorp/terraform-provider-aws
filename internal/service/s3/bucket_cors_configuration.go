@@ -107,7 +107,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "CORSConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "CORSConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
 	}
 

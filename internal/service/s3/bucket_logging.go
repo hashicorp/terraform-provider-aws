@@ -166,7 +166,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		return conn.PutBucketLogging(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "BucketLoggingStatus is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "BucketLoggingStatus is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
 	}
 

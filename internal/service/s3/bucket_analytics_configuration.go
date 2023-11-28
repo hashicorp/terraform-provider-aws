@@ -158,7 +158,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		return conn.PutBucketAnalyticsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "AnalyticsConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AnalyticsConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
 	}
 

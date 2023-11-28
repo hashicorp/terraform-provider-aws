@@ -13,6 +13,7 @@ import (
 const (
 	errCodeAccessDenied                         = "AccessDenied"
 	errCodeBucketNotEmpty                       = "BucketNotEmpty"
+	errCodeInvalidArgument                      = "InvalidArgument"
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
@@ -35,7 +36,6 @@ const (
 	errCodeOperationAborted                          = "OperationAborted"
 	errCodeOwnershipControlsNotFoundError            = "OwnershipControlsNotFoundError"
 	errCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
-	errCodeSerializationException                    = "SerializationException"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
 	// errCodeXNotImplemented is returned from Third Party S3 implementations

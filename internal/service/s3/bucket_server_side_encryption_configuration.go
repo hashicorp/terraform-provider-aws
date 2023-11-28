@@ -99,7 +99,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		return conn.PutBucketEncryption(ctx, input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
-	if tfawserr.ErrMessageContains(err, errCodeSerializationException, "ServerSideEncryptionConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ServerSideEncryptionConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
 	}
 
