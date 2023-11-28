@@ -82,6 +82,7 @@ const (
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
+	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
 	SWFEndpointID                        = "swf"
 	TimestreamWriteEndpointID            = "ingest.timestream"

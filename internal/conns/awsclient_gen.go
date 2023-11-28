@@ -80,6 +80,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
@@ -216,7 +217,6 @@ import (
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
-	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
 	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
@@ -993,8 +993,8 @@ func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.
 	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
 }
 
-func (c *AWSClient) SSOAdminConn(ctx context.Context) *ssoadmin_sdkv1.SSOAdmin {
-	return errs.Must(conn[*ssoadmin_sdkv1.SSOAdmin](ctx, c, names.SSOAdmin))
+func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {
+	return errs.Must(client[*ssoadmin_sdkv2.Client](ctx, c, names.SSOAdmin))
 }
 
 func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
