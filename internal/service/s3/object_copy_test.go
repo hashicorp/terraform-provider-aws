@@ -780,7 +780,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_directoryBucket(sourceBucket, sourceKey, targetBucket, targetKey string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccConfigAvailableAZsDirectoryBucket(), fmt.Sprintf(`
 locals {
   location_name = data.aws_availability_zones.available.zone_ids[0]
   source_bucket = "%[1]s--${local.location_name}--x-s3"

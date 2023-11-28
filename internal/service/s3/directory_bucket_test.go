@@ -114,8 +114,13 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 	}
 }
 
+func testAccConfigAvailableAZsDirectoryBucket() string {
+	// https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-express-networking.html#s3-express-endpoints.
+	return acctest.ConfigAvailableAZsNoOptInExclude("use1-az1", "use1-az2", "use1-az3", "usw2-az2", "apne1-az2")
+}
+
 func testAccDirectoryBucketConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccConfigAvailableAZsDirectoryBucket(), fmt.Sprintf(`
 locals {
   location_name = data.aws_availability_zones.available.zone_ids[0]
   bucket        = "%[1]s--${local.location_name}--x-s3"
