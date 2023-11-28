@@ -73,7 +73,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
 				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
-				RequiredWith: []string{"auth_token"},
 			},
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
