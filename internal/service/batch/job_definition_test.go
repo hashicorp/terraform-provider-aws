@@ -68,6 +68,9 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 		},
 	})
@@ -110,7 +113,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				Config: testAccJobDefinitionConfig_attributes(rName, 2, true, 4, 120, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					testAccCheckJobDefinitionPreviousRegistered(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousRegistered(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
@@ -118,7 +121,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				Config: testAccJobDefinitionConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -143,7 +146,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				Config: testAccJobDefinitionConfig_attributes(rName, 1, false, 1, 60, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -229,6 +232,9 @@ func TestAccBatchJobDefinition_ContainerProperties_fargateDefaults(t *testing.T)
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 		},
 	})
@@ -274,6 +280,9 @@ func TestAccBatchJobDefinition_ContainerProperties_fargate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 		},
 	})
@@ -341,6 +350,9 @@ func TestAccBatchJobDefinition_ContainerProperties_EC2(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 		},
 	})
@@ -370,6 +382,9 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 			{
 				Config: testAccJobDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -419,6 +434,9 @@ func TestAccBatchJobDefinition_ContainerProperties_EC2EmptyField(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 		},
 	})
@@ -493,6 +511,9 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 			{
 				Config: testAccJobDefinitionConfig_NodeProperties_advancedUpdate(rName),
@@ -640,7 +661,7 @@ func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckJobDefinitionPreviousRegistered(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionPreviousRegistered(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -669,7 +690,7 @@ func testAccCheckJobDefinitionPreviousRegistered(ctx context.Context, n string, 
 	}
 }
 
-func testAccCheckJobDefinitionPreviousDeregistered(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionPreviousDeregistered(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -705,7 +726,7 @@ func parseJobDefinitionPreviousARN(currentARN string) (previousARN string) {
 	revisionCurrent, _ := strconv.Atoi(revisionCurrentStr)
 	revisionPrevious := revisionCurrent - 1
 
-	re = regexache.MustCompile(`^(arn:aws:batch:[a-z0-9-]+:[0-9]+:job-definition/[a-z0-9-]+):`)
+	re = regexache.MustCompile(`^(arn:.*:batch:[a-z0-9-]+:[0-9]+:job-definition/[a-z0-9-]+):`)
 	arnPrefix := re.FindStringSubmatch(currentARN)[1]
 	previousARN = fmt.Sprintf("%s:%d", arnPrefix, revisionPrevious)
 
