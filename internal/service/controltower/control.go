@@ -6,9 +6,7 @@ package controltower
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,11 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_controltower_control")
+// @SDKResource("aws_controltower_control", name="Control")
 func ResourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlCreate,
@@ -61,7 +61,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
-	id := ControlCreateResourceID(targetIdentifier, controlIdentifier)
+	id := errs.Must(flex.FlattenResourceId([]string{targetIdentifier, controlIdentifier}, controlResourceIDPartCount, false))
 	input := &controltower.EnableControlInput{
 		ControlIdentifier: aws.String(controlIdentifier),
 		TargetIdentifier:  aws.String(targetIdentifier),
@@ -85,12 +85,12 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	targetIdentifier, controlIdentifier := parts[0], parts[1]
 	output, err := FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -112,11 +112,12 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	targetIdentifier, controlIdentifier := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting ControlTower Control: %s", d.Id())
 	output, err := conn.DisableControl(ctx, &controltower.DisableControlInput{
@@ -135,24 +136,9 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-const controlResourceIDSeparator = ","
-
-func ControlCreateResourceID(targetIdentifier, controlIdentifier string) string {
-	parts := []string{targetIdentifier, controlIdentifier}
-	id := strings.Join(parts, controlResourceIDSeparator)
-
-	return id
-}
-
-func ControlParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, controlResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TargetIdentifier%[2]sControlIdentifier", id, controlResourceIDSeparator)
-}
+const (
+	controlResourceIDPartCount = 2
+)
 
 func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Client, targetIdentifier, controlIdentifier string) (*types.EnabledControlSummary, error) {
 	var nextToken string

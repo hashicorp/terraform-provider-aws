@@ -94,19 +94,10 @@ func testAccCheckControlExists(ctx context.Context, n string, v *types.EnabledCo
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ControlTower Control ID is set")
-		}
-
-		targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 
-		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, rs.Primary.Attributes["target_identifier"], rs.Primary.Attributes["control_identifier"])
 
 		if err != nil {
 			return err
@@ -127,13 +118,7 @@ func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+			_, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, rs.Primary.Attributes["target_identifier"], rs.Primary.Attributes["control_identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
