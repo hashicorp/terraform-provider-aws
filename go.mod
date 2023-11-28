@@ -7,9 +7,9 @@ require (
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.48.7
 	github.com/aws/aws-sdk-go-v2 v1.23.2
-	github.com/aws/aws-sdk-go-v2/config v1.25.7
+	github.com/aws/aws-sdk-go-v2/config v1.25.8
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.6
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.0
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.21.5
@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.41.3
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.27.2
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.6.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/osis v1.5.3
