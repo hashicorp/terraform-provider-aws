@@ -362,11 +362,11 @@ resource "aws_s3_directory_bucket" "test" {
   }
 }
 resource "aws_s3_bucket_public_access_block" "bucket" {
-  bucket = aws_s3_directory_bucket.test.bucket
-  block_public_acls       = %[2]q
-  block_public_policy     = %[3]q
-  ignore_public_acls      = %[4]q
-  restrict_public_buckets = %[5]q
+  bucket                  = aws_s3_directory_bucket.test.bucket
+  block_public_acls       = %[1]q
+  block_public_policy     = %[2]q
+  ignore_public_acls      = %[3]q
+  restrict_public_buckets = %[4]q
 }
-`, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets))
+`, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets))
 }

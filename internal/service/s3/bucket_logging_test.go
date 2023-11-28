@@ -706,7 +706,7 @@ resource "aws_s3_directory_bucket" "test" {
   }
 }
 resource "aws_s3_bucket_logging" "test" {
-  bucket = aws_s3_directory_bucket.test.bucket
+  bucket        = aws_s3_directory_bucket.test.bucket
   target_bucket = aws_s3_bucket.log_bucket.id
   target_prefix = "log/"
 }
