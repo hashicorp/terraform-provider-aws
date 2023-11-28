@@ -98,8 +98,8 @@ github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.5 h1:w+goE7618i0fpnsT7Hzv
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.5/go.mod h1:JoTvvAtu1vk9gwLmmBita2NvLhiG3oCREGW6nWQi40o=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.2 h1:O6ff5PwwgQ7QkL/XA0H+0U0mWwjkYaP9tHvbr0Ptqak=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.2/go.mod h1:kuVxCbsxbP/h6YTT2BfOj4s/bwXYsG3C/8Qn9gO5QJY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.2 h1:9bqRsa2YG+3fZXcCOh7UygOTBlp/EMjOn9QWkFSXNAY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.2/go.mod h1:hrBzQzlQQRmiaeYRQPr0SdSx6fdqP+5YcGhb97LCt8M=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.3 h1:87nod8EVm8kzu/+LSVWMre3XHACdg6o2gybUrXlZr5I=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.3/go.mod h1:nWcvoA5vPwLHk5yYNYBobDTuyf9brqNbpwxE+/BnIN4=
 github.com/aws/aws-sdk-go-v2/service/eks v1.34.1 h1:lcpAUbLg8uZHGuZxOwm3TqSMt2LV/XTevPkGCu78PRk=
 github.com/aws/aws-sdk-go-v2/service/eks v1.34.1/go.mod h1:DInudKNZjEy7SJ0KfRh4VxaqY04B52Lq2+QRuvObfNQ=
 github.com/aws/aws-sdk-go-v2/service/emr v1.34.2 h1:ZH3kPZXKZHoAMNOBWSqobRRkEsj6E0qPN2M1uCAHWXQ=
