@@ -232,7 +232,7 @@ func TestAccS3ObjectsDataSource_directoryBucket(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_basic(rName, 1),
+				Config: testAccObjectsDataSourceConfig_directoryBucket(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
