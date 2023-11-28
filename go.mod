@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.137.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/emr v1.34.2
+	github.com/aws/aws-sdk-go-v2/service/emr v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.17.2
