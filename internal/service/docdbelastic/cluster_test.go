@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -102,7 +102,7 @@ func TestAccDocDBElasticCluster_disappears(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdbelastic_cluster" {
@@ -138,7 +138,7 @@ func testAccCheckClusterExists(ctx context.Context, name string, cluster *awstyp
 			return create.Error(names.DocDBElastic, create.ErrActionCheckingExistence, tfdocdbelastic.ResNameCluster, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient(ctx)
 		resp, err := conn.GetCluster(ctx, &docdbelastic.GetClusterInput{
 			ClusterArn: aws.String(rs.Primary.ID),
 		})
@@ -154,7 +154,7 @@ func testAccCheckClusterExists(ctx context.Context, name string, cluster *awstyp
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBElasticClient(ctx)
 
 	input := &docdbelastic.ListClustersInput{}
 	_, err := conn.ListClusters(ctx, input)

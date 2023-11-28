@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,7 +24,7 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_docdbelastic_cluster")
+
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -130,10 +129,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
-
-const (
-	ResNameCluster = "Cluster"
-)
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DocDBElasticClient(ctx)
@@ -329,98 +324,6 @@ const (
 	statusDeleting      = "DELETING"
 	statusNormal        = "ACTIVE"
 )
-
-func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusCreatePending},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusCluster(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Cluster); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusCluster(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Cluster); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Cluster); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findClusterByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		status := string(out.Status)
-		return out, aws.ToString(&status), nil
-	}
-}
-
-func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) (*awstypes.Cluster, error) {
-	in := &docdbelastic.GetClusterInput{
-		ClusterArn: aws.String(id),
-	}
-	out, err := conn.GetCluster(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil || out.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.Cluster, nil
-}
 
 func AuthValues() []string {
 	authValues := awstypes.Auth("").Values()
