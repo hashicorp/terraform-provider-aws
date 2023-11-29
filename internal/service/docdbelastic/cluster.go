@@ -236,7 +236,7 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DocDBElastic, create.ErrActionWaitingForCreation, ResNameCluster, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.DocDBElastic, create.ErrActionReading, ResNameCluster, state.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -280,7 +280,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			input.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
 		}
 
-		if !plan.ShardCapacity.Equal(state.ShardCount) {
+		if !plan.ShardCapacity.Equal(state.ShardCapacity) {
 			input.ShardCapacity = flex.Int32FromFramework(ctx, plan.ShardCapacity)
 		}
 
