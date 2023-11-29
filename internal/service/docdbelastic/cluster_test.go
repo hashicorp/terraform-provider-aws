@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -56,7 +55,7 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "cluster_arn", "docdb-elastic", regexache.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
 			{
@@ -184,7 +183,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "cluster_arn", "docdb-elastic", regexache.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
 			{
@@ -200,7 +199,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "cluster_arn", "docdb-elastic", regexache.MustCompile(`cluster/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
 		},

@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -213,7 +212,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
+	state.refreshFromOutput(ctx, out)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
@@ -243,7 +242,7 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
+	state.refreshFromOutput(ctx, out)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
@@ -318,7 +317,8 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
-		response.Diagnostics.Append(plan.refreshFromOutput(ctx, out)...)
+		plan.refreshFromOutput(ctx, out)
+		response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -486,9 +486,7 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	return out.Cluster, nil
 }
 
-func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *awstypes.Cluster) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *awstypes.Cluster) {
 	r.AdminUserName = flex.StringToFrameworkLegacy(ctx, output.AdminUserName)
 	r.AuthType = flex.StringValueToFramework(ctx, string(output.AuthType))
 	r.ARN = flex.StringToFramework(ctx, output.ClusterArn)
@@ -500,8 +498,6 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *aws
 	r.ShardCount = flex.Int32ToFramework(ctx, output.ShardCount)
 	r.SubnetIds = flex.FlattenFrameworkStringValueSet(ctx, output.SubnetIds)
 	r.VpcSecurityGroupIds = flex.FlattenFrameworkStringValueSet(ctx, output.VpcSecurityGroupIds)
-
-	return diags
 }
 
 func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool {
@@ -512,5 +508,5 @@ func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool 
 		!plan.ShardCapacity.Equal(state.ShardCapacity) ||
 		!plan.ShardCount.Equal(state.ShardCount) ||
 		!plan.SubnetIds.Equal(state.SubnetIds) ||
-		plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds)
+		!plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds)
 }
