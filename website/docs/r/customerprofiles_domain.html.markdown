@@ -94,7 +94,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `dead_letter_queue_url` - The URL of the SQS dead letter queue, which is used for reporting errors associated with ingesting data from third party applications. 
+* `dead_letter_queue_url` - The URL of the SQS dead letter queue, which is used for reporting errors associated with ingesting data from third party applications.
 * `default_encryption_key` - The default encryption key, which is an AWS managed key, is used when no specific type of encryption key is specified. It is used to encrypt all data before it is placed in permanent or semi-permanent storage.
 * `matching` - A block that specifies the process of matching duplicate profiles. [Documented below](#matching).
 * `rule_based_matching` - A block that specifies the process of matching duplicate profiles using the Rule-Based matching. [Documented below](#rule_based_matching).

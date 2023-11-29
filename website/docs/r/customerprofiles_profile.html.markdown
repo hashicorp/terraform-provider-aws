@@ -50,7 +50,7 @@ The following arguments are optional:
 * `mobile_phone_number` - The customer’s mobile phone number.
 * `party_type_string` - The type of profile used to describe the customer.
 * `personal_email_address` - The customer’s personal email address.
-* `phone_number` - The customer’s phone number, which has not been specified as a mobile, home, or business number. 
+* `phone_number` - The customer’s phone number, which has not been specified as a mobile, home, or business number.
 * `shipping_address` - A block that specifies the customer’s shipping address. [Documented below](#address).
 
 ### `address`
