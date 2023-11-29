@@ -92,31 +92,11 @@ func (t ObjectMapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return ObjectMapValueOf[T]{}
 }
 
-/*
-func (t ObjectMapTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return mapNestedObjectTypeNewObjectPtr[T](ctx)
-}
-*/
-
 func (t ObjectMapTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	return NewObjectMapNullValueMapOf[T](ctx), diags
 }
-
-/*
-func mapNestedObjectTypeNewObjectPtr[T any](_ context.Context) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	return new(T), diags
-}
-
-func mapNestedObjectTypeNewObjectSlice[T any](_ context.Context, len, cap int) ([]*T, diag.Diagnostics) { //nolint:unparam
-	var diags diag.Diagnostics
-
-	return make([]*T, len, cap), diags
-}
-*/
 
 // ObjectMapValueOf represents a Terraform Plugin Framework Map value whose elements are of type ObjectTypeOf.
 type ObjectMapValueOf[T any] struct {
@@ -142,47 +122,14 @@ func (v ObjectMapValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewObjectMapTypeOf[T](ctx)
 }
 
-/*
-func (v ObjectMapValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return v.ToPtrMap(ctx)
-}
-*/
-
 func (v ObjectMapValueOf[T]) ToObjectMap(ctx context.Context) (any, diag.Diagnostics) {
 	return v.ToMap(ctx)
 }
-
-/*
-// ToPtr returns a pointer to the single element of a ObjectMap.
-func (v ObjectMapValueOf[T]) ToPtrMap(ctx context.Context) (map[string]*T, diag.Diagnostics) {
-	return mapNestedObjectValueObjectPtrMap[T](ctx, v.MapValue)
-}
-*/
 
 // ToSlice returns a slice of pointers to the elements of a ObjectMap.
 func (v ObjectMapValueOf[T]) ToMap(ctx context.Context) (map[string]T, diag.Diagnostics) {
 	return mapNestedObjectValueObjectMap[T](ctx, v.MapValue)
 }
-
-/*
-func mapNestedObjectValueObjectPtrMap[T any](ctx context.Context, val valueWithMapElements) (map[string]*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	kvs := val.Elements()
-	var m map[string]*T
-	for k, _ := range kvs {
-		ptr, d := nestedObjectValueObjectPtrFromValue[T](ctx, kvs[k])
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		m[k] = ptr
-	}
-
-	return m, diags
-}
-*/
 
 func mapNestedObjectValueObjectMap[T any](ctx context.Context, val valueWithMapElements) (map[string]T, diag.Diagnostics) {
 	var diags diag.Diagnostics
