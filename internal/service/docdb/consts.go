@@ -57,3 +57,15 @@ const (
 	globalClusterStatusModifying = "modifying"
 	globalClusterStatusUpgrading = "upgrading"
 )
+
+const (
+	storageTypeIOpt1    = "iopt1"
+	storageTypeStandard = "standard"
+)
+
+func storageType_Values() []string {
+	return []string{
+		storageTypeIOpt1,
+		storageTypeStandard,
+	}
+}

@@ -241,6 +241,11 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(storageType_Values(), false),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
@@ -328,6 +333,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("storage_type"); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
@@ -407,8 +416,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOkExists("storage_encrypted"); ok {
+		if v, ok := d.GetOk("storage_encrypted"); ok {
 			input.StorageEncrypted = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("storage_type"); ok {
+			input.StorageType = aws.String(v.(string))
 		}
 
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
@@ -499,6 +512,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set("storage_type", dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
@@ -548,6 +562,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("preferred_backup_window") {
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange("storage_type") {
+			input.StorageType = aws.String(d.Get("storage_type").(string))
 		}
 
 		if d.HasChange("preferred_maintenance_window") {
