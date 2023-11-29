@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/go-cmp/cmp"
 	configtesting "github.com/hashicorp/aws-sdk-go-base/v2/configtesting"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
@@ -17,26 +18,114 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"golang.org/x/exp/maps"
 )
 
 // TestSharedConfigFileParsing prevents regression in shared config file parsing
 // * https://github.com/aws/aws-sdk-go-v2/issues/2349: indented keys
+// * https://github.com/aws/aws-sdk-go-v2/issues/2363: leading whitespace
+// * https://github.com/aws/aws-sdk-go-v2/issues/2369: trailing `#` in, e.g. SSO Start URLs
 func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
 	testcases := map[string]struct {
 		Config                  map[string]any
 		SharedConfigurationFile string
 		Check                   func(t *testing.T, meta *conns.AWSClient)
 	}{
+		"leading newline": {
+			SharedConfigurationFile: `
+[default]
+region = us-west-2
+`, //lintignore:AWSAT003
+			Check: func(t *testing.T, meta *conns.AWSClient) {
+				//lintignore:AWSAT003
+				if a, e := meta.Region, "us-west-2"; a != e {
+					t.Errorf("expected region %q, got %q", e, a)
+				}
+			},
+		},
+
 		"leading whitespace": {
 			// Do not "fix" indentation!
-			SharedConfigurationFile: `
-	[default]
+			SharedConfigurationFile: `	[default]
 	region = us-west-2
 	`, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
 				//lintignore:AWSAT003
 				if a, e := meta.Region, "us-west-2"; a != e {
 					t.Errorf("expected region %q, got %q", e, a)
+				}
+			},
+		},
+
+		"leading newline and whitespace": {
+			// Do not "fix" indentation!
+			SharedConfigurationFile: `
+	[default]
+	region = us-west-2
+		`, //lintignore:AWSAT003
+			Check: func(t *testing.T, meta *conns.AWSClient) {
+				//lintignore:AWSAT003
+				if a, e := meta.Region, "us-west-2"; a != e {
+					t.Errorf("expected region %q, got %q", e, a)
+				}
+			},
+		},
+
+		"named profile after leading newline and whitespace": {
+			Config: map[string]any{
+				"profile": "test",
+			},
+			// Do not "fix" indentation!
+			SharedConfigurationFile: `
+[default]
+region = us-west-2
+
+	[profile test]
+	region = us-east-1
+			`, //lintignore:AWSAT003
+			Check: func(t *testing.T, meta *conns.AWSClient) {
+				//lintignore:AWSAT003
+				if a, e := meta.Region, "us-east-1"; a != e {
+					t.Errorf("expected region %q, got %q", e, a)
+				}
+			},
+		},
+
+		"named profile": {
+			Config: map[string]any{
+				"profile": "test",
+			},
+			SharedConfigurationFile: `
+[default]
+region = us-west-2
+
+[profile test]
+region = us-east-1
+`, //lintignore:AWSAT003
+			Check: func(t *testing.T, meta *conns.AWSClient) {
+				//lintignore:AWSAT003
+				if a, e := meta.Region, "us-east-1"; a != e {
+					t.Errorf("expected region %q, got %q", e, a)
+				}
+			},
+		},
+
+		"trailing hash": {
+			SharedConfigurationFile: `
+[default]
+region = us-west-2
+sso_start_url = https://d-123456789a.awsapps.com/start#
+`, //lintignore:AWSAT003
+			Check: func(t *testing.T, meta *conns.AWSClient) {
+				awsConfig := meta.AwsConfig()
+				var ssoStartUrl string
+				for _, source := range awsConfig.ConfigSources {
+					if shared, ok := source.(config.SharedConfig); ok {
+						ssoStartUrl = shared.SSOStartURL
+					}
+				}
+				if a, e := ssoStartUrl, "https://d-123456789a.awsapps.com/start#"; a != e {
+					t.Errorf("expected sso_start_url %q, got %q", e, a)
 				}
 			},
 		},
@@ -56,6 +145,8 @@ func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
 				"skip_credentials_validation": true,
 				"skip_requesting_account_id":  true,
 			}
+
+			maps.Copy(config, tc.Config)
 
 			if tc.SharedConfigurationFile != "" {
 				file, err := os.CreateTemp("", "aws-sdk-go-base-shared-configuration-file")
@@ -101,6 +192,10 @@ func TestSharedConfigFileParsing(t *testing.T) { //nolint:paralleltest
 
 			if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			if diags.HasError() {
+				t.FailNow()
 			}
 
 			meta := p.Meta().(*conns.AWSClient)

@@ -8,23 +8,34 @@ import (
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
+	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
+	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
+	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
+	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
+	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
+	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
+	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
+	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
+	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
@@ -81,12 +92,10 @@ import (
 	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
-	appflow_sdkv1 "github.com/aws/aws-sdk-go/service/appflow"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	apprunner_sdkv1 "github.com/aws/aws-sdk-go/service/apprunner"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
@@ -95,8 +104,6 @@ import (
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	budgets_sdkv1 "github.com/aws/aws-sdk-go/service/budgets"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	chimesdkmediapipelines_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	chimesdkvoice_sdkv1 "github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
@@ -104,20 +111,16 @@ import (
 	cloudsearch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudsearch"
 	cloudtrail_sdkv1 "github.com/aws/aws-sdk-go/service/cloudtrail"
 	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
-	cloudwatchevidently_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	cloudwatchlogs_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
 	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
 	codecommit_sdkv1 "github.com/aws/aws-sdk-go/service/codecommit"
-	codedeploy_sdkv1 "github.com/aws/aws-sdk-go/service/codedeploy"
 	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
 	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	controltower_sdkv1 "github.com/aws/aws-sdk-go/service/controltower"
 	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -199,7 +202,6 @@ import (
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
 	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
-	s3control_sdkv1 "github.com/aws/aws-sdk-go/service/s3control"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
@@ -270,8 +272,12 @@ func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client
 	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig))
 }
 
-func (c *AWSClient) AppFlowConn(ctx context.Context) *appflow_sdkv1.Appflow {
-	return errs.Must(conn[*appflow_sdkv1.Appflow](ctx, c, names.AppFlow))
+func (c *AWSClient) AppFabricClient(ctx context.Context) *appfabric_sdkv2.Client {
+	return errs.Must(client[*appfabric_sdkv2.Client](ctx, c, names.AppFabric))
+}
+
+func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
+	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow))
 }
 
 func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
@@ -282,8 +288,8 @@ func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
 	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh))
 }
 
-func (c *AWSClient) AppRunnerConn(ctx context.Context) *apprunner_sdkv1.AppRunner {
-	return errs.Must(conn[*apprunner_sdkv1.AppRunner](ctx, c, names.AppRunner))
+func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {
+	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner))
 }
 
 func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
@@ -342,12 +348,12 @@ func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
 	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime))
 }
 
-func (c *AWSClient) ChimeSDKMediaPipelinesConn(ctx context.Context) *chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines {
-	return errs.Must(conn[*chimesdkmediapipelines_sdkv1.ChimeSDKMediaPipelines](ctx, c, names.ChimeSDKMediaPipelines))
+func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines_sdkv2.Client {
+	return errs.Must(client[*chimesdkmediapipelines_sdkv2.Client](ctx, c, names.ChimeSDKMediaPipelines))
 }
 
-func (c *AWSClient) ChimeSDKVoiceConn(ctx context.Context) *chimesdkvoice_sdkv1.ChimeSDKVoice {
-	return errs.Must(conn[*chimesdkvoice_sdkv1.ChimeSDKVoice](ctx, c, names.ChimeSDKVoice))
+func (c *AWSClient) ChimeSDKVoiceClient(ctx context.Context) *chimesdkvoice_sdkv2.Client {
+	return errs.Must(client[*chimesdkvoice_sdkv2.Client](ctx, c, names.ChimeSDKVoice))
 }
 
 func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {
@@ -446,8 +452,16 @@ func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
 	return errs.Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect))
 }
 
-func (c *AWSClient) ControlTowerConn(ctx context.Context) *controltower_sdkv1.ControlTower {
-	return errs.Must(conn[*controltower_sdkv1.ControlTower](ctx, c, names.ControlTower))
+func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.Client {
+	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases))
+}
+
+func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower_sdkv2.Client {
+	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower))
+}
+
+func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
+	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles))
 }
 
 func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
@@ -482,8 +496,8 @@ func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
 	return errs.Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync))
 }
 
-func (c *AWSClient) DeployConn(ctx context.Context) *codedeploy_sdkv1.CodeDeploy {
-	return errs.Must(conn[*codedeploy_sdkv1.CodeDeploy](ctx, c, names.Deploy))
+func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
+	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy))
 }
 
 func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
@@ -550,6 +564,10 @@ func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
 	return errs.Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR))
 }
 
+func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
+	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR))
+}
+
 func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
 	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers))
 }
@@ -578,8 +596,8 @@ func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBrid
 	return errs.Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events))
 }
 
-func (c *AWSClient) EvidentlyConn(ctx context.Context) *cloudwatchevidently_sdkv1.CloudWatchEvidently {
-	return errs.Must(conn[*cloudwatchevidently_sdkv1.CloudWatchEvidently](ctx, c, names.Evidently))
+func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently_sdkv2.Client {
+	return errs.Must(client[*evidently_sdkv2.Client](ctx, c, names.Evidently))
 }
 
 func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {
@@ -748,10 +766,6 @@ func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client
 
 func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
 	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location))
-}
-
-func (c *AWSClient) LogsConn(ctx context.Context) *cloudwatchlogs_sdkv1.CloudWatchLogs {
-	return errs.Must(conn[*cloudwatchlogs_sdkv1.CloudWatchLogs](ctx, c, names.Logs))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
@@ -928,10 +942,6 @@ func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
 	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3))
-}
-
-func (c *AWSClient) S3ControlConn(ctx context.Context) *s3control_sdkv1.S3Control {
-	return errs.Must(conn[*s3control_sdkv1.S3Control](ctx, c, names.S3Control))
 }
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client {

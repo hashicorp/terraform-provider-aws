@@ -53,6 +53,10 @@ func (client *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
 	return client.awsConfig.Credentials
 }
 
+func (client *AWSClient) AwsConfig() aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
+	return client.awsConfig.Copy()
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.

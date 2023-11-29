@@ -199,7 +199,7 @@ This argument supports the following arguments:
 * `description` (Optional) Description of the crawler.
 * `delta_target` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
-* `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
+* `jdbc_target` (Optional) List of nested JDBC target arguments. See [JDBC Target](#jdbc-target) below.
 * `s3_target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
 * `catalog_target` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
 * `mongodb_target` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
@@ -320,4 +320,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-2f160a94134902ed274026e5b91be6900343aff33a6ff67e7ca8207f81fa2336 -->
+<!-- cache-key: cdktf-0.19.0 input-0df369bee2ab9f48ca2abe5fa0e864a1921bff66fc146728b45e061f21763933 -->

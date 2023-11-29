@@ -162,7 +162,7 @@ The following arguments are optional:
 
 * `autoScalingConfigurationArn` - ARN of an App Runner automatic scaling configuration resource that you want to associate with your service. If not provided, App Runner associates the latest revision of a default auto scaling configuration.
 * `encryptionConfiguration` - (Forces new resource) An optional custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [Encryption Configuration](#encryption-configuration) below for more details.
-* `healthCheckConfiguration` - (Forces new resource) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
+* `healthCheckConfiguration` - Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
 * `instanceConfiguration` - The runtime configuration of instances (scaling units) of the App Runner service. See [Instance Configuration](#instance-configuration) below for more details.
 * `networkConfiguration` - Configuration settings related to network traffic of the web application that the App Runner service runs. See [Network Configuration](#network-configuration) below for more details.
 * `observabilityConfiguration` - The observability configuration of your service. See [Observability Configuration](#observability-configuration) below for more details.
@@ -217,8 +217,7 @@ The `networkConfiguration` block supports the following arguments:
 
 * `ingressConfiguration` - (Optional) Network configuration settings for inbound network traffic. See [Ingress Configuration](#ingress-configuration) below for more details.
 * `egressConfiguration` - (Optional) Network configuration settings for outbound message traffic. See [Egress Configuration](#egress-configuration) below for more details.
-* `egressType` - (Optional) Type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
-* `vpcConnectorArn` - ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+* `ipAddressType` - (Optional) App Runner provides you with the option to choose between Internet Protocol version 4 (IPv4) and dual stack (IPv4 and IPv6) for your incoming public network configuration. Valid values: `IPV4`, `DUAL_STACK`. Default: `IPV4`.
 
 ### Ingress Configuration
 
@@ -247,6 +246,7 @@ The `codeRepository` block supports the following arguments:
 * `codeConfiguration` - (Optional) Configuration for building and running the service from a source code repository. See [Code Configuration](#code-configuration) below for more details.
 * `repositoryUrl` - (Required) Location of the repository that contains the source code.
 * `sourceCodeVersion` - (Required) Version that should be used within the source code repository. See [Source Code Version](#source-code-version) below for more details.
+* `sourceDirectory` - (Optional) The path of the directory that stores source code and configuration files. The build and start commands also execute from here. The path is absolute from root and, if not specified, defaults to the repository root.
 
 ### Image Repository
 
@@ -300,6 +300,10 @@ The `sourceCodeVersion` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the App Runner service.
+* `autoScalingConfigurationRevision` - The revision of this auto scaling configuration. It's unique among all the active configurations that share the same `auto_scaling_configuration_name`.
+* `hasAssociatedService` - Indicates if this auto scaling configuration has an App Runner service associated with it.
+* `isDefault` - Indicates if this auto scaling configuration should be used as the default for a new App Runner service that does not have an auto scaling configuration ARN specified during creation.
+* `latest` - It's set to `true` for the configuration with the highest `auto_scaling_configuration_revision` among all configurations that share the same `auto_scaling_configuration_name`.
 * `serviceId` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
 * `serviceUrl` - Subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
 * `status` - Current state of the App Runner service.
@@ -327,4 +331,4 @@ Using `terraform import`, import App Runner Services using the `arn`. For exampl
 % terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ab52185ade0d482c41dce2950b5061670985bf2589f6ce689511bce1971583a6 -->
+<!-- cache-key: cdktf-0.19.0 input-49b6751d647a49c3c3492d7fba17d8ea4f9304c7977e4bcce52e5ef6a905c952 -->

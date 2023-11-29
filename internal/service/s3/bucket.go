@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -33,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -43,6 +45,10 @@ import (
 
 const (
 	resNameBucket = "Bucket"
+
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	s3BucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
@@ -91,7 +97,10 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63),
+					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+				),
 			},
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
@@ -103,7 +112,9 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				),
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -1047,7 +1058,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1076,7 +1087,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
@@ -1424,17 +1435,29 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string) error {
+func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string, optFns ...func(*s3_sdkv2.Options)) error {
 	input := &s3_sdkv2.HeadBucketInput{
 		Bucket: aws_sdkv2.String(bucket),
 	}
 
-	_, err := conn.HeadBucket(ctx, input)
+	_, err := conn.HeadBucket(ctx, input, optFns...)
 
 	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
+		}
+	}
+
+	// FIXME Move to aws-sdk-go-base
+	// FIXME &smithy.OperationError{ServiceID:"S3", OperationName:"HeadBucket", Err:(*errors.errorString)(0xc00202bb60)}
+	// FIXME "operation error S3: HeadBucket, get identity: get credentials: operation error S3: CreateSession, https response error StatusCode: 404, RequestID: 0033eada6b00018c17de82890509d9eada65ba39, HostID: F31dBn, NoSuchBucket:"
+	if operationErr, ok := errs.As[*smithy.OperationError](err); ok {
+		if strings.Contains(operationErr.Err.Error(), errCodeNoSuchBucket) {
+			return &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 	}
 

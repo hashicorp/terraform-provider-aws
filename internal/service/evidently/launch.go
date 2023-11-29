@@ -11,14 +11,15 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -297,11 +298,11 @@ func ResourceLaunch() *schema.Resource {
 }
 
 func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
-	input := &cloudwatchevidently.CreateLaunchInput{
+	input := &evidently.CreateLaunchInput{
 		Name:    aws.String(name),
 		Project: aws.String(project),
 		Groups:  expandGroups(d.Get("groups").([]interface{})),
@@ -324,7 +325,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ScheduledSplitsConfig = expandScheduledSplitsConfig(v.([]interface{}))
 	}
 
-	output, err := conn.CreateLaunchWithContext(ctx, input)
+	output, err := conn.CreateLaunch(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
@@ -332,7 +333,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// the GetLaunch API call uses the Launch name and Project ARN
 	// concat Launch name and Project Name or ARN to be used in Read for imports
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Launch.Name), aws.StringValue(output.Launch.Project)))
+	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(output.Launch.Name), aws.ToString(output.Launch.Project)))
 
 	if _, err := waitLaunchCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) creation: %s", name, project, err)
@@ -342,7 +343,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	launchName, projectNameOrARN, err := LaunchParseID(d.Id())
 
@@ -379,9 +380,9 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("arn", launch.Arn)
-	d.Set("created_time", aws.TimeValue(launch.CreatedTime).Format(time.RFC3339))
+	d.Set("created_time", aws.ToTime(launch.CreatedTime).Format(time.RFC3339))
 	d.Set("description", launch.Description)
-	d.Set("last_updated_time", aws.TimeValue(launch.LastUpdatedTime).Format(time.RFC3339))
+	d.Set("last_updated_time", aws.ToTime(launch.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("name", launch.Name)
 	d.Set("project", launch.Project)
 	d.Set("randomization_salt", launch.RandomizationSalt)
@@ -395,13 +396,13 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	if d.HasChanges("description", "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
 		name := d.Get("name").(string)
 		project := d.Get("project").(string)
 
-		input := &cloudwatchevidently.UpdateLaunchInput{
+		input := &evidently.UpdateLaunchInput{
 			Description:           aws.String(d.Get("description").(string)),
 			Groups:                expandGroups(d.Get("groups").([]interface{})),
 			Launch:                aws.String(name),
@@ -411,7 +412,7 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			ScheduledSplitsConfig: expandScheduledSplitsConfig(d.Get("scheduled_splits_config").([]interface{})),
 		}
 
-		_, err := conn.UpdateLaunchWithContext(ctx, input)
+		_, err := conn.UpdateLaunch(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
@@ -426,18 +427,18 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
+	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Launch: %s", d.Id())
-	_, err := conn.DeleteLaunchWithContext(ctx, &cloudwatchevidently.DeleteLaunchInput{
+	_, err := conn.DeleteLaunch(ctx, &evidently.DeleteLaunchInput{
 		Launch:  aws.String(name),
 		Project: aws.String(project),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -462,8 +463,8 @@ func LaunchParseID(id string) (string, string, error) {
 	return launchName, projectNameOrARN, nil
 }
 
-func expandGroups(tfMaps []interface{}) []*cloudwatchevidently.LaunchGroupConfig {
-	apiObjects := make([]*cloudwatchevidently.LaunchGroupConfig, 0, len(tfMaps))
+func expandGroups(tfMaps []interface{}) []awstypes.LaunchGroupConfig {
+	apiObjects := make([]awstypes.LaunchGroupConfig, 0, len(tfMaps))
 
 	for _, tfMap := range tfMaps {
 		apiObjects = append(apiObjects, expandGroup(tfMap.(map[string]interface{})))
@@ -472,8 +473,8 @@ func expandGroups(tfMaps []interface{}) []*cloudwatchevidently.LaunchGroupConfig
 	return apiObjects
 }
 
-func expandGroup(tfMap map[string]interface{}) *cloudwatchevidently.LaunchGroupConfig {
-	apiObject := &cloudwatchevidently.LaunchGroupConfig{
+func expandGroup(tfMap map[string]interface{}) awstypes.LaunchGroupConfig {
+	apiObject := awstypes.LaunchGroupConfig{
 		Feature:   aws.String(tfMap["feature"].(string)),
 		Name:      aws.String(tfMap["name"].(string)),
 		Variation: aws.String(tfMap["variation"].(string)),
@@ -486,8 +487,8 @@ func expandGroup(tfMap map[string]interface{}) *cloudwatchevidently.LaunchGroupC
 	return apiObject
 }
 
-func expandMetricMonitors(tfMaps []interface{}) []*cloudwatchevidently.MetricMonitorConfig {
-	apiObjects := make([]*cloudwatchevidently.MetricMonitorConfig, 0, len(tfMaps))
+func expandMetricMonitors(tfMaps []interface{}) []awstypes.MetricMonitorConfig {
+	apiObjects := make([]awstypes.MetricMonitorConfig, 0, len(tfMaps))
 
 	for _, tfMap := range tfMaps {
 		apiObjects = append(apiObjects, expandMetricMonitor(tfMap.(map[string]interface{})))
@@ -496,22 +497,22 @@ func expandMetricMonitors(tfMaps []interface{}) []*cloudwatchevidently.MetricMon
 	return apiObjects
 }
 
-func expandMetricMonitor(tfMap map[string]interface{}) *cloudwatchevidently.MetricMonitorConfig {
-	apiObject := &cloudwatchevidently.MetricMonitorConfig{
+func expandMetricMonitor(tfMap map[string]interface{}) awstypes.MetricMonitorConfig {
+	apiObject := awstypes.MetricMonitorConfig{
 		MetricDefinition: expandMetricDefinition(tfMap["metric_definition"].([]interface{})),
 	}
 
 	return apiObject
 }
 
-func expandMetricDefinition(tfList []interface{}) *cloudwatchevidently.MetricDefinitionConfig {
+func expandMetricDefinition(tfList []interface{}) *awstypes.MetricDefinitionConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
 
-	apiObject := &cloudwatchevidently.MetricDefinitionConfig{
+	apiObject := &awstypes.MetricDefinitionConfig{
 		EntityIdKey: aws.String(tfMap["entity_id_key"].(string)),
 		Name:        aws.String(tfMap["name"].(string)),
 		ValueKey:    aws.String(tfMap["value_key"].(string)),
@@ -528,22 +529,22 @@ func expandMetricDefinition(tfList []interface{}) *cloudwatchevidently.MetricDef
 	return apiObject
 }
 
-func expandScheduledSplitsConfig(tfList []interface{}) *cloudwatchevidently.ScheduledSplitsLaunchConfig {
+func expandScheduledSplitsConfig(tfList []interface{}) *awstypes.ScheduledSplitsLaunchConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
 
-	apiObject := &cloudwatchevidently.ScheduledSplitsLaunchConfig{
+	apiObject := &awstypes.ScheduledSplitsLaunchConfig{
 		Steps: expandSteps(tfMap["steps"].([]interface{})),
 	}
 
 	return apiObject
 }
 
-func expandSteps(tfMaps []interface{}) []*cloudwatchevidently.ScheduledSplitConfig {
-	apiObjects := make([]*cloudwatchevidently.ScheduledSplitConfig, 0, len(tfMaps))
+func expandSteps(tfMaps []interface{}) []awstypes.ScheduledSplitConfig {
+	apiObjects := make([]awstypes.ScheduledSplitConfig, 0, len(tfMaps))
 
 	for _, tfMap := range tfMaps {
 		apiObjects = append(apiObjects, expandStep(tfMap.(map[string]interface{})))
@@ -552,12 +553,12 @@ func expandSteps(tfMaps []interface{}) []*cloudwatchevidently.ScheduledSplitConf
 	return apiObjects
 }
 
-func expandStep(tfMap map[string]interface{}) *cloudwatchevidently.ScheduledSplitConfig {
+func expandStep(tfMap map[string]interface{}) awstypes.ScheduledSplitConfig {
 	t, _ := time.Parse(time.RFC3339, tfMap["start_time"].(string))
 	startTime := aws.Time(t)
 
-	apiObject := &cloudwatchevidently.ScheduledSplitConfig{
-		GroupWeights:     flex.ExpandInt64Map(tfMap["group_weights"].(map[string]interface{})),
+	apiObject := awstypes.ScheduledSplitConfig{
+		GroupWeights:     flex.ExpandInt64ValueMap(tfMap["group_weights"].(map[string]interface{})),
 		SegmentOverrides: expandSegmentOverrides(tfMap["segment_overrides"].([]interface{})),
 		StartTime:        startTime,
 	}
@@ -565,8 +566,8 @@ func expandStep(tfMap map[string]interface{}) *cloudwatchevidently.ScheduledSpli
 	return apiObject
 }
 
-func expandSegmentOverrides(tfMaps []interface{}) []*cloudwatchevidently.SegmentOverride {
-	apiObjects := make([]*cloudwatchevidently.SegmentOverride, 0, len(tfMaps))
+func expandSegmentOverrides(tfMaps []interface{}) []awstypes.SegmentOverride {
+	apiObjects := make([]awstypes.SegmentOverride, 0, len(tfMaps))
 
 	for _, tfMap := range tfMaps {
 		apiObjects = append(apiObjects, expandSegmentOverride(tfMap.(map[string]interface{})))
@@ -575,17 +576,17 @@ func expandSegmentOverrides(tfMaps []interface{}) []*cloudwatchevidently.Segment
 	return apiObjects
 }
 
-func expandSegmentOverride(tfMap map[string]interface{}) *cloudwatchevidently.SegmentOverride {
-	apiObject := &cloudwatchevidently.SegmentOverride{
+func expandSegmentOverride(tfMap map[string]interface{}) awstypes.SegmentOverride {
+	apiObject := awstypes.SegmentOverride{
 		EvaluationOrder: aws.Int64(int64(tfMap["evaluation_order"].(int))),
 		Segment:         aws.String(tfMap["segment"].(string)),
-		Weights:         flex.ExpandInt64Map(tfMap["weights"].(map[string]interface{})),
+		Weights:         flex.ExpandInt64ValueMap(tfMap["weights"].(map[string]interface{})),
 	}
 
 	return apiObject
 }
 
-func flattenExecution(apiObjects *cloudwatchevidently.LaunchExecution) []interface{} {
+func flattenExecution(apiObjects *awstypes.LaunchExecution) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
@@ -593,17 +594,17 @@ func flattenExecution(apiObjects *cloudwatchevidently.LaunchExecution) []interfa
 	values := map[string]interface{}{}
 
 	if apiObjects.EndedTime != nil {
-		values["ended_time"] = aws.TimeValue(apiObjects.EndedTime).Format(time.RFC3339)
+		values["ended_time"] = aws.ToTime(apiObjects.EndedTime).Format(time.RFC3339)
 	}
 
 	if apiObjects.StartedTime != nil {
-		values["started_time"] = aws.TimeValue(apiObjects.StartedTime).Format(time.RFC3339)
+		values["started_time"] = aws.ToTime(apiObjects.StartedTime).Format(time.RFC3339)
 	}
 
 	return []interface{}{values}
 }
 
-func flattenGroups(apiObjects []*cloudwatchevidently.LaunchGroup) []interface{} {
+func flattenGroups(apiObjects []awstypes.LaunchGroup) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -611,7 +612,7 @@ func flattenGroups(apiObjects []*cloudwatchevidently.LaunchGroup) []interface{} 
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if apiObject.Name == nil {
 			continue
 		}
 
@@ -621,28 +622,28 @@ func flattenGroups(apiObjects []*cloudwatchevidently.LaunchGroup) []interface{} 
 	return tfList
 }
 
-func flattenGroup(apiObject *cloudwatchevidently.LaunchGroup) map[string]interface{} {
-	if apiObject == nil {
+func flattenGroup(apiObject awstypes.LaunchGroup) map[string]interface{} {
+	if apiObject.Name == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"name": aws.StringValue(apiObject.Name),
+		"name": aws.ToString(apiObject.Name),
 	}
 
 	for feature, variation := range apiObject.FeatureVariations {
 		tfMap["feature"] = feature
-		tfMap["variation"] = aws.StringValue(variation)
+		tfMap["variation"] = variation
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenMetricMonitors(apiObjects []*cloudwatchevidently.MetricMonitor) []interface{} {
+func flattenMetricMonitors(apiObjects []awstypes.MetricMonitor) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -650,7 +651,7 @@ func flattenMetricMonitors(apiObjects []*cloudwatchevidently.MetricMonitor) []in
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if apiObject == (awstypes.MetricMonitor{}) {
 			continue
 		}
 
@@ -660,8 +661,8 @@ func flattenMetricMonitors(apiObjects []*cloudwatchevidently.MetricMonitor) []in
 	return tfList
 }
 
-func flattenMetricMonitor(apiObject *cloudwatchevidently.MetricMonitor) map[string]interface{} {
-	if apiObject == nil {
+func flattenMetricMonitor(apiObject awstypes.MetricMonitor) map[string]interface{} {
+	if apiObject == (awstypes.MetricMonitor{}) {
 		return nil
 	}
 
@@ -672,29 +673,29 @@ func flattenMetricMonitor(apiObject *cloudwatchevidently.MetricMonitor) map[stri
 	return tfMap
 }
 
-func flattenMetricMonitorDefinition(apiObject *cloudwatchevidently.MetricDefinition) []interface{} {
+func flattenMetricMonitorDefinition(apiObject *awstypes.MetricDefinition) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"entity_id_key": aws.StringValue(apiObject.EntityIdKey),
-		"name":          aws.StringValue(apiObject.Name),
-		"value_key":     aws.StringValue(apiObject.ValueKey),
+		"entity_id_key": aws.ToString(apiObject.EntityIdKey),
+		"name":          aws.ToString(apiObject.Name),
+		"value_key":     aws.ToString(apiObject.ValueKey),
 	}
 
 	if v := apiObject.EventPattern; v != nil {
-		tfMap["event_pattern"] = aws.StringValue(v)
+		tfMap["event_pattern"] = aws.ToString(v)
 	}
 
 	if v := apiObject.UnitLabel; v != nil {
-		tfMap["unit_label"] = aws.StringValue(v)
+		tfMap["unit_label"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenScheduledSplitsDefinition(apiObject *cloudwatchevidently.ScheduledSplitsLaunchDefinition) []interface{} {
+func flattenScheduledSplitsDefinition(apiObject *awstypes.ScheduledSplitsLaunchDefinition) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -706,7 +707,7 @@ func flattenScheduledSplitsDefinition(apiObject *cloudwatchevidently.ScheduledSp
 	return []interface{}{tfMap}
 }
 
-func flattenSteps(apiObjects []*cloudwatchevidently.ScheduledSplit) []interface{} {
+func flattenSteps(apiObjects []awstypes.ScheduledSplit) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -714,7 +715,7 @@ func flattenSteps(apiObjects []*cloudwatchevidently.ScheduledSplit) []interface{
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if apiObject.StartTime == nil {
 			continue
 		}
 
@@ -724,14 +725,14 @@ func flattenSteps(apiObjects []*cloudwatchevidently.ScheduledSplit) []interface{
 	return tfList
 }
 
-func flattenStep(apiObject *cloudwatchevidently.ScheduledSplit) map[string]interface{} {
-	if apiObject == nil {
+func flattenStep(apiObject awstypes.ScheduledSplit) map[string]interface{} {
+	if apiObject.StartTime == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"group_weights": aws.Int64ValueMap(apiObject.GroupWeights),
-		"start_time":    aws.TimeValue(apiObject.StartTime).Format(time.RFC3339),
+		"group_weights": apiObject.GroupWeights,
+		"start_time":    aws.ToTime(apiObject.StartTime).Format(time.RFC3339),
 	}
 
 	if v := apiObject.SegmentOverrides; v != nil {
@@ -741,7 +742,7 @@ func flattenStep(apiObject *cloudwatchevidently.ScheduledSplit) map[string]inter
 	return tfMap
 }
 
-func flattenSegmentOverrides(apiObjects []*cloudwatchevidently.SegmentOverride) []interface{} {
+func flattenSegmentOverrides(apiObjects []awstypes.SegmentOverride) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -749,7 +750,7 @@ func flattenSegmentOverrides(apiObjects []*cloudwatchevidently.SegmentOverride) 
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if apiObject.EvaluationOrder == nil {
 			continue
 		}
 
@@ -759,15 +760,15 @@ func flattenSegmentOverrides(apiObjects []*cloudwatchevidently.SegmentOverride) 
 	return tfList
 }
 
-func flattenSegmentOverride(apiObject *cloudwatchevidently.SegmentOverride) map[string]interface{} {
-	if apiObject == nil {
+func flattenSegmentOverride(apiObject awstypes.SegmentOverride) map[string]interface{} {
+	if apiObject.EvaluationOrder == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"evaluation_order": aws.Int64Value(apiObject.EvaluationOrder),
-		"segment":          aws.StringValue(apiObject.Segment),
-		"weights":          aws.Int64ValueMap(apiObject.Weights),
+		"evaluation_order": aws.ToInt64(apiObject.EvaluationOrder),
+		"segment":          aws.ToString(apiObject.Segment),
+		"weights":          apiObject.Weights,
 	}
 
 	return tfMap

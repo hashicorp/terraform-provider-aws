@@ -118,11 +118,11 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("maximum_message_length"); ok {
-		in.MaximumMessageLength = int32(v.(int))
+		in.MaximumMessageLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("maximum_message_rate_per_second"); ok {
-		in.MaximumMessageRatePerSecond = int32(v.(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("message_review_handler"); ok && len(v.([]interface{})) > 0 {
@@ -199,12 +199,12 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("maximum_message_length") {
-		in.MaximumMessageLength = int32(d.Get("maximum_message_length").(int))
+		in.MaximumMessageLength = aws.Int32(int32(d.Get("maximum_message_length").(int)))
 		update = true
 	}
 
 	if d.HasChanges("maximum_message_rate_per_second") {
-		in.MaximumMessageRatePerSecond = int32(d.Get("maximum_message_rate_per_second").(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(d.Get("maximum_message_rate_per_second").(int)))
 		update = true
 	}
 

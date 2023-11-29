@@ -93,7 +93,7 @@ func ResourceUserProfile() *schema.Resource {
 										},
 									},
 									"identity_provider_oauth_settings": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 20,
 										Elem: &schema.Resource{

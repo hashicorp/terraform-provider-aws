@@ -186,6 +186,37 @@ func ResourceGroup() *schema.Resource {
 					},
 				},
 			},
+			"instance_maintenance_policy": {
+				Type:             schema.TypeList,
+				MaxItems:         1,
+				Optional:         true,
+				DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ValidateFunc: validation.Any(
+								validation.IntBetween(100, 200),
+								validation.IntBetween(-1, -1),
+							),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
+						},
+						"min_healthy_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(-1, 100),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
+						},
+					},
+				},
+			},
 			"instance_refresh": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -892,6 +923,20 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
+func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("instance_maintenance_policy")
+	oList := o.([]interface{})
+	nList := n.([]interface{})
+
+	if len(oList) == 0 && len(nList) != 0 {
+		tfMap := nList[0].(map[string]interface{})
+		if int64(tfMap["min_healthy_percentage"].(int)) == -1 || int64(tfMap["max_healthy_percentage"].(int)) == -1 {
+			return true
+		}
+	}
+	return false
+}
+
 func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if diff.HasChange(subAttribute) {
@@ -1017,6 +1062,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("health_check_grace_period"); ok {
 		createInput.HealthCheckGracePeriod = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("instance_maintenance_policy"); ok {
+		createInput.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("launch_configuration"); ok {
@@ -1203,6 +1252,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
+	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(g.InstanceMaintenancePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
@@ -1330,6 +1382,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange("health_check_type") {
 			input.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
 			input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
+		}
+
+		if d.HasChange("instance_maintenance_policy") {
+			input.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(d.Get("instance_maintenance_policy").([]interface{}))
 		}
 
 		if d.HasChange("launch_configuration") {
@@ -3481,6 +3537,36 @@ func flattenInstancesDistribution(apiObject *autoscaling.InstancesDistribution) 
 	return tfMap
 }
 
+func expandInstanceMaintenancePolicy(l []interface{}) *autoscaling.InstanceMaintenancePolicy {
+	if len(l) == 0 {
+		//Empty InstanceMaintenancePolicy block will reset already assigned values
+		return &autoscaling.InstanceMaintenancePolicy{
+			MinHealthyPercentage: aws.Int64(-1),
+			MaxHealthyPercentage: aws.Int64(-1),
+		}
+	}
+
+	tfMap := l[0].(map[string]interface{})
+
+	return &autoscaling.InstanceMaintenancePolicy{
+		MinHealthyPercentage: aws.Int64(int64(tfMap["min_healthy_percentage"].(int))),
+		MaxHealthyPercentage: aws.Int64(int64(tfMap["max_healthy_percentage"].(int))),
+	}
+}
+
+func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *autoscaling.InstanceMaintenancePolicy) []interface{} {
+	if instanceMaintenancePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"min_healthy_percentage": instanceMaintenancePolicy.MinHealthyPercentage,
+		"max_healthy_percentage": instanceMaintenancePolicy.MaxHealthyPercentage,
+	}
+
+	return []interface{}{m}
+}
+
 func flattenLaunchTemplate(apiObject *autoscaling.LaunchTemplate) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -3974,9 +4060,11 @@ func startInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, in
 }
 
 func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	v, ok := i.(string)
 	if !ok {
-		return diag.Errorf("expected type to be string")
+		return sdkdiag.AppendErrorf(diags, "expected type to be string")
 	}
 
 	if v == "launch_configuration" || v == "launch_template" || v == "mixed_instances_policy" {
@@ -3992,11 +4080,11 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {
-				return diag.Errorf("'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
+				return sdkdiag.AppendErrorf(diags, "'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
 			}
-			return nil
+			return diags
 		}
 	}
 
-	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+	return sdkdiag.AppendErrorf(diags, "'%s' is not a recognized parameter name for aws_autoscaling_group", v)
 }

@@ -7,13 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -65,8 +67,8 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 				MaxItems: 3,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(chimesdkvoice.NotificationTarget_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.NotificationTarget](),
 				},
 			},
 			"voice_connector_id": {
@@ -79,15 +81,15 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chimesdkvoice.PutVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(vcId),
 	}
 
-	config := &chimesdkvoice.StreamingConfiguration{
-		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention").(int))),
+	config := &awstypes.StreamingConfiguration{
+		DataRetentionInHours: aws.Int32(int32(d.Get("data_retention").(int))),
 		Disabled:             aws.Bool(d.Get("disabled").(bool)),
 	}
 
@@ -101,7 +103,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 
 	input.StreamingConfiguration = config
 
-	if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
+	if _, err := conn.PutVoiceConnectorStreamingConfiguration(ctx, input); err != nil {
 		return diag.Errorf("creating Chime Voice Connector (%s) streaming configuration: %s", vcId, err)
 	}
 
@@ -111,14 +113,14 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetVoiceConnectorStreamingConfigurationWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	resp, err := conn.GetVoiceConnectorStreamingConfiguration(ctx, input)
+	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) streaming not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -148,7 +150,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -157,8 +159,8 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 			VoiceConnectorId: aws.String(vcId),
 		}
 
-		config := &chimesdkvoice.StreamingConfiguration{
-			DataRetentionInHours: aws.Int64(int64(d.Get("data_retention").(int))),
+		config := &awstypes.StreamingConfiguration{
+			DataRetentionInHours: aws.Int32(int32(d.Get("data_retention").(int))),
 			Disabled:             aws.Bool(d.Get("disabled").(bool)),
 		}
 
@@ -172,7 +174,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 
 		input.StreamingConfiguration = config
 
-		if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
+		if _, err := conn.PutVoiceConnectorStreamingConfiguration(ctx, input); err != nil {
 			return diag.Errorf("updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 		}
 	}
@@ -181,15 +183,15 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteVoiceConnectorStreamingConfigurationWithContext(ctx, input)
+	_, err := conn.DeleteVoiceConnectorStreamingConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil
 	}
 
@@ -200,25 +202,25 @@ func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandStreamingNotificationTargets(data []interface{}) []*chimesdkvoice.StreamingNotificationTarget {
-	var streamingTargets []*chimesdkvoice.StreamingNotificationTarget
+func expandStreamingNotificationTargets(data []interface{}) []awstypes.StreamingNotificationTarget {
+	var streamingTargets []awstypes.StreamingNotificationTarget
 
 	for _, item := range data {
-		streamingTargets = append(streamingTargets, &chimesdkvoice.StreamingNotificationTarget{
-			NotificationTarget: aws.String(item.(string)),
+		streamingTargets = append(streamingTargets, awstypes.StreamingNotificationTarget{
+			NotificationTarget: awstypes.NotificationTarget(item.(string)),
 		})
 	}
 
 	return streamingTargets
 }
 
-func expandMediaInsightsConfiguration(tfList []interface{}) *chimesdkvoice.MediaInsightsConfiguration {
+func expandMediaInsightsConfiguration(tfList []interface{}) *awstypes.MediaInsightsConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 	tfMap := tfList[0].(map[string]interface{})
 
-	mediaInsightsConfiguration := &chimesdkvoice.MediaInsightsConfiguration{}
+	mediaInsightsConfiguration := &awstypes.MediaInsightsConfiguration{}
 	if v, ok := tfMap["disabled"]; ok {
 		mediaInsightsConfiguration.Disabled = aws.Bool(v.(bool))
 	}
@@ -228,17 +230,17 @@ func expandMediaInsightsConfiguration(tfList []interface{}) *chimesdkvoice.Media
 	return mediaInsightsConfiguration
 }
 
-func flattenStreamingNotificationTargets(targets []*chimesdkvoice.StreamingNotificationTarget) []*string {
+func flattenStreamingNotificationTargets(targets []awstypes.StreamingNotificationTarget) []*string {
 	var rawTargets []*string
 
 	for _, t := range targets {
-		rawTargets = append(rawTargets, t.NotificationTarget)
+		rawTargets = append(rawTargets, aws.String(string(t.NotificationTarget)))
 	}
 
 	return rawTargets
 }
 
-func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *chimesdkvoice.MediaInsightsConfiguration) []interface{} {
+func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *awstypes.MediaInsightsConfiguration) []interface{} {
 	if mediaInsightsConfiguration == nil {
 		return nil
 	}

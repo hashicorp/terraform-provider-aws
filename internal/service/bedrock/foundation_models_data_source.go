@@ -184,10 +184,10 @@ func flattenFoundationModelSummaries(ctx context.Context, models []awstypes.Foun
 		attr["model_name"] = flex.StringToFramework(ctx, model.ModelName)
 		attr["provider_name"] = flex.StringToFramework(ctx, model.ProviderName)
 
-		attr["customizations_supported"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.CustomizationsSupported))
-		attr["inference_types_supported"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.InferenceTypesSupported))
-		attr["input_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.InputModalities))
-		attr["output_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, toStringSlice(model.OutputModalities))
+		attr["customizations_supported"] = flex.FlattenFrameworkStringValueSet(ctx, model.CustomizationsSupported)
+		attr["inference_types_supported"] = flex.FlattenFrameworkStringValueSet(ctx, model.InferenceTypesSupported)
+		attr["input_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, model.InputModalities)
+		attr["output_modalities"] = flex.FlattenFrameworkStringValueSet(ctx, model.OutputModalities)
 		attr["response_streaming_supported"] = flex.BoolToFramework(ctx, model.ResponseStreamingSupported)
 
 		val := types.ObjectValueMust(attributeTypes, attr)
