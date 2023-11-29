@@ -14,7 +14,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestMappedObjectTypeOfEqual(t *testing.T) {
+func TestObjectMapTypeOfEqual(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
@@ -26,11 +26,11 @@ func TestMappedObjectTypeOfEqual(t *testing.T) {
 			other: types.StringType,
 		},
 		"equal type": {
-			other: fwtypes.NewMappedObjectTypeOf[ObjectA](ctx),
+			other: fwtypes.NewObjectMapTypeOf[ObjectA](ctx),
 			want:  true,
 		},
 		"other struct type": {
-			other: fwtypes.NewMappedObjectTypeOf[ObjectB](ctx),
+			other: fwtypes.NewObjectMapTypeOf[ObjectB](ctx),
 		},
 	}
 
@@ -39,7 +39,7 @@ func TestMappedObjectTypeOfEqual(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := fwtypes.NewMappedObjectTypeOf[ObjectA](ctx).Equal(testCase.other)
+			got := fwtypes.NewObjectMapTypeOf[ObjectA](ctx).Equal(testCase.other)
 
 			if got != testCase.want {
 				t.Errorf("got = %v, want = %v", got, testCase.want)
@@ -48,7 +48,7 @@ func TestMappedObjectTypeOfEqual(t *testing.T) {
 	}
 }
 
-func TestMappedObjectTypeOfValueFromTerraform(t *testing.T) {
+func TestObjectMapTypeOfValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
 	objectA := ObjectA{
@@ -82,19 +82,19 @@ func TestMappedObjectTypeOfValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			tfVal:   tftypes.NewValue(objectAMapType, nil),
-			wantVal: fwtypes.NewMappedObjectValueOfNull[ObjectA](ctx),
+			wantVal: fwtypes.NewObjectMapNullValueMapOf[ObjectA](ctx),
 		},
 		"unknown value": {
 			tfVal:   tftypes.NewValue(objectAMapType, tftypes.UnknownValue),
-			wantVal: fwtypes.NewMappedObjectValueOfUnknown[ObjectA](ctx),
+			wantVal: fwtypes.NewObjectMapUnknownValueMapOf[ObjectA](ctx),
 		},
 		"valid value": {
 			tfVal:   objectAMapValue,
-			wantVal: fwtypes.NewMappedObjectValueOfMapOf[ObjectA](ctx, map[string]ObjectA{"fred": objectA}),
+			wantVal: fwtypes.NewObjectMapValueMapOf[ObjectA](ctx, map[string]ObjectA{"fred": objectA}),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBMapValue,
-			wantVal: fwtypes.NewMappedObjectValueOfMapOf[ObjectA](ctx, map[string]ObjectA{"fred": objectA}),
+			wantVal: fwtypes.NewObjectMapValueMapOf[ObjectA](ctx, map[string]ObjectA{"fred": objectA}),
 			wantErr: true,
 		},
 	}
@@ -104,7 +104,7 @@ func TestMappedObjectTypeOfValueFromTerraform(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			gotVal, err := fwtypes.NewMappedObjectTypeOf[ObjectA](ctx).ValueFromTerraform(ctx, testCase.tfVal)
+			gotVal, err := fwtypes.NewObjectMapTypeOf[ObjectA](ctx).ValueFromTerraform(ctx, testCase.tfVal)
 			gotErr := err != nil
 
 			if gotErr != testCase.wantErr {
@@ -122,7 +122,7 @@ func TestMappedObjectTypeOfValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestMappedObjectValueOfEqual(t *testing.T) {
+func TestObjectMapValueOfEqual(t *testing.T) {
 	t.Parallel()
 
 	objectA := ObjectA{
@@ -144,20 +144,20 @@ func TestMappedObjectValueOfEqual(t *testing.T) {
 			other: types.StringValue("test"),
 		},
 		"equal value": {
-			other: fwtypes.NewMappedObjectValueOfMapOf(ctx, map[string]ObjectA{"fred": objectA}),
+			other: fwtypes.NewObjectMapValueMapOf(ctx, map[string]ObjectA{"fred": objectA}),
 			want:  true,
 		},
 		"struct not equal value": {
-			other: fwtypes.NewMappedObjectValueOfMapOf(ctx, map[string]ObjectA{"fred": objectA2}),
+			other: fwtypes.NewObjectMapValueMapOf(ctx, map[string]ObjectA{"fred": objectA2}),
 		},
 		"other struct value": {
-			other: fwtypes.NewMappedObjectValueOfMapOf(ctx, map[string]ObjectB{"fred": objectB}),
+			other: fwtypes.NewObjectMapValueMapOf(ctx, map[string]ObjectB{"fred": objectB}),
 		},
 		"null value": {
-			other: fwtypes.NewMappedObjectValueOfNull[ObjectA](ctx),
+			other: fwtypes.NewObjectMapNullValueMapOf[ObjectA](ctx),
 		},
 		"unknown value": {
-			other: fwtypes.NewMappedObjectValueOfUnknown[ObjectA](ctx),
+			other: fwtypes.NewObjectMapUnknownValueMapOf[ObjectA](ctx),
 		},
 	}
 
@@ -166,7 +166,7 @@ func TestMappedObjectValueOfEqual(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := fwtypes.NewMappedObjectValueOfMapOf(ctx, map[string]ObjectA{"fred": objectA}).Equal(testCase.other)
+			got := fwtypes.NewObjectMapValueMapOf(ctx, map[string]ObjectA{"fred": objectA}).Equal(testCase.other)
 
 			if got != testCase.want {
 				t.Errorf("got = %v, want = %v", got, testCase.want)
