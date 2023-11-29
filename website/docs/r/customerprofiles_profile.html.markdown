@@ -1,7 +1,7 @@
 ---
 subcategory: "Connect Customer Profiles"
 layout: "aws"
-page_title: "AWS: aws_customerprofiles_profile":
+page_title: "AWS: aws_customerprofiles_profile"
 description: |-
   Terraform resource for managing an Amazon Customer Profiles Profile.
 ---
