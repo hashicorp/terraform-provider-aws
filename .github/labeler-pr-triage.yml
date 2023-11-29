@@ -908,6 +908,7 @@ service/rum:
 service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
+  - 'website/**/s3_directory_bucket*'
   - 'website/**/s3_object*'
   - 'website/**/canonical_user_id*'
 service/s3control:

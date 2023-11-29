@@ -6,6 +6,7 @@ package s3
 import (
 	"context"
 	"log"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -124,6 +125,10 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutObjectLockConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Object Lock Configuration: %s", bucket, err)

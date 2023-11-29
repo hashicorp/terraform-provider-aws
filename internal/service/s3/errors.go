@@ -3,12 +3,17 @@
 
 package s3
 
+import (
+	"fmt"
+)
+
 // Error code constants missing from AWS Go SDK:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#pkg-constants
 
 const (
 	errCodeAccessDenied                         = "AccessDenied"
 	errCodeBucketNotEmpty                       = "BucketNotEmpty"
+	errCodeInvalidArgument                      = "InvalidArgument"
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
@@ -42,3 +47,7 @@ const (
 const (
 	ErrMessageBucketAlreadyExists = "bucket already exists"
 )
+
+func errDirectoryBucket(err error) error {
+	return fmt.Errorf("directory buckets are not supported: %w", err)
+}
