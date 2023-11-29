@@ -126,7 +126,6 @@ func (v ObjectMapValueOf[T]) ToObjectMap(ctx context.Context) (any, diag.Diagnos
 	return v.ToMap(ctx)
 }
 
-// ToSlice returns a slice of pointers to the elements of a ObjectMap.
 func (v ObjectMapValueOf[T]) ToMap(ctx context.Context) (map[string]T, diag.Diagnostics) {
 	return mapNestedObjectValueObjectMap[T](ctx, v.MapValue)
 }
@@ -136,7 +135,7 @@ func mapNestedObjectValueObjectMap[T any](ctx context.Context, val valueWithMapE
 
 	kvs := val.Elements()
 	m := make(map[string]T)
-	for k, _ := range kvs {
+	for k := range kvs {
 		ptr, d := nestedObjectValueObjectPtrFromValue[T](ctx, kvs[k])
 		diags.Append(d...)
 		if diags.HasError() {

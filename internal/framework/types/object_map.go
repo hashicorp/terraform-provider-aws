@@ -14,9 +14,6 @@ import (
 type ObjectMapType interface {
 	attr.Type
 
-	// NewObjectPtr returns a new, empty value as an object pointer (Go *struct).
-	//NewObjectPtr(context.Context) (any, diag.Diagnostics)
-
 	// NullValue returns a Null Value.
 	NullValue(context.Context) (attr.Value, diag.Diagnostics)
 }
