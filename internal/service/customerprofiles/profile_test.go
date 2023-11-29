@@ -33,7 +33,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_full(rName, accountNumber, email),
+				Config: testAccProfileConfig_full(rName, accountNumber, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
@@ -106,7 +106,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProfile_fullUpdated(rName, accountNumberUpdated, emailUpdated),
+				Config: testAccProfileConfig_fullUpdated(rName, accountNumberUpdated, emailUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
@@ -189,7 +189,7 @@ func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_full(rName, accountNumber, email),
+				Config: testAccProfileConfig_full(rName, accountNumber, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceProfile(), resourceName),
@@ -256,7 +256,7 @@ func testAccProfileImportStateIdFunc(resourceName string) resource.ImportStateId
 	}
 }
 
-func testAccProfile_base(rName string) string {
+func testAccProfileConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_customerprofiles_domain" "test" {
   domain_name             = %[1]q
@@ -265,9 +265,9 @@ resource "aws_customerprofiles_domain" "test" {
 `, rName)
 }
 
-func testAccProfile_full(rName, accountNumber, email string) string {
+func testAccProfileConfig_full(rName, accountNumber, email string) string {
 	return acctest.ConfigCompose(
-		testAccProfile_base(rName),
+		testAccProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_customerprofiles_profile" "test" {
   domain_name            = aws_customerprofiles_domain.test.domain_name
@@ -350,9 +350,9 @@ resource "aws_customerprofiles_profile" "test" {
 `, rName, accountNumber, email))
 }
 
-func testAccProfile_fullUpdated(rName, accountNumberUpdated, emailUpdated string) string {
+func testAccProfileConfig_fullUpdated(rName, accountNumberUpdated, emailUpdated string) string {
 	return acctest.ConfigCompose(
-		testAccProfile_base(rName),
+		testAccProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_customerprofiles_profile" "test" {
   domain_name            = aws_customerprofiles_domain.test.domain_name

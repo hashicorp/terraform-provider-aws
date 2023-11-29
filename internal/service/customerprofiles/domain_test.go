@@ -28,7 +28,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomain_base(rName, 120),
+				Config: testAccDomainConfig_base(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
@@ -40,7 +40,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomain_base(rName, 365),
+				Config: testAccDomainConfig_base(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
@@ -61,7 +61,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomain_full(rName),
+				Config: testAccDomainConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
@@ -108,7 +108,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomain_fullUpdated(rName),
+				Config: testAccDomainConfig_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
@@ -164,7 +164,7 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomain_tags(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -177,7 +177,7 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomain_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -186,7 +186,7 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomain_tags(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -208,7 +208,7 @@ func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfile_base(rName),
+				Config: testAccDomainConfig_base(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceDomain(), resourceName),
@@ -264,7 +264,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccDomain_base(rName string, defaultExpirationDays int) string {
+func testAccDomainConfig_base(rName string, defaultExpirationDays int) string {
 	return fmt.Sprintf(`
 resource "aws_customerprofiles_domain" "test" {
   domain_name             = %[1]q
@@ -273,7 +273,7 @@ resource "aws_customerprofiles_domain" "test" {
 `, rName, defaultExpirationDays)
 }
 
-func testAccDomain_tags(rName string, tagKey, tagValue string) string {
+func testAccDomainConfig_tags(rName string, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_customerprofiles_domain" "test" {
   domain_name             = %[1]q
@@ -286,7 +286,7 @@ resource "aws_customerprofiles_domain" "test" {
 `, rName, tagKey, tagValue)
 }
 
-func testAccDomain_tags2(rName string, tagKey, tagValue, tagKey2, tagValue2 string) string {
+func testAccDomainConfig_tags2(rName string, tagKey, tagValue, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_customerprofiles_domain" "test" {
   domain_name             = %[1]q
@@ -300,7 +300,7 @@ resource "aws_customerprofiles_domain" "test" {
 `, rName, tagKey, tagValue, tagKey2, tagValue2)
 }
 
-func testAccDomain_full(rName string) string {
+func testAccDomainConfig_full(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
@@ -427,7 +427,7 @@ resource "aws_customerprofiles_domain" "test" {
 `, rName)
 }
 
-func testAccDomain_fullUpdated(rName string) string {
+func testAccDomainConfig_fullUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
