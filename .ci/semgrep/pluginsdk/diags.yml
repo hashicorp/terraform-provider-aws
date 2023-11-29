@@ -1,81 +1,84 @@
 rules:
   - id: avoid-diag_FromErr
-    fix: sdkdiag.AppendFromErr(diags, $ERR)
     languages: [go]
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/[b-z]*
-    patterns:
-      - pattern: diag.FromErr($ERR)
+        - internal/service/[d-z]*
+    pattern: diag.FromErr($ERR)
+    fix: sdkdiag.AppendFromErr(diags, $ERR)
     severity: WARNING
 
   - id: avoid-diag_Errorf
-    fix-regex:
-      regex: diag\.Errorf\((.*)\)
-      replacement: sdkdiag.AppendErrorf(diags, \1)
     languages: [go]
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/[b-z]*
-    patterns:
-      - pattern: diag.Errorf(...)
+        - internal/service/[d-z]*
+    pattern: diag.Errorf($...ARGS)
+    fix: sdkdiag.AppendErrorf(diags, $...ARGS)
     severity: WARNING
 
-  - id: avoid-create_DiagError
-    fix-regex:
-      regex: create\.DiagError\((.*)\)
-      replacement: create.AppendDiagError(diags, \1)
+  - id: avoid-return-create_DiagError
     languages: [go]
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/[b-z]*
-    patterns:
-      - pattern: create.DiagError(...)
+        - internal/service/[d-z]*
+    pattern: return create.DiagError($...ARGS)
+    fix: return create.AppendDiagError(diags, $...ARGS)
+    severity: WARNING
+
+  - id: avoid-append-create_DiagError
+    languages: [go]
+    message: Prefer `create.AppendDiagError` to `create.DiagError`
+    paths:
+      exclude:
+        - internal/service/connect
+        - internal/service/connectcases
+        - internal/service/controltower
+        - internal/service/cur
+        - internal/service/[d-z]*
+    pattern: append(diags, create.DiagError($...ARGS)...)
+    fix: create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
 
   - id: avoid-create_DiagSettingError
-    fix-regex:
-      regex: create\.DiagSettingError\((.*)\)
-      replacement: create.AppendDiagSettingError(diags, \1)
     languages: [go]
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/[b-z]*
-    patterns:
-      - pattern: create.DiagSettingError(...)
+        - internal/service/[d-z]*
+    pattern: create.DiagSettingError($...ARGS)
+    fix: create.AppendDiagSettingError(diags, $...ARGS)
     severity: WARNING
 
   - id: append-Read-to-diags
-    fix-regex:
-      regex: return (resource\w+Read\(.*\))
-      replacement: return append(diags, \1...)
     languages: [go]
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/[b-z]*
+        - internal/service/[d-z]*
     patterns:
-      - pattern: return $READFN(...)
+      - pattern: return $READFN($...ARGS)
       - metavariable-regex:
           metavariable: "$READFN"
           regex: resource\w+Read
+      - pattern-not-inside: |
+          func $UPDATEFN(...) {
+            return $READFN($...ARGS)
+          }
+    fix: return append(diags, $READFN($...ARGS)...)
     severity: WARNING
 
   - id: return-diags-not-nil
-    fix-regex:
-      regex: return nil
-      replacement: return diags
     languages: [go]
     message: Return diags instead of nil
     paths:
       include:
         - internal/service
       exclude:
-        - internal/service/[b-z]*
+        - internal/service/[d-z]*
     patterns:
       - pattern: return nil
       - pattern-not-inside: |
@@ -86,4 +89,5 @@ rules:
           func $F(...) diag.Diagnostics {
             ...
           }
+    fix: return diags
     severity: WARNING
