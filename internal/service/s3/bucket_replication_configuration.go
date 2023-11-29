@@ -346,6 +346,10 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		_, err = conn.PutBucketReplication(ctx, input)
 	}
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ReplicationConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Replication Configuration: %s", bucket, err)
 	}

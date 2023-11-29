@@ -12,6 +12,7 @@ const (
 	Amplify                      = "amplify"
 	AppAutoScaling               = "appautoscaling"
 	AppConfig                    = "appconfig"
+	AppFabric                    = "appfabric"
 	AppFlow                      = "appflow"
 	AppIntegrations              = "appintegrations"
 	AppMesh                      = "appmesh"

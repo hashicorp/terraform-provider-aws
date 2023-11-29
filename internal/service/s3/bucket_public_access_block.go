@@ -80,6 +80,10 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "PublicAccessBlockConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Public Access Block: %s", bucket, err)
 	}

@@ -57,6 +57,8 @@ service/appconfig:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfig_'
 service/appconfigdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfigdata_'
+service/appfabric:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appfabric_'
 service/appflow:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appflow_'
 service/appintegrations:
@@ -552,7 +554,7 @@ service/route53resolver:
 service/rum:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rum_'
 service/s3:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
