@@ -92,7 +92,7 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Traffic Source Attachment (%s) create: %s", id, err)
 	}
 
-	return resourceTrafficSourceAttachmentRead(ctx, d, meta)
+	return append(diags, resourceTrafficSourceAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -144,7 +144,7 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Traffic Source Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const trafficSourceAttachmentIDSeparator = ","

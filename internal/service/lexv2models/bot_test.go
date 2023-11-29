@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,6 +28,7 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot.test"
+	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -44,7 +46,7 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 					testAccCheckBotExists(ctx, resourceName, &bot),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", "60"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "data_privacy.0.child_directed"),
 				),
 			},
@@ -140,6 +142,40 @@ func TestAccLexV2ModelsBot_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsBot_type(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var bot lexmodelsv2.DescribeBotOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_bot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotConfig_type(rName, 60, true, string(types.BotTypeBot)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotExists(ctx, resourceName, &bot),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.BotTypeBot)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
@@ -206,7 +242,7 @@ func testAccBotBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "test_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -223,8 +259,8 @@ resource "aws_iam_role" "test_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = aws_iam_role.test_role.name
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonLexFullAccess"
 }
 `, rName)
@@ -237,10 +273,10 @@ func testAccBotConfig_basic(rName string, ttl int, dp bool) string {
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = %[2]d
-  role_arn                    = aws_iam_role.test_role.arn
+  role_arn                    = aws_iam_role.test.arn
 
   data_privacy {
-    child_directed = "%[3]t"
+    child_directed = %[3]t
   }
 }
 `, rName, ttl, dp))
@@ -253,7 +289,7 @@ func testAccBotConfig_tags1(rName string, ttl int, dp bool, tagKey1, tagValue1 s
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = %[2]d
-  role_arn                    = aws_iam_role.test_role.arn
+  role_arn                    = aws_iam_role.test.arn
 
   data_privacy {
     child_directed = %[3]t
@@ -273,7 +309,7 @@ func testAccBotConfig_tags2(rName string, ttl int, dp bool, tagKey1, tagValue1, 
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = %[2]d
-  role_arn                    = aws_iam_role.test_role.arn
+  role_arn                    = aws_iam_role.test.arn
 
   data_privacy {
     child_directed = %[3]t
@@ -285,4 +321,21 @@ resource "aws_lexv2models_bot" "test" {
   }
 }
 `, rName, ttl, dp, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccBotConfig_type(rName string, ttl int, dp bool, botType string) string {
+	return acctest.ConfigCompose(
+		testAccBotBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_bot" "test" {
+  name                        = %[1]q
+  idle_session_ttl_in_seconds = %[2]d
+  role_arn                    = aws_iam_role.test.arn
+  type                        = %[4]q
+
+  data_privacy {
+    child_directed = %[3]t
+  }
+}
+`, rName, ttl, dp, botType))
 }

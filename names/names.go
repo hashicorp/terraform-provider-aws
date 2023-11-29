@@ -31,6 +31,7 @@ const (
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
 	AppFlowEndpointID                    = "appflow"
+	AppRunnerEndpointID                  = "apprunner"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	BedrockEndpointID                    = "bedrock"
@@ -43,10 +44,12 @@ const (
 	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
+	ControlTowerEndpointID               = "controltower"
 	DSEndpointID                         = "ds"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
 	EMRServerlessEndpointID              = "emrserverless"
+	EvidentlyEndpointID                  = "evidently"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
@@ -95,6 +98,8 @@ const (
 )
 
 const (
+	GlobalRegionID = "aws-global" // AWS Standard global region.
+
 	USEast1RegionID = "us-east-1" // US East (N. Virginia).
 	USWest1RegionID = "us-west-1" // US West (N. California).
 	USWest2RegionID = "us-west-2" // US West (Oregon).

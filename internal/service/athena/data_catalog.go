@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -81,6 +82,8 @@ func resourceDataCatalog() *schema.Resource {
 }
 
 func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	name := d.Get("name").(string)
@@ -98,15 +101,17 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.CreateDataCatalog(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Athena Data Catalog (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Athena Data Catalog (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceDataCatalogRead(ctx, d, meta)
+	return append(diags, resourceDataCatalogRead(ctx, d, meta)...)
 }
 
 func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	dataCatalog, err := findDataCatalogByName(ctx, conn, d.Id())
@@ -114,11 +119,11 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Athena Data Catalog (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Athena Data Catalog (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Athena Data Catalog (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -151,10 +156,12 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("parameters", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -173,14 +180,16 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateDataCatalog(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Athena Data Catalog (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Athena Data Catalog (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceDataCatalogRead(ctx, d, meta)
+	return append(diags, resourceDataCatalogRead(ctx, d, meta)...)
 }
 
 func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
@@ -189,14 +198,14 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Athena Data Catalog (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Athena Data Catalog (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findDataCatalogByName(ctx context.Context, conn *athena.Client, name string) (*types.DataCatalog, error) {

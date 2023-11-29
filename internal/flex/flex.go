@@ -122,6 +122,13 @@ func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
 	})
 }
 
+// ExpandInt64ValueMap expands a map of string to interface to a map of string to int64
+func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
+	return tfmaps.ApplyToAllValues(m, func(v any) int64 {
+		return int64(v.(int))
+	})
+}
+
 // Expands a map of string to interface to a map of string to *string
 func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	return tfmaps.ApplyToAllValues(m, func(v any) *string {

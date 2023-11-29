@@ -304,6 +304,10 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		return conn.PutBucketNotificationConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "NotificationConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Notification: %s", bucket, err)
 	}

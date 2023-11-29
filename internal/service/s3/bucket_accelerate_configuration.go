@@ -74,6 +74,10 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		return conn.PutBucketAccelerateConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AccelerateConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Accelerate Configuration: %s", bucket, err)
 	}
