@@ -13,16 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-const (
-	listObjectVersionsMaxKeys = 1000
-)
-
-// emptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
+// emptyBucket empties the specified S3 general purpose bucket by deleting all object versions and delete markers.
 // If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
 // an attempt is made to remove any S3 Object Lock legal holds.
-// Returns the number of objects deleted.
+// Returns the number of object versions and delete markers deleted.
 func emptyBucket(ctx context.Context, conn *s3.Client, bucket string, force bool) (int64, error) {
 	nObjects, err := forEachObjectVersionsPage(ctx, conn, bucket, func(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectVersionsOutput) (int64, error) {
 		return deletePageOfObjectVersions(ctx, conn, bucket, force, page)
@@ -38,13 +35,18 @@ func emptyBucket(ctx context.Context, conn *s3.Client, bucket string, force bool
 	return nObjects, err
 }
 
+// emptyDirectoryBucket empties the specified S3 directory bucket by deleting all objects.
+// Returns the number of objects deleted.
+func emptyDirectoryBucket(ctx context.Context, conn *s3.Client, bucket string) (int64, error) {
+	return forEachObjectsPage(ctx, conn, bucket, deletePageOfObjects)
+}
+
 // forEachObjectVersionsPage calls the specified function for each page returned from the S3 ListObjectVersionsPages API.
 func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket string, fn func(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectVersionsOutput) (int64, error)) (int64, error) {
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket:  aws.String(bucket),
-		MaxKeys: aws.Int32(listObjectVersionsMaxKeys),
+		Bucket: aws.String(bucket),
 	}
 	var lastErr error
 
@@ -54,6 +56,39 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 
 		if err != nil {
 			return nObjects, fmt.Errorf("listing S3 bucket (%s) object versions: %w", bucket, err)
+		}
+
+		n, err := fn(ctx, conn, bucket, page)
+		nObjects += n
+
+		if err != nil {
+			lastErr = err
+			break
+		}
+	}
+
+	if lastErr != nil {
+		return nObjects, lastErr
+	}
+
+	return nObjects, nil
+}
+
+// forEachObjectsPage calls the specified function for each page returned from the S3 ListObjectsV2 API.
+func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn func(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectsV2Output) (int64, error)) (int64, error) {
+	var nObjects int64
+
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
+	}
+	var lastErr error
+
+	pages := s3.NewListObjectsV2Paginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nObjects, fmt.Errorf("listing S3 bucket (%s) objects: %w", bucket, err)
 		}
 
 		n, err := fn(ctx, conn, bucket, page)
@@ -109,7 +144,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 	}
 
 	if err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) objects: %w", bucket, err)
+		return nObjects, fmt.Errorf("deleting S3 bucket (%s) object versions: %w", bucket, err)
 	}
 
 	nObjects -= int64(len(output.Errors))
@@ -161,7 +196,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 	}
 
 	if err := errors.Join(deleteErrs...); err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) objects: %w", bucket, err)
+		return nObjects, fmt.Errorf("deleting S3 bucket (%s) object versions: %w", bucket, err)
 	}
 
 	return nObjects, nil
@@ -217,6 +252,52 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket stri
 	return nObjects, nil
 }
 
+// deletePageOfObjects deletes a page (<= 1000) of S3 objects.
+// Returns the number of objects deleted.
+func deletePageOfObjects(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectsV2Output) (int64, error) {
+	toDelete := tfslices.ApplyToAll(page.Contents, func(v types.Object) types.ObjectIdentifier {
+		return types.ObjectIdentifier{
+			Key: v.Key,
+		}
+	})
+
+	var nObjects int64
+	if nObjects = int64(len(toDelete)); nObjects == 0 {
+		return nObjects, nil
+	}
+
+	input := &s3.DeleteObjectsInput{
+		Bucket: aws.String(bucket),
+		Delete: &types.Delete{
+			Objects: toDelete,
+			Quiet:   aws.Bool(true), // Only report errors.
+		},
+	}
+
+	output, err := conn.DeleteObjects(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return nObjects, nil
+	}
+
+	if err != nil {
+		return nObjects, fmt.Errorf("deleting S3 bucket (%s) objects: %w", bucket, err)
+	}
+
+	nObjects -= int64(len(output.Errors))
+
+	var errs []error
+	for _, v := range output.Errors {
+		errs = append(errs, newDeleteObjectVersionError(v))
+	}
+
+	if err := errors.Join(errs...); err != nil {
+		return nObjects, fmt.Errorf("deleting S3 bucket (%s) objects: %w", bucket, err)
+	}
+
+	return nObjects, nil
+}
+
 func newObjectVersionError(key, versionID string, err error) error {
 	if err == nil {
 		return nil
@@ -243,8 +324,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket:  aws.String(bucket),
-		MaxKeys: aws.Int32(listObjectVersionsMaxKeys),
+		Bucket: aws.String(bucket),
 	}
 	if key != "" {
 		input.Prefix = aws.String(key)
