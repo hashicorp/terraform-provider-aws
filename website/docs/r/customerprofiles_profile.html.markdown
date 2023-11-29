@@ -70,7 +70,7 @@ The `address` configuration block supports the following attributes:
 
 ## Attribute Reference
 
-This resource exports the following attribute in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the Customer Profiles Profile.
 

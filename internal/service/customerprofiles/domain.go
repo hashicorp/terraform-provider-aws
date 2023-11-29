@@ -767,7 +767,7 @@ func flattenConflictResolution(apiObject *types.ConflictResolution) []interface{
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["conflict_resolving_model"] = types.ConflictResolvingModel(apiObject.ConflictResolvingModel)
+	tfMap["conflict_resolving_model"] = apiObject.ConflictResolvingModel
 
 	if v := apiObject.SourceName; v != nil {
 		tfMap["source_name"] = aws.ToString(v)
@@ -829,7 +829,7 @@ func flattenJobSchedule(apiObject *types.JobSchedule) []interface{} {
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["day_of_the_week"] = types.JobScheduleDayOfTheWeek(apiObject.DayOfTheWeek)
+	tfMap["day_of_the_week"] = apiObject.DayOfTheWeek
 
 	if v := apiObject.Time; v != nil {
 		tfMap["time"] = aws.ToString(v)
@@ -849,7 +849,7 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []in
 		tfMap["address"] = flex.FlattenStringValueList(v)
 	}
 
-	tfMap["attribute_matching_model"] = types.AttributeMatchingModel(apiObject.AttributeMatchingModel)
+	tfMap["attribute_matching_model"] = apiObject.AttributeMatchingModel
 
 	if v := apiObject.EmailAddress; v != nil {
 		tfMap["email_address"] = flex.FlattenStringValueList(v)

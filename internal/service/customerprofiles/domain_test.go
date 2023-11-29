@@ -197,7 +197,7 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccCustomerProfilesDomain_dissapears(t *testing.T) {
+func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
