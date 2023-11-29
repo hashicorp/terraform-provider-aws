@@ -64,80 +64,80 @@ resource "aws_db_instance" "example" {
 
 1. Edit the Terraform configuration to add the `aws_rds_blue_green_deployment` resource
 
-```terraform
-resource "aws_db_instance" "example" {
-  identifier = "example-db"
-}
+    ```terraform
+    resource "aws_db_instance" "example" {
+      identifier = "example-db"
+    }
 
-resource "aws_rds_blue_green_deployment" "example" {
-  source = aws_db_instance.example.arn
-}
-```
+    resource "aws_rds_blue_green_deployment" "example" {
+      source = aws_db_instance.example.arn
+    }
+    ```
 
-2. Run `terraform apply`.
+1. Run `terraform apply`.
   This will wait until the Blue/Green Deployment and the "Green" RDS Instance  `example-db-green` are created
-3. Edit the Terraform configuration to add an `aws_db_instance` resource for the RDS Instance `example-db-green` and make any desired configuration changes
+1. Edit the Terraform configuration to add an `aws_db_instance` resource for the RDS Instance `example-db-green` and make any desired configuration changes
 
-```terraform
-resource "aws_db_instance" "example" {
-  identifier = "example-db"
-}
+    ```terraform
+    resource "aws_db_instance" "example" {
+      identifier = "example-db"
+    }
 
-resource "aws_rds_blue_green_deployment" "example" {
-  source = aws_db_instance.example.arn
-}
+    resource "aws_rds_blue_green_deployment" "example" {
+      source = aws_db_instance.example.arn
+    }
 
-resource "aws_db_instance" "example_updated" {
-  identifier = "example-db-green"
-}
-```
+    resource "aws_db_instance" "example_updated" {
+      identifier = "example-db-green"
+    }
+    ```
 
-4. Run `terraform` to import the RDS Instance `example-db-green`
-5. Run `terraform apply` to update the RDS Instance `example-db-green`
-6. Edit the Terraform configuration to trigger the switchover on the `aws_rds_blue_green_deployment` resource
+1. Run `terraform` to import the RDS Instance `example-db-green`
+1. Run `terraform apply` to update the RDS Instance `example-db-green`
+1. Edit the Terraform configuration to trigger the switchover on the `aws_rds_blue_green_deployment` resource
 
-```terraform
-resource "aws_db_instance" "example" {
-  identifier = "example-db"
-}
+    ```terraform
+    resource "aws_db_instance" "example" {
+      identifier = "example-db"
+    }
 
-resource "aws_rds_blue_green_deployment" "example" {
-  source      = aws_db_instance.example.arn
-  switch_over = true
-}
+    resource "aws_rds_blue_green_deployment" "example" {
+      source      = aws_db_instance.example.arn
+      switch_over = true
+    }
 
-resource "aws_db_instance" "example_updated" {
-  identifier = "example-db-green"
-}
-```
+    resource "aws_db_instance" "example_updated" {
+      identifier = "example-db-green"
+    }
+    ```
 
-7. Run `terraform apply` to perform the switchover.
+1. Run `terraform apply` to perform the switchover.
   The updated RDS Instance will be renamed from `example-db-green` to `example-db` and the original RDS Instance will be renamed from `example-db` to `example-db-old`.
   This means that the resource `aws_db_instance.example` will now be pointing to the updated RDS Instance, the resource `aws_db_instance.example_updated` will be pointing at a non-existent RDS Instance, and the original RDS Instance is not known to Terraform.
-8. Edit the Terraform configuration to remove the resource `aws_db_instance.example_updated` and add an `aws_db_instance` resource for the RDS Instance `example-db-old`
+1. Edit the Terraform configuration to remove the resource `aws_db_instance.example_updated` and add an `aws_db_instance` resource for the RDS Instance `example-db-old`
 
-```terraform
-resource "aws_db_instance" "example" {
-  identifier = "example-db"
-}
+    ```terraform
+    resource "aws_db_instance" "example" {
+      identifier = "example-db"
+    }
 
-resource "aws_rds_blue_green_deployment" "example" {
-  source      = aws_db_instance.example.arn
-  switch_over = true
-}
+    resource "aws_rds_blue_green_deployment" "example" {
+      source      = aws_db_instance.example.arn
+      switch_over = true
+    }
 
-resource "aws_db_instance" "example_to_delete" {
-  identifier = "example-db-old"
-}
-```
+    resource "aws_db_instance" "example_to_delete" {
+      identifier = "example-db-old"
+    }
+    ```
 
-9. Run `terraform` to import the RDS Instance `example-db-old`
-10. Edit the Terraform configuration to remove the resource `aws_db_instance.example_updated` and the `aws_rds_blue_green_deployment` resource
+1. Run `terraform` to import the RDS Instance `example-db-old`
+1. Edit the Terraform configuration to remove the resource `aws_db_instance.example_updated` and the `aws_rds_blue_green_deployment` resource
 
-```terraform
-resource "aws_db_instance" "example" {
-  identifier = "example-db"
-}
-```
+    ```terraform
+    resource "aws_db_instance" "example" {
+      identifier = "example-db"
+    }
+    ```
 
-11. Run `terraform apply` to delete the Blue/Green Deployment and the original RDS Instance
+1. Run `terraform apply` to delete the Blue/Green Deployment and the original RDS Instance
