@@ -63,8 +63,8 @@ The following arguments are required:
 
 * `cluster_name` - (Required) The name of the cluster to create the association in.
 * `namespace` - (Required) The name of the Kubernetes namespace inside the cluster to create the association in. The service account and the pods that use the service account must be in this namespace.
-* `service_account` - (Required) The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
+* `service_account` - (Required) The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
 
 The following arguments are optional:
 
@@ -76,22 +76,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `association_arn` - The Amazon Resource Name (ARN) of the association.
 * `association_id` - The ID of the association.
-* `created_at` - The timestamp that the association was created at.
-* `modified_at` - The most recent timestamp that the association was modified at.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_eks_pod_identity_association.example
-  id = "example:a-12345678"
+  id = "example,a-12345678"
 }
 ```
 
-Using `terraform import`, import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a colon (`:`). For example:
+Using `terraform import`, import EKS (Elastic Kubernetes) Pod Identity Association using the `cluster_name` and `association_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_eks_pod_identity_association.example example:a-12345678
+% terraform import aws_eks_pod_identity_association.example example,a-12345678
 ```

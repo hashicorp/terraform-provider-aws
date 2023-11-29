@@ -6,11 +6,11 @@ package eks
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -251,24 +252,20 @@ func (r *podIdentityAssociationResource) Delete(ctx context.Context, req resourc
 }
 
 func (r *podIdentityAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, idSeparator)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sassociation-id", req.ID, idSeparator)
+	const (
+		partCount = 2
+	)
+	parts, err := flex.ExpandResourceId(req.ID, partCount, false)
+	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("importing Pod Identity Association (%s)", req.ID), err.Error())
 		return
 	}
 
-	state := podIdentityAssociationResourceModel{
-		AssociationID: types.StringValue(parts[1]),
-		ClusterName:   types.StringValue(parts[0]),
-	}
-
-	diags := resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("association_id"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_name"), parts[0])...)
 }
+
 func (r *podIdentityAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }

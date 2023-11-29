@@ -150,7 +150,7 @@ func testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName string) re
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["association_id"]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["association_id"]), nil
 	}
 }
 
