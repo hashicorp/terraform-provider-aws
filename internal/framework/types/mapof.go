@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 var _ basetypes.MapTypable = MapTypeOf[struct{}]{}
@@ -38,8 +39,6 @@ func (t MapTypeOf[T]) Equal(o attr.Type) bool {
 
 func (t MapTypeOf[T]) String() string {
 	var zero T
-	fmt.Printf("String():%T\n", zero)
-	//return fmt.Sprintf("MapTypeOf[%T]", zero)
 	return fmt.Sprintf("%T", zero)
 }
 
@@ -122,29 +121,13 @@ func NewMapValueOfUnknown[T any](ctx context.Context) MapValueOf[T] {
 }
 
 func NewMapValueOf[T any](ctx context.Context, elements map[string]T) MapValueOf[T] {
-	fmt.Printf("elements:(%[1]T):%+[1]v\n", elements)
-	//t := NewMapTypeOf[T](ctx)
-	//fmt.Printf("--NewMapTypeOf:(%T)%+v\n", t, t)
-	t, err := ElementType[T](ctx)
-	if err != nil {
-		fmt.Printf("error:%s\n", err)
-	}
-	fmt.Printf("--t:(%T)%+v\n", t, t)
-	lv, diag := basetypes.NewMapValueFrom(ctx, t, elements)
-	fmt.Printf("--lv:%+v\n", lv)
-	fmt.Printf("--diag:%+v\n", diag)
-	ret := MapValueOf[T]{MapValue: lv}
-	fmt.Printf("---ret:%[1]T,%+[1]v\n", ret)
-	return ret
+	return MapValueOf[T]{MapValue: fwdiag.Must(basetypes.NewMapValueFrom(ctx, ElementTypeMust[T](ctx), elements))}
 }
 
 func ElementType[T any](ctx context.Context) (attr.Type, error) {
 	var t T
 	val := reflect.ValueOf(t)
 	typ := val.Type()
-
-	fmt.Printf("val: %+v\n", val)
-	fmt.Printf("typ: %+v\n", typ)
 
 	v, ok := val.Interface().(attr.Value)
 
