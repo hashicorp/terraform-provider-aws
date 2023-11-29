@@ -110,7 +110,7 @@ func ResourceJobDefinition() *schema.Resource {
 						"pod_properties": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"containers": {
@@ -241,6 +241,7 @@ func ResourceJobDefinition() *schema.Resource {
 									"host_network": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  true,
 									},
 									"metadata": {
 										Type:     schema.TypeList,
@@ -272,8 +273,10 @@ func ResourceJobDefinition() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"medium": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      "",
+																ValidateFunc: validation.StringInSlice([]string{"", "Memory"}, true),
 															},
 															"size_limit": {
 																Type:     schema.TypeString,
@@ -298,6 +301,7 @@ func ResourceJobDefinition() *schema.Resource {
 												"name": {
 													Type:     schema.TypeString,
 													Optional: true,
+													Default:  "Default",
 												},
 												"secret": {
 													Type:     schema.TypeSet,

@@ -1260,103 +1260,103 @@ resource "aws_batch_job_definition" "test" {
 
 func testAccJobDefinitionConfig_EKSProperties_basic(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "container"
-		eks_properties {
-		  pod_properties {
-			host_network = true
-			containers {
-			  image = "public.ecr.aws/amazonlinux/amazonlinux:1"
-			  command = [
-				"sleep",
-				"60"
-			  ]
-			  resources {
-				limits = {
-				  cpu    = "1"
-				  memory = "1024Mi"
-				}
-			  }
-			}
-			metadata {
-			  labels = {
-				environment = "test"
-				name        = %[1]q
-			  }
-			}
-		  }
-		}
-	}`, rName)
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      host_network = true
+      containers {
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+    }
+  }
+}`, rName)
 }
 
 func testAccJobDefinitionConfig_EKSProperties_advancedUpdate(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_batch_job_definition" "test" {
-		name = %[1]q
-		type = "container"
-		eks_properties {
-		  pod_properties {
-			host_network = true
-			containers {
-			  args              = ["60"]
-			  image             = "public.ecr.aws/amazonlinux/amazonlinux:2"
-			  image_pull_policy = "Always"
-			  name              = "sleep"
-			  command = [
-				"sleep",
-			  ]
-			  resources {
-				requests = {
-				  cpu    = "1"
-				  memory = "1024Mi"
-				}
-				limits = {
-				  cpu    = "1"
-				  memory = "1024Mi"
-				}
-			  }
-			  security_context {
-				privileged                 = true
-				read_only_root_file_system = true
-				run_as_group               = 1000
-				run_as_user                = 1000
-				run_as_non_root            = true
-			  }
-			  volume_mounts {
-				mount_path = "/tmp"
-				read_only  = true
-				name       = "tmp"
-			  }
-			  env {
-				name  = "Test"
-				value = "Environment Variable"
-			  }
-			}
-			metadata {
-			  labels = {
-				environment = "test"
-				name        = %[1]q
-			  }
-			}
-			volumes {
-			  name = "tmp"
-			  empty_dir {
-				medium = "Memory"
-				size_limit = "128Mi"
-			  }
-			}
-			service_account_name = "test-service-account"
-			dns_policy           = "ClusterFirst"
-		  }
-		}
-		parameters = {
-		  param1 = "val1"
-		  param2 = "val2"
-		}
-	  
-		timeout {
-		  attempt_duration_seconds = 60
-		}
-	  }`, rName)
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      host_network = true
+      containers {
+        args              = ["60"]
+        image             = "public.ecr.aws/amazonlinux/amazonlinux:2"
+        image_pull_policy = "Always"
+        name              = "sleep"
+        command = [
+          "sleep",
+        ]
+        resources {
+          requests = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+        security_context {
+          privileged                 = true
+          read_only_root_file_system = true
+          run_as_group               = 1000
+          run_as_user                = 1000
+          run_as_non_root            = true
+        }
+        volume_mounts {
+          mount_path = "/tmp"
+          read_only  = true
+          name       = "tmp"
+        }
+        env {
+          name  = "Test"
+          value = "Environment Variable"
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+      volumes {
+        name = "tmp"
+        empty_dir {
+          medium     = "Memory"
+          size_limit = "128Mi"
+        }
+      }
+      service_account_name = "test-service-account"
+      dns_policy           = "ClusterFirst"
+    }
+  }
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+
+  timeout {
+    attempt_duration_seconds = 60
+  }
+}`, rName)
 }
