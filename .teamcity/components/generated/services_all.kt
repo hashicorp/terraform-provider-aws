@@ -133,6 +133,7 @@ val services = mapOf(
     "mediaconvert" to ServiceSpec("Elemental MediaConvert"),
     "medialive" to ServiceSpec("Elemental MediaLive"),
     "mediapackage" to ServiceSpec("Elemental MediaPackage"),
+    "mediapackagev2" to ServiceSpec("Elemental MediaPackage Version 2"),
     "mediastore" to ServiceSpec("Elemental MediaStore"),
     "memorydb" to ServiceSpec("MemoryDB for Redis"),
     "mq" to ServiceSpec("MQ", vpcLock = true),
