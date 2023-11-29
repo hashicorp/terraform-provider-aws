@@ -17,4 +17,5 @@ var (
 	FindFargateProfileByTwoPartKey             = findFargateProfileByTwoPartKey
 	FindNodegroupByTwoPartKey                  = findNodegroupByTwoPartKey
 	FindOIDCIdentityProviderConfigByTwoPartKey = findOIDCIdentityProviderConfigByTwoPartKey
+	FindPodIdentityAssociationByTwoPartKey     = findPodIdentityAssociationByTwoPartKey
 )

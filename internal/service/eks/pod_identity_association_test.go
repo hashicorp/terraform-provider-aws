@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,15 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var podidentityassociation eks.DescribePodIdentityAssociationOutput
+	var podidentityassociation types.PodIdentityAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
@@ -63,8 +60,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 
 func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var podidentityassociation eks.DescribePodIdentityAssociationOutput
+	var podidentityassociation types.PodIdentityAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
@@ -92,8 +88,7 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 
 func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var podidentityassociation eks.DescribePodIdentityAssociationOutput
+	var podidentityassociation types.PodIdentityAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
@@ -144,8 +139,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 
 func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var podidentityassociation eks.DescribePodIdentityAssociationOutput
+	var podidentityassociation types.PodIdentityAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_pod_identity_association.test"
 
@@ -192,46 +186,39 @@ func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := conn.DescribePodIdentityAssociation(ctx, &eks.DescribePodIdentityAssociationInput{
-				AssociationId: aws.String(rs.Primary.ID),
-				ClusterName:   aws.String(rs.Primary.Attributes["cluster_name"]),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.EKS, create.ErrActionCheckingDestroyed, tfeks.ResNamePodIdentityAssociation, rs.Primary.ID, err)
+			_, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["association_id"], rs.Primary.Attributes["cluster_name"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.EKS, create.ErrActionCheckingDestroyed, tfeks.ResNamePodIdentityAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EKS Pod Identity Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPodIdentityAssociationExists(ctx context.Context, name string, podidentityassociation *eks.DescribePodIdentityAssociationOutput) resource.TestCheckFunc {
+func testAccCheckPodIdentityAssociationExists(ctx context.Context, n string, v *types.PodIdentityAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EKS, create.ErrActionCheckingExistence, tfeks.ResNamePodIdentityAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.EKS, create.ErrActionCheckingExistence, tfeks.ResNamePodIdentityAssociation, name, errors.New("not set"))
+			return create.Error(names.EKS, create.ErrActionCheckingExistence, tfeks.ResNamePodIdentityAssociation, n, errors.New("not found"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
-		resp, err := conn.DescribePodIdentityAssociation(ctx, &eks.DescribePodIdentityAssociationInput{
-			AssociationId: aws.String(rs.Primary.ID),
-			ClusterName:   aws.String(rs.Primary.Attributes["cluster_name"]),
-		})
+
+		output, err := tfeks.FindPodIdentityAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["association_id"], rs.Primary.Attributes["cluster_name"])
 
 		if err != nil {
-			return create.Error(names.EKS, create.ErrActionCheckingExistence, tfeks.ResNamePodIdentityAssociation, rs.Primary.ID, err)
+			return err
 		}
 
-		*podidentityassociation = *resp
+		*v = *output
 
 		return nil
 	}
