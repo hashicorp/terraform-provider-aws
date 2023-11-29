@@ -323,23 +323,20 @@ func (s Set[T]) Difference(ns Set[T]) Set[T] {
 // DiffStringMaps returns the set of keys and values that must be created, the set of keys
 // and values that must be destroyed, and the set of keys and values that are unchanged.
 func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
-	// First, we're creating everything we have
-	add := map[string]*string{}
-	for k, v := range newMap {
-		add[k] = aws.String(v.(string))
-	}
+	// First, we're creating everything we have.
+	add := ExpandStringMap(newMap)
 
-	// Build the maps of what to remove and what is unchanged
-	remove := map[string]*string{}
-	unchanged := map[string]*string{}
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]*string)
+	unchanged := make(map[string]*string)
 	for k, v := range oldMap {
-		old, ok := add[k]
-		if !ok || aws.StringValue(old) != v.(string) {
+		v := v.(string)
+		if old, ok := add[k]; !ok || aws.StringValue(old) != v {
 			// Delete it!
-			remove[k] = aws.String(v.(string))
+			remove[k] = aws.String(v)
 		} else if ok {
-			unchanged[k] = aws.String(v.(string))
-			// already present so remove from new
+			unchanged[k] = aws.String(v)
+			// Already present, so remove from new.
 			delete(add, k)
 		}
 	}
