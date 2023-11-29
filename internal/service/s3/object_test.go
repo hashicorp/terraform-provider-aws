@@ -1772,7 +1772,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) {
+func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.acceptance-test-naming-parent-disappears
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
@@ -2706,6 +2706,8 @@ resource "aws_s3_directory_bucket" "test" {
   location {
     name = local.location_name
   }
+
+  force_destroy = true
 }
 
 resource "aws_s3_object" "object" {
