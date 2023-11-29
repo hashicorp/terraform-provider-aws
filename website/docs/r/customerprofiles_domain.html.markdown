@@ -98,6 +98,7 @@ The following arguments are optional:
 * `default_encryption_key` - The default encryption key, which is an AWS managed key, is used when no specific type of encryption key is specified. It is used to encrypt all data before it is placed in permanent or semi-permanent storage.
 * `matching` - A block that specifies the process of matching duplicate profiles. [Documented below](#matching).
 * `rule_based_matching` - A block that specifies the process of matching duplicate profiles using the Rule-Based matching. [Documented below](#rule_based_matching).
+* `tags` - Tags to apply to the domain. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `matching`
 
