@@ -1,4 +1,9 @@
 ## 5.29.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_docdbelastic_cluster` ([#31033](https://github.com/hashicorp/terraform-provider-aws/issues/31033))
+
 ## 5.28.0 (November 29, 2023)
 
 FEATURES:
