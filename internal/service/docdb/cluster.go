@@ -245,6 +245,15 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(storageType_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// When you create a DocumentDB DB cluster with the storage type set to "iopt1",
+					// the storage type is returned in the response.
+					// The storage type isn't returned when you set it to "standard".
+					if old == "" && new == storageTypeStandard {
+						return true
+					}
+					return old == new
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
