@@ -5,10 +5,8 @@ package eks
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -21,6 +19,7 @@ import (
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -30,42 +29,43 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Pod Identity Association")
 // @Tags(identifierAttribute="association_arn")
-func newResourcePodIdentityAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePodIdentityAssociation{}
+func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &podIdentityAssociationResource{}
 
 	return r, nil
 }
 
-type resourcePodIdentityAssociationData struct {
-	AssociationArn types.String `tfsdk:"association_arn"`
-	AssociationId  types.String `tfsdk:"association_id"`
+type podIdentityAssociationResourceModel struct {
+	AssociationARN types.String `tfsdk:"association_arn"`
+	AssociationID  types.String `tfsdk:"association_id"`
 	ClusterName    types.String `tfsdk:"cluster_name"`
-	CreatedAt      types.String `tfsdk:"created_at"`
 	ID             types.String `tfsdk:"id"`
 	Namespace      types.String `tfsdk:"namespace"`
-	ModifiedAt     types.String `tfsdk:"modified_at"`
-	RoleArn        fwtypes.ARN  `tfsdk:"role_arn"`
+	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount types.String `tfsdk:"service_account"`
 	Tags           types.Map    `tfsdk:"tags"`
 	TagsAll        types.Map    `tfsdk:"tags_all"`
+}
+
+func (model *podIdentityAssociationResourceModel) setID() {
+	model.ID = model.AssociationID
 }
 
 const (
 	ResNamePodIdentityAssociation = "Pod Identity Association"
 )
 
-type resourcePodIdentityAssociation struct {
+type podIdentityAssociationResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourcePodIdentityAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *podIdentityAssociationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_eks_pod_identity_association"
 }
 
-func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"association_arn": schema.StringAttribute{
@@ -86,18 +86,7 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"created_at": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"modified_at": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			"namespace": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -114,66 +103,59 @@ func (r *resourcePodIdentityAssociation) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func (r *resourcePodIdentityAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().EKSClient(ctx)
-
-	var plan resourcePodIdentityAssociationData
+func (r *podIdentityAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan podIdentityAssociationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &eks.CreatePodIdentityAssociationInput{
-		ClusterName:        fwflex.StringFromFramework(ctx, plan.ClusterName),
-		ClientRequestToken: aws.String(sdkid.UniqueId()),
-		Namespace:          fwflex.StringFromFramework(ctx, plan.Namespace),
-		RoleArn:            fwflex.StringFromFramework(ctx, plan.RoleArn),
-		ServiceAccount:     fwflex.StringFromFramework(ctx, plan.ServiceAccount),
-		Tags:               getTagsIn(ctx),
+	conn := r.Meta().EKSClient(ctx)
+
+	input := &eks.CreatePodIdentityAssociationInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.CreatePodIdentityAssociation(ctx, in)
+	input.ClientRequestToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreatePodIdentityAssociation(ctx, input)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EKS, create.ErrActionCreating, ResNamePodIdentityAssociation, plan.AssociationId.String(), err),
+			create.ProblemStandardMessage(names.EKS, create.ErrActionCreating, ResNamePodIdentityAssociation, plan.AssociationID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EKS, create.ErrActionCreating, ResNamePodIdentityAssociation, plan.AssociationId.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
 
-	plan.AssociationArn = fwflex.StringToFramework(ctx, out.Association.AssociationArn)
-	plan.AssociationId = fwflex.StringToFramework(ctx, out.Association.AssociationId)
-	plan.CreatedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.CreatedAt.Format(time.RFC3339)))
-	plan.ID = fwflex.StringToFramework(ctx, out.Association.AssociationId)
-	plan.ModifiedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
+	// Set values for unknowns.
+	plan.AssociationARN = fwflex.StringToFramework(ctx, output.Association.AssociationArn)
+	plan.AssociationID = fwflex.StringToFramework(ctx, output.Association.AssociationId)
+	plan.setID()
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourcePodIdentityAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *podIdentityAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().EKSClient(ctx)
 
-	var data resourcePodIdentityAssociationData
+	var data podIdentityAssociationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, data.AssociationId.ValueString(), data.ClusterName.ValueString())
+	pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, data.AssociationID.ValueString(), data.ClusterName.ValueString())
+
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -183,23 +165,25 @@ func (r *resourcePodIdentityAssociation) Read(ctx context.Context, req resource.
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EKS, create.ErrActionSetting, ResNamePodIdentityAssociation, data.AssociationId.String(), err),
+			create.ProblemStandardMessage(names.EKS, create.ErrActionSetting, ResNamePodIdentityAssociation, data.AssociationID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	// Set attributes for import.
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, pia, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	setTagsOut(ctx, pia.Tags)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePodIdentityAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourcePodIdentityAssociationData
+func (r *podIdentityAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state podIdentityAssociationResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -213,40 +197,31 @@ func (r *resourcePodIdentityAssociation) Update(ctx context.Context, req resourc
 
 	conn := r.Meta().EKSClient(ctx)
 
-	if !plan.RoleArn.Equal(state.RoleArn) {
-		in := &eks.UpdatePodIdentityAssociationInput{
-			AssociationId: aws.String(plan.AssociationId.ValueString()),
-			ClusterName:   aws.String(plan.ClusterName.ValueString()),
+	if !plan.RoleARN.Equal(state.RoleARN) {
+		input := &eks.UpdatePodIdentityAssociationInput{}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if !plan.RoleArn.IsNull() {
-			in.RoleArn = aws.String(plan.RoleArn.ValueString())
-		}
+		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		out, err := conn.UpdatePodIdentityAssociation(ctx, in)
+		_, err := conn.UpdatePodIdentityAssociation(ctx, input)
+
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EKS, create.ErrActionUpdating, ResNamePodIdentityAssociation, plan.AssociationId.String(), err),
+				create.ProblemStandardMessage(names.EKS, create.ErrActionUpdating, ResNamePodIdentityAssociation, plan.AssociationID.String(), err),
 				err.Error(),
 			)
 			return
 		}
-		if out == nil || out.Association == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EKS, create.ErrActionUpdating, ResNamePodIdentityAssociation, plan.AssociationId.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		plan.ModifiedAt = fwflex.StringToFramework(ctx, aws.String(out.Association.ModifiedAt.Format(time.RFC3339)))
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePodIdentityAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourcePodIdentityAssociationData
+func (r *podIdentityAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state podIdentityAssociationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -254,26 +229,28 @@ func (r *resourcePodIdentityAssociation) Delete(ctx context.Context, req resourc
 
 	conn := r.Meta().EKSClient(ctx)
 
-	in := &eks.DeletePodIdentityAssociationInput{
-		AssociationId: fwflex.StringFromFramework(ctx, state.AssociationId),
-		ClusterName:   fwflex.StringFromFramework(ctx, state.ClusterName),
+	input := &eks.DeletePodIdentityAssociationInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, state, input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	_, err := conn.DeletePodIdentityAssociation(ctx, in)
+	_, err := conn.DeletePodIdentityAssociation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EKS, create.ErrActionDeleting, ResNamePodIdentityAssociation, state.AssociationId.String(), err),
+			create.ProblemStandardMessage(names.EKS, create.ErrActionDeleting, ResNamePodIdentityAssociation, state.AssociationID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourcePodIdentityAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *podIdentityAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sassociation-id", req.ID, idSeparator)
@@ -281,8 +258,8 @@ func (r *resourcePodIdentityAssociation) ImportState(ctx context.Context, req re
 		return
 	}
 
-	state := resourcePodIdentityAssociationData{
-		AssociationId: types.StringValue(parts[1]),
+	state := podIdentityAssociationResourceModel{
+		AssociationID: types.StringValue(parts[1]),
 		ClusterName:   types.StringValue(parts[0]),
 	}
 
@@ -292,33 +269,32 @@ func (r *resourcePodIdentityAssociation) ImportState(ctx context.Context, req re
 		return
 	}
 }
-func (r *resourcePodIdentityAssociation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *podIdentityAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, AssociationId, ClusterName string) (*eks.DescribePodIdentityAssociationOutput, error) {
-	in := &eks.DescribePodIdentityAssociationInput{
-		AssociationId: aws.String(AssociationId),
-		ClusterName:   aws.String(ClusterName),
+func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, associationID, clusterName string) (*awstypes.PodIdentityAssociation, error) {
+	input := &eks.DescribePodIdentityAssociationInput{
+		AssociationId: aws.String(associationID),
+		ClusterName:   aws.String(clusterName),
 	}
 
-	out, err := conn.DescribePodIdentityAssociation(ctx, in)
+	output, err := conn.DescribePodIdentityAssociation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Association == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output.Association, nil
 }
