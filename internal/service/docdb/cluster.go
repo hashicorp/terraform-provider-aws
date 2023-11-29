@@ -840,7 +840,7 @@ func statusDBCluster(ctx context.Context, conn *docdb.DocDB, id string) retry.St
 	}
 }
 
-func waitDBClusterAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) {
+func waitDBClusterAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusCreating,
