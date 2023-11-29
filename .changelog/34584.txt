@@ -2,6 +2,10 @@
 aws_lb_trust_store
 ```
 
+```release-note:new-resource
+aws_lb_trust_store_revocation
+```
+
 ```release-note:new-data-source
 aws_lb_trust_store
 ```
