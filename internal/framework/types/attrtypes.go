@@ -19,10 +19,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 	val := reflect.ValueOf(t)
 	typ := val.Type()
 
-	fmt.Printf("typ.Kind(): %s\n", typ.Kind())
-
 	if typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct {
-		fmt.Printf("POINTER TO A STRUCT!\n")
 		val = reflect.New(typ.Elem()).Elem()
 		typ = typ.Elem()
 	}
@@ -46,7 +43,6 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 		}
 
 		if v, ok := val.Field(i).Interface().(attr.Value); ok {
-			fmt.Printf("attrtypes[%d]: %s %+v\n", i, tag, v.Type(ctx))
 			attributeTypes[tag] = v.Type(ctx)
 		}
 	}
