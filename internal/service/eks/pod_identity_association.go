@@ -184,23 +184,23 @@ func (r *podIdentityAssociationResource) Read(ctx context.Context, req resource.
 }
 
 func (r *podIdentityAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state podIdentityAssociationResourceModel
+	var old, new podIdentityAssociationResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().EKSClient(ctx)
 
-	if !plan.RoleARN.Equal(state.RoleARN) {
+	if !new.RoleARN.Equal(old.RoleARN) {
 		input := &eks.UpdatePodIdentityAssociationInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -211,14 +211,14 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EKS, create.ErrActionUpdating, ResNamePodIdentityAssociation, plan.AssociationID.String(), err),
+				create.ProblemStandardMessage(names.EKS, create.ErrActionUpdating, ResNamePodIdentityAssociation, new.AssociationID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 func (r *podIdentityAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
