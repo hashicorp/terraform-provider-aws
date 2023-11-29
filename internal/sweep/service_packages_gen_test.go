@@ -61,6 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -273,6 +274,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		connect.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
+		customerprofiles.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),
