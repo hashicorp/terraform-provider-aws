@@ -44,6 +44,7 @@ const (
 	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DocDBElasticEndpointID               = "docdb-elastic"
 	ControlTowerEndpointID               = "controltower"
 	DSEndpointID                         = "ds"
 	EKSEndpointID                        = "eks"
