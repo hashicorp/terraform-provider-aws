@@ -46,6 +46,7 @@ const (
 	CodeBuild                    = "codebuild"
 	CodeCatalyst                 = "codecatalyst"
 	CodeCommit                   = "codecommit"
+	CodeGuruProfiler             = "codeguruprofiler"
 	CodeGuruReviewer             = "codegurureviewer"
 	CodePipeline                 = "codepipeline"
 	CodeStarConnections          = "codestarconnections"

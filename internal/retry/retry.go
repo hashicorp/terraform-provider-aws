@@ -63,17 +63,25 @@ func (r *Retry) backoffDelay() time.Duration {
 	return time.Duration(float64(r.options.BackoffMinDuration) * mult)
 }
 
+// Do not use the default RNG since we do not want different provider instances
+// to pick the same deterministic random sequence.
+var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+// Sleeps for a random duration close to the specified value or until context is done,
+// whichever occurs first.
 func randomizedSleep(ctx context.Context, d time.Duration) {
 	const jitter = 0.4
-	mult := 1 - jitter*rand.Float64() // Subtract up to 40%.
+	mult := 1 - jitter*rng.Float64() // Subtract up to 40%.
 	sleep(ctx, time.Duration(float64(d)*mult))
 }
 
+// Sleeps for the specified duration or until context is done, whichever occurs first.
 func sleep(ctx context.Context, d time.Duration) {
 	t := time.NewTimer(d)
+	defer t.Stop()
 	select {
 	case <-ctx.Done():
-		t.Stop()
+		return
 	case <-t.C:
 	}
 }
