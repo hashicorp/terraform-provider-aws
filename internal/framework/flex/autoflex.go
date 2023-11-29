@@ -806,16 +806,7 @@ func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwt
 			fromInterface = f.MapIndex(key).Elem().Interface()
 		}
 
-		targetInterface := target.Interface()
-		if target.Kind() == reflect.Ptr {
-			structType := target.Type().Elem()
-
-			if reflect.New(structType).Elem().Kind() == reflect.Ptr {
-				structType = reflect.New(structType).Elem().Type().Elem()
-			}
-		}
-
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, targetInterface, expander)...)
+		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
