@@ -188,6 +188,30 @@ func TestAccS3Object_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_Disappears_bucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccS3Object_upgradeFromV4(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -2008,7 +2032,8 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_object" "object" {
