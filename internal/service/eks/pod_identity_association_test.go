@@ -142,6 +142,47 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 	})
 }
 
+func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var podidentityassociation eks.DescribePodIdentityAssociationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_pod_identity_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPodIdentityAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPodIdentityAssociationConfig_updatedRoleARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPodIdentityAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
@@ -357,4 +398,45 @@ resource "aws_eks_pod_identity_association" "test" {
 
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccPodIdentityAssociationConfig_updatedRoleARN(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-2"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "pods.eks.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  role       = aws_iam_role.test2.name
+}
+
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test2.arn
+}
+`, rName))
 }
