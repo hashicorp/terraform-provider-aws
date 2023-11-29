@@ -336,11 +336,11 @@ resource "aws_neptune_parameter_group" "test" {
 }
 
 func testAccParameterGroupConfig_nameGenerated() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
 }
-`)
+`
 }
 
 func testAccParameterGroupConfig_namePrefix(namePrefix string) string {
