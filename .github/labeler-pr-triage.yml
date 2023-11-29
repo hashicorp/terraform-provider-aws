@@ -109,6 +109,9 @@ service/appconfig:
 service/appconfigdata:
   - 'internal/service/appconfigdata/**/*'
   - 'website/**/appconfigdata_*'
+service/appfabric:
+  - 'internal/service/appfabric/**/*'
+  - 'website/**/appfabric_*'
 service/appflow:
   - 'internal/service/appflow/**/*'
   - 'website/**/appflow_*'
@@ -908,6 +911,7 @@ service/rum:
 service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
+  - 'website/**/s3_directory_bucket*'
   - 'website/**/s3_object*'
   - 'website/**/canonical_user_id*'
 service/s3control:

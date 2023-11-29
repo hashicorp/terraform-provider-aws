@@ -601,6 +601,45 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		CheckDestroy: testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// At v5.26.0 the resource's schema is v1 and auth_token_update_strategy is not an argument
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.26.0",
+					},
+				},
+				Config: testAccReplicationGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccReplicationGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

@@ -80,6 +80,7 @@ provider "aws" {
   <li><code>apigatewayv2</code></li>
   <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
   <li><code>appconfig</code></li>
+  <li><code>appfabric</code></li>
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>

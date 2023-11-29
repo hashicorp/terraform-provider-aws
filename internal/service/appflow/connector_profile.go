@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1428,6 +1429,8 @@ func resourceConnectorProfile() *schema.Resource {
 }
 
 func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	name := d.Get("name").(string)
@@ -1452,15 +1455,17 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateConnectorProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AppFlow Connector Profile (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppFlow Connector Profile (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.ConnectorProfileArn))
 
-	return resourceConnectorProfileRead(ctx, d, meta)
+	return append(diags, resourceConnectorProfileRead(ctx, d, meta)...)
 }
 
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	connectorProfile, err := findConnectorProfileByARN(ctx, conn, d.Id())
@@ -1468,11 +1473,11 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Connector Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
 	// Credentials are not returned by any API operation. Instead, a
@@ -1490,10 +1495,12 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("credentials_arn", connectorProfile.CredentialsArn)
 	d.Set("name", connectorProfile.ConnectorProfileName)
 
-	return nil
+	return diags
 }
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	name := d.Get("name").(string)
@@ -1509,13 +1516,15 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.UpdateConnectorProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
-	return resourceConnectorProfileRead(ctx, d, meta)
+	return append(diags, resourceConnectorProfileRead(ctx, d, meta)...)
 }
 
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Connector Profile: %s", d.Id())
@@ -1524,14 +1533,14 @@ func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AppFlow Connector Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findConnectorProfileByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.ConnectorProfile, error) {

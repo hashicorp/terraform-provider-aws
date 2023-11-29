@@ -16,6 +16,7 @@ variable "service_labels" {
     "appautoscaling",
     "appconfig",
     "appconfigdata",
+    "appfabric",
     "appflow",
     "appintegrations",
     "applicationcostprofiler",

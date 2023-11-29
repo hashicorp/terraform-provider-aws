@@ -1,4 +1,25 @@
-## 5.27.0 (Unreleased)
+## 5.29.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_docdbelastic_cluster` ([#31033](https://github.com/hashicorp/terraform-provider-aws/issues/31033))
+
+## 5.28.0 (November 29, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_s3_directory_buckets` ([#34612](https://github.com/hashicorp/terraform-provider-aws/issues/34612))
+* **New Resource:** `aws_s3_directory_bucket` ([#34612](https://github.com/hashicorp/terraform-provider-aws/issues/34612))
+
+ENHANCEMENTS:
+
+* resource/aws_s3control_access_grants_instance: Add `identity_center_arn` argument and `identity_center_application_arn` attribute ([#34582](https://github.com/hashicorp/terraform-provider-aws/issues/34582))
+
+BUG FIXES:
+
+* resource/aws_elaticache_replication_group: Fix regression caused by the introduction of the `auth_token_update_strategy` argument with a default value ([#34600](https://github.com/hashicorp/terraform-provider-aws/issues/34600))
+
+## 5.27.0 (November 27, 2023)
 
 NOTES:
 
@@ -6,18 +27,38 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_emr_supported_instance_types` ([#34481](https://github.com/hashicorp/terraform-provider-aws/issues/34481))
+* **New Resource:** `aws_apprunner_default_auto_scaling_configuration_version` ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
 * **New Resource:** `aws_lexv2models_bot_version` ([#33858](https://github.com/hashicorp/terraform-provider-aws/issues/33858))
+* **New Resource:** `aws_s3control_access_grant` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
+* **New Resource:** `aws_s3control_access_grants_instance` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
+* **New Resource:** `aws_s3control_access_grants_instance_resource_policy` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
+* **New Resource:** `aws_s3control_access_grants_location` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
 
 ENHANCEMENTS:
 
+* resource/aws_apprunner_auto_scaling_configuration_version: Add `has_associated_service` and `is_default` attributes ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
+* resource/aws_apprunner_service: Add `network_configuration.ip_address_type` argument ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
+* resource/aws_apprunner_service: Add `source_configuration.code_repository.source_directory` argument to support monorepos ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
+* resource/aws_apprunner_service: Allow `health_check_configuration` to be updated in-place ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
+* resource/aws_cloudwatch_event_rule: Add `state` parameter and deprecate `is_enabled` parameter ([#34510](https://github.com/hashicorp/terraform-provider-aws/issues/34510))
 * resource/aws_elaticache_replication_group: Add `auth_token_update_strategy` argument ([#34460](https://github.com/hashicorp/terraform-provider-aws/issues/34460))
 * resource/aws_lambda_function: Add support for `java21` `runtime` value ([#34476](https://github.com/hashicorp/terraform-provider-aws/issues/34476))
+* resource/aws_lambda_function: Add support for `python3.12` `runtime` value ([#34533](https://github.com/hashicorp/terraform-provider-aws/issues/34533))
 * resource/aws_lambda_layer_version: Add support for `java21` `compatible_runtimes` value ([#34476](https://github.com/hashicorp/terraform-provider-aws/issues/34476))
+* resource/aws_lambda_layer_version: Add support for `python3.12` `compatible_runtimes` value ([#34533](https://github.com/hashicorp/terraform-provider-aws/issues/34533))
+* resource/aws_s3_bucket_logging: Add `target_object_key_format` configuration block to support [automatic date-based partitioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html#server-access-logging-overview) ([#34504](https://github.com/hashicorp/terraform-provider-aws/issues/34504))
 
 BUG FIXES:
 
 * resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `destination_flow_config` or `task` is updated ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
 * resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic ([#34456](https://github.com/hashicorp/terraform-provider-aws/issues/34456))
+* resource/aws_apprunner_service: Correctly set `service_url` for private services ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
+* resource/aws_glue_trigger: Fix `ConcurrentModificationException: Workflow <workflowName> was modified while adding trigger <triggerName>` errors ([#34530](https://github.com/hashicorp/terraform-provider-aws/issues/34530))
+* resource/aws_lb_target_group: Adds plan- and apply-time validation for invalid parameter combinations ([#34488](https://github.com/hashicorp/terraform-provider-aws/issues/34488))
+* resource/aws_lexv2_bot_locale: Fix `voice_settings.engine` validation, value conversion errors ([#34532](https://github.com/hashicorp/terraform-provider-aws/issues/34532))
+* resource/aws_lexv2models_bot: Properly send `type` argument on create and update when configured ([#34524](https://github.com/hashicorp/terraform-provider-aws/issues/34524))
+* resource/aws_pipes_pipe: Fix error when zero value is sent to `source_parameters` on update ([#34487](https://github.com/hashicorp/terraform-provider-aws/issues/34487))
 
 ## 5.26.0 (November 16, 2023)
 

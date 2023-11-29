@@ -68,7 +68,15 @@ This resource supports the following arguments:
 * `event_pattern` - (Optional) The event pattern described a JSON object. At least one of `schedule_expression` or `event_pattern` is required. See full documentation of [Events and Event Patterns in EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-and-event-patterns.html) for details. **Note**: The event pattern size is 2048 by default but it is adjustable up to 4096 characters by submitting a service quota increase request. See [Amazon EventBridge quotas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html) for details.
 * `description` - (Optional) The description of the rule.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
-* `is_enabled` - (Optional) Whether the rule should be enabled (defaults to `true`).
+* `is_enabled` - (Optional, **Deprecated** Use `state` instead) Whether the rule should be enabled.
+  Defaults to `true`.
+  Conflicts with `state`.
+* `state` - (Optional) State of the rule.
+  Valid values are `DISABLED`, `ENABLED`, and `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`.
+  When state is `ENABLED`, the rule is enabled for all events except those delivered by CloudTrail.
+  To also enable the rule for events delivered by CloudTrail, set `state` to `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`.
+  Defaults to `ENABLED`.
+  Conflicts with `is_enabled`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

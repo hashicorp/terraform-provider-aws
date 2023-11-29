@@ -11,6 +11,7 @@ val services = mapOf(
     "apigatewayv2" to ServiceSpec("API Gateway V2", vpcLock = true),
     "appautoscaling" to ServiceSpec("Application Auto Scaling", vpcLock = true),
     "appconfig" to ServiceSpec("AppConfig"),
+    "appfabric" to ServiceSpec("AppFabric"),
     "appflow" to ServiceSpec("AppFlow"),
     "appintegrations" to ServiceSpec("AppIntegrations"),
     "applicationinsights" to ServiceSpec("CloudWatch Application Insights"),
