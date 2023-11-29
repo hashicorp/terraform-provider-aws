@@ -427,6 +427,8 @@ service/medialive:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_medialive_'
 service/mediapackage:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_package_'
+service/mediapackagev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_packagev2_'
 service/mediapackagevod:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mediapackagevod_'
 service/mediastore:

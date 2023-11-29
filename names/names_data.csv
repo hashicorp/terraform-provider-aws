@@ -383,3 +383,4 @@ workspaces-web,workspacesweb,workspacesweb,workspacesweb,,workspacesweb,,,WorkSp
 xray,xray,xray,xray,,xray,,,XRay,XRay,,,2,,aws_xray_,,xray_,X-Ray,AWS,,,,,,,
 verifiedpermissions,verifiedpermissions,verifiedpermissions,verifiedpermissions,,verifiedpermissions,,,VerifiedPermissions,VerifiedPermissions,,,2,,aws_verifiedpermissions_,,verifiedpermissions_,Verified Permissions,Amazon,,,,,,,
 codecatalyst,codecatalyst,codecatalyst,codecatalyst,,codecatalyst,,,CodeCatalyst,CodeCatalyst,,,2,,aws_codecatalyst_,,codecatalyst_,CodeCatalyst,Amazon,,,,,,,
+mediapackagev2,mediapackagev2,mediapackagev2,mediapackagev2,,mediapackagev2,,,MediaPackageV2,MediaPackageV2,,,2,aws_media_packagev2_,aws_mediapackagev2_,,media_packagev2_,Elemental MediaPackage Version 2,AWS,,,,,,,
