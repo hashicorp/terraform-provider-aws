@@ -556,23 +556,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 
 					vTo.Set(reflect.ValueOf(to))
 					return diags
-				default:
-					diags.Append(vFrom.ElementsAs(ctx, &vTo, true)...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(vTo))
-					return diags
 				}
-			default:
-				diags.Append(vFrom.ElementsAs(ctx, &tMapElem, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(vTo))
-				return diags
 			}
 		}
 	}
