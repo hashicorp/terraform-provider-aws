@@ -1,6 +1,6 @@
 # RDS Blue/Green Deployments
 
-**Summary:** 
+**Summary:** Discussion of which resource types can support RDS Blue/Green Deployments for updates
 **Created:** 2023-11-24
 
 ---
