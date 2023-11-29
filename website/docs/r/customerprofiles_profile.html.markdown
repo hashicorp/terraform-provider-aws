@@ -53,7 +53,6 @@ The following arguments are optional:
 * `phone_number` - The customer’s phone number, which has not been specified as a mobile, home, or business number. 
 * `shipping_address` - A block that specifies the customer’s shipping address. [Documented below](#address).
 
-
 ### `address`
 
 The `address` configuration block supports the following attributes:
@@ -68,7 +67,6 @@ The `address` configuration block supports the following attributes:
 * `postal_code` - The postal code of a customer address.
 * `province` - The province in which a customer lives.
 * `state` - The state in which a customer lives.
-
 
 ## Timeouts
 

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDomain_basic(t *testing.T) {
+func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,12 +25,12 @@ func TestAccDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomain_base(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
 				),
 			},
@@ -42,7 +42,7 @@ func TestAccDomain_basic(t *testing.T) {
 			{
 				Config: testAccDomain_base(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
 				),
 			},
@@ -50,7 +50,7 @@ func TestAccDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccDomain_full(t *testing.T) {
+func TestAccCustomerProfilesDomain_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -58,12 +58,12 @@ func TestAccDomain_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomain_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", "true"),
@@ -110,7 +110,7 @@ func TestAccDomain_full(t *testing.T) {
 			{
 				Config: testAccDomain_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", "true"),
@@ -153,7 +153,7 @@ func TestAccDomain_full(t *testing.T) {
 	})
 }
 
-func TestAccDomain_tags(t *testing.T) {
+func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -161,12 +161,12 @@ func TestAccDomain_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomain_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -179,7 +179,7 @@ func TestAccDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomain_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -188,7 +188,7 @@ func TestAccDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomain_tags(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -197,7 +197,7 @@ func TestAccDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccDomain_disappears(t *testing.T) {
+func TestAccCustomerProfilesDomain_dissapears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -205,12 +205,12 @@ func TestAccDomain_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfile_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -219,7 +219,7 @@ func TestAccDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -238,7 +238,7 @@ func testAccDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
 

@@ -23,7 +23,7 @@ resource "aws_customerprofiles_domain" "example" {
 
 ```terraform
 resource "aws_sqs_queue" "example" {
-  name = %[1]q
+  name = "example"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -99,7 +99,6 @@ The following arguments are optional:
 * `matching` - A block that specifies the process of matching duplicate profiles. [Documented below](#matching).
 * `rule_based_matching` - A block that specifies the process of matching duplicate profiles using the Rule-Based matching. [Documented below](#rule_based_matching).
 
-
 ### `matching`
 
 The `matching` configuration block supports the following attributes:
@@ -108,7 +107,6 @@ The `matching` configuration block supports the following attributes:
 * `auto_merging` - (Optional) A block that specifies the configuration about the auto-merging process. [Documented below](#auto_merging).
 * `exporting_config` - (Optional) A block that specifies the configuration for exporting Identity Resolution results. [Documented below](#exporting_config).
 * `job_schedule` - (Optional) A block that specifies the day and time when you want to start the Identity Resolution Job every week. [Documented below](#job_schedule).
-
 
 ### `rule_based_matching`
 
@@ -122,7 +120,6 @@ The `rule_based_matching` configuration block supports the following attributes:
 * `max_allowed_rule_level_for_matching` - (Optional) Indicates the maximum allowed rule level for matching.
 * `max_allowed_rule_level_for_merging` - (Optional) Indicates the maximum allowed rule level for merging.
 
-
 ### `auto_merging`
 
 The `auto_merging` configuration block supports the following attributes:
@@ -132,7 +129,6 @@ The `auto_merging` configuration block supports the following attributes:
 * `consolidation` - (Optional) A block that specifies a list of matching attributes that represent matching criteria. If two profiles meet at least one of the requirements in the matching attributes list, they will be merged. [Documented below](#consolidation).
 * `min_allowed_confidence_score_for_merging ` - (Optional) A number between 0 and 1 that represents the minimum confidence score required for profiles within a matching group to be merged during the auto-merge process. A higher score means higher similarity required to merge profiles.
 
-
 ### `conflict_resolution`
 
 The `conflict_resolution` configuration block supports the following attributes:
@@ -140,20 +136,17 @@ The `conflict_resolution` configuration block supports the following attributes:
 * `conflict_resolving_model` - (Required) How the auto-merging process should resolve conflicts between different profiles. Valid values are `RECENCY` and `SOURCE`
 * `source_name` - (Optional) The `ObjectType` name that is used to resolve profile merging conflicts when choosing `SOURCE` as the `ConflictResolvingModel`.
 
-
 ### `consolidation`
 
 The `consolidation` configuration block supports the following attributes:
 
 * `matching_attributes_list` - (Required) A list of matching criteria.
 
-
 ### `exporting_config`
 
 The `exporting_config` configuration block supports the following attributes:
 
 * `s3_exporting_config` - (Optional) A block that specifies the S3 location where Identity Resolution Jobs write result files. [Documented below](#s3_exporting_config).
-
 
 ### `s3_exporting_config`
 
@@ -162,14 +155,12 @@ The `s3_exporting_config` configuration block supports the following attributes:
 * `s3_bucket_name` - (Required) The name of the S3 bucket where Identity Resolution Jobs write result files.
 * `s3_key_name` - (Optional) The S3 key name of the location where Identity Resolution Jobs write result files.
 
-
 ### `job_schedule`
 
 The `job_schedule` configuration block supports the following attributes:
 
 * `day_of_the_week` - (Required) The day when the Identity Resolution Job should run every week.
 * `time` - (Required) The time when the Identity Resolution Job should run every week.
-
 
 ### `attribute_types_selector`
 
@@ -180,13 +171,11 @@ The `attribute_types_selector` configuration block supports the following attrib
 * `email_address` - (Optional) The `Email` type. You can choose from `EmailAddress`, `BusinessEmailAddress` and `PersonalEmailAddress`.
 * `phone_number` - (Optional) The `PhoneNumber` type. You can choose from `PhoneNumber`, `HomePhoneNumber`, and `MobilePhoneNumber`.
 
-
 ### `matching_rules`
 
 The `matching_rules` configuration block supports the following attributes:
 
 * `rule` - (Required) A single rule level of the `match_rules`. Configures how the rule-based matching process should match profiles.
-
 
 ## Timeouts
 

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccProfile_full(t *testing.T) {
+func TestAccCustomerProfilesProfile_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -30,12 +30,12 @@ func TestAccProfile_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfile_full(rName, accountNumber, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccProfileExists(ctx, resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "account_number", accountNumber),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "Low Profile Customer"),
@@ -108,7 +108,7 @@ func TestAccProfile_full(t *testing.T) {
 			{
 				Config: testAccProfile_fullUpdated(rName, accountNumberUpdated, emailUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccProfileExists(ctx, resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "High Profile Customer"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.%", "10"),
@@ -175,7 +175,7 @@ func TestAccProfile_full(t *testing.T) {
 	})
 }
 
-func TestAccProfile_disappears(t *testing.T) {
+func TestAccCustomerProfilesProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -186,12 +186,12 @@ func TestAccProfile_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfile_full(rName, accountNumber, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccProfileExists(ctx, resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -200,7 +200,7 @@ func TestAccProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -219,7 +219,7 @@ func testAccProfileExists(ctx context.Context, n string) resource.TestCheckFunc 
 	}
 }
 
-func testAccProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
 
