@@ -68,6 +68,12 @@ The `address` configuration block supports the following attributes:
 * `province` - The province in which a customer lives.
 * `state` - The state in which a customer lives.
 
+## Attribute Reference
+
+This resource exports the following attribute in addition to the arguments above:
+
+* `id` - The identifier of the Customer Profiles Profile.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
