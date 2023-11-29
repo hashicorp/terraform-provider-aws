@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_docdbelastic_cluster` ([#31033](https://github.com/hashicorp/terraform-provider-aws/issues/31033))
+* **New Resource:** `aws_eks_pod_identity_association` ([#34566](https://github.com/hashicorp/terraform-provider-aws/issues/34566))
 
 ENHANCEMENTS:
 
