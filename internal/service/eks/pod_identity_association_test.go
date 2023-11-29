@@ -42,12 +42,13 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPodIdentityAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace"),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -84,6 +85,58 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfeks.ResourcePodIdentityAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var podidentityassociation eks.DescribePodIdentityAssociationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_pod_identity_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPodIdentityAssociationConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckPodIdentityAssociationImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPodIdentityAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccPodIdentityAssociationConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -253,7 +306,22 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 `, rName))
 }
+
 func testAccPodIdentityAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccPodIdentityAssociationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccPodIdentityAssociationConfig_clusterBase(rName),
 		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
@@ -265,8 +333,28 @@ resource "aws_eks_pod_identity_association" "test" {
   role_arn        = aws_iam_role.test.arn
 
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccPodIdentityAssociationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccPodIdentityAssociationConfig_clusterBase(rName),
+		testAccPodIdentityAssociationConfig_podIdentityRoleBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_pod_identity_association" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  namespace       = %[1]q
+  service_account = "%[1]s-sa"
+  role_arn        = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
