@@ -21,6 +21,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -405,6 +406,10 @@ func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.
 
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
 	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
+}
+
+func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {
+	return errs.Must(client[*codeguruprofiler_sdkv2.Client](ctx, c, names.CodeGuruProfiler))
 }
 
 func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {

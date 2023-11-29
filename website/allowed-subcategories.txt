@@ -48,6 +48,7 @@ CodeBuild
 CodeCatalyst
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
 CodeGuru Reviewer
 CodePipeline
 CodeStar Connections
