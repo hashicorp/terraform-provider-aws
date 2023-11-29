@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -129,8 +130,8 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
-	if _, err := waitEventSubscriptionActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for DocumentDB Event Subscription (%s) to become active: %s", d.Id(), err)
+	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for DocumentDB Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceEventSubscriptionRead(ctx, d, meta)
@@ -139,7 +140,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	output, err := FindEventSubscriptionByID(ctx, conn, d.Id())
+	output, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Event Subscription (%s) not found, removing from state", d.Id())
@@ -195,8 +196,8 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 			return diag.Errorf("updating DocumentDB Event Subscription (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitEventSubscriptionActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for DocumentDB Event Subscription (%s) to become active: %s", d.Id(), err)
+		if _, err := waitEventSubscriptionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for DocumentDB Event Subscription (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -265,4 +266,138 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	return nil
+}
+
+func FindEventSubscriptionByName(ctx context.Context, conn *docdb.DocDB, name string) (*docdb.EventSubscription, error) {
+	input := &docdb.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(name),
+	}
+	output, err := findEventSubscription(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.CustSubscriptionId) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEventSubscription(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeEventSubscriptionsInput) (*docdb.EventSubscription, error) {
+	output, err := findEventSubscriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEventSubscriptions(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeEventSubscriptionsInput) ([]*docdb.EventSubscription, error) {
+	var output []*docdb.EventSubscription
+
+	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.EventSubscriptionsList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeSubscriptionNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEventSubscriptionByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.DocDB, name string, timeout time.Duration) (*docdb.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusCreating},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.DocDB, name string, timeout time.Duration) (*docdb.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.DocDB, name string, timeout time.Duration) (*docdb.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
