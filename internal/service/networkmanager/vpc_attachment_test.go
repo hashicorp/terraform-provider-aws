@@ -448,18 +448,15 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 	testcases := map[string]struct {
 		acceptanceRequired bool
 		expectedState      string
-		expectRecreation   bool
 	}{
 		"acceptance_required": {
 			acceptanceRequired: true,
 			expectedState:      networkmanager.AttachmentStatePendingAttachmentAcceptance,
-			expectRecreation:   true,
 		},
 
 		"acceptance_not_required": {
 			acceptanceRequired: false,
 			expectedState:      networkmanager.AttachmentStateAvailable,
-			expectRecreation:   false,
 		},
 	}
 
@@ -490,7 +487,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 1, false, true),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
-							testAccCheckVPCAttachmentRecreated(&v1, &v2, testcase.expectRecreation),
+							testAccCheckVPCAttachmentRecreated(&v1, &v2, false),
 							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
@@ -500,7 +497,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 2, false, false),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v3),
-							testAccCheckVPCAttachmentRecreated(&v2, &v3, testcase.expectRecreation),
+							testAccCheckVPCAttachmentRecreated(&v2, &v3, false),
 							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
@@ -510,7 +507,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 2, false, true),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v4),
-							testAccCheckVPCAttachmentRecreated(&v3, &v4, testcase.expectRecreation),
+							testAccCheckVPCAttachmentRecreated(&v3, &v4, false),
 							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
