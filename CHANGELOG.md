@@ -4,6 +4,11 @@ FEATURES:
 
 * **New Resource:** `aws_docdbelastic_cluster` ([#31033](https://github.com/hashicorp/terraform-provider-aws/issues/31033))
 
+ENHANCEMENTS:
+
+* resource/aws_docdb_cluster: Add `storage_type` argument ([#34637](https://github.com/hashicorp/terraform-provider-aws/issues/34637))
+* resource/aws_neptune_parameter_group: Add `name_prefix` argument ([#34500](https://github.com/hashicorp/terraform-provider-aws/issues/34500))
+
 ## 5.28.0 (November 29, 2023)
 
 FEATURES:
