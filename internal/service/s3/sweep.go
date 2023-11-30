@@ -58,7 +58,7 @@ func sweepObjects(region string) error {
 	}
 	conn := client.S3Client(ctx)
 
-	// General-purpose buckets.
+	// General purpose buckets.
 	output, err := conn.ListBuckets(ctx, &s3.ListBucketsInput{})
 
 	if awsv2.SkipSweepError(err) {
@@ -138,7 +138,7 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	_, err := deleteAllObjectVersions(ctx, os.conn, os.bucket, "", os.locked, true)
+	_, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
