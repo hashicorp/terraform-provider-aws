@@ -1227,7 +1227,7 @@ resource "aws_internet_gateway" "test" {
 func testAccListenerConfig_mutualAuthentication(rName string, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
-		testAccTrustStoreConfig_S3BucketCA(rName), fmt.Sprintf(`
+		testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
 resource "aws_lb_trust_store" "test" {
   name                             = %[1]q
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket

@@ -44,7 +44,7 @@ func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
 }
 
 func testAccTrustStoreDataSourceConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_S3BucketCA(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
 resource "aws_lb_trust_store" "test" {
   name                             = %[1]q
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket

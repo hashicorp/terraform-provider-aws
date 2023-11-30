@@ -5,19 +5,18 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccELBV2TrustStore_basic(t *testing.T) {
@@ -38,6 +37,7 @@ func TestAccELBV2TrustStore_basic(t *testing.T) {
 					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile("truststore/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 				),
 			},
 			{
@@ -95,30 +95,23 @@ func TestAccELBV2TrustStore_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustStoreExists(ctx context.Context, n string, res *elbv2.TrustStore) resource.TestCheckFunc {
+func testAccCheckTrustStoreExists(ctx context.Context, n string, v *elbv2.TrustStore) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Trust Store ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
-		trustStore, err := tfelbv2.FindTrustStoreByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTrustStoreByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("reading ELBv2 Trust Store (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if trustStore == nil {
-			return fmt.Errorf("ELBv2 Trust Store (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		*res = *trustStore
 		return nil
 	}
 }
@@ -132,28 +125,24 @@ func testAccCheckTrustStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			trustStore, err := tfelbv2.FindTrustStoreByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfelbv2.FindTrustStoreByARN(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTrustStoreNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading ELBv2 Trust Store (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if trustStore == nil {
-				continue
-			}
-
-			return fmt.Errorf("ELBv2 Trust Store %q still exists", rs.Primary.ID)
+			return fmt.Errorf("ELBv2 Trust Store %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccTrustStoreConfig_S3BucketCA(rName string) string {
+func testAccTrustStoreConfig_baseS3BucketCA(rName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -178,7 +167,6 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_object" "test" {
-
   bucket  = aws_s3_bucket.test.bucket
   key     = "%[1]s.pem"
   content = <<EOT
@@ -222,12 +210,11 @@ LDgwwPky7T6W4ohoGv+p497rbPtHsLq9
 -----END CERTIFICATE-----
 EOT
 }
-
 `, rName))
 }
 
 func testAccTrustStoreConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_S3BucketCA(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
 resource "aws_lb_trust_store" "test" {
   name                             = %[1]q
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
@@ -237,9 +224,7 @@ resource "aws_lb_trust_store" "test" {
 }
 
 func testAccTrustStoreConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_S3BucketCA(rName), fmt.Sprintf(`
-
-
+	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
 resource "aws_lb_trust_store" "test" {
   name                             = %[1]q
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
@@ -248,14 +233,13 @@ resource "aws_lb_trust_store" "test" {
   tags = {
     %[2]q = %[3]q
   }
-
 }
 
 `, rName, tagKey1, tagValue1))
 }
 
 func testAccTrustStoreConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_S3BucketCA(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
 resource "aws_lb_trust_store" "test" {
   name                             = %[1]q
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
@@ -266,6 +250,5 @@ resource "aws_lb_trust_store" "test" {
     %[4]q = %[5]q
   }
 }
-
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
