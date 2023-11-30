@@ -11,5 +11,9 @@ aws_lb_trust_store
 ```
 
 ```release-note:enhancement
-resource/aws_lb_listener: Add mutual_authentication configuration block
+resource/aws_lb_listener: Add `mutual_authentication` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener: Add `mutual_authentication` attribute
 ```
