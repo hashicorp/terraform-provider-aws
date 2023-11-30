@@ -47,7 +47,8 @@ func ResourceListener() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -362,20 +363,20 @@ func ResourceListener() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"mode": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(MutualAuthenticationModeEnum_Values(), true),
+							ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
 						},
 						"trust_store_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
 						},
 					},
 				},
@@ -468,13 +469,13 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.SslPolicy = aws.String(v.(string))
 	}
 
-	output, err := retryListenerCreate(ctx, conn, input)
+	output, err := retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
-		output, err = retryListenerCreate(ctx, conn, input)
+		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 	}
 
 	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
@@ -482,7 +483,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
 		input.Tags = nil
 
-		output, err = retryListenerCreate(ctx, conn, input)
+		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 	}
 
 	if err != nil {
@@ -491,10 +492,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
 
-	const (
-		loadBalancerListenerReadTimeout = 2 * time.Minute
-	)
-	_, err = tfresource.RetryWhenNotFound(ctx, loadBalancerListenerReadTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindListenerByARN(ctx, conn, d.Id())
 	})
 
@@ -561,14 +559,33 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	const (
-		loadBalancerListenerUpdateTimeout = 5 * time.Minute
-	)
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elbv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("alpn_policy"); ok {
+			input.AlpnPolicy = aws.StringSlice([]string{v.(string)})
+		}
+
+		if v, ok := d.GetOk("certificate_arn"); ok {
+			input.Certificates = []*elbv2.Certificate{{
+				CertificateArn: aws.String(v.(string)),
+			}}
+		}
+
+		if d.HasChange("default_action") {
+			var err error
+			input.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		if d.HasChange("mutual_authentication") {
+			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
 		}
 
 		if v, ok := d.GetOk("port"); ok {
@@ -583,50 +600,9 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("certificate_arn"); ok {
-			input.Certificates = make([]*elbv2.Certificate, 1)
-			input.Certificates[0] = &elbv2.Certificate{
-				CertificateArn: aws.String(v.(string)),
-			}
-		}
-
-		if v, ok := d.GetOk("alpn_policy"); ok {
-			input.AlpnPolicy = aws.StringSlice([]string{v.(string)})
-		}
-
-		if d.HasChange("default_action") {
-			var err error
-			input.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		if d.HasChange("mutual_authentication") {
-			var err error
-			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		err := retry.RetryContext(ctx, loadBalancerListenerUpdateTimeout, func() *retry.RetryError {
-			_, err := conn.ModifyListenerWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyListenerWithContext(ctx, input)
-		}
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			return conn.ModifyListenerWithContext(ctx, input)
+		}, elbv2.ErrCodeCertificateNotFoundException)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Listener (%s): %s", d.Id(), err)
@@ -640,21 +616,20 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
+	log.Printf("[INFO] Deleting ELBv2 Listener: %s", d.Id())
 	_, err := conn.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func retryListenerCreate(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
-	const (
-		loadBalancerListenerCreateTimeout = 5 * time.Minute
-	)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, loadBalancerListenerCreateTimeout, func() (interface{}, error) {
+func retryListenerCreate(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.CreateListenerInput, timeout time.Duration) (*elbv2.CreateListenerOutput, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.CreateListenerWithContext(ctx, input)
 	}, elbv2.ErrCodeCertificateNotFoundException)
 
@@ -944,7 +919,7 @@ func expandMutualAuthenticationAttributes(l []interface{}) *elbv2.MutualAuthenti
 	}
 
 	mode := tfMap["mode"].(string)
-	if mode == MutualAuthenticationOff {
+	if mode == mutualAuthenticationOff {
 		return &elbv2.MutualAuthenticationAttributes{
 			Mode: aws.String(mode),
 		}
@@ -1050,7 +1025,7 @@ func flattenMutualAuthenticationAttributes(description *elbv2.MutualAuthenticati
 	}
 
 	mode := aws.StringValue(description.Mode)
-	if mode == MutualAuthenticationOff {
+	if mode == mutualAuthenticationOff {
 		return []interface{}{
 			map[string]interface{}{
 				"mode": mode,
@@ -1189,20 +1164,15 @@ func flattenLbListenerActionRedirectConfig(config *elbv2.RedirectActionConfig) [
 }
 
 const (
-	// MutualAuthenticationOff is a MutualAuthenticationModeEnum enum value
-	MutualAuthenticationOff = "off"
-
-	// MutualAuthenticationVerify is a MutualAuthenticationModeEnum enum value
-	MutualAuthenticationVerify = "verify"
-	// MutualAuthenticationPassthrough is a MutualAuthenticationModeEnum enum value
-	MutualAuthenticationPassthrough = "passthrough"
+	mutualAuthenticationOff         = "off"
+	mutualAuthenticationVerify      = "verify"
+	mutualAuthenticationPassthrough = "passthrough"
 )
 
-// ProtocolEnum_Values returns all elements of the ProtocolEnum enum
-func MutualAuthenticationModeEnum_Values() []string {
+func mutualAuthenticationModeEnum_Values() []string {
 	return []string{
-		MutualAuthenticationOff,
-		MutualAuthenticationVerify,
-		MutualAuthenticationPassthrough,
+		mutualAuthenticationOff,
+		mutualAuthenticationVerify,
+		mutualAuthenticationPassthrough,
 	}
 }
