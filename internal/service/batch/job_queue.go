@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go/service/batch"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -59,6 +60,7 @@ type resourceJobQueue struct {
 
 func (r *resourceJobQueue) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
+		// ExactlyOneOf is better?
 		resourcevalidator.Conflicting(
 			path.MatchRoot("compute_environments"),
 			path.MatchRoot("compute_environment_order"),
@@ -147,18 +149,20 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	// PR Note: After we get the new parameter working (compute_environment_order), we will have to include logic
-	// so either parameter can work until the next major version
-	// ceo := flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments)
+	var ceo []string
 
-	input := batch.CreateJobQueueInput{
-		Tags: getTagsIn(ctx),
+	if !data.ComputeEnvironmentOrder.IsNull() {
+		ceo = flex.ExpandFrameworkListNestedBlockPtr(ctx, data.ComputeEnvironmentOrder)
+	} else {
+		ceo = flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments)
 	}
 
-	response.Diagnostics.Append(flex.Expand(ctx, &data, &input)...)
-
-	if response.Diagnostics.HasError() {
-		return
+	input := batch.CreateJobQueueInput{
+		ComputeEnvironmentOrder: expandComputeEnvironments(ceo),
+		JobQueueName:            flex.StringFromFramework(ctx, data.JobQueueName),
+		Priority:                flex.Int64FromFramework(ctx, data.Priority),
+		State:                   flex.StringFromFramework(ctx, data.State),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if !data.SchedulingPolicyARN.IsNull() {
@@ -241,7 +245,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 
 	if !plan.ComputeEnvironments.Equal(state.ComputeEnvironments) {
 		ceo := flex.ExpandFrameworkStringValueList(ctx, plan.ComputeEnvironments)
-		input.ComputeEnvironmentOrder = expandComputeEnvironmentOrder(ceo)
+		input.ComputeEnvironmentOrder = expandComputeEnvironments(ceo)
 
 		update = true
 	}
@@ -401,8 +405,14 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 
 	return diags
 }
+func (r *resourceJobQueue) expandComputeEnvironmentOrder(ctx context.Context, data computeEnvironmentOrder) awstypes.ComputeEnvironmentOrder {
+	return awstypes.ComputeEnvironmentOrder{
+		Order:              flex.Int32FromFramework(ctx, data.Order),
+		ComputeEnvironment: flex.StringFromFramework(ctx, data.ComputeEnvironment),
+	}
+}
 
-func expandComputeEnvironmentOrder(order []string) (envs []*batch.ComputeEnvironmentOrder) {
+func expandComputeEnvironments(order []string) (envs []*batch.ComputeEnvironmentOrder) {
 	for i, env := range order {
 		envs = append(envs, &batch.ComputeEnvironmentOrder{
 			Order:              aws.Int64(int64(i)),
