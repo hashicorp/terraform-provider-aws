@@ -174,11 +174,6 @@ func (r *resourceProfilingGroup) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	//state.ProfilingStatus = fwtypes.NewListNestedObjectValueOfPtr(ctx, &profilingStatus{
-	//	LatestAgentOrchestratedAt:    flex.StringValueToFramework(ctx, out.ProfilingStatus.LatestAgentOrchestratedAt.Format(time.RFC3339)),
-	//	LatestAgentProfileReportedAt: flex.StringValueToFramework(ctx, out.ProfilingStatus.LatestAgentProfileReportedAt.Format(time.RFC3339)),
-	//})
-
 	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

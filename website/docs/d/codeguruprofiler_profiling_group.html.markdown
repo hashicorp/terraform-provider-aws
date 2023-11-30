@@ -1,0 +1,38 @@
+---
+subcategory: "CodeGuru Profiler"
+layout: "aws"
+page_title: "AWS: aws_codeguruprofiler_profiling_group"
+description: |-
+  Terraform data source for managing an AWS CodeGuru Profiler Profiling Group.
+---
+
+# Data Source: aws_codeguruprofiler_profiling_group
+
+Terraform data source for managing an AWS CodeGuru Profiler Profiling Group.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+data "aws_codeguruprofiler_profiling_group" "example" {
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+
+The following arguments are optional:
+
+* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the Profiling Group. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `tags` - Mapping of Key-Value tags for the resource.
