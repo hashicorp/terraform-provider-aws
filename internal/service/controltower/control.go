@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -58,6 +59,8 @@ func resourceControl() *schema.Resource {
 }
 
 func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	controlIdentifier := d.Get("control_identifier").(string)
@@ -71,24 +74,26 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.EnableControl(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating ControlTower Control (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating ControlTower Control (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for ControlTower Control (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Control (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceControlRead(ctx, d, meta)
+	return append(diags, resourceControlRead(ctx, d, meta)...)
 }
 
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetIdentifier, controlIdentifier := parts[0], parts[1]
@@ -97,25 +102,27 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ControlTower Control %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading ControlTower Control (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ControlTower Control (%s): %s", d.Id(), err)
 	}
 
 	d.Set("control_identifier", output.ControlIdentifier)
 	d.Set("target_identifier", targetIdentifier)
 
-	return nil
+	return diags
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetIdentifier, controlIdentifier := parts[0], parts[1]
@@ -127,14 +134,14 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting ControlTower Control (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Control (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for ControlTower Control (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Control (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const (

@@ -300,7 +300,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceImageBuilderRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
+	return resourceImageBuilderRead(ctx, d, meta)
 }
 
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

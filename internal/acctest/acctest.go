@@ -21,6 +21,8 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -29,7 +31,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -1029,30 +1030,27 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := &ssoadmin.ListInstancesInput{}
-	var instances []*ssoadmin.InstanceMetadata
+	var instances []ssoadmintypes.InstanceMetadata
 
-	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := ssoadmin.NewListInstancesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if PreCheckSkipError(err) {
+			t.Skipf("skipping tests: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing SSO Instances: %s", err)
 		}
 
-		instances = append(instances, page.Instances...)
-
-		return !lastPage
-	})
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping tests: %s", err)
+		if page != nil {
+			instances = append(instances, page.Instances...)
+		}
 	}
 
 	if len(instances) == 0 {
 		t.Skip("skipping tests; no SSO Instances found.")
-	}
-
-	if err != nil {
-		t.Fatalf("listing SSO Instances: %s", err)
 	}
 }
 
