@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emr v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/finspace v1.17.3
+	github.com/aws/aws-sdk-go-v2/service/finspace v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.19.5
