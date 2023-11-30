@@ -127,6 +127,21 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 					"manage_ebs_snapshots",
 				},
 			},
+			{
+				Config: testAccAMIConfig_noDeprecateAt(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "deprecation_time", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
 		},
 	})
 }
@@ -615,6 +630,25 @@ resource "aws_ami" "test" {
   }
 }
 `, rName, deprecateAt))
+}
+
+// testAccAMIConfig_noDeprecateAt should stay in sync with testAccAMIConfig_deprecateAt
+func testAccAMIConfig_noDeprecateAt(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAMIConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
 }
 
 func testAccAMIConfig_desc(rName, desc string) string {
