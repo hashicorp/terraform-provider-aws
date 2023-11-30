@@ -47,7 +47,8 @@ func TestAccELBV2Listener_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
 				),
 			},
 			{
@@ -319,6 +320,7 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 				Config: testAccListenerConfig_mutualAuthentication(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", "verify"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_authentication.0.trust_store_arn", "aws_lb_trust_store.test", "arn"),
@@ -1227,13 +1229,13 @@ resource "aws_internet_gateway" "test" {
 func testAccListenerConfig_mutualAuthentication(rName string, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
-		testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
+		testAccTrustStoreConfig_baseS3BucketCA(rName),
+		fmt.Sprintf(`
 resource "aws_lb_trust_store" "test" {
   name                             = %[1]q
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
   ca_certificates_bundle_s3_key    = aws_s3_object.test.key
 }
-
 
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -1294,8 +1296,6 @@ resource "aws_iam_server_certificate" "test" {
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
 }
-
-
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
