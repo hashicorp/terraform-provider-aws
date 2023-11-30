@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.1
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.5.5
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.40.0
