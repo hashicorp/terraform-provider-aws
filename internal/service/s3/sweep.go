@@ -114,7 +114,7 @@ func sweepObjects(region string) error {
 				continue
 			}
 
-			sweepables = append(sweepables, objectSweeper{
+			sweepables = append(sweepables, directoryBucketObjectSweeper{
 				conn:   conn,
 				bucket: aws.ToString(v.Name),
 			})
@@ -141,6 +141,19 @@ func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 	_, err := deleteAllObjectVersions(ctx, os.conn, os.bucket, "", os.locked, true)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
+	}
+	return nil
+}
+
+type directoryBucketObjectSweeper struct {
+	conn   *s3.Client
+	bucket string
+}
+
+func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	_, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
+	if err != nil {
+		return fmt.Errorf("deleting S3 Directory Bucket (%s) objects: %w", os.bucket, err)
 	}
 	return nil
 }
