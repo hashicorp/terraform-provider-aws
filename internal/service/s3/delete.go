@@ -309,19 +309,21 @@ func newDeleteObjectVersionError(err types.Error) error {
 	return fmt.Errorf("deleting: %w", newObjectVersionError(aws.ToString(err.Key), aws.ToString(err.VersionId), s3Err))
 }
 
-// deleteAllObjectVersions deletes all versions of a specified key from an S3 bucket.
+// deleteAllObjectVersions deletes all versions of a specified key from an S3 general purpose bucket.
 // If key is empty then all versions of all objects are deleted.
-// Set force to true to override any S3 object lock protections on object lock enabled buckets.
+// Set `force` to `true` to override any S3 object lock protections on object lock enabled buckets.
 // Returns the number of objects deleted.
+// Use `emptyBucket` to delete all versions of all objects in a bucket.
 func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key string, force, ignoreObjectErrors bool) (int64, error) {
-	var nObjects int64
+	if key == "" {
+		return 0, errors.New("use `emptyBucket` to delete all versions of all objects in an S3 general purpose bucket")
+	}
 
 	input := &s3.ListObjectVersionsInput{
 		Bucket: aws.String(bucket),
+		Prefix: aws.String(key),
 	}
-	if key != "" {
-		input.Prefix = aws.String(key)
-	}
+	var nObjects int64
 	var lastErr error
 
 	pages := s3.NewListObjectVersionsPaginator(conn, input)
@@ -340,7 +342,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 			objectKey := aws.ToString(objectVersion.Key)
 			objectVersionID := aws.ToString(objectVersion.VersionId)
 
-			if key != "" && key != objectKey {
+			if key != objectKey {
 				continue
 			}
 
@@ -431,7 +433,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 			deleteMarkerKey := aws.ToString(deleteMarker.Key)
 			deleteMarkerVersionID := aws.ToString(deleteMarker.VersionId)
 
-			if key != "" && key != deleteMarkerKey {
+			if key != deleteMarkerKey {
 				continue
 			}
 
@@ -456,7 +458,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 }
 
 // deleteObjectVersion deletes a specific object version.
-// Set force to true to override any S3 object lock protections.
+// Set `force` to `true` to override any S3 object lock protections.
 func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, force bool) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(b),
