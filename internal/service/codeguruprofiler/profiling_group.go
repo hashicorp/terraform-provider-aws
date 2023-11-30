@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -70,14 +69,6 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"profiling_status": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[profilingStatus](ctx),
-				Computed:    true,
-				ElementType: fwtypes.NewObjectTypeOf[profilingStatus](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -287,22 +278,10 @@ type resourceProfilingGroupData struct {
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]              `tfsdk:"compute_platform"`
 	ID                       types.String                                              `tfsdk:"id"`
 	Name                     types.String                                              `tfsdk:"name"`
-	ProfilingStatus          fwtypes.ListNestedObjectValueOf[profilingStatus]          `tfsdk:"profiling_status"`
 	Tags                     types.Map                                                 `tfsdk:"tags"`
 	TagsAll                  types.Map                                                 `tfsdk:"tags_all"`
 }
 
 type agentOrchestrationConfig struct {
 	ProfilingEnabled types.Bool `tfsdk:"profiling_enabled"`
-}
-
-type profilingStatus struct {
-	LatestAgentOrchestratedAt    types.String                                           `tfsdk:"latest_agent_orchestrated_at"`
-	LatestAgentProfileReportedAt types.String                                           `tfsdk:"latest_agent_profile_reported_at"`
-	LatestAggregatedProfile      fwtypes.ListNestedObjectValueOf[aggregatedProfileTime] `tfsdk:"latest_aggregated_profile"`
-}
-
-type aggregatedProfileTime struct {
-	Period types.String `tfsdk:"period"`
-	Start  types.String `tfsdk:"start"`
 }

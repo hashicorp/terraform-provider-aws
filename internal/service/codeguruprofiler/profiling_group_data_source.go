@@ -5,6 +5,7 @@ package codeguruprofiler
 
 import (
 	"context"
+	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -51,6 +52,9 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 				CustomType: computePlatform,
 				Computed:   true,
 			},
+			"created_at": schema.StringAttribute{
+				Computed: true,
+			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
@@ -61,6 +65,9 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 				ElementType: fwtypes.NewObjectTypeOf[dsProfilingStatus](ctx),
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"updated_at": schema.StringAttribute{
+				Computed: true,
+			},
 		},
 	}
 }
@@ -92,6 +99,8 @@ func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
+	data.CreatedAt = flex.StringValueToFramework(ctx, out.CreatedAt.Format(time.RFC3339))
+	data.UpdatedAt = flex.StringValueToFramework(ctx, out.UpdatedAt.Format(time.RFC3339))
 	data.ID = flex.StringToFramework(ctx, out.Name)
 	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, out.Tags)
 
@@ -102,10 +111,12 @@ type dataSourceProfilingGroupData struct {
 	ARN                      types.String                                                `tfsdk:"arn"`
 	AgentOrchestrationConfig fwtypes.ListNestedObjectValueOf[dsAgentOrchestrationConfig] `tfsdk:"agent_orchestration_config"`
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]                `tfsdk:"compute_platform"`
+	CreatedAt                types.String                                                `tfsdk:"created_at"`
 	ID                       types.String                                                `tfsdk:"id"`
 	Name                     types.String                                                `tfsdk:"name"`
 	ProfilingStatus          fwtypes.ListNestedObjectValueOf[dsProfilingStatus]          `tfsdk:"profiling_status"`
 	Tags                     types.Map                                                   `tfsdk:"tags"`
+	UpdatedAt                types.String                                                `tfsdk:"updated_at"`
 }
 
 type dsAgentOrchestrationConfig struct {
