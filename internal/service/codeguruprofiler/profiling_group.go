@@ -66,7 +66,7 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"id": framework.IDAttribute(),
-			"profiling_group_name": schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,20 +118,21 @@ func (r *resourceProfilingGroup) Create(ctx context.Context, req resource.Create
 		return
 	}
 
+	in.ProfilingGroupName = flex.StringFromFramework(ctx, plan.Name)
 	in.ClientToken = aws.String(id.UniqueId())
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateProfilingGroup(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CodeGuruProfiler, create.ErrActionCreating, ResNameProfilingGroup, plan.ProfilingGroupName.ValueString(), err),
+			create.ProblemStandardMessage(names.CodeGuruProfiler, create.ErrActionCreating, ResNameProfilingGroup, plan.Name.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.ProfilingGroup == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CodeGuruProfiler, create.ErrActionCreating, ResNameProfilingGroup, plan.ProfilingGroupName.ValueString(), nil),
+			create.ProblemStandardMessage(names.CodeGuruProfiler, create.ErrActionCreating, ResNameProfilingGroup, plan.Name.ValueString(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -162,7 +163,7 @@ func (r *resourceProfilingGroup) Read(ctx context.Context, req resource.ReadRequ
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CodeGuruProfiler, create.ErrActionSetting, ResNameProfilingGroup, state.ID.String(), err),
+			create.ProblemStandardMessage(names.CodeGuruProfiler, create.ErrActionSetting, ResNameProfilingGroup, state.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -174,6 +175,7 @@ func (r *resourceProfilingGroup) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	state.Name = flex.StringToFramework(ctx, out.Name)
 	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -284,7 +286,7 @@ type resourceProfilingGroupData struct {
 	AgentOrchestrationConfig fwtypes.ListNestedObjectValueOf[agentOrchestrationConfig] `tfsdk:"agent_orchestration_config"`
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]              `tfsdk:"compute_platform"`
 	ID                       types.String                                              `tfsdk:"id"`
-	ProfilingGroupName       types.String                                              `tfsdk:"profiling_group_name"`
+	Name                     types.String                                              `tfsdk:"name"`
 	ProfilingStatus          fwtypes.ListNestedObjectValueOf[profilingStatus]          `tfsdk:"profiling_status"`
 	Tags                     types.Map                                                 `tfsdk:"tags"`
 	TagsAll                  types.Map                                                 `tfsdk:"tags_all"`
