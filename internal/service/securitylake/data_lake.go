@@ -65,7 +65,6 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"datalake_arn": framework.ARNAttributeComputedOnly(),
-			"id":           framework.IDAttribute(),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -73,6 +72,7 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			names.AttrTags: tftags.TagsAttribute(),
+			names.AttrID:   framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"configurations": schema.SetNestedBlock{
@@ -137,12 +137,12 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"role_arn": schema.StringAttribute{
-										Optional: true,
-									},
 									"regions": schema.ListAttribute{
 										ElementType: types.StringType,
 										Optional:    true,
+									},
+									"role_arn": schema.StringAttribute{
+										Optional: true,
 									},
 								},
 							},
@@ -160,7 +160,7 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceDataLakeData
+	var plan datalakeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,12 +192,13 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	plan.DataLakeArn = flex.StringToFramework(ctx, out.DataLakes[0].DataLakeArn)
+	plan.setID()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	waitOut, err := waitDataLakeCreated(ctx, conn, plan.DataLakeArn.ValueString(), createTimeout)
+	waitOut, err := waitDataLakeCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, plan.DataLakeArn.ValueString(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, plan.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -209,7 +210,7 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var state resourceDataLakeData
+	var state datalakeResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -237,7 +238,7 @@ func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, r
 func (r *resourceDataLake) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var plan, state resourceDataLakeData
+	var plan, state datalakeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -290,7 +291,7 @@ func (r *resourceDataLake) Update(ctx context.Context, req resource.UpdateReques
 func (r *resourceDataLake) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var state resourceDataLakeData
+	var state datalakeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -759,13 +760,34 @@ var (
 	}
 )
 
-type resourceDataLakeData struct {
+type datalakeResourceModel struct {
 	DataLakeArn             types.String   `tfsdk:"datalake_arn"`
 	ID                      types.String   `tfsdk:"id"`
 	MetaStoreManagerRoleArn types.String   `tfsdk:"meta_store_manager_role_arn"`
 	Configurations          types.Set      `tfsdk:"configurations"`
 	Tags                    types.Map      `tfsdk:"tags"`
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
+}
+
+func (model *datalakeResourceModel) setID() {
+	model.ID = model.DataLakeArn
+}
+
+func (model *datalakeResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.DataLakeResource) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if out == nil {
+		return diags
+	}
+
+	model.DataLakeArn = flex.StringToFramework(ctx, out.DataLakeArn)
+	model.setID()
+	configurations, d := flattenDataLakeConfigurations(ctx, []*awstypes.DataLakeResource{out})
+	diags.Append(d...)
+
+	model.Configurations = configurations
+
+	return diags
 }
 
 type dataLakeConfigurationsData struct {
@@ -804,21 +826,4 @@ func extractRegionFromARN(arn string) (string, error) {
 		return "", fmt.Errorf("invalid ARN: %s", arn)
 	}
 	return parts[3], nil
-}
-
-func (rd *resourceDataLakeData) refreshFromOutput(ctx context.Context, out *awstypes.DataLakeResource) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
-	}
-
-	rd.DataLakeArn = flex.StringToFramework(ctx, out.DataLakeArn)
-	rd.ID = flex.StringToFramework(ctx, out.DataLakeArn)
-	configurations, d := flattenDataLakeConfigurations(ctx, []*awstypes.DataLakeResource{out})
-	diags.Append(d...)
-
-	rd.Configurations = configurations
-
-	return diags
 }
