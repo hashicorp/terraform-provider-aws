@@ -1,4 +1,5 @@
-## 5.29.0 (Unreleased)
+## 5.30.0 (Unreleased)
+## 5.29.0 (November 30, 2023)
 
 FEATURES:
 
