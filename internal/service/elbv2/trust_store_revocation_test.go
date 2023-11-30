@@ -5,18 +5,18 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccELBV2TrustStoreRevocation_basic(t *testing.T) {
@@ -48,30 +48,30 @@ func TestAccELBV2TrustStoreRevocation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustStoreRevocationExists(ctx context.Context, n string, res *elbv2.DescribeTrustStoreRevocation) resource.TestCheckFunc {
+func testAccCheckTrustStoreRevocationExists(ctx context.Context, n string, v *elbv2.DescribeTrustStoreRevocation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Trust Store Revocation ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
-		revocation, err := tfelbv2.FindTrustStoreRevocation(ctx, conn, rs.Primary.ID)
+		trustStoreARN := rs.Primary.Attributes["trust_store_arn"]
+		revocationID, err := strconv.ParseInt(rs.Primary.Attributes["revocation_id"], 10, 64)
 
 		if err != nil {
-			return fmt.Errorf("reading ELBv2 Trust Store Revocation (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if revocation == nil {
-			return fmt.Errorf("ELBv2 Trust Store Revocation (%s) not found", rs.Primary.ID)
+		output, err := tfelbv2.FindTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
+
+		if err != nil {
+			return err
 		}
 
-		*res = *revocation
+		*v = *output
+
 		return nil
 	}
 }
@@ -85,21 +85,24 @@ func testAccCheckTrustStoreRevocationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			revocation, err := tfelbv2.FindTrustStoreRevocation(ctx, conn, rs.Primary.ID)
+			trustStoreARN := rs.Primary.Attributes["trust_store_arn"]
+			revocationID, err := strconv.ParseInt(rs.Primary.Attributes["revocation_id"], 10, 64)
 
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTrustStoreNotFoundException) {
+			if err != nil {
+				return err
+			}
+
+			_, err = tfelbv2.FindTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading ELBv2 Trust Store Revocation (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if revocation == nil {
-				continue
-			}
-
-			return fmt.Errorf("ELBv2 Trust Store Revocation %q still exists", rs.Primary.ID)
+			return fmt.Errorf("ELBv2 Trust Store Revocation %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -114,9 +117,7 @@ resource "aws_lb_trust_store" "test" {
   ca_certificates_bundle_s3_key    = aws_s3_object.test.key
 }
 
-
 resource "aws_s3_object" "crl" {
-
   bucket  = aws_s3_bucket.test.bucket
   key     = "%[1]s-crl.pem"
   content = <<EOT
@@ -142,14 +143,11 @@ mblwMFiUDFIa5K9gMRKksXpzRHvOvDe4+ZJvop1k7r5tU4iAYZkNgTGjiMt3WjwD
 EOT
 }
 
-
 resource "aws_lb_trust_store_revocation" "test" {
   trust_store_arn = aws_lb_trust_store.test.arn
 
   revocations_s3_bucket = aws_s3_bucket.test.bucket
   revocations_s3_key    = aws_s3_object.crl.key
 }
-
-
 `, rName))
 }
