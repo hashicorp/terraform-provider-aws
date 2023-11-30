@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_networkmanager_attachment_accepter: Now revokes attachment on deletion for VPC Attachments ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
 * resource/aws_networkmanager_vpc_attachment: Fixes error when modifying `options` fields while waiting for acceptance ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
 * resource/aws_networkmanager_vpc_attachment: Fixes error where VPC Attachments waiting for acceptance could not be deleted ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_s3_directory_bucket: Fix `NotImplemented: This bucket does not support Object Versioning` errors on resource Delete when `force_destroy` is `true` ([#34647](https://github.com/hashicorp/terraform-provider-aws/issues/34647))
 
 ## 5.28.0 (November 29, 2023)
 
