@@ -5,7 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -13,25 +12,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_lb_trust_store")
-// @SDKDataSource("aws_alb_trust_store")
+// @SDKDataSource("aws_lb_trust_store", name="Trust Store")
 func DataSourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrustStoreRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(20 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -52,37 +47,15 @@ func dataSourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	var results []*elbv2.TrustStore
-
-	err := conn.DescribeTrustStoresPagesWithContext(ctx, input, func(page *elbv2.DescribeTrustStoresOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, l := range page.TrustStores {
-			if l == nil {
-				continue
-			}
-
-			results = append(results, l)
-		}
-
-		return !lastPage
-	})
+	trustStore, err := findTrustStore(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Listener: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ELBv2 Trust Store", err))
 	}
-
-	if len(results) != 1 {
-		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(results))
-	}
-
-	trustStore := results[0]
 
 	d.SetId(aws.StringValue(trustStore.TrustStoreArn))
-	d.Set("name", trustStore.Name)
 	d.Set("arn", trustStore.TrustStoreArn)
+	d.Set("name", trustStore.Name)
 
 	return diags
 }

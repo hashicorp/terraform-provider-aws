@@ -38,10 +38,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_alb_target_group",
 		},
 		{
-			Factory:  DataSourceTrustStore,
-			TypeName: "aws_alb_trust_store",
-		},
-		{
 			Factory:  DataSourceLoadBalancer,
 			TypeName: "aws_lb",
 		},
@@ -60,6 +56,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceTrustStore,
 			TypeName: "aws_lb_trust_store",
+			Name:     "Trust Store",
 		},
 		{
 			Factory:  DataSourceLoadBalancers,

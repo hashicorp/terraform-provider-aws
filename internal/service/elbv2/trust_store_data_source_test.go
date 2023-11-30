@@ -19,6 +19,7 @@ func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceNameByName := "data.aws_lb_trust_store.named"
 	datasourceNameByArn := "data.aws_lb_trust_store.with_arn"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -55,7 +56,6 @@ resource "aws_lb_trust_store" "test" {
 
 func testAccTrustStoreDataSourceConfig_withName(rName string) string {
 	return acctest.ConfigCompose(testAccTrustStoreDataSourceConfig_base(rName), fmt.Sprintf(`
-
 data "aws_lb_trust_store" "named" {
   name       = %[1]q
   depends_on = [aws_lb_trust_store.test]
