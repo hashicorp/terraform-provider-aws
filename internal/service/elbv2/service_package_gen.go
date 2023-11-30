@@ -111,14 +111,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_alb_target_group_attachment",
 		},
 		{
-			Factory:  ResourceTrustStore,
-			TypeName: "aws_alb_trust_store",
-			Name:     "Trust Store",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
-			},
-		},
-		{
 			Factory:  ResourceTrustStoreRevocation,
 			TypeName: "aws_alb_trust_store_revocation",
 			Name:     "Trust Store Revocation",

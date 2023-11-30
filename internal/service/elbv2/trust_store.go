@@ -27,7 +27,6 @@ import (
 )
 
 // @SDKResource("aws_lb_trust_store", name="Trust Store")
-// @SDKResource("aws_alb_trust_store", name="Trust Store")
 // @Tags(identifierAttribute="id")
 func ResourceTrustStore() *schema.Resource {
 	return &schema.Resource{
@@ -39,8 +38,10 @@ func ResourceTrustStore() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -102,25 +103,15 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
-	exist, err := FindTrustStoreByName(ctx, conn, name)
-
-	if err != nil && !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Trust Store (%s): %s", name, err)
-	}
-
-	if exist != nil {
-		return sdkdiag.AppendErrorf(diags, "ELBv2 Trust Store (%s) already exists", name)
-	}
-
 	input := &elbv2.CreateTrustStoreInput{
-		Name:                         aws.String(name),
-		Tags:                         getTagsIn(ctx),
 		CaCertificatesBundleS3Bucket: aws.String(d.Get("ca_certificates_bundle_s3_bucket").(string)),
 		CaCertificatesBundleS3Key:    aws.String(d.Get("ca_certificates_bundle_s3_key").(string)),
+		Name:                         aws.String(name),
+		Tags:                         getTagsIn(ctx),
 	}
 
-	if d.Get("ca_certificates_bundle_s3_object_version").(string) != "" {
-		input.CaCertificatesBundleS3ObjectVersion = aws.String(d.Get("ca_certificates_bundle_s3_object_version").(string))
+	if v, ok := d.GetOk("ca_certificates_bundle_s3_object_version"); ok {
+		input.CaCertificatesBundleS3ObjectVersion = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateTrustStoreWithContext(ctx, input)
@@ -144,13 +135,9 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Trust Store (%s): %s", name, err)
 	}
 
-	if len(output.TrustStores) == 0 {
-		return sdkdiag.AppendErrorf(diags, "creating Trust Store: no trust stores returned in response")
-	}
-
 	d.SetId(aws.StringValue(output.TrustStores[0].TrustStoreArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindTrustStoreByARN(ctx, conn, d.Id())
 	})
 
@@ -179,9 +166,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindTrustStoreByARN(ctx, conn, d.Id())
-	}, d.IsNewResource())
+	trustStore, err := FindTrustStoreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Trust Store %s not found, removing from state", d.Id())
@@ -193,10 +178,9 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Trust Store (%s): %s", d.Id(), err)
 	}
 
-	trustStore := outputRaw.(*elbv2.TrustStore)
-
-	d.Set("name", trustStore.Name)
 	d.Set("arn", trustStore.TrustStoreArn)
+	d.Set("name", trustStore.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(trustStore.Name)))
 
 	return diags
 }
@@ -205,20 +189,21 @@ func resourceTrustStoreUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	if d.HasChanges("ca_certificates_bundle_s3_bucket", "ca_certificates_bundle_s3_key", "ca_certificates_bundle_s3_object_version", "tags") {
-		var params = &elbv2.ModifyTrustStoreInput{
-			TrustStoreArn:                aws.String(d.Id()),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &elbv2.ModifyTrustStoreInput{
 			CaCertificatesBundleS3Bucket: aws.String(d.Get("ca_certificates_bundle_s3_bucket").(string)),
 			CaCertificatesBundleS3Key:    aws.String(d.Get("ca_certificates_bundle_s3_key").(string)),
+			TrustStoreArn:                aws.String(d.Id()),
 		}
 
-		if d.Get("ca_certificates_bundle_s3_object_version").(string) != "" {
-			params.CaCertificatesBundleS3ObjectVersion = aws.String(d.Get("ca_certificates_bundle_s3_object_version").(string))
+		if v, ok := d.GetOk("ca_certificates_bundle_s3_object_version"); ok {
+			input.CaCertificatesBundleS3ObjectVersion = aws.String(v.(string))
 		}
 
-		_, err := conn.ModifyTrustStoreWithContext(ctx, params)
+		_, err := conn.ModifyTrustStoreWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying Trust Store: %s", err)
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Trust Store (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -227,41 +212,21 @@ func resourceTrustStoreUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	const (
-		trustStoreDeleteTimeout = 2 * time.Minute
-	)
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	err := waitForNoTrustStoreAssociations(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Trust Store Associations (%s) to be removed: %s", d.Get("name").(string), err)
+	if err := waitForNoTrustStoreAssociations(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBV2 Trust Store (%s) associations delete: %s", d.Id(), err)
 	}
 
-	input := &elbv2.DeleteTrustStoreInput{
-		TrustStoreArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Trust Store (%s): %s", d.Id(), input)
-	err = retry.RetryContext(ctx, trustStoreDeleteTimeout, func() *retry.RetryError {
-		_, err := conn.DeleteTrustStoreWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, "TrustStoreInUse", "is currently in use by a listener") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTrustStoreWithContext(ctx, input)
-	}
+	log.Printf("[DEBUG] Deleting ELBv2 Trust Store: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteTrustStoreWithContext(ctx, &elbv2.DeleteTrustStoreInput{
+			TrustStoreArn: aws.String(d.Id()),
+		})
+	}, elbv2.ErrCodeTrustStoreInUseException, "is currently in use by a listener")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Trust Store: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Trust Store (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -271,8 +236,7 @@ func FindTrustStoreByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*e
 	input := &elbv2.DescribeTrustStoresInput{
 		TrustStoreArns: aws.StringSlice([]string{arn}),
 	}
-
-	output, err := FindTrustStore(ctx, conn, input)
+	output, err := findTrustStore(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -288,28 +252,17 @@ func FindTrustStoreByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*e
 	return output, nil
 }
 
-func FindTrustStoreByName(ctx context.Context, conn *elbv2.ELBV2, name string) (*elbv2.TrustStore, error) {
-	input := &elbv2.DescribeTrustStoresInput{
-		Names: aws.StringSlice([]string{name}),
-	}
-
-	output, err := FindTrustStore(ctx, conn, input)
+func findTrustStore(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTrustStoresInput) (*elbv2.TrustStore, error) {
+	output, err := findTrustStores(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Eventual consistency check.
-	if aws.StringValue(output.Name) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
+	return tfresource.AssertSinglePtrResult(output)
 }
 
-func FindTrustStores(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTrustStoresInput) ([]*elbv2.TrustStore, error) {
+func findTrustStores(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTrustStoresInput) ([]*elbv2.TrustStore, error) {
 	var output []*elbv2.TrustStore
 
 	err := conn.DescribeTrustStoresPagesWithContext(ctx, input, func(page *elbv2.DescribeTrustStoresOutput, lastPage bool) bool {
@@ -340,37 +293,7 @@ func FindTrustStores(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descri
 	return output, nil
 }
 
-func FindTrustStore(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTrustStoresInput) (*elbv2.TrustStore, error) {
-	output, err := FindTrustStores(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
-func waitForNoTrustStoreAssociations(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) error {
-	input := &elbv2.DescribeTrustStoreAssociationsInput{
-		TrustStoreArn: aws.String(arn),
-	}
-
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
-		return GetRemainingTrustStoreAssociations(ctx, conn, input)
-	})
-
-	return err
-}
-
-func GetRemainingTrustStoreAssociations(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTrustStoreAssociationsInput) (int, error) {
+func findTrustStoreAssociations(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTrustStoreAssociationsInput) ([]*elbv2.TrustStoreAssociation, error) {
 	var output []*elbv2.TrustStoreAssociation
 
 	err := conn.DescribeTrustStoreAssociationsPagesWithContext(ctx, input, func(page *elbv2.DescribeTrustStoreAssociationsOutput, lastPage bool) bool {
@@ -388,15 +311,33 @@ func GetRemainingTrustStoreAssociations(ctx context.Context, conn *elbv2.ELBV2, 
 	})
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTrustStoreNotFoundException) {
-		return -1, &retry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	return len(output), nil
+	return output, nil
+}
+
+func waitForNoTrustStoreAssociations(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) error {
+	input := &elbv2.DescribeTrustStoreAssociationsInput{
+		TrustStoreArn: aws.String(arn),
+	}
+
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+		associations, err := findTrustStoreAssociations(ctx, conn, input)
+
+		if err != nil {
+			return 0, err
+		}
+
+		return len(associations), nil
+	})
+
+	return err
 }

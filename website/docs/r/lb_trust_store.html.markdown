@@ -1,7 +1,7 @@
 ---
 subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
-page_title: "AWS: aws_alb_trust_store"
+page_title: "AWS: aws_lb_trust_store"
 description: |-
   Provides a Trust Store resource for use with Load Balancers.
 ---
@@ -9,8 +9,6 @@ description: |-
 # Resource: aws_lb_trust_store
 
 Provides a ELBv2 Trust Store for use with Application Load Balancer Listener resources.
-
-~> **Note:** `aws_alb_trust_store` is known as `aws_lb_trust_store`. The functionality is identical.
 
 ## Example Usage
 
