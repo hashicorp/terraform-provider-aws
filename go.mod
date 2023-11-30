@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/glacier v1.18.5
+	github.com/aws/aws-sdk-go-v2/service/glacier v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.19.5
