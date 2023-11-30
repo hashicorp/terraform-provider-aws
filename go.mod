@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.1
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.18.5
