@@ -6,6 +6,7 @@ package backup
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -60,6 +61,8 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
+	iamPropagationTimeout := 2 * time.Minute
+
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
@@ -72,10 +75,16 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 		Policy:          aws.String(policy),
 	}
 
-	_, err = conn.PutBackupVaultAccessPolicyWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
+		func() (interface{}, error) {
+			return conn.PutBackupVaultAccessPolicyWithContext(ctx, input)
+		},
+		errCodeInvalidVaultPolicyConfig, "VaultPolicyyConfig.IamBackupRole",
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Policy (%s): %s", outputRaw.(d.)
+		, err)
 	}
 
 	d.SetId(name)
