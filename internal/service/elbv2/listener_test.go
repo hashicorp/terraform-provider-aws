@@ -5,20 +5,19 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"golang.org/x/exp/slices"
 )
 
@@ -682,30 +681,23 @@ func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, liste
 	}
 }
 
-func testAccCheckListenerExists(ctx context.Context, n string, res *elbv2.Listener) resource.TestCheckFunc {
+func testAccCheckListenerExists(ctx context.Context, n string, v *elbv2.Listener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Listener ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
-		listener, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if listener == nil {
-			return fmt.Errorf("ELBv2 Listener (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		*res = *listener
 		return nil
 	}
 }
@@ -719,21 +711,17 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			listener, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if listener == nil {
-				continue
-			}
-
-			return fmt.Errorf("ELBv2 Listener %q still exists", rs.Primary.ID)
+			return fmt.Errorf("ELBv2 Listener %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -741,27 +729,7 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccListenerConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name        = %[1]q
   description = "Used for ALB Testing"
