@@ -95,7 +95,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.1
-	github.com/aws/smithy-go v1.18.1
 	github.com/beevik/etree v1.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
@@ -158,6 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.1 // indirect
+	github.com/aws/smithy-go v1.18.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect

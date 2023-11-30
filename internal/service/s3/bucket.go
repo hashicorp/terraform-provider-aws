@@ -23,7 +23,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1442,22 +1441,10 @@ func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string, optFn
 
 	_, err := conn.HeadBucket(ctx, input, optFns...)
 
-	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) {
+	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
 		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
-		}
-	}
-
-	// FIXME Move to aws-sdk-go-base
-	// FIXME &smithy.OperationError{ServiceID:"S3", OperationName:"HeadBucket", Err:(*errors.errorString)(0xc00202bb60)}
-	// FIXME "operation error S3: HeadBucket, get identity: get credentials: operation error S3: CreateSession, https response error StatusCode: 404, RequestID: 0033eada6b00018c17de82890509d9eada65ba39, HostID: F31dBn, NoSuchBucket:"
-	if operationErr, ok := errs.As[*smithy.OperationError](err); ok {
-		if strings.Contains(operationErr.Err.Error(), errCodeNoSuchBucket) {
-			return &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
 		}
 	}
 

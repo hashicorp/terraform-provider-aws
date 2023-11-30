@@ -164,6 +164,54 @@ func TestAccS3Object_basic(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccS3Object_Disappears_bucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccS3Object_upgradeFromV4(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -1724,6 +1772,32 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.acceptance-test-naming-parent-disappears
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		// FIXME "Error running post-test destroy, there may be dangling resources: operation error S3: HeadObject, https response error StatusCode: 403, RequestID: 0033eada6b00018c1804fda905093646dd76f12a, HostID: SfKUL8OB, api error Forbidden: Forbidden"
+		// CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_directoryBucket(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -1958,7 +2032,8 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_object" "object" {
@@ -2631,6 +2706,8 @@ resource "aws_s3_directory_bucket" "test" {
   location {
     name = local.location_name
   }
+
+  force_destroy = true
 }
 
 resource "aws_s3_object" "object" {
