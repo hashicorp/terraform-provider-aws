@@ -6,6 +6,7 @@ package ec2
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -551,6 +553,12 @@ func enableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string, depre
 		return fmt.Errorf("enabling deprecation: %w", err)
 	}
 
+	_, err = waitImageDeprecationTimeUpdated(ctx, conn, id, deprecateAt)
+
+	if err != nil {
+		return fmt.Errorf("enabling deprecation: waiting for completion: %w", err)
+	}
+
 	return nil
 }
 
@@ -781,4 +789,55 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.Bloc
 	}
 
 	return tfList
+}
+
+func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.EC2, imageID, expectedValue string) (*ec2.Image, error) {
+	t, err := time.Parse(time.RFC3339, expectedValue)
+	if err != nil {
+		return nil, err
+	}
+	rt := t.Round(time.Minute)
+	expectedValue = rt.Format(time.RFC3339)
+
+	stateConf := &retry.StateChangeConf{
+		Target:     []string{expectedValue},
+		Refresh:    statusImageDeprecationTime(ctx, conn, imageID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Image); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusImageDeprecationTime(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImageByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		t, err := time.Parse(time.RFC3339, aws.StringValue(output.DeprecationTime))
+		if err != nil {
+			return nil, "", err
+		}
+		rt := t.Round(time.Minute)
+
+		return output, rt.Format(time.RFC3339), nil
+	}
 }

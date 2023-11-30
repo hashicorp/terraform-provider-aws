@@ -119,6 +119,14 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAtUpdated),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
 		},
 	})
 }
