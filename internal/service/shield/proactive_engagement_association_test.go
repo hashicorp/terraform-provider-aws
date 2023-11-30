@@ -70,6 +70,7 @@ func TestAccShieldProactiveEngagementAssociation_disabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
