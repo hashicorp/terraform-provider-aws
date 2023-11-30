@@ -30,6 +30,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceDRTAccessRoleARNAssociation,
 			Name:    "DRT Access Role ARN Association",
 		},
+		{
+			Factory: newResourceProactiveEngagementAssociation,
+			Name:    "Proactive Engagement Association",
+		},
 	}
 }
 
