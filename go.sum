@@ -70,8 +70,8 @@ github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.1 h1:rjqetdmGe/3VzEQxbn
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.1/go.mod h1:8m1cbOiu5qnYqMcwKMQopBmpwCSGC95GRD1oNkFSyu0=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.1 h1:Q/4N3e62dgk0kJlHclAQY+BKfFCeHrKAHRLzWMZkU+Y=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.1/go.mod h1:39DUtvRbWM+d0kcMyx0kUUPaZgigrvcN61ptJbr3DvY=
-github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.6 h1:GET7AUHvPiZCZarDwsSWWB4ayk9IW3Vg0jIcw5SxbV0=
-github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.14.6/go.mod h1:VL4qiTcJAS39Kc7jxnS9C/zJ9O6NKKYKa1F+mnp4clA=
+github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.1 h1:VEHIOO14aNUlDRhcVuIJe+6Qr2pAzBQjhPyJt6ZWRAM=
+github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.1/go.mod h1:Kd2EyIvnZq+1X6iYkuFTsmG7I5tOuc7ogiiQOSl0OYg=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.28.2 h1:ZM+TwNU3m4ZbseapBQVuJDnsElXFjqZd4u9fVeEPfaY=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.28.2/go.mod h1:K71bNJOG///pjA7EaenxW6coSYNkdP117lApBdfdG+U=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.9.3 h1:BDsZGaPFVdUIFaz2m6rVdVNSZzSelzq2vTbxBbFre70=
