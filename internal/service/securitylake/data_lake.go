@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -27,9 +28,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -338,75 +341,89 @@ func (r *dataLakeResource) ModifyPlan(ctx context.Context, request resource.Modi
 	r.SetTagsAll(ctx, request, response)
 }
 
-func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
+func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.DataLakeStatusInitialized),
-		Target:                    enum.Slice(awstypes.DataLakeStatusCompleted),
-		Refresh:                   createStatusDataLake(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DataLakeResource); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.ListDataLakesOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.DataLakeStatusPending, awstypes.DataLakeStatusInitialized),
-		Target:                    enum.Slice(awstypes.DataLakeStatusCompleted),
-		Refresh:                   updateStatusDataLake(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*securitylake.ListDataLakesOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.ListDataLakesOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted),
-		Target:  []string{},
-		Refresh: createStatusDataLake(ctx, conn, id),
+		Pending: enum.Slice(awstypes.DataLakeStatusInitialized),
+		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
+		Refresh: statusDataLakeCreate(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*securitylake.ListDataLakesOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func createStatusDataLake(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
+func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataLakeStatusPending, awstypes.DataLakeStatusInitialized),
+		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
+		Refresh: statusDataLakeUpdate(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
+		if v := output.UpdateStatus; v != nil {
+			if v := v.Exception; v != nil {
+				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
+			}
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted),
+		Target:  []string{},
+		Refresh: statusDataLakeUpdate(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
+		if v := output.UpdateStatus; v != nil {
+			if v := v.Exception; v != nil {
+				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
+			}
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindDataLakeByID(ctx, conn, id)
+		output, err := findDataLakeByARN(ctx, conn, arn)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
+
 		if err != nil {
 			return nil, "", err
 		}
 
-		return out, string(out.CreateStatus), nil
+		return output, string(output.CreateStatus), nil
 	}
 }
 
-func updateStatusDataLake(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
+func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindDataLakeByID(ctx, conn, id)
+		output, err := findDataLakeByARN(ctx, conn, arn)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -414,7 +431,12 @@ func updateStatusDataLake(ctx context.Context, conn *securitylake.Client, id str
 		if err != nil {
 			return nil, "", err
 		}
-		return out, string(out.UpdateStatus.Status), nil
+
+		if output.UpdateStatus == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.UpdateStatus.Status), nil
 	}
 }
 
@@ -833,4 +855,58 @@ func extractRegionFromARN(arn string) (string, error) {
 		return "", fmt.Errorf("invalid ARN: %s", arn)
 	}
 	return parts[3], nil
+}
+
+func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
+	input := &securitylake.ListDataLakesInput{
+		Regions: []string{errs.Must(regionFromARNString(arn))},
+	}
+
+	return findDataLake(ctx, conn, input, func(v *awstypes.DataLakeResource) bool {
+		return aws.ToString(v.DataLakeArn) == arn
+	})
+}
+
+func findDataLake(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) (*awstypes.DataLakeResource, error) {
+	output, err := findDataLakes(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]*awstypes.DataLakeResource, error) {
+	var dataLakes []*awstypes.DataLakeResource
+
+	output, err := conn.ListDataLakes(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output.DataLakes {
+		v := v
+		if v := &v; filter(v) {
+			dataLakes = append(dataLakes, v)
+		}
+	}
+
+	return dataLakes, nil
+}
+
+// regionFromARNString return the AWS Region from the specified ARN string.
+func regionFromARNString(s string) (string, error) {
+	v, err := arn.Parse(s)
+
+	if err != nil {
+		return "", err
+	}
+
+	return v.Region, nil
 }
