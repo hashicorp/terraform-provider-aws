@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,10 +75,10 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"configurations": schema.SetNestedBlock{
-				Validators: []validator.Set{
-					setvalidator.SizeAtLeast(1),
-					setvalidator.SizeAtMost(1),
+			"configuration": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -117,7 +116,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 											},
 										},
 									},
-									"transitions": schema.SetNestedBlock{
+									"transition": schema.SetNestedBlock{
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"days": schema.Int64Attribute{
@@ -513,8 +512,8 @@ func flattenLifeCycleConfiguration(ctx context.Context, apiObject *awstypes.Data
 	diags.Append(d...)
 
 	obj := map[string]attr.Value{
-		"expiration":  expiration,
-		"transitions": transitions,
+		"expiration": expiration,
+		"transition": transitions,
 	}
 	objVal, d := types.ObjectValue(dataLakeConfigurationsLifecycleTypes, obj)
 	diags.Append(d...)
@@ -751,8 +750,8 @@ var (
 	}
 
 	dataLakeConfigurationsLifecycleTypes = map[string]attr.Type{
-		"expiration":  types.ListType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleExpirationTypes}},
-		"transitions": types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleTransitionsTypes}},
+		"expiration": types.ListType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleExpirationTypes}},
+		"transition": types.SetType{ElemType: types.ObjectType{AttrTypes: dataLakeConfigurationsLifecycleTransitionsTypes}},
 	}
 
 	dataLakeConfigurationsReplicationConfigurationTypes = map[string]attr.Type{
@@ -765,7 +764,7 @@ type dataLakeResourceModel struct {
 	DataLakeArn             types.String   `tfsdk:"arn"`
 	ID                      types.String   `tfsdk:"id"`
 	MetaStoreManagerRoleArn types.String   `tfsdk:"meta_store_manager_role_arn"`
-	Configurations          types.Set      `tfsdk:"configurations"`
+	Configurations          types.Set      `tfsdk:"configuration"`
 	Tags                    types.Map      `tfsdk:"tags"`
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 }
@@ -804,7 +803,7 @@ type dataLakeConfigurationsEncryption struct {
 
 type dataLakeConfigurationsLifecycle struct {
 	Expiration  types.List `tfsdk:"expiration"`
-	Transitions types.Set  `tfsdk:"transitions"`
+	Transitions types.Set  `tfsdk:"transition"`
 }
 
 type dataLakeConfigurationsLifecycleExpiration struct {

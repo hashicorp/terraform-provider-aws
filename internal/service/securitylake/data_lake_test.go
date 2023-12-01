@@ -45,9 +45,9 @@ func TestAccSecurityLakeDataLake_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
 				),
 			},
 			{
@@ -84,17 +84,17 @@ func TestAccSecurityLakeDataLake_lifeCycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.days", "80"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
 				),
 			},
 			{
@@ -131,17 +131,17 @@ func TestAccSecurityLakeDataLake_lifeCycleUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.days", "80"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
 				),
 			},
 			{
@@ -155,15 +155,15 @@ func TestAccSecurityLakeDataLake_lifeCycleUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
 				),
 			},
 			{
@@ -200,18 +200,18 @@ func TestAccSecurityLakeDataLake_replication(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.replication_configuration.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "configurations.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.replication_configuration.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "configuration.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.0.regions.#", "1"),
 				),
 			},
 			{
@@ -477,7 +477,7 @@ func testAccDataLakeConfig_basic(rName string) string {
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
+  configuration {
     region = "eu-west-1"
 
     encryption_configuration {
@@ -500,7 +500,7 @@ func testAccDataLakeConfig_lifeCycle(rName string) string {
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
+  configuration {
     region = "eu-west-1"
 
     encryption_configuration {
@@ -508,11 +508,11 @@ resource "aws_securitylake_data_lake" "test" {
     }
 
     lifecycle_configuration {
-      transitions {
+      transition {
         days          = 31
         storage_class = "STANDARD_IA"
       }
-      transitions {
+      transition {
         days          = 80
         storage_class = "ONEZONE_IA"
       }
@@ -536,7 +536,7 @@ func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
+  configuration {
     region = "eu-west-1"
 
     encryption_configuration {
@@ -544,7 +544,7 @@ resource "aws_securitylake_data_lake" "test" {
     }
 
     lifecycle_configuration {
-      transitions {
+      transition {
         days          = 31
         storage_class = "STANDARD_IA"
       }
@@ -569,7 +569,7 @@ func testAccDataLakeConfig_replication(rName string) string {
 resource "aws_securitylake_data_lake" "region_2" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
+  configuration {
     region = "eu-west-2"
 
     encryption_configuration {
@@ -577,7 +577,7 @@ resource "aws_securitylake_data_lake" "region_2" {
     }
 
     lifecycle_configuration {
-      transitions {
+      transition {
         days          = 31
         storage_class = "STANDARD_IA"
       }
