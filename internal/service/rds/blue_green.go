@@ -46,7 +46,7 @@ func (o *blueGreenOrchestrator) cleanUp(ctx context.Context) { //nolint:unused /
 	}
 }
 
-func (o *blueGreenOrchestrator) createDeployment(ctx context.Context, input *rds_sdkv2.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
+func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds_sdkv2.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
 	createOut, err := o.conn.CreateBlueGreenDeployment(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
@@ -63,7 +63,7 @@ func (o *blueGreenOrchestrator) waitForDeploymentAvailable(ctx context.Context, 
 	return dep, nil
 }
 
-func (o *blueGreenOrchestrator) switchover(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
+func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
 	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}

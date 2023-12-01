@@ -9,11 +9,14 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -66,6 +69,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
@@ -5263,6 +5267,178 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	var updatedVersion string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_engineVersion(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.initial", "version"),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "resource_id"),
+					testAccCheckRetrieveValue("data.aws_rds_engine_version.updated", "version", &updatedVersion),
+				),
+			},
+			{
+				PreConfig: func() {
+					meta := acctest.Provider.Meta().(*conns.AWSClient)
+					conn := meta.RDSClient(ctx)
+					deadline := tfresource.NewDeadline(40 * time.Minute)
+
+					orchestrator := tfrds.NewBlueGreenOrchestrator(conn)
+					var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
+					defer func() {
+						if len(cleaupWaiters) == 0 {
+							return
+						}
+
+						waiter, waiters := cleaupWaiters[0], cleaupWaiters[1:]
+						waiter()
+						for _, waiter := range waiters {
+							// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
+							// to complete, we don't need to run them concurrently, saving on network traffic.
+							waiter(tfresource.WithDelay(0))
+						}
+					}()
+
+					input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
+						BlueGreenDeploymentName: aws.String(rName),
+						Source:                  v1.DBInstanceArn,
+						TargetEngineVersion:     aws.String(updatedVersion),
+					}
+
+					dep, err := orchestrator.CreateDeployment(ctx, input)
+					if err != nil {
+						t.Fatalf("creating Blue/Green Deployment: %s", err)
+					}
+
+					deploymentIdentifier := dep.BlueGreenDeploymentIdentifier
+
+					defer func() {
+						// Ensure that the Blue/Green Deployment is always cleaned up
+						input := &rds_sdkv2.DeleteBlueGreenDeploymentInput{
+							BlueGreenDeploymentIdentifier: deploymentIdentifier,
+						}
+						if aws.StringValue(dep.Status) != "SWITCHOVER_COMPLETED" {
+							input.DeleteTarget = aws.Bool(true)
+						}
+						_, err = conn.DeleteBlueGreenDeployment(ctx, input)
+						if err != nil {
+							t.Fatalf("deleting Blue/Green Deployment: %s", err)
+						}
+
+						cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+							_, err = tfrds.WaitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
+							if err != nil {
+								t.Fatalf("waiting for Blue/Green Deployment to be deleted: %s", err)
+							}
+						})
+					}()
+
+					dep, err = tfrds.WaitBlueGreenDeploymentAvailable(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining())
+					if err != nil {
+						t.Fatalf("waiting for Blue/Green Deployment to be available: %s", err)
+					}
+					targetARN, err := tfrds.ParseDBInstanceARN(aws.StringValue(dep.Target))
+					if err != nil {
+						t.Fatalf("parsing target ARN: %s", err)
+					}
+					_, err = tfrds.WaitDBInstanceAvailable(ctx, conn, targetARN.Identifier, deadline.Remaining())
+					if err != nil {
+						t.Fatalf("waiting for Green instance to be available: %s", err)
+					}
+
+					dep, err = orchestrator.Switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
+					if err != nil {
+						t.Fatalf("switching over: %s", err)
+					}
+
+					sourceARN, err := tfrds.ParseDBInstanceARN(aws.StringValue(dep.Source))
+					if err != nil {
+						t.Fatalf("parsing source ARN: %s", err)
+					}
+
+					deleteInput := &rds_sdkv2.DeleteDBInstanceInput{
+						DBInstanceIdentifier: aws.String(sourceARN.Identifier),
+						SkipFinalSnapshot:    aws.Bool(true),
+					}
+					_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
+						func() (any, error) {
+							return conn.DeleteDBInstance(ctx, deleteInput)
+						},
+						func(err error) (bool, error) {
+							// Retry for IAM eventual consistency.
+							if tfawserr_sdkv2.ErrMessageContains(err, tfrds.ErrCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+								return true, err
+							}
+
+							if tfawserr_sdkv2.ErrMessageContains(err, tfrds.ErrCodeInvalidParameterCombination, "disable deletion pro") {
+								return true, err
+							}
+
+							return false, err
+						},
+					)
+					if err != nil {
+						t.Fatalf("deleting source instance: %s", err)
+					}
+
+					cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+						_, err = tfrds.WaitDBInstanceDeleted(ctx, meta.RDSConn(ctx), sourceARN.Identifier, deadline.Remaining(), optFns...)
+						if err != nil {
+							t.Fatalf("waiting for source instance to be deleted: %s", err)
+						}
+					})
+				},
+				Config: testAccInstanceConfig_engineVersion(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "resource_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+					"latest_restorable_time",
+				},
+			},
+		},
+	})
+
+}
+
 func TestAccRDSInstance_gp3MySQL(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -5776,6 +5952,19 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckRetrieveValue(name, key string, v *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		*v = rs.Primary.Attributes[key]
 
 		return nil
 	}
@@ -10915,6 +11104,48 @@ resource "aws_db_instance" "test" {
   }
 }
 `, rName, password))
+}
+
+func testAccInstanceConfig_engineVersion(rName string, updated bool) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${local.engine_version.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = local.engine_version.engine
+  engine_version = local.engine_version.version
+  license_model  = "general-public-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = [%[3]s]
+}
+
+data "aws_rds_engine_version" "initial" {
+  engine             = "mysql"
+  preferred_versions = ["8.0.31", "8.0.30", "8.0.28"]
+}
+
+data "aws_rds_engine_version" "updated" {
+  engine             = data.aws_rds_engine_version.initial.engine
+  preferred_versions = data.aws_rds_engine_version.initial.valid_upgrade_targets
+}
+
+locals {
+  engine_version = %[2]t ? data.aws_rds_engine_version.updated : data.aws_rds_engine_version.initial
+}
+`, rName, updated, mySQLPreferredInstanceClasses))
 }
 
 func testAccInstanceConfig_gp3(rName string, orderableClassConfig func() string, allocatedStorage int) string {

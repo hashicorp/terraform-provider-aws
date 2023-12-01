@@ -1651,17 +1651,30 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+	var (
+		v   *rds.DBInstance
+		err error
+	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get("identifier").(string))
-		d.SetId("")
-		return nil
+	if d.IsNewResource() {
+		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+	} else {
+		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+		if tfresource.NotFound(err) {
+			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get("identifier").(string))
+			if tfresource.NotFound(err) {
+				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get("identifier").(string))
+				d.SetId("")
+				return nil
+			}
+		}
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 	}
+
+	d.SetId(aws.StringValue(v.DbiResourceId))
 
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set("arn", v.DBInstanceArn)
@@ -1856,7 +1869,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creating Blue/Green Deployment", d.Get("identifier").(string))
 
-			dep, err := orchestrator.createDeployment(ctx, createIn)
+			dep, err := orchestrator.CreateDeployment(ctx, createIn)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
@@ -1912,7 +1925,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get("identifier").(string))
 
-			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
+			dep, err = orchestrator.Switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
