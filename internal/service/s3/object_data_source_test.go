@@ -462,6 +462,42 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.test"
+	dataSourceName := "data.aws_s3_object.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_directoryBucket(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccObjectDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -841,4 +877,27 @@ data "aws_s3_object" "test" {
   key    = %[2]q
 }
 `, rName, key)
+}
+
+func testAccObjectDataSourceConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "%[1]s-key"
+  content = "Hello World"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_object.test.bucket
+  key    = aws_s3_object.test.key
+}
+`, rName))
 }

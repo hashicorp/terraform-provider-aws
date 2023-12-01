@@ -170,18 +170,20 @@ const (
 )
 
 func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	baselineID := d.Get("baseline_id").(string)
 
 	patchBaseline, err := findPatchBaselineByID(ctx, conn, baselineID)
 	if err != nil {
-		return create.DiagErrorMessage(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
+		return create.AppendDiagErrorMessage(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
 			create.ProblemStandardMessage(names.SSM, create.ErrActionReading, resNamePatchBaseline, baselineID, err),
 		)
 	}
 	if pbOS, cOS := string(patchBaseline.OperatingSystem), d.Get("operating_system"); pbOS != cOS {
-		return create.DiagErrorMessage(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
+		return create.AppendDiagErrorMessage(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
 			fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", pbOS, cOS),
 		)
 	}
@@ -191,15 +193,17 @@ func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceD
 	}
 	_, err = conn.RegisterDefaultPatchBaseline(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID, err)
+		return create.AppendDiagError(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID, err)
 	}
 
 	d.SetId(string(patchBaseline.OperatingSystem))
 
-	return resourceDefaultPatchBaselineRead(ctx, d, meta)
+	return append(diags, resourceDefaultPatchBaselineRead(ctx, d, meta)...)
 }
 
 func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	out, err := FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(d.Id()))
@@ -209,13 +213,13 @@ func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 	if err != nil {
-		return create.DiagError(names.SSM, create.ErrActionReading, ResNameDefaultPatchBaseline, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSM, create.ErrActionReading, ResNameDefaultPatchBaseline, d.Id(), err)
 	}
 
 	d.Set("baseline_id", out.BaselineId)
 	d.Set("operating_system", out.OperatingSystem)
 
-	return nil
+	return diags
 }
 
 func operatingSystemFilter(os ...types.OperatingSystem) types.PatchOrchestratorFilter {

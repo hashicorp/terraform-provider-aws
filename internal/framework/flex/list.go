@@ -10,6 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []*string {
@@ -82,4 +85,53 @@ func FlattenFrameworkStringValueListLegacy[T ~string](_ context.Context, vs []T)
 	}
 
 	return types.ListValueMust(types.StringType, elems)
+}
+
+type FrameworkElementExpanderFunc[T any, U any] func(context.Context, T) U
+
+func ExpandFrameworkListNestedBlock[T any, U any](ctx context.Context, tfList types.List, f FrameworkElementExpanderFunc[T, U]) []U {
+	if tfList.IsNull() || tfList.IsUnknown() {
+		return nil
+	}
+
+	var data []T
+
+	_ = fwdiag.Must(0, tfList.ElementsAs(ctx, &data, false))
+
+	return slices.ApplyToAll(data, func(t T) U {
+		return f(ctx, t)
+	})
+}
+
+func ExpandFrameworkListNestedBlockPtr[T any, U any](ctx context.Context, tfList types.List, f FrameworkElementExpanderFunc[T, *U]) *U {
+	if tfList.IsNull() || tfList.IsUnknown() {
+		return nil
+	}
+
+	var data []T
+
+	_ = fwdiag.Must(0, tfList.ElementsAs(ctx, &data, false))
+
+	if len(data) == 0 {
+		return nil
+	}
+
+	return f(ctx, data[0])
+}
+
+type FrameworkElementFlattenerFunc[T any, U any] func(context.Context, U) T
+
+func FlattenFrameworkListNestedBlock[T any, U any](ctx context.Context, apiObjects []U, f FrameworkElementFlattenerFunc[T, U]) types.List {
+	attributeTypes := fwtypes.AttributeTypesMust[T](ctx)
+	elementType := types.ObjectType{AttrTypes: attributeTypes}
+
+	if len(apiObjects) == 0 {
+		return types.ListNull(elementType)
+	}
+
+	data := slices.ApplyToAll(apiObjects, func(apiObject U) T {
+		return f(ctx, apiObject)
+	})
+
+	return fwdiag.Must(types.ListValueFrom(ctx, elementType, data))
 }

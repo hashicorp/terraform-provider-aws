@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -66,6 +67,8 @@ func resourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("connection_name").(string)
@@ -78,15 +81,17 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateConnection(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner Connection (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner Connection (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.Connection.ConnectionName))
 
-	return resourceConnectionRead(ctx, d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	c, err := findConnectionByName(ctx, conn, d.Id())
@@ -94,11 +99,11 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner Connection (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", c.ConnectionArn)
@@ -106,7 +111,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("provider_type", c.ProviderType)
 	d.Set("status", c.Status)
 
-	return nil
+	return diags
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -115,6 +120,8 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Connection: %s", d.Id())
@@ -123,18 +130,18 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitConnectionDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner Connection (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findConnectionByName(ctx context.Context, conn *apprunner.Client, name string) (*types.ConnectionSummary, error) {

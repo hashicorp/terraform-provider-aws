@@ -10,6 +10,7 @@ Amplify
 App Mesh
 App Runner
 AppConfig
+AppFabric
 AppFlow
 AppIntegrations
 AppStream 2.0
@@ -47,6 +48,7 @@ CodeBuild
 CodeCatalyst
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
 CodeGuru Reviewer
 CodePipeline
 CodeStar Connections
@@ -95,6 +97,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage Version 2
 Elemental MediaStore
 EventBridge
 EventBridge Pipes

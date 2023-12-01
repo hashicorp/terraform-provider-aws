@@ -220,7 +220,7 @@ func RegisterSweepers() {
 			"aws_codestarconnections_host",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
-			"aws_dms_replication_instance",
+			"aws_dms_replication_subnet_group",
 			"aws_docdb_subnet_group",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_instance_connect_endpoint",

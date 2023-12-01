@@ -1,4 +1,51 @@
-## 5.27.0 (Unreleased)
+## 5.30.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_lb_trust_store_revocation` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+
+ENHANCEMENTS:
+
+* data-source/aws_lb_listener: Add `mutual_authentication` attribute ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* resource/aws_lb_listener: Add `mutual_authentication` configuration block ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+
+## 5.29.0 (November 30, 2023)
+
+FEATURES:
+
+* **New Resource:** `aws_docdbelastic_cluster` ([#31033](https://github.com/hashicorp/terraform-provider-aws/issues/31033))
+* **New Resource:** `aws_eks_pod_identity_association` ([#34566](https://github.com/hashicorp/terraform-provider-aws/issues/34566))
+
+ENHANCEMENTS:
+
+* resource/aws_docdb_cluster: Add `storage_type` argument ([#34637](https://github.com/hashicorp/terraform-provider-aws/issues/34637))
+* resource/aws_neptune_parameter_group: Add `name_prefix` argument ([#34500](https://github.com/hashicorp/terraform-provider-aws/issues/34500))
+
+BUG FIXES:
+
+* resource/aws_networkmanager_attachment_accepter: Now revokes attachment on deletion for VPC Attachments ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_networkmanager_vpc_attachment: Fixes error when modifying `options` fields while waiting for acceptance ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_networkmanager_vpc_attachment: Fixes error where VPC Attachments waiting for acceptance could not be deleted ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_s3_directory_bucket: Fix `NotImplemented: This bucket does not support Object Versioning` errors on resource Delete when `force_destroy` is `true` ([#34647](https://github.com/hashicorp/terraform-provider-aws/issues/34647))
+
+## 5.28.0 (November 29, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_s3_directory_buckets` ([#34612](https://github.com/hashicorp/terraform-provider-aws/issues/34612))
+* **New Resource:** `aws_s3_directory_bucket` ([#34612](https://github.com/hashicorp/terraform-provider-aws/issues/34612))
+
+ENHANCEMENTS:
+
+* resource/aws_s3control_access_grants_instance: Add `identity_center_arn` argument and `identity_center_application_arn` attribute ([#34582](https://github.com/hashicorp/terraform-provider-aws/issues/34582))
+
+BUG FIXES:
+
+* resource/aws_elaticache_replication_group: Fix regression caused by the introduction of the `auth_token_update_strategy` argument with a default value ([#34600](https://github.com/hashicorp/terraform-provider-aws/issues/34600))
+
+## 5.27.0 (November 27, 2023)
 
 NOTES:
 
@@ -9,6 +56,10 @@ FEATURES:
 * **New Data Source:** `aws_emr_supported_instance_types` ([#34481](https://github.com/hashicorp/terraform-provider-aws/issues/34481))
 * **New Resource:** `aws_apprunner_default_auto_scaling_configuration_version` ([#34292](https://github.com/hashicorp/terraform-provider-aws/issues/34292))
 * **New Resource:** `aws_lexv2models_bot_version` ([#33858](https://github.com/hashicorp/terraform-provider-aws/issues/33858))
+* **New Resource:** `aws_s3control_access_grant` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
+* **New Resource:** `aws_s3control_access_grants_instance` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
+* **New Resource:** `aws_s3control_access_grants_instance_resource_policy` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
+* **New Resource:** `aws_s3control_access_grants_location` ([#34564](https://github.com/hashicorp/terraform-provider-aws/issues/34564))
 
 ENHANCEMENTS:
 
