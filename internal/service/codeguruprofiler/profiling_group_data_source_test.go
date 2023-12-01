@@ -51,7 +51,7 @@ func TestAccCodeGuruProfilerProfilingGroupDataSource_basic(t *testing.T) {
 func testAccProfilingGroupDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codeguruprofiler_profiling_group" "test" {
-  name = %[1]q
+  name             = %[1]q
   compute_platform = "Default"
 
   agent_orchestration_config {
@@ -60,7 +60,7 @@ resource "aws_codeguruprofiler_profiling_group" "test" {
 }
 
 data "aws_codeguruprofiler_profiling_group" "test" {
-    name = aws_codeguruprofiler_profiling_group.test.name
+  name = aws_codeguruprofiler_profiling_group.test.name
 }
 `, rName)
 }

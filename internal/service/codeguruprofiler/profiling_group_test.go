@@ -250,7 +250,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccProfilingGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codeguruprofiler_profiling_group" "test" {
-  name = %[1]q
+  name             = %[1]q
   compute_platform = "Default"
 
   agent_orchestration_config {
@@ -263,7 +263,7 @@ resource "aws_codeguruprofiler_profiling_group" "test" {
 func testAccProfilingGroupConfig_update(rName string, profilingEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_codeguruprofiler_profiling_group" "test" {
-  name = %[1]q
+  name             = %[1]q
   compute_platform = "Default"
 
   agent_orchestration_config {
@@ -276,7 +276,7 @@ resource "aws_codeguruprofiler_profiling_group" "test" {
 func testAccProfilingGroupConfig_tags1(rName, key1, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeguruprofiler_profiling_group" "test" {
-  name = %[1]q
+  name             = %[1]q
   compute_platform = "Default"
 
   agent_orchestration_config {
@@ -292,7 +292,7 @@ resource "aws_codeguruprofiler_profiling_group" "test" {
 func testAccProfilingGroupConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeguruprofiler_profiling_group" "test" {
-  name = %[1]q
+  name             = %[1]q
   compute_platform = "Default"
 
   agent_orchestration_config {

@@ -15,6 +15,12 @@ Terraform resource for managing an AWS CodeGuru Profiler Profiling Group.
 
 ```terraform
 resource "aws_codeguruprofiler_profiling_group" "example" {
+  name             = "example"
+  compute_platform = "Default"
+
+  agent_orchestration_config {
+    profiling_enabled = true
+  }
 }
 ```
 
@@ -22,28 +28,24 @@ resource "aws_codeguruprofiler_profiling_group" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `agent_orchestration_config` - (Required) Specifies whether profiling is enabled or disabled for the created profiling. See [Agent Orchestration Config](#agent-orchestration-config) for more details.
+* `name` - (Required) The name of the profiling group to create.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `compute_platform` - (Optional) The compute platform of the profiling group.
 * `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Profiling Group. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Profiling Group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Timeouts
+### Agent Orchestration Config
 
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `profiling_enabled` - (Required) Boolean that specifies whether the profiling agent collects profiling data or
 
 ## Import
 
@@ -52,12 +54,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_codeguruprofiler_profiling_group.example
-  id = "profiling_group-id-12345678"
+  id = "profiling_group-name-12345678"
 }
 ```
 
-Using `terraform import`, import CodeGuru Profiler Profiling Group using the `example_id_arg`. For example:
+Using `terraform import`, import CodeGuru Profiler Profiling Group using the `name`. For example:
 
 ```console
-% terraform import aws_codeguruprofiler_profiling_group.example profiling_group-id-12345678
+% terraform import aws_codeguruprofiler_profiling_group.example profiling_group-name-12345678
 ```
