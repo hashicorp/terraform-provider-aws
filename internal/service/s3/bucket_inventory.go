@@ -179,7 +179,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("name").(string)
 	inventoryConfiguration := &types.InventoryConfiguration{
 		Id:        aws.String(name),
-		IsEnabled: d.Get("enabled").(bool),
+		IsEnabled: aws.Bool(d.Get("enabled").(bool)),
 	}
 
 	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -218,6 +218,10 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Inventory: %s", bucket, err)

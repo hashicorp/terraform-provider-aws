@@ -2209,7 +2209,7 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", "default.oracle-ee-19"),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "replica_mode", "open-read-only"),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "name"),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
 					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
 				),
@@ -4856,7 +4856,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
@@ -8700,7 +8700,7 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  parameter_group_name    = aws_db_parameter_group.test.id
+  parameter_group_name    = aws_db_parameter_group.test.name
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -8709,7 +8709,7 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = aws_db_instance.source.instance_class
-  parameter_group_name = aws_db_parameter_group.test.id
+  parameter_group_name = aws_db_parameter_group.test.name
   replicate_source_db  = aws_db_instance.source.identifier
   skip_final_snapshot  = true
 }
@@ -8723,7 +8723,7 @@ func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_differentSetOnBo
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = aws_db_instance.source.instance_class
-  parameter_group_name = aws_db_parameter_group.test.id
+  parameter_group_name = aws_db_parameter_group.test.name
   replicate_source_db  = aws_db_instance.source.identifier
   skip_final_snapshot  = true
 }
@@ -8745,7 +8745,7 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  parameter_group_name    = aws_db_parameter_group.source.id
+  parameter_group_name    = aws_db_parameter_group.source.name
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -8784,7 +8784,7 @@ resource "aws_db_instance" "source" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  parameter_group_name    = aws_db_parameter_group.test.id
+  parameter_group_name    = aws_db_parameter_group.test.name
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -8828,7 +8828,7 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = aws_db_instance.source.instance_class
-  parameter_group_name = aws_db_parameter_group.test.id
+  parameter_group_name = aws_db_parameter_group.test.name
   replicate_source_db  = aws_db_instance.source.identifier
   skip_final_snapshot  = true
 }
@@ -9009,7 +9009,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
   apply_immediately   = true
 
-  parameter_group_name = aws_db_parameter_group.test.id
+  parameter_group_name = aws_db_parameter_group.test.name
   ca_cert_identifier   = "rds-ca-2019"
 
   timeouts {
@@ -9907,7 +9907,7 @@ resource "aws_db_snapshot" "test" {
 resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = aws_db_instance.source.instance_class
-  parameter_group_name = aws_db_parameter_group.test.id
+  parameter_group_name = aws_db_parameter_group.test.name
   snapshot_identifier  = aws_db_snapshot.test.id
   skip_final_snapshot  = true
 }
@@ -10663,7 +10663,7 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                 = "test"
-  parameter_group_name    = aws_db_parameter_group.test.id
+  parameter_group_name    = aws_db_parameter_group.test.name
   skip_final_snapshot     = true
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"

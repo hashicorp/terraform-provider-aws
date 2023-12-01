@@ -623,6 +623,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppConfig"
     severity: WARNING
+  - id: appfabric-in-func-name
+    languages:
+      - go
+    message: Do not use "AppFabric" in func name inside appfabric package
+    paths:
+      include:
+        - internal/service/appfabric
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AppFabric"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: appfabric-in-test-name
+    languages:
+      - go
+    message: Include "AppFabric" in test name
+    paths:
+      include:
+        - internal/service/appfabric/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAppFabric"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: appfabric-in-const-name
+    languages:
+      - go
+    message: Do not use "AppFabric" in const name inside appfabric package
+    paths:
+      include:
+        - internal/service/appfabric
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AppFabric"
+    severity: WARNING
+  - id: appfabric-in-var-name
+    languages:
+      - go
+    message: Do not use "AppFabric" in var name inside appfabric package
+    paths:
+      include:
+        - internal/service/appfabric
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)AppFabric"
+    severity: WARNING
   - id: appflow-in-func-name
     languages:
       - go
@@ -2999,6 +3057,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)codedeploy"
     severity: WARNING
+  - id: codeguruprofiler-in-func-name
+    languages:
+      - go
+    message: Do not use "CodeGuruProfiler" in func name inside codeguruprofiler package
+    paths:
+      include:
+        - internal/service/codeguruprofiler
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruProfiler"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codeguruprofiler-in-test-name
+    languages:
+      - go
+    message: Include "CodeGuruProfiler" in test name
+    paths:
+      include:
+        - internal/service/codeguruprofiler/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCodeGuruProfiler"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: codeguruprofiler-in-const-name
+    languages:
+      - go
+    message: Do not use "CodeGuruProfiler" in const name inside codeguruprofiler package
+    paths:
+      include:
+        - internal/service/codeguruprofiler
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruProfiler"
+    severity: WARNING
+  - id: codeguruprofiler-in-var-name
+    languages:
+      - go
+    message: Do not use "CodeGuruProfiler" in var name inside codeguruprofiler package
+    paths:
+      include:
+        - internal/service/codeguruprofiler
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CodeGuruProfiler"
+    severity: WARNING
   - id: codegurureviewer-in-func-name
     languages:
       - go
@@ -3462,77 +3578,4 @@ rules:
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
             - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: computeoptimizer-in-test-name
-    languages:
-      - go
-    message: Include "ComputeOptimizer" in test name
-    paths:
-      include:
-        - internal/service/computeoptimizer/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccComputeOptimizer"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: computeoptimizer-in-const-name
-    languages:
-      - go
-    message: Do not use "ComputeOptimizer" in const name inside computeoptimizer package
-    paths:
-      include:
-        - internal/service/computeoptimizer
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ComputeOptimizer"
-    severity: WARNING
-  - id: computeoptimizer-in-var-name
-    languages:
-      - go
-    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
-    paths:
-      include:
-        - internal/service/computeoptimizer
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ComputeOptimizer"
-    severity: WARNING
-  - id: configservice-in-func-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in func name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

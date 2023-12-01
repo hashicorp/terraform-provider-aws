@@ -52,82 +52,58 @@ func Error(service, action, resource, id string, gotError error) error {
 	return errors.New(ProblemStandardMessage(service, action, resource, id, gotError))
 }
 
-// AddError returns diag.Diagnostics with an additional diag.Diagnostic containing
+// AppendDiagError returns diag.Diagnostics with an additional diag.Diagnostic containing
 // an error using a standardized problem message
-func AddError(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
-	return append(diags, newError(service, action, resource, id, gotError))
+func AppendDiagError(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
+	return append(diags,
+		diagError(service, action, resource, id, gotError),
+	)
 }
 
 // DiagError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
 // with a standardized error message
 func DiagError(service, action, resource, id string, gotError error) diag.Diagnostics {
 	return diag.Diagnostics{
-		newError(service, action, resource, id, gotError),
+		diagError(service, action, resource, id, gotError),
 	}
 }
 
-func newError(service, action, resource, id string, gotError error) diag.Diagnostic {
+func diagError(service, action, resource, id string, gotError error) diag.Diagnostic {
 	return diag.Diagnostic{
 		Severity: diag.Error,
 		Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 	}
 }
 
-func DiagErrorFramework(service, action, resource, id string, gotError error) fwdiag.Diagnostic {
-	return fwdiag.NewErrorDiagnostic(
-		ProblemStandardMessage(service, action, resource, id, nil),
-		gotError.Error(),
+func AppendDiagErrorMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
+	return append(diags,
+		diagError(service, action, resource, id, fmt.Errorf(message)),
 	)
 }
 
-func DiagErrorMessage(service, action, resource, id, message string) diag.Diagnostics {
+func AppendDiagSettingError(diags diag.Diagnostics, service, resource, id, argument string, gotError error) diag.Diagnostics {
+	return append(diags,
+		diagSettingError(service, resource, id, argument, gotError),
+	)
+}
+
+// DiagSettingError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
+// with a standardized error message when setting arguments and attributes values.
+func DiagSettingError(service, resource, id, argument string, gotError error) diag.Diagnostics {
 	return diag.Diagnostics{
-		diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
-		},
+		diagSettingError(service, resource, id, argument, gotError),
 	}
 }
 
-// ErrorSetting returns an errors.Error with a standardized error message when setting
-// arguments and attributes values.
-func SettingError(service, resource, id, argument string, gotError error) error {
-	return errors.New(ProblemStandardMessage(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError))
+func diagSettingError(service, resource, id, argument string, gotError error) diag.Diagnostic {
+	return diagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
 }
 
-// DiagSettingError returns an errors.Error with a standardized error message when setting
-// arguments and attributes values.
-func DiagSettingError(service, resource, id, argument string, gotError error) diag.Diagnostics {
-	return DiagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
-}
-
-// AddWarning returns diag.Diagnostics with an additional diag.Diagnostic containing
-// a warning using a standardized problem message
-func AddWarning(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
-	return append(diags,
-		diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
-		},
-	)
-}
-
-func AddWarningMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
+func AppendDiagWarningMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
 	return append(diags,
 		diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  ProblemStandardMessage(service, action, resource, id, fmt.Errorf(message)),
-		},
-	)
-}
-
-// AddWarningNotFoundRemoveState returns diag.Diagnostics with an additional diag.Diagnostic containing
-// a warning using a standardized problem message
-func AddWarningNotFoundRemoveState(service, action, resource, id string) diag.Diagnostics {
-	return append(diag.Diagnostics{},
-		diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  ProblemStandardMessage(service, action, resource, id, errors.New("not found, removing from state")),
 		},
 	)
 }
@@ -139,4 +115,11 @@ func WarnLog(service, action, resource, id string, gotError error) {
 
 func LogNotFoundRemoveState(service, action, resource, id string) {
 	WarnLog(service, action, resource, id, errors.New("not found, removing from state"))
+}
+
+func DiagErrorFramework(service, action, resource, id string, gotError error) fwdiag.Diagnostic {
+	return fwdiag.NewErrorDiagnostic(
+		ProblemStandardMessage(service, action, resource, id, nil),
+		gotError.Error(),
+	)
 }

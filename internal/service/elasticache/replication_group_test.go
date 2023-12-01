@@ -62,7 +62,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -99,7 +99,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -132,7 +132,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -167,7 +167,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -219,7 +219,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "5.0.6"),
@@ -347,7 +347,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_updatedDescription(rName),
@@ -388,7 +388,7 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_updatedMaintenanceWindow(rName),
@@ -431,7 +431,7 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_user(rName, userGroup, 1),
@@ -473,7 +473,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_updatedNodeSize(rName),
@@ -519,6 +519,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -533,7 +534,74 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	token1 := sdkacctest.RandString(16)
+	token2 := sdkacctest.RandString(16)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_authTokenSetup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+			},
+			{
+				// When adding an auth_token to a previously passwordless replication
+				// group, the SET strategy can be used.
+				Config: testAccReplicationGroupConfig_authToken(rName, token1, elasticache.AuthTokenUpdateStrategyTypeSet),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auth_token", token1),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", elasticache.AuthTokenUpdateStrategyTypeSet),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_authToken(rName, token2, elasticache.AuthTokenUpdateStrategyTypeRotate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", elasticache.AuthTokenUpdateStrategyTypeRotate),
+				),
+			},
+			{
+				// To explicitly set an auth token and remove the previous one, the modify request
+				// should include the auth_token to be kept and the SET auth_token_update_strategy.
+				//
+				// Ref: https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html#auth-modifyng-token
+				Config: testAccReplicationGroupConfig_authToken(rName, token2, elasticache.AuthTokenUpdateStrategyTypeSet),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", elasticache.AuthTokenUpdateStrategyTypeSet),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -544,26 +612,26 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 	resourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		CheckDestroy: testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName, sdkacctest.RandString(16)),
+				// At v5.26.0 the resource's schema is v1 and auth_token_update_strategy is not an argument
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.26.0",
+					},
+				},
+				Config: testAccReplicationGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName, sdkacctest.RandString(16)),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccReplicationGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
@@ -600,7 +668,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -638,7 +706,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -678,7 +746,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -723,7 +791,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -768,7 +836,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -827,7 +895,7 @@ func TestAccElastiCacheReplicationGroup_ipDiscovery(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -869,7 +937,7 @@ func TestAccElastiCacheReplicationGroup_networkType(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -911,7 +979,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -953,6 +1021,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -1234,6 +1303,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -1286,7 +1356,7 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_enableSnapshotting(rName),
@@ -1326,7 +1396,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -1359,7 +1429,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -1425,7 +1495,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 4),
@@ -1490,7 +1560,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				PreConfig: func() {
@@ -1875,7 +1945,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -1992,12 +2062,10 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, true),
@@ -2099,7 +2167,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -2159,7 +2227,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_globalIDFull(rName, updatedNumCacheClusters),
@@ -2250,7 +2318,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 1, 3),
@@ -2328,7 +2396,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -2372,6 +2440,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -2428,6 +2497,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -2474,6 +2544,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -2533,6 +2604,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"auth_token_update_strategy",
 					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
@@ -3438,7 +3510,7 @@ resource "aws_elasticache_replication_group" "test" {
   parameter_group_name       = "default.redis5.0"
   engine_version             = "5.0.6"
   transit_encryption_enabled = true
-  auth_token                 = "%[2]s"
+  auth_token                 = %[2]q
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -3460,6 +3532,84 @@ resource "aws_security_group" "test" {
 }
 `, rName, authToken),
 	)
+}
+
+// Identical to the _authToken configutaion, but with no authorization yet
+// configured. This will execercise the case when authorization is added
+// to a replication group which previously had none.
+func testAccReplicationGroupConfig_authTokenSetup(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t2.micro"
+  num_cache_clusters   = "1"
+  port                 = 6379
+  subnet_group_name    = aws_elasticache_subnet_group.test.name
+  security_group_ids   = [aws_security_group.test.id]
+  parameter_group_name = "default.redis5.0"
+  engine_version       = "5.0.6"
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName))
+}
+
+func testAccReplicationGroupConfig_authToken(rName string, authToken string, updateStrategy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis5.0"
+  engine_version             = "5.0.6"
+  transit_encryption_enabled = true
+  auth_token                 = %[2]q
+  auth_token_update_strategy = %[3]q
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, authToken, updateStrategy))
 }
 
 func testAccReplicationGroupConfig_numberCacheClusters(rName string, numberCacheClusters int) string {
