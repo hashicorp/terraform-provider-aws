@@ -135,7 +135,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"tags":                             testAccTransitGatewayVPCAttachment_tags,
 			"ApplianceModeSupport":             testAccTransitGatewayVPCAttachment_ApplianceModeSupport,
 			"DnsSupport":                       testAccTransitGatewayVPCAttachment_DNSSupport,
-			"SecurityGroupReferencingSupport ": testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport,
+			"SecurityGroupReferencingSupport": testAccTransitGatewayVPCAttachment_SecurityGroupReferencingSupport,
 			"Ipv6Support":                      testAccTransitGatewayVPCAttachment_IPv6Support,
 			"SharedTransitGateway":             testAccTransitGatewayVPCAttachment_SharedTransitGateway,
 			"SubnetIds":                        testAccTransitGatewayVPCAttachment_SubnetIDs,
