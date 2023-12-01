@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.48.9
+	github.com/aws/aws-sdk-go v1.48.10
 	github.com/aws/aws-sdk-go-v2 v1.23.4
 	github.com/aws/aws-sdk-go-v2/config v1.25.10
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.8
@@ -89,7 +89,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.1
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.1
@@ -152,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.1 // indirect
