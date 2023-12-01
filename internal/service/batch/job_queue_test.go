@@ -56,6 +56,40 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobQueue_basicCEO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_stateCEO(rName, batch.JQStateEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("job-queue/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateEnabled),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchJobQueue_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 batch.JobQueueDetail
@@ -590,7 +624,20 @@ func testAccJobQueueConfig_state(rName string, state string) string {
 		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-//   compute_environments = [aws_batch_compute_environment.test.arn]
+   compute_environments = [aws_batch_compute_environment.test.arn]
+
+  name                 = %[1]q
+  priority             = 1
+  state                = %[2]q
+}
+`, rName, state))
+}
+
+func testAccJobQueueConfig_stateCEO(rName string, state string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
   compute_environment_order {
     compute_environment = aws_batch_compute_environment.test.arn
 	order = 1

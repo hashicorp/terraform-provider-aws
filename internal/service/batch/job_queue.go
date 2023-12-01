@@ -198,7 +198,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	if !data.ComputeEnvironmentOrder.IsNull() {
-		state.ComputeEnvironmentOrder = flex.Flatten(ctx, out.ComputeEnvironmentOrder, data.ComputeEnvironmentOrder)
+		flex.Flatten(ctx, out.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)
 	} else {
 		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	}
@@ -232,6 +232,11 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
+	if !data.ComputeEnvironmentOrder.IsNull() {
+		flex.Flatten(ctx, out.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)
+	} else {
+		data.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
+	}
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -408,8 +413,6 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 	r.Priority = flex.Int64ToFrameworkLegacy(ctx, out.Priority)
 	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn)
 	r.State = flex.StringToFrameworkLegacy(ctx, out.State)
-
-	// r.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 
 	setTagsOut(ctx, out.Tags)
 
