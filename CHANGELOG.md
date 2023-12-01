@@ -1,4 +1,16 @@
 ## 5.30.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_lb_trust_store_revocation` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+
+ENHANCEMENTS:
+
+* data-source/aws_lb_listener: Add `mutual_authentication` attribute ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* resource/aws_lb_listener: Add `mutual_authentication` configuration block ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+
 ## 5.29.0 (November 30, 2023)
 
 FEATURES:
