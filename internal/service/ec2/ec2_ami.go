@@ -465,16 +465,10 @@ func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.Get("description").(string) != "" {
-		_, err := conn.ModifyImageAttributeWithContext(ctx, &ec2.ModifyImageAttributeInput{
-			Description: &ec2.AttributeValue{
-				Value: aws.String(d.Get("description").(string)),
-			},
-			ImageId: aws.String(d.Id()),
-		})
-
+	if d.HasChange("description") {
+		err := updateDescription(ctx, conn, d.Id(), d.Get("description").(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s) description: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -542,6 +536,27 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return diags
+}
+
+func updateDescription(ctx context.Context, conn *ec2.EC2, id string, description string) error {
+	input := &ec2.ModifyImageAttributeInput{
+		Description: &ec2.AttributeValue{
+			Value: aws.String(description),
+		},
+		ImageId: aws.String(id),
+	}
+
+	_, err := conn.ModifyImageAttributeWithContext(ctx, input)
+	if err != nil {
+		return fmt.Errorf("updating description: %s", err)
+	}
+
+	err = waitImageDescriptionUpdated(ctx, conn, id, description)
+	if err != nil {
+		return fmt.Errorf("updating description: waiting for completion: %s", err)
+	}
+
+	return nil
 }
 
 func enableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string, deprecateAt string) error {
@@ -816,6 +831,27 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.Bloc
 }
 
 const imageDeprecationPropagationTimeout = 2 * time.Minute
+
+func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.EC2, imageID, expectedValue string) error {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+		output, err := FindImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.StringValue(output.Description) == expectedValue, nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
+}
 
 func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.EC2, imageID, expectedValue string) error {
 	expected, err := time.Parse(time.RFC3339, expectedValue)

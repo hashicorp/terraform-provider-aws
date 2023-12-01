@@ -182,6 +182,14 @@ func TestAccEC2AMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", descUpdated),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
 		},
 	})
 }
