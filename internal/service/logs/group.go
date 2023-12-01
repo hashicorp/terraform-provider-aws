@@ -61,6 +61,12 @@ func resourceGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validLogGroupNamePrefix,
 			},
+			"log_group_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "STANDARD",
+				ValidateFunc: validation.StringInSlice([]string{"STANDARD", "INFREQUENT_ACCESS"}, false),
+			},
 			"retention_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -85,8 +91,9 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatchlogs.CreateLogGroupInput{
-		LogGroupName: aws.String(name),
-		Tags:         getTagsIn(ctx),
+		LogGroupName:  aws.String(name),
+		Tags:          getTagsIn(ctx),
+		LogGroupClass: types.LogGroupClass(d.Get("log_group_class").(string)),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {

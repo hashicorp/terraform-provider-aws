@@ -40,6 +40,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -221,6 +222,36 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsGroup_logClass(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_logClass(rName, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", "STANDARD"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_logClass(rName, "INFREQUENT_ACCESS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", "INFREQUENT_ACCESS"),
 				),
 			},
 		},
@@ -458,6 +489,15 @@ resource "aws_cloudwatch_log_group" "test" {
   kms_key_id = aws_kms_key.test[%[2]d].arn
 }
 `, rName, idx)
+}
+
+func testAccGroupConfig_logClass(rName string, val string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name            = %[1]q
+  log_group_class = %[2]q
+}
+`, rName, val)
 }
 
 func testAccGroupConfig_retentionPolicy(rName string, val int) string {
