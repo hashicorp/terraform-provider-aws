@@ -77,6 +77,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -89,6 +90,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 					},
 					Blocks: map[string]schema.Block{
 						"encryption_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeEncryptionConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -103,12 +105,14 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 							},
 						},
 						"lifecycle_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeLifecycleConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"expiration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeLifecycleExpirationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
@@ -121,6 +125,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 										},
 									},
 									"transition": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[dataLakeLifecycleTransitionModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"days": schema.Int64Attribute{
@@ -136,6 +141,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 							},
 						},
 						"replication_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeReplicationConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -420,13 +426,13 @@ func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 type dataLakeResourceModel struct {
-	Configurations          types.Set      `tfsdk:"configuration"`
-	DataLakeARN             types.String   `tfsdk:"arn"`
-	ID                      types.String   `tfsdk:"id"`
-	MetaStoreManagerRoleARN fwtypes.ARN    `tfsdk:"meta_store_manager_role_arn"`
-	Tags                    types.Map      `tfsdk:"tags"`
-	TagsAll                 types.Map      `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value `tfsdk:"timeouts"`
+	Configurations          fwtypes.ListNestedObjectValueOf[dataLakeConfigurationModel] `tfsdk:"configuration"`
+	DataLakeARN             types.String                                                `tfsdk:"arn"`
+	ID                      types.String                                                `tfsdk:"id"`
+	MetaStoreManagerRoleARN fwtypes.ARN                                                 `tfsdk:"meta_store_manager_role_arn"`
+	Tags                    types.Map                                                   `tfsdk:"tags"`
+	TagsAll                 types.Map                                                   `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 func (model *dataLakeResourceModel) setID() {
