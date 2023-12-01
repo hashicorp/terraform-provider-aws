@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,10 +35,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Data Lake")
-func newResourceDataLake(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDataLake{}
+// @Tags(identifierAttribute="arn")
+func newDataLakeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &dataLakeResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -52,27 +51,29 @@ const (
 	ResNameDataLake = "Data Lake"
 )
 
-type resourceDataLake struct {
+type dataLakeResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDataLake) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *dataLakeResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_securitylake_data_lake"
 }
 
-func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"datalake_arn": framework.ARNAttributeComputedOnly(),
+			"arn":        framework.ARNAttributeComputedOnly(),
+			names.AttrID: framework.IDAttribute(),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags: tftags.TagsAttribute(),
-			names.AttrID:   framework.IDAttribute(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"configurations": schema.SetNestedBlock{
@@ -159,8 +160,8 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan datalakeResourceModel
+func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan dataLakeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,10 +208,10 @@ func (r *resourceDataLake) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var state datalakeResourceModel
+	var state dataLakeResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -235,10 +236,10 @@ func (r *resourceDataLake) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDataLake) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dataLakeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var plan, state datalakeResourceModel
+	var plan, state dataLakeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -288,10 +289,10 @@ func (r *resourceDataLake) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDataLake) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dataLakeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var state datalakeResourceModel
+	var state dataLakeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -328,8 +329,8 @@ func (r *resourceDataLake) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r *resourceDataLake) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *dataLakeResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
@@ -760,8 +761,8 @@ var (
 	}
 )
 
-type datalakeResourceModel struct {
-	DataLakeArn             types.String   `tfsdk:"datalake_arn"`
+type dataLakeResourceModel struct {
+	DataLakeArn             types.String   `tfsdk:"arn"`
 	ID                      types.String   `tfsdk:"id"`
 	MetaStoreManagerRoleArn types.String   `tfsdk:"meta_store_manager_role_arn"`
 	Configurations          types.Set      `tfsdk:"configurations"`
@@ -769,11 +770,11 @@ type datalakeResourceModel struct {
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 }
 
-func (model *datalakeResourceModel) setID() {
+func (model *dataLakeResourceModel) setID() {
 	model.ID = model.DataLakeArn
 }
 
-func (model *datalakeResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.DataLakeResource) diag.Diagnostics {
+func (model *dataLakeResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.DataLakeResource) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
