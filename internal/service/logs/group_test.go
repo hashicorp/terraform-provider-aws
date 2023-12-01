@@ -36,11 +36,11 @@ func TestAccLogsGroup_basic(t *testing.T) {
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "log_group_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -228,7 +228,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_logClass(t *testing.T) {
+func TestAccLogsGroup_logGroupClass(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -241,14 +241,7 @@ func TestAccLogsGroup_logClass(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_logClass(rName, "STANDARD"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "log_group_class", "STANDARD"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_logClass(rName, "INFREQUENT_ACCESS"),
+				Config: testAccGroupConfig_logGroupClass(rName, "INFREQUENT_ACCESS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "log_group_class", "INFREQUENT_ACCESS"),
@@ -491,7 +484,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rName, idx)
 }
 
-func testAccGroupConfig_logClass(rName string, val string) string {
+func testAccGroupConfig_logGroupClass(rName string, val string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name            = %[1]q
