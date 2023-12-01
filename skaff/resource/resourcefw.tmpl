@@ -63,6 +63,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+{{- if .AWSGoSDKV2 }}
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 {{- if .IncludeTags }}
@@ -593,8 +596,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{- end }}
 	if err != nil {
 		{{- if .AWSGoSDKV2 }}
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		{{- else }}
@@ -786,8 +788,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	{{ if .AWSGoSDKV2 }}
 	out, err := conn.Get{{ .Resource }}(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
