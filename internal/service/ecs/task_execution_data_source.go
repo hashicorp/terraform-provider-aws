@@ -274,6 +274,10 @@ const (
 )
 
 func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return ecsRunTask(DSNameTaskExecution, ctx, d, meta)
+}
+
+func ecsRunTask(resourceName string, ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
@@ -319,14 +323,14 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("placement_constraints"); ok {
 		pc, err := expandPlacementConstraints(v.(*schema.Set).List())
 		if err != nil {
-			return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return create.DiagError(names.ECS, create.ErrActionCreating, resourceName, d.Id(), err)
 		}
 		input.PlacementConstraints = pc
 	}
 	if v, ok := d.GetOk("placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
 		if err != nil {
-			return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return create.DiagError(names.ECS, create.ErrActionCreating, resourceName, d.Id(), err)
 		}
 		input.PlacementStrategy = ps
 	}
@@ -345,10 +349,10 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.RunTaskWithContext(ctx, &input)
 	if err != nil {
-		return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+		return create.DiagError(names.ECS, create.ErrActionCreating, resourceName, d.Id(), err)
 	}
 	if out == nil || len(out.Tasks) == 0 {
-		return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), tfresource.NewEmptyResultError(input))
+		return create.DiagError(names.ECS, create.ErrActionCreating, resourceName, d.Id(), tfresource.NewEmptyResultError(input))
 	}
 
 	var taskArns []*string

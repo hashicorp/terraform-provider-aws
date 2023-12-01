@@ -95,6 +95,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceTaskExecution,
+			TypeName: "aws_ecs_task_execution",
+		},
+		{
 			Factory:  ResourceTaskSet,
 			TypeName: "aws_ecs_task_set",
 			Name:     "Task Set",
