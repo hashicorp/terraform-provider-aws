@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go/service/batch"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -149,22 +148,27 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	var ceo []string
+	input := batch.CreateJobQueueInput{
+		// ComputeEnvironmentOrder: expandComputeEnvironments(ceo),
+		JobQueueName: flex.StringFromFramework(ctx, data.JobQueueName),
+		Priority:     flex.Int64FromFramework(ctx, data.Priority),
+		State:        flex.StringFromFramework(ctx, data.State),
+		Tags:         getTagsIn(ctx),
+	}
 
 	if !data.ComputeEnvironmentOrder.IsNull() {
-		ceo = flex.ExpandFrameworkListNestedBlockPtr(ctx, data.ComputeEnvironmentOrder)
+		// c := flex.ExpandFrameworkListNestedBlockPtr(ctx, data.ComputeEnvironmentOrder, r.expandComputeEnvironmentOrder)
+		// input.ComputeEnvironmentOrder = nil
+		flex.Expand(ctx, data.ComputeEnvironmentOrder, func(i int, v interface{}) {
+			ceo := v.(computeEnvironmentOrder)
+			input.ComputeEnvironmentOrder = append(input.ComputeEnvironmentOrder, &batch.ComputeEnvironmentOrder{
+				Order:              flex.Int64FromFramework(ctx, ceo.Order),
+				ComputeEnvironment: flex.StringFromFramework(ctx, ceo.ComputeEnvironment),
+			})
+		}, nil)
 	} else {
-		ceo = flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments)
+		input.ComputeEnvironmentOrder = expandComputeEnvironments(flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments))
 	}
-
-	input := batch.CreateJobQueueInput{
-		ComputeEnvironmentOrder: expandComputeEnvironments(ceo),
-		JobQueueName:            flex.StringFromFramework(ctx, data.JobQueueName),
-		Priority:                flex.Int64FromFramework(ctx, data.Priority),
-		State:                   flex.StringFromFramework(ctx, data.State),
-		Tags:                    getTagsIn(ctx),
-	}
-
 	if !data.SchedulingPolicyARN.IsNull() {
 		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
 	}
@@ -193,6 +197,11 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
+	if !data.ComputeEnvironmentOrder.IsNull() {
+		state.ComputeEnvironmentOrder = flex.Flatten(ctx, out.ComputeEnvironmentOrder, data.ComputeEnvironmentOrder)
+	} else {
+		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
+	}
 	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -396,21 +405,26 @@ func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch
 
 	r.ARN = flex.StringToFrameworkLegacy(ctx, out.JobQueueArn)
 	r.JobQueueName = flex.StringToFramework(ctx, out.JobQueueName)
-	r.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	r.Priority = flex.Int64ToFrameworkLegacy(ctx, out.Priority)
 	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn)
 	r.State = flex.StringToFrameworkLegacy(ctx, out.State)
+
+	// r.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 
 	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
-func (r *resourceJobQueue) expandComputeEnvironmentOrder(ctx context.Context, data computeEnvironmentOrder) awstypes.ComputeEnvironmentOrder {
-	return awstypes.ComputeEnvironmentOrder{
-		Order:              flex.Int32FromFramework(ctx, data.Order),
-		ComputeEnvironment: flex.StringFromFramework(ctx, data.ComputeEnvironment),
-	}
-}
+
+// func (r *resourceJobQueue) expandComputeEnvironmentOrder(ctx context.Context, ceos computeEnvironmentOrder) awstypes.ComputeEnvironmentOrder {
+// 	for _, v := range data.ComputeEnvironmentOrder {
+
+// 	}
+// 	return awstypes.ComputeEnvironmentOrder{
+// 		Order:              flex.Int32FromFramework(ctx, data.Order),
+// 		ComputeEnvironment: flex.StringFromFramework(ctx, data.ComputeEnvironment),
+// 	}
+// }
 
 func expandComputeEnvironments(order []string) (envs []*batch.ComputeEnvironmentOrder) {
 	for i, env := range order {
