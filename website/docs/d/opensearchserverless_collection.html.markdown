@@ -40,3 +40,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_modified_date` - Date the Collection was last modified.
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
+* `standby_replicas` - Indicates whether standby replicas should be used for a collection.

@@ -57,6 +57,44 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchServerlessCollection_standbyReplicas(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rStandbyReplicas := "DISABLED"
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_standbyReplicas(rName, rStandbyReplicas),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, resourceName, &collection),
+					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "standby_replicas"),
+					resource.TestCheckResourceAttr(resourceName, "standby_replicas", rStandbyReplicas),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchServerlessCollection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var collection types.CollectionDetail
@@ -262,6 +300,20 @@ resource "aws_opensearchserverless_collection" "test" {
   depends_on = [aws_opensearchserverless_security_policy.test]
 }
 `, rName),
+	)
+}
+
+func testAccCollectionConfig_standbyReplicas(rName string, rStandbyReplicas string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+  standby_replicas = %2q
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName, rStandbyReplicas),
 	)
 }
 

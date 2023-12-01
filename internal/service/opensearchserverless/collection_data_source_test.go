@@ -85,6 +85,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "dashboard_endpoint", resourceName, "dashboard_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
 				),
 			},
