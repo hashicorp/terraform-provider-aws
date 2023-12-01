@@ -98,7 +98,7 @@ func NewResource[T any, U any, V r[T, U]]() V {
 }
 
 // setImpl sets the CRUDer implementation.
-func (r *ResourceWithConfigureEx[T]) setImpl(impl resourceCRUDer[T]) {
+func (r *ResourceWithConfigureEx[T]) setImpl(impl resourceCRUDer[T]) { //nolint:unused // Called from NewResource
 	r.impl = impl
 }
 

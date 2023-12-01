@@ -50,7 +50,7 @@ func NewDataSource[T any, U any, V ds[T, U]]() V {
 }
 
 // setImpl sets the reader implementation.
-func (d *DataSourceWithConfigureEx[T]) setImpl(impl dataSourceReader[T]) {
+func (d *DataSourceWithConfigureEx[T]) setImpl(impl dataSourceReader[T]) { //nolint:unused // Called from NewDataSource
 	d.impl = impl
 }
 
