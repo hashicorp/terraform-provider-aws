@@ -150,10 +150,6 @@ func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	const (
-		trustStoreDeleteTimeout = 2 * time.Minute
-	)
-
 	parts, err := flex.ExpandResourceId(d.Id(), trustStoreRevocationResourceIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
