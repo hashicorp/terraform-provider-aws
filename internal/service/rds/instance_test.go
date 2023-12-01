@@ -5968,6 +5968,10 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, license, storage, classes)
 }
 
+func testAccInstanceConfig_orderableClassDb2() string {
+	return testAccInstanceConfig_orderableClass("db2-se", "bring-your-own-license", "gp3", db2PreferredInstanceClasses)
+}
+
 func testAccInstanceConfig_orderableClassMySQL() string {
 	return testAccInstanceConfig_orderableClass("mysql", "general-public-license", "standard", mySQLPreferredInstanceClasses)
 }
@@ -6051,6 +6055,39 @@ resource "aws_db_instance" "test" {
   # documented. Terraform will downcase this to match (as opposed to throw a
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_db2engine(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassDb2(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name   = "tf-db2-pg-%[1]s"
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  "ParameterName=rds.ibm_customer_id,ParameterValue=0000000,ApplyMethod=immediate" \
+
+  parameter {
+    name  = "rds.ibm_customer_id"
+    value = 0000000
+  }
+  parameter {
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
+
+  allocated_storage    = 10
+  skip_final_snapshot  = true
+
+  apply_immediately = true
 }
 `, rName))
 }
@@ -8729,36 +8766,34 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_parameter_group" "test" {
+  name   = "%[1]s-group"
   family = data.aws_rds_engine_version.default.parameter_group_family
-  name   = %[1]q
 
   parameter {
-    name  = "sync_binlog"
-    value = 0
+    name  = "rds.ibm_customer_id"
+    value = 0000000
+    apply_method = "immediate"
+  }
+  parameter {
+    name         = "rds.ibm_site_id"
+    value        = 0000000000
+    apply_method = "immediate"
   }
 }
 
-resource "aws_db_instance" "source" {
-  allocated_storage       = 5
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier              = "%[1]s-source"
+  identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  parameter_group_name    = aws_db_parameter_group.source.name
+  license_model           = "bring-your-own-license"
+  parameter_group_name    = aws_db_parameter_group.test.name
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
-}
-
-resource "aws_db_parameter_group" "source" {
-  family = data.aws_rds_engine_version.default.parameter_group_family
-  name   = "%[1]s-source"
-
-  parameter {
-    name  = "sync_binlog"
-    value = 0
-  }
+  storage_type            = "gp3"
 }
 `, rName))
 }
