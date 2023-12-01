@@ -418,8 +418,8 @@ resource "aws_sagemaker_app_image_config" "test" {
 
   jupyter_lab_image_config {
     container_config {
-      container_arguments             = ["%[2]s"]
-      container_entrypoint            = ["%[2]s"]
+      container_arguments  = ["%[2]s"]
+      container_entrypoint = ["%[2]s"]
       container_environment_variables = {
         %[2]q = %[2]q
       }
