@@ -61,6 +61,7 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -166,7 +167,6 @@ func (r *resourceProfilingGroup) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state.Name = flex.StringToFramework(ctx, out.Name)
 	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -191,6 +191,7 @@ func (r *resourceProfilingGroup) Update(ctx context.Context, req resource.Update
 			return
 		}
 
+		in.ProfilingGroupName = flex.StringFromFramework(ctx, state.ID)
 		out, err := conn.UpdateProfilingGroup(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
