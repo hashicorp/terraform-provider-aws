@@ -438,6 +438,7 @@ service/elbv2:
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
   - 'website/**/lb_hosted*'
+  - 'website/**/lb_trust_store*'
 service/emr:
   - 'internal/service/emr/**/*'
   - 'website/**/emr_*'
@@ -700,6 +701,9 @@ service/medialive:
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
+service/mediapackagev2:
+  - 'internal/service/mediapackagev2/**/*'
+  - 'website/**/media_packagev2_*'
 service/mediapackagevod:
   - 'internal/service/mediapackagevod/**/*'
   - 'website/**/mediapackagevod_*'
@@ -908,6 +912,7 @@ service/rum:
 service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
+  - 'website/**/s3_directory_bucket*'
   - 'website/**/s3_object*'
   - 'website/**/canonical_user_id*'
 service/s3control:

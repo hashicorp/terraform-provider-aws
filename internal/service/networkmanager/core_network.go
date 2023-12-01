@@ -36,7 +36,7 @@ const (
 	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
 	latestPolicyVersionID = -1
 	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
-	waitCoreNetworkPolicyCreatedTimeInMinutes = 4
+	waitCoreNetworkPolicyCreatedTimeInMinutes = 5
 )
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
@@ -436,10 +436,12 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkMan
 
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.CoreNetworkStateDeleting},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusCoreNetworkState(ctx, conn, id),
+		Pending:    []string{networkmanager.CoreNetworkStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Delay:      5 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Refresh:    statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -19,7 +20,7 @@ import (
 // @SDKDataSource("aws_controltower_controls", name="Control")
 func dataSourceControls() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: DataSourceControlsRead,
+		ReadWithoutTimeout: dataSourceControlsRead,
 
 		Schema: map[string]*schema.Schema{
 			"enabled_controls": {
@@ -36,7 +37,9 @@ func dataSourceControls() *schema.Resource {
 	}
 }
 
-func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier := d.Get("target_identifier").(string)
@@ -47,7 +50,7 @@ func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 	controls, err := findEnabledControls(ctx, conn, input, tfslices.PredicateTrue[*types.EnabledControlSummary]())
 
 	if err != nil {
-		return diag.Errorf("reading ControlTower Controls (%s): %s", targetIdentifier, err)
+		return sdkdiag.AppendErrorf(diags, "reading ControlTower Controls (%s): %s", targetIdentifier, err)
 	}
 
 	d.SetId(targetIdentifier)
@@ -55,5 +58,5 @@ func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta in
 		return aws.ToString(v.ControlIdentifier)
 	}))
 
-	return nil
+	return diags
 }

@@ -274,6 +274,10 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "LifecycleConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
 	}
