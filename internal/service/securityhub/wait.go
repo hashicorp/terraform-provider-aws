@@ -7,8 +7,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -20,17 +22,17 @@ const (
 )
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
-func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
+func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
-		Target:  []string{securityhub.AdminStatusEnabled},
+		Target:  enum.Slice(types.AdminStatusEnabled),
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
 		Timeout: adminAccountEnabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*securityhub.AdminAccount); ok {
+	if output, ok := outputRaw.(*types.AdminAccount); ok {
 		return output, err
 	}
 
@@ -38,9 +40,9 @@ func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.SecurityHub,
 }
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
-func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
+func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{securityhub.AdminStatusDisableInProgress},
+		Pending: enum.Slice(types.AdminStatusDisableInProgress),
 		Target:  []string{adminStatusNotFound},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
 		Timeout: adminAccountNotFoundTimeout,
@@ -48,7 +50,7 @@ func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.SecurityHub
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*securityhub.AdminAccount); ok {
+	if output, ok := outputRaw.(*types.AdminAccount); ok {
 		return output, err
 	}
 

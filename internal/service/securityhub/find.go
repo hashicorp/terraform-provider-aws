@@ -6,81 +6,51 @@ package securityhub
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAdminAccount(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
-	input := &securityhub.ListOrganizationAdminAccountsInput{}
-	var result *securityhub.AdminAccount
-
-	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *securityhub.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, adminAccount := range page.AdminAccounts {
-			if adminAccount == nil {
-				continue
-			}
-
-			if aws.StringValue(adminAccount.AccountId) == adminAccountID {
-				result = adminAccount
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
-}
-
-func FindInsight(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.Insight, error) {
-	input := &securityhub.GetInsightsInput{
-		InsightArns: aws.StringSlice([]string{arn}),
-		MaxResults:  aws.Int64(1),
+func FindActionTargetByArn(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
+	input := &securityhub.DescribeActionTargetsInput{
+		ActionTargetArns: []string{arn},
 	}
 
-	output, err := conn.GetInsightsWithContext(ctx, input)
+	output, err := conn.DescribeActionTargets(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Insights) == 0 {
-		return nil, nil
+	if output == nil || len(output.ActionTargets) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.Insights[0], nil
+	if count := len(output.ActionTargets); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return &output.ActionTargets[0], nil
 }
 
-func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.SecurityHub, standardsSubscriptionARN, standardsControlARN string) (*securityhub.StandardsControl, error) {
-	input := &securityhub.DescribeStandardsControlsInput{
-		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
+func FindFindingAggregatorByArn(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
+	input := &securityhub.GetFindingAggregatorInput{
+		FindingAggregatorArn: aws.String(arn),
 	}
-	var output *securityhub.StandardsControl
 
-	err := conn.DescribeStandardsControlsPagesWithContext(ctx, input, func(page *securityhub.DescribeStandardsControlsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	output, err := conn.GetFindingAggregator(ctx, input)
 
-		for _, control := range page.Controls {
-			if aws.StringValue(control.StandardsControlArn) == standardsControlARN {
-				output = control
-
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -96,4 +66,88 @@ func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx co
 	}
 
 	return output, nil
+}
+
+func FindAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
+	input := &securityhub.ListOrganizationAdminAccountsInput{}
+
+	output, err := conn.ListOrganizationAdminAccounts(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, adminAccount := range output.AdminAccounts {
+		if adminAccount.AccountId == aws.String(adminAccountID) {
+			return &adminAccount, nil
+		}
+	}
+
+	return nil, err
+}
+
+func FindInsight(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
+	input := &securityhub.GetInsightsInput{
+		InsightArns: []string{arn},
+		MaxResults:  aws.Int32(1),
+	}
+
+	output, err := conn.GetInsights(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Insights) == 0 {
+		return nil, nil
+	}
+
+	return &output.Insights[0], nil
+}
+
+func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
+	input := &securityhub.DescribeStandardsControlsInput{
+		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
+	}
+
+	output, err := conn.DescribeStandardsControls(ctx, input)
+
+	var result types.StandardsControl
+	for _, control := range output.Controls {
+		if aws.ToString(control.StandardsControlArn) == standardsControlARN {
+			result = control
+			break
+		}
+	}
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return &result, nil
 }

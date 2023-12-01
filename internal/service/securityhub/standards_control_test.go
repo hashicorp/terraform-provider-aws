@@ -9,22 +9,23 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccStandardsControl_basic(t *testing.T) {
+func TestAccSecurityHubStandardsControl_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var standardsControl securityhub.StandardsControl
+	var standardsControl types.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001
 		Steps: []resource.TestStep{
@@ -47,14 +48,14 @@ func testAccStandardsControl_basic(t *testing.T) {
 	})
 }
 
-func testAccStandardsControl_disabledControlStatus(t *testing.T) {
+func TestAccSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	ctx := acctest.Context(t)
-	var standardsControl securityhub.StandardsControl
+	var standardsControl types.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001
 		Steps: []resource.TestStep{
@@ -70,12 +71,12 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 	})
 }
 
-func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
+func TestAccSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, //lintignore:AT001
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 	})
 }
 
-func testAccCheckStandardsControlExists(ctx context.Context, n string, control *securityhub.StandardsControl) resource.TestCheckFunc {
+func testAccCheckStandardsControlExists(ctx context.Context, n string, control *types.StandardsControl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -98,7 +99,7 @@ func testAccCheckStandardsControlExists(ctx context.Context, n string, control *
 			return fmt.Errorf("No Security Hub Standards Control ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
 

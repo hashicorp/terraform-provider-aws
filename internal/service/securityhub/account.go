@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -59,10 +60,10 @@ func ResourceAccount() *schema.Resource {
 				Default:  true,
 			},
 			"control_finding_generator": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(securityhub.ControlFindingGenerator_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ControlFindingGenerator](),
 			},
 			"enable_default_standards": {
 				Type:     schema.TypeBool,
@@ -76,17 +77,17 @@ func ResourceAccount() *schema.Resource {
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	input := &securityhub.EnableSecurityHubInput{
 		EnableDefaultStandards: aws.Bool(d.Get("enable_default_standards").(bool)),
 	}
 
 	if v, ok := d.GetOk("control_finding_generator"); ok {
-		input.ControlFindingGenerator = aws.String(v.(string))
+		input.ControlFindingGenerator = types.ControlFindingGenerator((v.(string)))
 	}
 
-	_, err := conn.EnableSecurityHubWithContext(ctx, input)
+	_, err := conn.EnableSecurityHub(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
@@ -99,7 +100,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 			AutoEnableControls: aws.Bool(autoEnableControls),
 		}
 
-		_, err := conn.UpdateSecurityHubConfigurationWithContext(ctx, input)
+		_, err := conn.UpdateSecurityHubConfiguration(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
@@ -111,7 +112,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	_, err := FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
 
@@ -125,7 +126,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscriptions: %s", err)
 	}
 
-	hub, err := conn.DescribeHubWithContext(ctx, &securityhub.DescribeHubInput{
+	hub, err := conn.DescribeHub(ctx, &securityhub.DescribeHubInput{
 		HubArn: aws.String(accountHubARN(meta.(*conns.AWSClient))),
 	})
 
@@ -144,17 +145,17 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	input := &securityhub.UpdateSecurityHubConfigurationInput{
 		AutoEnableControls: aws.Bool(d.Get("auto_enable_controls").(bool)),
 	}
 
 	if d.HasChange("control_finding_generator") {
-		input.ControlFindingGenerator = aws.String(d.Get("control_finding_generator").(string))
+		input.ControlFindingGenerator = types.ControlFindingGenerator((d.Get("control_finding_generator").(string)))
 	}
 
-	_, err := conn.UpdateSecurityHubConfigurationWithContext(ctx, input)
+	_, err := conn.UpdateSecurityHubConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
@@ -165,14 +166,14 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountNotFoundTimeout, func() (interface{}, error) {
-		return conn.DisableSecurityHubWithContext(ctx, &securityhub.DisableSecurityHubInput{})
-	}, securityhub.ErrCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
+		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
+	}, "InvalidInputException", "Cannot disable Security Hub on the Security Hub administrator")
 
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 

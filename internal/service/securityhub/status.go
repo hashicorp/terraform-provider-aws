@@ -6,8 +6,7 @@ package securityhub
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -20,7 +19,7 @@ const (
 )
 
 // statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
-func statusAdminAccountAdmin(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) retry.StateRefreshFunc {
+func statusAdminAccountAdmin(ctx context.Context, conn *securityhub.Client, adminAccountID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		adminAccount, err := FindAdminAccount(ctx, conn, adminAccountID)
 
@@ -32,6 +31,6 @@ func statusAdminAccountAdmin(ctx context.Context, conn *securityhub.SecurityHub,
 			return adminAccount, adminStatusNotFound, nil
 		}
 
-		return adminAccount, aws.StringValue(adminAccount.Status), nil
+		return adminAccount, string(adminAccount.Status), nil
 	}
 }

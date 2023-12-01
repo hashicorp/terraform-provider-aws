@@ -8,16 +8,19 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccInviteAccepter_basic(t *testing.T) {
+func TestAccSecurityHubInviteAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_invite_accepter.test"
 
@@ -26,7 +29,7 @@ func testAccInviteAccepter_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInviteAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -53,9 +56,9 @@ func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		resp, err := conn.GetMasterAccountWithContext(ctx, &securityhub.GetMasterAccountInput{})
+		resp, err := conn.GetMasterAccount(ctx, &securityhub.GetMasterAccountInput{})
 
 		if err != nil {
 			return fmt.Errorf("error retrieving Security Hub master account: %w", err)
@@ -71,15 +74,15 @@ func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) 
 
 func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_invite_accepter" {
 				continue
 			}
 
-			resp, err := conn.GetMasterAccountWithContext(ctx, &securityhub.GetMasterAccountInput{})
-			if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+			resp, err := conn.GetMasterAccount(ctx, &securityhub.GetMasterAccountInput{})
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 			// If Security Hub is not enabled, the API returns "BadRequestException"

@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_securityhub_invite_accepter")
@@ -44,7 +45,7 @@ func ResourceInviteAccepter() *schema.Resource {
 
 func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
 	invitationId, err := resourceInviteAccepterGetInvitationID(ctx, conn, d.Get("master_id").(string))
@@ -53,7 +54,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "accepting Security Hub invitation: %s", err)
 	}
 
-	_, err = conn.AcceptInvitationWithContext(ctx, &securityhub.AcceptInvitationInput{
+	_, err = conn.AcceptInvitation(ctx, &securityhub.AcceptInvitationInput{
 		InvitationId: aws.String(invitationId),
 		MasterId:     aws.String(d.Get("master_id").(string)),
 	})
@@ -67,18 +68,18 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInviteAccepterGetInvitationID(ctx context.Context, conn *securityhub.SecurityHub, masterId string) (string, error) {
+func resourceInviteAccepterGetInvitationID(ctx context.Context, conn *securityhub.Client, masterId string) (string, error) {
 	log.Printf("[DEBUG] Getting InvitationId for MasterId %s", masterId)
 
-	resp, err := conn.ListInvitationsWithContext(ctx, &securityhub.ListInvitationsInput{})
+	resp, err := conn.ListInvitations(ctx, &securityhub.ListInvitationsInput{})
 
 	if err != nil {
 		return "", fmt.Errorf("listing Security Hub invitations: %w", err)
 	}
 
 	for _, invitation := range resp.Invitations {
-		log.Printf("[DEBUG] Invitation: %s", invitation)
-		if aws.StringValue(invitation.AccountId) == masterId {
+		log.Printf("[DEBUG] Invitation: %s", aws.ToString(invitation.AccountId))
+		if aws.ToString(invitation.AccountId) == masterId {
 			return *invitation.InvitationId, nil
 		}
 	}
@@ -88,14 +89,14 @@ func resourceInviteAccepterGetInvitationID(ctx context.Context, conn *securityhu
 
 func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 	log.Print("[DEBUG] Reading Security Hub master account")
 
-	resp, err := conn.GetMasterAccountWithContext(ctx, &securityhub.GetMasterAccountInput{})
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-		log.Print("[WARN] Security Hub master account not found, removing from state")
+	resp, err := conn.GetMasterAccount(ctx, &securityhub.GetMasterAccountInput{})
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Master Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "retrieving Security Hub master account: %s", err)
@@ -117,10 +118,10 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 
-	_, err := conn.DisassociateFromMasterAccountWithContext(ctx, &securityhub.DisassociateFromMasterAccountInput{})
+	_, err := conn.DisassociateFromMasterAccount(ctx, &securityhub.DisassociateFromMasterAccountInput{})
 
 	if tfawserr.ErrMessageContains(err, "BadRequestException", "The request is rejected because the current account is not associated to a master account") {
 		return diags

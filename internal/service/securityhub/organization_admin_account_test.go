@@ -15,9 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationAdminAccount_basic(t *testing.T) {
+func TestAccSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
@@ -26,7 +27,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,7 +47,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationAdminAccount_disappears(t *testing.T) {
+func TestAccSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
@@ -55,7 +56,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
+func TestAccSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 	altResourceName := "aws_securityhub_organization_admin_account.alternate"
@@ -83,7 +84,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 
 func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_organization_admin_account" {
@@ -138,7 +139,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		adminAccount, err := tfsecurityhub.FindAdminAccount(ctx, conn, rs.Primary.ID)
 

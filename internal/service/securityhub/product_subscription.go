@@ -9,11 +9,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -45,12 +48,12 @@ func ResourceProductSubscription() *schema.Resource {
 
 func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 	productArn := d.Get("product_arn").(string)
 
 	log.Printf("[DEBUG] Enabling Security Hub Product Subscription for product %s", productArn)
 
-	resp, err := conn.EnableImportFindingsForProductWithContext(ctx, &securityhub.EnableImportFindingsForProductInput{
+	resp, err := conn.EnableImportFindingsForProduct(ctx, &securityhub.EnableImportFindingsForProductInput{
 		ProductArn: aws.String(productArn),
 	})
 
@@ -65,7 +68,7 @@ func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	productArn, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
@@ -93,19 +96,29 @@ func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func ProductSubscriptionCheckExists(ctx context.Context, conn *securityhub.SecurityHub, productSubscriptionArn string) (bool, error) {
+func ProductSubscriptionCheckExists(ctx context.Context, conn *securityhub.Client, productSubscriptionArn string) (bool, error) {
 	input := &securityhub.ListEnabledProductsForImportInput{}
 	exists := false
 
-	err := conn.ListEnabledProductsForImportPagesWithContext(ctx, input, func(page *securityhub.ListEnabledProductsForImportOutput, lastPage bool) bool {
-		for _, readProductSubscriptionArn := range page.ProductSubscriptions {
-			if aws.StringValue(readProductSubscriptionArn) == productSubscriptionArn {
-				exists = true
-				return false
-			}
+	output, err := conn.ListEnabledProductsForImport(ctx, input)
+
+	for _, enabledProduct := range output.ProductSubscriptions {
+		if enabledProduct == productSubscriptionArn {
+			exists = true
+			break
 		}
-		return !lastPage
-	})
+	}
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return false, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+		return false, nil
+	}
 
 	if err != nil {
 		return false, err
@@ -118,7 +131,7 @@ func ProductSubscriptionParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Expected Security Hub Product Subscription ID in format <product_arn>,<arn> - received: %s", id)
+		return "", "", fmt.Errorf("expected Security Hub Product Subscription ID in format <product_arn>,<arn> - received: %s", id)
 	}
 
 	return parts[0], parts[1], nil
@@ -126,7 +139,7 @@ func ProductSubscriptionParseID(id string) (string, string, error) {
 
 func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 	log.Printf("[DEBUG] Disabling Security Hub Product Subscription %s", d.Id())
 
 	_, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
@@ -135,7 +148,7 @@ func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "disabling Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DisableImportFindingsForProductWithContext(ctx, &securityhub.DisableImportFindingsForProductInput{
+	_, err = conn.DisableImportFindingsForProduct(ctx, &securityhub.DisableImportFindingsForProductInput{
 		ProductSubscriptionArn: aws.String(productSubscriptionArn),
 	})
 

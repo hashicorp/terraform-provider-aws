@@ -7,13 +7,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -41,7 +41,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -49,7 +49,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 		AdminAccountId: aws.String(adminAccountID),
 	}
 
-	_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
+	_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Security Hub Organization Admin Account (%s): %s", adminAccountID, err)
@@ -66,14 +66,14 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	adminAccount, err := FindAdminAccount(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
@@ -97,15 +97,15 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	input := &securityhub.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, input)
+	_, err := conn.DisableOrganizationAdminAccount(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+	if tfresource.NotFound(err) {
 		return diags
 	}
 

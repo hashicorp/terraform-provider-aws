@@ -8,12 +8,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -33,9 +34,9 @@ func ResourceStandardsControl() *schema.Resource {
 			},
 
 			"control_status": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(securityhub.ControlStatus_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.ControlStatus](),
 			},
 
 			"control_status_updated_at": {
@@ -86,7 +87,7 @@ func ResourceStandardsControl() *schema.Resource {
 }
 
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
 
@@ -111,7 +112,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("control_status_updated_at", control.ControlStatusUpdatedAt.Format(time.RFC3339))
 	d.Set("description", control.Description)
 	d.Set("disabled_reason", control.DisabledReason)
-	d.Set("related_requirements", aws.StringValueSlice(control.RelatedRequirements))
+	d.Set("related_requirements", control.RelatedRequirements)
 	d.Set("remediation_url", control.RemediationUrl)
 	d.Set("severity_rating", control.SeverityRating)
 	d.Set("standards_control_arn", control.StandardsControlArn)
@@ -121,18 +122,18 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	d.SetId(d.Get("standards_control_arn").(string))
 
 	input := &securityhub.UpdateStandardsControlInput{
-		ControlStatus:       aws.String(d.Get("control_status").(string)),
+		ControlStatus:       types.ControlStatus(d.Get("control_status").(string)),
 		DisabledReason:      aws.String(d.Get("disabled_reason").(string)),
 		StandardsControlArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Updating Security Hub Standards Control: %s", input)
-	_, err := conn.UpdateStandardsControlWithContext(ctx, input)
+	log.Printf("[DEBUG] Updating Security Hub Standards Control")
+	_, err := conn.UpdateStandardsControl(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("updating Security Hub Standards Control (%s): %s", d.Id(), err)

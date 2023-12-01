@@ -8,13 +8,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,22 +46,22 @@ func ResourceStandardsSubscription() *schema.Resource {
 
 func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	standardsARN := d.Get("standards_arn").(string)
 	input := &securityhub.BatchEnableStandardsInput{
-		StandardsSubscriptionRequests: []*securityhub.StandardsSubscriptionRequest{{
+		StandardsSubscriptionRequests: []types.StandardsSubscriptionRequest{{
 			StandardsArn: aws.String(standardsARN),
 		}},
 	}
 
-	output, err := conn.BatchEnableStandardsWithContext(ctx, input)
+	output, err := conn.BatchEnableStandards(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Standards Subscription (%s): %s", standardsARN, err)
 	}
 
-	d.SetId(aws.StringValue(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
+	d.SetId(aws.ToString(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
 
 	if _, err := waitStandardsSubscriptionCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Standards Subscription (%s) create: %s", d.Id(), err)
@@ -70,7 +72,7 @@ func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.Resource
 
 func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	output, err := FindStandardsSubscriptionByARN(ctx, conn, d.Id())
 
@@ -91,11 +93,11 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Standards Subscription: %s", d.Id())
-	_, err := conn.BatchDisableStandardsWithContext(ctx, &securityhub.BatchDisableStandardsInput{
-		StandardsSubscriptionArns: aws.StringSlice([]string{d.Id()}),
+	_, err := conn.BatchDisableStandards(ctx, &securityhub.BatchDisableStandardsInput{
+		StandardsSubscriptionArns: []string{d.Id()},
 	})
 
 	if err != nil {
@@ -111,14 +113,14 @@ func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindStandardsSubscription(ctx context.Context, conn *securityhub.SecurityHub, input *securityhub.GetEnabledStandardsInput) (*securityhub.StandardsSubscription, error) {
+func FindStandardsSubscription(ctx context.Context, conn *securityhub.Client, input *securityhub.GetEnabledStandardsInput) (*types.StandardsSubscription, error) {
 	output, err := FindStandardsSubscriptions(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -126,34 +128,20 @@ func FindStandardsSubscription(ctx context.Context, conn *securityhub.SecurityHu
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindStandardsSubscriptions(ctx context.Context, conn *securityhub.SecurityHub, input *securityhub.GetEnabledStandardsInput) ([]*securityhub.StandardsSubscription, error) {
-	var output []*securityhub.StandardsSubscription
+func FindStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, input *securityhub.GetEnabledStandardsInput) ([]types.StandardsSubscription, error) {
+	output, err := conn.GetEnabledStandards(ctx, input)
 
-	err := conn.GetEnabledStandardsPagesWithContext(ctx, input, func(page *securityhub.GetEnabledStandardsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.StandardsSubscriptions {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+	if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -164,12 +152,12 @@ func FindStandardsSubscriptions(ctx context.Context, conn *securityhub.SecurityH
 		return nil, err
 	}
 
-	return output, nil
+	return output.StandardsSubscriptions, nil
 }
 
-func FindStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
+func FindStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
 	input := &securityhub.GetEnabledStandardsInput{
-		StandardsSubscriptionArns: aws.StringSlice([]string{arn}),
+		StandardsSubscriptionArns: []string{arn},
 	}
 
 	output, err := FindStandardsSubscription(ctx, conn, input)
@@ -178,9 +166,9 @@ func FindStandardsSubscriptionByARN(ctx context.Context, conn *securityhub.Secur
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.StandardsStatus); status == securityhub.StandardsStatusFailed {
+	if status := output.StandardsStatus; status == types.StandardsStatusFailed {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(status),
 			LastRequest: input,
 		}
 	}
@@ -195,7 +183,7 @@ const (
 	standardsSubscriptionDeleteTimeout = 3 * time.Minute
 )
 
-func statusStandardsSubscription(ctx context.Context, conn *securityhub.SecurityHub, arn string) retry.StateRefreshFunc {
+func statusStandardsSubscription(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStandardsSubscriptionByARN(ctx, conn, arn)
 
@@ -209,38 +197,38 @@ func statusStandardsSubscription(ctx context.Context, conn *securityhub.Security
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.StandardsStatus), nil
+		return output, string(output.StandardsStatus), nil
 	}
 }
 
-func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
+func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusPending},
-		Target:  []string{securityhub.StandardsStatusReady, securityhub.StandardsStatusIncomplete},
+		Pending: enum.Slice(types.StandardsStatusPending),
+		Target:  enum.Slice(types.StandardsStatusReady, types.StandardsStatusIncomplete),
 		Refresh: statusStandardsSubscription(ctx, conn, arn),
 		Timeout: standardsSubscriptionCreateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*securityhub.StandardsSubscription); ok {
+	if output, ok := outputRaw.(*types.StandardsSubscription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
+func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusDeleting},
-		Target:  []string{standardsStatusNotFound, securityhub.StandardsStatusIncomplete},
+		Pending: enum.Slice(types.StandardsStatusDeleting),
+		Target:  enum.Slice(standardsStatusNotFound, types.StandardsStatusIncomplete),
 		Refresh: statusStandardsSubscription(ctx, conn, arn),
 		Timeout: standardsSubscriptionDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*securityhub.StandardsSubscription); ok {
+	if output, ok := outputRaw.(*types.StandardsSubscription); ok {
 		return output, err
 	}
 
