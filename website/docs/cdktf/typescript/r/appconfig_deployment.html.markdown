@@ -41,6 +41,9 @@ class MyConvertedCode extends TerraformStack {
       environmentId: Token.asString(
         awsAppconfigEnvironmentExample.environmentId
       ),
+      kmsKeyIdentifier: Token.asString(
+        awsKMSKeyExample.arn
+      ),
       tags: {
         Type: "AppConfig Deployment",
       },
@@ -60,6 +63,7 @@ This resource supports the following arguments:
 * `deploymentStrategyId` - (Required, Forces new resource) Deployment strategy ID or name of a predefined deployment strategy. See [Predefined Deployment Strategies](https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-creating-deployment-strategy.html#appconfig-creating-deployment-strategy-predefined) for more details.
 * `description` - (Optional, Forces new resource) Description of the deployment. Can be at most 1024 characters.
 * `environmentId` - (Required, Forces new resource) Environment ID. Must be between 4 and 7 characters in length.
+* `kmsKeyIdentifier` - (Optional, Forces new resource) The KMS key identifier (key ID, key alias, or key ARN). Appconfig uses this ID to encrypt the configuration data using a customer managed key.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
