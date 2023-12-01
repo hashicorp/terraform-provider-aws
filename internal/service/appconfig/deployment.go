@@ -82,11 +82,6 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"kms_key_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.Any(verify.ValidARN, validation.StringLenBetween(1, 256)),
-			},
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -110,10 +105,6 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("kms_key_identifier"); ok {
-		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	output, err := conn.StartDeploymentWithContext(ctx, input)
