@@ -16,6 +16,7 @@ Terraform data source for managing an AWS CodeGuru Profiler Profiling Group.
 
 ```terraform
 data "aws_codeguruprofiler_profiling_group" "example" {
+  name = "example"
 }
 ```
 
@@ -23,16 +24,13 @@ data "aws_codeguruprofiler_profiling_group" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) The name of the profiling group.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Profiling Group. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `agent_orchestration_config` - Profiling Group agent orchestration config
+* `arn` - ARN of the Profiling Group.
+* `compute_platform` - The compute platform of the profiling group.
 * `tags` - Mapping of Key-Value tags for the resource.

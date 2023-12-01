@@ -29,7 +29,7 @@ resource "aws_codeguruprofiler_profiling_group" "example" {
 The following arguments are required:
 
 * `agent_orchestration_config` - (Required) Specifies whether profiling is enabled or disabled for the created profiling. See [Agent Orchestration Config](#agent-orchestration-config) for more details.
-* `name` - (Required) The name of the profiling group to create.
+* `name` - (Required) The name of the profiling group.
 
 The following arguments are optional:
 
