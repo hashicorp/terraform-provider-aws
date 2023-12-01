@@ -88,7 +88,7 @@ func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := FindFindingAggregatorByArn(ctx, conn, d.Id())
+	output, err := FindFindingAggregatorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Finding aggregator (%s) not found, removing from state", d.Id())

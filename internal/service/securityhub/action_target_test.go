@@ -147,7 +147,7 @@ func testAccCheckActionTargetExists(ctx context.Context, n string) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		action, err := tfsecurityhub.FindActionTargetByArn(ctx, conn, rs.Primary.ID)
+		action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -170,7 +170,7 @@ func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			action, err := tfsecurityhub.FindActionTargetByArn(ctx, conn, rs.Primary.ID)
+			action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
 
 			if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 				continue

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindActionTargetByArn(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
+func FindActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
 	input := &securityhub.DescribeActionTargetsInput{
 		ActionTargetArns: []string{arn},
 	}
@@ -43,7 +43,7 @@ func FindActionTargetByArn(ctx context.Context, conn *securityhub.Client, arn st
 	return &output.ActionTargets[0], nil
 }
 
-func FindFindingAggregatorByArn(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
+func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
 	input := &securityhub.GetFindingAggregatorInput{
 		FindingAggregatorArn: aws.String(arn),
 	}

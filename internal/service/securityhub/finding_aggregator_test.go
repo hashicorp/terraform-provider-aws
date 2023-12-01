@@ -96,7 +96,7 @@ func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, err := tfsecurityhub.FindFindingAggregatorByArn(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Failed to get finding aggregator: %s", err)
@@ -115,7 +115,7 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfsecurityhub.FindFindingAggregatorByArn(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
 			if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 				continue

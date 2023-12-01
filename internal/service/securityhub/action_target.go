@@ -107,7 +107,7 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Action Targets (%s): %s", d.Id(), err)
 	}
 
-	output, err := FindActionTargetByArn(ctx, conn, d.Id())
+	output, err := FindActionTargetByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Reading Security Hub Action Targets with ARN (%s) not found, removing from state", d.Id())
