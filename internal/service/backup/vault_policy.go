@@ -75,7 +75,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 		Policy:          aws.String(policy),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBackupVaultAccessPolicyWithContext(ctx, input)
 		},
@@ -83,8 +83,7 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Policy (%s): %s", outputRaw.(d.)
-		, err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Policy (%s): %s", name, err)
 	}
 
 	d.SetId(name)
