@@ -260,7 +260,7 @@ func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfsecuritylake.FindDataLakeByID(ctx, conn, rs.Primary.ID)
+			_, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -289,7 +289,7 @@ func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *type
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-		resp, err := tfsecuritylake.FindDataLakeByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, rs.Primary.ID, err)
 		}
