@@ -8,12 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -113,7 +112,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 
 			// Because of this resource's dependency, the Organizations organization
 			// will be deleted first, resulting in the following valid error
-			if tfawserr.ErrMessageContains(err, securityhub.ErrCodeAccessDeniedException, "account is not a member of an organization") {
+			if errs.MessageContains(err, "AccessDeniedException", "not subscribed to AWS Security Hub") {
 				continue
 			}
 

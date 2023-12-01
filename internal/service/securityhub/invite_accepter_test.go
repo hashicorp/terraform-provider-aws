@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -64,7 +64,7 @@ func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("error retrieving Security Hub master account: %w", err)
 		}
 
-		if resp == nil || resp.Master == nil || aws.StringValue(resp.Master.AccountId) == "" {
+		if resp == nil || resp.Master == nil || aws.ToString(resp.Master.AccountId) == "" {
 			return fmt.Errorf("Security Hub master account not found for: %s", resourceName)
 		}
 
@@ -93,11 +93,11 @@ func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFu
 				return fmt.Errorf("error retrieving Security Hub master account: %w", err)
 			}
 
-			if resp == nil || resp.Master == nil || aws.StringValue(resp.Master.AccountId) == "" {
+			if resp == nil || resp.Master == nil || aws.ToString(resp.Master.AccountId) == "" {
 				continue
 			}
 
-			return fmt.Errorf("Security Hub master account still configured: %s", aws.StringValue(resp.Master.AccountId))
+			return fmt.Errorf("Security Hub master account still configured: %s", aws.ToString(resp.Master.AccountId))
 		}
 		return nil
 	}
