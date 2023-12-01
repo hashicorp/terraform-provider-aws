@@ -300,37 +300,33 @@ func (r *dataLakeResource) Update(ctx context.Context, req resource.UpdateReques
 func (r *dataLakeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var state dataLakeResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var data dataLakeResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	region, _ := extractRegionFromARN(state.ID.ValueString())
+	_, err := conn.DeleteDataLake(ctx, &securitylake.DeleteDataLakeInput{
+		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+	})
 
-	in := &securitylake.DeleteDataLakeInput{
-		Regions: []string{region},
+	// No data lake:
+	// "An error occurred (AccessDeniedException) when calling the DeleteDataLake operation: User: ... is not authorized to perform: securitylake:DeleteDataLake"
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") {
+		return
 	}
 
-	_, err := conn.DeleteDataLake(ctx, in)
-
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameDataLake, state.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameDataLake, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDataLakeDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
+	if _, err = waitDataLakeDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForDeletion, ResNameDataLake, state.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForDeletion, ResNameDataLake, data.ID.String(), err),
 			err.Error(),
 		)
 		return
