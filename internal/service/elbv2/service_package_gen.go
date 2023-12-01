@@ -108,11 +108,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_alb_target_group_attachment",
 		},
 		{
-			Factory:  ResourceTrustStoreRevocation,
-			TypeName: "aws_alb_trust_store_revocation",
-			Name:     "Trust Store Revocation",
-		},
-		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_lb",
 			Name:     "Load Balancer",
