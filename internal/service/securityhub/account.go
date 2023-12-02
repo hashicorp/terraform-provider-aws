@@ -84,7 +84,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("control_finding_generator"); ok {
-		input.ControlFindingGenerator = types.ControlFindingGenerator((v.(string)))
+		input.ControlFindingGenerator = types.ControlFindingGenerator(v.(string))
 	}
 
 	_, err := conn.EnableSecurityHub(ctx, input)
@@ -152,7 +152,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("control_finding_generator") {
-		input.ControlFindingGenerator = types.ControlFindingGenerator((d.Get("control_finding_generator").(string)))
+		input.ControlFindingGenerator = types.ControlFindingGenerator(d.Get("control_finding_generator").(string))
 	}
 
 	_, err := conn.UpdateSecurityHubConfiguration(ctx, input)

@@ -84,7 +84,7 @@ func resourceInviteAccepterGetInvitationID(ctx context.Context, conn *securityhu
 		}
 	}
 
-	return "", fmt.Errorf("Cannot find InvitationId for MasterId %s", masterId)
+	return "", fmt.Errorf("cannot find InvitationId for MasterId %s", masterId)
 }
 
 func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
