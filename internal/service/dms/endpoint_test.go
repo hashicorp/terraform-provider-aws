@@ -1368,7 +1368,15 @@ func TestAccDMSEndpoint_PostgreSQL_settings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.capture_ddls", "true"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.max_file_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.ddl_artifacts_schema", "true"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.fail_tasks_on_lob_truncation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_schema", "test"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.slot_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.plugin_name", "pglogical"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.trim_space_in_char", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.map_boolean_as_boolean", "true"),
 				),
 			},
 		},
@@ -3841,9 +3849,17 @@ resource "aws_dms_endpoint" "test" {
   extra_connection_attributes = ""
   postgres_settings  {
 	after_connect_script = "SET search_path TO pg_catalog,public;"
-	capture_ddls         = true
-	max_file_size        = 1024
-	execute_timeout      = 100
+	capture_ddls                 = true
+	max_file_size                = 1024
+	execute_timeout              = 100
+	ddl_artifacts_schema         = true
+	fail_tasks_on_lob_truncation = false
+	heartbeat_enable             = true
+	heartbeat_schema             = "test"
+	slot_name                    = "test"
+	plugin_name                  = "pglogical"
+	trim_space_in_char           = true
+	map_boolean_as_boolean       = true
   }
 }
 `, rName)
