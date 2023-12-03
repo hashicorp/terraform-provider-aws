@@ -171,7 +171,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 
 						if err != nil {
-							return sdkdiag.AppendErrorf(diags, err)
+							return sdkdiag.AppendFromErr(diags, err)
 						}
 
 						// If there is no filtering by certificate types, proceed to next certificate.
@@ -258,7 +258,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		// Now we have multiple candidate certificates and we only allow one certificate.
-
 		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching search criteria")
 	}
 
