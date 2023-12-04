@@ -39,32 +39,6 @@ func FindAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccoun
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func FindInsight(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
-	input := &securityhub.GetInsightsInput{
-		InsightArns: []string{arn},
-		MaxResults:  aws.Int32(1),
-	}
-
-	output, err := conn.GetInsights(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.Insights)
-}
-
 func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
 	input := &securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),

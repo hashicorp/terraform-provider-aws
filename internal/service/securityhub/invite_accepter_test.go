@@ -8,15 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/securityhub"
-	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,26 +46,18 @@ func testAccInviteAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInviteAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[resourceName]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		resp, err := conn.GetMasterAccount(ctx, &securityhub.GetMasterAccountInput{})
+		_, err := tfsecurityhub.FindMasterAccount(ctx, conn)
 
-		if err != nil {
-			return fmt.Errorf("error retrieving Security Hub master account: %w", err)
-		}
-
-		if resp == nil || resp.Master == nil || aws.ToString(resp.Master.AccountId) == "" {
-			return fmt.Errorf("Security Hub master account not found for: %s", resourceName)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -81,23 +70,17 @@ func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			resp, err := conn.GetMasterAccount(ctx, &securityhub.GetMasterAccountInput{})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			_, err := tfsecurityhub.FindMasterAccount(ctx, conn)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
-			// If Security Hub is not enabled, the API returns "BadRequestException"
-			if tfawserr.ErrCodeEquals(err, "BadRequestException") {
-				continue
-			}
+
 			if err != nil {
-				return fmt.Errorf("error retrieving Security Hub master account: %w", err)
+				return err
 			}
 
-			if resp == nil || resp.Master == nil || aws.ToString(resp.Master.AccountId) == "" {
-				continue
-			}
-
-			return fmt.Errorf("Security Hub master account still configured: %s", aws.ToString(resp.Master.AccountId))
+			return fmt.Errorf("Security Hub Master Account (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}

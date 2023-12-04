@@ -460,7 +460,7 @@ func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindInsightByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -486,7 +486,7 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindInsightByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
