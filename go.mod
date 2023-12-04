@@ -94,7 +94,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.2
-	github.com/aws/aws-sdk-go-v2/service/xray v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/xray v1.23.2
 	github.com/beevik/etree v1.2.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
