@@ -77,7 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.2
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.1
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/signer v1.19.1
