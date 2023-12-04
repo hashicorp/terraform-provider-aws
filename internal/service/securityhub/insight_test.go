@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -460,21 +460,17 @@ func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-					continue
-				}
-				if errs.IsA[*types.ResourceNotFoundException](err) {
-					continue
-				}
-				return fmt.Errorf("error deleting Security Hub Insight (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if insight != nil {
-				return fmt.Errorf("Security Hub Insight (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Security Hub Insight (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -490,17 +486,9 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("error reading Security Hub Insight (%s): %w", rs.Primary.ID, err)
-		}
-
-		if insight == nil {
-			return fmt.Errorf("error reading Security Hub Insight (%s): not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
