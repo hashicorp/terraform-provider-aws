@@ -145,6 +145,10 @@ func FindStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 		return nil, err
 	}
 
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
 	return output.StandardsSubscriptions, nil
 }
 

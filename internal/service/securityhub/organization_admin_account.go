@@ -80,16 +80,6 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	if adminAccount == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading Security Hub Organization Admin Account (%s): %s", d.Id(), err)
-		}
-
-		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
 	d.Set("admin_account_id", adminAccount.AccountId)
 
 	return diags

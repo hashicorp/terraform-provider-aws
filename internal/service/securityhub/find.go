@@ -32,15 +32,11 @@ func FindActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn st
 		return nil, err
 	}
 
-	if output == nil || len(output.ActionTargets) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.ActionTargets); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.ActionTargets[0], nil
+	return tfresource.AssertSingleValueResult(output.ActionTargets)
 }
 
 func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
@@ -73,7 +69,7 @@ func FindAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccoun
 
 	output, err := conn.ListOrganizationAdminAccounts(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -84,13 +80,13 @@ func FindAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccoun
 		return nil, err
 	}
 
-	for _, adminAccount := range output.AdminAccounts {
-		if adminAccount.AccountId == aws.String(adminAccountID) {
-			return &adminAccount, nil
+	for _, v := range output.AdminAccounts {
+		if v := &v; aws.ToString(v.AccountId) == adminAccountID {
+			return v, nil
 		}
 	}
 
-	return nil, err
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func FindInsight(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
@@ -112,11 +108,11 @@ func FindInsight(ctx context.Context, conn *securityhub.Client, arn string) (*ty
 		return nil, err
 	}
 
-	if output == nil || len(output.Insights) == 0 {
-		return nil, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return &output.Insights[0], nil
+	return tfresource.AssertSingleValueResult(output.Insights)
 }
 
 func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
