@@ -17,6 +17,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_backup_vault_policy: Fix eventual consistency error when waiting for IAM ([#34671](https://github.com/hashicorp/terraform-provider-aws/issues/34671))
 * resource/aws_eks_pod_identity_association: Retry IAM eventual consistency errors on create and update ([#34717](https://github.com/hashicorp/terraform-provider-aws/issues/34717))
 
 ## 5.29.0 (November 30, 2023)
