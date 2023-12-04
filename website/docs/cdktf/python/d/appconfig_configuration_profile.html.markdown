@@ -49,7 +49,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the Configuration Profile.
 * `id` - AppConfig Configuration Profile ID and Application ID separated by a colon `(:)`.
 * `location_uri` - Location URI of the Configuration Profile.
-* `kms_key_identifier` - KMS Key ID, or alias, or ARN of KMS Key or alias, to encrypt hosted configuration store configuration versions.
 * `name` - Name of the Configuration Profile.
 * `retrieval_role_arn` - ARN of an IAM role with permission to access the configuration at the specified location_uri.
 * `tags` - Map of tags for the resource.
