@@ -121,6 +121,18 @@ func ResourceClassifier() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"serde": {
+							Type:     schema.TypeString,
+							Optional: true,
+							// Computed is required because if nothing is set, the API
+							// will return "" which will be translated to "None"
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"OpenCSVSerDe",
+								"LazySimpleSerDe",
+								"None",
+							}, false),
+						},
 					},
 				},
 			},
@@ -352,6 +364,10 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
 	}
 
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = aws.String(v)
+	}
+
 	return csvClassifier
 }
 
@@ -377,6 +393,10 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
+	}
+
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = aws.String(v)
 	}
 
 	return csvClassifier
@@ -466,6 +486,13 @@ func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interf
 		"quote_symbol":               aws.StringValue(csvClassifier.QuoteSymbol),
 		"custom_datatype_configured": aws.BoolValue(csvClassifier.CustomDatatypeConfigured),
 		"custom_datatypes":           aws.StringValueSlice(csvClassifier.CustomDatatypes),
+		"serde":                      aws.StringValue(csvClassifier.Serde),
+	}
+
+	// When setting the value of `serde` to "None", it comes back as "" within the API
+	// This needs to be translated from "" or the validation will fail.
+	if m["serde"].(string) == "" {
+		m["serde"] = "None"
 	}
 
 	return []map[string]interface{}{m}
