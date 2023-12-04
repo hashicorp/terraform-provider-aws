@@ -252,6 +252,7 @@ provider "aws" {
   <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
+  <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
   <li><code>servicediscovery</code></li>
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>

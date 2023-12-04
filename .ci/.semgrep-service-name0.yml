@@ -999,6 +999,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppMesh"
     severity: WARNING
+  - id: appregistry-in-func-name
+    languages:
+      - go
+    message: Do not use "appregistry" in func name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: appregistry-in-const-name
+    languages:
+      - go
+    message: Do not use "appregistry" in const name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
+  - id: appregistry-in-var-name
+    languages:
+      - go
+    message: Do not use "appregistry" in var name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
   - id: apprunner-in-func-name
     languages:
       - go
@@ -3563,19 +3606,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Comprehend"
-    severity: WARNING
-  - id: computeoptimizer-in-func-name
-    languages:
-      - go
-    message: Do not use "ComputeOptimizer" in func name inside computeoptimizer package
-    paths:
-      include:
-        - internal/service/computeoptimizer
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ComputeOptimizer"
-            - pattern-not-regex: ^TestAcc.*
     severity: WARNING

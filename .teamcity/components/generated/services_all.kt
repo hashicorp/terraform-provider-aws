@@ -180,6 +180,7 @@ val services = mapOf(
     "securitylake" to ServiceSpec("Security Lake"),
     "serverlessrepo" to ServiceSpec("Serverless Application Repository"),
     "servicecatalog" to ServiceSpec("Service Catalog"),
+    "servicecatalogappregistry" to ServiceSpec("Service Catalog AppRegistry"),
     "servicediscovery" to ServiceSpec("Cloud Map", vpcLock = true),
     "servicequotas" to ServiceSpec("Service Quotas"),
     "ses" to ServiceSpec("SES (Simple Email)"),
