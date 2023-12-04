@@ -32,5 +32,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `agent_orchestration_config` - Profiling Group agent orchestration config
 * `arn` - ARN of the Profiling Group.
+* `created_at`- Timestamp when Profiling Group was created.
 * `compute_platform` - The compute platform of the profiling group.
+* `profiling_status` - The status of the Profiling Group.
 * `tags` - Mapping of Key-Value tags for the resource.
+* `updated_at` -  Timestamp when Profiling Group was updated.
