@@ -40,6 +40,7 @@ const (
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
 	CodeDeployEndpointID                 = "codedeploy"
+	CodeGuruProfilerEndpointID           = "codeguru-profiler"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
 	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
