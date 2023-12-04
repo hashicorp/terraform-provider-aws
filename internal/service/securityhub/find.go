@@ -50,7 +50,7 @@ func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, a
 
 	output, err := conn.GetFindingAggregator(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
