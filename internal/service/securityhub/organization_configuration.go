@@ -5,15 +5,19 @@ package securityhub
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_securityhub_organization_configuration")
@@ -72,14 +76,43 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := conn.DescribeOrganizationConfiguration(ctx, &securityhub.DescribeOrganizationConfigurationInput{})
+	output, err := FindOrganizationConfiguration(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN]Security Hub Organization Configuration %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Organization Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_standards", output.AutoEnableStandards)
 
 	return diags
+}
+
+func FindOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
+	input := &securityhub.DescribeOrganizationConfigurationInput{}
+
+	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.OrganizationConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
