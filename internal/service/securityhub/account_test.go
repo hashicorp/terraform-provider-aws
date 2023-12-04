@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -199,18 +198,12 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 
 func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub Account ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
-
-		_, err := tfsecurityhub.FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+		_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
 		return err
 	}
@@ -218,14 +211,12 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_account" {
 				continue
 			}
 
-			_, err := tfsecurityhub.FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+			_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
 			if tfresource.NotFound(err) {
 				continue

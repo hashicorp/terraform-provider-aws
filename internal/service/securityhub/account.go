@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -112,31 +113,22 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	_, err := FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+	output, err := FindHub(ctx, meta.(*conns.AWSClient))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Security Hub Standards Subscriptions %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub Account %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscriptions: %s", err)
-	}
-
-	hub, err := conn.DescribeHub(ctx, &securityhub.DescribeHubInput{
-		HubArn: aws.String(accountHubARN(meta.(*conns.AWSClient))),
-	})
-
-	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", hub.HubArn)
-	d.Set("auto_enable_controls", hub.AutoEnableControls)
-	d.Set("control_finding_generator", hub.ControlFindingGenerator)
+	d.Set("arn", output.HubArn)
+	d.Set("auto_enable_controls", output.AutoEnableControls)
+	d.Set("control_finding_generator", output.ControlFindingGenerator)
 	// enable_default_standards is never returned
 	d.Set("enable_default_standards", d.Get("enable_default_standards"))
 
@@ -184,7 +176,35 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
+func FindHub(ctx context.Context, meta *conns.AWSClient) (*securityhub.DescribeHubOutput, error) {
+	input := &securityhub.DescribeHubInput{
+		HubArn: aws.String(accountHubARN(meta)),
+	}
+	return findHub(ctx, meta.SecurityHubClient(ctx), input)
+}
+
+func findHub(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeHubInput) (*securityhub.DescribeHubOutput, error) {
+	output, err := conn.DescribeHub(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // Security Hub ARN: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecurityhub.html#awssecurityhub-resources-for-iam-policies
-func accountHubARN(conn *conns.AWSClient) string {
-	return fmt.Sprintf("arn:%s:securityhub:%s:%s:hub/default", conn.Partition, conn.Region, conn.AccountID)
+func accountHubARN(meta *conns.AWSClient) string {
+	return fmt.Sprintf("arn:%s:securityhub:%s:%s:hub/default", meta.Partition, meta.Region, meta.AccountID)
 }
