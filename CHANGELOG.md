@@ -15,6 +15,10 @@ ENHANCEMENTS:
 * resource/aws_lb_listener: Add `mutual_authentication` configuration block ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
 * resource/aws_s3_bucket: Fix `stack overflow` fatal errors on resource Delete when `force_destroy` is `true` and the bucket contains delete markers ([#34712](https://github.com/hashicorp/terraform-provider-aws/issues/34712))
 
+BUG FIXES:
+
+* resource/aws_eks_pod_identity_association: Retry IAM eventual consistency errors on create and update ([#34717](https://github.com/hashicorp/terraform-provider-aws/issues/34717))
+
 ## 5.29.0 (November 30, 2023)
 
 FEATURES:
