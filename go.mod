@@ -7,8 +7,8 @@ require (
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.48.10
 	github.com/aws/aws-sdk-go-v2 v1.23.5
-	github.com/aws/aws-sdk-go-v2/config v1.25.10
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.8
+	github.com/aws/aws-sdk-go-v2/config v1.25.11
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.9
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.14.1
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/sts v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.1
@@ -143,9 +143,9 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.3 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.16.8 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.7 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.7 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.9 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.8 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.2 // indirect
@@ -153,10 +153,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.18.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.18.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.2 // indirect
 	github.com/aws/smithy-go v1.18.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
