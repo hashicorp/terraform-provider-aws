@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc) //nolint:unused // WIP
+type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc) //nolint:unused // WIP
 
 type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
 
@@ -32,17 +32,17 @@ func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
 	}
 }
 
-func (o *blueGreenOrchestrator) cleanUp(ctx context.Context) { //nolint:unused // WIP
+func (o *blueGreenOrchestrator) CleanUp(ctx context.Context) {
 	if len(o.cleanupWaiters) == 0 {
 		return
 	}
 
 	waiter, waiters := o.cleanupWaiters[0], o.cleanupWaiters[1:]
-	waiter(ctx)
+	waiter(ctx, o.conn)
 	for _, waiter := range waiters {
 		// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
 		// to complete, we don't need to run them concurrently, saving on network traffic.
-		waiter(ctx, tfresource.WithDelay(0))
+		waiter(ctx, o.conn, tfresource.WithDelay(0))
 	}
 }
 
@@ -84,6 +84,10 @@ func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier strin
 		return nil, fmt.Errorf("switching over Blue/Green Deployment: waiting for completion: %s", err)
 	}
 	return dep, nil
+}
+
+func (o *blueGreenOrchestrator) AddCleanupWaiter(f cleanupWaiterFunc) {
+	o.cleanupWaiters = append(o.cleanupWaiters, f)
 }
 
 type instanceHandler struct {

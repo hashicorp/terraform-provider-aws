@@ -1844,21 +1844,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"password",
 		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
-			handler := newInstanceHandler(conn)
-			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
-			defer func() {
-				if len(cleaupWaiters) == 0 {
-					return
-				}
+			defer orchestrator.CleanUp(ctx)
 
-				waiter, waiters := cleaupWaiters[0], cleaupWaiters[1:]
-				waiter()
-				for _, waiter := range waiters {
-					// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
-					// to complete, we don't need to run them concurrently, saving on network traffic.
-					waiter(tfresource.WithDelay(0))
-				}
-			}()
+			handler := newInstanceHandler(conn)
 
 			err := handler.precondition(ctx, d)
 			if err != nil {
@@ -1896,7 +1884,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return
 				}
 
-				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+				orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
 					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
 					if err != nil {
 						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Get("identifier").(string), err)
@@ -1981,7 +1969,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get("identifier").(string), err)
 			}
 
-			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+			orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
 				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), sourceARN.Identifier, deadline.Remaining(), optFns...)
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get("identifier").(string), err)
