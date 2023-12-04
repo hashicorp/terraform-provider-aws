@@ -4,6 +4,6 @@
 package backup
 
 const (
-	errCodeAccessDeniedException    = "AccessDeniedException"
-	errCodeInvalidVaultPolicyConfig = "InvalidVaultPolicyConfig"
+	errCodeAccessDeniedException          = "AccessDeniedException"
+	errCodeInvalidParameterValueException = "InvalidParameterValueException"
 )
