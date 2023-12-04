@@ -169,9 +169,9 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountNotFoundTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, adminAccountNotFoundTimeout, func() (interface{}, error) {
 		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
-	}, "InvalidInputException", "Cannot disable Security Hub on the Security Hub administrator")
+	}, "Cannot disable Security Hub on the Security Hub administrator")
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

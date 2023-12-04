@@ -134,14 +134,7 @@ func FindStandardsSubscription(ctx context.Context, conn *securityhub.Client, in
 func FindStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, input *securityhub.GetEnabledStandardsInput) ([]types.StandardsSubscription, error) {
 	output, err := conn.GetEnabledStandards(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
