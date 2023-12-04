@@ -90,6 +90,8 @@ func ResourceGrantAccepter() *schema.Resource {
 }
 
 func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.AcceptGrantInput{
@@ -99,15 +101,17 @@ func resourceGrantAccepterCreate(ctx context.Context, d *schema.ResourceData, me
 	out, err := conn.AcceptGrantWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionCreating, ResGrantAccepter, d.Get("grant_arn").(string), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionCreating, ResGrantAccepter, d.Get("grant_arn").(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.GrantArn))
 
-	return resourceGrantAccepterRead(ctx, d, meta)
+	return append(diags, resourceGrantAccepterRead(ctx, d, meta)...)
 }
 
 func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	out, err := FindGrantAccepterByGrantARN(ctx, conn, d.Id())
@@ -115,11 +119,11 @@ func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrantAccepter, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionReading, ResGrantAccepter, d.Id(), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrantAccepter, d.Id(), err)
 	}
 
 	d.Set("allowed_operations", out.GrantedOperations)
@@ -132,10 +136,12 @@ func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("status", out.GrantStatus)
 	d.Set("version", out.Version)
 
-	return nil
+	return diags
 }
 
 func resourceGrantAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.RejectGrantInput{
@@ -145,10 +151,10 @@ func resourceGrantAccepterDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err := conn.RejectGrantWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionDeleting, ResGrantAccepter, d.Id(), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionDeleting, ResGrantAccepter, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindGrantAccepterByGrantARN(ctx context.Context, conn *licensemanager.LicenseManager, arn string) (*licensemanager.Grant, error) {

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -86,6 +87,8 @@ func ResourceLicenseConfiguration() *schema.Resource {
 }
 
 func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	name := d.Get("name").(string)
@@ -114,15 +117,17 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	output, err := conn.CreateLicenseConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating License Manager License Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating License Manager License Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.LicenseConfigurationArn))
 
-	return resourceLicenseConfigurationRead(ctx, d, meta)
+	return append(diags, resourceLicenseConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	output, err := FindLicenseConfigurationByARN(ctx, conn, d.Id())
@@ -130,11 +135,11 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] License Manager License Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading License Manager License Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading License Manager License Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.LicenseConfigurationArn)
@@ -148,10 +153,12 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -169,14 +176,16 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 		_, err := conn.UpdateLicenseConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating License Manager License Configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating License Manager License Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceLicenseConfigurationRead(ctx, d, meta)
+	return append(diags, resourceLicenseConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting License Manager License Configuration: %s", d.Id())
@@ -185,14 +194,14 @@ func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting License Manager License Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting License Manager License Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.LicenseManager, arn string) (*licensemanager.GetLicenseConfigurationOutput, error) {
