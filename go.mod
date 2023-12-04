@@ -70,7 +70,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.64.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.2
-	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.1
+	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.20.1
