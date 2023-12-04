@@ -90,7 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.3
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.1
