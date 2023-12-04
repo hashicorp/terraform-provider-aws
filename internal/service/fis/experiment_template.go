@@ -284,6 +284,8 @@ func ResourceExperimentTemplate() *schema.Resource {
 }
 
 func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.CreateExperimentTemplateInput{
@@ -298,21 +300,23 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
 	if err != nil {
-		return create.DiagError(names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
 	}
 	input.Targets = targets
 
 	output, err := conn.CreateExperimentTemplate(ctx, input)
 	if err != nil {
-		return create.DiagError(names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
 	}
 
 	d.SetId(aws.ToString(output.ExperimentTemplate.Id))
 
-	return resourceExperimentTemplateRead(ctx, d, meta)
+	return append(diags, resourceExperimentTemplateRead(ctx, d, meta)...)
 }
 
 func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.GetExperimentTemplateInput{Id: aws.String(d.Id())}
@@ -322,22 +326,22 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && errors.As(err, &nf) {
 		create.LogNotFoundRemoveState(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, ErrCodeNotFound) {
 		create.LogNotFoundRemoveState(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id(), err)
 	}
 
 	experimentTemplate := out.ExperimentTemplate
 	if experimentTemplate == nil {
-		return create.DiagError(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id(), errors.New("empty result"))
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id(), errors.New("empty result"))
 	}
 
 	d.SetId(aws.ToString(experimentTemplate.Id))
@@ -345,27 +349,29 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("description", experimentTemplate.Description)
 
 	if err := d.Set("action", flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
 	}
 
 	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
 	}
 
 	if err := d.Set("stop_condition", flattenExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
 
 	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -397,21 +403,23 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 		if d.HasChange("target") {
 			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
 			if err != nil {
-				return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
+				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 			}
 			input.Targets = targets
 		}
 
 		_, err := conn.UpdateExperimentTemplate(ctx, input)
 		if err != nil {
-			return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 		}
 	}
 
-	return resourceExperimentTemplateRead(ctx, d, meta)
+	return append(diags, resourceExperimentTemplateRead(ctx, d, meta)...)
 }
 
 func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 	_, err := conn.DeleteExperimentTemplate(ctx, &fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
@@ -419,18 +427,18 @@ func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 
 	var nf *types.ResourceNotFoundException
 	if errors.As(err, &nf) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrStatusCodeEquals(err, ErrCodeNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FIS, create.ErrActionDeleting, ResNameExperimentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionDeleting, ResNameExperimentTemplate, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExperimentTemplateActionInput {

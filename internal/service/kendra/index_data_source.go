@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -282,6 +283,8 @@ func DataSourceIndex() *schema.Resource {
 }
 
 func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -290,11 +293,11 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 	resp, err := findIndexByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Index (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Index (%s): %s", id, err)
 	}
 
 	if resp == nil {
-		return diag.Errorf("getting Kendra Index (%s): empty response", id)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Index (%s): empty response", id)
 	}
 
 	arn := arn.ARN{
@@ -317,40 +320,40 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("user_context_policy", resp.UserContextPolicy)
 
 	if err := d.Set("capacity_units", flattenCapacityUnits(resp.CapacityUnits)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("document_metadata_configuration_updates", flattenDocumentMetadataConfigurations(resp.DocumentMetadataConfigurations)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("index_statistics", flattenIndexStatistics(resp.IndexStatistics)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(resp.ServerSideEncryptionConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("user_group_resolution_configuration", flattenUserGroupResolutionConfiguration(resp.UserGroupResolutionConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("user_token_configurations", flattenUserTokenConfigurations(resp.UserTokenConfigurations)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", arn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(id)
 
-	return nil
+	return diags
 }
