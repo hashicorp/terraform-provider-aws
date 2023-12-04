@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubAccount_basic(t *testing.T) {
+func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 	controlFindingGeneratorDefaultValueFromAWS := "SECURITY_CONTROL"
@@ -53,7 +53,7 @@ func TestAccSecurityHubAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubAccount_disappears(t *testing.T) {
+func testAccAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 
@@ -75,7 +75,7 @@ func TestAccSecurityHubAccount_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubAccount_enableDefaultStandardsFalse(t *testing.T) {
+func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 
@@ -96,7 +96,7 @@ func TestAccSecurityHubAccount_enableDefaultStandardsFalse(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubAccount_full(t *testing.T) {
+func testAccAccount_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 
@@ -127,7 +127,7 @@ func TestAccSecurityHubAccount_full(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubAccount_migrateV0(t *testing.T) {
+func testAccAccount_migrateV0(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 
@@ -159,7 +159,7 @@ func TestAccSecurityHubAccount_migrateV0(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/33039 et al.
-func TestAccSecurityHubAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
+func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
 	controlFindingGeneratorExpectedValue := "SECURITY_CONTROL"

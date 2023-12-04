@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubActionTarget_basic(t *testing.T) {
+func testAccActionTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -46,7 +46,7 @@ func TestAccSecurityHubActionTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubActionTarget_disappears(t *testing.T) {
+func testAccActionTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -68,7 +68,7 @@ func TestAccSecurityHubActionTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubActionTarget_Description(t *testing.T) {
+func testAccActionTarget_Description(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -101,7 +101,7 @@ func TestAccSecurityHubActionTarget_Description(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubActionTarget_Name(t *testing.T) {
+func testAccActionTarget_Name(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 

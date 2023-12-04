@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubFindingAggregator_basic(t *testing.T) {
+func testAccFindingAggregator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
@@ -61,7 +61,7 @@ func TestAccSecurityHubFindingAggregator_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubFindingAggregator_disappears(t *testing.T) {
+func testAccFindingAggregator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 

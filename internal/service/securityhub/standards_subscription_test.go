@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubStandardsSubscription_basic(t *testing.T) {
+func testAccStandardsSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var standardsSubscription types.StandardsSubscription
 	resourceName := "aws_securityhub_standards_subscription.test"
@@ -45,7 +45,7 @@ func TestAccSecurityHubStandardsSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubStandardsSubscription_disappears(t *testing.T) {
+func testAccStandardsSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var standardsSubscription types.StandardsSubscription
 	resourceName := "aws_securityhub_standards_subscription.test"

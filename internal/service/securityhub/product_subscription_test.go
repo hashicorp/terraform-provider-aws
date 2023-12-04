@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubProductSubscription_basic(t *testing.T) {
+func testAccProductSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

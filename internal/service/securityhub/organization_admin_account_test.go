@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
+func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
@@ -46,7 +46,7 @@ func TestAccSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
+func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
@@ -71,7 +71,7 @@ func TestAccSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
+func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 	altResourceName := "aws_securityhub_organization_admin_account.alternate"

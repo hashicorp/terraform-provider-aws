@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubOrganizationConfiguration_basic(t *testing.T) {
+func testAccOrganizationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_configuration.test"
 
@@ -51,7 +51,7 @@ func TestAccSecurityHubOrganizationConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubOrganizationConfiguration_autoEnableStandards(t *testing.T) {
+func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_configuration.test"
 

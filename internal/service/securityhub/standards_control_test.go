@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubStandardsControl_basic(t *testing.T) {
+func testAccStandardsControl_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var standardsControl types.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
@@ -48,7 +48,7 @@ func TestAccSecurityHubStandardsControl_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
+func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 	var standardsControl types.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
@@ -71,7 +71,7 @@ func TestAccSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
+func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.Test(t, resource.TestCase{
