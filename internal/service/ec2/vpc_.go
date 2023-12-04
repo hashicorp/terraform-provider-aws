@@ -114,7 +114,7 @@ func ResourceVPC() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      types.TenancyDefault,
-				ValidateFunc: validation.StringInSlice(enum.Slice(types.TenancyDefault, types.TenancyDedicated), false),
+				ValidateFunc: validation.StringInSlice(flattenTenancyEnumValues(types.Tenancy("").Values()), false),
 			},
 			"ipv4_ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -737,4 +737,14 @@ func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID
 	}
 
 	return output, nil
+}
+
+func flattenTenancyEnumValues(t []types.Tenancy) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }
