@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_codeguruprofiler_profiling_group` ([#34672](https://github.com/hashicorp/terraform-provider-aws/issues/34672))
 * **New Data Source:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Data Source:** `aws_ssoadmin_application_providers` ([#34670](https://github.com/hashicorp/terraform-provider-aws/issues/34670))
 * **New Resource:** `aws_codeguruprofiler_profiling_group` ([#34672](https://github.com/hashicorp/terraform-provider-aws/issues/34672))
 * **New Resource:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
 * **New Resource:** `aws_lb_trust_store_revocation` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
