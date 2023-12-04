@@ -35,10 +35,10 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 20),
+					validation.StringLenBetween(2, 30),
 					validation.StringMatch(
-						regexache.MustCompile(`^[0-9a-z]+(?:[._-][0-9a-z]+)*$`),
-						"must only include alphanumeric, underscore, period, or hyphen characters"),
+						regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`),
+						"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
 				),
 			},
 			"registry_id": {
