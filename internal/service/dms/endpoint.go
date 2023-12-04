@@ -359,12 +359,16 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"babelfish_database_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"capture_ddls": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"max_file_size": {
-							Type:     schema.TypeInt,
+						"database_mode": {
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"ddl_artifacts_schema": {
@@ -383,28 +387,36 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"heartbeat_schema": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"heartbeat_frequency": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"slot_name": {
+						"heartbeat_schema": {
 							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"map_boolean_as_boolean": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"map_jsonb_as_clob": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"map_long_varchar_as": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
 							Optional: true,
 						},
 						"plugin_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"trim_space_in_char": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"map_boolean_as_boolean": {
-							Type:     schema.TypeBool,
+						"slot_name": {
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
@@ -2134,11 +2146,14 @@ func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSetti
 	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
 		settings.AfterConnectScript = aws.String(v)
 	}
+	if v, ok := tfMap["babelfish_database_name"].(string); ok && v != "" {
+		settings.BabelfishDatabaseName = aws.String(v)
+	}
 	if v, ok := tfMap["capture_ddls"].(bool); ok {
 		settings.CaptureDdls = aws.Bool(v)
 	}
-	if v, ok := tfMap["max_file_size"].(int); ok {
-		settings.MaxFileSize = aws.Int64(int64(v))
+	if v, ok := tfMap["database_mode"].(string); ok && v != "" {
+		settings.DatabaseMode = aws.String(v)
 	}
 	if v, ok := tfMap["ddl_artifacts_schema"].(string); ok && v != "" {
 		settings.DdlArtifactsSchema = aws.String(v)
@@ -2152,23 +2167,29 @@ func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSetti
 	if v, ok := tfMap["heartbeat_enable"].(bool); ok {
 		settings.HeartbeatEnable = aws.Bool(v)
 	}
-	if v, ok := tfMap["heartbeat_schema"].(string); ok && v != "" {
-		settings.HeartbeatSchema = aws.String(v)
-	}
 	if v, ok := tfMap["heartbeat_frequency"].(int); ok {
 		settings.HeartbeatFrequency = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
-		settings.SlotName = aws.String(v)
+	if v, ok := tfMap["heartbeat_schema"].(string); ok && v != "" {
+		settings.HeartbeatSchema = aws.String(v)
+	}
+	if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
+		settings.MapBooleanAsBoolean = aws.Bool(v)
+	}
+	if v, ok := tfMap["map_jsonb_as_clob"].(bool); ok {
+		settings.MapJsonbAsClob = aws.Bool(v)
+	}
+	if v, ok := tfMap["map_long_varchar_as"].(string); ok && v != "" {
+		settings.MapLongVarcharAs = aws.String(v)
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok {
+		settings.MaxFileSize = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
 		settings.PluginName = aws.String(v)
 	}
-	if v, ok := tfMap["trim_space_in_char"].(bool); ok {
-		settings.TrimSpaceInChar = aws.Bool(v)
-	}
-	if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
-		settings.MapBooleanAsBoolean = aws.Bool(v)
+	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
+		settings.SlotName = aws.String(v)
 	}
 
 	return settings

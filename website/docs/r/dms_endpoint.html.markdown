@@ -58,6 +58,7 @@ The following arguments are optional:
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
 * `password` - (Optional) Password to be used to login to the endpoint database.
+* `postgres_settings` - (Optional) Configuration block for Postgres settings. See below.
 * `pause_replication_tasks` - (Optional) Whether to pause associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint. Only tasks paused by the resource will be restarted after the modification completes. Default is `false`.
 * `port` - (Optional) Port used by the endpoint database.
 * `redshift_settings` - (Optional) Configuration block for Redshift settings. See below.
@@ -126,6 +127,26 @@ The following arguments are optional:
 * `docs_to_investigate` - (Optional) Number of documents to preview to determine the document organization. Use this setting when `nesting_level` is set to `one`. Default is `1000`.
 * `extract_doc_id` - (Optional) Document ID. Use this setting when `nesting_level` is set to `none`. Default is `false`.
 * `nesting_level` - (Optional) Specifies either document or table mode. Default is `none`. Valid values are `one` (table mode) and `none` (document mode).
+
+### postgres_settings
+-> Additional information can be found in the [Using PostgreSQL as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html).
+
+* `after_connect_script` - (Optional) For use with change data capture (CDC) only, this attribute has AWS DMS bypass foreign keys and user triggers to reduce the time it takes to bulk load data.
+* `babelfish_database_name` - (Optional) The Babelfish for Aurora PostgreSQL database name for the endpoint.
+* `capture_ddls` - (Optional) To capture DDL events, AWS DMS creates various artifacts in the PostgreSQL database when the task starts.
+* `database_mode` - (Optional) Specifies the default behavior of the replication's handling of PostgreSQL- compatible endpoints that require some additional configuration, such as Babelfish endpoints.
+* `ddl_artifacts_schema` - (Optional) Sets the schema in which the operational DDL database artifacts are created. Default is `public`.
+* `execute_timeout` - (Optional) Sets the client statement timeout for the PostgreSQL instance, in seconds. Default value is `60`.
+* `fail_tasks_on_lob_truncation` - (Optional) When set to `true`, this value causes a task to fail if the actual size of a LOB column is greater than the specified `LobMaxSize`. Default is `false`.
+* `heartbeat_enable` - (Optional) The write-ahead log (WAL) heartbeat feature mimics a dummy transaction. By doing this, it prevents idle logical replication slots from holding onto old WAL logs, which can result in storage full situations on the source.
+* `heartbeat_frequency` - (Optional) Sets the WAL heartbeat frequency (in minutes). Default value is `5`.
+* `heartbeat_schema` - (Optional) Sets the schema in which the heartbeat artifacts are created. Default value is `public`.
+* `map_boolean_as_boolean` - (Optional) You can use PostgreSQL endpoint settings to map a boolean as a boolean from your PostgreSQL source to a Amazon Redshift target. Default value is `false`.
+* `map_jsonb_as_clob` - Optional When true, DMS migrates JSONB values as CLOB.
+* `map_long_varchar_as` - Optional When true, DMS migrates LONG values as VARCHAR.
+* `max_file_size` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
+* `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test_decoding`.
+* `slot_name` - (Optional) Sets the name of a previously created logical replication slot for a CDC load of the PostgreSQL source instance.
 
 ### redis_settings
 
