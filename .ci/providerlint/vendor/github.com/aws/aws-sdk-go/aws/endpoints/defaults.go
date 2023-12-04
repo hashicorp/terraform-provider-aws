@@ -755,6 +755,13 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"agreement-marketplace": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{},
+			},
+		},
 		"airflow": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -34443,6 +34450,13 @@ var awscnPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region: "cn-northwest-1",
+				}: endpoint{},
+			},
+		},
+		"redshift-serverless": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "cn-north-1",
 				}: endpoint{},
 			},
 		},

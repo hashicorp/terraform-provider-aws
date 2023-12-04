@@ -234,6 +234,7 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	case basetypes.MapValuable:
+
 		diags.Append(expander.map_(ctx, vFrom, vTo)...)
 		return diags
 
@@ -504,6 +505,11 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	case basetypes.StringTypable:
 		diags.Append(expander.mapOfString(ctx, v, vTo)...)
 		return diags
+	case basetypes.ObjectTypable:
+		if vFrom, ok := vFrom.(fwtypes.ObjectMapValue); ok {
+			diags.Append(expander.objectMap(ctx, vFrom, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
@@ -521,7 +527,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 	switch vTo.Kind() {
 	case reflect.Map:
 		switch tMapKey := vTo.Type().Key(); tMapKey.Kind() {
-		case reflect.String:
+		case reflect.String: // key
 			switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
 			case reflect.String:
 				//
@@ -537,7 +543,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 				return diags
 
 			case reflect.Ptr:
-				switch tMapElem.Elem().Kind() {
+				switch k := tMapElem.Elem().Kind(); k {
 				case reflect.String:
 					//
 					// types.Map(OfString) -> map[string]*string.
@@ -644,6 +650,10 @@ func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Struct:
+		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+		return diags
+
 	case reflect.Ptr:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
@@ -739,6 +749,77 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	}
 
 	vTo.Set(t)
+
+	return diags
+}
+
+// objectMap copies a Plugin Framework ObjectMapValue value to a compatible AWS API value.
+func (expander autoExpander) objectMap(ctx context.Context, vFrom fwtypes.ObjectMapValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Map:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Ptr:
+			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+			return diags
+		case reflect.Struct:
+			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+			return diags
+		}
+	case reflect.Ptr:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Struct:
+			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+			return diags
+		}
+	}
+
+	diags.AddError("Incompatible types", fmt.Sprintf("objectMap[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
+	return diags
+}
+
+// mappedObjectToStruct copies a Plugin Framework ObjectMapValue to a compatible AWS API (*)struct value.
+func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwtypes.ObjectMapValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Get the mapped Objects as a map
+	from, d := vFrom.ToObjectMap(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if tStruct.Kind() == reflect.Ptr {
+		tStruct = tStruct.Elem()
+	}
+
+	f := reflect.ValueOf(from)
+	m := reflect.MakeMap(vTo.Type())
+
+	for _, key := range f.MapKeys() {
+		// Create a new target structure and walk its fields.
+		target := reflect.New(tStruct)
+
+		fromInterface := f.MapIndex(key).Interface()
+		if f.MapIndex(key).Kind() == reflect.Ptr {
+			fromInterface = f.MapIndex(key).Elem().Interface()
+		}
+
+		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), expander)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		// Set value (or pointer) in the target slice.
+		if vTo.Type().Elem().Kind() == reflect.Struct {
+			m.SetMapIndex(key, target.Elem())
+		} else {
+			m.SetMapIndex(key, target)
+		}
+	}
+
+	vTo.Set(m)
 
 	return diags
 }
@@ -1225,7 +1306,7 @@ func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFro
 		return diags
 	}
 
-	// Set the target structure as a nested Object.
+	// Set the target structure as a mapped Object.
 	val, d := tTo.ValueFromObjectPtr(ctx, to)
 	diags.Append(d...)
 	if diags.HasError() {

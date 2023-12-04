@@ -119,7 +119,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
 	}
 
 	d.Set("description", resp.Group.Description)

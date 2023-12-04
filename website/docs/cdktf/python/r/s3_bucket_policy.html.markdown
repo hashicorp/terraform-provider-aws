@@ -12,6 +12,8 @@ description: |-
 
 Attaches a policy to an S3 bucket resource.
 
+-> Policies can be attached to both S3 general purpose buckets and S3 directory buckets.
+
 ## Example Usage
 
 ### Basic Usage
@@ -83,4 +85,4 @@ Using `terraform import`, import S3 bucket policies using the bucket name. For e
 % terraform import aws_s3_bucket_policy.allow_access_from_another_account my-tf-test-bucket
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-78dda90d0687f88ff8f30cf20c2b7dab5c85cc20a65eb0998240609b14380055 -->
+<!-- cache-key: cdktf-0.19.0 input-ce73bb0e8c95d107e5421c665248cb3f86ed08c2b8db8245400a825a612f812b -->

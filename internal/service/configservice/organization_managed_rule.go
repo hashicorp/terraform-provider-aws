@@ -195,7 +195,7 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 	}
 
 	if d.IsNewResource() && rule == nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationCustomPolicyRuleMetadata != nil {

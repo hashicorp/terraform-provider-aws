@@ -862,7 +862,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	userPool := resp.UserPool
@@ -955,7 +955,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	d.Set("mfa_configuration", output.MfaConfiguration)

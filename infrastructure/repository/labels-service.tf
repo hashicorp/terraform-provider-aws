@@ -201,6 +201,7 @@ variable "service_labels" {
     "mediaconvert",
     "medialive",
     "mediapackage",
+    "mediapackagev2",
     "mediapackagevod",
     "mediastore",
     "mediastoredata",

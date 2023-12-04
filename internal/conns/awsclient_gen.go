@@ -21,6 +21,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -52,6 +53,7 @@ import (
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
+	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -78,6 +80,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
@@ -214,7 +217,6 @@ import (
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
-	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
 	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
@@ -405,6 +407,10 @@ func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.
 
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
 	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
+}
+
+func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {
+	return errs.Must(client[*codeguruprofiler_sdkv2.Client](ctx, c, names.CodeGuruProfiler))
 }
 
 func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {
@@ -795,6 +801,10 @@ func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.
 	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage))
 }
 
+func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2_sdkv2.Client {
+	return errs.Must(client[*mediapackagev2_sdkv2.Client](ctx, c, names.MediaPackageV2))
+}
+
 func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {
 	return errs.Must(conn[*mediastore_sdkv1.MediaStore](ctx, c, names.MediaStore))
 }
@@ -983,8 +993,8 @@ func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.
 	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
 }
 
-func (c *AWSClient) SSOAdminConn(ctx context.Context) *ssoadmin_sdkv1.SSOAdmin {
-	return errs.Must(conn[*ssoadmin_sdkv1.SSOAdmin](ctx, c, names.SSOAdmin))
+func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {
+	return errs.Must(client[*ssoadmin_sdkv2.Client](ctx, c, names.SSOAdmin))
 }
 
 func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
