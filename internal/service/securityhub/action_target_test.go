@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -140,23 +141,11 @@ func testAccCheckActionTargetExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub custom action ARN is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if action == nil {
-			return fmt.Errorf("Security Hub custom action %s not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -169,15 +158,17 @@ func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if action != nil {
-				return fmt.Errorf("Security Hub custom action %s still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Security Hub Action Target (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil

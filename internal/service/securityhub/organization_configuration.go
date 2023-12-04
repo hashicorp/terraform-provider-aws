@@ -79,7 +79,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	output, err := FindOrganizationConfiguration(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN]Security Hub Organization Configuration %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}

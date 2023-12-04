@@ -14,31 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
-	input := &securityhub.DescribeActionTargetsInput{
-		ActionTargetArns: []string{arn},
-	}
-
-	output, err := conn.DescribeActionTargets(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSingleValueResult(output.ActionTargets)
-}
-
 func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
 	input := &securityhub.GetFindingAggregatorInput{
 		FindingAggregatorArn: aws.String(arn),
