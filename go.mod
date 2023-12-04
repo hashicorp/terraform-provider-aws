@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.1
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.10.1
