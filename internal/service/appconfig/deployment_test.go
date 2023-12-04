@@ -266,7 +266,7 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 func testAccDeploymentKMSConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test_kms" {
-  description          = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
