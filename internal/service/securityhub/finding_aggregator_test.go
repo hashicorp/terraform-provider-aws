@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -90,19 +90,11 @@ func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub finding aggregator ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("Failed to get finding aggregator: %s", err)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -117,7 +109,7 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
-			if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -125,7 +117,7 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("Security Hub Finding Aggregator %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Security Hub Finding Aggregator (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil

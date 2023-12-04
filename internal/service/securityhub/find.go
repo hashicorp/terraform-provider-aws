@@ -14,31 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
-	input := &securityhub.GetFindingAggregatorInput{
-		FindingAggregatorArn: aws.String(arn),
-	}
-
-	output, err := conn.GetFindingAggregator(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
 	input := &securityhub.ListOrganizationAdminAccountsInput{}
 
