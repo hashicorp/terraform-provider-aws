@@ -92,8 +92,8 @@ github.com/aws/aws-sdk-go-v2/service/connectcases v1.12.2 h1:iTNWtMKN5GuaPVjl6ZL
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.12.2/go.mod h1:K1ZcJm1ED1HKMwKjBNsXUIT8JlYRSnM2PPhBysefcnQ=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.10.2 h1:3oEzKq/zqeVZO+lHQTgy/W+fiHM9739uN5mddTv1CV0=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.10.2/go.mod h1:vmHJ1RicN6YgOCz7bkyZx/fiIbkovbg0RFPA9Jg1lr8=
-github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.1 h1:XkzZhinmYFJN5719BXNl5u+uIbfmVRgCAYdyw69+5wk=
-github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.1/go.mod h1:PulHem6esgophTYl9b+pkuUCIOZv5ns32y3OkVOEiLg=
+github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.2 h1:HrC9v8xKQQUYNSXLuzsPSx5QPIGDYH60VxODHSBDydc=
+github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.2/go.mod h1:LavnebM8u3CFezOK6Yeiltce/7JCEIXm6qvS70drgfk=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.1 h1:mNc9ULp/XrFbtegTRUaqveDEasNqoFsUTxJP54yMel0=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.1/go.mod h1:I/Zck2BWam9d0wzDwqpPZCl2BooqVHHRIyZWRyQ2eRM=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.1 h1:WorI76WemskFqnreItdqjwuKA05aUxJ+gF9ZRB8BDbI=
