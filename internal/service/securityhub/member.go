@@ -179,10 +179,6 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-const (
-	errCodeAccessDeniedException = "AccessDeniedException"
-)
-
 func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
 	input := &securityhub.GetMembersInput{
 		AccountIds: []string{accountID},
@@ -190,7 +186,7 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 
 	output, err := conn.GetMembers(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.MessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found.") {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.AccessDeniedException](err, "The request is rejected since no such resource found.") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
