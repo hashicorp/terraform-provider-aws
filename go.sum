@@ -176,8 +176,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.64.2 h1:PTOyeFw0q+Kikm+9PlUaZdYFrPOA
 github.com/aws/aws-sdk-go-v2/service/rds v1.64.2/go.mod h1:Ty2c2SC4jhY6hvGeeOe8T50m1PkioZD9lk6iiOsADkU=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.2 h1:/Hcjv1vMCqMmxC1z0tSspx1K3fNzjaFhenKMoBC43bc=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.2/go.mod h1:fTdl/4FFFXQznFGE4fdQnVuknYEQeh90s7sYhuz5u5M=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.1 h1:L0e9lArANhvkZkYk3Y9B/8dlsbrGRGiZ64fQzqHP7mg=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.1/go.mod h1:5MonjEmwlL/snD1a5UHafYr1bu4g66tkA4JrDIo3poE=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.2 h1:BgAiXLKm2FAhryAXXBLo4mkjIzgg/Y4CGT9rb9Lwsy0=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.2/go.mod h1:RCh0PgYX9L1l/udeNwLTnmIFaqeLllRa6g2TCZSJiUk=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.1 h1:BU6eLctA8toMf8l7QPWbXlhYVdErHTwmBE7ThHenhN4=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.1/go.mod h1:E18BXA3W5yGyeEdFU0ldlgCiIngVme4eBgVJQFaAkPI=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.1 h1:1VkYcAaNPX/PeUa+8TnhrGVFuiI/q0sdAIaFOAM9Bc0=
