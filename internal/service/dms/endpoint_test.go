@@ -3877,7 +3877,7 @@ resource "aws_dms_endpoint" "test" {
   ssl_mode                    = "require"
   extra_connection_attributes = ""
   postgres_settings  {
-	after_connect_script = "SET search_path TO pg_catalog,public;"
+	after_connect_script         = "SET search_path TO pg_catalog,public;"
 	capture_ddls                 = true
 	ddl_artifacts_schema         = true
 	execute_timeout              = 100
@@ -3910,7 +3910,7 @@ resource "aws_dms_endpoint" "test" {
   ssl_mode                    = "require"
   extra_connection_attributes = ""
   postgres_settings  {
-	after_connect_script = "SET search_path TO pg_catalog,public;"
+	after_connect_script         = "SET search_path TO pg_catalog,public;"
 	babelfish_database_name      = "babelfish"
 	database_mode                = "babelfish"
 	execute_timeout              = 100
