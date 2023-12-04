@@ -80,15 +80,15 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.EnableSecurityHubInput{
+	inputC := &securityhub.EnableSecurityHubInput{
 		EnableDefaultStandards: aws.Bool(d.Get("enable_default_standards").(bool)),
 	}
 
 	if v, ok := d.GetOk("control_finding_generator"); ok {
-		input.ControlFindingGenerator = types.ControlFindingGenerator(v.(string))
+		inputC.ControlFindingGenerator = types.ControlFindingGenerator(v.(string))
 	}
 
-	_, err := conn.EnableSecurityHub(ctx, input)
+	_, err := conn.EnableSecurityHub(ctx, inputC)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
@@ -96,16 +96,14 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	if autoEnableControls := d.Get("auto_enable_controls").(bool); !autoEnableControls {
-		input := &securityhub.UpdateSecurityHubConfigurationInput{
-			AutoEnableControls: aws.Bool(autoEnableControls),
-		}
+	inputU := &securityhub.UpdateSecurityHubConfigurationInput{
+		AutoEnableControls: aws.Bool(d.Get("auto_enable_controls").(bool)),
+	}
 
-		_, err := conn.UpdateSecurityHubConfiguration(ctx, input)
+	_, err = conn.UpdateSecurityHubConfiguration(ctx, inputU)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
