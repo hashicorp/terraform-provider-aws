@@ -4,7 +4,6 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     pattern: return diag.FromErr($ERR)
@@ -16,7 +15,6 @@ rules:
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     pattern: append(diags, diag.FromErr($ERR)...)
@@ -28,7 +26,6 @@ rules:
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     pattern: diag.Errorf($...ARGS)
@@ -40,7 +37,6 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     pattern: return create.DiagError($...ARGS)
@@ -52,7 +48,6 @@ rules:
     message: Prefer `create.AppendDiagError` to `create.DiagError`
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     pattern: append(diags, create.DiagError($...ARGS)...)
@@ -64,7 +59,6 @@ rules:
     message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     pattern: create.DiagSettingError($...ARGS)
@@ -76,7 +70,6 @@ rules:
     message: Append results of $READFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     patterns:
@@ -96,7 +89,6 @@ rules:
     message: Append results of $UPDATEFN to diags instead of returning directly
     paths:
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     patterns:
@@ -114,7 +106,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/keyspaces
         - internal/service/k[i-z]*
         - internal/service/[l-z]*
     patterns:
