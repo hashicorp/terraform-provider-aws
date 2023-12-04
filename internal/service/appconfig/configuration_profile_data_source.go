@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,9 +48,8 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Computed: true,
 			},
 			"kms_key_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.Any(verify.ValidARN, validation.StringLenBetween(1, 256)),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
