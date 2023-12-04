@@ -112,6 +112,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>apigatewayv2</code></li>
   <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
   <li><code>appconfig</code></li>
+  <li><code>appfabric</code></li>
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
@@ -144,6 +145,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>codebuild</code></li>
   <li><code>codecatalyst</code></li>
   <li><code>codecommit</code></li>
+  <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
   <li><code>codestarconnections</code></li>
@@ -235,6 +237,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>mediaconvert</code></li>
   <li><code>medialive</code></li>
   <li><code>mediapackage</code></li>
+  <li><code>mediapackagev2</code></li>
   <li><code>mediastore</code></li>
   <li><code>memorydb</code></li>
   <li><code>mq</code></li>
@@ -418,4 +421,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-c512f946c3de8eca0fd769921ed13fc6e49b54dd14b00a279129beffc2c5506b -->
+<!-- cache-key: cdktf-0.19.0 input-b2b6c6c9d15a70961ae7496610c00d3015e62cc972020a5ff6ea81639e655cd8 -->
