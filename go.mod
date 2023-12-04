@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.2
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.1
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.138.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/emr v1.35.1
