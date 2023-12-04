@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.1
