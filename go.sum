@@ -144,8 +144,8 @@ github.com/aws/aws-sdk-go-v2/service/kendra v1.47.2 h1:40hom88eZWfOMEBt/gjen/fY9
 github.com/aws/aws-sdk-go-v2/service/kendra v1.47.2/go.mod h1:gE5yR4k3yXUlhUNtDcntNokgu1nqIx+cOrAyKAZ+O+I=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.7.2 h1:ycNDW90OiI9dCriVMmNfuyQh/YgnQyyOLHRyIfltcwE=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.7.2/go.mod h1:qZGAfvrvtgXZxmq/2oYiYqzH29Kz4rgkO3yPhHg+034=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.49.1 h1:WXcAFQYM2yNP7Q11wLEv+30jWWiEFoM3QW2KayLtC3I=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.49.1/go.mod h1:jpFWR7gn12KL5+OdniByZ8N60RTgnxURGqUG7t1S4Sc=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.49.2 h1:puX5QWXC1DYjNsXJ43bnHUagmg9CC1nkiLYtI9187gM=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.49.2/go.mod h1:qEbgrQPSjNitaIGzc0T0YbsO+GdXQU+M+7gfRj1ikKM=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.1 h1:WKNM77ve9DoEBHoNPv9YBErsGtwO85jqjAn45l5Ju/o=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.1/go.mod h1:GfUiwutcZylsJY4ZyX4yudD4XsPUrZpIKKl5gzA2nvo=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.32.1 h1:AVt+BNamhJpSvOAoUeD6QnOEbSNAJLt69OW9nQrm75g=
