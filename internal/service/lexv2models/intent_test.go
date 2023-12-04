@@ -13,8 +13,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	lextypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -97,26 +97,24 @@ func TestIntentAutoExpand(t *testing.T) {
 		},
 		AllowInterrupt: aws.Bool(true),
 	}
-	/*
-		slotValue := tflexv2models.SlotValue{
-			InterpretedValue: types.StringValue(testString),
-		}
-	*/
-	/*
-		slotValueOverride := tflexv2models.SlotValueOverride{
-			Shape: types.StringValue(testString),
-			Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValue),
-			Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
-				{
-					Shape: types.StringValue(testString),
-					Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValue),
-				},
-			}),
-		}
-	*/
+	slotValue := tflexv2models.SlotValue{
+		InterpretedValue: types.StringValue(testString),
+	}
+	slotValueOverride := tflexv2models.SlotValueOverride{
+		Shape: fwtypes.StringEnumValue(lextypes.SlotShapeList),
+		Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValue),
+		//Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
+		//	{
+		//		Shape: types.StringValue(testString),
+		//		Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValue),
+		//	},
+		//}
+	}
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		//Slots: fwtypes.NewMapValueOf[tflexv2models.SlotValueOverride](ctx, &slotValueOverride),
+		Slots: fwtypes.NewObjectMapValueMapOf[tflexv2models.SlotValueOverride](ctx, map[string]tflexv2models.SlotValueOverride{
+			testString: slotValueOverride,
+		}),
 	}
 	dialogActionTF := tflexv2models.DialogAction{
 		Type:                types.StringValue(string(lextypes.DialogActionTypeCloseIntent)),
@@ -126,8 +124,8 @@ func TestIntentAutoExpand(t *testing.T) {
 	dialogStateTF := tflexv2models.DialogState{
 		DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogActionTF),
 		Intent:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentOverrideTF),
-		SessionAttributes: types.MapValueMust(types.StringType, map[string]attr.Value{
-			testString: types.StringValue(testString2),
+		SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+			testString: basetypes.NewStringValue(testString2),
 		}),
 	}
 	dialogStateAWS := lextypes.DialogState{
@@ -138,117 +136,115 @@ func TestIntentAutoExpand(t *testing.T) {
 		},
 		Intent: &lextypes.IntentOverride{
 			Name: aws.String(testString),
+			Slots: map[string]lextypes.SlotValueOverride{
+				testString: {
+					Shape: lextypes.SlotShapeList,
+					Value: &lextypes.SlotValue{
+						InterpretedValue: aws.String(testString),
+					},
+					//Values: []lextypes.SlotValueOverride{{
+					//	Shape: lextypes.SlotShapeList,
+					//	Value: &lextypes.SlotValue{
+					//		InterpretedValue: aws.String(testString),
+					//	},
+					//}},
+				},
+			},
 		},
 		SessionAttributes: map[string]string{
 			testString: testString2,
 		},
 	}
 
-	//conditionTF := tflexv2models.Condition{
-	//	ExpressionString: types.StringValue(testString),
-	//}
+	conditionTF := tflexv2models.Condition{
+		ExpressionString: types.StringValue(testString),
+	}
 
 	defaultConditionalBranchTF := tflexv2models.DefaultConditionalBranch{
 		NextStep: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
 		Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
 	}
 
-	/*
-		conditionalBranchTF := tflexv2models.ConditionalBranch{
-			Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
-			Name:      types.StringValue(testString),
-			//NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-			Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		}
-	*/
-
-	//conditionalBranchesTF := []tflexv2models.ConditionalBranch{
-	//	conditionalBranchTF,
-	//}
 	conditionalSpecificationTF := tflexv2models.ConditionalSpecification{
 		Active: types.BoolValue(true),
-		/*
-			ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.ConditionalBranch{
-				{
-					Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
-					Name: types.StringValue(testString),
-					NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-					Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-				},
-			}),
-		*/
+		ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.ConditionalBranch{{
+			Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
+			Name:      types.StringValue(testString),
+			NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+			Response:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		}}),
+
 		DefaultBranch: fwtypes.NewListNestedObjectValueOfPtr(ctx, &defaultConditionalBranchTF),
 	}
 	conditionalSpecificationAWS := lextypes.ConditionalSpecification{
 		Active: aws.Bool(true),
-		ConditionalBranches: []lextypes.ConditionalBranch{
-			{
-				Condition: &lextypes.Condition{
-					ExpressionString: aws.String(testString),
-				},
-				Name: aws.String(testString),
-				//NextStep: &dialogStateAWS,
-				Response: &responseSpecificationAWS,
+		ConditionalBranches: []lextypes.ConditionalBranch{{
+			Condition: &lextypes.Condition{
+				ExpressionString: aws.String(testString),
 			},
-		},
+			Name:     aws.String(testString),
+			NextStep: &dialogStateAWS,
+			Response: &responseSpecificationAWS,
+		}},
 		DefaultBranch: &lextypes.DefaultConditionalBranch{
-			//NextStep: &dialogStateAWS,
+			NextStep: &dialogStateAWS,
 			Response: &responseSpecificationAWS,
 		},
 	}
+
+	intentClosingSettingTF := tflexv2models.IntentClosingSetting{
+		Active:          types.BoolValue(true),
+		ClosingResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
+		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+	}
+	intentClosingSettingAWS := lextypes.IntentClosingSetting{
+		Active:          aws.Bool(true),
+		ClosingResponse: &responseSpecificationAWS,
+		Conditional:     &conditionalSpecificationAWS,
+		NextStep:        &dialogStateAWS,
+	}
+
 	/*
-		intentClosingSettingTF := tflexv2models.IntentClosingSetting{
-			Active:          types.BoolValue(true),
-			ClosingResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-			Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-			NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		}
-		intentClosingSettingAWS := lextypes.IntentClosingSetting{
-			Active:          aws.Bool(true),
-			ClosingResponse: &responseSpecificationAWS,
-			Conditional:     &conditionalSpecificationAWS,
-		}
-
-		/*
-				allowedInputTypes := tflexv2models.AllowedInputTypes{
-					AllowAudioInput: types.BoolValue(true),
-					AllowDTMFInput:  types.BoolValue(true),
-				}
-				audioSpecification := tflexv2models.AudioSpecification{
-					EndTimeoutMs: types.Int64Value(1),
-					MaxLengthMs:  types.Int64Value(1),
-				}
-				dtmfSpecification := tflexv2models.DTMFSpecification{
-					DeletionCharacter: types.StringValue(testString),
-					EndCharacter:      types.StringValue(testString),
-					EndTimeoutMs:      types.Int64Value(1),
-					MaxLength:         types.Int64Value(1),
-				}
-				audioAndDTMFInputSpecification := tflexv2models.AudioAndDTMFInputSpecification{
-					StartTimeoutMs:     types.Int64Value(1),
-					AudioSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioSpecification),
-					DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dtmfSpecification),
-				}
-
-				textInputSpecification := tflexv2models.TextInputSpecification{
-					StartTimeoutMs: types.Int64Value(1),
-				}
-				promptAttemptSpecification := tflexv2models.PromptAttemptSpecification{
-					AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypes),
-					AllowInterrupt:                 types.BoolValue(true),
-					AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecification),
-					TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &textInputSpecification),
-				}
-				promptAttemptSpecificationMap := map[string]tflexv2models.PromptAttemptSpecification{
-					testString: promptAttemptSpecification,
-				}
-			promptSpecificationTF := tflexv2models.PromptSpecification{
-				MaxRetries:               types.Int64Value(1),
-				MessageGroup:             fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
-				AllowInterrupt:           types.BoolValue(true),
-				MessageSelectionStrategy: types.StringValue(testString),
-				//PromptAttemptsSpecification: promptAttemptSpecificationMap,
+			allowedInputTypes := tflexv2models.AllowedInputTypes{
+				AllowAudioInput: types.BoolValue(true),
+				AllowDTMFInput:  types.BoolValue(true),
 			}
+			audioSpecification := tflexv2models.AudioSpecification{
+				EndTimeoutMs: types.Int64Value(1),
+				MaxLengthMs:  types.Int64Value(1),
+			}
+			dtmfSpecification := tflexv2models.DTMFSpecification{
+				DeletionCharacter: types.StringValue(testString),
+				EndCharacter:      types.StringValue(testString),
+				EndTimeoutMs:      types.Int64Value(1),
+				MaxLength:         types.Int64Value(1),
+			}
+			audioAndDTMFInputSpecification := tflexv2models.AudioAndDTMFInputSpecification{
+				StartTimeoutMs:     types.Int64Value(1),
+				AudioSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioSpecification),
+				DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dtmfSpecification),
+			}
+
+			textInputSpecification := tflexv2models.TextInputSpecification{
+				StartTimeoutMs: types.Int64Value(1),
+			}
+			promptAttemptSpecification := tflexv2models.PromptAttemptSpecification{
+				AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypes),
+				AllowInterrupt:                 types.BoolValue(true),
+				AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecification),
+				TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &textInputSpecification),
+			}
+			promptAttemptSpecificationMap := map[string]tflexv2models.PromptAttemptSpecification{
+				testString: promptAttemptSpecification,
+			}
+		promptSpecificationTF := tflexv2models.PromptSpecification{
+			MaxRetries:               types.Int64Value(1),
+			MessageGroup:             fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+			AllowInterrupt:           types.BoolValue(true),
+			MessageSelectionStrategy: types.StringValue(testString),
+			//PromptAttemptsSpecification: promptAttemptSpecificationMap,
+		}
 	*/
 	/*
 		failureSuccessTimeoutTF := tflexv2models.FailureSuccessTimeout{
@@ -363,7 +359,7 @@ func TestIntentAutoExpand(t *testing.T) {
 		BotVersion: types.StringValue(testString),
 		//ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
 		//ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		CreationDateTime: fwtypes.TimestampType{},
+		CreationDateTime: fwtypes.Timestamp{},
 		Description:      types.StringValue(testString),
 		DialogCodeHook:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
 		//FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
@@ -371,7 +367,7 @@ func TestIntentAutoExpand(t *testing.T) {
 		//InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
 		InputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
 		KendraConfiguration:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		LastUpdatedDateTime:   fwtypes.TimestampType{},
+		LastUpdatedDateTime:   fwtypes.Timestamp{},
 		LocaleID:              types.StringValue(testString),
 		Name:                  types.StringValue(testString),
 		OutputContext:         fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
@@ -412,33 +408,33 @@ func TestIntentAutoExpand(t *testing.T) {
 			Target:     &lextypes.ConditionalSpecification{},
 			WantTarget: &conditionalSpecificationAWS,
 		},
-
-		/*
-			{
-				TestName: "complex Source and complex Target",
-				Source:   &intentResourceTF,
-				Target:   &lexmodelsv2.CreateIntentInput{},
-				WantTarget: &lexmodelsv2.CreateIntentInput{
-					BotId: aws.String(testString),
-				},
-			},
-		*/
+		{
+			TestName:   "intentClosingSetting",
+			Source:     &intentClosingSettingTF,
+			Target:     &lextypes.IntentClosingSetting{},
+			WantTarget: &intentClosingSettingAWS,
+		},
 	}
 
 	opts := cmpopts.IgnoreUnexported(
-		lextypes.SSMLMessage{},
-		lextypes.PlainTextMessage{},
 		lextypes.Button{},
+		lextypes.Condition{},
+		lextypes.ConditionalBranch{},
+		lextypes.ConditionalSpecification{},
 		lextypes.CustomPayload{},
-		lextypes.ImageResponseCard{},
-		lextypes.Message{},
-		lextypes.ResponseSpecification{},
-		lextypes.MessageGroup{},
+		lextypes.DefaultConditionalBranch{},
 		lextypes.DialogAction{},
 		lextypes.DialogState{},
+		lextypes.ImageResponseCard{},
+		lextypes.IntentClosingSetting{},
 		lextypes.IntentOverride{},
-		lextypes.ConditionalSpecification{},
-		lextypes.ConditionalBranch{},
+		lextypes.Message{},
+		lextypes.MessageGroup{},
+		lextypes.PlainTextMessage{},
+		lextypes.ResponseSpecification{},
+		lextypes.SlotValue{},
+		lextypes.SlotValueOverride{},
+		lextypes.SSMLMessage{},
 	)
 
 	for _, testCase := range testCases {

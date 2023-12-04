@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -963,7 +964,7 @@ type ResourceIntentData struct {
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
 	ClosingSetting         fwtypes.ListNestedObjectValueOf[IntentClosingSetting]        `tfsdk:"closing_setting"`
 	ConfirmationSetting    fwtypes.ListNestedObjectValueOf[IntentConfirmationSetting]   `tfsdk:"confirmation_setting"`
-	CreationDateTime       fwtypes.TimestampType                                        `tfsdk:"creation_date_time"`
+	CreationDateTime       fwtypes.Timestamp                                            `tfsdk:"creation_date_time"`
 	Description            types.String                                                 `tfsdk:"description"`
 	DialogCodeHook         fwtypes.ListNestedObjectValueOf[DialogCodeHookSettings]      `tfsdk:"dialog_code_hook"`
 	FulfillmentCodeHook    fwtypes.ListNestedObjectValueOf[FulfillmentCodeHookSettings] `tfsdk:"fulfillment_code_hook"`
@@ -971,7 +972,7 @@ type ResourceIntentData struct {
 	InitialResponseSetting fwtypes.ListNestedObjectValueOf[InitialResponseSetting]      `tfsdk:"initial_response_setting"`
 	InputContext           fwtypes.ListNestedObjectValueOf[InputContext]                `tfsdk:"input_context"`
 	KendraConfiguration    fwtypes.ListNestedObjectValueOf[KendraConfiguration]         `tfsdk:"kendra_configuration"`
-	LastUpdatedDateTime    fwtypes.TimestampType                                        `tfsdk:"last_updated_date_time"`
+	LastUpdatedDateTime    fwtypes.Timestamp                                            `tfsdk:"last_updated_date_time"`
 	LocaleID               types.String                                                 `tfsdk:"locale_id"`
 	Name                   types.String                                                 `tfsdk:"name"`
 	OutputContext          fwtypes.ListNestedObjectValueOf[OutputContext]               `tfsdk:"output_context"`
@@ -1049,7 +1050,7 @@ type Condition struct {
 type DialogState struct {
 	DialogAction      fwtypes.ListNestedObjectValueOf[DialogAction]   `tfsdk:"dialog_action"`
 	Intent            fwtypes.ListNestedObjectValueOf[IntentOverride] `tfsdk:"intent"`
-	SessionAttributes types.Map                                       `tfsdk:"session_attributes"`
+	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]       `tfsdk:"session_attributes"`
 }
 
 type DialogAction struct {
@@ -1059,14 +1060,14 @@ type DialogAction struct {
 }
 
 type IntentOverride struct {
-	Name types.String `tfsdk:"name"`
-	//Slots fwtypes.MapValueOf[SlotValueOverride] `tfsdk:"slots"`
+	Name  types.String                                `tfsdk:"name"`
+	Slots fwtypes.ObjectMapValueOf[SlotValueOverride] `tfsdk:"slots"`
 }
 
 type SlotValueOverride struct {
-	Shape  types.String                                       `tfsdk:"shape"`
-	Value  fwtypes.ListNestedObjectValueOf[SlotValue]         `tfsdk:"value"`
-	Values fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"values"`
+	Shape fwtypes.StringEnum[awstypes.SlotShape]     `tfsdk:"shape"`
+	Value fwtypes.ListNestedObjectValueOf[SlotValue] `tfsdk:"value"`
+	//Values fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"values"`
 }
 
 type SlotValue struct {
