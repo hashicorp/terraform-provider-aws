@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -171,10 +170,6 @@ func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
-
-			if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-				continue
-			}
 
 			if err != nil {
 				return err
