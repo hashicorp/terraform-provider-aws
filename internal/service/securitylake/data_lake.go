@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -85,19 +85,20 @@ func (r *resourceDataLake) Schema(ctx context.Context, req resource.SchemaReques
 						"region": schema.StringAttribute{
 							Required: true,
 						},
-					},
-					Blocks: map[string]schema.Block{
-						"encryption_configuration": schema.ListNestedBlock{
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"kms_key_id": schema.StringAttribute{
-										Optional: true,
-										Computed: true,
-										Default:  stringdefault.StaticString("S3_MANAGED_KEY"),
-									},
+						"encryption_configuration": schema.ListAttribute{
+							Computed: true,
+							Optional: true,
+							ElementType: types.ObjectType{
+								AttrTypes: map[string]attr.Type{
+									"kms_key_id": types.StringType,
 								},
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
 						},
+					},
+					Blocks: map[string]schema.Block{
 						"lifecycle_configuration": schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),

@@ -305,6 +305,8 @@ func testAccDataLakeConfigBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 
 
+
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "meta_store_manager" {
@@ -467,6 +469,28 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 }
   EOF
 }
+
+resource "aws_kms_key" "test" {
+  description = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = %[1]q
+
+    Statement = [{
+      Sid      = "Enable IAM User Permissions"
+      Effect   = "Allow"
+      Action   = "kms:*"
+      Resource = "*"
+
+      Principal = {
+        AWS = "*"
+      }
+    }]
+  })
+}
+
+
 `, rName)
 }
 
@@ -479,10 +503,6 @@ resource "aws_securitylake_data_lake" "test" {
 
   configurations {
     region = "eu-west-1"
-
-    encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
-    }
   }
   tags = {
     Name = %[1]q
