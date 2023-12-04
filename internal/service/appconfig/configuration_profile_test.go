@@ -423,10 +423,10 @@ resource "aws_kms_alias" "k_alias" {
 }
 
 resource "aws_appconfig_configuration_profile" "test" {
-  application_id = aws_appconfig_application.test.id
-  name           = %[1]q
+  application_id     = aws_appconfig_application.test.id
+  name               = %[1]q
   kms_key_identifier = "alias/%[1]s"
-  location_uri   = "hosted"
+  location_uri       = "hosted"
 }
 `, rName))
 }
