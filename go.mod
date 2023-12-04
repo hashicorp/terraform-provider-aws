@@ -155,6 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.2 // indirect
 	github.com/aws/smithy-go v1.18.1 // indirect
