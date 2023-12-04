@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -50,6 +51,8 @@ func ResourceContributorInsights() *schema.Resource {
 }
 
 func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	input := &dynamodb.UpdateContributorInsightsInput{
@@ -68,25 +71,27 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 
 	output, err := conn.UpdateContributorInsightsWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("creating DynamoDB ContributorInsights for table (%s): %s", d.Get("table_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DynamoDB ContributorInsights for table (%s): %s", d.Get("table_name").(string), err)
 	}
 
 	id := EncodeContributorInsightsID(aws.StringValue(output.TableName), indexName, meta.(*conns.AWSClient).AccountID)
 	d.SetId(id)
 
 	if err := waitContributorInsightsCreated(ctx, conn, aws.StringValue(output.TableName), indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for DynamoDB ContributorInsights (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB ContributorInsights (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceContributorInsightsRead(ctx, d, meta)
+	return append(diags, resourceContributorInsightsRead(ctx, d, meta)...)
 }
 
 func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, indexName, err := DecodeContributorInsightsID(d.Id())
 	if err != nil {
-		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
 	}
 
 	out, err := FindContributorInsights(ctx, conn, tableName, indexName)
@@ -94,27 +99,29 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DynamoDB ContributorInsights (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading DynamoDB ContributorInsights (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DynamoDB ContributorInsights (%s): %s", d.Id(), err)
 	}
 
 	d.Set("index_name", out.IndexName)
 	d.Set("table_name", out.TableName)
 
-	return nil
+	return diags
 }
 
 func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	log.Printf("[INFO] Deleting DynamoDB ContributorInsights %s", d.Id())
 
 	tableName, indexName, err := DecodeContributorInsightsID(d.Id())
 	if err != nil {
-		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
 	}
 
 	input := &dynamodb.UpdateContributorInsightsInput{
@@ -129,18 +136,18 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 	_, err = conn.UpdateContributorInsightsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting DynamoDB ContributorInsights (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DynamoDB ContributorInsights (%s): %s", d.Id(), err)
 	}
 
 	if err := waitContributorInsightsDeleted(ctx, conn, tableName, indexName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for DynamoDB ContributorInsights (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB ContributorInsights (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func EncodeContributorInsightsID(tableName, indexName, accountID string) string {
