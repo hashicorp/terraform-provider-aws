@@ -24,28 +24,28 @@ import { Token, TerraformStack } from "cdktf";
  */
 import { AppconfigDeployment } from "./.gen/providers/aws/appconfig-deployment";
 class MyConvertedCode extends TerraformStack {
-    constructor(scope: Construct, name: string) {
-        super(scope, name);
-        new AppconfigDeployment(this, "example", {
-            applicationId: Token.asString(awsAppconfigApplicationExample.id),
-            configurationProfileId: Token.asString(
-                awsAppconfigConfigurationProfileExample.configurationProfileId
-            ),
-            configurationVersion: Token.asString(
-                awsAppconfigHostedConfigurationVersionExample.versionNumber
-            ),
-            deploymentStrategyId: Token.asString(
-                awsAppconfigDeploymentStrategyExample.id
-            ),
-            description: "My example deployment",
-            environmentId: Token.asString(
-                awsAppconfigEnvironmentExample.environmentId
-            ),
-            tags: {
-                Type: "AppConfig Deployment",
-            },
-        });
-    }
+constructor(scope: Construct, name: string) {
+    super(scope, name);
+    new AppconfigDeployment(this, "example", {
+        applicationId: Token.asString(awsAppconfigApplicationExample.id),
+        configurationProfileId: Token.asString(
+            awsAppconfigConfigurationProfileExample.configurationProfileId
+        ),
+        configurationVersion: Token.asString(
+            awsAppconfigHostedConfigurationVersionExample.versionNumber
+        ),
+        deploymentStrategyId: Token.asString(
+            awsAppconfigDeploymentStrategyExample.id
+        ),
+        description: "My example deployment",
+        environmentId: Token.asString(
+            awsAppconfigEnvironmentExample.environmentId
+        ),
+        tags: {
+            Type: "AppConfig Deployment",
+        },
+    });
+  }
 }
 
 ```
