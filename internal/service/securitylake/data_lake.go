@@ -605,6 +605,7 @@ func expandDataLakeConfigurations(ctx context.Context, tfList []dataLakeConfigur
 	var replicationConfiguration []dataLakeConfigurationsReplicationConfiguration
 
 	for _, tfObj := range tfList {
+		diags.Append(tfObj.EncryptionConfiguration.ElementsAs(ctx, &encryptionConfiguration, false)...)
 		diags.Append(tfObj.LifecycleConfiguration.ElementsAs(ctx, &lifecycleConfiguration, false)...)
 		diags.Append(tfObj.ReplicationConfiguration.ElementsAs(ctx, &replicationConfiguration, false)...)
 		lifecycleConfiguration, d := expandLifecycleConfiguration(ctx, lifecycleConfiguration)
