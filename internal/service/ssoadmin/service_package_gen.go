@@ -28,6 +28,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Application",
 			Tags:    &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory: newResourceApplicationAssignment,
+			Name:    "Application Assignment",
+		},
 	}
 }
 
