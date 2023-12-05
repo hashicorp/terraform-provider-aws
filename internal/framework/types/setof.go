@@ -20,6 +20,10 @@ type setTypeOf[T attr.Value] struct {
 }
 
 var (
+	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
+)
+
+var (
 	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
 	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
 )
