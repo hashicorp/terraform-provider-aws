@@ -10,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
 * **New Resource:** `aws_lb_trust_store_revocation` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
 * **New Resource:** `aws_ssoadmin_application` ([#34723](https://github.com/hashicorp/terraform-provider-aws/issues/34723))
+* **New Resource:** `aws_ssoadmin_application_assignment` ([#34741](https://github.com/hashicorp/terraform-provider-aws/issues/34741))
 
 ENHANCEMENTS:
 
