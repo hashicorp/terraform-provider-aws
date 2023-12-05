@@ -63,9 +63,11 @@ func ResourceConfigurationProfile() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"kms_key_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.Any(verify.ValidARN, validation.StringLenBetween(1, 256)),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringLenBetween(1, 256)),
 			},
 			"name": {
 				Type:         schema.TypeString,

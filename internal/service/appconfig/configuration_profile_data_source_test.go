@@ -62,7 +62,7 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
-resource "aws_kms_alias" "test_alias" {
+resource "aws_kms_alias" "test" {
   name          = "alias/%[1]s"
   target_key_id = aws_kms_key.test.id
 }
@@ -70,7 +70,7 @@ resource "aws_kms_alias" "test_alias" {
 resource "aws_appconfig_configuration_profile" "test" {
   application_id     = aws_appconfig_application.test.id
   name               = %[1]q
-  kms_key_identifier = "alias/%[1]s"
+  kms_key_identifier = aws_kms_alias.test.name
   location_uri       = "hosted"
 
   validator {

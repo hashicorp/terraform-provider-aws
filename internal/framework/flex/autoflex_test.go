@@ -547,7 +547,7 @@ func TestGenericExpand(t *testing.T) {
 }
 
 type TestFlexTF11 struct {
-	FieldInner fwtypes.MapValueOf[types.String] `tfsdk:"field_inner"`
+	FieldInner fwtypes.MapValueOf[basetypes.StringValue] `tfsdk:"field_inner"`
 }
 
 type TestFlexTF12 struct {
@@ -666,6 +666,24 @@ func TestGenericExpand2(t *testing.T) {
 				FieldInner: map[string]*TestFlexAWS01{
 					"x": {
 						Field1: "a",
+					},
+				},
+			},
+		},
+		{
+			TestName: "nested string map",
+			Source: &TestFlexTF14{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
+					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+						"x": types.StringValue("y"),
+					}),
+				}),
+			},
+			Target: &TestFlexAWS16{},
+			WantTarget: &TestFlexAWS16{
+				FieldOuter: TestFlexAWS13{
+					FieldInner: map[string]string{
+						"x": "y",
 					},
 				},
 			},

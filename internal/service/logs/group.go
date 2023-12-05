@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,6 +45,13 @@ func resourceGroup() *schema.Resource {
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"log_group_class": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.LogGroupClassStandard,
+				ValidateDiagFunc: enum.Validate[types.LogGroupClass](),
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -85,8 +93,9 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatchlogs.CreateLogGroupInput{
-		LogGroupName: aws.String(name),
-		Tags:         getTagsIn(ctx),
+		LogGroupClass: types.LogGroupClass(d.Get("log_group_class").(string)),
+		LogGroupName:  aws.String(name),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -136,6 +145,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
 	d.Set("kms_key_id", lg.KmsKeyId)
+	d.Set("log_group_class", lg.LogGroupClass)
 	d.Set("name", lg.LogGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
