@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubActionTarget_basic(t *testing.T) {
+func testAccActionTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -46,7 +46,7 @@ func TestAccSecurityHubActionTarget_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubActionTarget_disappears(t *testing.T) {
+func testAccActionTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -68,7 +68,7 @@ func TestAccSecurityHubActionTarget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubActionTarget_Description(t *testing.T) {
+func testAccActionTarget_Description(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -101,7 +101,7 @@ func TestAccSecurityHubActionTarget_Description(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubActionTarget_Name(t *testing.T) {
+func testAccActionTarget_Name(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_action_target.test"
 
@@ -141,23 +141,11 @@ func testAccCheckActionTargetExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub custom action ARN is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if action == nil {
-			return fmt.Errorf("Security Hub custom action %s not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -170,9 +158,9 @@ func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			action, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindActionTargetByARN(ctx, conn, rs.Primary.ID)
 
-			if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -180,9 +168,7 @@ func testAccCheckActionTargetDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			if action != nil {
-				return fmt.Errorf("Security Hub custom action %s still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Security Hub Action Target (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -11,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -26,6 +28,7 @@ func ResourceInsight() *schema.Resource {
 		ReadWithoutTimeout:   resourceInsightRead,
 		UpdateWithoutTimeout: resourceInsightUpdate,
 		DeleteWithoutTimeout: resourceInsightDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -35,7 +38,6 @@ func ResourceInsight() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"filters": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -133,12 +135,10 @@ func ResourceInsight() *schema.Resource {
 					},
 				},
 			},
-
 			"group_by_attribute": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -151,13 +151,12 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &securityhub.CreateInsightInput{
 		GroupByAttribute: aws.String(d.Get("group_by_attribute").(string)),
 		Name:             aws.String(name),
 	}
 
-	if v, ok := d.GetOk("filters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("filters"); ok {
 		input.Filters = expandSecurityFindingFilters(v.([]interface{}))
 	}
 
@@ -165,10 +164,6 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err != nil {
 		return diag.Errorf("creating Security Hub Insight (%s): %s", name, err)
-	}
-
-	if output == nil {
-		return diag.Errorf("creating Security Hub Insight (%s): empty output", name)
 	}
 
 	d.SetId(aws.ToString(output.InsightArn))
@@ -179,7 +174,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	insight, err := FindInsight(ctx, conn, d.Id())
+	insight, err := FindInsightByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
@@ -189,15 +184,6 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err != nil {
 		return diag.Errorf("reading Security Hub Insight (%s): %s", d.Id(), err)
-	}
-
-	if insight == nil {
-		if d.IsNewResource() {
-			return diag.Errorf("reading Security Hub Insight (%s): empty output", d.Id())
-		}
-		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	d.Set("arn", insight.InsightArn)
@@ -241,17 +227,45 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.DeleteInsightInput{
+	log.Printf("[DEBUG] Deleting Security Hub Insight: %s", d.Id())
+	_, err := conn.DeleteInsight(ctx, &securityhub.DeleteInsightInput{
 		InsightArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteInsight(ctx, input)
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return nil
+	}
 
 	if err != nil {
 		return diag.Errorf("deleting Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindInsightByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
+	input := &securityhub.GetInsightsInput{
+		InsightArns: []string{arn},
+	}
+
+	output, err := conn.GetInsights(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Insights)
 }
 
 func dateFilterSchema() *schema.Schema {

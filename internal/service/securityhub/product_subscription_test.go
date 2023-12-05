@@ -20,8 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubProductSubscription_basic(t *testing.T) {
+func testAccProductSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	accountResourceName := "aws_securityhub_account.example"
+	resourceName := "aws_securityhub_product_subscription.example"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
@@ -33,8 +36,8 @@ func TestAccSecurityHubProductSubscription_basic(t *testing.T) {
 				// all automatically subscribed when enabling Security Hub.
 				// This configuration will enable Security Hub, then in a later PreConfig,
 				// we will disable an AWS product subscription so we can test (re-)enabling it.
-				Config: testAccProductSubscriptionConfig_empty,
-				Check:  testAccCheckAccountExists(ctx, "aws_securityhub_account.example"),
+				Config: testAccProductSubscriptionConfig_accountOnly,
+				Check:  testAccCheckAccountExists(ctx, accountResourceName),
 			},
 			{
 				// AWS product subscriptions happen automatically when enabling Security Hub.
@@ -42,36 +45,36 @@ func TestAccSecurityHubProductSubscription_basic(t *testing.T) {
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 					productSubscriptionARN := arn.ARN{
-						AccountID: acctest.AccountID(),
 						Partition: acctest.Partition(),
-						Region:    acctest.Region(),
-						Resource:  "product-subscription/aws/guardduty",
 						Service:   "securityhub",
+						Region:    acctest.Region(),
+						AccountID: acctest.AccountID(),
+						Resource:  "product-subscription/aws/guardduty",
 					}.String()
-
 					input := &securityhub.DisableImportFindingsForProductInput{
 						ProductSubscriptionArn: aws.String(productSubscriptionARN),
 					}
 
 					_, err := conn.DisableImportFindingsForProduct(ctx, input)
+
 					if err != nil {
 						t.Fatalf("error disabling Security Hub Product Subscription for GuardDuty: %s", err)
 					}
 				},
 				Config: testAccProductSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProductSubscriptionExists(ctx, "aws_securityhub_product_subscription.example"),
+					testAccCheckProductSubscriptionExists(ctx, resourceName),
 				),
 			},
 			{
-				ResourceName:      "aws_securityhub_product_subscription.example",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				// Check Destroy - but only target the specific resource (otherwise Security Hub
 				// will be disabled and the destroy check will fail)
-				Config: testAccProductSubscriptionConfig_empty,
+				Config: testAccProductSubscriptionConfig_accountOnly,
 				Check:  testAccCheckProductSubscriptionDestroy(ctx),
 			},
 		},
@@ -87,23 +90,9 @@ func testAccCheckProductSubscriptionExists(ctx context.Context, n string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, productSubscriptionArn, err := tfsecurityhub.ProductSubscriptionParseID(rs.Primary.ID)
+		_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes["arn"])
 
-		if err != nil {
-			return err
-		}
-
-		exists, err := tfsecurityhub.ProductSubscriptionCheckExists(ctx, conn, productSubscriptionArn)
-
-		if err != nil {
-			return err
-		}
-
-		if !exists {
-			return fmt.Errorf("Security Hub product subscription %s not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -116,13 +105,7 @@ func testAccCheckProductSubscriptionDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, productSubscriptionArn, err := tfsecurityhub.ProductSubscriptionParseID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			exists, err := tfsecurityhub.ProductSubscriptionCheckExists(ctx, conn, productSubscriptionArn)
+			_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes["arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -132,28 +115,23 @@ func testAccCheckProductSubscriptionDestroy(ctx context.Context) resource.TestCh
 				return err
 			}
 
-			if exists {
-				return fmt.Errorf("Security Hub product subscription %s still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Security Hub Product Subscription (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-const testAccProductSubscriptionConfig_empty = `
+const testAccProductSubscriptionConfig_accountOnly = `
 resource "aws_securityhub_account" "example" {}
 `
 
-const testAccProductSubscriptionConfig_basic = `
-resource "aws_securityhub_account" "example" {}
-
+var testAccProductSubscriptionConfig_basic = acctest.ConfigCompose(testAccProductSubscriptionConfig_accountOnly, `
 data "aws_region" "current" {}
-
 data "aws_partition" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = [aws_securityhub_account.example]
   product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}::product/aws/guardduty"
 }
-`
+`)

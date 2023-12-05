@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubMember_basic(t *testing.T) {
+func testAccMember_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var member types.Member
 	resourceName := "aws_securityhub_member.test"
@@ -48,7 +48,7 @@ func TestAccSecurityHubMember_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubMember_invite(t *testing.T) {
+func testAccMember_invite(t *testing.T) {
 	ctx := acctest.Context(t)
 	var member types.Member
 	resourceName := "aws_securityhub_member.test"

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
+func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
@@ -46,7 +46,7 @@ func TestAccSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
+func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
@@ -71,7 +71,7 @@ func TestAccSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
+func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_admin_account.test"
 	altResourceName := "aws_securityhub_organization_admin_account.alternate"
@@ -108,11 +108,9 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			adminAccount, err := tfsecurityhub.FindAdminAccount(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindAdminAccountByID(ctx, conn, rs.Primary.ID)
 
-			// Because of this resource's dependency, the Organizations organization
-			// will be deleted first, resulting in the following valid error
-			if errs.MessageContains(err, "AccessDeniedException", "not subscribed to AWS Security Hub") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -120,11 +118,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				return err
 			}
 
-			if adminAccount == nil {
-				continue
-			}
-
-			return fmt.Errorf("expected Security Hub Organization Admin Account (%s) to be removed", rs.Primary.ID)
+			return fmt.Errorf("Security Hub Organization Admin Account (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -140,17 +134,9 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		adminAccount, err := tfsecurityhub.FindAdminAccount(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindAdminAccountByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if adminAccount == nil {
-			return fmt.Errorf("Security Hub Organization Admin Account (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

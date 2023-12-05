@@ -12,23 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	// Associated is the member status naming for regions that do not support Organizations
-	memberStatusAssociated = "Associated"
-	memberStatusInvited    = "Invited"
-	memberStatusEnabled    = "Enabled"
-	memberStatusResigned   = "Resigned"
 )
 
 // @SDKResource("aws_securityhub_member")
@@ -77,7 +68,9 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	accountID := d.Get("account_id").(string)
 	input := &securityhub.CreateMembersInput{
-		AccountDetails: []types.AccountDetails{{AccountId: aws.String(accountID)}},
+		AccountDetails: []types.AccountDetails{{
+			AccountId: aws.String(accountID),
+		}},
 	}
 
 	if v, ok := d.GetOk("email"); ok {
@@ -133,11 +126,18 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("account_id", member.AccountId)
 	d.Set("email", member.Email)
-	d.Set("master_id", member.MasterId)
 	status := aws.ToString(member.MemberStatus)
-	d.Set("member_status", status)
+	const (
+		// Associated is the member status naming for Regions that do not support Organizations.
+		memberStatusAssociated = "Associated"
+		memberStatusInvited    = "Invited"
+		memberStatusEnabled    = "Enabled"
+		memberStatusResigned   = "Resigned"
+	)
 	invited := status == memberStatusInvited || status == memberStatusEnabled || status == memberStatusAssociated || status == memberStatusResigned
 	d.Set("invite", invited)
+	d.Set("master_id", member.MasterId)
+	d.Set("member_status", status)
 
 	return diags
 }
@@ -150,7 +150,7 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountIds: []string{d.Id()},
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -179,10 +179,6 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-const (
-	errCodeAccessDeniedException = "AccessDeniedException"
-)
-
 func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
 	input := &securityhub.GetMembersInput{
 		AccountIds: []string{accountID},
@@ -190,7 +186,7 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 
 	output, err := conn.GetMembers(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.MessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found.") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -201,15 +197,11 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 		return nil, err
 	}
 
-	if output == nil || len(output.Members) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.Members); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.Members[0], nil
+	return tfresource.AssertSingleValueResult(output.Members)
 }
 
 func unprocessedAccountError(apiObject types.Result) error {
@@ -221,13 +213,13 @@ func unprocessedAccountError(apiObject types.Result) error {
 }
 
 func unprocessedAccountsError(apiObjects []types.Result) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := unprocessedAccountError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }

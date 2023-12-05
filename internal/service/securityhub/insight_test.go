@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityHubInsight_basic(t *testing.T) {
+func testAccInsight_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -56,7 +56,7 @@ func TestAccSecurityHubInsight_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_disappears(t *testing.T) {
+func testAccInsight_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -79,7 +79,7 @@ func TestAccSecurityHubInsight_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_DateFilters(t *testing.T) {
+func testAccInsight_DateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -132,7 +132,7 @@ func TestAccSecurityHubInsight_DateFilters(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_IPFilters(t *testing.T) {
+func testAccInsight_IPFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -163,7 +163,7 @@ func TestAccSecurityHubInsight_IPFilters(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_KeywordFilters(t *testing.T) {
+func testAccInsight_KeywordFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -194,7 +194,7 @@ func TestAccSecurityHubInsight_KeywordFilters(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_MapFilters(t *testing.T) {
+func testAccInsight_MapFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -227,7 +227,7 @@ func TestAccSecurityHubInsight_MapFilters(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_MultipleFilters(t *testing.T) {
+func testAccInsight_MultipleFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -286,7 +286,7 @@ func TestAccSecurityHubInsight_MultipleFilters(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_Name(t *testing.T) {
+func testAccInsight_Name(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
@@ -324,7 +324,7 @@ func TestAccSecurityHubInsight_Name(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_NumberFilters(t *testing.T) {
+func testAccInsight_NumberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -382,7 +382,7 @@ func TestAccSecurityHubInsight_NumberFilters(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_GroupByAttribute(t *testing.T) {
+func testAccInsight_GroupByAttribute(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -418,7 +418,7 @@ func TestAccSecurityHubInsight_GroupByAttribute(t *testing.T) {
 	})
 }
 
-func TestAccSecurityHubInsight_WorkflowStatus(t *testing.T) {
+func testAccInsight_WorkflowStatus(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
@@ -460,21 +460,17 @@ func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindInsightByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-					continue
-				}
-				if errs.IsA[*types.ResourceNotFoundException](err) {
-					continue
-				}
-				return fmt.Errorf("error deleting Security Hub Insight (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if insight != nil {
-				return fmt.Errorf("Security Hub Insight (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Security Hub Insight (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -490,17 +486,9 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindInsightByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("error reading Security Hub Insight (%s): %w", rs.Primary.ID, err)
-		}
-
-		if insight == nil {
-			return fmt.Errorf("error reading Security Hub Insight (%s): not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
