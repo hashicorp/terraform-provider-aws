@@ -150,7 +150,10 @@ func testAccAccount_migrateV0(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAccountConfig_basic,
-				PlanOnly:                 true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+				),
 			},
 		},
 	})
