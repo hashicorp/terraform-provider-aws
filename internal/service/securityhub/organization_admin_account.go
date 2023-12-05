@@ -54,7 +54,12 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 		AdminAccountId: aws.String(adminAccountID),
 	}
 
-	_, err := conn.EnableOrganizationAdminAccount(ctx, input)
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+		return conn.EnableOrganizationAdminAccount(ctx, input)
+	}, errCodeResourceConflictException)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Security Hub Organization Admin Account (%s): %s", adminAccountID, err)

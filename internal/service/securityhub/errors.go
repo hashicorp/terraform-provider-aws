@@ -7,5 +7,6 @@ const (
 	errCodeAccessDeniedException     = "AccessDeniedException"
 	errCodeInvalidAccessException    = "InvalidAccessException"
 	errCodeInvalidInputException     = "InvalidInputException"
+	errCodeResourceConflictException = "ResourceConflictException"
 	errCodeResourceNotFoundException = "ResourceNotFoundException"
 )
