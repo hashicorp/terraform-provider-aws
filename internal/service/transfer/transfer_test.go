@@ -42,6 +42,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"Protocols":                     testAccServer_protocols,
 			"ProtocolDetails":               testAccServer_protocolDetails,
 			"SecurityPolicy":                testAccServer_securityPolicy,
+			"SecurityPolicyFIPS":            testAccServer_securityPolicyFIPS,
 			"StructuredLogDestinations":     testAccServer_structuredLogDestinations,
 			"UpdateEndpointTypePublicToVPC": testAccServer_updateEndpointType_publicToVPC,
 			"UpdateEndpointTypePublicToVPCAddressAllocationIDs":      testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs,
