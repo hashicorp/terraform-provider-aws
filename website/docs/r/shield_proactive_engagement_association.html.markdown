@@ -42,7 +42,7 @@ resource "aws_shield_drt_access_role_arn_association" "example" {
 }
 
 resource "aws_shield_protection_group" "test" {
-  protection_group_id = %[1]q
+  protection_group_id = "example"
   aggregation         = "MAX"
   pattern             = "ALL"
 }
@@ -52,12 +52,12 @@ resource "aws_shield_proactive_engagement_association" "test" {
   emergency_contacts {
     contact_notes = "Notes"
     email_address = "test@company.com"
-    phone_number = "+12358132134"
+    phone_number  = "+12358132134"
   }
   emergency_contacts {
     contact_notes = "Notes 2"
     email_address = "test2@company.com"
-    phone_number = "+12358132134"
+    phone_number  = "+12358132134"
   }
   depends_on = [aws_shield_drt_access_role_arn_association.test]
 }
