@@ -22,6 +22,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// ComputeEnvironments has been deprecated. The Import step of tests that use ComputeEnvironments
+// need to ignore
+var ignoreDeprecatedCEOForImports = []string{
+	"compute_environment_order",
+	"compute_environment_order.#",
+	"compute_environment_order.0.%",
+	"compute_environment_order.0.compute_environment",
+	"compute_environment_order.0.order",
+	"compute_environments.#",
+	"compute_environments.0",
+}
+
 func TestAccBatchJobQueue_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 batch.JobQueueDetail
@@ -48,9 +60,21 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: ignoreDeprecatedCEOForImports,
+			},
+			{
+				// Validates the imported state matches `compute_environment_order`
+				Config: testAccJobQueueConfig_stateCEO(rName, batch.JQStateEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "0"),
+				),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -114,6 +138,30 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobQueue_disappearsCEO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_stateCEO(rName, batch.JQStateEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobQueue, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 batch.JobQueueDetail
@@ -133,6 +181,39 @@ func TestAccBatchJobQueue_MigrateFromPluginSDK(t *testing.T) {
 					},
 				},
 				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("job-queue/%s", rName)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_MigrateFromPluginSDKCEO(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.13.1",
+					},
+				},
+				Config: testAccJobQueueConfig_stateCEO(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("job-queue/%s", rName)),
