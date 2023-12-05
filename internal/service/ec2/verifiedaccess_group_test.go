@@ -48,8 +48,8 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.kms_key_arn", ""),
 				),
 			},
 			{
@@ -82,9 +82,9 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled"),
-					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccVerifiedAccessGroup_updateKms(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", "false"),
 				),
 			},
 			{
@@ -140,10 +140,10 @@ func TestAccVerifiedAccessGroup_updateKms(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.customer_managed_key_enabled", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
 				),
 			},
 			{
@@ -470,7 +470,7 @@ resource "aws_kms_key" "test_key" {
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
   policy_document            = %[1]q 
-  server_side_encryption_configuration {
+  sse_configuration {
 	kms_key_arn = aws_kms_key.test_key.arn
 	customer_managed_key_enabled = true
   }
@@ -486,7 +486,7 @@ resource "aws_kms_key" "test_key" {
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
   policy_document            = %[1]q
-  server_side_encryption_configuration {
+  sse_configuration {
 	customer_managed_key_enabled = false
   }
 }

@@ -60,7 +60,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"server_side_encryption_configuration": {
+			"sse_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -115,7 +115,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("server_side_encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.SseSpecification = expandCreateVerifiedAccessGroupSseConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -156,11 +156,11 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
 
 	if v := group.SseSpecification; v != nil {
-		if err := d.Set("server_side_encryption_configuration", flattenCreateVerifiedAccessGroupSseConfiguration(v)); err != nil {
+		if err := d.Set("sse_configuration", flattenCreateVerifiedAccessGroupSseConfiguration(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting sse configuration: %s", err)
 		}
 	} else {
-		d.Set("server_side_encryption_configuration", nil)
+		d.Set("sse_configuration", nil)
 	}
 
 	setTagsOutV2(ctx, group.Tags)
@@ -180,7 +180,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("policy_document", "tags", "tags_all", "server_side_encryption_configuration") {
+	if d.HasChangesExcept("policy_document", "tags", "tags_all", "sse_configuration") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
@@ -214,12 +214,12 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChange("server_side_encryption_configuration") {
+	if d.HasChange("sse_configuration") {
 		in := &ec2.ModifyVerifiedAccessGroupPolicyInput{
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("server_side_encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			in.SseSpecification = expandCreateVerifiedAccessGroupSseConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
