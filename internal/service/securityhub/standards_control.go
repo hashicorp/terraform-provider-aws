@@ -5,10 +5,13 @@ package securityhub
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -137,6 +140,39 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
+// StandardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.
+func StandardsControlARNToStandardsSubscriptionARN(inputARN string) (string, error) {
+	const (
+		resourceSeparator = "/"
+		service           = "securityhub"
+	)
+	parsedARN, err := arn.Parse(inputARN)
+	if err != nil {
+		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
+	}
+
+	if actual, expected := parsedARN.Service, service; actual != expected {
+		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, inputARN, actual)
+	}
+
+	inputResourceParts := strings.Split(parsedARN.Resource, resourceSeparator)
+
+	if actual, expected := len(inputResourceParts), 3; actual < expected {
+		return "", fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
+	}
+
+	outputResourceParts := append([]string{"subscription"}, inputResourceParts[1:len(inputResourceParts)-1]...)
+	outputARN := arn.ARN{
+		Partition: parsedARN.Partition,
+		Service:   parsedARN.Service,
+		Region:    parsedARN.Region,
+		AccountID: parsedARN.AccountID,
+		Resource:  strings.Join(outputResourceParts, resourceSeparator),
+	}.String()
+
+	return outputARN, nil
+}
+
 func FindStandardsControlByTwoPartKey(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
 	input := &securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
@@ -176,6 +212,7 @@ func findStandardsControls(ctx context.Context, conn *securityhub.Client, input 
 		}
 
 		for _, v := range page.Controls {
+			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}

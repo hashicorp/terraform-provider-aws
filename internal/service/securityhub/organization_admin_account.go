@@ -157,6 +157,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 		}
 
 		for _, v := range page.AdminAccounts {
+			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}

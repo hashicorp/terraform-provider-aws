@@ -167,6 +167,7 @@ func findInvitations(ctx context.Context, conn *securityhub.Client, input *secur
 		}
 
 		for _, v := range page.Invitations {
+			v := v
 			if v := &v; filter(v) {
 				output = append(output, v)
 			}
