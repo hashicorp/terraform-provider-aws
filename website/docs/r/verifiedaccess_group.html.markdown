@@ -45,7 +45,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the verified access group.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `policy_docment` - (Optional) The policy document that is associated with this resource.
-* `server_side_encryption_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption
+* `sse_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption
   * `kms_key_arn` - Arn of the KMS key to use
   * `cmk_enabled` - Boolean flag to indicate that the CMK should be used 
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner` - AWS account number owning this resource.
 * `verifiedaccess_group_arn` - ARN of this verified acess group.
 * `verifiedaccess_group_id` - ID of this verified access group.
-* `server_side_encryption_configuration` - Configuration information for KMS-based encryption.
+* `sse_configuration` - Configuration information for KMS-based encryption.
   * `kms_key_arn` - The Arn of the key being used.
   * `cmk_enabled` - Boolean indicating if customer-managed keys (CMK) are being used.
 
