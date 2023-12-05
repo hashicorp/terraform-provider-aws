@@ -18,11 +18,11 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-type resourcePrefix string
+type ResourcePrefixCtxKey string
 
 const (
-	ResourcePrefix        resourcePrefix = "RESOURCE_PREFIX"
-	ResourcePrefixRecurse resourcePrefix = "RESOURCE_PREFIX_RECURSE"
+	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
+	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
 )
 
 // Expand "expands" a resource's "business logic" data structure,
