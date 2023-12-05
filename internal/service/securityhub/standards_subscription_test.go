@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -68,15 +67,11 @@ func testAccStandardsSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStandardsSubscriptionExists(ctx context.Context, n string, standardsSubscription *types.StandardsSubscription) resource.TestCheckFunc {
+func testAccCheckStandardsSubscriptionExists(ctx context.Context, n string, v *types.StandardsSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub Standards Subscription ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
@@ -87,7 +82,7 @@ func testAccCheckStandardsSubscriptionExists(ctx context.Context, n string, stan
 			return err
 		}
 
-		*standardsSubscription = *output
+		*v = *output
 
 		return nil
 	}
@@ -105,10 +100,6 @@ func testAccCheckStandardsSubscriptionDestroy(ctx context.Context) resource.Test
 			output, err := tfsecurityhub.FindStandardsSubscriptionByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if errs.MessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
 				continue
 			}
 
