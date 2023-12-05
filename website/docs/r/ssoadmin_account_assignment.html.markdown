@@ -10,6 +10,8 @@ description: |-
 
 Provides a Single Sign-On (SSO) Account Assignment resource
 
+**IMPORTANT:** Currently there is an issue where deletion of both an `aws_ssoadmin_managed_policy_attachment` and `aws_ssoadmin_account_assignment` can occur simultaneously. This causes a problem with the `Delete` operation of the policy attachment and can cause your `terraform destroy` to fail. To avoid this, add an explicit dependency between these resources with the `depends_on` meta argument.
+
 ## Example Usage
 
 ```terraform
