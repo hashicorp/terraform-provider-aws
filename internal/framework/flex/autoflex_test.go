@@ -173,7 +173,7 @@ func TestGenericExpand(t *testing.T) {
 	ctx := context.Background()
 	testString := "test"
 	testStringResult := "a"
-	testCases := []struct {
+	testCases := []struct { //nolint:containedctx
 		Context    context.Context
 		TestName   string
 		Source     any

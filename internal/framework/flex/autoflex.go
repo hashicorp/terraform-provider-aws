@@ -249,7 +249,6 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	case basetypes.MapValuable:
-
 		diags.Append(expander.map_(ctx, vFrom, vTo)...)
 		return diags
 
