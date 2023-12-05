@@ -159,6 +159,14 @@ type TestFlexAWS12 struct {
 	FieldUrl *string
 }
 
+type TestFlexTF16 struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type TestFlexAWS18 struct {
+	IntentName *string
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -166,6 +174,7 @@ func TestGenericExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 	testCases := []struct {
+		Context    context.Context
 		TestName   string
 		Source     any
 		Target     any
@@ -173,76 +182,89 @@ func TestGenericExpand(t *testing.T) {
 		WantTarget any
 	}{
 		{
+			Context:  ctx,
 			TestName: "nil Source and Target",
 			WantErr:  true,
 		},
 		{
+			Context:  ctx,
 			TestName: "non-pointer Target",
 			Source:   TestFlex00{},
 			Target:   0,
 			WantErr:  true,
 		},
 		{
+			Context:  ctx,
 			TestName: "non-struct Source",
 			Source:   testString,
 			Target:   &TestFlex00{},
 			WantErr:  true,
 		},
 		{
+			Context:  ctx,
 			TestName: "non-struct Target",
 			Source:   TestFlex00{},
 			Target:   &testString,
 			WantErr:  true,
 		},
 		{
+			Context:    ctx,
 			TestName:   "types.String to string",
 			Source:     types.StringValue("a"),
 			Target:     &testString,
 			WantTarget: &testStringResult,
 		},
 		{
+			Context:    ctx,
 			TestName:   "empty struct Source and Target",
 			Source:     TestFlex00{},
 			Target:     &TestFlex00{},
 			WantTarget: &TestFlex00{},
 		},
 		{
+			Context:    ctx,
 			TestName:   "empty struct pointer Source and Target",
 			Source:     &TestFlex00{},
 			Target:     &TestFlex00{},
 			WantTarget: &TestFlex00{},
 		},
 		{
+			Context:    ctx,
 			TestName:   "single string struct pointer Source and empty Target",
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlex00{},
 			WantTarget: &TestFlex00{},
 		},
 		{
+			Context:  ctx,
 			TestName: "does not implement attr.Value Source",
 			Source:   &TestFlexAWS01{Field1: "a"},
 			Target:   &TestFlexAWS01{},
 			WantErr:  true,
 		},
 		{
+			Context:    ctx,
 			TestName:   "single string Source and single string Target",
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: "a"},
 		},
 		{
+			Context:    ctx,
 			TestName:   "single string Source and single *string Target",
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String("a")},
 		},
 		{
+			Context:    ctx,
 			TestName:   "single string Source and single int64 Target",
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS03{},
 			WantTarget: &TestFlexAWS03{},
 		},
 		{
+			Context:  ctx,
 			TestName: "primtive types Source and primtive types Target",
 			Source: &TestFlexTF03{
 				Field1:  types.StringValue("field1"),
@@ -275,6 +297,7 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
+			Context:  ctx,
 			TestName: "List/Set/Map of primitive types Source and slice/map of primtive types Target",
 			Source: &TestFlexTF04{
 				Field1: types.ListValueMust(types.StringType, []attr.Value{
@@ -313,24 +336,28 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
+			Context:    ctx,
 			TestName:   "single list Source and *struct Target",
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
 			Target:     &TestFlexAWS06{},
 			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
 		},
 		{
+			Context:    ctx,
 			TestName:   "single set Source and *struct Target",
 			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
 			Target:     &TestFlexAWS06{},
 			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
 		},
 		{
+			Context:    ctx,
 			TestName:   "empty list Source and empty []struct Target",
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
 			Target:     &TestFlexAWS08{},
 			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
 		},
 		{
+			Context:  ctx,
 			TestName: "non-empty list Source and non-empty []struct Target",
 			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
@@ -343,12 +370,14 @@ func TestGenericExpand(t *testing.T) {
 			}},
 		},
 		{
+			Context:    ctx,
 			TestName:   "empty list Source and empty []*struct Target",
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 		},
 		{
+			Context:  ctx,
 			TestName: "non-empty list Source and non-empty []*struct Target",
 			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
@@ -361,12 +390,14 @@ func TestGenericExpand(t *testing.T) {
 			}},
 		},
 		{
+			Context:    ctx,
 			TestName:   "empty list Source and empty []struct Target",
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
 			Target:     &TestFlexAWS08{},
 			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
 		},
 		{
+			Context:  ctx,
 			TestName: "non-empty list Source and non-empty []struct Target",
 			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
@@ -379,12 +410,14 @@ func TestGenericExpand(t *testing.T) {
 			}},
 		},
 		{
+			Context:    ctx,
 			TestName:   "empty set Source and empty []*struct Target",
 			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 		},
 		{
+			Context:  ctx,
 			TestName: "non-empty set Source and non-empty []*struct Target",
 			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
@@ -397,6 +430,7 @@ func TestGenericExpand(t *testing.T) {
 			}},
 		},
 		{
+			Context:  ctx,
 			TestName: "non-empty set Source and non-empty []struct Target",
 			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
@@ -409,6 +443,7 @@ func TestGenericExpand(t *testing.T) {
 			}},
 		},
 		{
+			Context:  ctx,
 			TestName: "complex Source and complex Target",
 			Source: &TestFlexTF07{
 				Field1: types.StringValue("m"),
@@ -436,6 +471,7 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
+			Context:  ctx,
 			TestName: "plural ordinary field names",
 			Source: &TestFlexTF08{
 				Field: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
@@ -448,6 +484,7 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
+			Context:  ctx,
 			TestName: "plural field names",
 			Source: &TestFlexTF09{
 				City: types.ListValueMust(types.StringType, []attr.Value{
@@ -512,6 +549,7 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
+			Context:  ctx,
 			TestName: "capitalization field names",
 			Source: &TestFlexTF10{
 				FieldURL: types.StringValue("h"),
@@ -521,6 +559,17 @@ func TestGenericExpand(t *testing.T) {
 				FieldUrl: aws.String("h"),
 			},
 		},
+		{
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			TestName: "resource name prefix",
+			Source: &TestFlexTF16{
+				Name: types.StringValue("Ovodoghen"),
+			},
+			Target: &TestFlexAWS18{},
+			WantTarget: &TestFlexAWS18{
+				IntentName: aws.String("Ovodoghen"),
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -528,7 +577,7 @@ func TestGenericExpand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			err := Expand(ctx, testCase.Source, testCase.Target)
+			err := Expand(testCase.Context, testCase.Source, testCase.Target)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
