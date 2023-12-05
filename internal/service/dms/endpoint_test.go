@@ -3876,7 +3876,7 @@ resource "aws_dms_endpoint" "test" {
   database_name               = "tftest"
   ssl_mode                    = "require"
   extra_connection_attributes = ""
-  postgres_settings  {
+  postgres_settings {
 	after_connect_script         = "SET search_path TO pg_catalog,public;"
 	capture_ddls                 = true
 	ddl_artifacts_schema         = true
@@ -3909,7 +3909,7 @@ resource "aws_dms_endpoint" "test" {
   database_name               = "tftest"
   ssl_mode                    = "require"
   extra_connection_attributes = ""
-  postgres_settings  {
+  postgres_settings {
 	after_connect_script    = "SET search_path TO pg_catalog,public;"
 	babelfish_database_name = "babelfish"
 	database_mode           = "babelfish"
