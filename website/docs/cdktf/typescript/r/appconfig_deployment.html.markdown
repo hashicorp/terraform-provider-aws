@@ -30,21 +30,21 @@ class MyConvertedCode extends TerraformStack {
       applicationId: Token.asString(awsAppconfigApplicationExample.id),
       configurationProfileId: Token.asString(
         awsAppconfigConfigurationProfileExample.configurationProfileId
-   ),
-   configurationVersion: Token.asString(
-     awsAppconfigHostedConfigurationVersionExample.versionNumber
-   ), 
-   deploymentStrategyId: Token.asString(
-     awsAppconfigDeploymentStrategyExample.id
-   ),
-   description: "My example deployment",
-   environmentId: Token.asString(
-     awsAppconfigEnvironmentExample.environmentId
-   ),
-   tags: {
-     Type: "AppConfig Deployment",
-   },
-  });
+      ),
+      configurationVersion: Token.asString(
+        awsAppconfigHostedConfigurationVersionExample.versionNumber
+      ),
+      deploymentStrategyId: Token.asString(
+        awsAppconfigDeploymentStrategyExample.id
+      ),
+      description: "My example deployment",
+      environmentId: Token.asString(
+        awsAppconfigEnvironmentExample.environmentId
+      ),
+      tags: {
+        Type: "AppConfig Deployment",
+      },
+   });
   }
 }
 
@@ -81,9 +81,9 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string) {
-    super(scope, name);
-  }
+    constructor(scope: Construct, name: string) {
+        super(scope, name);
+    }
 }
 
 ```

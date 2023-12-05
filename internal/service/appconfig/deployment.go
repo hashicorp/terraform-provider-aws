@@ -83,15 +83,15 @@ func ResourceDeployment() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kms_key_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.Any(verify.ValidARN, validation.StringLenBetween(1, 256)),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringLenBetween(1, 256)),
 			},
 			"state": {
 				Type:     schema.TypeString,

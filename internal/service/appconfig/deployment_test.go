@@ -265,37 +265,37 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 
 func testAccDeploymentKMSConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test_kms" {
+resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
 }
 
-resource "aws_appconfig_application" "test_kms" {
-  name = "kms_%[1]s"
+resource "aws_appconfig_application" "test" {
+  name = %[1]q
 }
 
-resource "aws_appconfig_environment" "test_kms" {
-  name           = "kms_%[1]s"
-  application_id = aws_appconfig_application.test_kms.id
+resource "aws_appconfig_environment" "test" {
+  name           = "%[1]q
+  application_id = aws_appconfig_application.test.id
 }
 
-resource "aws_appconfig_configuration_profile" "test_kms" {
-  application_id     = aws_appconfig_application.test_kms.id
-  name               = "kms_%[1]s"
+resource "aws_appconfig_configuration_profile" "test" {
+  application_id     = aws_appconfig_application.test.id
+  name               = %[1]q
   location_uri       = "hosted"
-  kms_key_identifier = aws_kms_key.test_kms.arn
+  kms_key_identifier = aws_kms_key.test.arn
 }
 
-resource "aws_appconfig_deployment_strategy" "test_kms" {
-  name                           = "kms_%[1]s"
+resource "aws_appconfig_deployment_strategy" "test" {
+  name                           = %[1]q
   deployment_duration_in_minutes = 3
   growth_factor                  = 10
   replicate_to                   = "NONE"
 }
 
-resource "aws_appconfig_hosted_configuration_version" "test_kms" {
-  application_id           = aws_appconfig_application.test_kms.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test_kms.configuration_profile_id
+resource "aws_appconfig_hosted_configuration_version" "test" {
+  application_id           = aws_appconfig_application.test.id
+  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
   content_type             = "application/json"
 
   content = jsonencode({
@@ -326,14 +326,14 @@ func testAccDeploymentConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeploymentKMSConfig(rName),
 		fmt.Sprintf(`
-resource "aws_appconfig_deployment" "test_kms"{
-  application_id           = aws_appconfig_application.test_kms.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test_kms.configuration_profile_id
-  configuration_version    = aws_appconfig_hosted_configuration_version.test_kms.version_number
+resource "aws_appconfig_deployment" "test"{
+  application_id           = aws_appconfig_application.test.id
+  configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
+  configuration_version    = aws_appconfig_hosted_configuration_version.test.version_number
   description              = %[1]q
-  deployment_strategy_id   = aws_appconfig_deployment_strategy.test_kms.id
-  environment_id           = aws_appconfig_environment.test_kms.environment_id
-  kms_key_identifier       = aws_kms_key.test_kms.arn
+  deployment_strategy_id   = aws_appconfig_deployment_strategy.test.id
+  environment_id           = aws_appconfig_environment.test.environment_id
+  kms_key_identifier       = aws_kms_key.test.arn
 }
 `, rName))
 }
