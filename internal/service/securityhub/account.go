@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -163,7 +163,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
 	}, errCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -173,10 +173,6 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	return diags
 }
-
-const (
-	errCodeInvalidInputException = "InvalidInputException"
-)
 
 func FindHub(ctx context.Context, meta *conns.AWSClient) (*securityhub.DescribeHubOutput, error) {
 	input := &securityhub.DescribeHubInput{
@@ -188,7 +184,7 @@ func FindHub(ctx context.Context, meta *conns.AWSClient) (*securityhub.DescribeH
 func findHub(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeHubInput) (*securityhub.DescribeHubOutput, error) {
 	output, err := conn.DescribeHub(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -4,5 +4,8 @@
 package securityhub
 
 const (
-	errCodeAccessDeniedException = "AccessDeniedException"
+	errCodeAccessDeniedException     = "AccessDeniedException"
+	errCodeInvalidAccessException    = "InvalidAccessException"
+	errCodeInvalidInputException     = "InvalidInputException"
+	errCodeResourceNotFoundException = "ResourceNotFoundException"
 )

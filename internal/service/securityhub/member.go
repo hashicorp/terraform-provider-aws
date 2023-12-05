@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -151,7 +150,7 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountIds: []string{d.Id()},
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -187,7 +186,7 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 
 	output, err := conn.GetMembers(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -100,7 +100,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 
 	_, err := conn.DisableOrganizationAdminAccount(ctx, input)
 
-	if tfresource.NotFound(err) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 

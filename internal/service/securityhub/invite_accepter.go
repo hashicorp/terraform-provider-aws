@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -105,7 +104,7 @@ func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Dissasociating from Security Hub Master Account: %s", d.Id())
 	_, err := conn.DisassociateFromMasterAccount(ctx, &securityhub.DisassociateFromMasterAccountInput{})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
 		return diags
 	}
 
@@ -121,7 +120,7 @@ func FindMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.In
 
 	output, err := conn.GetMasterAccount(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
