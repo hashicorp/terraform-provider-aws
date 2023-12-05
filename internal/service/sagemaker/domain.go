@@ -1276,7 +1276,7 @@ func expandUserSettings(l []interface{}) *sagemaker.UserSettings {
 	}
 
 	if v, ok := m["custom_posix_user_config"].([]interface{}); ok && len(v) > 0 {
-		config.CustomPosixUserConfig = expandCustomPosixUserConfig(v)
+		config.CustomPosixUserConfig = expandCustomPOSIXUserConfig(v)
 	}
 
 	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
@@ -1344,7 +1344,7 @@ func expandRStudioServerProAppSettings(l []interface{}) *sagemaker.RStudioServer
 	return config
 }
 
-func expandCustomPosixUserConfig(l []interface{}) *sagemaker.CustomPosixUserConfig {
+func expandCustomPOSIXUserConfig(l []interface{}) *sagemaker.CustomPosixUserConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1490,13 +1490,13 @@ func expandDefaultSpaceStorageSettings(l []interface{}) *sagemaker.DefaultSpaceS
 	config := &sagemaker.DefaultSpaceStorageSettings{}
 
 	if v, ok := m["default_ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultEbsStorageSettings = expandDefaultEbsStorageSettings(v)
+		config.DefaultEbsStorageSettings = expandDefaultEBSStorageSettings(v)
 	}
 
 	return config
 }
 
-func expandDefaultEbsStorageSettings(l []interface{}) *sagemaker.DefaultEbsStorageSettings {
+func expandDefaultEBSStorageSettings(l []interface{}) *sagemaker.DefaultEbsStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1776,7 +1776,7 @@ func flattenUserSettings(config *sagemaker.UserSettings) []map[string]interface{
 	}
 
 	if config.CustomPosixUserConfig != nil {
-		m["custom_posix_user_config"] = flattenCustomPosixUserConfig(config.CustomPosixUserConfig)
+		m["custom_posix_user_config"] = flattenCustomPOSIXUserConfig(config.CustomPosixUserConfig)
 	}
 
 	if config.CodeEditorAppSettings != nil {
@@ -1886,13 +1886,13 @@ func flattenDefaultSpaceStorageSettings(config *sagemaker.DefaultSpaceStorageSet
 	m := map[string]interface{}{}
 
 	if config.DefaultEbsStorageSettings != nil {
-		m["default_ebs_storage_settings"] = flattenDefaultEbsStorageSettings(config.DefaultEbsStorageSettings)
+		m["default_ebs_storage_settings"] = flattenDefaultEBSStorageSettings(config.DefaultEbsStorageSettings)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenDefaultEbsStorageSettings(config *sagemaker.DefaultEbsStorageSettings) []map[string]interface{} {
+func flattenDefaultEBSStorageSettings(config *sagemaker.DefaultEbsStorageSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -1924,7 +1924,7 @@ func flattenDomainTensorBoardAppSettings(config *sagemaker.TensorBoardAppSetting
 	return []map[string]interface{}{m}
 }
 
-func flattenCustomPosixUserConfig(config *sagemaker.CustomPosixUserConfig) []map[string]interface{} {
+func flattenCustomPOSIXUserConfig(config *sagemaker.CustomPosixUserConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
