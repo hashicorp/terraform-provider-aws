@@ -127,14 +127,14 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 		eContactSettings, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, describeIn)
 
 		if err == nil && len(eContactSettings.EmergencyContactList) == 0 {
-			r.executeUpdateExistingAssociation(ctx, req, resp, plan, conn, emergencyContactsList)
+			r.executeUpdateExistingAssociation(ctx, resp, plan, conn, emergencyContactsList)
 		} else if err != nil {
 			var ioe *shield.InvalidOperationException
 			var nfe *shield.ResourceNotFoundException
 			if errors.As(err, &ioe) && strings.Contains(ioe.Message(), "Enable/DisableProactiveEngagement") {
-				r.executeUpdateExistingAssociation(ctx, req, resp, plan, conn, emergencyContactsList)
+				r.executeUpdateExistingAssociation(ctx, resp, plan, conn, emergencyContactsList)
 			} else if errors.As(err, &nfe) {
-				r.executeCreateNewAssociation(ctx, req, resp, plan, conn, emergencyContactsList)
+				r.executeCreateNewAssociation(ctx, resp, plan, conn, emergencyContactsList)
 			} else {
 				resp.Diagnostics.AddError(create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
 					err.Error(),
@@ -142,11 +142,11 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 				return
 			}
 		} else {
-			r.executeUpdateExistingAssociation(ctx, req, resp, plan, conn, emergencyContactsList)
+			r.executeUpdateExistingAssociation(ctx, resp, plan, conn, emergencyContactsList)
 		}
 
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		_, err = waitProactiveEngagementAssociationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+		_, err = waitProactiveEngagementAssociationCreated(ctx, conn, createTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForCreation, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -161,7 +161,7 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociation(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
+func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociation(ctx context.Context, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
 	in := &shield.UpdateEmergencyContactSettingsInput{
 		EmergencyContactList: emergencyContactsList,
 	}
@@ -185,7 +185,7 @@ func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociatio
 	}
 }
 
-func (r *resourceProactiveEngagementAssociation) executeCreateNewAssociation(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
+func (r *resourceProactiveEngagementAssociation) executeCreateNewAssociation(ctx context.Context, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
 	in := &shield.AssociateProactiveEngagementDetailsInput{
 		EmergencyContactList: emergencyContactsList,
 	}
@@ -280,7 +280,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 			return
 		}
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitProactiveEngagementAssociationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		_, err = waitProactiveEngagementAssociationUpdated(ctx, conn, updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -298,7 +298,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 			return
 		}
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitProactiveEngagementAssociationDeleted(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		_, err = waitProactiveEngagementAssociationDeleted(ctx, conn, updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -351,7 +351,7 @@ func (r *resourceProactiveEngagementAssociation) Delete(ctx context.Context, req
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProactiveEngagementAssociationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitProactiveEngagementAssociationDeleted(ctx, conn, deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForDeletion, ResNameProactiveEngagementAssociation, state.ID.String(), err),
@@ -361,13 +361,13 @@ func (r *resourceProactiveEngagementAssociation) Delete(ctx context.Context, req
 	}
 }
 
-func waitProactiveEngagementAssociationCreated(ctx context.Context, conn *shield.Shield, id string, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
+func waitProactiveEngagementAssociationCreated(ctx context.Context, conn *shield.Shield, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusProactiveEngagementAssociation(ctx, conn, id),
+		Refresh:                   statusProactiveEngagementAssociation(ctx, conn),
 		Timeout:                   timeout,
-		NotFoundChecks:            2,
+		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -377,11 +377,11 @@ func waitProactiveEngagementAssociationCreated(ctx context.Context, conn *shield
 	return nil, err
 }
 
-func waitProactiveEngagementAssociationUpdated(ctx context.Context, conn *shield.Shield, id string, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
+func waitProactiveEngagementAssociationUpdated(ctx context.Context, conn *shield.Shield, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated, statusNormal},
-		Refresh:                   statusProactiveEngagementAssociation(ctx, conn, id),
+		Refresh:                   statusProactiveEngagementAssociation(ctx, conn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -391,15 +391,14 @@ func waitProactiveEngagementAssociationUpdated(ctx context.Context, conn *shield
 	if out, ok := outputRaw.(*shield.DescribeEmergencyContactSettingsOutput); ok {
 		return out, err
 	}
-
 	return nil, err
 }
 
-func waitProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Shield, id string, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
+func waitProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Shield, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
-		Refresh: statusProactiveEngagementAssociationDeleted(ctx, conn, id),
+		Refresh: statusProactiveEngagementAssociationDeleted(ctx, conn),
 		Timeout: timeout,
 	}
 
@@ -410,7 +409,7 @@ func waitProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield
 	return nil, err
 }
 
-func statusProactiveEngagementAssociation(ctx context.Context, conn *shield.Shield, id string) retry.StateRefreshFunc {
+func statusProactiveEngagementAssociation(ctx context.Context, conn *shield.Shield) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := describeEmergencyContactSettings(ctx, conn)
 		if tfresource.NotFound(err) {
@@ -424,7 +423,7 @@ func statusProactiveEngagementAssociation(ctx context.Context, conn *shield.Shie
 	}
 }
 
-func statusProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Shield, id string) retry.StateRefreshFunc {
+func statusProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Shield) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := describeEmergencyContactSettings(ctx, conn)
 		if tfresource.NotFound(err) {
