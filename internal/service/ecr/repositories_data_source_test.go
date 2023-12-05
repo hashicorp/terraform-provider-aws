@@ -13,7 +13,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, tfecr.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.ECREndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(ecr.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
