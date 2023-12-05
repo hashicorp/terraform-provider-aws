@@ -3,10 +3,14 @@
 
 package securityhub
 
-const (
-	errCodeAccessDeniedException     = "AccessDeniedException"
-	errCodeInvalidAccessException    = "InvalidAccessException"
-	errCodeInvalidInputException     = "InvalidInputException"
-	errCodeResourceConflictException = "ResourceConflictException"
-	errCodeResourceNotFoundException = "ResourceNotFoundException"
+import (
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+)
+
+var (
+	errCodeAccessDeniedException     = (*types.AccessDeniedException)(nil).ErrorCode()
+	errCodeInvalidAccessException    = (*types.InvalidAccessException)(nil).ErrorCode()
+	errCodeInvalidInputException     = (*types.InvalidInputException)(nil).ErrorCode()
+	errCodeResourceConflictException = (*types.ResourceConflictException)(nil).ErrorCode()
+	errCodeResourceNotFoundException = (*types.ResourceNotFoundException)(nil).ErrorCode()
 )
