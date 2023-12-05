@@ -89,6 +89,7 @@ func ResourceDeployment() *schema.Resource {
 			"kms_key_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: validation.Any(
 					verify.ValidARN,
 					validation.StringLenBetween(1, 256)),

@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
       tags: {
         Type: "AppConfig Deployment",
       },
-   });
+  });
   }
 }
 
@@ -81,9 +81,9 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
 class MyConvertedCode extends TerraformStack {
-    constructor(scope: Construct, name: string) {
-        super(scope, name);
-    }
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+  }
 }
 
 ```

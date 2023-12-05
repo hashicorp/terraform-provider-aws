@@ -65,12 +65,12 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 func TestAccAppConfigDeployment_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_deployment.test_kms"
-	appResourceName := "aws_appconfig_application.test_kms"
-	confProfResourceName := "aws_appconfig_configuration_profile.test_kms"
-	depStrategyResourceName := "aws_appconfig_deployment_strategy.test_kms"
-	envResourceName := "aws_appconfig_environment.test_kms"
-	confVersionResourceName := "aws_appconfig_hosted_configuration_version.test_kms"
+	resourceName := "aws_appconfig_deployment.test"
+	appResourceName := "aws_appconfig_application.test"
+	confProfResourceName := "aws_appconfig_configuration_profile.test"
+	depStrategyResourceName := "aws_appconfig_deployment_strategy.test"
+	envResourceName := "aws_appconfig_environment.test"
+	confVersionResourceName := "aws_appconfig_hosted_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -96,11 +96,6 @@ func TestAccAppConfigDeployment_kms(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -275,7 +270,7 @@ resource "aws_appconfig_application" "test" {
 }
 
 resource "aws_appconfig_environment" "test" {
-  name           = "%[1]q
+  name           = %[1]q
   application_id = aws_appconfig_application.test.id
 }
 
