@@ -18,6 +18,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+type resourcePrefix string
+
+const (
+	ResourcePrefix        resourcePrefix = "RESOURCE_PREFIX"
+	ResourcePrefixRecurse resourcePrefix = "RESOURCE_PREFIX_RECURSE"
+)
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -139,7 +146,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		if fieldName == "Tags" {
 			continue // Resource tags are handled separately.
 		}
-		toFieldVal := findFieldFuzzy(fieldName, valTo)
+		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
 		}
@@ -156,7 +163,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	return diags
 }
 
-func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo reflect.Value) reflect.Value {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
 		return v
@@ -188,6 +195,14 @@ func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
 	if plural.IsPlural(fieldNameFrom) {
 		if v := valTo.FieldByName(plural.Singular(fieldNameFrom)); v.IsValid() {
 			return v
+		}
+	}
+
+	// fourth precedence is using resource prefix
+	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+		if ctx.Value(ResourcePrefixRecurse) == nil {
+			ctx = context.WithValue(ctx, ResourcePrefixRecurse, true)
+			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo)
 		}
 	}
 
