@@ -27,7 +27,7 @@ func testAccStandardsControl_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil, //lintignore:AT001
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsControlConfig_basic(),
@@ -57,7 +57,7 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil, //lintignore:AT001
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStandardsControlConfig_disabledStatus(),
@@ -78,7 +78,7 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil, //lintignore:AT001
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStandardsControlConfig_enabledStatus(),
@@ -88,41 +88,34 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 	})
 }
 
-func testAccCheckStandardsControlExists(ctx context.Context, n string, control *types.StandardsControl) resource.TestCheckFunc {
+func testAccCheckStandardsControlExists(ctx context.Context, n string, v *types.StandardsControl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub Standards Control ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		output, err := tfsecurityhub.FindStandardsControlByTwoPartKey(ctx, conn, standardsSubscriptionARN, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*control = *output
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccStandardsControlConfig_basic() string {
-	return acctest.ConfigCompose(
-		testAccStandardsSubscriptionConfig_basic,
-		`
+	return acctest.ConfigCompose(testAccStandardsSubscriptionConfig_basic, `
 resource aws_securityhub_standards_control test {
   standards_control_arn = format("%s/1.10", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "ENABLED"
@@ -131,9 +124,7 @@ resource aws_securityhub_standards_control test {
 }
 
 func testAccStandardsControlConfig_disabledStatus() string {
-	return acctest.ConfigCompose(
-		testAccStandardsSubscriptionConfig_basic,
-		`
+	return acctest.ConfigCompose(testAccStandardsSubscriptionConfig_basic, `
 resource aws_securityhub_standards_control test {
   standards_control_arn = format("%s/1.11", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "DISABLED"
@@ -143,9 +134,7 @@ resource aws_securityhub_standards_control test {
 }
 
 func testAccStandardsControlConfig_enabledStatus() string {
-	return acctest.ConfigCompose(
-		testAccStandardsSubscriptionConfig_basic,
-		`
+	return acctest.ConfigCompose(testAccStandardsSubscriptionConfig_basic, `
 resource aws_securityhub_standards_control test {
   standards_control_arn = format("%s/1.12", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
   control_status        = "ENABLED"
