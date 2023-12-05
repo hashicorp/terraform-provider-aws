@@ -325,7 +325,12 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	err := disableJobQueue(ctx, conn, data.ID.ValueString(), deleteTimeout)
+	status, err := disableJobQueue(ctx, conn, data.ID.ValueString(), deleteTimeout)
+
+	if status == "does not exist." {
+		response.State.RemoveResource(ctx)
+		return
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -454,13 +459,18 @@ func findJobQueueByName(ctx context.Context, conn *batch.Batch, sn string) (*bat
 	return nil, nil
 }
 
-func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) error {
+func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (string, error) {
 	_, err := conn.UpdateJobQueueWithContext(ctx, &batch.UpdateJobQueueInput{
 		JobQueue: aws.String(id),
 		State:    aws.String(batch.JQStateDisabled),
 	})
+
 	if err != nil {
-		return err
+		// if queue err is not found, it means it's already deleted
+		if err.Error() == "does not exist." {
+			return "does not exist.", nil
+		}
+		return "", err
 	}
 
 	stateChangeConf := &retry.StateChangeConf{
@@ -472,7 +482,7 @@ func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout 
 		MinTimeout: 3 * time.Second,
 	}
 	_, err = stateChangeConf.WaitForStateContext(ctx)
-	return err
+	return "", err
 }
 
 func waitJobQueueCreated(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (*batch.JobQueueDetail, error) {
