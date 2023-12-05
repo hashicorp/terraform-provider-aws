@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -56,7 +57,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"engine", "source_db_cluster_identifier"},
-				ValidateFunc: validEngine(),
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -159,13 +160,13 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	globalCluster, err := FindGlobalClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Neptune Cluster (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Neptune Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Neptune Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Neptune Global Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", globalCluster.GlobalClusterArn)
@@ -198,7 +199,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if err != nil {
-			return diag.Errorf("updating neptune Global Cluster (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Neptune Global Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitGlobalClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {

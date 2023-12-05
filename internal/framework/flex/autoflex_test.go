@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -518,6 +519,197 @@ func TestGenericExpand(t *testing.T) {
 			Target: &TestFlexAWS12{},
 			WantTarget: &TestFlexAWS12{
 				FieldUrl: aws.String("h"),
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			err := Expand(ctx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+type TestFlexTF11 struct {
+	FieldInner fwtypes.MapValueOf[basetypes.StringValue] `tfsdk:"field_inner"`
+}
+
+type TestFlexTF12 struct {
+	FieldInner fwtypes.ObjectMapValueOf[TestFlexTF01] `tfsdk:"field_inner"`
+}
+
+type TestFlexTF13 struct {
+	FieldInner fwtypes.ObjectMapValueOf[*TestFlexTF01] `tfsdk:"field_inner"`
+}
+
+type TestFlexTF14 struct {
+	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF11] `tfsdk:"field_outer"`
+}
+
+type TestFlexTF15 struct {
+	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF12] `tfsdk:"field_outer"`
+}
+
+type TestFlexAWS13 struct {
+	FieldInner map[string]string
+}
+
+type TestFlexAWS14 struct {
+	FieldInner map[string]TestFlexAWS01
+}
+
+type TestFlexAWS15 struct {
+	FieldInner map[string]*TestFlexAWS01
+}
+
+type TestFlexAWS16 struct {
+	FieldOuter TestFlexAWS13
+}
+
+type TestFlexAWS17 struct {
+	FieldOuter TestFlexAWS14
+}
+
+func TestGenericExpand2(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := []struct {
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName: "map string",
+			Source: &TestFlexTF11{
+				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": types.StringValue("y"),
+				}),
+			},
+			Target: &TestFlexAWS13{},
+			WantTarget: &TestFlexAWS13{
+				FieldInner: map[string]string{
+					"x": "y",
+				},
+			},
+		},
+		{
+			TestName: "object map",
+			Source: &TestFlexTF12{
+				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
+					"x": {
+						Field1: types.StringValue("a"),
+					}},
+				),
+			},
+			Target: &TestFlexAWS14{},
+			WantTarget: &TestFlexAWS14{
+				FieldInner: map[string]TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+		},
+		{
+			TestName: "object map ptr target",
+			Source: &TestFlexTF12{
+				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
+					map[string]TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+			Target: &TestFlexAWS15{},
+			WantTarget: &TestFlexAWS15{
+				FieldInner: map[string]*TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+		},
+		{
+			TestName: "object map ptr source and target",
+			Source: &TestFlexTF13{
+				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
+					map[string]*TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+			Target: &TestFlexAWS15{},
+			WantTarget: &TestFlexAWS15{
+				FieldInner: map[string]*TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+		},
+		{
+			TestName: "nested string map",
+			Source: &TestFlexTF14{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
+					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+						"x": types.StringValue("y"),
+					}),
+				}),
+			},
+			Target: &TestFlexAWS16{},
+			WantTarget: &TestFlexAWS16{
+				FieldOuter: TestFlexAWS13{
+					FieldInner: map[string]string{
+						"x": "y",
+					},
+				},
+			},
+		},
+		{
+			TestName: "nested object map",
+			Source: &TestFlexTF15{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
+					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
+						map[string]TestFlexTF01{
+							"x": {
+								Field1: types.StringValue("a"),
+							},
+						},
+					),
+				}),
+			},
+			Target: &TestFlexAWS17{},
+			WantTarget: &TestFlexAWS17{
+				FieldOuter: TestFlexAWS14{
+					FieldInner: map[string]TestFlexAWS01{
+						"x": {
+							Field1: "a",
+						},
+					},
+				},
 			},
 		},
 	}

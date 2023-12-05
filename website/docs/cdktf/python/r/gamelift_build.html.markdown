@@ -42,7 +42,7 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the build
-* `operating_system` - (Required) Operating system that the game server binaries are built to run onE.g., `WINDOWS_2012`, `AMAZON_LINUX` or `AMAZON_LINUX_2`.
+* `operating_system` - (Required) Operating system that the game server binaries are built to run on. Valid values: `WINDOWS_2012`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `WINDOWS_2016`, `AMAZON_LINUX_2023`.
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
 * `version` - (Optional) Version that is associated with this build.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -83,4 +83,4 @@ Using `terraform import`, import GameLift Builds using the ID. For example:
 % terraform import aws_gamelift_build.example <build-id>
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-c2f0faa65301c95ac0436ad1af88ccbf7979ead6e43e9ac51b389783a62ddcfb -->
+<!-- cache-key: cdktf-0.19.0 input-335047b4beeab94de2f256ae709556edb1ba7d68195b28a0ba7275b83b6af2dc -->

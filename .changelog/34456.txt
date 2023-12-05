@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic 
+```
+
+```release-note:bug
+resource/aws_appflow_flow: Fix `InvalidParameter: 2 validation error(s) found` error when `destination_flow_config` or `task` is updated
+```

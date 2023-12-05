@@ -383,7 +383,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
 	if ontapConfig.SnaplockConfiguration != nil {
 		if err := d.Set("snaplock_configuration", []interface{}{flattenSnaplockConfiguration(ontapConfig.SnaplockConfiguration)}); err != nil {
-			return diag.Errorf("setting snaplock_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting snaplock_configuration: %s", err)
 		}
 	} else {
 		d.Set("snaplock_configuration", nil)
@@ -393,7 +393,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("storage_virtual_machine_id", ontapConfig.StorageVirtualMachineId)
 	if ontapConfig.TieringPolicy != nil {
 		if err := d.Set("tiering_policy", []interface{}{flattenTieringPolicy(ontapConfig.TieringPolicy)}); err != nil {
-			return diag.Errorf("setting tiering_policy: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting tiering_policy: %s", err)
 		}
 	} else {
 		d.Set("tiering_policy", nil)

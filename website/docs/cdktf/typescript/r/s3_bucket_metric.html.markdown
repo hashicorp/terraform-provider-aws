@@ -12,6 +12,8 @@ description: |-
 
 Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html) resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add metrics configuration for entire S3 bucket
@@ -116,4 +118,4 @@ Using `terraform import`, import S3 bucket metric configurations using `bucket:m
 % terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1091c69fa9fb93d148c9ff3885128f11e533b402052266873576f08369f6d546 -->
+<!-- cache-key: cdktf-0.19.0 input-23e6a43e0f6f8c4b686725c3bd633db4815a94e8635f92dc710fe3dd3f72cfc6 -->

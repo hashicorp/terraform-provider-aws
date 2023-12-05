@@ -12,6 +12,8 @@ description: |-
 
 Provides an [S3 Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intelligent-tiering.html) configuration resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add intelligent tiering configuration for entire S3 bucket
@@ -126,4 +128,4 @@ Using `terraform import`, import S3 bucket intelligent tiering configurations us
 % terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-b6b169e601dae3b6976c4585bd3676643529f574da01b5ad3983daea051c81f0 -->
+<!-- cache-key: cdktf-0.19.0 input-edbf222c0509de935ae7e968f1135a975907d699aec103595f6bbe9c75bcbff7 -->

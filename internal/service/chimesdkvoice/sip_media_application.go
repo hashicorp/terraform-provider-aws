@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -73,7 +74,7 @@ func ResourceSipMediaApplication() *schema.Resource {
 
 func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	createInput := &chimesdkvoice.CreateSipMediaApplicationInput{
 		AwsRegion: aws.String(d.Get("aws_region").(string)),
@@ -82,20 +83,20 @@ func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		Tags:      getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateSipMediaApplicationWithContext(ctx, createInput)
+	resp, err := conn.CreateSipMediaApplication(ctx, createInput)
 	if err != nil || resp.SipMediaApplication == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Chime Sip Media Application: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.SipMediaApplication.SipMediaApplicationId))
+	d.SetId(aws.ToString(resp.SipMediaApplication.SipMediaApplicationId))
 	return append(diags, resourceSipMediaApplicationRead(ctx, d, meta)...)
 }
 
 func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	resp, err := FindSIPResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.SipMediaApplication, error) {
+	resp, err := FindSIPResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.SipMediaApplication, error) {
 		return findSIPMediaApplicationByID(ctx, conn, d.Id())
 	})
 
@@ -115,7 +116,7 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges("name", "endpoints") {
 		updateInput := &chimesdkvoice.UpdateSipMediaApplicationInput{
@@ -124,7 +125,7 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 			Endpoints:             expandSipMediaApplicationEndpoints(d.Get("endpoints").([]interface{})),
 		}
 
-		if _, err := conn.UpdateSipMediaApplicationWithContext(ctx, updateInput); err != nil {
+		if _, err := conn.UpdateSipMediaApplication(ctx, updateInput); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Sip Media Application (%s): %s", d.Id(), err)
 		}
 	}
@@ -134,14 +135,14 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.DeleteSipMediaApplicationInput{
 		SipMediaApplicationId: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteSipMediaApplicationWithContext(ctx, input); err != nil {
-		if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if _, err := conn.DeleteSipMediaApplication(ctx, input); err != nil {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			log.Printf("[WARN] Chime Sip Media Application %s not found", d.Id())
 			return diags
 		}
@@ -151,39 +152,39 @@ func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandSipMediaApplicationEndpoints(data []interface{}) []*chimesdkvoice.SipMediaApplicationEndpoint {
-	var sipMediaApplicationEndpoint []*chimesdkvoice.SipMediaApplicationEndpoint
+func expandSipMediaApplicationEndpoints(data []interface{}) []awstypes.SipMediaApplicationEndpoint {
+	var sipMediaApplicationEndpoint []awstypes.SipMediaApplicationEndpoint
 
 	tfMap, ok := data[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
-	sipMediaApplicationEndpoint = append(sipMediaApplicationEndpoint, &chimesdkvoice.SipMediaApplicationEndpoint{
+	sipMediaApplicationEndpoint = append(sipMediaApplicationEndpoint, awstypes.SipMediaApplicationEndpoint{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string))})
 	return sipMediaApplicationEndpoint
 }
 
-func flattenSipMediaApplicationEndpoints(apiObject []*chimesdkvoice.SipMediaApplicationEndpoint) []interface{} {
+func flattenSipMediaApplicationEndpoints(apiObject []awstypes.SipMediaApplicationEndpoint) []interface{} {
 	var rawSipMediaApplicationEndpoints []interface{}
 
 	for _, e := range apiObject {
 		rawEndpoint := map[string]interface{}{
-			"lambda_arn": aws.StringValue(e.LambdaArn),
+			"lambda_arn": aws.ToString(e.LambdaArn),
 		}
 		rawSipMediaApplicationEndpoints = append(rawSipMediaApplicationEndpoints, rawEndpoint)
 	}
 	return rawSipMediaApplicationEndpoints
 }
 
-func findSIPMediaApplicationByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.SipMediaApplication, error) {
+func findSIPMediaApplicationByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.SipMediaApplication, error) {
 	in := &chimesdkvoice.GetSipMediaApplicationInput{
 		SipMediaApplicationId: aws.String(id),
 	}
 
-	resp, err := conn.GetSipMediaApplicationWithContext(ctx, in)
+	resp, err := conn.GetSipMediaApplication(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

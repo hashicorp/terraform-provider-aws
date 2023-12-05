@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -49,6 +50,8 @@ func DataSourceSecurityGroups() *schema.Resource {
 }
 
 func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{}
@@ -68,7 +71,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	output, err := FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Security Groups: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Security Groups: %s", err)
 	}
 
 	var arns, securityGroupIDs, vpcIDs []string
@@ -91,5 +94,5 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("ids", securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)
 
-	return nil
+	return diags
 }
