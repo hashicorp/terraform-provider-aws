@@ -1209,10 +1209,10 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
-	custom_posix_user_config {
+    custom_posix_user_config {
       gid = 1001
       uid = 10000
-	}
+    }
   }
 
   retention_policy {
@@ -2006,12 +2006,12 @@ resource "aws_sagemaker_domain" "test" {
   default_user_settings {
     execution_role = aws_iam_role.test.arn
 
-	custom_file_system_config {
+    custom_file_system_config {
       efs_file_system_config {
         file_system_id   = aws_efs_mount_target.test.file_system_id
-		file_system_path = "/"
-	  }
-	}
+        file_system_path = "/"
+      }
+    }
   }
 
   retention_policy {
@@ -2035,7 +2035,7 @@ resource "aws_sagemaker_domain" "test" {
       default_ebs_storage_settings {
         default_ebs_volume_size_in_gb = 10
         maximum_ebs_volume_size_in_gb = 200
-	  }
+      }
     }
   }
 
