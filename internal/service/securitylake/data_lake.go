@@ -148,6 +148,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"regions": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
 									},
@@ -465,8 +466,8 @@ type dataLakeLifecycleTransitionModel struct {
 }
 
 type dataLakeReplicationConfigurationModel struct {
-	Regions types.Set   `tfsdk:"regions"`
-	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
+	Regions fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
+	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
 }
 
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
