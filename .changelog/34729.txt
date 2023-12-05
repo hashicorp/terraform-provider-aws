@@ -30,3 +30,6 @@ resource/aws_sagemaker_space: Add `space_display_name` argument
 resource/aws_sagemaker_space: Add `sagemaker_image_version_alias` argument under all `default_resource_spec` blocks
 ```
 
+```release-note:enhancement
+resource/aws_sagemaker_app: Add `resource_spec.sagemaker_image_version_alias` argument
+```
