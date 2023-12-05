@@ -5,9 +5,11 @@ package ssoadmin
 
 // Exports for use in tests only.
 var (
-	ResourceApplication           = newResourceApplication
-	ResourceApplicationAssignment = newResourceApplicationAssignment
+	ResourceApplication                        = newResourceApplication
+	ResourceApplicationAssignment              = newResourceApplicationAssignment
+	ResourceApplicationAssignmentConfiguration = newResourceApplicationAssignmentConfiguration
 
-	FindApplicationByID           = findApplicationByID
-	FindApplicationAssignmentByID = findApplicationAssignmentByID
+	FindApplicationByID                        = findApplicationByID
+	FindApplicationAssignmentByID              = findApplicationAssignmentByID
+	FindApplicationAssignmentConfigurationByID = findApplicationAssignmentConfigurationByID
 )
