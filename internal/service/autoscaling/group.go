@@ -4060,9 +4060,11 @@ func startInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, in
 }
 
 func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	v, ok := i.(string)
 	if !ok {
-		return diag.Errorf("expected type to be string")
+		return sdkdiag.AppendErrorf(diags, "expected type to be string")
 	}
 
 	if v == "launch_configuration" || v == "launch_template" || v == "mixed_instances_policy" {
@@ -4078,11 +4080,11 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {
-				return diag.Errorf("'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
+				return sdkdiag.AppendErrorf(diags, "'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
 			}
-			return nil
+			return diags
 		}
 	}
 
-	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+	return sdkdiag.AppendErrorf(diags, "'%s' is not a recognized parameter name for aws_autoscaling_group", v)
 }

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -32,9 +33,9 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -60,8 +61,8 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.start_time", startTime),
-					resource.TestCheckResourceAttr(resourceName, "status", cloudwatchevidently.LaunchStatusCreated),
-					resource.TestCheckResourceAttr(resourceName, "type", cloudwatchevidently.LaunchTypeAwsEvidentlySplits),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.LaunchStatusCreated)),
+					resource.TestCheckResourceAttr(resourceName, "type", string(awstypes.LaunchTypeScheduledSplitsLaunch)),
 				),
 			},
 			{
@@ -75,7 +76,7 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -88,9 +89,9 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +120,7 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -132,9 +133,9 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,7 +204,7 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -214,9 +215,9 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -293,7 +294,7 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 
 func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -306,9 +307,9 @@ func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -337,7 +338,7 @@ func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 
 func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -352,9 +353,9 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -427,7 +428,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 
 func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -441,9 +442,9 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -537,7 +538,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 
 func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -548,9 +549,9 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -590,7 +591,7 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 
 func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var launch cloudwatchevidently.Launch
+	var launch awstypes.Launch
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -600,7 +601,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -618,7 +619,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 
 func testAccCheckLaunchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_launch" {
 				continue
@@ -647,7 +648,7 @@ func testAccCheckLaunchDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLaunchExists(ctx context.Context, n string, v *cloudwatchevidently.Launch) resource.TestCheckFunc {
+func testAccCheckLaunchExists(ctx context.Context, n string, v *awstypes.Launch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -665,7 +666,7 @@ func testAccCheckLaunchExists(ctx context.Context, n string, v *cloudwatcheviden
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
 
 		output, err := tfcloudwatchevidently.FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
 

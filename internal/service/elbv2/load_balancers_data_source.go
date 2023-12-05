@@ -37,13 +37,15 @@ const (
 )
 
 func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	results, err := FindLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
 	}
 
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -59,7 +61,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			if err != nil {
-				return create.DiagError(names.ELBV2, "listing tags", DSNameLoadBalancers, arn, err)
+				return create.AppendDiagError(diags, names.ELBV2, "listing tags", DSNameLoadBalancers, arn, err)
 			}
 			if !tags.ContainsAll(tagsToMatch) {
 				continue
@@ -79,5 +81,5 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("arns", loadBalancerARNs)
 
-	return nil
+	return diags
 }

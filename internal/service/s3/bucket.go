@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -43,6 +44,10 @@ import (
 
 const (
 	resNameBucket = "Bucket"
+
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	s3BucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
@@ -91,7 +96,10 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63),
+					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+				),
 			},
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
@@ -103,7 +111,9 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				),
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -1047,7 +1057,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1076,7 +1086,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
@@ -1424,14 +1434,14 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string) error {
+func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string, optFns ...func(*s3_sdkv2.Options)) error {
 	input := &s3_sdkv2.HeadBucketInput{
 		Bucket: aws_sdkv2.String(bucket),
 	}
 
-	_, err := conn.HeadBucket(ctx, input)
+	_, err := conn.HeadBucket(ctx, input, optFns...)
 
-	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) {
+	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
 		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

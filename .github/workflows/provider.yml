@@ -292,8 +292,8 @@ jobs:
           tfproviderdocs check \
             -allowed-resource-subcategories-file website/allowed-subcategories.txt \
             -enable-contents-check \
-            -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-            -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+            -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
+            -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
             -provider-source registry.terraform.io/hashicorp/aws \
             -providers-schema-json terraform-providers-schema/schema.json \
             -require-resource-subcategory \

@@ -12,6 +12,8 @@ description: |-
 
 Provides a resource to manage an S3 Multi-Region Access Point associated with specified buckets.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Multiple AWS Buckets in Different Regions
@@ -142,4 +144,4 @@ Using `terraform import`, import Multi-Region Access Points using the `accountId
 % terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-561f76eaf08b8898b3aa821b8c028e27dcb6512218497d376c771b48c1350f6b -->
+<!-- cache-key: cdktf-0.19.0 input-3c062e6275316732e03cf56b1f29e3af7a9c9f929af2e8fbccd540e074753cbf -->

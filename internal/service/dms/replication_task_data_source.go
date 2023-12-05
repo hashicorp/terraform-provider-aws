@@ -79,6 +79,8 @@ const (
 )
 
 func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -87,7 +89,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 
 	task, err := FindReplicationTaskByID(ctx, conn, taskID)
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
@@ -103,22 +105,22 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 
 	settings, err := replicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
 	}
 
 	d.Set("replication_task_settings", settings)
 
 	tags, err := listTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameReplicationTask, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionSetting, DSNameReplicationTask, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

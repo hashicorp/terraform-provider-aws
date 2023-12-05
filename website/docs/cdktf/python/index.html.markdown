@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1276 resources and 521 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1289 resources and 528 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -313,7 +313,9 @@ credential_process = custom-process --username jdoe
 |EC2 IMDS Endpoint |`ec2_metadata_service_endpoint`|`AWS_EC2_METADATA_SERVICE_ENDPOINT`|N/A|
 |EC2 IMDS Endpoint Mode|`ec2_metadata_service_endpoint_mode`|`AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE`|N/A|
 |Disable EC2 IMDS|`skip_metadata_api_check`|`AWS_EC2_METADATA_DISABLED`|N/A|
-|HTTP Proxy|`http_proxy`|`HTTP_PROXY` or `HTTPS_PROXY`|N/A|
+|HTTP Proxy|`http_proxy`|`HTTP_PROXY` or `http_proxy`|N/A|
+|HTTPS Proxy|`https_proxy`|`HTTPS_PROXY` or `https_proxy`|N/A|
+|Non-Proxied Hosts|`no_proxy`|`NO_PROXY` or `no_proxy`|N/A|
 |Max Retries|`max_retries`|`AWS_MAX_ATTEMPTS`|`max_attempts`|
 |Profile|`profile`|`AWS_PROFILE` or `AWS_DEFAULT_PROFILE`|N/A|
 |Retry Mode|`retry_mode`|`AWS_RETRY_MODE`|`retry_mode`|
@@ -390,7 +392,11 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `ec2_metadata_service_endpoint_mode` - (Optional) Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
 * `endpoints` - (Optional) Configuration block for customizing service endpoints. See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions. See also `use_fips_endpoint`.
 * `forbidden_account_ids` - (Optional) List of forbidden AWS account IDs to prevent you from mistakenly using the wrong one (and potentially end up destroying a live environment). Conflicts with `allowed_account_ids`.
-* `http_proxy` - (Optional) Address of an HTTP proxy to use when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
+* `http_proxy` - (Optional) URL of a proxy to use for HTTP requests when accessing the AWS API.
+  Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.
+* `https_proxy` - (Optional) URL of a proxy to use for HTTPS requests when accessing the AWS API.
+  Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.
+  To use an HTTP proxy **without** an HTTPS proxy, set `https_proxy` to an empty string (`""`).
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
@@ -398,6 +404,14 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   If omitted, the default value is `25`.
   Can also be set using the environment variable `AWS_MAX_ATTEMPTS`
   and the shared configuration parameter `max_attempts`.
+* `no_proxy` - (Optional) Comma-separated list of hosts that should not use HTTP or HTTPS proxies.
+  Each value can be one of:
+    * A domain name
+    * An IP address
+    * A CIDR address
+    * An asterisk (`*`), to indicate that no proxying should be performed
+  Domain name and IP address values can also include a port number.
+  Can also be set using the `NO_PROXY` or `no_proxy` environment variables.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
   Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
 * `region` - (Optional) AWS region where the provider will operate. The region must be set.
@@ -787,4 +801,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.19.0 input-712b7ffde5d4701d34fcb42f4ae7c59cd71e768f8ed2ab1262a190ad7266f331 -->
+<!-- cache-key: cdktf-0.19.0 input-da467981e2debaee0d37fa47680725e904512dd8e6a6cc3a8cfdad9849cbc945 -->

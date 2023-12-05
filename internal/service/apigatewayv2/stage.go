@@ -395,7 +395,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del, _ := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := flex.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
 				del[k] = aws.String("")

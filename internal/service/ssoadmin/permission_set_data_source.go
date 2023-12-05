@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,23 +33,19 @@ func DataSourcePermissionSet() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"arn", "name"},
 			},
-
 			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"instance_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -59,17 +56,14 @@ func DataSourcePermissionSet() *schema.Resource {
 				),
 				ExactlyOneOf: []string{"name", "arn"},
 			},
-
 			"relay_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"session_duration": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -77,12 +71,12 @@ func DataSourcePermissionSet() *schema.Resource {
 
 func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceArn := d.Get("instance_arn").(string)
 
-	var permissionSet *ssoadmin.PermissionSet
+	var permissionSet *awstypes.PermissionSet
 
 	if v, ok := d.GetOk("arn"); ok {
 		arn := v.(string)
@@ -92,7 +86,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 			PermissionSetArn: aws.String(arn),
 		}
 
-		output, err := conn.DescribePermissionSetWithContext(ctx, input)
+		output, err := conn.DescribePermissionSet(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading SSO Admin Permission Set (%s): %s", arn, err)
 		}
@@ -104,50 +98,40 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 		permissionSet = output.PermissionSet
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		var describeErr error
 
 		input := &ssoadmin.ListPermissionSetsInput{
 			InstanceArn: aws.String(instanceArn),
 		}
 
-		err := conn.ListPermissionSetsPagesWithContext(ctx, input, func(page *ssoadmin.ListPermissionSetsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		var permissionSetArns []string
+		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "listing SSO Permission Sets: %s", err)
 			}
 
-			for _, permissionSetArn := range page.PermissionSets {
-				if permissionSetArn == nil {
-					continue
-				}
-
-				output, describeErr := conn.DescribePermissionSetWithContext(ctx, &ssoadmin.DescribePermissionSetInput{
-					InstanceArn:      aws.String(instanceArn),
-					PermissionSetArn: permissionSetArn,
-				})
-
-				if describeErr != nil {
-					return false
-				}
-
-				if output == nil || output.PermissionSet == nil {
-					continue
-				}
-
-				if aws.StringValue(output.PermissionSet.Name) == name {
-					permissionSet = output.PermissionSet
-					return false
-				}
-			}
-
-			return !lastPage
-		})
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing SSO Permission Sets: %s", err)
+			permissionSetArns = append(permissionSetArns, page.PermissionSets...)
 		}
 
-		if describeErr != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set (%s): %s", name, describeErr)
+		for _, permissionSetArn := range permissionSetArns {
+			output, err := conn.DescribePermissionSet(ctx, &ssoadmin.DescribePermissionSetInput{
+				InstanceArn:      aws.String(instanceArn),
+				PermissionSetArn: aws.String(permissionSetArn),
+			})
+
+			if err != nil {
+				// Proceed with attempting to describe the remaining permission sets
+				continue
+			}
+
+			if output == nil || output.PermissionSet == nil {
+				continue
+			}
+
+			if aws.ToString(output.PermissionSet.Name) == name {
+				permissionSet = output.PermissionSet
+			}
 		}
 	}
 
@@ -155,7 +139,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set: not found")
 	}
 
-	arn := aws.StringValue(permissionSet.PermissionSetArn)
+	arn := aws.ToString(permissionSet.PermissionSetArn)
 
 	d.SetId(arn)
 	d.Set("arn", arn)

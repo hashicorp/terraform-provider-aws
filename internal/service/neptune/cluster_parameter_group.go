@@ -23,9 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
-
-const clusterParameterGroupMaxParamsBulkEdit = 20
 
 // @SDKResource("aws_neptune_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
@@ -123,9 +122,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	d.SetId(name)
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List()))
-
-		if err != nil {
+		if err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List())); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -156,65 +153,41 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("name", dbClusterParameterGroup.DBClusterParameterGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
-	// Only include user customized parameters as there's hundreds of system/default ones
+	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &neptune.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 		Source:                      aws.String("user"),
 	}
-	var parameters []*neptune.Parameter
 
-	err = conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParametersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Parameters {
-			if v != nil {
-				parameters = append(parameters, v)
-			}
-		}
-
-		return !lastPage
-	})
+	parameters, err := findDBClusterParameters(ctx, conn, input, tfslices.PredicateTrue[*neptune.Parameter]())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) user parameters: %s", d.Id(), err)
 	}
 
-	// Add only system parameters that are set in the config
+	// Add only system parameters that are set in the config.
 	p := d.Get("parameter")
 	if p == nil {
 		p = new(schema.Set)
 	}
-	s := p.(*schema.Set)
-	configParameters := expandParameters(s.List())
+	configParameters := expandParameters(p.(*schema.Set).List())
 
 	input = &neptune.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 		Source:                      aws.String("engine-default"),
 	}
 
-	err = conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParametersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Parameters {
-			if v != nil {
-				for _, p := range configParameters {
-					if aws.StringValue(v.ParameterName) == aws.StringValue(p.ParameterName) {
-						parameters = append(parameters, v)
-					}
-				}
-			}
-		}
-
-		return !lastPage
+	systemParameters, err := findDBClusterParameters(ctx, conn, input, func(v *neptune.Parameter) bool {
+		return slices.ContainsFunc(configParameters, func(p *neptune.Parameter) bool {
+			return aws.StringValue(v.ParameterName) == aws.StringValue(p.ParameterName)
+		})
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) system parameters: %s", d.Id(), err)
 	}
+
+	parameters = append(parameters, systemParameters...)
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
@@ -229,15 +202,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
 			err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), parameters)
@@ -272,6 +237,9 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 }
 
 func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
+	const (
+		clusterParameterGroupMaxParamsBulkEdit = 20
+	)
 	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
 	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
 		input := &neptune.ModifyDBClusterParameterGroupInput{
@@ -329,6 +297,37 @@ func findDBClusterParameterGroups(ctx context.Context, conn *neptune.Neptune, in
 
 		for _, v := range page.DBClusterParameterGroups {
 			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDBClusterParameters(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterParametersInput, filter tfslices.Predicate[*neptune.Parameter]) ([]*neptune.Parameter, error) {
+	var output []*neptune.Parameter
+
+	err := conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParametersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Parameters {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}

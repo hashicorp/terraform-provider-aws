@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -189,6 +190,8 @@ func dataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -196,13 +199,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	cluster, err := findClusterByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading EKS Cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 	d.Set("arn", cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
-		return diag.Errorf("setting certificate_authority: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
 	}
 	// cluster_id is only relevant for clusters on Outposts.
 	if cluster.OutpostConfig != nil {
@@ -210,30 +213,30 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("created_at", aws.ToTime(cluster.CreatedAt).String())
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
-		return diag.Errorf("setting enabled_cluster_log_types: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
-		return diag.Errorf("setting identity: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
 	}
 	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
-		return diag.Errorf("setting kubernetes_network_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
 	}
 	d.Set("name", cluster.Name)
 	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
-		return diag.Errorf("setting outpost_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return diag.Errorf("setting vpc_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

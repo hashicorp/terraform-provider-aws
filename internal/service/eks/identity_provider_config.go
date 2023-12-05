@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -130,6 +131,8 @@ func resourceIdentityProviderConfig() *schema.Resource {
 }
 
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
@@ -145,24 +148,26 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	_, err := conn.AssociateIdentityProviderConfig(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("associating EKS Identity Provider Config (%s): %s", idpID, err)
+		return sdkdiag.AppendErrorf(diags, "associating EKS Identity Provider Config (%s): %s", idpID, err)
 	}
 
 	d.SetId(idpID)
 
 	if _, err := waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for EKS Identity Provider Config (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Identity Provider Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceIdentityProviderConfigRead(ctx, d, meta)
+	return append(diags, resourceIdentityProviderConfigRead(ctx, d, meta)...)
 }
 
 func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	oidc, err := findOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
@@ -170,23 +175,23 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Identity Provider Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EKS Identity Provider Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", oidc.IdentityProviderConfigArn)
 	d.Set("cluster_name", oidc.ClusterName)
 	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
-		return diag.Errorf("setting oidc: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}
 	d.Set("status", oidc.Status)
 
 	setTagsOut(ctx, oidc.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -195,11 +200,13 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Disassociating EKS Identity Provider Config: %s", d.Id())
@@ -212,22 +219,22 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Identity provider config is not associated with cluster") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitOIDCIdentityProviderConfigDeleted(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for EKS Identity Provider Config (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Identity Provider Config (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, configName string) (*types.OidcIdentityProviderConfig, error) {

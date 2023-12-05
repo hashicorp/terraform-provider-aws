@@ -41,6 +41,13 @@ func ApplyToAll[S ~[]E1, E1, E2 any](s S, f func(E1) E2) []E2 {
 	return v
 }
 
+// ToPointers returns a new slice containing pointers to each element of the original slice `s`.
+func ToPointers[S ~[]E, E any](s S) []*E {
+	return ApplyToAll(s, func(e E) *E {
+		return &e
+	})
+}
+
 // Predicate represents a predicate (boolean-valued function) of one argument.
 type Predicate[T any] func(T) bool
 

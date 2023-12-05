@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1224,6 +1225,8 @@ func resourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -1247,15 +1250,17 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateFlow(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AppFlow Flow (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppFlow Flow (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.FlowArn))
 
-	return resourceFlowRead(ctx, d, meta)
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	flowDefinition, err := findFlowByARN(ctx, conn, d.Id())
@@ -1263,39 +1268,39 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, output.FlowArn)
 	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(output.DestinationFlowConfigList)); err != nil {
-		return diag.Errorf("setting destination_flow_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting destination_flow_config: %s", err)
 	}
 	d.Set("kms_arn", output.KmsArn)
 	d.Set(names.AttrName, output.FlowName)
 	if output.SourceFlowConfig != nil {
 		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(output.SourceFlowConfig)}); err != nil {
-			return diag.Errorf("setting source_flow_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting source_flow_config: %s", err)
 		}
 	} else {
 		d.Set("source_flow_config", nil)
 	}
 	if err := d.Set("task", flattenTasks(output.Tasks)); err != nil {
-		return diag.Errorf("setting task: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting task: %s", err)
 	}
 	if output.TriggerConfig != nil {
 		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
-			return diag.Errorf("setting trigger_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)
@@ -1303,10 +1308,12 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -1325,14 +1332,16 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateFlow(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceFlowRead(ctx, d, meta)
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Id())
@@ -1341,18 +1350,18 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFlowDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for AppFlow Flow (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findFlowByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.FlowDefinition, error) {

@@ -68,6 +68,12 @@ func ResourceReplicationGroup() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
+			"auth_token_update_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
+				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
+			},
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
@@ -342,12 +348,24 @@ func ResourceReplicationGroup() *schema.Resource {
 			},
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		// SchemaVersion: 1 did not include any state changes via MigrateState.
 		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
 		// Future state migrations should be performed with StateUpgraders.
 		MigrateState: func(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 			return inst, nil
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			// v5.27.0 introduced the auth_token_update_strategy argument with a default
+			// value required to preserve backward compatibility. In order to prevent
+			// differences and attempted modifications on upgrade, the default value
+			// must be written to state via a state upgrader.
+			{
+				Type:    resourceReplicationGroupConfigV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: replicationGroupStateUpgradeV1,
+				Version: 1,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -855,11 +873,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if d.HasChange("auth_token") {
+		if d.HasChanges("auth_token", "auth_token_update_strategy") {
 			params := &elasticache.ModifyReplicationGroupInput{
 				ApplyImmediately:        aws.Bool(true),
 				ReplicationGroupId:      aws.String(d.Id()),
-				AuthTokenUpdateStrategy: aws.String("ROTATE"),
+				AuthTokenUpdateStrategy: aws.String(d.Get("auth_token_update_strategy").(string)),
 				AuthToken:               aws.String(d.Get("auth_token").(string)),
 			}
 
