@@ -16,23 +16,19 @@ import (
 )
 
 // @FrameworkDataSource(name="Repositories")
-func newDataSourceRepositories(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRepositories{}, nil
+func newRepositoriesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &repositoriesDataSource{}, nil
 }
 
-const (
-	DSNameRepositories = "Repositories Data Source"
-)
-
-type dataSourceRepositories struct {
+type repositoriesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceRepositories) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *repositoriesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	resp.TypeName = "aws_ecr_repositories"
 }
 
-func (d *dataSourceRepositories) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *repositoriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": framework.IDAttribute(),
@@ -43,10 +39,10 @@ func (d *dataSourceRepositories) Schema(ctx context.Context, req datasource.Sche
 		},
 	}
 }
-func (d *dataSourceRepositories) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *repositoriesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ECRClient(ctx)
 
-	var data dataSourceRepositoriesData
+	var data repositoriesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -54,15 +50,12 @@ func (d *dataSourceRepositories) Read(ctx context.Context, req datasource.ReadRe
 
 	var names []string
 
-	paginator := ecr.NewDescribeRepositoriesPaginator(conn, &ecr.DescribeRepositoriesInput{}, func(o *ecr.DescribeRepositoriesPaginatorOptions) {
-		o.StopOnDuplicateToken = true
-	})
-
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
+	pages := ecr.NewDescribeRepositoriesPaginator(conn, &ecr.DescribeRepositoriesInput{})
+	for pages.HasMorePages() {
+		output, err := pages.NextPage(ctx)
 
 		if err != nil {
-			resp.Diagnostics.AddError("reading ECR repositories", err.Error())
+			resp.Diagnostics.AddError("reading ECR Repositories", err.Error())
 			return
 		}
 
@@ -72,12 +65,12 @@ func (d *dataSourceRepositories) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region)
-	data.Names = flex.FlattenFrameworkStringValueSetLegacy(ctx, names)
+	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceRepositoriesData struct {
+type repositoriesDataSourceModel struct {
 	ID    fwtypes.String `tfsdk:"id"`
 	Names fwtypes.Set    `tfsdk:"names"`
 }
