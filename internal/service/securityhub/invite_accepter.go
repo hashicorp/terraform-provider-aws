@@ -116,10 +116,6 @@ func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-const (
-	errCodeAccessDeniedException = "AccessDeniedException"
-)
-
 func FindMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.Invitation, error) {
 	input := &securityhub.GetMasterAccountInput{}
 
@@ -159,6 +155,13 @@ func findInvitations(ctx context.Context, conn *securityhub.Client, input *secur
 	pages := securityhub.NewListInvitationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
 
 		if err != nil {
 			return nil, err

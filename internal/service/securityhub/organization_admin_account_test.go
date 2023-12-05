@@ -108,7 +108,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			_, err := tfsecurityhub.FindAdminAccount(ctx, conn, rs.Primary.ID)
+			_, err := tfsecurityhub.FindAdminAccountByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -134,7 +134,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, err := tfsecurityhub.FindAdminAccount(ctx, conn, rs.Primary.ID)
+		_, err := tfsecurityhub.FindAdminAccountByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

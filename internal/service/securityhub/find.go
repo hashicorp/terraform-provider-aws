@@ -14,31 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
-	input := &securityhub.ListOrganizationAdminAccountsInput{}
-
-	output, err := conn.ListOrganizationAdminAccounts(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidAccessException](err, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range output.AdminAccounts {
-		if v := &v; aws.ToString(v.AccountId) == adminAccountID {
-			return v, nil
-		}
-	}
-
-	return nil, tfresource.NewEmptyResultError(input)
-}
-
 func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
 	input := &securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
