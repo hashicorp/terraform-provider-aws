@@ -1,7 +1,0 @@
-```release-note:enhancement
-resource/aws_appconfig_configuration_profile: kms_key_identifier is added to enable use of CMK KMS keys
-```
-
-```release-note:enhancement
-resource/aws_appconfig_deployment: kms_key_identifier is added to enable use of CMK KMS keys
-```

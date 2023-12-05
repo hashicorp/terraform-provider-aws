@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
       tags: {
         Type: "AppConfig Deployment",
       },
-  });
+    });
   }
 }
 
