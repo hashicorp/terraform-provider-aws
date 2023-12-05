@@ -48,6 +48,7 @@ const (
 	DocDBElasticEndpointID               = "docdb-elastic"
 	ControlTowerEndpointID               = "controltower"
 	DSEndpointID                         = "ds"
+	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
 	EMRServerlessEndpointID              = "emrserverless"

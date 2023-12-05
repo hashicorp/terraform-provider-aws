@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,6 +66,8 @@ func resourceKeyspace() *schema.Resource {
 }
 
 func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	name := d.Get("name").(string)
@@ -76,7 +79,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreateKeyspace(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Keyspaces Keyspace (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Keyspaces Keyspace (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -86,13 +89,15 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Keyspaces Keyspace (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Keyspace (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceKeyspaceRead(ctx, d, meta)
+	return append(diags, resourceKeyspaceRead(ctx, d, meta)...)
 }
 
 func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspace, err := findKeyspaceByName(ctx, conn, d.Id())
@@ -100,17 +105,17 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Keyspaces Keyspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", keyspace.ResourceArn)
 	d.Set("name", keyspace.KeyspaceName)
 
-	return nil
+	return diags
 }
 
 func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -119,6 +124,8 @@ func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
@@ -131,11 +138,11 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		"a table under it is currently being created or deleted")
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
@@ -143,10 +150,10 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Keyspaces Keyspace (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Keyspace (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findKeyspaceByName(ctx context.Context, conn *keyspaces.Client, name string) (*keyspaces.GetKeyspaceOutput, error) {

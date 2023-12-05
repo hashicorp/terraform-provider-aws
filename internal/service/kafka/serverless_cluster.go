@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -125,6 +126,8 @@ func ResourceServerlessCluster() *schema.Resource {
 }
 
 func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	name := d.Get("cluster_name").(string)
@@ -140,19 +143,21 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 	output, err := conn.CreateClusterV2WithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MSK Serverless Cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Serverless Cluster (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ClusterArn))
 
 	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MSK Serverless Cluster (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Serverless Cluster (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceServerlessClusterRead(ctx, d, meta)
+	return append(diags, resourceServerlessClusterRead(ctx, d, meta)...)
 }
 
 func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindServerlessClusterByARN(ctx, conn, d.Id())
@@ -160,18 +165,18 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK Serverless Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MSK Serverless Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Serverless Cluster (%s): %s", d.Id(), err)
 	}
 
 	clusterARN := aws.StringValue(cluster.ClusterArn)
 	d.Set("arn", clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
-			return diag.Errorf("setting client_authentication: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
 		}
 	} else {
 		d.Set("client_authentication", nil)
@@ -180,12 +185,12 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
 	if err := d.Set("vpc_config", flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
-		return diag.Errorf("setting vpc_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceServerlessClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

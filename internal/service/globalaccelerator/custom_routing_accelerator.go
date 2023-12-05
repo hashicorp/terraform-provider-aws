@@ -294,7 +294,7 @@ func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.Resou
 	_, err := conn.UpdateCustomRoutingAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -311,7 +311,7 @@ func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.Resou
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
