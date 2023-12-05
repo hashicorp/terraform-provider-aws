@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
@@ -96,14 +97,32 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
+	autoEnableControls := d.Get("auto_enable_controls").(bool)
 	inputU := &securityhub.UpdateSecurityHubConfigurationInput{
-		AutoEnableControls: aws.Bool(d.Get("auto_enable_controls").(bool)),
+		AutoEnableControls: aws.Bool(autoEnableControls),
 	}
 
 	_, err = conn.UpdateSecurityHubConfiguration(ctx, inputU)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
+	}
+
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, autoEnableControls, func() (bool, error) {
+		output, err := FindHub(ctx, meta.(*conns.AWSClient))
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.ToBool(output.AutoEnableControls), nil
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Account (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
