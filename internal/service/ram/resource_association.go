@@ -157,7 +157,18 @@ func GetResourceShareAssociation(ctx context.Context, conn *ram.RAM, resourceSha
 		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
 	}
 
-	output, err := conn.GetResourceShareAssociationsWithContext(ctx, input)
+	var output []*ram.ResourceShareAssociation
+	err := conn.GetResourceShareAssociationsPagesWithContext(ctx, input, func(page *ram.GetResourceShareAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ResourceShareAssociations {
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 		return nil, &retry.NotFoundError{
@@ -170,11 +181,11 @@ func GetResourceShareAssociation(ctx context.Context, conn *ram.RAM, resourceSha
 		return nil, err
 	}
 
-	switch count := len(output.ResourceShareAssociations); count {
+	switch count := len(output); count {
 	case 0:
 		return nil, tfresource.NewEmptyResultError(input)
 	case 1:
-		return output.ResourceShareAssociations[0], nil
+		return output[0], nil
 	default:
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
