@@ -304,6 +304,10 @@ func testAccDataLakeConfigBaseConfig(rName string) string {
 
 
 
+
+
+
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "meta_store_manager" {
@@ -468,9 +472,9 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 }
 
 resource "aws_kms_key" "test" {
-	deletion_window_in_days = 7
-  
-	policy = <<POLICY
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Id": "kms-tf-1",
@@ -495,12 +499,13 @@ func testAccDataLakeConfig_basic(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
 
+
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configurations {
     region = "eu-west-1"
-	
+
   }
   tags = {
     Name = %[1]q
@@ -515,6 +520,8 @@ func testAccDataLakeConfig_lifeCycle(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
 
 
+
+
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -522,7 +529,7 @@ resource "aws_securitylake_data_lake" "test" {
     region = "eu-west-1"
 
     encryption_configuration {
-		kms_key_id = aws_kms_key.test.id
+      kms_key_id = aws_kms_key.test.id
     }
 
     lifecycle_configuration {
@@ -551,6 +558,7 @@ func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
 
+
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -558,7 +566,7 @@ resource "aws_securitylake_data_lake" "test" {
     region = "eu-west-1"
 
     encryption_configuration {
-		kms_key_id = aws_kms_key.test.id
+      kms_key_id = aws_kms_key.test.id
     }
 
     lifecycle_configuration {
