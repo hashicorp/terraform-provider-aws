@@ -159,7 +159,6 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 }
 
 func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociation(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
-
 	in := &shield.UpdateEmergencyContactSettingsInput{
 		EmergencyContactList: emergencyContactsList,
 	}

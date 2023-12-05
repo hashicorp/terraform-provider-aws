@@ -14,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldProactiveEngagementAssociation_basic(t *testing.T) {
@@ -24,6 +23,9 @@ func TestAccShieldProactiveEngagementAssociation_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	domain := acctest.RandomDomainName()
+	address1 := acctest.RandomEmailAddress(domain)
+	address2 := acctest.RandomEmailAddress(domain)
 
 	var proactiveengagementassociation shield.DescribeEmergencyContactSettingsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -38,7 +40,7 @@ func TestAccShieldProactiveEngagementAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProactiveEngagementAssociationConfig_basic(rName),
+				Config: testAccProactiveEngagementAssociationConfig_basic(rName, address1, address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
 				),
@@ -53,6 +55,10 @@ func TestAccShieldProactiveEngagementAssociation_disabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	domain := acctest.RandomDomainName()
+	address1 := acctest.RandomEmailAddress(domain)
+	address2 := acctest.RandomEmailAddress(domain)
+
 	var proactiveengagementassociation shield.DescribeEmergencyContactSettingsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_proactive_engagement_association.test"
@@ -66,7 +72,7 @@ func TestAccShieldProactiveEngagementAssociation_disabled(t *testing.T) {
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProactiveEngagementAssociationConfig_disabled(rName),
+				Config: testAccProactiveEngagementAssociationConfig_disabled(rName, address1, address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
 				),
@@ -82,6 +88,10 @@ func TestAccShieldProactiveEngagementAssociation_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	domain := acctest.RandomDomainName()
+	address1 := acctest.RandomEmailAddress(domain)
+	address2 := acctest.RandomEmailAddress(domain)
+
 	var proactiveengagementassociation shield.DescribeEmergencyContactSettingsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_proactive_engagement_association.test"
@@ -95,7 +105,7 @@ func TestAccShieldProactiveEngagementAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProactiveEngagementAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProactiveEngagementAssociationConfig_basic(rName),
+				Config: testAccProactiveEngagementAssociationConfig_basic(rName, address1, address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProactiveEngagementAssociation, resourceName),
@@ -174,9 +184,9 @@ func testAccPreCheckProactiveEngagement(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccProactiveEngagementAssociationConfig_basic(rName string) string {
+func testAccProactiveEngagementAssociationConfig_basic(rName string, email1 string, email2 string) string {
 	return fmt.Sprintf(`
-  data "aws_partition" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -210,23 +220,23 @@ resource "aws_shield_proactive_engagement_association" "test" {
   enabled = true
   emergency_contacts {
     contact_notes = "Notes"
-    email_address = "test@company.com"
-    phone_number = "+12358132134"
+    email_address = %[2]q
+    phone_number  = "+12358132134"
   }
   emergency_contacts {
     contact_notes = "Notes 2"
-    email_address = "test2@company.com"
-    phone_number = "+12358132134"
+    email_address = %[3]q
+    phone_number  = "+12358132134"
   }
   depends_on = [aws_shield_drt_access_role_arn_association.test]
 }
 
-`, rName)
+`, rName, email1, email2)
 }
 
-func testAccProactiveEngagementAssociationConfig_disabled(rName string) string {
+func testAccProactiveEngagementAssociationConfig_disabled(rName string, email1 string, email2 string) string {
 	return fmt.Sprintf(`
-  data "aws_partition" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -260,16 +270,16 @@ resource "aws_shield_proactive_engagement_association" "test" {
   enabled = false
   emergency_contacts {
     contact_notes = "Notes"
-    email_address = "test@company.com"
-    phone_number = "+12358132134"
+    email_address = %[2]q
+    phone_number  = "+12358132134"
   }
   emergency_contacts {
     contact_notes = "Notes 2"
-    email_address = "test2@company.com"
-    phone_number = "+12358132134"
+    email_address = %[3]q
+    phone_number  = "+12358132134"
   }
   depends_on = [aws_shield_drt_access_role_arn_association.test]
 }
 
-`, rName)
+`, rName, email1, email2)
 }

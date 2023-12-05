@@ -70,7 +70,6 @@ The following arguments are required:
 * `enabled` - (Required) Boolean value indicating if Proactive Engagement should be enabled or nota
 * `emergency_contacts` - (Required) One or more emergency contacts are required if Proactive Engagement is to be enabled. See [`emergency_contacts`](#emergency_contacts).
 
-
 ### emergency_contacts
 
 * `email_address` - (Required) A valid email address that will be used for this contact.
