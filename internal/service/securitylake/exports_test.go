@@ -5,5 +5,7 @@ package securitylake
 
 // Exports for use in tests only.
 var (
-	ResourceDataLake = newResourceDataLake
+	ResourceDataLake = newDataLakeResource
+
+	FindDataLakeByARN = findDataLakeByARN
 )

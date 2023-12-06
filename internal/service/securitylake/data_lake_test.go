@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityLakeDataLake_basic(t *testing.T) {
+func testAccDataLake_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -31,208 +31,54 @@ func TestAccSecurityLakeDataLake_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn", "tags"},
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
 			},
 		},
 	})
 }
 
-func TestAccSecurityLakeDataLake_lifeCycle(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_securitylake_data_lake.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataLakeConfig_lifeCycle(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.days", "80"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn", "tags"},
-			},
-		},
-	})
-}
-
-func TestAccSecurityLakeDataLake_lifeCycleUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_securitylake_data_lake.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataLakeConfig_lifeCycle(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.days", "80"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn", "tags"},
-			},
-			{
-				Config: testAccDataLakeConfig_lifeCycleUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn", "tags"},
-			},
-		},
-	})
-}
-
-func TestAccSecurityLakeDataLake_replication(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_securitylake_data_lake.region_2"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataLakeConfig_replication(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.transitions.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.lifecycle_configuration.0.expiration.0.days", "300"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.replication_configuration.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "configurations.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configurations.0.replication_configuration.0.regions.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn", "tags"},
-			},
-		},
-	})
-}
-
-func TestAccSecurityLakeDataLake_disappears(t *testing.T) {
+func testAccDataLake_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -248,6 +94,230 @@ func TestAccSecurityLakeDataLake_disappears(t *testing.T) {
 	})
 }
 
+func testAccDataLake_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var datalake types.DataLakeResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+			{
+				Config: testAccDataLakeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDataLakeConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataLake_lifeCycle(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var datalake types.DataLakeResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_lifeCycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
+func testAccDataLake_lifeCycleUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var datalake types.DataLakeResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_lifeCycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+			{
+				Config: testAccDataLakeConfig_lifeCycleUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
+func testAccDataLake_replication(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var datalake types.DataLakeResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.region_2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_replication(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.0.regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.replication_configuration.0.regions.*", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
 func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
@@ -257,7 +327,7 @@ func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfsecuritylake.FindDataLakeByID(ctx, conn, rs.Primary.ID)
+			_, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -286,7 +356,7 @@ func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *type
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-		resp, err := tfsecuritylake.FindDataLakeByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, rs.Primary.ID, err)
 		}
@@ -297,18 +367,10 @@ func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *type
 	}
 }
 
-func testAccDataLakeConfigBaseConfig(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return fmt.Sprintf(`
-
-
-
-
-
-
-
-
+func testAccDataLakeConfigConfig_base(rName string) string {
+	return `
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "meta_store_manager" {
   name               = "AmazonSecurityLakeMetaStoreManager"
@@ -330,9 +392,6 @@ resource "aws_iam_role" "meta_store_manager" {
 ]
 }
 POLICY
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_iam_role_policy" "meta_store_manager" {
@@ -351,7 +410,7 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"logs:PutLogEvents"
 		],
 		"Resource": [
-			"arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
+			"arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
 		]
 		},
 		{
@@ -361,7 +420,7 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"logs:CreateLogGroup"
 		],
 		"Resource": [
-			"arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
+			"arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
 		]
 		},
 		{
@@ -372,9 +431,9 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"glue:BatchCreatePartition"
 		],
 		"Resource": [
-			"arn:aws:glue:*:*:table/amazon_security_lake_glue_db*/*",
-			"arn:aws:glue:*:*:database/amazon_security_lake_glue_db*",
-			"arn:aws:glue:*:*:catalog"
+			"arn:${data.aws_partition.current.partition}:glue:*:*:table/amazon_security_lake_glue_db*/*",
+			"arn:${data.aws_partition.current.partition}:glue:*:*:database/amazon_security_lake_glue_db*",
+			"arn:${data.aws_partition.current.partition}:glue:*:*:catalog"
 		]
 		},
 		{
@@ -386,7 +445,7 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"sqs:GetQueueAttributes"
 		],
 		"Resource": [
-			"arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
+			"arn:${data.aws_partition.current.partition}:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
 		]
 		}
 	]
@@ -409,9 +468,6 @@ resource "aws_iam_role" "datalake_s3_replication" {
   }]
 }
 POLICY
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_iam_role_policy" "datalake_s3_replication" {
@@ -436,8 +492,8 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 			],
 			"Effect": "Allow",
 			"Resource": [
-				"arn:aws:s3:::aws-security-data-lake*",
-				"arn:aws:s3:::aws-security-data-lake*/*"
+				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*",
+				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
 			],
 			"Condition": {
 				"StringEquals": {
@@ -456,7 +512,7 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 			],
 			"Effect": "Allow",
 			"Resource": [
-				"arn:aws:s3:::aws-security-data-lake*/*"
+				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
 			],
 			"Condition": {
 				"StringEquals": {
@@ -468,76 +524,92 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 		}
 	]
 }
-  EOF
+EOF
 }
-
-resource "aws_kms_key" "test" {
-  deletion_window_in_days = 7
-
-  policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Id": "kms-tf-1",
-	"Statement": [
-		{
-		"Sid": "Enable IAM User Permissions",
-		"Effect": "Allow",
-		"Principal": {
-			"AWS": "*"
-		},
-		"Action": "kms:*",
-		"Resource": "*"
-		}
-	]
-	}
-	POLICY
-}
-`, rName)
+`
 }
 
 func testAccDataLakeConfig_basic(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
-
-
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
-    region = "eu-west-1"
+  configuration {
+    region = %[2]q
 
+    encryption_configuration {
+      kms_key_id = "S3_MANAGED_KEY"
+    }
   }
-  tags = {
-    Name = %[1]q
-  }
+
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName))
+`, rName, acctest.Region()))
+}
+
+func testAccDataLakeConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
+
+  configuration {
+    region = %[4]q
+
+    encryption_configuration {
+      kms_key_id = "S3_MANAGED_KEY"
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_iam_role.meta_store_manager]
+}
+`, rName, tag1Key, tag1Value, acctest.Region()))
+}
+
+func testAccDataLakeConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
+
+  configuration {
+    region = %[6]q
+
+    encryption_configuration {
+      kms_key_id = "S3_MANAGED_KEY"
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_iam_role.meta_store_manager]
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value, acctest.Region()))
 }
 
 func testAccDataLakeConfig_lifeCycle(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
-
-
-
-
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
-    region = "eu-west-1"
+  configuration {
+    region = %[2]q
 
     encryption_configuration {
-      kms_key_id = aws_kms_key.test.id
+      kms_key_id = "S3_MANAGED_KEY"
     }
 
     lifecycle_configuration {
-      transitions {
+      transition {
         days          = 31
         storage_class = "STANDARD_IA"
       }
-      transitions {
+      transition {
         days          = 80
         storage_class = "ONEZONE_IA"
       }
@@ -546,31 +618,30 @@ resource "aws_securitylake_data_lake" "test" {
       }
     }
   }
+
   tags = {
     Name = %[1]q
   }
+
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName))
+`, rName, acctest.Region()))
 }
 
 func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
-
-
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
-    region = "eu-west-1"
+  configuration {
+    region = %[2]q
 
     encryption_configuration {
-      kms_key_id = aws_kms_key.test.id
+      kms_key_id = "S3_MANAGED_KEY"
     }
 
     lifecycle_configuration {
-      transitions {
+      transition {
         days          = 31
         storage_class = "STANDARD_IA"
       }
@@ -579,27 +650,30 @@ resource "aws_securitylake_data_lake" "test" {
       }
     }
   }
+
   tags = {
     Name = %[1]q
   }
+
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName))
+`, rName, acctest.Region()))
 }
 
 func testAccDataLakeConfig_replication(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), fmt.Sprintf(`
-
-
 resource "aws_securitylake_data_lake" "region_2" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
-  configurations {
-    region = "eu-west-2"
+  configuration {
+    region = %[3]q
+
+    encryption_configuration {
+      kms_key_id = "S3_MANAGED_KEY"
+    }
 
     lifecycle_configuration {
-      transitions {
+      transition {
         days          = 31
         storage_class = "STANDARD_IA"
       }
@@ -609,13 +683,15 @@ resource "aws_securitylake_data_lake" "region_2" {
     }
     replication_configuration {
       role_arn = aws_iam_role.datalake_s3_replication.arn
-      regions  = ["eu-west-1"]
+      regions  = [%[2]q]
     }
   }
+
   tags = {
     Name = %[1]q
   }
+
   depends_on = [aws_iam_role.meta_store_manager, aws_iam_role.datalake_s3_replication, aws_securitylake_data_lake.test]
 }
-`, rName))
+`, rName, acctest.Region(), acctest.AlternateRegion()))
 }

@@ -130,7 +130,7 @@ func (t setNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slic
 	return nil, diags
 }
 
-// SetNestedObjectValueOf represents a Terraform Plugin Framework Set value whose elements are of type ObjectTypeOf.
+// SetNestedObjectValueOf represents a Terraform Plugin Framework Set value whose elements are of type `ObjectTypeOf[T]`.
 type SetNestedObjectValueOf[T any] struct {
 	basetypes.SetValue
 }
