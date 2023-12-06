@@ -281,9 +281,9 @@ func ResourceLoadBalancer() *schema.Resource {
 			},
 			"subnets": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -331,7 +331,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-lb-"),
 	).Generate()
-	exist, err := FindLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
+	exist, err := findLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
 		Names: aws.StringSlice([]string{name}),
 	})
 
@@ -431,6 +431,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := flattenResource(ctx, d, meta, lb); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }
 
@@ -695,7 +696,7 @@ func FindLoadBalancerByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (
 		LoadBalancerArns: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := FindLoadBalancer(ctx, conn, input)
+	output, err := findLoadBalancer(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -711,7 +712,17 @@ func FindLoadBalancerByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (
 	return output, nil
 }
 
-func FindLoadBalancers(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeLoadBalancersInput) ([]*elbv2.LoadBalancer, error) {
+func findLoadBalancer(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeLoadBalancersInput) (*elbv2.LoadBalancer, error) {
+	output, err := findLoadBalancers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findLoadBalancers(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeLoadBalancersInput) ([]*elbv2.LoadBalancer, error) {
 	var output []*elbv2.LoadBalancer
 
 	err := conn.DescribeLoadBalancersPagesWithContext(ctx, input, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
@@ -720,7 +731,7 @@ func FindLoadBalancers(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Desc
 		}
 
 		for _, v := range page.LoadBalancers {
-			if v != nil {
+			if v != nil && v.State != nil {
 				output = append(output, v)
 			}
 		}
@@ -742,25 +753,32 @@ func FindLoadBalancers(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Desc
 	return output, nil
 }
 
-func FindLoadBalancer(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeLoadBalancersInput) (*elbv2.LoadBalancer, error) {
-	output, err := FindLoadBalancers(ctx, conn, input)
+func FindLoadBalancerAttributesByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) ([]*elbv2.LoadBalancerAttribute, error) {
+	input := &elbv2.DescribeLoadBalancerAttributesInput{
+		LoadBalancerArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil || output[0].State == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
+	return output.Attributes, nil
 }
 
-func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string) retry.StateRefreshFunc {
+func statusLoadBalancer(ctx context.Context, conn *elbv2.ELBV2, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLoadBalancerByARN(ctx, conn, arn)
 
@@ -780,7 +798,7 @@ func waitLoadBalancerActive(ctx context.Context, conn *elbv2.ELBV2, arn string, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{elbv2.LoadBalancerStateEnumProvisioning, elbv2.LoadBalancerStateEnumFailed},
 		Target:     []string{elbv2.LoadBalancerStateEnumActive},
-		Refresh:    statusLoadBalancerState(ctx, conn, arn),
+		Refresh:    statusLoadBalancer(ctx, conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting

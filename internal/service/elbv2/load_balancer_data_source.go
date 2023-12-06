@@ -202,7 +202,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	results, err := FindLoadBalancers(ctx, conn, input)
+	results, err := findLoadBalancers(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancers: %s", err)

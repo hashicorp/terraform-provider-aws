@@ -42,7 +42,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	results, err := FindLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
+	results, err := findLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
