@@ -257,6 +257,14 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
 	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
 
+	// Transparent tagging fails with "ResourceNotFoundException: The request failed because the specified resource doesn't exist."
+	// if the data lake's AWS Region isn't the configured one.
+	if region := configuration.Region.ValueString(); region != r.Meta().Region {
+		if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
+			setTagsOut(ctx, Tags(tags))
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
