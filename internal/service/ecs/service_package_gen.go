@@ -50,7 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccountSettingDefault,
+			Factory:  resourceAccountSettingDefault,
 			TypeName: "aws_ecs_account_setting_default",
 		},
 		{
