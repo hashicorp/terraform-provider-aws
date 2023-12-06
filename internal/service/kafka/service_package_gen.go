@@ -5,6 +5,8 @@ package kafka
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
@@ -41,6 +43,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceVersion,
 			TypeName: "aws_msk_kafka_version",
 		},
+		{
+			Factory:  DataSourceVPCConnection,
+			TypeName: "aws_msk_vpc_connection",
+			Name:     "VPC Connection",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
@@ -55,8 +63,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceClusterPolicy,
+			TypeName: "aws_msk_cluster_policy",
+			Name:     "Cluster Policy",
+		},
+		{
 			Factory:  ResourceConfiguration,
 			TypeName: "aws_msk_configuration",
+		},
+		{
+			Factory:  ResourceReplicator,
+			TypeName: "aws_msk_replicator",
+			Name:     "Replicator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceScramSecretAssociation,
@@ -66,6 +87,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceServerlessCluster,
 			TypeName: "aws_msk_serverless_cluster",
 			Name:     "Serverless Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVPCConnection,
+			TypeName: "aws_msk_vpc_connection",
+			Name:     "VPC Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
@@ -82,6 +111,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*k
 	sess := config["session"].(*session_sdkv1.Session)
 
 	return kafka_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kafka_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return kafka_sdkv2.NewFromConfig(cfg, func(o *kafka_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

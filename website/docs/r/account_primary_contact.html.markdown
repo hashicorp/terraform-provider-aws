@@ -29,7 +29,7 @@ resource "aws_account_primary_contact" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
 * `address_line_1` - (Required) The first line of the primary contact address.
@@ -45,14 +45,23 @@ The following arguments are supported:
 * `state_or_region` - (Optional) The state or region of the primary contact address. This field is required in selected countries.
 * `website_url` - (Optional) The URL of the website associated with the primary contact information, if any.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The Primary Contact can be imported using the `account_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Primary Contact using the `account_id`. For example:
 
+```terraform
+import {
+  to = aws_account_primary_contact.test
+  id = "1234567890"
+}
 ```
-$ terraform import aws_account_primary_contact.test 1234567890
+
+Using `terraform import`, import the Primary Contact using the `account_id`. For example:
+
+```console
+% terraform import aws_account_primary_contact.test 1234567890
 ```

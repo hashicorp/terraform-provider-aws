@@ -254,7 +254,7 @@ func cascadingControlConfigurationSchema() *schema.Schema {
 					MaxItems: 200,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_to_match": columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column_to_match": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"source_sheet_control_id": {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -1209,7 +1209,7 @@ func flattenFontConfiguration(apiObject *quicksight.FontConfiguration) []interfa
 }
 
 func flattenFontSize(apiObject *quicksight.FontSize) []interface{} {
-	if apiObject == nil {
+	if apiObject == nil || apiObject.Relative == nil {
 		return nil
 	}
 
@@ -1222,7 +1222,7 @@ func flattenFontSize(apiObject *quicksight.FontSize) []interface{} {
 }
 
 func flattenFontWeight(apiObject *quicksight.FontWeight) []interface{} {
-	if apiObject == nil {
+	if apiObject == nil || apiObject.Name == nil {
 		return nil
 	}
 

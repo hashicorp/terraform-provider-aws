@@ -27,8 +27,8 @@ The following arguments are required:
 
 * `statemachine_arn` - (Required) ARN of the State Machine.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `statemachine_versions` - ARN List identifying the statemachine versions.

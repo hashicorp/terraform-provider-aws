@@ -9,10 +9,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -20,7 +20,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,6 +29,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,9 +50,8 @@ func ResourceLoadBalancer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		// Subnets are ForceNew for Network Load Balancers
 		CustomizeDiff: customdiff.Sequence(
-			customizeDiffNLBSubnets,
+			customizeDiffNLB,
 			verify.SetTagsDiff,
 		),
 
@@ -120,6 +119,17 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dns_record_client_routing_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "any_availability_zone",
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
+				ValidateFunc: validation.StringInSlice([]string{
+					"availability_zone_affinity",
+					"partial_availability_zone_affinity",
+					"any_availability_zone",
+				}, false),
+			},
 			"drop_invalid_header_fields": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -161,6 +171,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
+			"enforce_security_group_inbound_rules_on_private_link_traffic": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringInSlice(elbv2.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum_Values(), false),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
+			},
 			"idle_timeout": {
 				Type:             schema.TypeInt,
 				Optional:         true,
@@ -197,6 +214,7 @@ func ResourceLoadBalancer() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
@@ -209,9 +227,9 @@ func ResourceLoadBalancer() *schema.Resource {
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
 				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"subnet_mapping": {
 				Type:     schema.TypeSet,
@@ -308,14 +326,23 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = id.PrefixedUniqueId(v.(string))
-	} else {
-		name = id.PrefixedUniqueId("tf-lb-")
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-lb-"),
+	).Generate()
+	exist, err := FindLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
+		Names: aws.StringSlice([]string{name}),
+	})
+
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s): %s", name, err)
 	}
+
+	if exist != nil {
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Load Balancer (%s) already exists", name)
+	}
+
 	d.Set("name", name)
 
 	lbType := d.Get("load_balancer_type").(string)
@@ -515,7 +542,21 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			})
 		}
 
-	case elbv2.LoadBalancerTypeEnumGateway, elbv2.LoadBalancerTypeEnumNetwork:
+	case elbv2.LoadBalancerTypeEnumGateway:
+		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
+			})
+		}
+
+	case elbv2.LoadBalancerTypeEnumNetwork:
+		if d.HasChange("dns_record_client_routing_policy") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("dns_record.client_routing_policy"),
+				Value: aws.String(d.Get("dns_record_client_routing_policy").(string)),
+			})
+		}
 		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
@@ -547,7 +588,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				break
 			}
 
-			re := regexp.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
+			re := regexache.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
 			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
 				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[2], err)
 				input.Attributes = removeAttribute(input.Attributes, sm[2])
@@ -562,13 +603,20 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", "security_groups") {
 		sgs := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
 			SecurityGroups:  sgs,
 		}
+
+		if v := d.Get("load_balancer_type"); v == elbv2.LoadBalancerTypeEnumNetwork {
+			if v, ok := d.GetOk("enforce_security_group_inbound_rules_on_private_link_traffic"); ok {
+				params.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic = aws.String(v.(string))
+			}
+		}
+
 		_, err := conn.SetSecurityGroupsWithContext(ctx, params)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "failure Setting LB Security Groups: %s", err)
@@ -846,7 +894,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbA
 }
 
 func getLBNameFromARN(arn string) (string, error) {
-	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
+	re := regexache.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
 		return "", fmt.Errorf("unexpected ARN format: %q", arn)
@@ -856,14 +904,10 @@ func getLBNameFromARN(arn string) (string, error) {
 	return matches[1], nil
 }
 
-// flattenSubnetsFromAvailabilityZones creates a slice of strings containing the subnet IDs
-// for the ALB based on the AvailabilityZones structure returned by the API.
 func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []string {
-	var result []string
-	for _, az := range availabilityZones {
-		result = append(result, aws.StringValue(az.SubnetId))
-	}
-	return result
+	return tfslices.ApplyToAll(availabilityZones, func(v *elbv2.AvailabilityZone) string {
+		return aws.StringValue(v.SubnetId)
+	})
 }
 
 func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
@@ -889,7 +933,7 @@ func SuffixFromARN(arn *string) string {
 		return ""
 	}
 
-	if arnComponents := regexp.MustCompile(`arn:.*:loadbalancer/(.*)`).FindAllStringSubmatch(*arn, -1); len(arnComponents) == 1 {
+	if arnComponents := regexache.MustCompile(`arn:.*:loadbalancer/(.*)`).FindAllStringSubmatch(*arn, -1); len(arnComponents) == 1 {
 		if len(arnComponents[0]) == 2 {
 			return arnComponents[0][1]
 		}
@@ -906,10 +950,12 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set("dns_name", lb.DNSName)
+	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
 	d.Set("name", lb.LoadBalancerName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
@@ -943,6 +989,10 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
 			accessLogMap["prefix"] = aws.StringValue(attr.Value)
+		case "dns_record.client_routing_policy":
+			dnsClientRoutingPolicy := aws.StringValue(attr.Value)
+			log.Printf("[DEBUG] Setting NLB DNS Record Client Routing Policy: %s", dnsClientRoutingPolicy)
+			d.Set("dns_record_client_routing_policy", dnsClientRoutingPolicy)
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
@@ -1000,14 +1050,17 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	return nil
 }
 
-// Load balancers of type 'network' cannot have their subnets updated at
-// this time. If the type is 'network' and subnets have changed, mark the
-// diff as a ForceNew operation
-func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+// Load balancers of type 'network' cannot have their subnets updated,
+// cannot have security groups added if none are present, and cannot have
+// all security groups removed. If the type is 'network' and any of these
+// conditions are met, mark the diff as a ForceNew operation.
+func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")
 	// - there are actual changes to be made in the subnets
+	//   OR security groups are being added where none currently exist
+	//   OR all security groups are being removed
 	//
 	// Any other combination should be treated as normal. At this time, subnet
 	// handling is the only known difference between Network Load Balancers and
@@ -1022,26 +1075,26 @@ func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v int
 		return nil
 	}
 
+	// Get diff for subnets.
 	o, n := diff.GetChange("subnets")
-	if o == nil {
-		o = new(schema.Set)
-	}
-	if n == nil {
-		n = new(schema.Set)
-	}
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-	remove := os.Difference(ns).List()
-	add := ns.Difference(os).List()
-	if len(remove) > 0 || len(add) > 0 {
-		if err := diff.SetNew("subnets", n); err != nil {
-			return err
-		}
+	os, ns := o.(*schema.Set), n.(*schema.Set)
 
+	if add, del := ns.Difference(os).List(), os.Difference(ns).List(); len(del) > 0 || len(add) > 0 {
 		if err := diff.ForceNew("subnets"); err != nil {
 			return err
 		}
 	}
+
+	// Get diff for security groups.
+	o, n = diff.GetChange("security_groups")
+	os, ns = o.(*schema.Set), n.(*schema.Set)
+
+	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
+		if err := diff.ForceNew("security_groups"); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

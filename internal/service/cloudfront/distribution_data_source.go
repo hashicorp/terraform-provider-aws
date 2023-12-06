@@ -61,7 +61,10 @@ func DataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"web_acl_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchema(),
 		},
 	}
@@ -89,6 +92,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
+			d.Set("web_acl_id", distributionConfig.WebACLId)
 			if aliases := distributionConfig.Aliases; aliases != nil {
 				d.Set("aliases", aliases.Items)
 			}

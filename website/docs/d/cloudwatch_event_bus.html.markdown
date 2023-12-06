@@ -24,6 +24,8 @@ data "aws_cloudwatch_event_bus" "example" {
 
 * `name` - (Required) Friendly EventBridge event bus name.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN.

@@ -6,9 +6,9 @@ package secretsmanager
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_secretsmanager_secret_rotation")
@@ -37,8 +38,9 @@ func ResourceSecretRotation() *schema.Resource {
 				Computed: true,
 			},
 			"rotation_lambda_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"rotation_rules": {
 				Type:     schema.TypeList,
@@ -61,14 +63,14 @@ func ResourceSecretRotation() *schema.Resource {
 						"duration": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`[0-9h]+`), ""),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
 						},
 						"schedule_expression": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
 						},
 					},
 				},
@@ -87,24 +89,25 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	secretID := d.Get("secret_id").(string)
 
-	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
-		input := &secretsmanager.RotateSecretInput{
-			RotationLambdaARN: aws.String(v.(string)),
-			RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
-			SecretId:          aws.String(secretID),
-		}
-
-		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-			return conn.RotateSecretWithContext(ctx, input)
-		}, "AccessDeniedException")
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret Rotation (%s): %s", secretID, err)
-		}
-
-		d.SetId(aws.StringValue(outputRaw.(*secretsmanager.RotateSecretOutput).ARN))
+	input := &secretsmanager.RotateSecretInput{
+		RotationRules: expandRotationRules(d.Get("rotation_rules").([]interface{})),
+		SecretId:      aws.String(secretID),
 	}
+
+	if v, ok := d.GetOk("rotation_lambda_arn"); ok {
+		input.RotationLambdaARN = aws.String(v.(string))
+	}
+
+	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.RotateSecretWithContext(ctx, input)
+	}, "AccessDeniedException")
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret Rotation (%s): %s", secretID, err)
+	}
+
+	d.SetId(aws.StringValue(outputRaw.(*secretsmanager.RotateSecretOutput).ARN))
 
 	return append(diags, resourceSecretRotationRead(ctx, d, meta)...)
 }
@@ -150,31 +153,22 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 	secretID := d.Get("secret_id").(string)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
-		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
-			input := &secretsmanager.RotateSecretInput{
-				RotationLambdaARN: aws.String(v.(string)),
-				RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
-				SecretId:          aws.String(secretID),
-			}
+		input := &secretsmanager.RotateSecretInput{
+			RotationRules: expandRotationRules(d.Get("rotation_rules").([]interface{})),
+			SecretId:      aws.String(secretID),
+		}
 
-			// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-				return conn.RotateSecretWithContext(ctx, input)
-			}, "AccessDeniedException")
+		if v, ok := d.GetOk("rotation_lambda_arn"); ok {
+			input.RotationLambdaARN = aws.String(v.(string))
+		}
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
-			}
-		} else {
-			input := &secretsmanager.CancelRotateSecretInput{
-				SecretId: aws.String(d.Id()),
-			}
+		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+			return conn.RotateSecretWithContext(ctx, input)
+		}, "AccessDeniedException")
 
-			_, err := conn.CancelRotateSecretWithContext(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "cancelling Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
-			}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
 		}
 	}
 

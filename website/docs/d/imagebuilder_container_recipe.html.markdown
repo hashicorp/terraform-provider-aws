@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `arn` - (Required) ARN of the container recipe.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `component` - List of objects with components for the container recipe.
     * `component_arn` - ARN of the Image Builder Component.

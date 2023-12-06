@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package wafv2
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_wafv2_ip_set", &resource.Sweeper{
 		Name: "aws_wafv2_ip_set",
 		F:    sweepIPSets,
@@ -81,7 +79,7 @@ func sweepIPSets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 IPSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -90,7 +88,7 @@ func sweepIPSets(region string) error {
 		return fmt.Errorf("error listing WAFv2 IPSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 IPSets (%s): %w", region, err)
@@ -130,7 +128,7 @@ func sweepRegexPatternSets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 RegexPatternSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -139,7 +137,7 @@ func sweepRegexPatternSets(region string) error {
 		return fmt.Errorf("error listing WAFv2 RegexPatternSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 RegexPatternSets (%s): %w", region, err)
@@ -179,7 +177,7 @@ func sweepRuleGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 RuleGroup sweep for %s: %s", region, err)
 		return nil
 	}
@@ -188,7 +186,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error listing WAFv2 RuleGroups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 RuleGroups (%s): %w", region, err)
@@ -238,7 +236,7 @@ func sweepWebACLs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 WebACL sweep for %s: %s", region, err)
 		return nil
 	}
@@ -247,7 +245,7 @@ func sweepWebACLs(region string) error {
 		return fmt.Errorf("error listing WAFv2 WebACLs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 WebACLs (%s): %w", region, err)

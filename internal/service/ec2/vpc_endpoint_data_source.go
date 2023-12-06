@@ -64,6 +64,10 @@ func DataSourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"private_dns_only_for_inbound_resolver_endpoint": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},

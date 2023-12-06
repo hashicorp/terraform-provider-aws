@@ -235,7 +235,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T) {
 		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIds2(rName),
+				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -247,7 +247,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIds1(rName),
+				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
@@ -255,7 +255,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIds2(rName),
+				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
@@ -514,25 +514,7 @@ func testAccCheckTransitGatewayVPCAttachmentNotRecreated(i, j *ec2.TransitGatewa
 }
 
 func testAccTransitGatewayVPCAttachmentConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -544,7 +526,7 @@ resource "aws_ec2_transit_gateway" "test" {
 func testAccTransitGatewayVPCAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), `
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 }
@@ -555,7 +537,7 @@ func testAccTransitGatewayVPCAttachmentConfig_applianceModeSupport(rName, appMod
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   appliance_mode_support = %[2]q
-  subnet_ids             = [aws_subnet.test.id]
+  subnet_ids             = aws_subnet.test[*].id
   transit_gateway_id     = aws_ec2_transit_gateway.test.id
   vpc_id                 = aws_vpc.test.id
 
@@ -570,7 +552,7 @@ func testAccTransitGatewayVPCAttachmentConfig_dnsSupport(rName, dnsSupport strin
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   dns_support        = %[2]q
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
@@ -582,27 +564,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccTransitGatewayVPCAttachmentConfig_ipv6Support(rName, ipv6Support string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block = true
-  cidr_block                       = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -611,7 +573,7 @@ resource "aws_ec2_transit_gateway" "test" {
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   ipv6_support       = %[2]q
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
@@ -623,10 +585,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccTransitGatewayVPCAttachmentConfig_sharedTransitGateway(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountProvider(),
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 data "aws_organizations_organization" "test" {}
 
 resource "aws_ec2_transit_gateway" "test" {
@@ -657,28 +616,10 @@ resource "aws_ram_principal_association" "test" {
   resource_share_arn = aws_ram_resource_share.test.id
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
 
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
@@ -689,28 +630,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayVPCAttachmentConfig_subnetIds1(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccTransitGatewayVPCAttachmentConfig_subnetIDs1(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -729,28 +650,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayVPCAttachmentConfig_subnetIds2(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccTransitGatewayVPCAttachmentConfig_subnetIDs2(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -772,7 +673,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 func testAccTransitGatewayVPCAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
@@ -786,7 +687,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 func testAccTransitGatewayVPCAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
@@ -799,25 +700,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccTransitGatewayVPCAttachmentConfig_defaultRouteTableAssociationAndPropagationDisabled(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
@@ -828,7 +711,7 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = [aws_subnet.test.id]
+  subnet_ids                                      = aws_subnet.test[*].id
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
@@ -844,7 +727,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 func testAccTransitGatewayVPCAttachmentConfig_defaultRouteTableAssociation(rName string, transitGatewayDefaultRouteTableAssociation bool) string {
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = [aws_subnet.test.id]
+  subnet_ids                                      = aws_subnet.test[*].id
   transit_gateway_default_route_table_association = %[2]t
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   vpc_id                                          = aws_vpc.test.id
@@ -859,7 +742,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 func testAccTransitGatewayVPCAttachmentConfig_defaultRouteTablePropagation(rName string, transitGatewayDefaultRouteTablePropagation bool) string {
 	return acctest.ConfigCompose(testAccTransitGatewayVPCAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = [aws_subnet.test.id]
+  subnet_ids                                      = aws_subnet.test[*].id
   transit_gateway_default_route_table_propagation = %[2]t
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   vpc_id                                          = aws_vpc.test.id

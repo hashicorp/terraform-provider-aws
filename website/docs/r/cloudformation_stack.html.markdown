@@ -51,7 +51,7 @@ resource "aws_cloudformation_stack" "network" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Stack name.
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
@@ -72,9 +72,9 @@ The following arguments are supported:
 * `iam_role_arn` - (Optional) The ARN of an IAM role that AWS CloudFormation assumes to create the stack. If you don't specify a value, AWS CloudFormation uses the role that was previously associated with the stack. If no role is available, AWS CloudFormation uses a temporary session that is generated from your user credentials.
 * `timeout_in_minutes` - (Optional) The amount of time that can pass before the stack status becomes `CREATE_FAILED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.
@@ -90,8 +90,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudformation Stacks can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudformation Stacks using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudformation_stack.stack
+  id = "networking-stack"
+}
 ```
-$ terraform import aws_cloudformation_stack.stack networking-stack
+
+Using `terraform import`, import Cloudformation Stacks using the `name`. For example:
+
+```console
+% terraform import aws_cloudformation_stack.stack networking-stack
 ```

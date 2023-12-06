@@ -128,7 +128,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return lambda_sdkv2.NewFromConfig(cfg, func(o *lambda_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = lambda_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

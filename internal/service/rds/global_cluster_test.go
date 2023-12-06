@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestClusterIDRegionFromARN(t *testing.T) {
@@ -116,10 +117,10 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
-					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexp.MustCompile(`cluster-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 				),
 			},
@@ -148,7 +149,7 @@ func TestAccRDSGlobalCluster_disappears(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					testAccCheckGlobalClusterDisappears(ctx, &globalCluster1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceGlobalCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,62 +229,6 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 	})
 }
 
-func TestAccRDSGlobalCluster_Engine_aurora(t *testing.T) {
-	ctx := acctest.Context(t)
-	var globalCluster1 rds.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_global_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalClusterConfig_engine(rName, "aurora"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
-	ctx := acctest.Context(t)
-	var globalCluster1 rds.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_global_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -301,14 +246,13 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "13.4"),
 				),
 			},
 			{
-				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
@@ -342,17 +286,18 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.4"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.12.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.12.0"),
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.11.1"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "8.0.mysql_aurora.3.02.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.11.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.02.3"),
 				),
 			},
 			{
@@ -383,17 +328,18 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.5"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "8.0.mysql_aurora.3.03.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.03.0"),
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.7"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "8.0.mysql_aurora.3.03.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.07.7"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.03.1"),
 				),
 			},
 		},
@@ -419,17 +365,18 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora", "5.6.mysql_aurora.1.23.4"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.12.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.12.0"),
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.11.1"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "8.0.mysql_aurora.3.02.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.11.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.02.3"),
 				),
 			},
 		},
@@ -611,33 +558,22 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *rds.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Global Cluster ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		cluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
+		output, err := tfrds.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if cluster == nil {
-			return fmt.Errorf("RDS Global Cluster not found")
-		}
-
-		if aws.StringValue(cluster.Status) != "available" {
-			return fmt.Errorf("RDS Global Cluster (%s) exists in non-available (%s) state", rs.Primary.ID, aws.StringValue(cluster.Status))
-		}
-
-		*globalCluster = *cluster
+		*v = *output
 
 		return nil
 	}
@@ -652,9 +588,9 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			globalCluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
+			_, err := tfrds.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -662,31 +598,10 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			if globalCluster == nil {
-				continue
-			}
-
-			return fmt.Errorf("RDS Global Cluster (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(globalCluster.Status))
+			return fmt.Errorf("RDS Global Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-
-		input := &rds.DeleteGlobalClusterInput{
-			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
-		}
-
-		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		return tfrds.WaitForGlobalClusterDeletion(ctx, conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfrds.GlobalClusterClusterDeleteTimeout)
 	}
 }
 
@@ -730,6 +645,7 @@ func testAccGlobalClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
 }
 `, rName)
 }
@@ -739,6 +655,7 @@ func testAccGlobalClusterConfig_databaseName(rName, databaseName string) string 
 resource "aws_rds_global_cluster" "test" {
   database_name             = %[1]q
   global_cluster_identifier = %[2]q
+  engine                    = "aurora-postgresql"
 }
 `, databaseName, rName)
 }
@@ -748,17 +665,9 @@ func testAccGlobalClusterConfig_deletionProtection(rName string, deletionProtect
 resource "aws_rds_global_cluster" "test" {
   deletion_protection       = %[1]t
   global_cluster_identifier = %[2]q
+  engine                    = "aurora-postgresql"
 }
 `, deletionProtection, rName)
-}
-
-func testAccGlobalClusterConfig_engine(rName, engine string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_global_cluster" "test" {
-  engine                    = %[1]q
-  global_cluster_identifier = %[2]q
-}
-`, engine, rName)
 }
 
 func testAccGlobalClusterConfig_engineVersion(rName, engine string) string {
@@ -779,6 +688,7 @@ func testAccGlobalClusterConfig_forceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
   force_destroy             = true
 }
 `, rName)
@@ -831,9 +741,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, engine, engineVersion string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 data "aws_availability_zones" "alternate" {
@@ -856,12 +764,11 @@ resource "aws_rds_cluster" "primary" {
   allow_major_version_upgrade = true
   apply_immediately           = true
   cluster_identifier          = %[4]q
-  database_name               = "totoro"
   engine                      = aws_rds_global_cluster.test.engine
   engine_version              = aws_rds_global_cluster.test.engine_version
   global_cluster_identifier   = aws_rds_global_cluster.test.id
-  master_password             = "satsukimae"
-  master_username             = "maesatsuki"
+  master_password             = "avoid-plaintext-passwords"
+  master_username             = "tfacctest"
   skip_final_snapshot         = true
 
   lifecycle {
@@ -875,7 +782,7 @@ resource "aws_rds_cluster_instance" "primary" {
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
   identifier         = %[4]q
-  instance_class     = "db.r4.large"
+  instance_class     = "db.r5.large"
 }
 
 resource "aws_vpc" "alternate" {
@@ -932,7 +839,7 @@ resource "aws_rds_cluster_instance" "secondary" {
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
   identifier         = %[5]q
-  instance_class     = "db.r4.large"
+  instance_class     = "db.r5.large"
 }
 `, rNameGlobal, engine, engineVersion, rNamePrimary, rNameSecondary))
 }
@@ -1001,6 +908,7 @@ func testAccGlobalClusterConfig_storageEncrypted(rName string, storageEncrypted 
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   storage_encrypted         = %[2]t
+  engine                    = "aurora-postgresql"
 }
 `, rName, storageEncrypted)
 }

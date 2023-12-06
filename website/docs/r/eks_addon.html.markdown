@@ -148,9 +148,9 @@ The following arguments are optional:
   for service accounts on your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
   in the Amazon EKS User Guide.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS add-on.
 * `id` - EKS Cluster name and EKS Addon name separated by a colon (`:`).
@@ -169,8 +169,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_addon.my_eks_addon
+  id = "my_cluster_name:my_addon_name"
+}
 ```
-$ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
+
+Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```

@@ -29,8 +29,9 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"key_name": {
 				Type:         schema.TypeString,

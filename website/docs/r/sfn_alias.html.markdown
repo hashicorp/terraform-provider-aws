@@ -41,32 +41,37 @@ resource "aws_sfn_alias" "my_sfn_alias" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for the alias you are creating.
 * `description` - (Optional) Description of the alias.
 * `routing_configuration` - (Required) The StateMachine alias' route configuration settings. Fields documented below
 
-For **routing_configuration** the following attributes are supported:
+`routing_configuration` supports the following arguments:
 
-* `state_machine_version_arn` - (Required) A version of the state machine.
+* `state_machine_version_arn` - (Required) The Amazon Resource Name (ARN) of the state machine version.
 * `weight` - (Required) Percentage of traffic routed to the state machine version.
 
-The following arguments are optional:
+## Attribute Reference
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) identifying your state machine alias.
 * `creation_date` - The date the state machine alias was created.
 
 ## Import
 
-SFN (Step Functions) Alias can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SFN (Step Functions) Alias using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sfn_alias.foo
+  id = "arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo"
+}
 ```
-$ terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
+
+Using `terraform import`, import SFN (Step Functions) Alias using the `arn`. For example:
+
+```console
+% terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
 ```

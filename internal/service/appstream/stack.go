@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -252,6 +253,8 @@ func ResourceStack() *schema.Resource {
 }
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	name := d.Get("name").(string)
@@ -305,15 +308,17 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, appstream.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return diag.Errorf("creating Appstream Stack (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Appstream Stack (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*appstream.CreateStackOutput).Stack.Name))
 
-	return resourceStackRead(ctx, d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	stack, err := FindStackByName(ctx, conn, d.Id())
@@ -321,43 +326,45 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Appstream Stack (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Appstream Stack (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("access_endpoints", flattenAccessEndpoints(stack.AccessEndpoints)); err != nil {
-		return diag.Errorf("setting access_endpoints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting access_endpoints: %s", err)
 	}
 	if err = d.Set("application_settings", flattenApplicationSettings(stack.ApplicationSettings)); err != nil {
-		return diag.Errorf("setting application_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting application_settings: %s", err)
 	}
 	d.Set("arn", stack.Arn)
 	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
 	d.Set("description", stack.Description)
 	d.Set("display_name", stack.DisplayName)
 	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
-		return diag.Errorf("setting embed_host_domains: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
 	}
 	d.Set("feedback_url", stack.FeedbackURL)
 	d.Set("name", stack.Name)
 	d.Set("redirect_url", stack.RedirectURL)
 	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
-		return diag.Errorf("setting storage_connectors: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
 	}
 	if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
-		return diag.Errorf("setting streaming_experience_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting streaming_experience_settings: %s", err)
 	}
 	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
-		return diag.Errorf("setting user_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting user_settings: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -400,14 +407,16 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateStackWithContext(ctx, input)
 
 		if err != nil {
-			diag.Errorf("updating Appstream Stack (%s): %s", d.Id(), err)
+			sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceStackRead(ctx, d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Stack: (%s)", d.Id())
@@ -416,11 +425,11 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Appstream Stack (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Appstream Stack (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (interface{}, error) {
@@ -428,10 +437,10 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {

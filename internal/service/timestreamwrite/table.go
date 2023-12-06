@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite/types"
@@ -50,7 +50,7 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 			"magnetic_store_write_properties": {
@@ -168,7 +168,7 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -353,11 +353,11 @@ func expandRetentionProperties(tfList []interface{}) *types.RetentionProperties 
 	apiObject := &types.RetentionProperties{}
 
 	if v, ok := tfMap["magnetic_store_retention_period_in_days"].(int); ok {
-		apiObject.MagneticStoreRetentionPeriodInDays = int64(v)
+		apiObject.MagneticStoreRetentionPeriodInDays = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["memory_store_retention_period_in_hours"].(int); ok {
-		apiObject.MemoryStoreRetentionPeriodInHours = int64(v)
+		apiObject.MemoryStoreRetentionPeriodInHours = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -369,8 +369,8 @@ func flattenRetentionProperties(apiObject *types.RetentionProperties) []interfac
 	}
 
 	tfMap := map[string]interface{}{
-		"magnetic_store_retention_period_in_days": apiObject.MagneticStoreRetentionPeriodInDays,
-		"memory_store_retention_period_in_hours":  apiObject.MemoryStoreRetentionPeriodInHours,
+		"magnetic_store_retention_period_in_days": aws.ToInt64(apiObject.MagneticStoreRetentionPeriodInDays),
+		"memory_store_retention_period_in_hours":  aws.ToInt64(apiObject.MemoryStoreRetentionPeriodInHours),
 	}
 
 	return []interface{}{tfMap}

@@ -123,8 +123,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_group_policy",
 		},
 		{
-			Factory:  ResourceGroupPolicyAttachment,
+			Factory:  resourceGroupPolicyAttachment,
 			TypeName: "aws_iam_group_policy_attachment",
+			Name:     "Group Policy Attachment",
 		},
 		{
 			Factory:  ResourceInstanceProfile,
@@ -145,8 +146,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourcePolicyAttachment,
+			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_iam_policy_attachment",
+			Name:     "Policy Attachment",
 		},
 		{
 			Factory:  ResourceRole,
@@ -159,14 +161,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_role_policy",
 		},
 		{
-			Factory:  ResourceRolePolicyAttachment,
+			Factory:  resourceRolePolicyAttachment,
 			TypeName: "aws_iam_role_policy_attachment",
+			Name:     "Role Policy Attachment",
 		},
 		{
 			Factory:  ResourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
 			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  ResourceSecurityTokenServicePreferences,
+			TypeName: "aws_iam_security_token_service_preferences",
+			Name:     "Security Token Service Preferences",
 		},
 		{
 			Factory:  ResourceServerCertificate,
@@ -207,8 +215,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_user_policy",
 		},
 		{
-			Factory:  ResourceUserPolicyAttachment,
+			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
+			Name:     "User Policy Attachment",
 		},
 		{
 			Factory:  ResourceUserSSHKey,

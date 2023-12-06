@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
@@ -25,7 +25,7 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	output, err := conn.DescribeCapacityProvidersWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Capacity Provider (%s) with tags: %s; retrying without tags", arn, err)
 
 		input.Include = nil
@@ -119,7 +119,7 @@ func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluste
 func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) (*ecs.Service, error) {
 	output, err := conn.DescribeServicesWithContext(ctx, input)
 
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) && input.Include != nil {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) && input.Include != nil {
 		id := aws.StringValueSlice(input.Services)[0]
 		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", id, err)
 

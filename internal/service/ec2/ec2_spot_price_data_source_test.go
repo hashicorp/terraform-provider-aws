@@ -5,9 +5,9 @@ package ec2_test
 
 import (
 	"context"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -28,8 +28,8 @@ func TestAccEC2SpotPriceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSpotPriceDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexache.MustCompile(`^\d+\.\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexache.MustCompile(acctest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -49,8 +49,8 @@ func TestAccEC2SpotPriceDataSource_filter(t *testing.T) {
 			{
 				Config: testAccSpotPriceDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexache.MustCompile(`^\d+\.\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexache.MustCompile(acctest.RFC3339RegexPattern)),
 				),
 			},
 		},

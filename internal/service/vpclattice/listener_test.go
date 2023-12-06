@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
@@ -51,7 +51,7 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "100"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 			{
@@ -142,7 +142,7 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 			{
@@ -183,7 +183,7 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "100"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{
@@ -224,7 +224,7 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "100"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{
@@ -266,7 +266,7 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "100"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{
@@ -308,7 +308,7 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "100"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{
@@ -353,7 +353,7 @@ func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "80"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.1.target_group_identifier", targetGroup1ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.1.weight", "20"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{
@@ -420,7 +420,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key0", "value0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{

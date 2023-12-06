@@ -15,9 +15,13 @@ func TestAccLakeFormation_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			"basic":            testAccDataLakeSettings_basic,
-			"dataSource":       testAccDataLakeSettingsDataSource_basic,
 			"disappears":       testAccDataLakeSettings_disappears,
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
+			"readOnlyAdmins":   testAccDataLakeSettings_readOnlyAdmins,
+		},
+		"DataLakeSettingsDataSource": {
+			"basic":          testAccDataLakeSettingsDataSource_basic,
+			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,
 		},
 		"PermissionsBasic": {
 			"basic":               testAccPermissions_basic,

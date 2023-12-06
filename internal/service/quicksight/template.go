@@ -73,7 +73,7 @@ func ResourceTemplate() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
 				"permissions": {
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 64,
@@ -160,8 +160,8 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateTemplateWithContext(ctx, input)
@@ -273,10 +273,10 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("permissions") {
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateTemplatePermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),

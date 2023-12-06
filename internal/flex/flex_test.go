@@ -15,31 +15,58 @@ import (
 func TestExpandStringList(t *testing.T) {
 	t.Parallel()
 
-	configured := []interface{}{"abc", "xyz123"}
-	got := ExpandStringList(configured)
-	want := []*string{
-		aws.String("abc"),
-		aws.String("xyz123"),
+	testCases := []struct {
+		configured []interface{}
+		want       []*string
+	}{
+		{
+			configured: []interface{}{"abc", "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"abc", 123, "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"foo", "bar", "", "baz"},
+			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String("baz")},
+		},
 	}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
+	for _, testCase := range testCases {
+		if got, want := ExpandStringList(testCase.configured), testCase.want; !cmp.Equal(got, want) {
+			t.Errorf("ExpandStringList(%v) = %v, want %v", testCase.configured, got, want)
+		}
 	}
 }
 
-func TestExpandStringListEmptyItems(t *testing.T) {
+func TestExpandStringListEmpty(t *testing.T) {
 	t.Parallel()
 
-	configured := []interface{}{"foo", "bar", "", "baz"}
-	got := ExpandStringList(configured)
-	want := []*string{
-		aws.String("foo"),
-		aws.String("bar"),
-		aws.String("baz"),
+	testCases := []struct {
+		configured []interface{}
+		want       []*string
+	}{
+		{
+			configured: []interface{}{"abc", "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"abc", 123, "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String(""), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"foo", "bar", "", "baz"},
+			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String(""), aws.String("baz")},
+		},
+		{
+			configured: []interface{}{"foo", "bar", nil, "baz"},
+			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String(""), aws.String("baz")},
+		},
 	}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
+	for _, testCase := range testCases {
+		if got, want := ExpandStringListEmpty(testCase.configured), testCase.want; !cmp.Equal(got, want) {
+			t.Errorf("ExpandStringListEmpty(%v) = %v, want %v", testCase.configured, got, want)
+		}
 	}
 }
 
@@ -242,5 +269,104 @@ func TestFlattenTimeStringList(t *testing.T) {
 
 	if !cmp.Equal(got, want) {
 		t.Errorf("expanded = %v, want = %v", got, want)
+	}
+}
+
+func TestDiffStringMaps(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Old, New                  map[string]interface{}
+		Create, Remove, Unchanged map[string]interface{}
+	}{
+		// Add
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Create: map[string]interface{}{
+				"bar": "baz",
+			},
+			Remove: map[string]interface{}{},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+			Unchanged: map[string]interface{}{},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+			Unchanged: map[string]interface{}{
+				"hello": "world",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]interface{}{},
+			Remove: map[string]interface{}{
+				"bar": "baz",
+			},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		c, r, u := DiffStringMaps(tc.Old, tc.New)
+		cm := FlattenStringMap(c)
+		rm := FlattenStringMap(r)
+		um := FlattenStringMap(u)
+		if diff := cmp.Diff(cm, tc.Create); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(rm, tc.Remove); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(um, tc.Unchanged); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
 	}
 }

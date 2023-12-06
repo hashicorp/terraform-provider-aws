@@ -103,9 +103,9 @@ The `ttl` object takes the following arguments:
 
 * `status` - (Optional) Valid values: `ENABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -120,8 +120,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `keyspace_name` and `table_name` separated by `/` to import a table. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_keyspaces_table.example
+  id = "my_keyspace/my_table"
+}
 ```
-$ terraform import aws_keyspaces_table.example my_keyspace/my_table
+
+Using `terraform import`, import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
+
+```console
+% terraform import aws_keyspaces_table.example my_keyspace/my_table
 ```

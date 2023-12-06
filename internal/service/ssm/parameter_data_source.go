@@ -24,6 +24,10 @@ func DataSourceParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"insecure_value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -72,9 +76,13 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(param.Name))
 	d.Set("arn", param.ARN)
+	d.Set("value", param.Value)
+	d.Set("insecure_value", nil)
+	if aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
+		d.Set("insecure_value", param.Value)
+	}
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
-	d.Set("value", param.Value)
 	d.Set("version", param.Version)
 
 	return diags

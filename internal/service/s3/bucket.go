@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -22,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -30,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -40,6 +44,10 @@ import (
 
 const (
 	resNameBucket = "Bucket"
+
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	s3BucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
@@ -75,7 +83,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"grant"},
-				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
 				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 			},
 			"arn": {
@@ -88,7 +96,10 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 63),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63),
+					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+				),
 			},
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
@@ -100,7 +111,9 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+				),
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -698,15 +711,15 @@ func ResourceBucket() *schema.Resource {
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	connSDKv2 := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := create.Name(d.Get("bucket").(string), d.Get("bucket_prefix").(string))
-
 	awsRegion := meta.(*conns.AWSClient).Region
 
 	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
 	// current account. It also resets the Bucket ACLs.
 	if awsRegion == endpoints.UsEast1RegionID {
-		if err := FindBucket(ctx, conn, bucket); err == nil {
+		if err := findBucket(ctx, connSDKv2, bucket); err == nil {
 			return create.DiagError(names.S3, create.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
 		}
 	}
@@ -759,7 +772,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(bucket)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return nil, FindBucket(ctx, conn, d.Id())
+		return nil, findBucket(ctx, connSDKv2, d.Id())
 	})
 
 	if err != nil {
@@ -772,8 +785,9 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	connSDKv2 := meta.(*conns.AWSClient).S3Client(ctx)
 
-	err := FindBucket(ctx, conn, d.Id())
+	err := findBucket(ctx, connSDKv2, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
@@ -811,7 +825,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, errCodeNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchBucketPolicy, errCodeNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 bucket (%s) policy: %s", d.Id(), err)
 	}
 
@@ -871,7 +885,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket CORS configuration: %s", err)
 	}
 
@@ -902,7 +916,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil && !tfawserr.ErrCodeEquals(err,
 		errCodeMethodNotAllowed,
 		errCodeNotImplemented,
-		ErrCodeNoSuchWebsiteConfiguration,
+		errCodeNoSuchWebsiteConfiguration,
 		errCodeXNotImplemented,
 	) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket website configuration: %s", err)
@@ -1043,7 +1057,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchLifecycleConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1072,7 +1086,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
@@ -1102,7 +1116,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrMessageContains(err, ErrCodeServerSideEncryptionConfigurationNotFound, "encryption configuration was not found") {
+	if err != nil && !tfawserr.ErrMessageContains(err, errCodeServerSideEncryptionConfigurationNotFound, "encryption configuration was not found") {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket encryption: %s", err)
 	}
 
@@ -1365,6 +1379,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	connSDKv2 := meta.(*conns.AWSClient).S3Client(ctx)
 
 	log.Printf("[INFO] Deleting S3 Bucket: %s", d.Id())
 	_, err := conn.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{
@@ -1380,7 +1395,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object
 			// keys, other AWS services and applications using the S3 Bucket can.
-			conn := meta.(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
+			conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 			// bucket may have things delete them
 			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %s", err)
@@ -1393,7 +1408,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
 			}
 
-			if n, err := EmptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
+			if n, err := emptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
 				return diag.Errorf("emptying S3 Bucket (%s): %s", d.Id(), err)
 			} else {
 				log.Printf("[DEBUG] Deleted %d S3 objects", n)
@@ -1408,8 +1423,8 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.S3, create.ErrActionDeleting, resNameBucket, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 1*time.Minute, func() (interface{}, error) {
-		return nil, FindBucket(ctx, conn, d.Id())
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return nil, findBucket(ctx, connSDKv2, d.Id())
 	})
 
 	if err != nil {
@@ -1419,14 +1434,14 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func FindBucket(ctx context.Context, conn *s3.S3, bucket string) error {
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(bucket),
+func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string, optFns ...func(*s3_sdkv2.Options)) error {
+	input := &s3_sdkv2.HeadBucketInput{
+		Bucket: aws_sdkv2.String(bucket),
 	}
 
-	_, err := conn.HeadBucketWithContext(ctx, input)
+	_, err := conn.HeadBucket(ctx, input, optFns...)
 
-	if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
 		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

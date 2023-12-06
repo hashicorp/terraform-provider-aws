@@ -6,7 +6,7 @@ description: |-
   This data source provides information about a Service Catalog product.
 ---
 
-# Data source: aws_servicecatalog_product
+# Data Source: aws_servicecatalog_product
 
 Use this data source to retrieve information about a Service Catalog product.
 

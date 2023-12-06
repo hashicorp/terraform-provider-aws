@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Fixed a bug that caused errors related to the `word_orientation` argument when using word cloud visuals.
+```
+
+```release-note:bug
+resource/aws_quicksight_dashboard: Fixed a bug that caused errors related to the `word_orientation` argument when using word cloud visuals.
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Fixed a bug that caused errors related to the `word_orientation` argument when using word cloud visuals.
+```

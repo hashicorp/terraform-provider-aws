@@ -199,7 +199,7 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 				"permissions": {
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 64,
@@ -209,7 +209,7 @@ func ResourceDataSet() *schema.Resource {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
-								MaxItems: 16,
+								MaxItems: 20,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"principal": {
@@ -877,8 +877,8 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LogicalTableMap = expandDataSetLogicalTableMap(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1058,10 +1058,10 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateDataSetPermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),

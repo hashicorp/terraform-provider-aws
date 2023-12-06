@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package opsworks
 
 import (
@@ -20,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_opsworks_stack", &resource.Sweeper{
 		Name: "aws_opsworks_stack",
 		F:    sweepStacks,
@@ -83,7 +81,7 @@ func sweepApplication(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Application sweep for %s: %s", region, err)
 			return nil
 		}
@@ -119,7 +117,7 @@ func sweepApplication(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepInstance(region string) error {
@@ -135,7 +133,7 @@ func sweepInstance(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Instance sweep for %s: %s", region, err)
 			return nil
 		}
@@ -172,7 +170,7 @@ func sweepInstance(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepRDSDBInstance(region string) error {
@@ -188,7 +186,7 @@ func sweepRDSDBInstance(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks RDS DB Instance sweep for %s: %s", region, err)
 			return nil
 		}
@@ -225,7 +223,7 @@ func sweepRDSDBInstance(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepStacks(region string) error {
@@ -241,7 +239,7 @@ func sweepStacks(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Stack sweep for %s: %s", region, err)
 			return nil
 		}
@@ -268,7 +266,7 @@ func sweepStacks(region string) error {
 		sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepLayers(region string) error {
@@ -284,7 +282,7 @@ func sweepLayers(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Layer sweep for %s: %s", region, err)
 			return nil
 		}
@@ -330,7 +328,7 @@ func sweepLayers(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepUserProfiles(region string) error {
@@ -346,7 +344,7 @@ func sweepUserProfiles(region string) error {
 	output, err := conn.DescribeUserProfilesWithContext(ctx, &opsworks.DescribeUserProfilesInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks User Profile sweep for %s: %s", region, err)
 			return nil
 		}
@@ -360,7 +358,7 @@ func sweepUserProfiles(region string) error {
 		sweepResources = append(sweepResources, newUserProfileSweeper(r, d, client))
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 type userProfileSweeper struct {
@@ -377,7 +375,7 @@ func newUserProfileSweeper(resource *schema.Resource, d *schema.ResourceData, cl
 
 func (ups userProfileSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	err := ups.sweepable.Delete(ctx, timeout, optFns...)
-	if strings.Contains(err.Error(), "Cannot delete self") {
+	if err != nil && strings.Contains(err.Error(), "Cannot delete self") {
 		log.Printf("[WARN] Skipping OpsWorks User Profile (%s): %s", ups.d.Id(), err)
 		return nil
 	}

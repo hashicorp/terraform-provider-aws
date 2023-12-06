@@ -5,9 +5,9 @@ package ssmincidents_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,7 +46,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status", dataSourceName, "region.0.status"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status_message", dataSourceName, "region.0.status_message"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 		},

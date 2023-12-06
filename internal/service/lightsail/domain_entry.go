@@ -65,6 +65,7 @@ func ResourceDomainEntry() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"A",
+					"AAAA",
 					"CNAME",
 					"MX",
 					"NS",

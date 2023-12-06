@@ -5,7 +5,8 @@ package s3control
 
 import (
 	"fmt"
-	"regexp"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validateS3MultiRegionAccessPointName(v interface{}, k string) (ws []string, errors []error) {
@@ -14,15 +15,15 @@ func validateS3MultiRegionAccessPointName(v interface{}, k string) (ws []string,
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be less than 3 or longer than 50 characters", k))
 	}
-	if regexp.MustCompile(`_|[A-Z]|\.`).MatchString(value) {
+	if regexache.MustCompile(`_|[A-Z]|\.`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"cannot contain underscores, uppercase letters, or periods. %q", k))
 	}
-	if regexp.MustCompile(`^-`).MatchString(value) {
+	if regexache.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot begin with a hyphen", k))
 	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
+	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
 	}

@@ -20,8 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -30,7 +28,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"gopkg.in/dnaeon/go-vcr.v3/cassette"
 	"gopkg.in/dnaeon/go-vcr.v3/recorder"
@@ -133,6 +131,8 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 // VCR requires a single HTTP client to handle all interactions.
 func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		var diags diag.Diagnostics
+
 		providerMetas.Lock()
 		meta, ok := providerMetas[testName]
 		defer providerMetas.Unlock()
@@ -144,7 +144,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		vcrMode, err := vcrMode()
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		// Cribbed from aws-sdk-go-base.
@@ -168,7 +168,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		})
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		// Remove sensitive HTTP headers.
@@ -263,8 +263,8 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		meta.SetHTTPClient(httpClient)
 		provider.SetMeta(meta)
 
-		if v, diags := configureContextFunc(ctx, d); diags.HasError() {
-			return nil, diags
+		if v, ds := configureContextFunc(ctx, d); ds.HasError() {
+			return nil, append(diags, ds...)
 		} else {
 			meta = v.(*conns.AWSClient)
 		}
@@ -273,16 +273,16 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		// TODO Need to loop through all API clients to do this.
 		// TODO Use []*client.Client?
 		// TODO AWS SDK for Go v2 API clients.
-		meta.LogsConn(ctx).Handlers.AfterRetry.PushFront(func(r *request.Request) {
-			// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
-			if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
-				r.Retryable = aws.Bool(false)
-			}
-		})
+		// meta.LogsConn(ctx).Handlers.AfterRetry.PushFront(func(r *request.Request) {
+		// 	// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
+		// 	if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
+		// 		r.Retryable = aws.Bool(false)
+		// 	}
+		// })
 
 		providerMetas[testName] = meta
 
-		return meta, nil
+		return meta, diags
 	}
 }
 

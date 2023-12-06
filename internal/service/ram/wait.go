@@ -39,43 +39,7 @@ func WaitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.RA
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated},
 		Target:  []string{},
-		Refresh: StatusResourceShareOwnerSelf(ctx, conn, arn),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*ram.ResourceShare); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitResourceShareOwnedBySelfActive waits for a ResourceShare owned by own account to return ACTIVE
-func WaitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ram.ResourceShareStatusPending},
-		Target:  []string{ram.ResourceShareStatusActive},
-		Refresh: StatusResourceShareOwnerSelf(ctx, conn, arn),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*ram.ResourceShare); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitResourceShareOwnedBySelfDeleted waits for a ResourceShare owned by own account to return DELETED
-func WaitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ram.ResourceShareStatusDeleting},
-		Target:  []string{ram.ResourceShareStatusDeleted},
-		Refresh: StatusResourceShareOwnerSelf(ctx, conn, arn),
+		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
 		Timeout: timeout,
 	}
 

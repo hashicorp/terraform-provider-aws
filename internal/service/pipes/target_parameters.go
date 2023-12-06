@@ -4,8 +4,7 @@
 package pipes
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -185,7 +184,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
 								),
 							},
 						},
@@ -276,7 +275,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																validation.StringMatch(regexache.MustCompile(`^sg-[0-9A-Za-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 															),
 														},
 													},
@@ -288,7 +287,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																validation.StringMatch(regexache.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 															),
 														},
 													},
@@ -530,7 +529,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 50),
-									validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9\-]+[\.][A-Za-z0-9\-]+$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`), ""),
 								),
 							},
 							"resources": {
@@ -554,7 +553,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexp.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
 								),
 							},
 						},
@@ -738,7 +737,7 @@ func targetParametersSchema() *schema.Schema {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 256),
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 											),
 										},
 										"value": {
@@ -918,7 +917,7 @@ func expandBatchArrayProperties(tfMap map[string]interface{}) *types.BatchArrayP
 	apiObject := &types.BatchArrayProperties{}
 
 	if v, ok := tfMap["size"].(int); ok {
-		apiObject.Size = int32(v)
+		apiObject.Size = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1090,7 +1089,7 @@ func expandBatchRetryStrategy(tfMap map[string]interface{}) *types.BatchRetryStr
 	apiObject := &types.BatchRetryStrategy{}
 
 	if v, ok := tfMap["attempts"].(int); ok {
-		apiObject.Attempts = int32(v)
+		apiObject.Attempts = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1516,7 +1515,7 @@ func expandECSEphemeralStorage(tfMap map[string]interface{}) *types.EcsEphemeral
 	apiObject := &types.EcsEphemeralStorage{}
 
 	if v, ok := tfMap["size_in_gib"].(int); ok {
-		apiObject.SizeInGiB = int32(v)
+		apiObject.SizeInGiB = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1874,7 +1873,7 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 	}
 
 	if v := apiObject.EcsTaskParameters; v != nil {
-		tfMap["cloudwatch_logs_parameters"] = []interface{}{flattenPipeTargetECSTaskParameters(v)}
+		tfMap["ecs_task_parameters"] = []interface{}{flattenPipeTargetECSTaskParameters(v)}
 	}
 
 	if v := apiObject.EventBridgeEventBusParameters; v != nil {
@@ -1961,8 +1960,8 @@ func flattenBatchArrayProperties(apiObject *types.BatchArrayProperties) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Size; v != 0 {
-		tfMap["size"] = int(v)
+	if v := apiObject.Size; v != nil {
+		tfMap["size"] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -2085,8 +2084,8 @@ func flattenBatchRetryStrategy(apiObject *types.BatchRetryStrategy) map[string]i
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Attempts; v != 0 {
-		tfMap["attempts"] = int(v)
+	if v := apiObject.Attempts; v != nil {
+		tfMap["attempts"] = aws.ToInt32(v)
 	}
 
 	return tfMap
