@@ -480,7 +480,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
 	// Retry creation without tags
-	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+	if input.Tags != nil && tfawserr.ErrMessageContains(err, errCodeValidationError, tagsOnCreationErrMessage) {
 		input.Tags = nil
 
 		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))

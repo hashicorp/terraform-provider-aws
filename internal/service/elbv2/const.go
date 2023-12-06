@@ -4,7 +4,7 @@
 package elbv2
 
 const (
-	ErrValidationError = "ValidationError"
+	errCodeValidationError = "ValidationError"
 
-	TagsOnCreationErrMessage = "cannot specify tags on creation"
+	tagsOnCreationErrMessage = "cannot specify tags on creation"
 )
