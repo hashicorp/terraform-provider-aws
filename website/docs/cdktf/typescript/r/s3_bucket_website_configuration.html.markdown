@@ -12,6 +12,8 @@ description: |-
 
 Provides an S3 bucket website configuration resource. For more information, see [Hosting Websites on S3](https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With `routingRule` configured
@@ -194,4 +196,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_website_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-41a0e7bf7a7343429d1d7cf6e55d272d2709263fda9bdf55fa57e0879a7d920a -->
+<!-- cache-key: cdktf-0.19.0 input-2bd65f193d56ad7f250de1a3de6546120dfff97bf42a13c7dc68b5c6058c0969 -->

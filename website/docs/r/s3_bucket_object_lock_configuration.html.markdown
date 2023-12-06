@@ -14,6 +14,8 @@ Provides an S3 bucket Object Lock configuration resource. For more information a
 Thus, to **enable** Object Lock for a **new** bucket, see the [Using object lock configuration](s3_bucket.html.markdown#using-object-lock-configuration) section in  the `aws_s3_bucket` resource or the [Object Lock configuration for a new bucket](#object-lock-configuration-for-a-new-bucket) example below.
 If you want to **enable** Object Lock for an **existing** bucket, contact AWS Support and see the [Object Lock configuration for an existing bucket](#object-lock-configuration-for-an-existing-bucket) example below.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Object Lock configuration for a new bucket

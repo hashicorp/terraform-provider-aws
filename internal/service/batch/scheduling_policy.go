@@ -101,6 +101,8 @@ func ResourceSchedulingPolicy() *schema.Resource {
 }
 
 func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
@@ -113,16 +115,17 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Batch Scheduling Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Batch Scheduling Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Arn))
 
-	return resourceSchedulingPolicyRead(ctx, d, meta)
+	return append(diags, resourceSchedulingPolicyRead(ctx, d, meta)...)
 }
 
 func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	sp, err := FindSchedulingPolicyByARN(ctx, conn, d.Id())
@@ -149,6 +152,8 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChange("fair_share_policy") {
@@ -160,14 +165,16 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err := conn.UpdateSchedulingPolicyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Batch Scheduling Policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Batch Scheduling Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSchedulingPolicyRead(ctx, d, meta)
+	return append(diags, resourceSchedulingPolicyRead(ctx, d, meta)...)
 }
 
 func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
@@ -176,10 +183,10 @@ func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Batch Scheduling Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Batch Scheduling Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindSchedulingPolicyByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {

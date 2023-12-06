@@ -125,7 +125,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)
