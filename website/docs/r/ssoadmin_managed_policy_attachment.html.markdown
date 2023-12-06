@@ -73,6 +73,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "example" {
   managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
+```
 
 ## Argument Reference
 
