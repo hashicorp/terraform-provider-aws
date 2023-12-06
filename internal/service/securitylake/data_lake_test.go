@@ -47,7 +47,6 @@ func testAccDataLake_basic(t *testing.T) {
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "0"),
@@ -176,7 +175,7 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttrPair(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
@@ -224,7 +223,7 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttrPair(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
@@ -248,7 +247,7 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
+					resource.TestCheckResourceAttrPair(resourceName, "configurations.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
@@ -377,19 +376,17 @@ resource "aws_iam_role" "meta_store_manager" {
   path               = "/service-role/"
   assume_role_policy = <<POLICY
 {
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Sid": "AllowLambda",
-	"Effect": "Allow",
-	"Principal": {
-		"Service": [
-		"lambda.amazonaws.com"
-		]
-	},
-	"Action": "sts:AssumeRole"
-	}
-]
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowLambda",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": [
+        "lambda.amazonaws.com"
+      ]
+    },
+    "Action": "sts:AssumeRole"
+  }]
 }
 POLICY
 }
@@ -398,59 +395,54 @@ resource "aws_iam_role_policy" "meta_store_manager" {
   name = "AmazonSecurityLakeMetaStoreManagerPolicy"
   role = aws_iam_role.meta_store_manager.name
 
-  policy = <<EOF
+  policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Sid": "AllowWriteLambdaLogs",
-		"Effect": "Allow",
-		"Action": [
-			"logs:CreateLogStream",
-			"logs:PutLogEvents"
-		],
-		"Resource": [
-			"arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
-		]
-		},
-		{
-		"Sid": "AllowCreateAwsCloudWatchLogGroup",
-		"Effect": "Allow",
-		"Action": [
-			"logs:CreateLogGroup"
-		],
-		"Resource": [
-			"arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
-		]
-		},
-		{
-		"Sid": "AllowGlueManage",
-		"Effect": "Allow",
-		"Action": [
-			"glue:CreatePartition",
-			"glue:BatchCreatePartition"
-		],
-		"Resource": [
-			"arn:${data.aws_partition.current.partition}:glue:*:*:table/amazon_security_lake_glue_db*/*",
-			"arn:${data.aws_partition.current.partition}:glue:*:*:database/amazon_security_lake_glue_db*",
-			"arn:${data.aws_partition.current.partition}:glue:*:*:catalog"
-		]
-		},
-		{
-		"Sid": "AllowToReadFromSqs",
-		"Effect": "Allow",
-		"Action": [
-			"sqs:ReceiveMessage",
-			"sqs:DeleteMessage",
-			"sqs:GetQueueAttributes"
-		],
-		"Resource": [
-			"arn:${data.aws_partition.current.partition}:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
-		]
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowWriteLambdaLogs",
+    "Effect": "Allow",
+    "Action": [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ],
+    "Resource": [
+      "arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
+    ]
+  }, {
+    "Sid": "AllowCreateAwsCloudWatchLogGroup",
+    "Effect": "Allow",
+    "Action": [
+      "logs:CreateLogGroup"
+    ],
+    "Resource": [
+      "arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
+    ]
+  }, {
+    "Sid": "AllowGlueManage",
+    "Effect": "Allow",
+    "Action": [
+      "glue:CreatePartition",
+      "glue:BatchCreatePartition"
+    ],
+    "Resource": [
+      "arn:${data.aws_partition.current.partition}:glue:*:*:table/amazon_security_lake_glue_db*/*",
+      "arn:${data.aws_partition.current.partition}:glue:*:*:database/amazon_security_lake_glue_db*",
+      "arn:${data.aws_partition.current.partition}:glue:*:*:catalog"
+    ]
+  }, {
+    "Sid": "AllowToReadFromSqs",
+    "Effect": "Allow",
+    "Action": [
+      "sqs:ReceiveMessage",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes"
+    ],
+    "Resource": [
+      "arn:${data.aws_partition.current.partition}:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
+    ]
+  }]
 }
-  EOF
+POLICY
 }
 
 resource "aws_iam_role" "datalake_s3_replication" {
@@ -474,57 +466,75 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
   name = "AmazonSecurityLakeS3ReplicationRolePolicy"
   role = aws_iam_role.datalake_s3_replication.name
 
-  policy = <<EOF
+  policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AllowReadS3ReplicationSetting",
-			"Action": [
-				"s3:ListBucket",
-				"s3:GetReplicationConfiguration",
-				"s3:GetObjectVersionForReplication",
-				"s3:GetObjectVersion",
-				"s3:GetObjectVersionAcl",
-				"s3:GetObjectVersionTagging",
-				"s3:GetObjectRetention",
-				"s3:GetObjectLegalHold"
-			],
-			"Effect": "Allow",
-			"Resource": [
-				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*",
-				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
-			],
-			"Condition": {
-				"StringEquals": {
-					"s3:ResourceAccount": [
-						"${data.aws_caller_identity.current.account_id}"
-					]
-				}
-			}
-		},
-		{
-			"Sid": "AllowS3Replication",
-			"Action": [
-				"s3:ReplicateObject",
-				"s3:ReplicateDelete",
-				"s3:ReplicateTags"
-			],
-			"Effect": "Allow",
-			"Resource": [
-				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
-			],
-			"Condition": {
-				"StringEquals": {
-					"s3:ResourceAccount": [
-						"${data.aws_caller_identity.current.account_id}"
-					]
-				}
-			}
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadS3ReplicationSetting",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetReplicationConfiguration",
+        "s3:GetObjectVersionForReplication",
+        "s3:GetObjectVersion",
+        "s3:GetObjectVersionAcl",
+        "s3:GetObjectVersionTagging",
+        "s3:GetObjectRetention",
+        "s3:GetObjectLegalHold"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*",
+        "arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "s3:ResourceAccount": [
+            "${data.aws_caller_identity.current.account_id}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowS3Replication",
+      "Action": [
+        "s3:ReplicateObject",
+        "s3:ReplicateDelete",
+        "s3:ReplicateTags"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "s3:ResourceAccount": [
+            "${data.aws_caller_identity.current.account_id}"
+          ]
+        }
+      }
+    }
+  ]
 }
-EOF
+POLICY
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [{
+    "Sid": "Enable IAM User Permissions",
+    "Effect": "Allow",
+    "Principal": {"AWS": "*"},
+    "Action": "kms:*",
+    "Resource": "*"
+  }]
+}
+POLICY
 }
 `
 }
@@ -536,10 +546,6 @@ resource "aws_securitylake_data_lake" "test" {
 
   configuration {
     region = %[2]q
-
-    encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
-    }
   }
 
   depends_on = [aws_iam_role.meta_store_manager]
@@ -554,10 +560,6 @@ resource "aws_securitylake_data_lake" "test" {
 
   configuration {
     region = %[4]q
-
-    encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
-    }
   }
 
   tags = {
@@ -576,10 +578,6 @@ resource "aws_securitylake_data_lake" "test" {
 
   configuration {
     region = %[6]q
-
-    encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
-    }
   }
 
   tags = {
@@ -601,7 +599,7 @@ resource "aws_securitylake_data_lake" "test" {
     region = %[2]q
 
     encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
+      kms_key_id = aws_kms_key.test.id
     }
 
     lifecycle_configuration {
@@ -637,7 +635,7 @@ resource "aws_securitylake_data_lake" "test" {
     region = %[2]q
 
     encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
+      kms_key_id = aws_kms_key.test.id
     }
 
     lifecycle_configuration {
@@ -667,10 +665,6 @@ resource "aws_securitylake_data_lake" "region_2" {
 
   configuration {
     region = %[3]q
-
-    encryption_configuration {
-      kms_key_id = "S3_MANAGED_KEY"
-    }
 
     lifecycle_configuration {
       transition {
