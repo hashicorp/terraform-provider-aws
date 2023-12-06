@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityLakeDataLake_basic(t *testing.T) {
+func testAccDataLake_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -31,7 +31,7 @@ func TestAccSecurityLakeDataLake_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -64,13 +64,13 @@ func TestAccSecurityLakeDataLake_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeDataLake_disappears(t *testing.T) {
+func testAccDataLake_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -91,7 +91,7 @@ func TestAccSecurityLakeDataLake_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeDataLake_tags(t *testing.T) {
+func testAccDataLake_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -101,7 +101,7 @@ func TestAccSecurityLakeDataLake_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -145,7 +145,7 @@ func TestAccSecurityLakeDataLake_tags(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeDataLake_lifeCycle(t *testing.T) {
+func testAccDataLake_lifeCycle(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -155,7 +155,7 @@ func TestAccSecurityLakeDataLake_lifeCycle(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -192,7 +192,7 @@ func TestAccSecurityLakeDataLake_lifeCycle(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeDataLake_lifeCycleUpdate(t *testing.T) {
+func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -202,7 +202,7 @@ func TestAccSecurityLakeDataLake_lifeCycleUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -261,7 +261,7 @@ func TestAccSecurityLakeDataLake_lifeCycleUpdate(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeDataLake_replication(t *testing.T) {
+func testAccDataLake_replication(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -271,7 +271,7 @@ func TestAccSecurityLakeDataLake_replication(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.region_2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
