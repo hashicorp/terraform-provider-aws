@@ -14,10 +14,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -654,26 +654,23 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	log.Printf("[INFO] Deleting LB: %s", d.Id())
-
-	// Destroy the load balancer
-	deleteElbOpts := elbv2.DeleteLoadBalancerInput{
+	log.Printf("[INFO] Deleting ELBv2 Load Balancer: %s", d.Id())
+	_, err := conn.DeleteLoadBalancerWithContext(ctx, &elbv2.DeleteLoadBalancerInput{
 		LoadBalancerArn: aws.String(d.Id()),
-	}
-	if _, err := conn.DeleteLoadBalancerWithContext(ctx, &deleteElbOpts); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting LB: %s", err)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Load Balancer (%s): %s", d.Id(), err)
 	}
 
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id())
-	if err != nil {
-		log.Printf("[WARN] Failed to cleanup ENIs for ALB %q: %#v", d.Id(), err)
+	if err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id()); err != nil {
+		log.Printf("[WARN] Failed to cleanup ENIs for ALB (%s): %s", d.Id(), err)
 	}
 
-	err = waitForNLBNetworkInterfacesToDetach(ctx, ec2conn, d.Id())
-	if err != nil {
-		log.Printf("[WARN] Failed to wait for ENIs to disappear for NLB %q: %#v", d.Id(), err)
+	if err := waitForNLBNetworkInterfacesToDetach(ctx, ec2conn, d.Id()); err != nil {
+		log.Printf("[WARN] Failed to wait for ENIs to disappear for NLB (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -818,92 +815,71 @@ func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*e
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.EC2, lbArn string) error {
-	name, err := getLBNameFromARN(lbArn)
-
+func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.EC2, arn string) error {
+	name, err := loadBalancerNameFromARN(arn)
 	if err != nil {
 		return err
 	}
 
 	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
-
 	if err != nil {
 		return err
 	}
 
-	var errs *multierror.Error
+	var errs []error
 
-	for _, networkInterface := range networkInterfaces {
-		if networkInterface.Attachment == nil {
+	for _, v := range networkInterfaces {
+		if v.Attachment == nil {
 			continue
 		}
 
-		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
-		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
+		attachmentID := aws.StringValue(v.Attachment.AttachmentId)
+		networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
 
-		err = tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
-
-		if err != nil {
-			errs = multierror.Append(errs, err)
-
+		if err := tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout); err != nil {
+			errs = append(errs, err)
 			continue
 		}
 
-		err = tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID)
-
-		if err != nil {
-			errs = multierror.Append(errs, err)
-
+		if err := tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			errs = append(errs, err)
 			continue
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbArn string) error {
-	const (
-		loadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
-	)
-	name, err := getLBNameFromARN(lbArn)
-
+	name, err := loadBalancerNameFromARN(lbArn)
 	if err != nil {
 		return err
 	}
 
-	errAttached := errors.New("attached")
-
-	_, err = tfresource.RetryWhen(ctx, loadBalancerNetworkInterfaceDetachTimeout,
-		func() (interface{}, error) {
-			networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
-
-			if err != nil {
-				return nil, err
-			}
-
-			if len(networkInterfaces) > 0 {
-				return networkInterfaces, errAttached
-			}
-
-			return networkInterfaces, nil
-		},
-		func(err error) (bool, error) {
-			if errors.Is(err, errAttached) {
-				return true, err
-			}
-
-			return false, err
-		},
+	const (
+		timeout = 5 * time.Minute
 	)
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
+		if err != nil {
+			return 0, err
+		}
+
+		return len(networkInterfaces), nil
+	})
 
 	return err
 }
 
-func getLBNameFromARN(arn string) (string, error) {
-	re := regexache.MustCompile("([^/]+/[^/]+/[^/]+)$")
-	matches := re.FindStringSubmatch(arn)
+func loadBalancerNameFromARN(s string) (string, error) {
+	v, err := arn.Parse(s)
+	if err != nil {
+		return "", err
+	}
+
+	matches := regexache.MustCompile("([^/]+/[^/]+/[^/]+)$").FindStringSubmatch(v.Resource)
 	if len(matches) != 2 {
-		return "", fmt.Errorf("unexpected ARN format: %q", arn)
+		return "", fmt.Errorf("unexpected ELBv2 Load Balancer ARN format: %q", s)
 	}
 
 	// e.g. app/example-alb/b26e625cdde161e6
@@ -963,16 +939,14 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
-	d.Set("vpc_id", lb.VpcId)
-	d.Set("zone_id", lb.CanonicalHostedZoneId)
-
-	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("setting subnets: %w", err)
-	}
-
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("setting subnet_mapping: %w", err)
 	}
+	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return fmt.Errorf("setting subnets: %w", err)
+	}
+	d.Set("vpc_id", lb.VpcId)
+	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
 	attributesResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
