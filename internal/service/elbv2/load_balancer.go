@@ -105,14 +105,10 @@ func ResourceLoadBalancer() *schema.Resource {
 				ForceNew: true,
 			},
 			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "defensive",
-				ValidateFunc: validation.StringInSlice([]string{
-					"monitor",
-					"defensive",
-					"strictest",
-				}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          httpDesyncMitigationModeDefensive,
+				ValidateFunc:     validation.StringInSlice(httpDesyncMitigationMode_Values(), false),
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
 			"dns_name": {
@@ -122,13 +118,9 @@ func ResourceLoadBalancer() *schema.Resource {
 			"dns_record_client_routing_policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          "any_availability_zone",
+				Default:          dnsRecordClientRoutingPolicyAnyAvailabilityZone,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
-				ValidateFunc: validation.StringInSlice([]string{
-					"availability_zone_affinity",
-					"partial_availability_zone_affinity",
-					"any_availability_zone",
-				}, false),
+				ValidateFunc:     validation.StringInSlice(dnsRecordClientRoutingPolicy_Values(), false),
 			},
 			"drop_invalid_header_fields": {
 				Type:             schema.TypeBool,
@@ -294,13 +286,9 @@ func ResourceLoadBalancer() *schema.Resource {
 			"xff_header_processing_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          "append",
+				Default:          httpXFFHeaderProcessingModeAppend,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
-				ValidateFunc: validation.StringInSlice([]string{
-					"append",
-					"preserve",
-					"remove",
-				}, false),
+				ValidateFunc:     validation.StringInSlice(httpXFFHeaderProcessingMode_Values(), false),
 			},
 			"zone_id": {
 				Type:     schema.TypeString,
