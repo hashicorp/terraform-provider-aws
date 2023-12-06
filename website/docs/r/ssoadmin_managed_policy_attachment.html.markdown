@@ -10,9 +10,6 @@ description: |-
 
 Provides an IAM managed policy for a Single Sign-On (SSO) Permission Set resource
 
-~> **IMPORTANT:** Currently there is an issue where deletion of both an `aws_ssoadmin_managed_policy_attachment` and `aws_ssoadmin_account_assignment` can occur simultaneously. This causes a problem with the `Delete` operation of the policy attachment and can cause your `terraform destroy` to fail. To avoid this, add an explicit dependency between these resources with the `depends_on` meta argument. See the `Managed Policy Attachment with Account Assignment (Identity Store Group)` example below.
-
-
 ~> **NOTE:** Creating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
 
 ## Example Usage
