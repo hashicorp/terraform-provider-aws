@@ -222,6 +222,11 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
+	if err := data.InitFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
 	dataLake, err := findDataLakeByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
@@ -237,10 +242,13 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataLake, &data)...)
+	var configuration dataLakeConfigurationModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -440,6 +448,12 @@ type dataLakeResourceModel struct {
 	Tags                    types.Map                                                   `tfsdk:"tags"`
 	TagsAll                 types.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value                                              `tfsdk:"timeouts"`
+}
+
+func (model *dataLakeResourceModel) InitFromID() error {
+	model.DataLakeARN = model.ID
+
+	return nil
 }
 
 func (model *dataLakeResourceModel) setID() {
