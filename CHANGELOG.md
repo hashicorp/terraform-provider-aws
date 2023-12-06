@@ -38,6 +38,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_appflow_flow: Fix perpetual diff on `destination_flow_config` ([#34770](https://github.com/hashicorp/terraform-provider-aws/issues/34770))
 * resource/aws_backup_vault_policy: Fix eventual consistency error when waiting for IAM ([#34671](https://github.com/hashicorp/terraform-provider-aws/issues/34671))
 * resource/aws_eks_pod_identity_association: Retry IAM eventual consistency errors on create and update ([#34717](https://github.com/hashicorp/terraform-provider-aws/issues/34717))
 * resource/aws_glue_connection: Fix crash while creating resource with empty `physical_connection_requirements` configuration block ([#34737](https://github.com/hashicorp/terraform-provider-aws/issues/34737))
