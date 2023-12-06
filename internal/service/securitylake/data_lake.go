@@ -72,6 +72,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"s3_bucket_arn":   framework.ARNAttributeComputedOnly(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -199,16 +200,21 @@ func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	// Set values for unknowns.
-	data.DataLakeARN = flex.StringToFramework(ctx, output.DataLakes[0].DataLakeArn)
+	dataLake := &output.DataLakes[0]
+	data.DataLakeARN = flex.StringToFramework(ctx, dataLake.DataLakeArn)
 	data.setID()
 
-	if _, err := waitDataLakeCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	dataLake, err = waitDataLakeCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
+
+	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -249,6 +255,7 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
+	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -445,6 +452,7 @@ type dataLakeResourceModel struct {
 	DataLakeARN             types.String                                                `tfsdk:"arn"`
 	ID                      types.String                                                `tfsdk:"id"`
 	MetaStoreManagerRoleARN fwtypes.ARN                                                 `tfsdk:"meta_store_manager_role_arn"`
+	S3BucketARN             types.String                                                `tfsdk:"s3_bucket_arn"`
 	Tags                    types.Map                                                   `tfsdk:"tags"`
 	TagsAll                 types.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value                                              `tfsdk:"timeouts"`

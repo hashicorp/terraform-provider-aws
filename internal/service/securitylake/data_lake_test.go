@@ -52,6 +52,7 @@ func testAccDataLake_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

@@ -99,6 +99,7 @@ Replication Configuration support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Lake.
+* `s3_bucket_arn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
