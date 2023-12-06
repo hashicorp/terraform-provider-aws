@@ -33,6 +33,7 @@ import (
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
@@ -144,7 +145,6 @@ import (
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
 	ecrpublic_sdkv1 "github.com/aws/aws-sdk-go/service/ecrpublic"
-	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
@@ -548,8 +548,8 @@ func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPubli
 	return errs.Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic))
 }
 
-func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
-	return errs.Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS))
+func (c *AWSClient) ECSClient(ctx context.Context) *ecs_sdkv2.Client {
+	return errs.Must(client[*ecs_sdkv2.Client](ctx, c, names.ECS))
 }
 
 func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
