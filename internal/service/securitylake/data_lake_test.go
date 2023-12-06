@@ -190,6 +190,7 @@ func TestAccSecurityLakeDataLake_replication(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -300,12 +301,10 @@ func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *type
 	}
 }
 
-func testAccDataLakeConfigBaseConfig(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return fmt.Sprintf(`
-
-
+func testAccDataLakeConfigConfig_base(rName string) string {
+	return `
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "meta_store_manager" {
   name               = "AmazonSecurityLakeMetaStoreManager"
@@ -327,9 +326,6 @@ resource "aws_iam_role" "meta_store_manager" {
 ]
 }
 POLICY
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_iam_role_policy" "meta_store_manager" {
@@ -348,7 +344,7 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"logs:PutLogEvents"
 		],
 		"Resource": [
-			"arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
+			"arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
 		]
 		},
 		{
@@ -358,7 +354,7 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"logs:CreateLogGroup"
 		],
 		"Resource": [
-			"arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
+			"arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
 		]
 		},
 		{
@@ -369,9 +365,9 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"glue:BatchCreatePartition"
 		],
 		"Resource": [
-			"arn:aws:glue:*:*:table/amazon_security_lake_glue_db*/*",
-			"arn:aws:glue:*:*:database/amazon_security_lake_glue_db*",
-			"arn:aws:glue:*:*:catalog"
+			"arn:${data.aws_partition.current.partition}:glue:*:*:table/amazon_security_lake_glue_db*/*",
+			"arn:${data.aws_partition.current.partition}:glue:*:*:database/amazon_security_lake_glue_db*",
+			"arn:${data.aws_partition.current.partition}:glue:*:*:catalog"
 		]
 		},
 		{
@@ -383,7 +379,7 @@ resource "aws_iam_role_policy" "meta_store_manager" {
 			"sqs:GetQueueAttributes"
 		],
 		"Resource": [
-			"arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
+			"arn:${data.aws_partition.current.partition}:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
 		]
 		}
 	]
@@ -406,9 +402,6 @@ resource "aws_iam_role" "datalake_s3_replication" {
   }]
 }
 POLICY
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_iam_role_policy" "datalake_s3_replication" {
@@ -433,8 +426,8 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 			],
 			"Effect": "Allow",
 			"Resource": [
-				"arn:aws:s3:::aws-security-data-lake*",
-				"arn:aws:s3:::aws-security-data-lake*/*"
+				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*",
+				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
 			],
 			"Condition": {
 				"StringEquals": {
@@ -453,7 +446,7 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 			],
 			"Effect": "Allow",
 			"Resource": [
-				"arn:aws:s3:::aws-security-data-lake*/*"
+				"arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
 			],
 			"Condition": {
 				"StringEquals": {
@@ -465,20 +458,18 @@ resource "aws_iam_role_policy" "datalake_s3_replication" {
 		}
 	]
 }
-  EOF
+EOF
 }
-`, rName)
+`
 }
 
 func testAccDataLakeConfig_basic(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = "eu-west-1"
+    region = %[2]q
 
     encryption_configuration {
       kms_key_id = "S3_MANAGED_KEY"
@@ -489,19 +480,16 @@ resource "aws_securitylake_data_lake" "test" {
   }
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName))
+`, rName, acctest.Region()))
 }
 
 func testAccDataLakeConfig_lifeCycle(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
-
-
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = "eu-west-1"
+    region = %[2]q
 
     encryption_configuration {
       kms_key_id = "S3_MANAGED_KEY"
@@ -521,23 +509,23 @@ resource "aws_securitylake_data_lake" "test" {
       }
     }
   }
+
   tags = {
     Name = %[1]q
   }
+
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName))
+`, rName, acctest.Region()))
 }
 
 func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
-	return acctest.ConfigCompose(testAccDataLakeConfigBaseConfig(rName), fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = "eu-west-1"
+    region = %[2]q
 
     encryption_configuration {
       kms_key_id = "S3_MANAGED_KEY"
@@ -553,24 +541,23 @@ resource "aws_securitylake_data_lake" "test" {
       }
     }
   }
+
   tags = {
     Name = %[1]q
   }
+
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName))
+`, rName, acctest.Region()))
 }
 
 func testAccDataLakeConfig_replication(rName string) string {
-	//lintignore:AWSAT003,AWSAT005
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), fmt.Sprintf(`
-
-
 resource "aws_securitylake_data_lake" "region_2" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = "eu-west-2"
+    region = %[3]q
 
     encryption_configuration {
       kms_key_id = "S3_MANAGED_KEY"
@@ -587,13 +574,15 @@ resource "aws_securitylake_data_lake" "region_2" {
     }
     replication_configuration {
       role_arn = aws_iam_role.datalake_s3_replication.arn
-      regions  = ["eu-west-1"]
+      regions  = [%[2]q]
     }
   }
+
   tags = {
     Name = %[1]q
   }
+
   depends_on = [aws_iam_role.meta_store_manager, aws_iam_role.datalake_s3_replication, aws_securitylake_data_lake.test]
 }
-`, rName))
+`, rName, acctest.Region(), acctest.AlternateRegion()))
 }
