@@ -27613,6 +27613,38 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "fips-verification-us-east-1",
+				}: endpoint{
+					Hostname: "verification.signer-fips.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "fips-verification-us-east-2",
+				}: endpoint{
+					Hostname: "verification.signer-fips.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				endpointKey{
+					Region: "fips-verification-us-west-1",
+				}: endpoint{
+					Hostname: "verification.signer-fips.us-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-1",
+					},
+				},
+				endpointKey{
+					Region: "fips-verification-us-west-2",
+				}: endpoint{
+					Hostname: "verification.signer-fips.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
 				endpointKey{
@@ -27653,6 +27685,166 @@ var awsPartition = partition{
 					Variant: fipsVariant,
 				}: endpoint{
 					Hostname: "signer-fips.us-west-2.amazonaws.com",
+				},
+				endpointKey{
+					Region: "verification-af-south-1",
+				}: endpoint{
+					Hostname: "verification.signer.af-south-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "af-south-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-ap-east-1",
+				}: endpoint{
+					Hostname: "verification.signer.ap-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-east-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-ap-northeast-1",
+				}: endpoint{
+					Hostname: "verification.signer.ap-northeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-northeast-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-ap-northeast-2",
+				}: endpoint{
+					Hostname: "verification.signer.ap-northeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-northeast-2",
+					},
+				},
+				endpointKey{
+					Region: "verification-ap-south-1",
+				}: endpoint{
+					Hostname: "verification.signer.ap-south-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-south-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-ap-southeast-1",
+				}: endpoint{
+					Hostname: "verification.signer.ap-southeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-ap-southeast-2",
+				}: endpoint{
+					Hostname: "verification.signer.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
+					},
+				},
+				endpointKey{
+					Region: "verification-ca-central-1",
+				}: endpoint{
+					Hostname: "verification.signer.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-eu-central-1",
+				}: endpoint{
+					Hostname: "verification.signer.eu-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-central-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-eu-north-1",
+				}: endpoint{
+					Hostname: "verification.signer.eu-north-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-north-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-eu-south-1",
+				}: endpoint{
+					Hostname: "verification.signer.eu-south-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-south-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-eu-west-1",
+				}: endpoint{
+					Hostname: "verification.signer.eu-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-eu-west-2",
+				}: endpoint{
+					Hostname: "verification.signer.eu-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-2",
+					},
+				},
+				endpointKey{
+					Region: "verification-eu-west-3",
+				}: endpoint{
+					Hostname: "verification.signer.eu-west-3.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-3",
+					},
+				},
+				endpointKey{
+					Region: "verification-me-south-1",
+				}: endpoint{
+					Hostname: "verification.signer.me-south-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "me-south-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-sa-east-1",
+				}: endpoint{
+					Hostname: "verification.signer.sa-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "sa-east-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-us-east-1",
+				}: endpoint{
+					Hostname: "verification.signer.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-us-east-2",
+				}: endpoint{
+					Hostname: "verification.signer.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				endpointKey{
+					Region: "verification-us-west-1",
+				}: endpoint{
+					Hostname: "verification.signer.us-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-us-west-2",
+				}: endpoint{
+					Hostname: "verification.signer.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
 				},
 			},
 		},
@@ -34761,6 +34953,22 @@ var awscnPartition = partition{
 				endpointKey{
 					Region: "cn-northwest-1",
 				}: endpoint{},
+				endpointKey{
+					Region: "verification-cn-north-1",
+				}: endpoint{
+					Hostname: "verification.signer.cn-north-1.amazonaws.com.cn",
+					CredentialScope: credentialScope{
+						Region: "cn-north-1",
+					},
+				},
+				endpointKey{
+					Region: "verification-cn-northwest-1",
+				}: endpoint{
+					Hostname: "verification.signer.cn-northwest-1.amazonaws.com.cn",
+					CredentialScope: credentialScope{
+						Region: "cn-northwest-1",
+					},
+				},
 			},
 		},
 		"sms": service{
@@ -42465,11 +42673,41 @@ var awsisoPartition = partition{
 		"redshift": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "fips-us-iso-east-1",
+				}: endpoint{
+					Hostname: "redshift-fips.us-iso-east-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "fips-us-iso-west-1",
+				}: endpoint{
+					Hostname: "redshift-fips.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-iso-east-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "us-iso-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "redshift-fips.us-iso-east-1.c2s.ic.gov",
+				},
+				endpointKey{
 					Region: "us-iso-west-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-iso-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "redshift-fips.us-iso-west-1.c2s.ic.gov",
+				},
 			},
 		},
 		"resource-groups": service{
@@ -43239,8 +43477,23 @@ var awsisobPartition = partition{
 		"redshift": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "fips-us-isob-east-1",
+				}: endpoint{
+					Hostname: "redshift-fips.us-isob-east-1.sc2s.sgov.gov",
+					CredentialScope: credentialScope{
+						Region: "us-isob-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-isob-east-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-isob-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "redshift-fips.us-isob-east-1.sc2s.sgov.gov",
+				},
 			},
 		},
 		"resource-groups": service{

@@ -55,6 +55,10 @@ func ResourceSpace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"space_display_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"space_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -102,6 +106,10 @@ func ResourceSpace() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -147,6 +155,10 @@ func ResourceSpace() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
@@ -197,6 +209,10 @@ func ResourceSpace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -217,6 +233,10 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
 		input.SpaceSettings = expandSpaceSettings(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("space_display_name"); ok {
+		input.SpaceDisplayName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
@@ -254,10 +274,12 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.StringValue(Space.SpaceArn)
-	d.Set("space_name", Space.SpaceName)
-	d.Set("domain_id", Space.DomainId)
 	d.Set("arn", arn)
+	d.Set("domain_id", Space.DomainId)
 	d.Set("home_efs_file_system_uid", Space.HomeEfsFileSystemUid)
+	d.Set("space_display_name", Space.SpaceDisplayName)
+	d.Set("space_name", Space.SpaceName)
+	d.Set("url", Space.Url)
 
 	if err := d.Set("space_settings", flattenSpaceSettings(Space.SpaceSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
@@ -270,14 +292,21 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChange("space_settings") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		domainID := d.Get("domain_id").(string)
 		name := d.Get("space_name").(string)
 
 		input := &sagemaker.UpdateSpaceInput{
-			SpaceName:     aws.String(name),
-			DomainId:      aws.String(domainID),
-			SpaceSettings: expandSpaceSettings(d.Get("space_settings").([]interface{})),
+			SpaceName: aws.String(name),
+			DomainId:  aws.String(domainID),
+		}
+
+		if d.HasChanges("space_settings") {
+			input.SpaceSettings = expandSpaceSettings(d.Get("space_settings").([]interface{}))
+		}
+
+		if d.HasChange("space_display_name") {
+			input.SpaceDisplayName = aws.String(d.Get("space_display_name").(string))
 		}
 
 		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)

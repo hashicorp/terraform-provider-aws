@@ -22,7 +22,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceApplication,
+			Name:    "Application",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newResourceApplicationAssignment,
+			Name:    "Application Assignment",
+		},
+		{
+			Factory: newResourceApplicationAssignmentConfiguration,
+			Name:    "Application Assignment Configuration",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
