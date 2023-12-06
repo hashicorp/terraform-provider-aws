@@ -140,15 +140,28 @@ func FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx context.Contex
 		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
 	}
 
-	output, err := conn.GetResourceShareAssociationsWithContext(ctx, input)
+	var output []*ram.ResourceShareAssociation
+	err := conn.GetResourceShareAssociationsPagesWithContext(ctx, input, func(page *ram.GetResourceShareAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ResourceShareAssociations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.ResourceShareAssociations) == 0 || output.ResourceShareAssociations[0] == nil {
+	if output == nil || len(output) == 0 || output[0] == nil {
 		return nil, nil
 	}
 
-	return output.ResourceShareAssociations[0], nil
+	return output[0], nil
 }
