@@ -1,0 +1,3 @@
+```release-note:bug
+resource/appmesh_virtual_node: Remove limit of 50 backends per virtual node
+```
