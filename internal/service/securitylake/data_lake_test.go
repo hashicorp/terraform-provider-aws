@@ -305,7 +305,7 @@ func testAccDataLake_replication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.0.regions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.replication_configuration.0.regions.*", acctest.AlternateRegion()),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.replication_configuration.0.regions.*", acctest.Region()),
 				),
 			},
 			{
