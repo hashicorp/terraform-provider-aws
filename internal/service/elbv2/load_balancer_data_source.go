@@ -238,29 +238,25 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	lb := results[0]
-
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
-
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
-	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
-	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
-	d.Set("vpc_id", lb.VpcId)
-	d.Set("zone_id", lb.CanonicalHostedZoneId)
-	d.Set("dns_name", lb.DNSName)
-	d.Set("ip_address_type", lb.IpAddressType)
-	d.Set("load_balancer_type", lb.Type)
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
+	d.Set("dns_name", lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
-
-	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
-	}
-
+	d.Set("ip_address_type", lb.IpAddressType)
+	d.Set("name", lb.LoadBalancerName)
+	d.Set("internal", aws.StringValue(lb.Scheme) == "internal")
+	d.Set("load_balancer_type", lb.Type)
+	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
+	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
+	}
+	d.Set("vpc_id", lb.VpcId)
+	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
 	attributesResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),

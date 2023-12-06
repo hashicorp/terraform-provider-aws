@@ -29,6 +29,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -602,7 +603,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChanges("security_groups", "enforce_security_group_inbound_rules_on_private_link_traffic") {
+	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", "security_groups") {
 		sgs := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
@@ -903,14 +904,10 @@ func getLBNameFromARN(arn string) (string, error) {
 	return matches[1], nil
 }
 
-// flattenSubnetsFromAvailabilityZones creates a slice of strings containing the subnet IDs
-// for the ALB based on the AvailabilityZones structure returned by the API.
 func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []string {
-	var result []string
-	for _, az := range availabilityZones {
-		result = append(result, aws.StringValue(az.SubnetId))
-	}
-	return result
+	return tfslices.ApplyToAll(availabilityZones, func(v *elbv2.AvailabilityZone) string {
+		return aws.StringValue(v.SubnetId)
+	})
 }
 
 func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
