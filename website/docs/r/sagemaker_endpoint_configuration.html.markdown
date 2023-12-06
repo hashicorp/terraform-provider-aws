@@ -64,6 +64,9 @@ This resource supports the following arguments:
 * `destination_s3_uri` - (Required) The Amazon S3 bucket to send the core dump to.
 * `kms_key_id` - (Required) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that SageMaker uses to encrypt the core dump data at rest using Amazon S3 server-side encryption.
 
+#### routing_config
+* `routing_strategy` - (Required) Sets how the endpoint routes incoming traffic. `LEAST_OUTSTANDING_REQUESTS`: The endpoint routes requests to the specific instances that have more capacity to process them. `RANDOM`: The endpoint routes each request to a randomly chosen instance.
+
 #### serverless_config
 
 * `max_concurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.

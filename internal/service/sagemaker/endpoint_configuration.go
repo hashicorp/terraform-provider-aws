@@ -325,6 +325,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(LEAST_OUTSTANDING_REQUESTS|RANDOM)`), ""),
+									},
+								},
+							},
+						},
 						"serverless_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -447,6 +462,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(LEAST_OUTSTANDING_REQUESTS|RANDOM)`), ""),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -649,6 +679,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
 			l.AcceleratorType = aws.String(v)
+		}
+
+		if v, ok := data["routing_config"].([]interface{}); ok && len(v) > 0 {
+			l.RoutingConfig = expandRoutingConfig(v)
 		}
 
 		if v, ok := data["serverless_config"].([]interface{}); ok && len(v) > 0 {
@@ -911,6 +945,22 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 
 	if v, ok := m["include_inference_response_in"].(*schema.Set); ok && v.Len() > 0 {
 		c.IncludeInferenceResponseIn = flex.ExpandStringSet(v)
+	}
+
+	return c
+}
+
+func expandRoutingConfig(configured []interface{}) *sagemaker.ProductionVariantRoutingConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ProductionVariantRoutingConfig{}
+
+	if v, ok := m["routing_strategy"].(string); ok {
+		c.RoutingStrategy = aws.String(v)
 	}
 
 	return c
