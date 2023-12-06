@@ -35,6 +35,7 @@ func testAccDataLake_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,6 +75,7 @@ func testAccDataLake_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -105,6 +107,7 @@ func testAccDataLake_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -159,6 +162,7 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -206,6 +210,7 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -275,6 +280,7 @@ func testAccDataLake_replication(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLake),
