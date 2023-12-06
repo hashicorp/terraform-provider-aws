@@ -69,4 +69,4 @@ Using `terraform import`, import ECS Account Setting defaults using the `name`. 
 % terraform import aws_ecs_account_setting_default.example taskLongArnFormat
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c6b2c30bb370dbc4f2130758dcd1fab12e3335f271b897842de52c4e4af677af -->
+<!-- cache-key: cdktf-0.19.0 input-c6b2c30bb370dbc4f2130758dcd1fab12e3335f271b897842de52c4e4af677af -->

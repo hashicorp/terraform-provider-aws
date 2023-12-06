@@ -219,7 +219,7 @@ The following arguments are optional:
 
 * `accessTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used.
   By default, the unit is hours.
-  The unit can be overridden by a value in `tokenValidityUnitsAccessToken`.
+  The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowedOauthFlowsUserPoolClient` - (Optional) Whether the client is allowed to follow the OAuth protocol when interacting with Cognito user pools.
 * `allowedOauthFlows` - (Optional) List of allowed OAuth flows (code, implicit, client_credentials).
 * `allowedOauthScopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).
@@ -233,14 +233,14 @@ The following arguments are optional:
 * `generateSecret` - (Optional) Should an application secret be generated.
 * `idTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used.
   By default, the unit is hours.
-  The unit can be overridden by a value in `tokenValidityUnitsIdToken`.
+  The unit can be overridden by a value in `token_validity_units.id_token`.
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers.
-* `preventUserExistenceErrors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `enabled` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `legacy`, those APIs will return a `userNotFoundException` exception if the user does not exist in the user pool.
+* `preventUserExistenceErrors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `readAttributes` - (Optional) List of user pool attributes the application client can read from.
 * `refreshTokenValidity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used.
   By default, the unit is days.
-  The unit can be overridden by a value in `tokenValidityUnitsRefreshToken`.
-* `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `providerName` attribute of `awsCognitoIdentityProvider` resource(s), or the equivalent string(s).
+  The unit can be overridden by a value in `token_validity_units.refresh_token`.
+* `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `provider_name` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `tokenValidityUnits` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
 * `writeAttributes` - (Optional) List of user pool attributes the application client can write to.
 
@@ -248,19 +248,19 @@ The following arguments are optional:
 
 Either `applicationArn` or `applicationId` is required.
 
-* `applicationArn` - (Optional) Application ARN for an Amazon Pinpoint application. Conflicts with `externalId` and `roleArn`.
+* `applicationArn` - (Optional) Application ARN for an Amazon Pinpoint application. Conflicts with `external_id` and `role_arn`.
 * `applicationId` - (Optional) Application ID for an Amazon Pinpoint application.
-* `externalId` - (Optional) ID for the Analytics Configuration. Conflicts with `applicationArn`.
-* `roleArn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `applicationArn`.
+* `externalId` - (Optional) ID for the Analytics Configuration. Conflicts with `application_arn`.
+* `roleArn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
 * `userDataShared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
 ### token_validity_units
 
 Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `days`.
 
-* `accessToken` - (Optional) Time unit in for the value in `accessTokenValidity`, defaults to `hours`.
-* `idToken` - (Optional) Time unit in for the value in `idTokenValidity`, defaults to `hours`.
-* `refreshToken` - (Optional) Time unit in for the value in `refreshTokenValidity`, defaults to `days`.
+* `accessToken` - (Optional) Time unit in for the value in `access_token_validity`, defaults to `hours`.
+* `idToken` - (Optional) Time unit in for the value in `id_token_validity`, defaults to `hours`.
+* `refreshToken` - (Optional) Time unit in for the value in `refresh_token_validity`, defaults to `days`.
 
 ## Attribute Reference
 
@@ -291,4 +291,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f15ecc5dad4d3b315fc63b6cc6f271d574fd906c13652ee8c6dbe7ed3789a449 -->
+<!-- cache-key: cdktf-0.19.0 input-f15ecc5dad4d3b315fc63b6cc6f271d574fd906c13652ee8c6dbe7ed3789a449 -->

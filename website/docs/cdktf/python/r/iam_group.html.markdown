@@ -45,7 +45,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The group's ID.
+* `id` - The group's name.
 * `arn` - The ARN assigned by AWS for this group.
 * `name` - The group's name.
 * `path` - The path of the group in IAM.
@@ -72,4 +72,4 @@ Using `terraform import`, import IAM Groups using the `name`. For example:
 % terraform import aws_iam_group.developers developers
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-19922afba524eb368c46a00c530fc921f976515589b4b61def0e5a9b38c35831 -->
+<!-- cache-key: cdktf-0.19.0 input-e1f951434c8e97d752b4b33f7392019781badf8207ba190fd5ffe85bdd25a7f4 -->

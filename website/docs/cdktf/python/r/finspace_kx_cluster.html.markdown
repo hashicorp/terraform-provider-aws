@@ -56,6 +56,11 @@ class MyConvertedCode(TerraformStack):
             environment_id=Token.as_string(aws_finspace_kx_environment_example.id),
             name="my-tf-kx-cluster",
             release_label="1.0",
+            timeouts=[{
+                "create": "18h",
+                "update": "18h"
+            }
+            ],
             type="HDB",
             vpc_configuration=FinspaceKxClusterVpcConfiguration(
                 ip_address_type="IP_V4",
@@ -129,8 +134,13 @@ The capacity_configuration block supports the following arguments:
 The cache_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of cache storage . The valid values are:
-    * CACHE_1000 - This type provides at least 1000 MB/s disk access throughput.
+    * CACHE_1000 - This type provides 1000 MB/s disk access throughput.
+    * CACHE_250 - This type provides 250 MB/s disk access throughput.
+    * CACHE_12 - This type provides 12 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
+
+Please note that create/update timeouts may have to be adjusted from the default 4 hours depending upon the
+volume of data being cached, as noted in the example configuration.
 
 ### code
 
@@ -186,9 +196,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `update` - (Default `2m`)
-* `delete` - (Default `40m`)
+* `create` - (Default `4h`)
+* `update` - (Default `4h`)
+* `delete` - (Default `60m`)
 
 ## Import
 
@@ -209,4 +219,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ba9e9b61695441ed5084a8e4f387258970bfe29d8d0cd1d2e3384bca3e7f1cee -->
+<!-- cache-key: cdktf-0.19.0 input-a62354273cd0579ac96ba9caa797f616e648f46241c8907e9d1077a7877ab7f0 -->

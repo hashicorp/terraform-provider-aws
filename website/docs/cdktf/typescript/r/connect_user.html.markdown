@@ -212,17 +212,17 @@ This resource supports the following arguments:
 * `hierarchyGroupId` - (Optional) The identifier of the hierarchy group for the user.
 * `identityInfo` - (Optional) A block that contains information about the identity of the user. Documented below.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `name` - (Required) The user name for the account. For instances not using SAML for identity management, the user name can include up to 20 characters. If you are using SAML for identity management, the user name can include up to 64 characters from `[aZAZ09_-.\@]+`.
+* `name` - (Required) The user name for the account. For instances not using SAML for identity management, the user name can include up to 20 characters. If you are using SAML for identity management, the user name can include up to 64 characters from `[a-zA-Z0-9_-.\@]+`.
 * `password` - (Optional) The password for the user account. A password is required if you are using Amazon Connect for identity management. Otherwise, it is an error to include a password.
 * `phoneConfig` - (Required) A block that contains information about the phone settings for the user. Documented below.
 * `routingProfileId` - (Required) The identifier of the routing profile for the user.
 * `securityProfileIds` - (Required) A list of identifiers for the security profiles for the user. Specify a minimum of 1 and maximum of 10 security profile ids. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `tags` - (Optional) Tags to apply to the user. If configured with a provider
-[`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `identityInfo` block supports the following arguments:
 
-* `email` - (Optional) The email address. If you are using SAML for identity management and include this parameter, an error is returned. Note that updates to the `email` is supported. From the [UpdateUserIdentityInfo API documentation](https://docs.aws.amazon.com/connect/latest/APIReference/API_UpdateUserIdentityInfo.html) it is strongly recommended to limit who has the ability to invoke `updateUserIdentityInfo`. Someone with that ability can change the login credentials of other users by changing their email address. This poses a security risk to your organization. They can change the email address of a user to the attacker's email address, and then reset the password through email. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
+* `email` - (Optional) The email address. If you are using SAML for identity management and include this parameter, an error is returned. Note that updates to the `email` is supported. From the [UpdateUserIdentityInfo API documentation](https://docs.aws.amazon.com/connect/latest/APIReference/API_UpdateUserIdentityInfo.html) it is strongly recommended to limit who has the ability to invoke `UpdateUserIdentityInfo`. Someone with that ability can change the login credentials of other users by changing their email address. This poses a security risk to your organization. They can change the email address of a user to the attacker's email address, and then reset the password through email. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `firstName` - (Optional) The first name. This is required if you are using Amazon Connect or SAML for identity management. Minimum length of 1. Maximum length of 100.
 * `lastName` - (Optional) The last name. This is required if you are using Amazon Connect or SAML for identity management. Minimum length of 1. Maximum length of 100.
 
@@ -230,8 +230,8 @@ A `phoneConfig` block supports the following arguments:
 
 * `afterContactWorkTimeLimit` - (Optional) The After Call Work (ACW) timeout setting, in seconds. Minimum value of 0.
 * `autoAccept` - (Optional) When Auto-Accept Call is enabled for an available agent, the agent connects to contacts automatically.
-* `deskPhoneNumber` - (Optional) The phone number for the user's desk phone. Required if `phoneType` is set as `deskPhone`.
-* `phoneType` - (Required) The phone type. Valid values are `deskPhone` and `softPhone`.
+* `deskPhoneNumber` - (Optional) The phone number for the user's desk phone. Required if `phone_type` is set as `DESK_PHONE`.
+* `phoneType` - (Required) The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
 ## Attribute Reference
 
@@ -240,7 +240,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the user.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the user
 separated by a colon (`:`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `userId` - The identifier for the user.
 
 ## Import
@@ -265,4 +265,4 @@ Using `terraform import`, import Amazon Connect Users using the `instanceId` and
 % terraform import aws_connect_user.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-637041caefd4e9ef7b93ae5320925ba1005510f5cbf4f83cc643caaa13039440 -->
+<!-- cache-key: cdktf-0.19.0 input-637041caefd4e9ef7b93ae5320925ba1005510f5cbf4f83cc643caaa13039440 -->

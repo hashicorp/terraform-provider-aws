@@ -69,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - The friendly name of the policy.
 * `type` - The type of policy values can be `SERVICE_CONTROL_POLICY | TAG_POLICY | BACKUP_POLICY | AISERVICES_OPT_OUT_POLICY`
 
-<!-- cache-key: cdktf-0.18.0 input-64f486a6cfb19466cfa54daa60bbce856a5f3e8a11f79a4bf1dce126e773a631 -->
+<!-- cache-key: cdktf-0.19.0 input-64f486a6cfb19466cfa54daa60bbce856a5f3e8a11f79a4bf1dce126e773a631 -->

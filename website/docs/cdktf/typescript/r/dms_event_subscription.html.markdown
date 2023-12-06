@@ -50,26 +50,26 @@ This resource supports the following arguments:
 
 * `name` - (Required) Name of event subscription.
 * `enabled` - (Optional, Default: true) Whether the event subscription should be enabled.
-* `eventCategories` - (Optional) List of event categories to listen for, see `describeEventCategories` for a canonical list.
-* `sourceType` - (Optional, Default: all events) Type of source for events. Valid values: `replicationInstance` or `replicationTask`
+* `eventCategories` - (Optional) List of event categories to listen for, see `DescribeEventCategories` for a canonical list.
+* `sourceType` - (Optional, Default: all events) Type of source for events. Valid values: `replication-instance` or `replication-task`
 * `sourceIds` - (Required) Ids of sources to listen to.
 * `snsTopicArn` - (Required) SNS topic arn to send events on.
-* `tags` - (Optional) Map of resource tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the DMS Event Subscription.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import event subscriptions using the `name`. For examp
 % terraform import aws_dms_event_subscription.test my-awesome-event-subscription
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8fddb59943e1aef59e7d893b468b8a5bb1e2486c31cb4b972078535d91348ad6 -->
+<!-- cache-key: cdktf-0.19.0 input-8fddb59943e1aef59e7d893b468b8a5bb1e2486c31cb4b972078535d91348ad6 -->

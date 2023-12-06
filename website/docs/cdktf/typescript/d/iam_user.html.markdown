@@ -45,10 +45,11 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS for this user.
+* `id` - Unique ID assigned by AWS for this user.
 * `path` - Path in which this user was created.
 * `permissionsBoundary` - The ARN of the policy that is used to set the permissions boundary for the user.
 * `userId` - Unique ID assigned by AWS for this user.
 * `userName` - Name associated to this User
 * `tags` - Map of key-value pairs associated with the user.
 
-<!-- cache-key: cdktf-0.18.0 input-311b2756445d8c90d21040b26efe2adc4c762ad5827739191b5f65d550f8435c -->
+<!-- cache-key: cdktf-0.19.0 input-6fc236e4096e564d16a3b9afdadc3ab5361ca85cbec9e92427faf10567dd0bee -->

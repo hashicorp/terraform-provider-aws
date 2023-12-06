@@ -47,7 +47,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Service Network.
-* `authType` - Authentication type for the service network. Either `none` or `awsIam`.
+* `authType` - Authentication type for the service network. Either `NONE` or `AWS_IAM`.
 * `createdAt` - Date and time the service network was created.
 * `id` - ID of the service network.
 * `lastUpdatedAt` - Date and time the service network was last updated.
@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `numberOfAssociatedServices` - Number of services associated with this service network.
 * `numberOfAssociatedVpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.18.0 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->
+<!-- cache-key: cdktf-0.19.0 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->

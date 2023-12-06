@@ -46,15 +46,15 @@ This resource supports the following arguments:
 * `encryptionConfiguration` - (Optional) Encryption configuration for the repository. See [below for schema](#encryption_configuration).
 * `forceDelete` - (Optional) If `true`, will delete the repository even if it contains images.
   Defaults to `false`.
-* `imageTagMutability` - (Optional) The tag mutability setting for the repository. Must be one of: `mutable` or `immutable`. Defaults to `mutable`.
+* `imageTagMutability` - (Optional) The tag mutability setting for the repository. Must be one of: `MUTABLE` or `IMMUTABLE`. Defaults to `MUTABLE`.
 * `imageScanningConfiguration` - (Optional) Configuration block that defines image scanning configuration for the repository. By default, image scanning must be manually triggered. See the [ECR User Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html) for more information about image scanning.
-    * `scanOnPush` - (Required) Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+    * `scan_on_push` - (Required) Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false).
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### encryption_configuration
 
-* `encryptionType` - (Optional) The encryption type to use for the repository. Valid values are `aes256` or `kms`. Defaults to `aes256`.
-* `kmsKey` - (Optional) The ARN of the KMS key to use when `encryptionType` is `kms`. If not specified, uses the default AWS managed key for ECR.
+* `encryptionType` - (Optional) The encryption type to use for the repository. Valid values are `AES256` or `KMS`. Defaults to `AES256`.
+* `kmsKey` - (Optional) The ARN of the KMS key to use when `encryption_type` is `KMS`. If not specified, uses the default AWS managed key for ECR.
 
 ## Attribute Reference
 
@@ -62,14 +62,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Full ARN of the repository.
 * `registryId` - The registry ID where the repository was created.
-* `repositoryUrl` - The URL of the repository (in the form `awsAccountIdDkrEcrRegionAmazonawsCom/repositoryName`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `repositoryUrl` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `20M`)
+- `delete` - (Default `20m`)
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import ECR Repositories using the `name`. For example:
 % terraform import aws_ecr_repository.service test-service
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e1209b507b315e404a10f48d280e6590a59e9ffd637d877733fc8905cf37de81 -->
+<!-- cache-key: cdktf-0.19.0 input-e1209b507b315e404a10f48d280e6590a59e9ffd637d877733fc8905cf37de81 -->

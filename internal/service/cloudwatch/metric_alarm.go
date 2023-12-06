@@ -377,7 +377,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)

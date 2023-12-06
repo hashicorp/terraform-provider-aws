@@ -75,13 +75,13 @@ This resource supports the following arguments:
 * `createVersion` - (Optional) Determines if a new bot version is created when the initial resource is created and on each update. Defaults to `false`.
 * `description` - (Optional) A description of the bot. Must be less than or equal to 200 characters in length.
 * `detectSentiment` - (Optional) When set to true user utterances are sent to Amazon Comprehend for sentiment analysis. If you don't specify detectSentiment, the default is `false`.
-* `enableModelImprovements` - (Optional) Set to `true` to enable access to natural language understanding improvements. When you set the `enableModelImprovements` parameter to true you can use the `nluIntentConfidenceThreshold` parameter to configure confidence scores. For more information, see [Confidence Scores](https://docs.aws.amazon.com/lex/latest/dg/confidence-scores.html). You can only set the `enableModelImprovements` parameter in certain Regions. If you set the parameter to true, your bot has access to accuracy improvements. For more information see the [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-enableModelImprovements).
+* `enableModelImprovements` - (Optional) Set to `true` to enable access to natural language understanding improvements. When you set the `enable_model_improvements` parameter to true you can use the `nlu_intent_confidence_threshold` parameter to configure confidence scores. For more information, see [Confidence Scores](https://docs.aws.amazon.com/lex/latest/dg/confidence-scores.html). You can only set the `enable_model_improvements` parameter in certain Regions. If you set the parameter to true, your bot has access to accuracy improvements. For more information see the [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-enableModelImprovements).
 * `idleSessionTtlInSeconds` - (Optional) The maximum time in seconds that Amazon Lex retains the data gathered in a conversation. Default is `300`. Must be a number between 60 and 86400 (inclusive).
-* `locale` - (Optional) Specifies the target locale for the bot. Any intent used in the bot must be compatible with the locale of the bot. For available locales, see [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-locale). Default is `enUs`.
+* `locale` - (Optional) Specifies the target locale for the bot. Any intent used in the bot must be compatible with the locale of the bot. For available locales, see [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-locale). Default is `en-US`.
 * `intent` - (Required) A set of Intent objects. Each intent represents a command that a user can express. Attributes are documented under [intent](#intent). Can have up to 250 Intent objects.
 * `name` - (Required) The name of the bot that you want to create, case sensitive. Must be between 2 and 50 characters in length.
-* `nluIntentConfidenceThreshold` - (Optional) Determines the threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents in a PostContent or PostText response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted if they are configured for the bot. For more information see [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-nluIntentConfidenceThreshold) This value requires `enableModelImprovements` to be set to `true` and the default is `0`. Must be a float between 0 and 1.
-* `processBehavior` - (Optional) If you set the `processBehavior` element to `build`, Amazon Lex builds the bot so that it can be run. If you set the element to `save` Amazon Lex saves the bot, but doesn't build it. Default is `save`.
+* `nluIntentConfidenceThreshold` - (Optional) Determines the threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents in a PostContent or PostText response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted if they are configured for the bot. For more information see [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-nluIntentConfidenceThreshold) This value requires `enable_model_improvements` to be set to `true` and the default is `0`. Must be a float between 0 and 1.
+* `processBehavior` - (Optional) If you set the `process_behavior` element to `BUILD`, Amazon Lex builds the bot so that it can be run. If you set the element to `SAVE` Amazon Lex saves the bot, but doesn't build it. Default is `SAVE`.
 * `voiceId` - (Optional) The Amazon Polly voice ID that you want Amazon Lex to use for voice interactions with the user. The locale configured for the voice must match the locale of the bot. For more information, see [Available Voices](http://docs.aws.amazon.com/polly/latest/dg/voicelist.html) in the Amazon Polly Developer Guide.
 
 ### intent
@@ -130,9 +130,9 @@ slot values into the response card. For more information, see
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Attribute Reference
 
@@ -171,4 +171,4 @@ Using `terraform import`, import bots using their name. For example:
 % terraform import aws_lex_bot.order_flowers_bot OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e97de4060b2ca18f867fded9294c619effbd503e7c58dacacd804ae26ee28522 -->
+<!-- cache-key: cdktf-0.19.0 input-e97de4060b2ca18f867fded9294c619effbd503e7c58dacacd804ae26ee28522 -->

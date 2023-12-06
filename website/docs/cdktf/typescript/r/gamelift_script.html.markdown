@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the script
 * `storageLocation` - (Optional) Information indicating where your game script files are stored. See below.
 * `version` - (Optional) Version that is associated with this script.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `zipFile` - (Optional) A data object containing your Realtime scripts and dependencies as a zip  file. The zip file can have one or multiple files. Maximum size of a zip file is 5 MB.
 
 ### Nested Fields
@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - GameLift Script ID.
 * `arn` - GameLift Script ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import GameLift Scripts using the ID. For example:
 % terraform import aws_gamelift_script.example <script-id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ea65675a0727f9e5f10a03be30cedabffe531a0a9407f9d714cbdeca2fce29dc -->
+<!-- cache-key: cdktf-0.19.0 input-ea65675a0727f9e5f10a03be30cedabffe531a0a9407f9d714cbdeca2fce29dc -->

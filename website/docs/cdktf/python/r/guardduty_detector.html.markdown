@@ -144,4 +144,4 @@ Using `terraform import`, import GuardDuty detectors using the detector ID. For 
 
 The ID of the detector can be retrieved via the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/guardduty/list-detectors.html) using `aws guardduty list-detectors`.
 
-<!-- cache-key: cdktf-0.18.0 input-302ad3286e382870d4c5a91d3567a07ae8a6c0466169ed1648e2acc9f1c51eaf -->
+<!-- cache-key: cdktf-0.19.0 input-302ad3286e382870d4c5a91d3567a07ae8a6c0466169ed1648e2acc9f1c51eaf -->

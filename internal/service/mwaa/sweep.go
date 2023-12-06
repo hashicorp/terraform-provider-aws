@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package mwaa
 
 import (
@@ -16,9 +13,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_mwaa_environment", &resource.Sweeper{
 		Name: "aws_mwaa_environment",
 		F:    sweepEnvironment,
@@ -38,7 +36,7 @@ func sweepEnvironment(region string) error {
 
 	listOutput, err := conn.ListEnvironmentsWithContext(ctx, &mwaa.ListEnvironmentsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
+		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
 			return nil
 		}

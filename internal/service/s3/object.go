@@ -53,7 +53,12 @@ func ResourceObject() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceObjectCustomizeDiff,
-			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if ignoreProviderDefaultTags(ctx, d) {
+					return d.SetNew("tags_all", d.Get("tags"))
+				}
+				return verify.SetTagsDiff(ctx, d, meta)
+			},
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -180,6 +185,30 @@ func ResourceObject() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"override_provider": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_tags": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tags": {
+										Type:             schema.TypeMap,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										ValidateDiagFunc: verify.MapLenBetween(0, 0),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"server_side_encryption": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -268,13 +297,11 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
+	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
+		setTagsOut(ctx, Tags(tags))
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -336,7 +363,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			o, n := expandObjectDate(oraw.(string)), expandObjectDate(nraw.(string))
 
 			if n == nil || (o != nil && n.Before(*o)) {
-				input.BypassGovernanceRetention = true
+				input.BypassGovernanceRetention = aws.Bool(true)
 			}
 		}
 
@@ -403,7 +430,13 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
+
+	if ignoreProviderDefaultTags(ctx, d) {
+		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
+	} else {
+		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
+	}
 
 	var body io.ReadSeeker
 
@@ -452,7 +485,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		input.BucketKeyEnabled = v.(bool)
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {
@@ -668,4 +701,51 @@ func sdkv1CompatibleCleanKey(key string) string {
 	key = strings.TrimLeft(key, "/")
 	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
 	return key
+}
+
+func ignoreProviderDefaultTags(ctx context.Context, d verify.ResourceDiffer) bool {
+	if v, ok := d.GetOk("override_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if data := expandOverrideProviderModel(ctx, v.([]interface{})[0].(map[string]interface{})); data != nil && data.DefaultTagsConfig != nil {
+			return len(data.DefaultTagsConfig.Tags) == 0
+		}
+	}
+
+	return false
+}
+
+type overrideProviderModel struct {
+	DefaultTagsConfig *tftags.DefaultConfig
+}
+
+func expandOverrideProviderModel(ctx context.Context, tfMap map[string]interface{}) *overrideProviderModel {
+	if tfMap == nil {
+		return nil
+	}
+
+	data := &overrideProviderModel{}
+
+	if v, ok := tfMap["default_tags"].([]interface{}); ok && len(v) > 0 {
+		if v[0] != nil {
+			data.DefaultTagsConfig = expandDefaultTags(ctx, v[0].(map[string]interface{}))
+		} else {
+			// Ensure that DefaultTagsConfig is not nil as it's checked in ignoreProviderDefaultTags.
+			data.DefaultTagsConfig = expandDefaultTags(ctx, map[string]interface{}{})
+		}
+	}
+
+	return data
+}
+
+func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	data := &tftags.DefaultConfig{}
+
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
+		data.Tags = tftags.New(ctx, v)
+	}
+
+	return data
 }

@@ -48,7 +48,7 @@ The given filters must match exactly one VPC endpoint whose data will be exporte
 
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
-* `serviceName` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `comAmazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `awsSagemaker.<region>Notebook`).
+* `serviceName` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the specific VPC Endpoint to retrieve.
@@ -67,19 +67,19 @@ which take the following arguments:
 In addition to all arguments above except `filter`, the following attributes are exported:
 
 * `arn` - ARN of the VPC endpoint.
-* `cidrBlocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `gateway`.
-* `dnsEntry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `interface`. [DNS entry blocks are documented below](#dns_entry-block).
+* `cidrBlocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
+* `dnsEntry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. [DNS entry blocks are documented below](#dns_entry-block).
 * `dnsOptions` - DNS options for the VPC Endpoint. [DNS options blocks are documented below](#dns_options-block).
-* `networkInterfaceIds` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `interface`.
+* `networkInterfaceIds` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
 * `ownerId` - ID of the AWS account that owns the VPC endpoint.
-* `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `gateway`.
-* `prefixListId` - Prefix list ID of the exposed AWS service. Applicable for endpoints of type `gateway`.
-* `privateDnsEnabled` - Whether or not the VPC is associated with a private hosted zone - `true` or `false`. Applicable for endpoints of type `interface`.
+* `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
+* `prefixListId` - Prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
+* `privateDnsEnabled` - Whether or not the VPC is associated with a private hosted zone - `true` or `false`. Applicable for endpoints of type `Interface`.
 * `requesterManaged` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
-* `routeTableIds` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `gateway`.
-* `securityGroupIds` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `interface`.
-* `subnetIds` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `interface`.
-* `vpcEndpointType` - VPC Endpoint type, `gateway` or `interface`.
+* `routeTableIds` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
+* `securityGroupIds` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
+* `subnetIds` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
+* `vpcEndpointType` - VPC Endpoint type, `Gateway` or `Interface`.
 
 ### `dnsEntry` Block
 
@@ -99,6 +99,6 @@ DNS options (for `dnsOptions`) support the following attributes:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-cf41a1af88fdcd16967d2fea2f7220a7cac0581c1bfd6c1afb6c5a31ae85ffb1 -->
+<!-- cache-key: cdktf-0.19.0 input-cf41a1af88fdcd16967d2fea2f7220a7cac0581c1bfd6c1afb6c5a31ae85ffb1 -->

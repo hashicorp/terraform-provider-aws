@@ -71,4 +71,4 @@ Using `terraform import`, import MSK Connect Worker Configuration using the plug
 % terraform import aws_mskconnect_worker_configuration.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:worker-configuration/example/8848493b-7fcc-478c-a646-4a52634e3378-4'
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc7b92333857615efcf55495814a13f7f290beda82616db5a0a69a043449491a -->
+<!-- cache-key: cdktf-0.19.0 input-bc7b92333857615efcf55495814a13f7f290beda82616db5a0a69a043449491a -->

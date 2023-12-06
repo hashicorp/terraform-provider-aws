@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -43,6 +44,8 @@ func ResourceAlertManagerDefinition() *schema.Resource {
 }
 
 func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -54,19 +57,21 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 	_, err := conn.CreateAlertManagerDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Prometheus Alert Manager Definition (%s): %s", workspaceID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Prometheus Alert Manager Definition (%s): %s", workspaceID, err)
 	}
 
 	d.SetId(workspaceID)
 
 	if _, err := waitAlertManagerDefinitionCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Alert Manager Definition (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Alert Manager Definition (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceAlertManagerDefinitionRead(ctx, d, meta)
+	return append(diags, resourceAlertManagerDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	amd, err := FindAlertManagerDefinitionByID(ctx, conn, d.Id())
@@ -74,20 +79,22 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Prometheus Alert Manager Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set("definition", string(amd.Data))
 	d.Set("workspace_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	input := &prometheusservice.PutAlertManagerDefinitionInput{
@@ -98,17 +105,19 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 	_, err := conn.PutAlertManagerDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAlertManagerDefinitionUpdated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Alert Manager Definition (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Alert Manager Definition (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceAlertManagerDefinitionRead(ctx, d, meta)
+	return append(diags, resourceAlertManagerDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Alert Manager Definition: (%s)", d.Id())
@@ -117,16 +126,16 @@ func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.Resourc
 	})
 
 	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Prometheus Alert Manager Definition (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAlertManagerDefinitionDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Alert Manager Definition (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Alert Manager Definition (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

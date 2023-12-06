@@ -58,6 +58,7 @@ The following arguments are optional:
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
 * `password` - (Optional) Password to be used to login to the endpoint database.
+* `pause_replication_tasks` - (Optional) Whether to pause associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint. Only tasks paused by the resource will be restarted after the modification completes. Default is `false`.
 * `port` - (Optional) Port used by the endpoint database.
 * `redshift_settings` - (Optional) Configuration block for Redshift settings. See below.
 * `s3_settings` - (Optional) (**Deprecated**, use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead) Configuration block for S3 settings. See below.
@@ -178,6 +179,7 @@ The following arguments are optional:
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. Default is `rle_dictionary`.
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. Default is `SSE_S3`.
 * `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
+* `glue_catalog_generation` - (Optional) Whether to integrate AWS Glue Data Catalog with an Amazon S3 target. See [Using AWS Glue Data Catalog with an Amazon S3 target for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.GlueCatalog) for more information. Default is `false`.
 * `ignore_header_rows` - (Optional) When this value is set to `1`, DMS ignores the first row header in a .csv file. Default is `0`.
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. Default is `1048576` (1 GB).

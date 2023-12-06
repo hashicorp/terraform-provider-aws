@@ -253,13 +253,21 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "internal", "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
@@ -267,8 +275,13 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 						"lb_protocol":       "http",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "source_security_group"),
+					resource.TestCheckResourceAttrSet(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
 			},
 			{
@@ -304,10 +317,9 @@ func TestAccELBLoadBalancer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
+func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
-	nameRegex := regexache.MustCompile("^tfacc-")
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -317,20 +329,25 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_namePrefix,
+				Config: testAccLoadBalancerConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", nameRegex),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-lb-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-lb-"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
+func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
-	generatedNameRegexp := regexache.MustCompile("^tf-lb-")
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -340,11 +357,17 @@ func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nameGenerated,
+				Config: testAccLoadBalancerConfig_namePrefix("tf-px-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-px-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-px-"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1236,21 +1259,8 @@ resource "aws_elb" "test" {
 `, rName))
 }
 
-var testAccLoadBalancerConfig_namePrefix = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_elb" "test" {
-  name_prefix        = "tfacc-"
-  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  listener {
-    instance_port     = 8000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-}
-`)
-
-var testAccLoadBalancerConfig_nameGenerated = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+func testAccLoadBalancerConfig_nameGenerated() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_elb" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
@@ -1262,6 +1272,23 @@ resource "aws_elb" "test" {
   }
 }
 `)
+}
+
+func testAccLoadBalancerConfig_namePrefix(namePrefix string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elb" "test" {
+  name_prefix        = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+`, namePrefix))
+}
 
 var testAccLoadBalancerConfig_zeroValueName = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_elb" "test" {

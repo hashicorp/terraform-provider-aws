@@ -47,35 +47,35 @@ This resource supports the following arguments:
 * `subnetIds` - (Required) A list of IDs for the subnets that the file system will be accessible from. Upto 2 subnets can be provided.
 * `preferredSubnetId` - (Required) The ID for a subnet. A subnet is a range of IP addresses in your virtual private cloud (VPC).
 * `securityGroupIds` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
-* `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:hh:mm` format) to perform weekly maintenance, in the UTC time zone.
-* `deploymentType` - (Optional) - The filesystem deployment type. Supports `multiAz1` and `singleAz1`.
+* `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
+* `deploymentType` - (Optional) - The filesystem deployment type. Supports `MULTI_AZ_1` and `SINGLE_AZ_1`.
 * `kmsKeyId` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
 * `automaticBackupRetentionDays` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
-* `dailyAutomaticBackupStartTime` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automaticBackupRetentionDays` to be set.
+* `dailyAutomaticBackupStartTime` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
 * `diskIopsConfiguration` - (Optional) The SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
 * `endpointIpAddressRange` - (Optional) Specifies the IP address range in which the endpoints to access your file system will be created. By default, Amazon FSx selects an unused IP address range for you from the 198.19.* range.
-* `storageType` - (Optional) - The filesystem storage type. defaults to `ssd`.
+* `storageType` - (Optional) - The filesystem storage type. defaults to `SSD`.
 * `fsxAdminPassword` - (Optional) The ONTAP administrative password for the fsxadmin user that you can use to administer your file system using the ONTAP CLI and REST API.
 * `routeTableIds` - (Optional) Specifies the VPC route tables in which your file system's endpoints will be created. You should specify all VPC route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughputCapacity` - (Required) Sets the throughput capacity (in MBps) for the file system that you're creating. Valid values are `128`, `256`, `512`, `1024`, `2048`, and `4096`.
 
 ### Disk Iops Configuration
 
 * `iops` - (Optional) - The total number of SSD IOPS provisioned for the file system.
-* `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `automatic` and `userProvisioned`. Default value is `automatic`.
+* `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `AUTOMATIC` and `USER_PROVISIONED`. Default value is `AUTOMATIC`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
-* `dnsName` - DNS name for the file system, e.g., `fs12345678FsxUsWest2AmazonawsCom`
+* `dnsName` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
 * `endpoints` - The endpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
-* `id` - Identifier of the file system, e.g., `fs12345678`
+* `id` - Identifier of the file system, e.g., `fs-12345678`
 * `networkInterfaceIds` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
 * `ownerId` - AWS account identifier that created the file system.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - Identifier of the Virtual Private Cloud for the file system.
 
 ### Endpoints
@@ -92,9 +92,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `60M`)
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 
@@ -153,4 +153,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-134bc14f228fe82b4650aaa88cebc5d01bdf04be8f95607b99c8c282d98c71c1 -->
+<!-- cache-key: cdktf-0.19.0 input-134bc14f228fe82b4650aaa88cebc5d01bdf04be8f95607b99c8c282d98c71c1 -->

@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_apigatewayv2_integration_response` using t
 % terraform import aws_apigatewayv2_integration_response.example aabbccddee/1122334/998877
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c751414ee371648e7a14d8bdd24be3cec193584e33fff3962b58af0f01c841ec -->
+<!-- cache-key: cdktf-0.19.0 input-c751414ee371648e7a14d8bdd24be3cec193584e33fff3962b58af0f01c841ec -->

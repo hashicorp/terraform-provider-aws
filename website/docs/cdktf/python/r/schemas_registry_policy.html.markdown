@@ -90,4 +90,4 @@ Using `terraform import`, import EventBridge Schema Registry Policy using the `r
 % terraform import aws_schemas_registry_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9012f6db2847612db1042a8a2bfd8eded85a88882cdbccfc86d64bfed094f01b -->
+<!-- cache-key: cdktf-0.19.0 input-9012f6db2847612db1042a8a2bfd8eded85a88882cdbccfc86d64bfed094f01b -->

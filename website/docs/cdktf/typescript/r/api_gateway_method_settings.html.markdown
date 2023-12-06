@@ -212,21 +212,21 @@ This resource supports the following arguments:
 
 * `restApiId` - (Required) ID of the REST API
 * `stageName` - (Required) Name of the stage
-* `methodPath` - (Required) Method path defined as `{resourcePath}/{httpMethod}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_api_gateway_resource.example.path, "/")`).
+* `methodPath` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_api_gateway_resource.example.path, "/")`).
 * `settings` - (Required) Settings block, see below.
 
 ### `settings`
 
 * `metricsEnabled` - (Optional) Whether Amazon CloudWatch metrics are enabled for this method.
-* `loggingLevel` - (Optional) Logging level for this method, which effects the log entries pushed to Amazon CloudWatch Logs. The available levels are `off`, `error`, and `info`.
+* `loggingLevel` - (Optional) Logging level for this method, which effects the log entries pushed to Amazon CloudWatch Logs. The available levels are `OFF`, `ERROR`, and `INFO`.
 * `dataTraceEnabled` - (Optional) Whether data trace logging is enabled for this method, which effects the log entries pushed to Amazon CloudWatch Logs.
-* `throttlingBurstLimit` - (Optional) Throttling burst limit. Default: `1` (throttling disabled).
-* `throttlingRateLimit` - (Optional) Throttling rate limit. Default: `1` (throttling disabled).
+* `throttlingBurstLimit` - (Optional) Throttling burst limit. Default: `-1` (throttling disabled).
+* `throttlingRateLimit` - (Optional) Throttling rate limit. Default: `-1` (throttling disabled).
 * `cachingEnabled` - (Optional) Whether responses should be cached and returned for requests. A cache cluster must be enabled on the stage for responses to be cached.
 * `cacheTtlInSeconds` - (Optional) Time to live (TTL), in seconds, for cached responses. The higher the TTL, the longer the response will be cached.
 * `cacheDataEncrypted` - (Optional) Whether the cached responses are encrypted.
 * `requireAuthorizationForCacheControl` - (Optional) Whether authorization is required for a cache invalidation request.
-* `unauthorizedCacheControlHeaderStrategy` - (Optional) How to handle unauthorized requests for cache invalidation. The available values are `failWith403`, `succeedWithResponseHeader`, `succeedWithoutResponseHeader`.
+* `unauthorizedCacheControlHeaderStrategy` - (Optional) How to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
 
 ## Attribute Reference
 
@@ -254,4 +254,4 @@ Using `terraform import`, import `awsApiGatewayMethodSettings` using `restApiId/
 % terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7743821eda51c37e62e60ebb2ef0df1ec418fbff45349d42c5ad9056c52929c9 -->
+<!-- cache-key: cdktf-0.19.0 input-7743821eda51c37e62e60ebb2ef0df1ec418fbff45349d42c5ad9056c52929c9 -->

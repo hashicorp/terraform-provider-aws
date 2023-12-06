@@ -10,15 +10,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_autoscaling_lifecycle_hook")
@@ -39,34 +42,44 @@ func ResourceLifecycleHook() *schema.Resource {
 				Required: true,
 			},
 			"default_result": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(lifecycleHookDefaultResult_Values(), false),
 			},
 			"heartbeat_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(30, 7200),
 			},
 			"lifecycle_transition": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(lifecycleHookLifecycleTransition_Values(), false),
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
+						`no spaces or special characters except "-", "_", and "/"`),
+				),
 			},
 			"notification_metadata": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"notification_target_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
@@ -76,10 +89,36 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
-	input := getPutLifecycleHookInput(d)
 	name := d.Get("name").(string)
+	input := &autoscaling.PutLifecycleHookInput{
+		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
+		LifecycleHookName:    aws.String(name),
+	}
 
-	log.Printf("[INFO] Putting Auto Scaling Lifecycle Hook: %s", input)
+	if v, ok := d.GetOk("default_result"); ok {
+		input.DefaultResult = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("heartbeat_timeout"); ok {
+		input.HeartbeatTimeout = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("lifecycle_transition"); ok {
+		input.LifecycleTransition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("notification_metadata"); ok {
+		input.NotificationMetadata = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("notification_target_arn"); ok {
+		input.NotificationTargetARN = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("role_arn"); ok {
+		input.RoleARN = aws.String(v.(string))
+	}
+
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.PutLifecycleHookWithContext(ctx, input)
@@ -114,9 +153,9 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("default_result", p.DefaultResult)
 	d.Set("heartbeat_timeout", p.HeartbeatTimeout)
 	d.Set("lifecycle_transition", p.LifecycleTransition)
+	d.Set("name", p.LifecycleHookName)
 	d.Set("notification_metadata", p.NotificationMetadata)
 	d.Set("notification_target_arn", p.NotificationTargetARN)
-	d.Set("name", p.LifecycleHookName)
 	d.Set("role_arn", p.RoleARN)
 
 	return diags
@@ -141,39 +180,6 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
-}
-
-func getPutLifecycleHookInput(d *schema.ResourceData) *autoscaling.PutLifecycleHookInput {
-	var params = &autoscaling.PutLifecycleHookInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		LifecycleHookName:    aws.String(d.Get("name").(string)),
-	}
-
-	if v, ok := d.GetOk("default_result"); ok {
-		params.DefaultResult = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("heartbeat_timeout"); ok {
-		params.HeartbeatTimeout = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("lifecycle_transition"); ok {
-		params.LifecycleTransition = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("notification_metadata"); ok {
-		params.NotificationMetadata = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("notification_target_arn"); ok {
-		params.NotificationTargetARN = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("role_arn"); ok {
-		params.RoleARN = aws.String(v.(string))
-	}
-
-	return params
 }
 
 func FindLifecycleHook(ctx context.Context, conn *autoscaling.AutoScaling, asgName, hookName string) (*autoscaling.LifecycleHook, error) {

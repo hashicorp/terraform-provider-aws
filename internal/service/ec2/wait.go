@@ -462,132 +462,6 @@ func WaitInstanceIAMInstanceProfileUpdated(ctx context.Context, conn *ec2.EC2, i
 	return nil, err
 }
 
-func WaitInstanceCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ec2.InstanceStateNamePending,
-			ec2.InstanceStateNameRunning,
-			ec2.InstanceStateNameShuttingDown,
-			ec2.InstanceStateNameStopping,
-			ec2.InstanceStateNameStopped,
-		},
-		Target:     []string{ec2.InstanceStateNameTerminated},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopping},
-		Target:     []string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceStopped(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ec2.InstanceStateNamePending,
-			ec2.InstanceStateNameRunning,
-			ec2.InstanceStateNameShuttingDown,
-			ec2.InstanceStateNameStopping,
-		},
-		Target:     []string{ec2.InstanceStateNameStopped},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitInstanceCapacityReservationSpecificationUpdated(ctx context.Context, conn *ec2.EC2, instanceID string, expectedValue *ec2.CapacityReservationSpecification) (*ec2.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(true)},
@@ -3211,80 +3085,6 @@ func WaitIPAMScopeUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout
 	return nil, err
 }
 
-func WaitInstanceStoppedWithContext(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ec2.InstanceStateNamePending,
-			ec2.InstanceStateNameRunning,
-			ec2.InstanceStateNameShuttingDown,
-			ec2.InstanceStateNameStopping,
-		},
-		Target:     []string{ec2.InstanceStateNameStopped},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceStartedWithContext(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceReadyWithContext(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopping},
-		Target:     []string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped},
-		Refresh:    StatusInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.Ec2InstanceConnectEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.Ec2InstanceConnectEndpointStateCreateInProgress),
@@ -3316,6 +3116,79 @@ func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Cli
 
 	if output, ok := outputRaw.(*types.Ec2InstanceConnectEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.StateMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client, target string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{target},
+		Refresh: StatusImageBlockPublicAccessState(ctx, conn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
+		Target:  []string{},
+		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
 
 		return output, err
 	}

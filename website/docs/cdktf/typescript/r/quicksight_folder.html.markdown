@@ -113,10 +113,10 @@ The following arguments are required:
 The following arguments are optional:
 
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
-* `folderType` - (Optional) The type of folder. By default, it is `shared`. Valid values are: `shared`.
+* `folderType` - (Optional) The type of folder. By default, it is `SHARED`. Valid values are: `SHARED`.
 * `parentFolderArn` - (Optional) The Amazon Resource Name (ARN) for the parent folder. If not set, creates a root-level folder.
 * `permissions` - (Optional) A set of resource permissions on the folder. Maximum of 64 items. See [permissions](#permissions).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### permissions
 
@@ -132,16 +132,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `folderPath` - An array of ancestor ARN strings for the folder. Empty for root-level folders.
 * `id` - A comma-delimited string joining AWS account ID and folder ID.
 * `lastUpdatedTime` - The time that the folder was last updated.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `read`   - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `read`   - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -165,4 +165,4 @@ Using `terraform import`, import a QuickSight folder using the AWS account ID an
 % terraform import aws_quicksight_folder.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bfe67ec1b66703fe4dec29123039432b9ff61c08d31438163738103ae03db233 -->
+<!-- cache-key: cdktf-0.19.0 input-bfe67ec1b66703fe4dec29123039432b9ff61c08d31438163738103ae03db233 -->

@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `humanTaskUiName` - (Required) The name of the Human Task UI.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `uiTemplate` - (Required) The Liquid template for the worker user interface. See [UI Template](#ui-template) below.
 
 ### UI Template
@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Human Task UI.
 * `id` - The name of the Human Task UI.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uiTemplate` - (Required) The Liquid template for the worker user interface. See [UI Template](#ui-template) below.
 
 ### UI Template
@@ -87,4 +87,4 @@ Using `terraform import`, import SageMaker Human Task UIs using the `humanTaskUi
 % terraform import aws_sagemaker_human_task_ui.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0347aefb03f4de7b1e49c0835befda079c2fb5ecf326b1ae8183cd0caffa6dc5 -->
+<!-- cache-key: cdktf-0.19.0 input-0347aefb03f4de7b1e49c0835befda079c2fb5ecf326b1ae8183cd0caffa6dc5 -->

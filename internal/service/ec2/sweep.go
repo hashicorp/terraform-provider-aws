@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package ec2
 
 import (
@@ -19,10 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
 		Name: "aws_customer_gateway",
 		F:    sweepCustomerGateways,
@@ -222,7 +220,7 @@ func init() {
 			"aws_codestarconnections_host",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
-			"aws_dms_replication_instance",
+			"aws_dms_replication_subnet_group",
 			"aws_docdb_subnet_group",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_instance_connect_endpoint",
@@ -421,7 +419,7 @@ func sweepCapacityReservations(region string) error {
 
 	resp, err := conn.DescribeCapacityReservationsWithContext(ctx, &ec2.DescribeCapacityReservationsInput{})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Capacity Reservation sweep for %s: %s", region, err)
 		return nil
 	}
@@ -482,7 +480,7 @@ func sweepCarrierGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Carrier Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -526,7 +524,7 @@ func sweepClientVPNEndpoints(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Client VPN Endpoint sweep for %s: %s", region, err)
 		return nil
 	}
@@ -582,7 +580,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -594,7 +592,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Client VPN Network Association sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -644,7 +642,7 @@ func sweepFleets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Fleet sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -692,7 +690,7 @@ func sweepEBSVolumes(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
 		return nil
 	}
@@ -738,7 +736,7 @@ func sweepEBSSnapshots(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EBS Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
@@ -782,7 +780,7 @@ func sweepEgressOnlyInternetGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Egress-only Internet Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -815,7 +813,7 @@ func sweepEIPs(region string) error {
 
 	output, err := conn.DescribeAddressesWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, err)
 		return nil
 	}
@@ -855,7 +853,7 @@ func sweepEIPs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EIPs for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -889,7 +887,7 @@ func sweepFlowLogs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Flow Log sweep for %s: %s", region, err)
 		return nil
 	}
@@ -933,7 +931,7 @@ func sweepHosts(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Host sweep for %s: %s", region, err)
 		return nil
 	}
@@ -957,54 +955,59 @@ func sweepInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	err = conn.DescribeInstancesPagesWithContext(ctx, &ec2.DescribeInstancesInput{}, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
+	err = conn.DescribeInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, reservation := range page.Reservations {
-			if reservation == nil {
+		for _, v := range page.Reservations {
+			if v == nil {
 				continue
 			}
 
-			for _, instance := range reservation.Instances {
-				id := aws.StringValue(instance.InstanceId)
+			for _, v := range v.Instances {
+				id := aws.StringValue(v.InstanceId)
 
-				if instance.State != nil && aws.StringValue(instance.State.Name) == ec2.InstanceStateNameTerminated {
+				if v.State != nil && aws.StringValue(v.State.Name) == ec2.InstanceStateNameTerminated {
 					log.Printf("[INFO] Skipping terminated EC2 Instance: %s", id)
 					continue
+				}
+
+				if err := disableInstanceAPIStop(ctx, conn, id, false); err != nil {
+					log.Printf("[INFO] EC2 Instance (%s): %s", id, err)
 				}
 
 				r := ResourceInstance()
 				d := r.Data(nil)
 				d.SetId(id)
-				d.Set("disable_api_stop", false)
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
 		}
+
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Instances for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Instances for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Instances (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Instances (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepInternetGateways(region string) error {
@@ -1072,7 +1075,7 @@ func sweepInternetGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Internet Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1102,7 +1105,7 @@ func sweepKeyPairs(region string) error {
 
 	output, err := conn.DescribeKeyPairsWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1154,7 +1157,7 @@ func sweepLaunchTemplates(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Launch Template sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1198,7 +1201,7 @@ func sweepNATGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1254,7 +1257,7 @@ func sweepNetworkACLs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1305,7 +1308,7 @@ func sweepNetworkInterfaces(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Network Interface sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1356,7 +1359,7 @@ func sweepNetworkInsightsPaths(region string) error {
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Network Insights Paths for %s: %w", region, err))
 	}
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Network Insights Path sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -1375,7 +1378,7 @@ func sweepPlacementGroups(region string) error {
 
 	output, err := conn.DescribePlacementGroupsWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1509,7 +1512,7 @@ func sweepRouteTables(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Route Table sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -1565,7 +1568,7 @@ func sweepSecurityGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1657,7 +1660,7 @@ func sweepSpotFleetRequests(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Fleet Requests for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -1709,7 +1712,7 @@ func sweepSpotInstanceRequests(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Instance Requests for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping EC2 Spot Instance Requests sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -1748,7 +1751,7 @@ func sweepSubnets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1792,7 +1795,7 @@ func sweepTrafficMirrorFilters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Traffic Mirror Filter sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1836,7 +1839,7 @@ func sweepTrafficMirrorSessions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Traffic Mirror Session sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1880,7 +1883,7 @@ func sweepTrafficMirrorTargets(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Traffic Mirror Target sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1928,7 +1931,7 @@ func sweepTransitGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1976,7 +1979,7 @@ func sweepTransitGatewayConnectPeers(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway Connect Peer sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2024,7 +2027,7 @@ func sweepTransitGatewayConnects(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway Connect sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2072,7 +2075,7 @@ func sweepTransitGatewayMulticastDomains(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2120,7 +2123,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2168,7 +2171,7 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2239,7 +2242,7 @@ func sweepVPCDHCPOptions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 DHCP Options Set sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2287,7 +2290,7 @@ func sweepVPCEndpointServices(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2335,7 +2338,7 @@ func sweepVPCEndpoints(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2379,7 +2382,7 @@ func sweepVPCPeeringConnections(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC Peering Connection sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2428,7 +2431,7 @@ func sweepVPCs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2458,7 +2461,7 @@ func sweepVPNConnections(region string) error {
 
 	output, err := conn.DescribeVpnConnectionsWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPN Connection sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2500,7 +2503,7 @@ func sweepVPNGateways(region string) error {
 
 	output, err := conn.DescribeVpnGatewaysWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2550,7 +2553,7 @@ func sweepCustomerGateways(region string) error {
 
 	output, err := conn.DescribeCustomerGatewaysWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Customer Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2607,7 +2610,7 @@ func sweepIPAMs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2654,7 +2657,7 @@ func sweepIPAMResourceDiscoveries(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IPAM Resource Discovery sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2700,7 +2703,7 @@ func sweepAMIs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AMI sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2745,7 +2748,7 @@ func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 AWS Network Performance Metric Subscription sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2791,7 +2794,7 @@ func sweepInstanceConnectEndpoints(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Instance Connect Endpoint sweep for %s: %s", region, err)
 		return nil
 	}

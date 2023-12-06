@@ -82,4 +82,4 @@ Using `terraform import`, import VPC Lattice Service Network VPC Association usi
 % terraform import aws_vpclattice_service_network_vpc_association.example snsa-05e2474658a88f6ba
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7c8b2edfc9c8f937c0cca70fd647384595bc839a9f7ba74d190e7819a13b08d8 -->
+<!-- cache-key: cdktf-0.19.0 input-7c8b2edfc9c8f937c0cca70fd647384595bc839a9f7ba74d190e7819a13b08d8 -->

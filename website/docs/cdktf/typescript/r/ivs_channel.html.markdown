@@ -41,11 +41,11 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are optional:
 
 * `authorized` - (Optional) If `true`, channel is private (enabled for playback authorization).
-* `latencyMode` - (Optional) Channel latency mode. Valid values: `normal`, `low`.
+* `latencyMode` - (Optional) Channel latency mode. Valid values: `NORMAL`, `LOW`.
 * `name` - (Optional) Channel name.
 * `recordingConfigurationArn` - (Optional) Recording configuration ARN.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `standard`, `basic`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `STANDARD`, `BASIC`.
 
 ## Attribute Reference
 
@@ -54,15 +54,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Channel.
 * `ingestEndpoint` - Channel ingest endpoint, part of the definition of an ingest server, used when setting up streaming software.
 * `playbackUrl` - Channel playback URL.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import IVS (Interactive Video) Channel using the ARN. 
 % terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-027eff160d9ed7f8a55e22eabe213339e7ec60ef328ae2f09043ed6203e4c8ab -->
+<!-- cache-key: cdktf-0.19.0 input-027eff160d9ed7f8a55e22eabe213339e7ec60ef328ae2f09043ed6203e4c8ab -->

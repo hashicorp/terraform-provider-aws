@@ -47,10 +47,10 @@ This data source exports the following attributes in addition to the arguments a
 * `adminUsername` - The username of the administrator for the first database created in the namespace.
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `dbName` - The name of the first database created in the namespace.
-* `defaultIamRoleArn` - The Amazon Resource Name (ARN) of the IAM role to set as a default in the namespace. When specifying `defaultIamRoleArn`, it also must be part of `iamRoles`.
+* `defaultIamRoleArn` - The Amazon Resource Name (ARN) of the IAM role to set as a default in the namespace. When specifying `default_iam_role_arn`, it also must be part of `iam_roles`.
 * `iamRoles` - A list of IAM roles to associate with the namespace.
 * `kmsKeyId` - The ARN of the Amazon Web Services Key Management Service key used to encrypt your data.
 * `logExports` - The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespaceId` - The Redshift Namespace ID.
 
-<!-- cache-key: cdktf-0.18.0 input-353587d87083acd6cf58b7bf04d05a60c67f4c8fc0953c115222a623d6c4455b -->
+<!-- cache-key: cdktf-0.19.0 input-353587d87083acd6cf58b7bf04d05a60c67f4c8fc0953c115222a623d6c4455b -->

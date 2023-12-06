@@ -192,19 +192,19 @@ This resource supports the following arguments:
 * `roleArn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifactStore` (Required) One or more artifact_store blocks. Artifact stores are documented below.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 An `artifactStore` block supports the following arguments:
 
-* `location` - (Required) The location where AWS CodePipeline stores artifacts for a pipeline; currently only `s3` is supported.
+* `location` - (Required) The location where AWS CodePipeline stores artifacts for a pipeline; currently only `S3` is supported.
 * `type` - (Required) The type of the artifact store, such as Amazon S3
-* `encryptionKey` - (Optional) The encryption key block AWS CodePipeline uses to encrypt the data in the artifact store, such as an AWS Key Management Service (AWS KMS) key. If you don't specify a key, AWS CodePipeline uses the default key for Amazon Simple Storage Service (Amazon S3). An `encryptionKey` block is documented below.
+* `encryptionKey` - (Optional) The encryption key block AWS CodePipeline uses to encrypt the data in the artifact store, such as an AWS Key Management Service (AWS KMS) key. If you don't specify a key, AWS CodePipeline uses the default key for Amazon Simple Storage Service (Amazon S3). An `encryption_key` block is documented below.
 * `region` - (Optional) The region where the artifact store is located. Required for a cross-region CodePipeline, do not provide for a single-region CodePipeline.
 
 An `encryptionKey` block supports the following arguments:
 
 * `id` - (Required) The KMS key ARN or ID
-* `type` - (Required) The type of key; currently only `kms` is supported
+* `type` - (Required) The type of key; currently only `KMS` is supported
 
 A `stage` block supports the following arguments:
 
@@ -213,8 +213,8 @@ A `stage` block supports the following arguments:
 
 An `action` block supports the following arguments:
 
-* `category` - (Required) A category defines what kind of action can be taken in the stage, and constrains the provider type for the action. Possible values are `approval`, `build`, `deploy`, `invoke`, `source` and `test`.
-* `owner` - (Required) The creator of the action being called. Possible values are `aws`, `custom` and `thirdParty`.
+* `category` - (Required) A category defines what kind of action can be taken in the stage, and constrains the provider type for the action. Possible values are `Approval`, `Build`, `Deploy`, `Invoke`, `Source` and `Test`.
+* `owner` - (Required) The creator of the action being called. Possible values are `AWS`, `Custom` and `ThirdParty`.
 * `name` - (Required) The action declaration's name.
 * `provider` - (Required) The provider of the service being called by the action. Valid providers are determined by the action category. Provider names are listed in the [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation.
 * `version` - (Required) A string that identifies the action type.
@@ -234,7 +234,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The codepipeline ID.
 * `arn` - The codepipeline ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -258,4 +258,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7564a4a21906390b235c7f254087ae49e059d302514c3158ce3d6d1c0c29ca5e -->
+<!-- cache-key: cdktf-0.19.0 input-7564a4a21906390b235c7f254087ae49e059d302514c3158ce3d6d1c0c29ca5e -->

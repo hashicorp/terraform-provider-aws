@@ -79,7 +79,7 @@ func conditionalFormattingColorSchema() *schema.Schema {
 func conditionalFormattingIconSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
 		Type:     schema.TypeList,
-		Required: true,
+		Optional: true,
 		MinItems: 1,
 		MaxItems: 1,
 		Elem: &schema.Resource{

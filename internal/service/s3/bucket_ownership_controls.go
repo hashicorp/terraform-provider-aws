@@ -74,6 +74,10 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 
 	_, err := conn.PutBucketOwnershipControls(ctx, input)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "OwnershipControls is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Ownership Controls: %s", bucket, err)
 	}

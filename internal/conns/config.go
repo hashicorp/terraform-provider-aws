@@ -35,10 +35,12 @@ type Config struct {
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
 	ForbiddenAccountIds            []string
-	HTTPProxy                      string
+	HTTPProxy                      *string
+	HTTPSProxy                     *string
 	IgnoreTagsConfig               *tftags.IgnoreConfig
 	Insecure                       bool
 	MaxRetries                     int
+	NoProxy                        string
 	Profile                        string
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
@@ -77,14 +79,18 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		Insecure:                      c.Insecure,
 		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
+		HTTPSProxy:                    c.HTTPSProxy,
+		HTTPProxyMode:                 awsbase.HTTPProxyModeLegacy,
 		Logger:                        logger,
 		MaxRetries:                    c.MaxRetries,
+		NoProxy:                       c.NoProxy,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
 		RetryMode:                     c.RetryMode,
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		SsoEndpoint:                   c.Endpoints[names.SSO],
 		StsEndpoint:                   c.Endpoints[names.STS],
 		SuppressDebugLog:              c.SuppressDebugLog,
 		Token:                         c.Token,
@@ -117,6 +123,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	// Avoid duplicate calls to STS by enabling SkipCredsValidation for the call to GetAwsConfig
+	// and then restoring the configured value for the call to GetAwsAccountIDAndPartition.
+	skipCredsValidation := awsbaseConfig.SkipCredsValidation
+	awsbaseConfig.SkipCredsValidation = true
+
 	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
 	ctx, cfg, awsDiags := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 
@@ -139,6 +150,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 	c.Region = cfg.Region
 
+	awsbaseConfig.SkipCredsValidation = skipCredsValidation
+
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
 	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 
@@ -159,7 +172,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
 			Severity: baseSeverityToSdkSeverity(d.Severity()),
-			Summary:  fmt.Sprintf("retrieving AWS account details: %s", d.Summary()),
+			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
 	}
@@ -167,7 +180,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if accountID == "" {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
-			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
+			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
 	}
 
 	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
@@ -196,6 +209,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
+	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion

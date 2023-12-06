@@ -106,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `serverId` - (Requirement) The Server ID of the Transfer Server (e.g., `s12345678`)
+* `serverId` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `userName` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.
 
@@ -136,4 +136,4 @@ Using `terraform import`, import Transfer SSH Public Key using the `serverId` an
 % terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f16407da495aabd5e5cb11259213032844864d47c447730f78f40b9901749b2e -->
+<!-- cache-key: cdktf-0.19.0 input-f16407da495aabd5e5cb11259213032844864d47c447730f78f40b9901749b2e -->

@@ -86,17 +86,17 @@ The following arguments are required:
 
 - `name` - (Required) Name of the contact channel. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
-- `type` - (Required) Type of the contact channel. One of `sms`, `voice` or `email`.
+- `type` - (Required) Type of the contact channel. One of `SMS`, `VOICE` or `EMAIL`.
 
 ### delivery_address
 
-- `simpleAddress` - (Required) Details to engage this contact channel. The expected format depends on the contact channel type and is described in the [`contactChannelAddress` section of the SSM Contacts API Reference](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_SSMContacts_ContactChannelAddress.html).
+- `simpleAddress` - (Required) Details to engage this contact channel. The expected format depends on the contact channel type and is described in the [`ContactChannelAddress` section of the SSM Contacts API Reference](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_SSMContacts_ContactChannelAddress.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `activationStatus` - Whether the contact channel is activated. The contact channel must be activated to use it to engage the contact. One of `activated` or `notActivated`.
+- `activationStatus` - Whether the contact channel is activated. The contact channel must be activated to use it to engage the contact. One of `ACTIVATED` or `NOT_ACTIVATED`.
 
 - `arn` - Amazon Resource Name (ARN) of the contact channel.
 
@@ -122,4 +122,4 @@ Using `terraform import`, import SSM Contact Channel using the `arn`. For exampl
 % terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-875a737831eeadb1d936d18c2cf26aad7a60fef9a50f2c0c60f64676b0763b4f -->
+<!-- cache-key: cdktf-0.19.0 input-875a737831eeadb1d936d18c2cf26aad7a60fef9a50f2c0c60f64676b0763b4f -->

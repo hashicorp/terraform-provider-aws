@@ -10,15 +10,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -94,7 +95,9 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 }
 
 func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	in := &chimesdkvoice.CreateVoiceProfileDomainInput{
 		Name:                              aws.String(d.Get(names.AttrName).(string)),
@@ -106,49 +109,53 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 		in.Description = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateVoiceProfileDomainWithContext(ctx, in)
+	out, err := conn.CreateVoiceProfileDomain(ctx, in)
 	if err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.VoiceProfileDomain == nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionCreating, ResNameVoiceProfileDomain, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(out.VoiceProfileDomain.VoiceProfileDomainId))
+	d.SetId(aws.ToString(out.VoiceProfileDomain.VoiceProfileDomainId))
 
-	return resourceVoiceProfileDomainRead(ctx, d, meta)
+	return append(diags, resourceVoiceProfileDomainRead(ctx, d, meta)...)
 }
 
 func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	out, err := FindVoiceProfileDomainByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKVoice VoiceProfileDomain (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionReading, ResNameVoiceProfileDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionReading, ResNameVoiceProfileDomain, d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(out.VoiceProfileDomainId))
+	d.SetId(aws.ToString(out.VoiceProfileDomainId))
 	d.Set(names.AttrARN, out.VoiceProfileDomainArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrDescription, out.Description)
 
 	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(out.ServerSideEncryptionConfiguration)); err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionSetting, ResNameVoiceProfileDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionSetting, ResNameVoiceProfileDomain, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		in := &chimesdkvoice.UpdateVoiceProfileDomainInput{
@@ -160,43 +167,45 @@ func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceDat
 			in.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateVoiceProfileDomainWithContext(ctx, in)
+		_, err := conn.UpdateVoiceProfileDomain(ctx, in)
 		if err != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameVoiceProfileDomain, d.Id(), err)
+			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameVoiceProfileDomain, d.Id(), err)
 		}
 
-		return resourceVoiceProfileDomainRead(ctx, d, meta)
+		return append(diags, resourceVoiceProfileDomainRead(ctx, d, meta)...)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceVoiceProfileDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	log.Printf("[INFO] Deleting ChimeSDKVoice VoiceProfileDomain %s", d.Id())
 
-	_, err := conn.DeleteVoiceProfileDomainWithContext(ctx, &chimesdkvoice.DeleteVoiceProfileDomainInput{
+	_, err := conn.DeleteVoiceProfileDomain(ctx, &chimesdkvoice.DeleteVoiceProfileDomainInput{
 		VoiceProfileDomainId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionDeleting, ResNameVoiceProfileDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionDeleting, ResNameVoiceProfileDomain, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindVoiceProfileDomainByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.VoiceProfileDomain, error) {
+func FindVoiceProfileDomainByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.VoiceProfileDomain, error) {
 	in := &chimesdkvoice.GetVoiceProfileDomainInput{
 		VoiceProfileDomainId: aws.String(id),
 	}
-	out, err := conn.GetVoiceProfileDomainWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	out, err := conn.GetVoiceProfileDomain(ctx, in)
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -214,7 +223,7 @@ func FindVoiceProfileDomainByID(ctx context.Context, conn *chimesdkvoice.ChimeSD
 	return out.VoiceProfileDomain, nil
 }
 
-func flattenServerSideEncryptionConfiguration(apiObject *chimesdkvoice.ServerSideEncryptionConfiguration) []interface{} {
+func flattenServerSideEncryptionConfiguration(apiObject *awstypes.ServerSideEncryptionConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -224,11 +233,11 @@ func flattenServerSideEncryptionConfiguration(apiObject *chimesdkvoice.ServerSid
 	}}
 }
 
-func expandServerSideEncryptionConfiguration(tfList []interface{}) *chimesdkvoice.ServerSideEncryptionConfiguration {
+func expandServerSideEncryptionConfiguration(tfList []interface{}) *awstypes.ServerSideEncryptionConfiguration {
 	if len(tfList) != 1 {
 		return nil
 	}
-	return &chimesdkvoice.ServerSideEncryptionConfiguration{
+	return &awstypes.ServerSideEncryptionConfiguration{
 		KmsKeyArn: aws.String(tfList[0].(map[string]interface{})["kms_key_arn"].(string)),
 	}
 }

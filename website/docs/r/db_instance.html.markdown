@@ -251,7 +251,7 @@ Defaults to true.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
-  See [blue_green_update](#blue_green_update) below
+  See [`blue_green_update`](#blue_green_update) below.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -266,7 +266,7 @@ be created in the `default` VPC, or in EC2 Classic, if available. When working
 with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additional read replica contraints.
+for additional read replica constraints.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
@@ -288,8 +288,12 @@ Cannot be specified for gp3 storage if the `allocated_storage` value is below a 
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
-SE1) License model information for this DB instance.
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
+    * RDS for MariaDB: `general-public-license`
+    * RDS for Microsoft SQL Server: `license-included`
+    * RDS for MySQL: `general-public-license`
+    * RDS for Oracle: `bring-your-own-license | license-included`
+    * RDS for PostgreSQL: `postgresql-license`
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
@@ -407,7 +411,7 @@ resource "aws_db_instance" "db" {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
 
-## blue_green_update
+### `blue_green_update`
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.

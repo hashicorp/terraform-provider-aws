@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Prompt.
 * `prompt_id` - Identifier for the prompt.
 
-<!-- cache-key: cdktf-0.18.0 input-58177347a81170a254def5388f5a6e011293a60f34e502cfd48782224da8174b -->
+<!-- cache-key: cdktf-0.19.0 input-58177347a81170a254def5388f5a6e011293a60f34e502cfd48782224da8174b -->

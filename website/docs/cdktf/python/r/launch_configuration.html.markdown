@@ -274,4 +274,4 @@ Using `terraform import`, import launch configurations using the `name`. For exa
 % terraform import aws_launch_configuration.as_conf terraform-lg-123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1afc8a9c3b0aae557f61ece671e34889248cace0f6b278c49774c6baa830fa60 -->
+<!-- cache-key: cdktf-0.19.0 input-1afc8a9c3b0aae557f61ece671e34889248cace0f6b278c49774c6baa830fa60 -->

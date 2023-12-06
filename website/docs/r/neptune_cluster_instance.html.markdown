@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `availability_zone` - (Optional) The EC2 Availability Zone that the neptune instance is created in.
 * `cluster_identifier` - (Required) The identifier of the [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the neptune instance. Defaults to `neptune`. Valid Values: `neptune`.
-* `engine_version` - (Optional) The neptune engine version.
+* `engine_version` - (Optional) The neptune engine version. Currently configuring this argumnet has no effect.
 * `identifier` - (Optional, Forces new resource) The identifier for the neptune instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance class to use.

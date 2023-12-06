@@ -93,4 +93,4 @@ Using `terraform import`, import SQS Queue Redrive Policies using the queue URL.
 % terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/0123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e7f48e464819827bf219c6c6888346afabe01cbaae381206aa80f3e9ec43811a -->
+<!-- cache-key: cdktf-0.19.0 input-e7f48e464819827bf219c6c6888346afabe01cbaae381206aa80f3e9ec43811a -->
