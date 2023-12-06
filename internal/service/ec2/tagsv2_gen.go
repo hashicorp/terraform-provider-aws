@@ -66,7 +66,7 @@ func setTagsOutV2(ctx context.Context, tags []awstypes.Tag) {
 // updateTagsV2 updates ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTagsV2(ctx context.Context, conn *ec2.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTagsV2(ctx context.Context, conn *ec2.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*ec2.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -80,7 +80,7 @@ func updateTagsV2(ctx context.Context, conn *ec2.Client, identifier string, oldT
 			Tags:      TagsV2(removedTags),
 		}
 
-		_, err := conn.DeleteTags(ctx, input)
+		_, err := conn.DeleteTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -95,7 +95,7 @@ func updateTagsV2(ctx context.Context, conn *ec2.Client, identifier string, oldT
 			Tags:      TagsV2(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input)
+		_, err := conn.CreateTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
