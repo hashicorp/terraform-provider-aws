@@ -50,8 +50,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `emailIdentity` - (Required) The verified email identity.
-* `behaviorOnMxFailure` - (Optional) The action to take if the required MX record isn't found when you send an email. Valid values: `useDefaultValue`, `rejectMessage`.
-* `mailFromDomain` - (Optional) The custom MAIL FROM domain that you want the verified identity to use. Required if `behaviorOnMxFailure` is `rejectMessage`.
+* `behaviorOnMxFailure` - (Optional) The action to take if the required MX record isn't found when you send an email. Valid values: `USE_DEFAULT_VALUE`, `REJECT_MESSAGE`.
+* `mailFromDomain` - (Optional) The custom MAIL FROM domain that you want the verified identity to use. Required if `behavior_on_mx_failure` is `REJECT_MESSAGE`.
 
 ## Attribute Reference
 
@@ -79,4 +79,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Mail Fro
 % terraform import aws_sesv2_email_identity_mail_from_attributes.example example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3a9a88db16593e085c12ffe4c38e264061edc67814a816a38867c84c36efd10f -->
+<!-- cache-key: cdktf-0.19.0 input-3a9a88db16593e085c12ffe4c38e264061edc67814a816a38867c84c36efd10f -->

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,6 +91,8 @@ func ResourceRegion() *schema.Resource {
 }
 
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID := d.Get("directory_id").(string)
@@ -107,43 +110,45 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	_, err := conn.AddRegionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Directory Service Region (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Directory Service Region (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitRegionCreated(ctx, conn, directoryID, regionName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Directory Service Region (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Region (%s) create: %s", d.Id(), err)
 	}
 
 	regionConn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		if err := createTags(ctx, regionConn, directoryID, tags); err != nil {
-			return diag.Errorf("setting Directory Service Directory (%s) tags: %s", directoryID, err)
+			return sdkdiag.AppendErrorf(diags, "setting Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
 
 	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
 		if err := updateNumberOfDomainControllers(ctx, regionConn, directoryID, v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceRegionRead(ctx, d, meta)
+	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	region, err := FindRegion(ctx, conn, directoryID, regionName)
@@ -151,11 +156,11 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Region (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Directory Service Region (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Directory Service Region (%s): %s", d.Id(), err)
 	}
 
 	d.Set("desired_number_of_domain_controllers", region.DesiredNumberOfDomainControllers)
@@ -163,7 +168,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("region_name", region.RegionName)
 	if region.VpcSettings != nil {
 		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettings(region.VpcSettings)}); err != nil {
-			return diag.Errorf("setting vpc_settings: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
 		}
 	} else {
 		d.Set("vpc_settings", nil)
@@ -172,36 +177,38 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	regionConn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	tags, err := listTags(ctx, regionConn, directoryID)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Directory Service Directory (%s): %s", directoryID, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", directoryID, err)
 	}
 
 	setTagsOut(ctx, Tags(tags))
 
-	return nil
+	return diags
 }
 
 func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	conn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(ctx, conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -209,25 +216,27 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o, n := d.GetChange("tags_all")
 
 		if err := updateTags(ctx, conn, directoryID, o, n); err != nil {
-			return diag.Errorf("updating Directory Service Directory (%s) tags: %s", directoryID, err)
+			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
 
-	return resourceRegionRead(ctx, d, meta)
+	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
 func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// The Region must be removed using a client in the region.
 	conn, err := regionalConn(ctx, meta.(*conns.AWSClient), regionName)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.RemoveRegionWithContext(ctx, &directoryservice.RemoveRegionInput{
@@ -235,18 +244,18 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Directory Service Region (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Region (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRegionDeleted(ctx, conn, directoryID, regionName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Directory Service Region (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Region (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func regionalConn(ctx context.Context, client *conns.AWSClient, regionName string) (*directoryservice.DirectoryService, error) {

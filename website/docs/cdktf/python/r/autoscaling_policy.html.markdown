@@ -214,7 +214,7 @@ class MyConvertedCode(TerraformStack):
                     ),
                     predefined_load_metric_specification=AutoscalingPolicyPredictiveScalingConfigurationMetricSpecificationPredefinedLoadMetricSpecification(
                         predefined_metric_type="ASGTotalCPUUtilization",
-                        resource_label="testLabel"
+                        resource_label="app/my-alb/778d41231b141a0f/targetgroup/my-alb-target-group/943f017f100becff"
                     ),
                     target_value=10
                 )
@@ -409,21 +409,21 @@ This argument supports the following arguments:
 This argument supports the following arguments:
 
 * `predefined_metric_type` - (Required) Metric type. Valid values are `ASGTotalCPUUtilization`, `ASGTotalNetworkIn`, `ASGTotalNetworkOut`, or `ALBTargetGroupRequestCount`.
-* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group. You create the resource label by appending the final portion of the load balancer ARN and the final portion of the target group ARN into a single value, separated by a forward slash (/). Refer to [PredefinedMetricSpecification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_PredefinedMetricSpecification.html) for more information.
 
 ##### predefined_metric_pair_specification
 
 This argument supports the following arguments:
 
 * `predefined_metric_type` - (Required) Which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric. For example, if the metric type is `ASGCPUUtilization`, the Auto Scaling group's total CPU metric is used as the load metric, and the average CPU metric is used for the scaling metric. Valid values are `ASGCPUUtilization`, `ASGNetworkIn`, `ASGNetworkOut`, or `ALBRequestCount`.
-* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group. You create the resource label by appending the final portion of the load balancer ARN and the final portion of the target group ARN into a single value, separated by a forward slash (/). Refer to [PredefinedMetricSpecification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_PredefinedMetricSpecification.html) for more information.
 
 ##### predefined_scaling_metric_specification
 
 This argument supports the following arguments:
 
 * `predefined_metric_type` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, or `ALBRequestCountPerTarget`.
-* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group. You create the resource label by appending the final portion of the load balancer ARN and the final portion of the target group ARN into a single value, separated by a forward slash (/). Refer to [PredefinedMetricSpecification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_PredefinedMetricSpecification.html) for more information.
 
 ##### customized_scaling_metric_specification
 
@@ -505,4 +505,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6ef16432ba01c530072bf934dd255361c14e5ea52efe71ab800335601445b659 -->
+<!-- cache-key: cdktf-0.19.0 input-3cda1de0835095d7e158606559f0db3eb8b0ad3b3a1b8d1d3a230f006e768d8b -->

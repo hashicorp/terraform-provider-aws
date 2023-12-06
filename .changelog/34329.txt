@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_iot_policy: Retry `DeleteConflictException` errors on delete
+```
+
+```release-note:enhancement
+resource/aws_iot_policy: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_iot_policy: When updating the resource, delete the oldest non-default version of the policy if creating a new version would exceed the maximum number of versions (5)
+```

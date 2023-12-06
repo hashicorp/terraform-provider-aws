@@ -82,4 +82,4 @@ Using `terraform import`, import Key Pairs using the `key_name`. For example:
 
 ~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.
 
-<!-- cache-key: cdktf-0.18.0 input-bc4b2bf30b41e8b680f59b0e745bd630e891fca6baac140b343a76369eb3e8aa -->
+<!-- cache-key: cdktf-0.19.0 input-bc4b2bf30b41e8b680f59b0e745bd630e891fca6baac140b343a76369eb3e8aa -->

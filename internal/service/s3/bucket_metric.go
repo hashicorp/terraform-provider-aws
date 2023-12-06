@@ -97,6 +97,10 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 		return conn.PutBucketMetricsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "MetricsConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Metric: %s", bucket, err)
 	}

@@ -75,4 +75,4 @@ Using `terraform import`, import Amplify backend environment using `app_id` and 
 % terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c0149c5f68fd1dca66f72427d6f00bb2e21d8385c7bdf9671e71789ce006dd4d -->
+<!-- cache-key: cdktf-0.19.0 input-c0149c5f68fd1dca66f72427d6f00bb2e21d8385c7bdf9671e71789ce006dd4d -->

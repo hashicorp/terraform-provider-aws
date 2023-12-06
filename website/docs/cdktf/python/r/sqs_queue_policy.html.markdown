@@ -90,4 +90,4 @@ Using `terraform import`, import SQS Queue Policies using the queue URL. For exa
 % terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-07637ff0b9efc607148fb133417a818d191130d7adbc072b948e54c46e471ace -->
+<!-- cache-key: cdktf-0.19.0 input-07637ff0b9efc607148fb133417a818d191130d7adbc072b948e54c46e471ace -->

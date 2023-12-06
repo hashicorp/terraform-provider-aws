@@ -91,19 +91,19 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Whether or not the Trust Anchor should be enabled.
 * `name` - (Required) The name of the Trust Anchor.
 * `source` - (Required) The source of trust, documented below
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Blocks
 
 #### `source`
 
 * `sourceData` - (Required) The data denoting the source of trust, documented below
-* `sourceType` - (Required) The type of the source of trust. Must be either `awsAcmPca` or `certificateBundle`.
+* `sourceType` - (Required) The type of the source of trust. Must be either `AWS_ACM_PCA` or `CERTIFICATE_BUNDLE`.
 
 #### `sourceData`
 
-* `acmPcaArn` - (Optional, required when `sourceType` is `awsAcmPca`) The ARN of an ACM Private Certificate Authority.
-* `x509CertificateData` - (Optional, required when `sourceType` is `certificateBundle`)
+* `acmPcaArn` - (Optional, required when `source_type` is `AWS_ACM_PCA`) The ARN of an ACM Private Certificate Authority.
+* `x509CertificateData` - (Optional, required when `source_type` is `CERTIFICATE_BUNDLE`)
 
 ## Attribute Reference
 
@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the Trust Anchor
 * `id` - The Trust Anchor ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import `awsRolesanywhereTrustAnchor` using its `id`. F
 % terraform import aws_rolesanywhere_trust_anchor.example 92b2fbbb-984d-41a3-a765-e3cbdb69ebb1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-89d8cc3f15e0773b9fe438113eea5ac563a091c5c19d681db300ed32379fb0a0 -->
+<!-- cache-key: cdktf-0.19.0 input-89d8cc3f15e0773b9fe438113eea5ac563a091c5c19d681db300ed32379fb0a0 -->

@@ -68,7 +68,7 @@ This resource supports the following arguments:
 
 * `name` - (Required) A friendly name for the Protection you are creating.
 * `resourceArn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) for the Protection object that is created.
 * `arn` - The ARN of the Protection.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -100,4 +100,4 @@ Using `terraform import`, import Shield protection resources using specifying th
 % terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-35847768aaaa80ceec4dd0e0320b0024c8b87792dc136354d8b49f64094399b6 -->
+<!-- cache-key: cdktf-0.19.0 input-35847768aaaa80ceec4dd0e0320b0024c8b87792dc136354d8b49f64094399b6 -->

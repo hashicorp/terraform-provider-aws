@@ -406,7 +406,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		add, remove, _ := verify.DiffStringMaps(old, new)
+		add, remove, _ := flex.DiffStringMaps(old, new)
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {

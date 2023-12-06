@@ -185,7 +185,7 @@ func ResourceCanary() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return new == "rate(0 minute)" && old == "rate(0 hour)"
+								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
 							},
 						},
 					},

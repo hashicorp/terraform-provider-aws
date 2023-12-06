@@ -72,4 +72,4 @@ Using `terraform import`, import SWF Domains using the `name`. For example:
 % terraform import aws_swf_domain.foo test-domain
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-54abbc51f16eec052393c1102198887c7a517cee82c16898c2f3b8d0f149a603 -->
+<!-- cache-key: cdktf-0.19.0 input-54abbc51f16eec052393c1102198887c7a517cee82c16898c2f3b8d0f149a603 -->

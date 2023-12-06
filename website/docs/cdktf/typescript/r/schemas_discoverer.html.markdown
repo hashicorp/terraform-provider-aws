@@ -47,7 +47,7 @@ This resource supports the following arguments:
 
 * `sourceArn` - (Required) The ARN of the event bus to discover event schemas on.
 * `description` - (Optional) The description of the discoverer. Maximum of 256 characters.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the discoverer.
 * `id` - The ID of the discoverer.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -79,4 +79,4 @@ Using `terraform import`, import EventBridge discoverers using the `id`. For exa
 % terraform import aws_schemas_discoverer.test 123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5d0121c0f1733e52e29ed11dfdf085e2536a62771b5c5d2f16c8193227f29a29 -->
+<!-- cache-key: cdktf-0.19.0 input-5d0121c0f1733e52e29ed11dfdf085e2536a62771b5c5d2f16c8193227f29a29 -->

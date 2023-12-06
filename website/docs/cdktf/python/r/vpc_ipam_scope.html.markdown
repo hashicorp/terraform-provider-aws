@@ -83,4 +83,4 @@ Using `terraform import`, import IPAMs using the `scope_id`. For example:
 % terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-68c08f61045d93ee20b37304de2497b2ea7ce59df7aaa4d8e18944d3dc0ddf4e -->
+<!-- cache-key: cdktf-0.19.0 input-68c08f61045d93ee20b37304de2497b2ea7ce59df7aaa4d8e18944d3dc0ddf4e -->

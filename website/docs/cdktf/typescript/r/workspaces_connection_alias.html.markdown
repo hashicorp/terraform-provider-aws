@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `connectionString` - (Required) The connection string specified for the connection alias. The connection string must be in the form of a fully qualified domain name (FQDN), such as www.example.com.
-* `tags` – (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` – (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -50,15 +50,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The identifier of the connection alias.
 * `ownerAccountId` - The identifier of the Amazon Web Services account that owns the connection alias.
 * `state` - The current state of the connection alias.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import WorkSpaces Connection Alias using the connectio
 % terraform import aws_workspaces_connection_alias.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->
+<!-- cache-key: cdktf-0.19.0 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->

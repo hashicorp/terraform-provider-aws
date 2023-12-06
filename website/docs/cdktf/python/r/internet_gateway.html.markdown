@@ -100,4 +100,4 @@ Using `terraform import`, import Internet Gateways using the `id`. For example:
 % terraform import aws_internet_gateway.gw igw-c0a643a9
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-81f1e80b898b03aa78644b4608f5a5bf4c569724d3c844941b04df531a254c3a -->
+<!-- cache-key: cdktf-0.19.0 input-81f1e80b898b03aa78644b4608f5a5bf4c569724d3c844941b04df531a254c3a -->

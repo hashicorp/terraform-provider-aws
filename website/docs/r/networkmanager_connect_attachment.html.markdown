@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connect_attachment"
 description: |-
-  Terraform resource for managing an AWS NetworkManager ConnectAttachment.
+  Terraform resource for managing an AWS Network Manager ConnectAttachment.
 ---
 
 # Resource: aws_networkmanager_connect_attachment
 
-Terraform resource for managing an AWS NetworkManager ConnectAttachment.
+Terraform resource for managing an AWS Network Manager ConnectAttachment.
 
 ## Example Usage
 
@@ -70,11 +70,15 @@ The following arguments are required:
 - `core_network_id` - (Required) The ID of a core network where you want to create the attachment.
 - `transport_attachment_id` - (Required) The ID of the attachment between the two connections.
 - `edge_location` - (Required) The Region where the edge is located.
-- `options` - (Required) Options for creating an attachment.
+- `options` - (Required) Options block. See [options](#options) for more information.
 
 The following arguments are optional:
 
 - `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### options
+
+* `protocol` - (Required) The protocol used for the attachment connection. Possible values are `GRE` and `NO_ENCAP`.
 
 ## Attribute Reference
 

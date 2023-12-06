@@ -915,6 +915,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 			},
 			{
@@ -922,6 +923,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
 				),
 			},
@@ -1389,6 +1391,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 			},
 			{
@@ -1397,6 +1400,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb2),
 					testAccCheckLoadBalancerRecreated(&lb2, &lb1),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 			},
 			{
@@ -1405,6 +1409,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb3),
 					testAccCheckLoadBalancerNotRecreated(&lb3, &lb2),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
 				),
 			},
 			{
@@ -1413,6 +1418,67 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb4),
 					testAccCheckLoadBalancerRecreated(&lb4, &lb3),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.T) {
+	ctx := acctest.Context(t)
+	var lb1 elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName, 1, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off")),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName, 1, "on"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName, 1, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
 				),
 			},
 		},
@@ -2654,6 +2720,45 @@ resource "aws_lb" "test" {
   security_groups    = slice(aws_security_group.test[*].id, 0, %[2]d)
 }
 `, rName, n))
+}
+
+func testAccLoadBalancerConfig_nlbSecurityGroupsEnforcePrivateLink(rName string, n int, enforcePrivateLink string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = 3
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+  security_groups    = slice(aws_security_group.test[*].id, 0, %[2]d)
+
+  enforce_security_group_inbound_rules_on_private_link_traffic = %[3]q
+}
+`, rName, n, enforcePrivateLink))
 }
 
 func testAccLoadBalancerConfig_nlbSubnets(rName string, subnetCount int) string {

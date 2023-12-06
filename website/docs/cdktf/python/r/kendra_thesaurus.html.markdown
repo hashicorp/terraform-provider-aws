@@ -95,4 +95,4 @@ Using `terraform import`, import `aws_kendra_thesaurus` using the unique identif
 % terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c0dadf9d404f36bcb0eb8e47f42f731ded578d3015ecba91c35c34dacf029082 -->
+<!-- cache-key: cdktf-0.19.0 input-c0dadf9d404f36bcb0eb8e47f42f731ded578d3015ecba91c35c34dacf029082 -->

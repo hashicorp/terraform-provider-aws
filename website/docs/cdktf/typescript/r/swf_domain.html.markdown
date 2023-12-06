@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional, Forces new resource) The domain description.
 * `workflowExecutionRetentionPeriodInDays` - (Required, Forces new resource) Length of time that SWF will continue to retain information about the workflow execution after the workflow execution is complete, must be between 0 and 90 days.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the domain.
 * `arn` - Amazon Resource Name (ARN)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import SWF Domains using the `name`. For example:
 % terraform import aws_swf_domain.foo test-domain
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-54abbc51f16eec052393c1102198887c7a517cee82c16898c2f3b8d0f149a603 -->
+<!-- cache-key: cdktf-0.19.0 input-54abbc51f16eec052393c1102198887c7a517cee82c16898c2f3b8d0f149a603 -->

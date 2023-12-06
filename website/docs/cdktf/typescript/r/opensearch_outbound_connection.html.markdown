@@ -58,7 +58,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `connectionAlias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
-* `connectionMode` - (Required, Forces new resource) Specifies the connection mode. Accepted values are `direct` or `vpcEndpoint`.
+* `connectionMode` - (Required, Forces new resource) Specifies the connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
 * `acceptConnection` - (Optional, Forces new resource) Accepts the connection.
 * `connectionProperties` - (Optional, Forces new resource) Configuration block for the outbound connection.
 * `localDomainInfo` - (Required, Forces new resource) Configuration block for the local Opensearch domain.
@@ -70,7 +70,7 @@ This resource supports the following arguments:
 
 ### cross_cluster_search
 
-* `skipUnavailable` - (Optional, Forces new resource) Skips unavailable clusters and can only be used for cross-cluster searches. Accepted values are `enabled` or `disabled`.
+* `skipUnavailable` - (Optional, Forces new resource) Skips unavailable clusters and can only be used for cross-cluster searches. Accepted values are `ENABLED` or `DISABLED`.
 
 ### local_domain_info
 
@@ -93,14 +93,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 `connectionProperties` block exports the following:
 
-* `endpoint` - The endpoint of the remote domain, is only set when `connectionMode` is `vpcEndpoint` and `acceptConnection` is `true`.
+* `endpoint` - The endpoint of the remote domain, is only set when `connection_mode` is `VPC_ENDPOINT` and `accept_connection` is `TRUE`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -124,4 +124,4 @@ Using `terraform import`, import AWS Opensearch Outbound Connections using the O
 % terraform import aws_opensearch_outbound_connection.foo connection-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-22357101732120a510373c3e4ffc6057617f56b27aa4b15000ded430bddb956a -->
+<!-- cache-key: cdktf-0.19.0 input-22357101732120a510373c3e4ffc6057617f56b27aa4b15000ded430bddb956a -->

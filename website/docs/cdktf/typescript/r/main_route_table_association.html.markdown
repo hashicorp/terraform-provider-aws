@@ -13,7 +13,7 @@ description: |-
 Provides a resource for managing the main routing table of a VPC.
 
 ~> **NOTE:** **Do not** use both `awsDefaultRouteTable` to manage a default route table **and** `awsMainRouteTableAssociation` with the same VPC due to possible route conflicts. See [aws_default_route_table][tf-default-route-table] documentation for more details.
-For more information, see the Amazon VPC User Guide on [Route Tables](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html). For information about managing normal route tables in Terraform, see [`awsRouteTable`](/docs/providers/aws/r/route_table.html).
+For more information, see the Amazon VPC User Guide on [Route Tables][aws-route-tables]. For information about managing normal route tables in Terraform, see [`awsRouteTable`][tf-route-tables].
 
 ## Example Usage
 
@@ -62,16 +62,16 @@ this original table as the Main Route Table for the VPC. You'll see this
 additional Route Table in the AWS console; it must remain intact in order for
 the `mainRouteTableAssociation` delete to work properly.
 
-[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
-[tf-route-tables]: /docs/providers/aws/r/route_table.html
-[tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `2M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.18.0 input-8a24f73bf17fe1ade6055be9d49a3b7dead4b56fe5a89302c4898ee7002090fc -->
+[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
+[tf-route-tables]: /docs/providers/aws/r/route_table.html
+[tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
+
+<!-- cache-key: cdktf-0.19.0 input-85ce9464624a099dd063ef1f0d0569910365b562160b38d00d28cc7887154353 -->

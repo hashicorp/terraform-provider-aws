@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -87,8 +88,8 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "neptune",
-				ValidateFunc: validEngine(),
+				Default:      engineNeptune,
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -468,21 +469,21 @@ func statusDBInstance(ctx context.Context, conn *neptune.Neptune, id string) ret
 func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"backing-up",
-			"configuring-enhanced-monitoring",
-			"configuring-iam-database-auth",
-			"configuring-log-exports",
-			"creating",
-			"maintenance",
-			"modifying",
-			"rebooting",
-			"renaming",
-			"resetting-master-credentials",
-			"starting",
-			"storage-optimization",
-			"upgrading",
+			dbInstanceStatusBackingUp,
+			dbInstanceStatusConfiguringEnhancedMonitoring,
+			dbInstanceStatusConfiguringIAMDatabaseAuth,
+			dbInstanceStatusConfiguringLogExports,
+			dbInstanceStatusCreating,
+			dbInstanceStatusMaintenance,
+			dbInstanceStatusModifying,
+			dbInstanceStatusRebooting,
+			dbInstanceStatusRenaming,
+			dbInstanceStatusResettingMasterCredentials,
+			dbInstanceStatusStarting,
+			dbInstanceStatusStorageOptimization,
+			dbInstanceStatusUpgrading,
 		},
-		Target:     []string{"available"},
+		Target:     []string{dbInstanceStatusAvailable},
 		Refresh:    statusDBInstance(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -501,8 +502,8 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id stri
 func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"modifying",
-			"deleting",
+			dbInstanceStatusModifying,
+			dbInstanceStatusDeleting,
 		},
 		Target:     []string{},
 		Refresh:    statusDBInstance(ctx, conn, id),

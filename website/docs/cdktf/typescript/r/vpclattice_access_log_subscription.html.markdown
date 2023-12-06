@@ -74,4 +74,4 @@ Using `terraform import`, import VPC Lattice Access Log Subscription using the a
 % terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-071e5e00ee8c7257836217b64dd4601a37eae349f38d2cca190da1ad40bc2a7d -->
+<!-- cache-key: cdktf-0.19.0 input-071e5e00ee8c7257836217b64dd4601a37eae349f38d2cca190da1ad40bc2a7d -->

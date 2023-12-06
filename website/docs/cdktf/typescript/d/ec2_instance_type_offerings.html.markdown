@@ -49,11 +49,11 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstanceTypeOfferings.html) for supported filters. Detailed below.
-* `locationType` - (Optional) Location type. Defaults to `region`. Valid values: `availabilityZone`, `availabilityZoneId`, and `region`.
+* `locationType` - (Optional) Location type. Defaults to `region`. Valid values: `availability-zone`, `availability-zone-id`, and `region`.
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter. The `location` filter depends on the top-level `locationType` argument and if not specified, defaults to the current region.
+* `name` - (Required) Name of the filter. The `location` filter depends on the top-level `location_type` argument and if not specified, defaults to the current region.
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
@@ -71,6 +71,6 @@ Note that the indexes of Instance Type Offering instance types, locations and lo
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-b0fad9c4702cf5f0efa96a6a41ce0782d77f7dd1b5e2e01addf5aacedb2df2ba -->
+<!-- cache-key: cdktf-0.19.0 input-b0fad9c4702cf5f0efa96a6a41ce0782d77f7dd1b5e2e01addf5aacedb2df2ba -->

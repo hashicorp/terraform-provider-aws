@@ -65,4 +65,4 @@ Using `terraform import`, import Route53 Resolver rule associations using the `i
 % terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8c7e93b46c5b9235d6779fd392935a48ebd6544409cadb4a6bb0f7b6f8660fa4 -->
+<!-- cache-key: cdktf-0.19.0 input-8c7e93b46c5b9235d6779fd392935a48ebd6544409cadb4a6bb0f7b6f8660fa4 -->

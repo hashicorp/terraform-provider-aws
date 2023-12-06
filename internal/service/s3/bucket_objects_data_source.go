@@ -98,7 +98,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	// through the results. "maxKeys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		input.MaxKeys = int32(maxKeys)
+		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
 	if s, ok := d.GetOk("prefix"); ok {
@@ -110,7 +110,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if b, ok := d.GetOk("fetch_owner"); ok {
-		input.FetchOwner = b.(bool)
+		input.FetchOwner = aws.Bool(b.(bool))
 	}
 
 	var nKeys int64

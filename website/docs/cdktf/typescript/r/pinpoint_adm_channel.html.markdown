@@ -77,4 +77,4 @@ Using `terraform import`, import Pinpoint ADM Channel using the `applicationId`.
 % terraform import aws_pinpoint_adm_channel.channel application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e30cdacbcd0d1d318a6eb43fc0d36eaf1fd763528beb84e0e7303428d7cdffa4 -->
+<!-- cache-key: cdktf-0.19.0 input-e30cdacbcd0d1d318a6eb43fc0d36eaf1fd763528beb84e0e7303428d7cdffa4 -->

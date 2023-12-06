@@ -65,6 +65,6 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags associated with this stack.
 * `templateBody` - Structure containing the template body.
 * `iamRoleArn` - ARN of the IAM role used to create the stack.
-* `timeoutInMinutes` - Amount of time that can pass before the stack status becomes `createFailed`
+* `timeoutInMinutes` - Amount of time that can pass before the stack status becomes `CREATE_FAILED`
 
-<!-- cache-key: cdktf-0.18.0 input-a9acea3392c4b01ef5f2a16da219c4a26f63291cbb995f3f40b2de0113d12c7d -->
+<!-- cache-key: cdktf-0.19.0 input-a9acea3392c4b01ef5f2a16da219c4a26f63291cbb995f3f40b2de0113d12c7d -->

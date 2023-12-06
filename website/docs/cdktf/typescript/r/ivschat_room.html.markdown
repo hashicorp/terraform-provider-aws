@@ -96,12 +96,12 @@ The following arguments are optional:
   second that can be sent to the room (by all clients).
 * `messageReviewHandler` - (Optional) Configuration information for optional
   review of messages.
-    * `fallbackResult` - (Optional) The fallback behavior (whether the message
+    * `fallback_result` - (Optional) The fallback behavior (whether the message
     is allowed or denied) if the handler does not return a valid response,
-    encounters an error, or times out. Valid values: `allow`, `deny`.
+    encounters an error, or times out. Valid values: `ALLOW`, `DENY`.
     * `uri` - (Optional) ARN of the lambda message review handler function.
 * `name` - (Optional) Room name.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -109,15 +109,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Room.
 * `id` - Room ID
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -141,4 +141,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Room using the ARN
 % terraform import aws_ivschat_room.example arn:aws:ivschat:us-west-2:326937407773:room/GoXEXyB4VwHb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3fca5b37b7d82ff4310bf108852e9d4ce3f8757446324b2c39d6248a58f1f8e6 -->
+<!-- cache-key: cdktf-0.19.0 input-3fca5b37b7d82ff4310bf108852e9d4ce3f8757446324b2c39d6248a58f1f8e6 -->

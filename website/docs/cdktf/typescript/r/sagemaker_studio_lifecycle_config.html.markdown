@@ -45,9 +45,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `studioLifecycleConfigName` - (Required) The name of the Studio Lifecycle Configuration to create.
-* `studioLifecycleConfigAppType` - (Required) The App type that the Lifecycle Configuration is attached to. Valid values are `jupyterServer` and `kernelGateway`.
+* `studioLifecycleConfigAppType` - (Required) The App type that the Lifecycle Configuration is attached to. Valid values are `JupyterServer` and `KernelGateway`.
 * `studioLifecycleConfigContent` - (Required) The content of your Studio Lifecycle Configuration script. This content must be base64 encoded.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the Studio Lifecycle Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Studio Lifecycle Config.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -79,4 +79,4 @@ Using `terraform import`, import SageMaker Studio Lifecycle Configs using the `s
 % terraform import aws_sagemaker_studio_lifecycle_config.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-00bef775048f861308f13944fa8e3c7a8115b71e1ec29477cd558e7cfbe782d8 -->
+<!-- cache-key: cdktf-0.19.0 input-00bef775048f861308f13944fa8e3c7a8115b71e1ec29477cd558e7cfbe782d8 -->

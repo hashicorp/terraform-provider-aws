@@ -43,7 +43,7 @@ func ResourceKxEnvironment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(45 * time.Minute),
+			Delete: schema.DefaultTimeout(75 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -225,27 +225,27 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateKxEnvironment(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.EnvironmentId == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId))
 
 	if _, err := waitKxEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	// The CreateKxEnvironment API currently fails to tag the environment when the
 	// Tags field is set. Until the API is fixed, tag after creation instead.
 	if err := createTags(ctx, conn, aws.ToString(out.EnvironmentArn), getTagsIn(ctx)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	return append(diags, resourceKxEnvironmentRead(ctx, d, meta)...)
@@ -264,7 +264,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	d.Set("id", out.EnvironmentId)
@@ -279,11 +279,11 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())
 
 	if err := d.Set("transit_gateway_configuration", flattenTransitGatewayConfiguration(out.TransitGatewayConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	if err := d.Set("custom_dns_configuration", flattenCustomDNSConfigurations(out.CustomDNSConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	return diags
@@ -309,14 +309,14 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[DEBUG] Updating FinSpace KxEnvironment (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxEnvironment(ctx, in)
 		if err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("transit_gateway_configuration") || d.HasChanges("custom_dns_configuration") {
 		update = true
 		if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
 		}
 	}
 
@@ -342,11 +342,11 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	if _, err := waitKxEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	return diags

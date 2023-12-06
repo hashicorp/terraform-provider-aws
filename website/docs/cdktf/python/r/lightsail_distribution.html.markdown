@@ -303,4 +303,4 @@ Using `terraform import`, import Lightsail Distribution using the `id`. For exam
 % terraform import aws_lightsail_distribution.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->
+<!-- cache-key: cdktf-0.19.0 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->

@@ -117,7 +117,7 @@ This resource supports the following arguments:
 
 * `apiId` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `awsLambda`, `amazonDynamodb`, `amazonElasticsearch`, `http`, `none`, `relationalDatabase`, `amazonEventbridge`, `amazonOpensearchService`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 * `description` - (Optional) Description of the data source.
 * `dynamodbConfig` - (Optional) DynamoDB settings. See [DynamoDB Config](#dynamodb-config)
 * `elasticsearchConfig` - (Optional) Amazon Elasticsearch settings. See [ElasticSearch Config](#elasticsearch-config)
@@ -126,7 +126,7 @@ This resource supports the following arguments:
 * `lambdaConfig` - (Optional) AWS Lambda settings. See [Lambda Config](#lambda-config)
 * `opensearchserviceConfig` - (Optional) Amazon OpenSearch Service settings. See [OpenSearch Service Config](#opensearch-service-config)
 * `relationalDatabaseConfig` (Optional) AWS RDS settings. See [Relational Database Config](#relational-database-config)
-* `serviceRoleArn` - (Optional) IAM service role ARN for the data source.
+* `serviceRoleArn` - (Optional) IAM service role ARN for the data source. Required if `type` is specified as `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `AMAZON_EVENTBRIDGE`, or `AMAZON_OPENSEARCH_SERVICE`.
 
 ### DynamoDB Config
 
@@ -168,7 +168,7 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `authorizationType` - (Optional) Authorization type that the HTTP endpoint requires. Default values is `awsIam`.
+* `authorizationType` - (Optional) Authorization type that the HTTP endpoint requires. Default values is `AWS_IAM`.
 * `awsIamConfig` - (Optional) Identity and Access Management (IAM) settings. See [AWS IAM Config](#aws-iam-config).
 
 ##### AWS IAM Config
@@ -196,7 +196,7 @@ This argument supports the following arguments:
 This argument supports the following arguments:
 
 * `httpEndpointConfig` - (Required) Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http-endpoint-config).
-* `sourceType` - (Optional) Source type for the relational database. Valid values: `rdsHttpEndpoint`.
+* `sourceType` - (Optional) Source type for the relational database. Valid values: `RDS_HTTP_ENDPOINT`.
 
 #### HTTP Endpoint Config
 
@@ -236,4 +236,4 @@ Using `terraform import`, import `awsAppsyncDatasource` using the `apiId`, a hyp
 % terraform import aws_appsync_datasource.example abcdef123456-example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65f545420c1890e5f6affd2d36656c47c2a7c4b889f24fd05541970389549ddb -->
+<!-- cache-key: cdktf-0.19.0 input-a9f04a5458c9f7419be950e393980c31263681e22e413dc9419e676476b092d0 -->

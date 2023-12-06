@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -199,6 +200,8 @@ func ResourceMetricStream() *schema.Resource {
 }
 
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -233,13 +236,13 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Metric Stream (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Stream (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitMetricStreamRunning(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Metric Stream (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) create: %s", d.Id(), err)
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -248,18 +251,20 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return resourceMetricStreamRead(ctx, d, meta)
+			return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("setting CloudWatch Metric Stream (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Metric Stream (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceMetricStreamRead(ctx, d, meta)
+	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	output, err := FindMetricStreamByName(ctx, conn, d.Id())
@@ -267,11 +272,11 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
@@ -287,26 +292,28 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if output.IncludeFilters != nil {
 		if err := d.Set("include_filter", flattenMetricStreamFilters(output.IncludeFilters)); err != nil {
-			return diag.Errorf("setting include_filter: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting include_filter: %s", err)
 		}
 	}
 
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
-			return diag.Errorf("setting exclude_filter: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
 		}
 	}
 
 	if output.StatisticsConfigurations != nil {
 		if err := d.Set("statistics_configuration", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
-			return diag.Errorf("setting statistics_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting statistics_configuration: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -333,18 +340,20 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.PutMetricStreamWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch Metric Stream (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Stream (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitMetricStreamRunning(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudWatch Metric Stream (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceMetricStreamRead(ctx, d, meta)
+	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
@@ -353,14 +362,14 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMetricStreamDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Metric Stream (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindMetricStreamByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {

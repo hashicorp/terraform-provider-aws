@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,10 +39,40 @@ func ResourceVPCAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				if !d.HasChange("options.0.appliance_mode_support") {
+					return nil
+				}
+
+				if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance {
+					return d.ForceNew("options.0.appliance_mode_support")
+				}
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				if !d.HasChange("options.0.ipv6_support") {
+					return nil
+				}
+
+				if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance {
+					return d.ForceNew("options.0.ipv6_support")
+				}
+				return nil
+			},
+		),
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -126,6 +158,8 @@ func ResourceVPCAttachment() *schema.Resource {
 }
 
 func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
@@ -154,10 +188,12 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceVPCAttachmentRead(ctx, d, meta)
+	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
@@ -165,7 +201,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -201,10 +237,12 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	setTagsOut(ctx, a.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -249,10 +287,12 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	return resourceVPCAttachmentRead(ctx, d, meta)
+	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then VPC Attachment state
@@ -260,7 +300,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	output, sErr := FindVPCAttachmentByID(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if sErr != nil {
@@ -270,7 +310,16 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	d.Set("state", output.Attachment.State)
 
 	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("cannot delete Network Manager VPC Attachment (%s) in %s state", d.Id(), state)
+		_, err := conn.RejectAttachmentWithContext(ctx, &networkmanager.RejectAttachmentInput{
+			AttachmentId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "detaching Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitVPCAttachmenRejected(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) to be detached: %s", d.Id(), err)
+		}
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager VPC Attachment: %s", d.Id())
@@ -279,18 +328,18 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVPCAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindVPCAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.VpcAttachment, error) {
@@ -334,10 +383,16 @@ func StatusVPCAttachmentState(ctx context.Context, conn *networkmanager.NetworkM
 	}
 }
 
-func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) { //nolint:unparam
+func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
-		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
+		Pending: []string{
+			networkmanager.AttachmentStateCreating,
+			networkmanager.AttachmentStatePendingNetworkUpdate,
+		},
+		Target: []string{
+			networkmanager.AttachmentStateAvailable,
+			networkmanager.AttachmentStatePendingAttachmentAcceptance,
+		},
 		Timeout: timeout,
 		Refresh: StatusVPCAttachmentState(ctx, conn, id),
 	}
@@ -351,7 +406,47 @@ func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkM
 	return nil, err
 }
 
-func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+func waitVPCAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			networkmanager.AttachmentStateCreating,
+			networkmanager.AttachmentStatePendingNetworkUpdate,
+			networkmanager.AttachmentStatePendingAttachmentAcceptance,
+		},
+		Target: []string{
+			networkmanager.AttachmentStateAvailable,
+		},
+		Timeout: timeout,
+		Refresh: StatusVPCAttachmentState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStateAvailable},
+		Target:  []string{networkmanager.AttachmentStateRejected},
+		Timeout: timeout,
+		Refresh: StatusVPCAttachmentState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},

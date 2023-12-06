@@ -83,7 +83,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `accessControlAllowCredentials` - A Boolean value that CloudFront uses as the value for the Access-Control-Allow-Credentials HTTP response header.
 * `accessControlAllowHeaders` - Object that contains an attribute `items` that contains a list of HTTP header names that CloudFront includes as values for the Access-Control-Allow-Headers HTTP response header.
-* `accessControlAllowMethods` - Object that contains an attribute `items` that contains a list of HTTP methods that CloudFront includes as values for the Access-Control-Allow-Methods HTTP response header. Valid values: `get` | `post` | `options` | `put` | `delete` | `head` | `all`
+* `accessControlAllowMethods` - Object that contains an attribute `items` that contains a list of HTTP methods that CloudFront includes as values for the Access-Control-Allow-Methods HTTP response header. Valid values: `GET` | `POST` | `OPTIONS` | `PUT` | `DELETE` | `HEAD` | `ALL`
 * `accessControlAllowOrigins` - Object that contains an attribute `items` that contains a list of origins that CloudFront can use as the value for the Access-Control-Allow-Origin HTTP response header.
 * `accessControlExposeHeaders` - Object that contains an attribute `items` that contains a list of HTTP headers that CloudFront includes as values for the Access-Control-Expose-Headers HTTP response header.
 * `accessControlMaxAgeSec` - A number that CloudFront uses as the value for the Access-Control-Max-Age HTTP response header.
@@ -118,12 +118,12 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Frame Options
 
-* `frameOption` - Value of the X-Frame-Options HTTP response header. Valid values: `deny` | `sameorigin`
+* `frameOption` - Value of the X-Frame-Options HTTP response header. Valid values: `DENY` | `SAMEORIGIN`
 * `override` - Whether CloudFront overrides the X-Frame-Options HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Referrer Policy
 
-* `referrerPolicy` - Value of the Referrer-Policy HTTP response header. Valid Values: `noReferrer` | `noReferrerWhenDowngrade` | `origin` | `originWhenCrossOrigin` | `sameOrigin` | `strictOrigin` | `strictOriginWhenCrossOrigin` | `unsafeUrl`
+* `referrerPolicy` - Value of the Referrer-Policy HTTP response header. Valid Values: `no-referrer` | `no-referrer-when-downgrade` | `origin` | `origin-when-cross-origin` | `same-origin` | `strict-origin` | `strict-origin-when-cross-origin` | `unsafe-url`
 * `override` - Whether CloudFront overrides the Referrer-Policy HTTP response header received from the origin with the one specified in this response headers policy.
 
 ### Strict Transport Security
@@ -142,7 +142,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Server Timing Headers Config
 
-* `enabled` - Whether CloudFront adds the `serverTiming` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `enabled` - Whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
 * `samplingRate` - Number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to.
 
-<!-- cache-key: cdktf-0.18.0 input-72a56289982ff99c5a8915f5f70bc400c310b4c8325a6846d6c8b892d3eab9cb -->
+<!-- cache-key: cdktf-0.19.0 input-72a56289982ff99c5a8915f5f70bc400c310b4c8325a6846d6c8b892d3eab9cb -->

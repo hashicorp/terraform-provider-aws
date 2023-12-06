@@ -11,4 +11,6 @@ var (
 
 	UpdateTags   = updateTags
 	UpdateTagsV2 = updateTagsV2
+
+	StopInstance = stopInstance
 )

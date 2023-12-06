@@ -128,4 +128,4 @@ Using `terraform import`, import SageMaker Workteams using the `workteam_name`. 
 % terraform import aws_sagemaker_workteam.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3a7cf1fb125ebeb37f30bd90666ac5def329d2504804e10053f90547efe5df34 -->
+<!-- cache-key: cdktf-0.19.0 input-3a7cf1fb125ebeb37f30bd90666ac5def329d2504804e10053f90547efe5df34 -->

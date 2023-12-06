@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckVPCConnector(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +58,7 @@ func TestAccAppRunnerVPCConnector_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckVPCConnector(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckVPCConnector(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func TestAccAppRunnerVPCConnector_defaultTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckVPCConnector(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,7 +171,7 @@ func testAccCheckVPCConnectorDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 			_, err := tfapprunner.FindVPCConnectorByARN(ctx, conn, rs.Primary.ID)
 
@@ -196,11 +197,7 @@ func testAccCheckVPCConnectorExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Runner VPC Connector ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 		_, err := tfapprunner.FindVPCConnectorByARN(ctx, conn, rs.Primary.ID)
 
@@ -261,11 +258,11 @@ resource "aws_apprunner_vpc_connector" "test" {
 }
 
 func testAccPreCheckVPCConnector(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
 	input := &apprunner.ListVpcConnectorsInput{}
 
-	_, err := conn.ListVpcConnectorsWithContext(ctx, input)
+	_, err := conn.ListVpcConnectors(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

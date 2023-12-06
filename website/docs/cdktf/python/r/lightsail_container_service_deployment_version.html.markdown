@@ -132,4 +132,4 @@ Using `terraform import`, import Lightsail Container Service Deployment Version 
 % terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bb1ba480fb42ed01fcc93296f85d9bb0f9f2e3da82d84722d66da594585cd420 -->
+<!-- cache-key: cdktf-0.19.0 input-bb1ba480fb42ed01fcc93296f85d9bb0f9f2e3da82d84722d66da594585cd420 -->

@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `modificationTime` - The date and time that the rule was last modified, in Unix time format and Coordinated Universal Time (UTC).
 * `name` - The name of the rule.
 
-<!-- cache-key: cdktf-0.18.0 input-7b8006826528bb5f3aaa7132422f98725c6be04f17245114660aea8409422dde -->
+<!-- cache-key: cdktf-0.19.0 input-7b8006826528bb5f3aaa7132422f98725c6be04f17245114660aea8409422dde -->

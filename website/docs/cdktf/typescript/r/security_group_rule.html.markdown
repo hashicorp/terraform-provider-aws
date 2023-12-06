@@ -144,25 +144,25 @@ The following arguments are optional:
 
 ~> **Note** Although `cidrBlocks`, `ipv6CidrBlocks`, `prefixListIds`, and `sourceSecurityGroupId` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
 
-* `cidrBlocks` - (Optional) List of CIDR blocks. Cannot be specified with `sourceSecurityGroupId` or `self`.
+* `cidrBlocks` - (Optional) List of CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `description` - (Optional) Description of the rule.
-* `ipv6CidrBlocks` - (Optional) List of IPv6 CIDR blocks. Cannot be specified with `sourceSecurityGroupId` or `self`.
+* `ipv6CidrBlocks` - (Optional) List of IPv6 CIDR blocks. Cannot be specified with `source_security_group_id` or `self`.
 * `prefixListIds` - (Optional) List of Prefix List IDs.
-* `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `cidrBlocks`, `ipv6CidrBlocks`, or `sourceSecurityGroupId`.
-* `sourceSecurityGroupId` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidrBlocks`, `ipv6CidrBlocks`, or `self`.
+* `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `source_security_group_id`.
+* `sourceSecurityGroupId` - (Optional) Security group id to allow access to/from, depending on the `type`. Cannot be specified with `cidr_blocks`, `ipv6_cidr_blocks`, or `self`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the security group rule.
-* `securityGroupRuleId` - If the `awsSecurityGroupRule` resource has a single source or destination then this is the AWS Security Group Rule resource ID. Otherwise it is empty.
+* `securityGroupRuleId` - If the `aws_security_group_rule` resource has a single source or destination then this is the AWS Security Group Rule resource ID. Otherwise it is empty.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
+- `create` - (Default `5m`)
 
 ## Import
 
@@ -314,4 +314,4 @@ Import a rule that has itself and an IPv6 CIDR block as sources:
 % terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-db0dbf623f1a56f51f8c29803443104e878f48f4aaaba90059e21bccd58f7112 -->
+<!-- cache-key: cdktf-0.19.0 input-db0dbf623f1a56f51f8c29803443104e878f48f4aaaba90059e21bccd58f7112 -->

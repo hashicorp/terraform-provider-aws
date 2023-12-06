@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN for a configuration for DNSSEC validation.
 * `id` - The ID for a configuration for DNSSEC validation.
 * `ownerId` - The owner account ID of the virtual private cloud (VPC) for a configuration for DNSSEC validation.
-* `validationStatus` - The validation status for a DNSSEC configuration. The status can be one of the following: `enabling`, `enabled`, `disabling` and `disabled`.
+* `validationStatus` - The validation status for a DNSSEC configuration. The status can be one of the following: `ENABLING`, `ENABLED`, `DISABLING` and `DISABLED`.
 
 ## Import
 
@@ -80,4 +80,4 @@ Using `terraform import`, import  Route 53 Resolver DNSSEC configs using the Rou
 % terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65576be1323a01047ddd84b194036361eced4cbe29a22e9031f40a7283d1af9a -->
+<!-- cache-key: cdktf-0.19.0 input-65576be1323a01047ddd84b194036361eced4cbe29a22e9031f40a7283d1af9a -->
