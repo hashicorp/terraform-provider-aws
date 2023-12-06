@@ -338,6 +338,12 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataLakeResource); ok {
+		if v := output.UpdateStatus; v != nil {
+			if v := v.Exception; v != nil {
+				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.Code), aws.ToString(v.Reason)))
+			}
+		}
+
 		return output, err
 	}
 
@@ -371,7 +377,7 @@ func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted),
 		Target:  []string{},
-		Refresh: statusDataLakeUpdate(ctx, conn, arn),
+		Refresh: statusDataLakeCreate(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
