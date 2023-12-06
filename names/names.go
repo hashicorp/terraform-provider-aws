@@ -49,6 +49,7 @@ const (
 	ControlTowerEndpointID               = "controltower"
 	DSEndpointID                         = "ds"
 	ECREndpointID                        = "api.ecr"
+	ECSEndpointID                        = "ecs"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
 	EMRServerlessEndpointID              = "emrserverless"
