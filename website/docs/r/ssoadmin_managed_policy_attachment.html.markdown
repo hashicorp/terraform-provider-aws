@@ -16,7 +16,9 @@ Provides an IAM managed policy for a Single Sign-On (SSO) Permission Set resourc
 ~> **NOTE:** Creating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
 
 ## Example Usage
-### Basic Managed Policy Attachment
+
+### Basic Usage
+
 ```terraform
 data "aws_ssoadmin_instances" "example" {}
 
@@ -32,7 +34,10 @@ resource "aws_ssoadmin_managed_policy_attachment" "example" {
 }
 ```
 
-### Managed Policy Attachment with Account Assignment (Identity Store Group)
+### With Account Assignment
+
+~> Because destruction of a managed policy attachment resource also re-provisions the associated permission set to all accounts, explicitly indicating the dependency with the account assignment resource via the [`depends_on` meta argument](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) is necessary to ensure proper deletion order when these resources are used together.
+
 ```terraform
 data "aws_ssoadmin_instances" "example" {}
 
@@ -42,7 +47,6 @@ resource "aws_ssoadmin_permission_set" "example" {
 }
 
 resource "aws_identitystore_group" "example" {
-
   identity_store_id = tolist(data.aws_ssoadmin_instances.sso_instance.identity_store_ids)[0]
   display_name      = "Admin"
   description       = "Admin Group"
@@ -60,14 +64,14 @@ resource "aws_ssoadmin_account_assignment" "account_assignment" {
 }
 
 resource "aws_ssoadmin_managed_policy_attachment" "example" {
-  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
-  managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
-  permission_set_arn = aws_ssoadmin_permission_set.example.arn
-
   # Adding an explicit dependency on the account assignment resource will
   # allow the managed attachment to be safely destroyed prior to the removal
   # of the account assignment.
   depends_on = [aws_ssoadmin_account_assignment.example]
+
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
+  permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
 
 ## Argument Reference

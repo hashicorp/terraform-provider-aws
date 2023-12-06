@@ -10,10 +10,10 @@ description: |-
 
 Provides a Single Sign-On (SSO) Account Assignment resource
 
-**IMPORTANT:** Currently there is an issue where deletion of both an `aws_ssoadmin_managed_policy_attachment` and `aws_ssoadmin_account_assignment` can occur simultaneously. This causes a problem with the `Delete` operation of the policy attachment and can cause your `terraform destroy` to fail. To avoid this, add an explicit dependency between these resources with the `depends_on` meta argument. See the `Account Assignmend with Managed Policy Attachment` example below.
-
 ## Example Usage
-### Basic Account Assignment
+
+### Basic Usage
+
 ```terraform
 data "aws_ssoadmin_instances" "example" {}
 
@@ -45,7 +45,10 @@ resource "aws_ssoadmin_account_assignment" "example" {
 }
 ```
 
-### Account Assignmend with Managed Policy Attachment
+### With Managed Policy Attachment
+
+~> Because destruction of a managed policy attachment resource also re-provisions the associated permission set to all accounts, explicitly indicating the dependency with the account assignment resource via the [`depends_on` meta argument](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) is necessary to ensure proper deletion order when these resources are used together.
+
 ```terraform
 data "aws_ssoadmin_instances" "example" {}
 
@@ -55,7 +58,6 @@ resource "aws_ssoadmin_permission_set" "example" {
 }
 
 resource "aws_identitystore_group" "example" {
-
   identity_store_id = tolist(data.aws_ssoadmin_instances.sso_instance.identity_store_ids)[0]
   display_name      = "Admin"
   description       = "Admin Group"
@@ -73,14 +75,14 @@ resource "aws_ssoadmin_account_assignment" "account_assignment" {
 }
 
 resource "aws_ssoadmin_managed_policy_attachment" "example" {
-  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
-  managed_policy_arn = "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
-  permission_set_arn = aws_ssoadmin_permission_set.example.arn
-
   # Adding an explicit dependency on the account assignment resource will
   # allow the managed attachment to be safely destroyed prior to the removal
   # of the account assignment.
   depends_on = [aws_ssoadmin_account_assignment.example]
+
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
+  permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
 
 ## Argument Reference
