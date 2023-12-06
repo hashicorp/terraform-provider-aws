@@ -46,7 +46,8 @@ func testAccDataLake_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "0"),
@@ -674,6 +675,7 @@ resource "aws_securitylake_data_lake" "region_2" {
         days = 300
       }
     }
+
     replication_configuration {
       role_arn = aws_iam_role.datalake_s3_replication.arn
       regions  = [%[2]q]

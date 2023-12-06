@@ -14,8 +14,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -84,25 +86,27 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"encryption_configuration": schema.ListAttribute{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeEncryptionConfigurationModel](ctx),
+							Optional:   true,
+							Computed:   true,
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							ElementType: types.ObjectType{
+								AttrTypes: map[string]attr.Type{
+									"kms_key_id": types.StringType,
+								},
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
+						},
 						"region": schema.StringAttribute{
 							Required: true,
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"encryption_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeEncryptionConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"kms_key_id": schema.StringAttribute{
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
 						"lifecycle_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeLifecycleConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -212,6 +216,14 @@ func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	var configuration dataLakeConfigurationModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Set values for unknowns after creation is complete.
+	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
 	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
