@@ -94,6 +94,39 @@ func ResourceBucketLogging() *schema.Resource {
 					},
 				},
 			},
+			"target_object_key_format": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"partitioned_prefix": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"partition_date_source": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.PartitionDateSource](),
+									},
+								},
+							},
+							ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
+						},
+						"simple_prefix": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{},
+							},
+							ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
+						},
+					},
+				},
+			},
 			"target_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -125,9 +158,17 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandBucketLoggingTargetGrants(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLogging(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "BucketLoggingStatus is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Logging: %s", bucket, err)
@@ -173,6 +214,13 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("target_grant", flattenBucketLoggingTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
 	}
+	if loggingEnabled.TargetObjectKeyFormat != nil {
+		if err := d.Set("target_object_key_format", []interface{}{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting target_object_key_format: %s", err)
+		}
+	} else {
+		d.Set("target_object_key_format", nil)
+	}
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
 
 	return diags
@@ -202,6 +250,10 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("target_grant"); ok && v.(*schema.Set).Len() > 0 {
 		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandBucketLoggingTargetGrants(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err = conn.PutBucketLogging(ctx, input)
@@ -377,4 +429,66 @@ func flattenBucketLoggingTargetGrantGrantee(g *types.Grantee) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func expandTargetObjectKeyFormat(tfMap map[string]interface{}) *types.TargetObjectKeyFormat {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.TargetObjectKeyFormat{}
+
+	if v, ok := tfMap["partitioned_prefix"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PartitionedPrefix = expandPartitionedPrefix(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["simple_prefix"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.SimplePrefix = &types.SimplePrefix{}
+	}
+
+	return apiObject
+}
+
+func expandPartitionedPrefix(tfMap map[string]interface{}) *types.PartitionedPrefix {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PartitionedPrefix{}
+
+	if v, ok := tfMap["partition_date_source"].(string); ok && v != "" {
+		apiObject.PartitionDateSource = types.PartitionDateSource(v)
+	}
+
+	return apiObject
+}
+
+func flattenTargetObjectKeyFormat(apiObject *types.TargetObjectKeyFormat) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.PartitionedPrefix; v != nil {
+		tfMap["partitioned_prefix"] = []interface{}{flattenPartitionedPrefix(v)}
+	}
+
+	if apiObject.SimplePrefix != nil {
+		tfMap["simple_prefix"] = make([]map[string]interface{}, 1)
+	}
+
+	return tfMap
+}
+
+func flattenPartitionedPrefix(apiObject *types.PartitionedPrefix) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"partition_date_source": apiObject.PartitionDateSource,
+	}
+
+	return tfMap
 }

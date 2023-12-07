@@ -80,7 +80,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
 	}
 
 	d.Set("dashboard_arn", resp.DashboardArn)

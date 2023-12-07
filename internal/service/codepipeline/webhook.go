@@ -168,7 +168,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	webhookDef := webhook.Definition

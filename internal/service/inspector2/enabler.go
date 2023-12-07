@@ -156,14 +156,14 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		out, err = conn.Enable(ctx, in)
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}
 
 	d.SetId(id)
 
 	st, err := waitEnabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)
 	}
 
 	var disableAccountIDs []string
@@ -181,14 +181,14 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 			_, err := conn.Disable(ctx, in)
 			if err != nil {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
 			}
 		}
 	}
 
 	if len(disableAccountIDs) > 0 {
 		if _, err := waitEnabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)...)
+			return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
 		}
 	}
 
@@ -201,18 +201,18 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	accountIDs, _, err := parseEnablerID(d.Id())
 	if err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
 	s, err := AccountStatuses(ctx, conn, accountIDs)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Enabler (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
 	var enabledAccounts []string
@@ -232,10 +232,10 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("account_ids", flex.FlattenStringValueSet(enabledAccounts)); err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 	if err := d.Set("resource_types", flex.FlattenStringValueSet(enum.Slice(resourceTypes...))); err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
 	return diags
@@ -279,19 +279,19 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			out, err := conn.Enable(ctx, in)
 			if err != nil {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
 			}
 
 			if out == nil {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))
 			}
 
 			if len(out.FailedAccounts) > 0 {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, errors.New("failed accounts"))...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, errors.New("failed accounts"))
 			}
 
 			if _, err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
 			}
 		}
 
@@ -303,11 +303,11 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			_, err := conn.Disable(ctx, in)
 			if err != nil {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
 			}
 
 			if _, err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)...)
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
 			}
 		}
 	}
@@ -358,10 +358,10 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 
 	out, err := conn.Disable(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
 	if out == nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
 	}
 
 	for _, acct := range out.FailedAccounts {
@@ -370,11 +370,11 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 		}
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
 
 	if err := waitDisabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)
 	}
 
 	return diags
@@ -419,9 +419,13 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []stri
 		Delay:   10 * time.Second,
 	}
 
-	raw, err := stateConf.WaitForStateContext(ctx)
-	result := raw.(map[string]AccountResourceStatus)
-	return result, err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]AccountResourceStatus); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {

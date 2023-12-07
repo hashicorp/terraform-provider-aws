@@ -119,12 +119,42 @@ func testAccOrganizationConfiguration_lambda(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true),
+				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccOrganizationConfiguration_lambdaCode(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_inspector2_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", "true"),
 				),
 			},
 		},
@@ -164,7 +194,7 @@ func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.
 				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
 			}
 
-			if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) && !aws.ToBool(out.AutoEnable.Lambda) {
+			if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) && !aws.ToBool(out.AutoEnable.Lambda) && !aws.ToBool(out.AutoEnable.LambdaCode) {
 				if enabledDelAdAcct {
 					if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
 						return err
@@ -259,7 +289,7 @@ resource "aws_inspector2_organization_configuration" "test" {
 `, ec2, ecr)
 }
 
-func testAccOrganizationConfigurationConfig_lambda(ec2, ecr, lambda bool) string {
+func testAccOrganizationConfigurationConfig_lambda(ec2, ecr, lambda, lambda_code bool) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 resource "aws_inspector2_delegated_admin_account" "test" {
@@ -267,11 +297,12 @@ resource "aws_inspector2_delegated_admin_account" "test" {
 }
 resource "aws_inspector2_organization_configuration" "test" {
   auto_enable {
-    ec2    = %[1]t
-    ecr    = %[2]t
-    lambda = %[3]t
+    ec2         = %[1]t
+    ecr         = %[2]t
+    lambda      = %[3]t
+    lambda_code = %[4]t
   }
   depends_on = [aws_inspector2_delegated_admin_account.test]
 }
-`, ec2, ecr, lambda)
+`, ec2, ecr, lambda, lambda_code)
 }

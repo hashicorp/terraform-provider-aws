@@ -11,8 +11,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,22 +21,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	clusterVersionUpgradeInitial = "1.21"
-	clusterVersionUpgradeUpdated = "1.22"
+	clusterVersionUpgradeInitial = "1.27"
+	clusterVersionUpgradeUpdated = "1.28"
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +59,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
 					resource.TestMatchResourceAttr(resourceName, "platform_version", regexache.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "status", eks.ClusterStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ClusterStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "version", regexache.MustCompile(`^\d+\.\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -79,13 +81,13 @@ func TestAccEKSCluster_basic(t *testing.T) {
 
 func TestAccEKSCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,14 +105,14 @@ func TestAccEKSCluster_disappears(t *testing.T) {
 
 func TestAccEKSCluster_Encryption_create(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,14 +137,14 @@ func TestAccEKSCluster_Encryption_create(t *testing.T) {
 
 func TestAccEKSCluster_Encryption_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,14 +178,14 @@ func TestAccEKSCluster_Encryption_update(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/19968.
 func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -221,13 +223,13 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 
 func TestAccEKSCluster_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -257,13 +259,13 @@ func TestAccEKSCluster_version(t *testing.T) {
 
 func TestAccEKSCluster_logging(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -305,13 +307,13 @@ func TestAccEKSCluster_logging(t *testing.T) {
 
 func TestAccEKSCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 eks.Cluster
+	var cluster1, cluster2, cluster3 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -351,13 +353,13 @@ func TestAccEKSCluster_tags(t *testing.T) {
 
 func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -378,15 +380,55 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
+func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_vpcSecurityGroupIDs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_vpcSecurityGroupIDsAndSubnetIDsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2, cluster3 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -427,13 +469,13 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 
 func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 eks.Cluster
+	var cluster1, cluster2, cluster3 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -474,13 +516,13 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 
 func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -511,13 +553,13 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 
 func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -574,24 +616,16 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 
 func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 eks.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccClusterConfig_networkIPFamily(rName, `"v6"`),
-				ExpectError: regexache.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
-			},
-			{
-				Config:      testAccClusterConfig_networkIPFamily(rName, `"IPv4"`),
-				ExpectError: regexache.MustCompile(`expected .* to be one of \[ipv4 ipv6]`),
-			},
 			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
 				Check: resource.ComposeTestCheckFunc(
@@ -625,14 +659,14 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 
 func TestAccEKSCluster_Outpost_create(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 	controlPlaneInstanceType := "m5d.large"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -657,14 +691,14 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 
 func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster eks.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 	controlPlaneInstanceType := "m5d.large"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -688,17 +722,14 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterExists(ctx context.Context, resourceName string, cluster *eks.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *types.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EKS Cluster ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
 		output, err := tfeks.FindClusterByName(ctx, conn, rs.Primary.ID)
 
@@ -706,7 +737,7 @@ func testAccCheckClusterExists(ctx context.Context, resourceName string, cluster
 			return err
 		}
 
-		*cluster = *output
+		*v = *output
 
 		return nil
 	}
@@ -719,7 +750,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
 			_, err := tfeks.FindClusterByName(ctx, conn, rs.Primary.ID)
 
@@ -738,9 +769,9 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *types.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
+		if aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
 			return errors.New("EKS Cluster was not recreated")
 		}
 
@@ -748,9 +779,9 @@ func testAccCheckClusterRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterNotRecreated(i, j *types.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
+		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
 			return errors.New("EKS Cluster was recreated")
 		}
 
@@ -759,11 +790,11 @@ func testAccCheckClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
 	input := &eks.ListClustersInput{}
 
-	_, err := conn.ListClustersWithContext(ctx, input)
+	_, err := conn.ListClusters(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -774,17 +805,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccClusterConfig_Base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccClusterConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -837,11 +859,11 @@ resource "aws_subnet" "test" {
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_required(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -856,7 +878,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_version(rName, version string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -872,7 +894,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_logging(rName string, logTypes []string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name                      = %[1]q
   role_arn                  = aws_iam_role.test.arn
@@ -888,7 +910,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -907,7 +929,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -927,7 +949,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_encryption(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -955,7 +977,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_encryptionVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -984,7 +1006,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcSecurityGroupIDs(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -1007,8 +1029,56 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
+func testAccClusterConfig_vpcSecurityGroupIDsAndSubnetIDsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test2" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "new" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index + 2}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index + 2)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
+    subnet_ids         = aws_subnet.new[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName))
+}
+
 func testAccClusterConfig_vpcEndpointPrivateAccess(rName string, endpointPrivateAccess bool) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1025,7 +1095,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcEndpointPublicAccess(rName string, endpointPublicAccess bool) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1042,7 +1112,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_vpcPublicAccessCIDRs(rName string, publicAccessCidr string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1060,7 +1130,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_networkServiceIPv4CIDR(rName string, serviceIpv4Cidr string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1079,7 +1149,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_networkIPFamily(rName string, ipFamily string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -1098,7 +1168,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_outpost(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
@@ -1133,7 +1203,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccClusterConfig_outpostPlacement(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }

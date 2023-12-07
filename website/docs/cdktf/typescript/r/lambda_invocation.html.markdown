@@ -176,9 +176,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `lifecycleScope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `createOnly` and `crud`. Defaults to `createOnly`. `createOnly` will invoke the function only on creation or replacement. `crud` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
-* `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$latest`.
-* `terraformKey` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycleScope` is set to `crud`.
+* `lifecycleScope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `CREATE_ONLY` and `CRUD`. Defaults to `CREATE_ONLY`. `CREATE_ONLY` will invoke the function only on creation or replacement. `CRUD` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
+* `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$LATEST`.
+* `terraformKey` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attribute Reference
@@ -187,4 +187,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.18.0 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->
+<!-- cache-key: cdktf-0.19.0 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->

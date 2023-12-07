@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_ecr_pull_through_cache_rule")
@@ -43,6 +44,8 @@ func DataSourcePullThroughCacheRule() *schema.Resource {
 }
 
 func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
@@ -50,7 +53,7 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
 
 	if err != nil {
-		return diag.Errorf("reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(aws.StringValue(rule.EcrRepositoryPrefix))
@@ -58,5 +61,5 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
 
-	return nil
+	return diags
 }

@@ -29,6 +29,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -169,6 +170,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				Optional:         true,
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+			"enforce_security_group_inbound_rules_on_private_link_traffic": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringInSlice(elbv2.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum_Values(), false),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
 			},
 			"idle_timeout": {
 				Type:             schema.TypeInt,
@@ -595,13 +603,20 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", "security_groups") {
 		sgs := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
 			SecurityGroups:  sgs,
 		}
+
+		if v := d.Get("load_balancer_type"); v == elbv2.LoadBalancerTypeEnumNetwork {
+			if v, ok := d.GetOk("enforce_security_group_inbound_rules_on_private_link_traffic"); ok {
+				params.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic = aws.String(v.(string))
+			}
+		}
+
 		_, err := conn.SetSecurityGroupsWithContext(ctx, params)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "failure Setting LB Security Groups: %s", err)
@@ -889,14 +904,10 @@ func getLBNameFromARN(arn string) (string, error) {
 	return matches[1], nil
 }
 
-// flattenSubnetsFromAvailabilityZones creates a slice of strings containing the subnet IDs
-// for the ALB based on the AvailabilityZones structure returned by the API.
 func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []string {
-	var result []string
-	for _, az := range availabilityZones {
-		result = append(result, aws.StringValue(az.SubnetId))
-	}
-	return result
+	return tfslices.ApplyToAll(availabilityZones, func(v *elbv2.AvailabilityZone) string {
+		return aws.StringValue(v.SubnetId)
+	})
 }
 
 func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
@@ -939,6 +950,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set("dns_name", lb.DNSName)
+	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)

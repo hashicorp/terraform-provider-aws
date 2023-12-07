@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_arns` - List of the Amazon Cognito user pool ARNs.
 * `type` - Type of the authorizer.
 
-<!-- cache-key: cdktf-0.18.0 input-7c505056a62ecddc8f4337cf059da361268167b1838c9f6ea4a6d78a7e84dfe3 -->
+<!-- cache-key: cdktf-0.19.0 input-7c505056a62ecddc8f4337cf059da361268167b1838c9f6ea4a6d78a7e84dfe3 -->

@@ -48,6 +48,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -90,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
@@ -195,6 +197,7 @@ func registerSweepers() {
 	dlm.RegisterSweepers()
 	dms.RegisterSweepers()
 	docdb.RegisterSweepers()
+	docdbelastic.RegisterSweepers()
 	ds.RegisterSweepers()
 	dynamodb.RegisterSweepers()
 	ec2.RegisterSweepers()
@@ -237,6 +240,7 @@ func registerSweepers() {
 	kms.RegisterSweepers()
 	lambda.RegisterSweepers()
 	lexmodels.RegisterSweepers()
+	lexv2models.RegisterSweepers()
 	licensemanager.RegisterSweepers()
 	lightsail.RegisterSweepers()
 	location.RegisterSweepers()

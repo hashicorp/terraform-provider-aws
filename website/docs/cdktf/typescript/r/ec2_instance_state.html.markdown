@@ -77,15 +77,15 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the instance (matches `instanceId`).
+* `id` - ID of the instance (matches `instance_id`).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `update` - (Default `10M`)
-* `delete` - (Default `1M`)
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `1m`)
 
 ## Import
 
@@ -109,4 +109,4 @@ Using `terraform import`, import `awsEc2InstanceState` using the `instanceId` at
 % terraform import aws_ec2_instance_state.test i-02cae6557dfcf2f96
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-55ec6962efa979f04735e3258bd738fd11e346e716880406215eee2600843353 -->
+<!-- cache-key: cdktf-0.19.0 input-55ec6962efa979f04735e3258bd738fd11e346e716880406215eee2600843353 -->

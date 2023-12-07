@@ -142,8 +142,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "neptune",
-				ValidateFunc: validEngine(),
+				Default:      engineNeptune,
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -725,7 +725,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	input := neptune.DeleteDBClusterInput{
+	input := &neptune.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Id()),
 		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
 	}
@@ -746,7 +746,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return conn.DeleteDBClusterWithContext(ctx, &input)
+		return conn.DeleteDBClusterWithContext(ctx, input)
 	}, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state")
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
@@ -897,15 +897,15 @@ func statusDBCluster(ctx context.Context, conn *neptune.Neptune, id string) retr
 func waitDBClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"creating",
-			"backing-up",
-			"modifying",
-			"preparing-data-migration",
-			"migrating",
-			"configuring-iam-database-auth",
-			"upgrading",
+			clusterStatusCreating,
+			clusterStatusBackingUp,
+			clusterStatusModifying,
+			clusterStatusPreparingDataMigration,
+			clusterStatusMigrating,
+			clusterStatusConfiguringIAMDatabaseAuth,
+			clusterStatusUpgrading,
 		},
-		Target:     []string{"available"},
+		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -924,10 +924,10 @@ func waitDBClusterAvailable(ctx context.Context, conn *neptune.Neptune, id strin
 func waitDBClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"available",
-			"deleting",
-			"backing-up",
-			"modifying",
+			clusterStatusAvailable,
+			clusterStatusDeleting,
+			clusterStatusBackingUp,
+			clusterStatusModifying,
 		},
 		Target:     []string{},
 		Refresh:    statusDBCluster(ctx, conn, id),

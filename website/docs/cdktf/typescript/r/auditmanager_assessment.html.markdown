@@ -68,7 +68,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - (Required) Name of the assessment.
-* `assessmentReportsDestination` - (Required) Assessment report storage destination configuration. See [`assessmentReportsDestination`](#assessment_reports_destination) below.
+* `assessmentReportsDestination` - (Required) Assessment report storage destination configuration. See [`assessment_reports_destination`](#assessment_reports_destination) below.
 * `frameworkId` - (Required) Unique identifier of the framework the assessment will be created from.
 * `roles` - (Required) List of roles for the assessment. See [`roles`](#roles) below.
 * `scope` - (Required) Amazon Web Services accounts and services that are in scope for the assessment. See [`scope`](#scope) below.
@@ -76,22 +76,22 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the assessment.
-* `tags` - (Optional) A map of tags to assign to the assessment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the assessment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### assessment_reports_destination
 
-* `destination` - (Required) Destination of the assessment report. This value be in the form `s3://{bucketName}`.
-* `destinationType` - (Required) Destination type. Currently, `s3` is the only valid value.
+* `destination` - (Required) Destination of the assessment report. This value be in the form `s3://{bucket_name}`.
+* `destinationType` - (Required) Destination type. Currently, `S3` is the only valid value.
 
 ### roles
 
 * `roleArn` - (Required) Amazon Resource Name (ARN) of the IAM role.
-* `roleType` - (Required) Type of customer persona. For assessment creation, type must always be `processOwner`.
+* `roleType` - (Required) Type of customer persona. For assessment creation, type must always be `PROCESS_OWNER`.
 
 ### scope
 
-* `awsAccounts` - Amazon Web Services accounts that are in scope for the assessment. See [`awsAccounts`](#aws_accounts) below.
-* `awsServices` - Amazon Web Services services that are included in the scope of the assessment. See [`awsServices`](#aws_services) below.
+* `awsAccounts` - Amazon Web Services accounts that are in scope for the assessment. See [`aws_accounts`](#aws_accounts) below.
+* `awsServices` - Amazon Web Services services that are included in the scope of the assessment. See [`aws_services`](#aws_services) below.
 
 ### aws_accounts
 
@@ -108,7 +108,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the assessment.
 * `id` - Unique identifier for the assessment.
 * `rolesAll` - Complete list of all roles with access to the assessment. This includes both roles explicitly configured via the `roles` block, and any roles which have access to all Audit Manager assessments by default.
-* `status` - Status of the assessment. Valid values are `active` and `inactive`.
+* `status` - Status of the assessment. Valid values are `ACTIVE` and `INACTIVE`.
 
 ## Import
 
@@ -132,4 +132,4 @@ Using `terraform import`, import Audit Manager Assessments using the assessment 
 % terraform import aws_auditmanager_assessment.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa1e0891f6ec8901473fa207078140ea42269fbcc18c7cea3c07e91aa207dcb8 -->
+<!-- cache-key: cdktf-0.19.0 input-aa1e0891f6ec8901473fa207078140ea42269fbcc18c7cea3c07e91aa207dcb8 -->

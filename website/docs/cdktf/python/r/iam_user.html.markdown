@@ -77,6 +77,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN assigned by AWS for this user.
+* `id` - The user's name.
 * `name` - The user's name.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `unique_id` - The [unique ID][1] assigned by AWS.
@@ -102,4 +103,4 @@ Using `terraform import`, import IAM Users using the `name`. For example:
 % terraform import aws_iam_user.lb loadbalancer
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7fa2a1117bc8c5d00748a3bbf9afeae418b9e72ed4e7d7c7c625a1d0f6a8b0b5 -->
+<!-- cache-key: cdktf-0.19.0 input-3764b72389be63601b5f731331ce123e9f977757dd5f86aa6384cb4a060eb497 -->

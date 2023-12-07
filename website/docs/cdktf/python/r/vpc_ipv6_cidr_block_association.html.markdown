@@ -81,4 +81,4 @@ Using `terraform import`, import `aws_vpc_ipv6_cidr_block_association` using the
 % terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2a201569794abd4dddb78258ff009909eca49be072f28d838cf246ae7161cc63 -->
+<!-- cache-key: cdktf-0.19.0 input-2a201569794abd4dddb78258ff009909eca49be072f28d838cf246ae7161cc63 -->

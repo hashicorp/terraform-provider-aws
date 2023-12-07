@@ -192,4 +192,4 @@ Using `terraform import`, import data quality job definitions using the `name`. 
 % terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-89befb37e0c306bddb162e6069b25cc35d269452c0d563034978f681c073a661 -->
+<!-- cache-key: cdktf-0.19.0 input-89befb37e0c306bddb162e6069b25cc35d269452c0d563034978f681c073a661 -->

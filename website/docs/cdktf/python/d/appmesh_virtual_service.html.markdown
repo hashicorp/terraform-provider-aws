@@ -72,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Virtual service specification. See the [`aws_appmesh_virtual_service`](/docs/providers/aws/r/appmesh_virtual_service.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.18.0 input-a9e88eca01bcb0655a9491489c66102bdf389f472af4c3044e98fbafbd11d67d -->
+<!-- cache-key: cdktf-0.19.0 input-a9e88eca01bcb0655a9491489c66102bdf389f472af4c3044e98fbafbd11d67d -->

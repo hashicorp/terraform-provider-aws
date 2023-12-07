@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_iam_instance_profiles")
@@ -46,13 +47,15 @@ func DataSourceInstanceProfiles() *schema.Resource {
 }
 
 func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	roleName := d.Get("role_name").(string)
 	instanceProfiles, err := findInstanceProfilesForRole(ctx, conn, roleName)
 
 	if err != nil {
-		return diag.Errorf("reading IAM Instance Profiles for Role (%s): %s", roleName, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profiles for Role (%s): %s", roleName, err)
 	}
 
 	var arns, names, paths []string
@@ -68,7 +71,7 @@ func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("names", names)
 	d.Set("paths", paths)
 
-	return nil
+	return diags
 }
 
 func findInstanceProfilesForRole(ctx context.Context, conn *iam.IAM, roleName string) ([]*iam.InstanceProfile, error) {

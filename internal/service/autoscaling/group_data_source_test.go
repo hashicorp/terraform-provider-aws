@@ -35,6 +35,9 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "enabled_metrics.#", resourceName, "enabled_metrics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_grace_period", resourceName, "health_check_grace_period"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_type", resourceName, "health_check_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_maintenance_policy.#", resourceName, "instance_maintenance_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_maintenance_policy.0.min_healthy_percentage", resourceName, "instance_maintenance_policy.0.min_healthy_percentage"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_maintenance_policy.0.max_healthy_percentage", resourceName, "instance_maintenance_policy.0.max_healthy_percentage"),
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_configuration", resourceName, "launch_configuration"),
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_template.#", resourceName, "launch_template.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "load_balancers.#", resourceName, "load_balancers.#"),
@@ -203,8 +206,12 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity          = 0
   enabled_metrics           = ["GroupDesiredCapacity"]
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.test.name
-  availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  instance_maintenance_policy {
+    min_healthy_percentage = 90
+    max_healthy_percentage = 120
+  }
+  launch_configuration = aws_launch_configuration.test.name
+  availability_zones   = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
 
 resource "aws_autoscaling_group" "no_match" {

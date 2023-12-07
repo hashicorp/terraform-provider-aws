@@ -67,4 +67,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `destination_cidr_block` - The CIDR block associated with the local subnet of the customer network.
 * `vpn_connection_id` - The ID of the VPN connection.
 
-<!-- cache-key: cdktf-0.18.0 input-64b067c6df57ea0b47856274e104f5456078a8dcbea6eef290dbd19011659e4a -->
+<!-- cache-key: cdktf-0.19.0 input-64b067c6df57ea0b47856274e104f5456078a8dcbea6eef290dbd19011659e4a -->

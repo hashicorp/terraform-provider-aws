@@ -23,7 +23,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceNamedQuery,
+			TypeName: "aws_athena_named_query",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
@@ -43,6 +48,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceNamedQuery,
 			TypeName: "aws_athena_named_query",
+		},
+		{
+			Factory:  resourcePreparedStatement,
+			TypeName: "aws_athena_prepared_statement",
+			Name:     "Prepared Statement",
 		},
 		{
 			Factory:  resourceWorkGroup,

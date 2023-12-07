@@ -6,16 +6,16 @@ package eks
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKDataSource("aws_eks_node_group")
-func DataSourceNodeGroup() *schema.Resource {
+func dataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupRead,
 
@@ -184,20 +184,21 @@ func DataSourceNodeGroup() *schema.Resource {
 }
 
 func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := d.Get("node_group_name").(string)
 	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
+	nodeGroup, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {
-		return diag.Errorf("reading EKS Node Group (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Node Group (%s): %s", id, err)
 	}
 
 	d.SetId(id)
-
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set("arn", nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
@@ -206,34 +207,34 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
 	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
-		return diag.Errorf("setting launch_template: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return diag.Errorf("setting remote_access: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
 	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
-		return diag.Errorf("setting resources: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if nodeGroup.ScalingConfig != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return diag.Errorf("setting scaling_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
 	d.Set("status", nodeGroup.Status)
-	d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets))
+	d.Set("subnet_ids", nodeGroup.Subnets)
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
-		return diag.Errorf("setting taints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting taints: %s", err)
 	}
 	d.Set("version", nodeGroup.Version)
 
 	if err := d.Set("tags", KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

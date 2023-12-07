@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
@@ -48,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codeguruprofiler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
@@ -61,6 +63,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -228,6 +231,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		apigatewayv2.ServicePackage(ctx),
 		appautoscaling.ServicePackage(ctx),
 		appconfig.ServicePackage(ctx),
+		appfabric.ServicePackage(ctx),
 		appflow.ServicePackage(ctx),
 		appintegrations.ServicePackage(ctx),
 		applicationinsights.ServicePackage(ctx),
@@ -260,6 +264,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
 		codecommit.ServicePackage(ctx),
+		codeguruprofiler.ServicePackage(ctx),
 		codegurureviewer.ServicePackage(ctx),
 		codepipeline.ServicePackage(ctx),
 		codestarconnections.ServicePackage(ctx),
@@ -273,6 +278,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		connectcases.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
+		customerprofiles.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),

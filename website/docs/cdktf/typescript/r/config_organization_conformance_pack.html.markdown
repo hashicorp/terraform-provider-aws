@@ -115,9 +115,9 @@ This resource supports the following arguments:
 * `deliveryS3Bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
 * `deliveryS3KeyPrefix` - (Optional) The prefix for the Amazon S3 bucket. Maximum length of 1024.
 * `excludedAccounts` - (Optional) Set of AWS accounts to be excluded from an organization conformance pack while deploying a conformance pack. Maximum of 1000 accounts.
-* `inputParameter` - (Optional) Set of configuration blocks describing input parameters passed to the conformance pack template. Documented below. When configured, the parameters must also be included in the `templateBody` or in the template stored in Amazon S3 if using `templateS3Uri`.
-* `templateBody` - (Optional, Conflicts with `templateS3Uri`) A string containing full conformance pack template body. Maximum length of 51200. Drift detection is not possible with this argument.
-* `templateS3Uri` - (Optional, Conflicts with `templateBody`) Location of file, e.g., `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
+* `inputParameter` - (Optional) Set of configuration blocks describing input parameters passed to the conformance pack template. Documented below. When configured, the parameters must also be included in the `template_body` or in the template stored in Amazon S3 if using `template_s3_uri`.
+* `templateBody` - (Optional, Conflicts with `template_s3_uri`) A string containing full conformance pack template body. Maximum length of 51200. Drift detection is not possible with this argument.
+* `templateS3Uri` - (Optional, Conflicts with `template_body`) Location of file, e.g., `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
 
 ### input_parameter Argument Reference
 
@@ -137,9 +137,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `20M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
@@ -163,4 +163,4 @@ Using `terraform import`, import Config Organization Conformance Packs using the
 % terraform import aws_config_organization_conformance_pack.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4f933a5e639d5b2cfd2450761a6e901c02e6e8a4875255817cf9b88f4cfacd1d -->
+<!-- cache-key: cdktf-0.19.0 input-4f933a5e639d5b2cfd2450761a6e901c02e6e8a4875255817cf9b88f4cfacd1d -->

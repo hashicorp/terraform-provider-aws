@@ -140,6 +140,13 @@ func ClusterEngine_Values() []string {
 	}
 }
 
+func ClusterInstanceEngine_Values() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+	}
+}
+
 const (
 	GlobalClusterEngineAurora           = "aurora"
 	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"

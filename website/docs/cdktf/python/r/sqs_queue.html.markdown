@@ -202,4 +202,4 @@ Using `terraform import`, import SQS Queues using the queue `url`. For example:
 % terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61c8bbd892ec566ac1dba66044b682f7399f3a0480c812df8151302e52b9e635 -->
+<!-- cache-key: cdktf-0.19.0 input-61c8bbd892ec566ac1dba66044b682f7399f3a0480c812df8151302e52b9e635 -->

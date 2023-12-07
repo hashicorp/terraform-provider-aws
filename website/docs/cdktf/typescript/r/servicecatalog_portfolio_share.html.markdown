@@ -52,13 +52,13 @@ The following arguments are required:
 
 * `portfolioId` - (Required) Portfolio identifier.
 * `principalId` - (Required) Identifier of the principal with whom you will share the portfolio. Valid values AWS account IDs and ARNs of AWS Organizations and organizational units.
-* `type` - (Required) Type of portfolio share. Valid values are `account` (an external account), `organization` (a share to every account in an organization), `organizationalUnit`, `organizationMemberAccount` (a share to an account in an organization).
+* `type` - (Required) Type of portfolio share. Valid values are `ACCOUNT` (an external account), `ORGANIZATION` (a share to every account in an organization), `ORGANIZATIONAL_UNIT`, `ORGANIZATION_MEMBER_ACCOUNT` (a share to an account in an organization).
 
 The following arguments are optional:
 
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `sharePrincipals` - (Optional) Enables or disables Principal sharing when creating the portfolio share. If this flag is not provided, principal sharing is disabled.
-* `shareTagOptions` - (Optional) Whether to enable sharing of `awsServicecatalogTagOption` resources when creating the portfolio share.
+* `shareTagOptions` - (Optional) Whether to enable sharing of `aws_servicecatalog_tag_option` resources when creating the portfolio share.
 * `waitForAcceptance` - (Optional) Whether to wait (up to the timeout) for the share to be accepted. Organizational shares are automatically accepted.
 
 ## Attribute Reference
@@ -71,10 +71,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `update` - (Default `3M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -98,4 +98,4 @@ Using `terraform import`, import `awsServicecatalogPortfolioShare` using the por
 % terraform import aws_servicecatalog_portfolio_share.example port-12344321:ACCOUNT:123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2bfc4e872e821217e1db9b54e4495ec060f98eb8c8810ca144d89c25443c542e -->
+<!-- cache-key: cdktf-0.19.0 input-2bfc4e872e821217e1db9b54e4495ec060f98eb8c8810ca144d89c25443c542e -->

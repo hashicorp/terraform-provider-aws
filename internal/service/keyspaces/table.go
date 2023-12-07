@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -303,6 +304,8 @@ func resourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName := d.Get("keyspace_name").(string)
@@ -349,25 +352,27 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.CreateTable(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Keyspaces Table (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Keyspaces Table (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTableCreated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Keyspaces Table (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	table, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
@@ -375,31 +380,31 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Keyspaces Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Keyspaces Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", table.ResourceArn)
 	if table.CapacitySpecification != nil {
 		if err := d.Set("capacity_specification", []interface{}{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
-			return diag.Errorf("setting capacity_specification: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting capacity_specification: %s", err)
 		}
 	} else {
 		d.Set("capacity_specification", nil)
 	}
 	if table.ClientSideTimestamps != nil {
 		if err := d.Set("client_side_timestamps", []interface{}{flattenClientSideTimestamps(table.ClientSideTimestamps)}); err != nil {
-			return diag.Errorf("setting client_side_timestamps: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_side_timestamps: %s", err)
 		}
 	} else {
 		d.Set("client_side_timestamps", nil)
 	}
 	if table.Comment != nil {
 		if err := d.Set("comment", []interface{}{flattenComment(table.Comment)}); err != nil {
-			return diag.Errorf("setting comment: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting comment: %s", err)
 		}
 	} else {
 		d.Set("comment", nil)
@@ -407,7 +412,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("default_time_to_live", table.DefaultTimeToLive)
 	if table.EncryptionSpecification != nil {
 		if err := d.Set("encryption_specification", []interface{}{flattenEncryptionSpecification(table.EncryptionSpecification)}); err != nil {
-			return diag.Errorf("setting encryption_specification: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting encryption_specification: %s", err)
 		}
 	} else {
 		d.Set("encryption_specification", nil)
@@ -415,14 +420,14 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("keyspace_name", table.KeyspaceName)
 	if table.PointInTimeRecovery != nil {
 		if err := d.Set("point_in_time_recovery", []interface{}{flattenPointInTimeRecoverySummary(table.PointInTimeRecovery)}); err != nil {
-			return diag.Errorf("setting point_in_time_recovery: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 		}
 	} else {
 		d.Set("point_in_time_recovery", nil)
 	}
 	if table.SchemaDefinition != nil {
 		if err := d.Set("schema_definition", []interface{}{flattenSchemaDefinition(table.SchemaDefinition)}); err != nil {
-			return diag.Errorf("setting schema_definition: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting schema_definition: %s", err)
 		}
 	} else {
 		d.Set("schema_definition", nil)
@@ -430,22 +435,24 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("table_name", table.TableName)
 	if table.Ttl != nil {
 		if err := d.Set("ttl", []interface{}{flattenTimeToLive(table.Ttl)}); err != nil {
-			return diag.Errorf("setting ttl: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 		}
 	} else {
 		d.Set("ttl", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -462,11 +469,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -482,11 +489,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) ClientSideTimestamps: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) ClientSideTimestamps: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) ClientSideTimestamps update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) ClientSideTimestamps update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -501,11 +508,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			_, err := conn.UpdateTable(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("updating Keyspaces Table (%s) DefaultTimeToLive: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) DefaultTimeToLive: %s", d.Id(), err)
 			}
 
 			if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for Keyspaces Table (%s) DefaultTimeToLive update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) DefaultTimeToLive update: %s", d.Id(), err)
 			}
 		}
 
@@ -520,11 +527,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) EncryptionSpecification: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) EncryptionSpecification: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) EncryptionSpecification update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) EncryptionSpecification update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -540,11 +547,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) PointInTimeRecovery: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) PointInTimeRecovery: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) PointInTimeRecovery update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) PointInTimeRecovery update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -560,11 +567,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) Ttl: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) Ttl: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) Ttl update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) Ttl update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -595,27 +602,29 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					_, err := conn.UpdateTable(ctx, input)
 
 					if err != nil {
-						return diag.Errorf("updating Keyspaces Table (%s) AddColumns: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) AddColumns: %s", d.Id(), err)
 					}
 
 					if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for Keyspaces Table (%s) AddColumns update: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) AddColumns update: %s", d.Id(), err)
 					}
 				}
 			}
 		}
 	}
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Keyspaces Table: (%s)", d.Id())
@@ -625,18 +634,18 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Keyspaces Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTableDeleted(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Keyspaces Table (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const tableIDSeparator = "/"

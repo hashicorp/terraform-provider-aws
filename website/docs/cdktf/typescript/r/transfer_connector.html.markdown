@@ -83,7 +83,7 @@ This resource supports the following arguments:
 * `loggingRole` - (Optional) The IAM Role which is required for allowing the connector to turn on CloudWatch logging for Amazon S3 events.
 * `sftpConfig` - (Optional) Either SFTP or AS2 is configured.The parameters to configure for the connector object. Fields documented below.
 * `url` - (Required) The URL of the partners AS2 endpoint or SFTP endpoint.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### As2Config Details
 
@@ -130,4 +130,4 @@ Using `terraform import`, import Transfer AS2 Connector using the `connectorId`.
 % terraform import aws_transfer_connector.example c-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-08a2d3ed33597d19d5aea6b0a9938d36219bbcfc9565866ef46ddd1ae4b69a1b -->
+<!-- cache-key: cdktf-0.19.0 input-08a2d3ed33597d19d5aea6b0a9938d36219bbcfc9565866ef46ddd1ae4b69a1b -->

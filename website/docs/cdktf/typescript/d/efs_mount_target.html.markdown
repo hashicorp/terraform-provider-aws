@@ -44,9 +44,9 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `accessPointId` - (Optional) ID or ARN of the access point whose mount target that you want to find. It must be included if a `fileSystemId` and `mountTargetId` are not included.
-* `fileSystemId` - (Optional) ID or ARN of the file system whose mount target that you want to find. It must be included if an `accessPointId` and `mountTargetId` are not included.
-* `mountTargetId` - (Optional) ID or ARN of the mount target that you want to find. It must be included in your request if an `accessPointId` and `fileSystemId` are not included.
+* `accessPointId` - (Optional) ID or ARN of the access point whose mount target that you want to find. It must be included if a `file_system_id` and `mount_target_id` are not included.
+* `fileSystemId` - (Optional) ID or ARN of the file system whose mount target that you want to find. It must be included if an `access_point_id` and `mount_target_id` are not included.
+* `mountTargetId` - (Optional) ID or ARN of the mount target that you want to find. It must be included in your request if an `access_point_id` and `file_system_id` are not included.
 
 ## Attribute Reference
 
@@ -63,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `availabilityZoneId` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.
 * `ownerId` - AWS account ID that owns the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-241585ed69289317f2541ca35ef78442a4e59e0d0ccb4b15a56966c7604251c8 -->
+<!-- cache-key: cdktf-0.19.0 input-241585ed69289317f2541ca35ef78442a4e59e0d0ccb4b15a56966c7604251c8 -->

@@ -10,6 +10,7 @@ Amplify
 App Mesh
 App Runner
 AppConfig
+AppFabric
 AppFlow
 AppIntegrations
 AppStream 2.0
@@ -47,6 +48,7 @@ CodeBuild
 CodeCatalyst
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
 CodeGuru Reviewer
 CodePipeline
 CodeStar Connections
@@ -58,6 +60,7 @@ Compute Optimizer
 Config
 Connect
 Connect Cases
+Connect Customer Profiles
 Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
@@ -94,6 +97,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage Version 2
 Elemental MediaStore
 EventBridge
 EventBridge Pipes
@@ -145,6 +149,7 @@ Neptune
 Network Firewall
 Network Manager
 OpenSearch
+OpenSearch Ingestion
 OpenSearch Serverless
 OpsWorks
 Organizations

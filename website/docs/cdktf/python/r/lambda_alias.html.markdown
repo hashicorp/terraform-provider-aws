@@ -84,4 +84,4 @@ Using `terraform import`, import Lambda Function Aliases using the `function_nam
 % terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8fb769e7276158548fab5fb93af4f2a28e9364558792a79cc5b94ffb6bf2c452 -->
+<!-- cache-key: cdktf-0.19.0 input-8fb769e7276158548fab5fb93af4f2a28e9364558792a79cc5b94ffb6bf2c452 -->

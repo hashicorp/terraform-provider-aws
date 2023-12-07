@@ -72,7 +72,7 @@ This data source exports the following attributes in addition to the arguments a
 * `createdDate` - Creation date of the service mesh.
 * `lastUpdatedDate` - Last update date of the service mesh.
 * `resourceOwner` - Resource owner's AWS account ID.
-* `spec` - Service mesh specification. See the [`awsAppmeshMesh`](/docs/providers/aws/r/appmesh_mesh.html#spec) resource for details.
+* `spec` - Service mesh specification. See the [`aws_appmesh_mesh`](/docs/providers/aws/r/appmesh_mesh.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.18.0 input-d7824d065f1b548e8cd5d250543a8080d2008466f819e3d452bc45287fb64d1d -->
+<!-- cache-key: cdktf-0.19.0 input-d7824d065f1b548e8cd5d250543a8080d2008466f819e3d452bc45287fb64d1d -->
