@@ -9,7 +9,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -495,106 +494,6 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	attributes = append(attributes, loadBalancerAttributes.expand(d, true)...)
-
-	switch d.Get("load_balancer_type").(string) {
-	case elbv2.LoadBalancerTypeEnumApplication:
-		if d.HasChange("idle_timeout") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("idle_timeout.timeout_seconds"),
-				Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
-			})
-		}
-
-		if d.HasChange("enable_http2") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http2.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("enable_http2").(bool))),
-			})
-		}
-
-		// The "waf.fail_open.enabled" attribute is not available in all AWS regions
-		// e.g. us-gov-east-1; thus, we can instead only modify the attribute as a result of d.HasChange()
-		// to avoid "ValidationError: Load balancer attribute key 'waf.fail_open.enabled' is not recognized"
-		// when modifying the attribute right after resource creation.
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22037
-		if d.HasChange("enable_waf_fail_open") {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("waf.fail_open.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("enable_waf_fail_open").(bool))),
-			})
-		}
-
-		if d.HasChange("drop_invalid_header_fields") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.drop_invalid_header_fields.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("drop_invalid_header_fields").(bool))),
-			})
-		}
-
-		if d.HasChange("preserve_host_header") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.preserve_host_header.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("preserve_host_header").(bool))),
-			})
-		}
-
-		if d.HasChange("desync_mitigation_mode") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.desync_mitigation_mode"),
-				Value: aws.String(d.Get("desync_mitigation_mode").(string)),
-			})
-		}
-
-		if d.HasChange("enable_tls_version_and_cipher_suite_headers") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.x_amzn_tls_version_and_cipher_suite.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("enable_tls_version_and_cipher_suite_headers").(bool))),
-			})
-		}
-
-		if d.HasChange("enable_xff_client_port") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.xff_client_port.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("enable_xff_client_port").(bool))),
-			})
-		}
-
-		if d.HasChange("xff_header_processing_mode") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("routing.http.xff_header_processing.mode"),
-				Value: aws.String(d.Get("xff_header_processing_mode").(string)),
-			})
-		}
-
-	case elbv2.LoadBalancerTypeEnumGateway:
-		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("load_balancing.cross_zone.enabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
-			})
-		}
-
-	case elbv2.LoadBalancerTypeEnumNetwork:
-		if d.HasChange("dns_record_client_routing_policy") {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("dns_record.client_routing_policy"),
-				Value: aws.String(d.Get("dns_record_client_routing_policy").(string)),
-			})
-		}
-		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
-			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String("load_balancing.cross_zone.enabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_cross_zone_load_balancing").(bool))),
-			})
-		}
-	}
-
-	if d.HasChange("enable_deletion_protection") || d.IsNewResource() {
-		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-			Key:   aws.String("deletion_protection.enabled"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("enable_deletion_protection").(bool))),
-		})
-	}
 
 	if len(attributes) > 0 {
 		if err := modifyLoadBalancerAttributes(ctx, conn, d.Id(), attributes); err != nil {
