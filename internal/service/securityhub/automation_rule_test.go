@@ -375,6 +375,8 @@ func testAccCheckAutomationRuleDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccAutomationRuleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -402,6 +404,8 @@ resource "aws_securityhub_automation_rule" "test" {
       value      = "1234567890"
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName)
 }
@@ -411,6 +415,8 @@ func testAccAutomationRuleConfig_full(rName string) string {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
+resource "aws_securityhub_account" "test" {}
 
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
@@ -457,6 +463,8 @@ resource "aws_securityhub_automation_rule" "test" {
       }
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName)
 }
@@ -466,6 +474,8 @@ func testAccAutomationRuleConfig_fullUpdated(rName string) string {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
+resource "aws_securityhub_account" "test" {}
 
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
@@ -512,12 +522,16 @@ resource "aws_securityhub_automation_rule" "test" {
       }
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName)
 }
 
 func testAccAutomationRuleConfig_stringFilters(rName, comparison, value string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -538,12 +552,16 @@ resource "aws_securityhub_automation_rule" "test" {
       value      = %[3]q
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, comparison, value)
 }
 
 func testAccAutomationRuleConfig_numberFilters(rName, value string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -563,12 +581,16 @@ resource "aws_securityhub_automation_rule" "test" {
       %[2]s
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, value)
 }
 
 func testAccAutomationRuleConfig_dateFiltersAbsoluteRange(rName, start, end string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -589,12 +611,16 @@ resource "aws_securityhub_automation_rule" "test" {
       start = %[2]q
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, start, end)
 }
 
 func testAccAutomationRuleConfig_dateFiltersRelativeRange(rName, unit string, value int) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -617,12 +643,16 @@ resource "aws_securityhub_automation_rule" "test" {
       }
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, unit, value)
 }
 
 func testAccAutomationRuleConfig_mapFilters(rName, comparison, key, value string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -644,12 +674,16 @@ resource "aws_securityhub_automation_rule" "test" {
       value      = %[4]q
     }
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, comparison, key, value)
 }
 
 func testAccAutomationRuleConfig_tags(rName, key, value string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -673,12 +707,16 @@ resource "aws_securityhub_automation_rule" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, key, value)
 }
 
 func testAccAutomationRuleConfig_tags2(rName, key, value, key2, value2 string) string {
 	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
 resource "aws_securityhub_automation_rule" "test" {
   description = "test description"
   rule_name   = %[1]q
@@ -703,6 +741,8 @@ resource "aws_securityhub_automation_rule" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [aws_securityhub_account.test]
 }
 `, rName, key, value, key2, value2)
 }
