@@ -37,6 +37,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_securityhub_action_target",
 		},
 		{
+			Factory:  ResourceAutomationRule,
+			TypeName: "aws_securityhub_automation_rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceFindingAggregator,
 			TypeName: "aws_securityhub_finding_aggregator",
 		},

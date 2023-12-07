@@ -21,6 +21,15 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"Full":                        testAccAccount_full,
 			"RemoveControlFindingGeneratorDefaultValue": testAccAccount_removeControlFindingGeneratorDefaultValue,
 		},
+		"AutomationRule": {
+			"basic":         testAccAutomationRule_basic,
+			"disappears":    testAccAutomationRule_disappears,
+			"stringFilters": testAccAutomationRule_stringFilters,
+			"numberFilters": testAccAutomationRule_numberFilters,
+			"dateFilters":   testAccAutomationRule_dateFilters,
+			"mapFilters":    testAccAutomationRule_mapFilters,
+			"tags":          testAccAutomationRule_tags,
+		},
 		"Member": {
 			"basic":  testAccMember_basic,
 			"invite": testAccMember_invite,
