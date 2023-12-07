@@ -137,6 +137,7 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
+Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie

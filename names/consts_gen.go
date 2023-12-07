@@ -132,6 +132,7 @@ const (
 	Lightsail                    = "lightsail"
 	Location                     = "location"
 	Logs                         = "logs"
+	LookoutMetrics               = "lookoutmetrics"
 	MQ                           = "mq"
 	MWAA                         = "mwaa"
 	Macie2                       = "macie2"

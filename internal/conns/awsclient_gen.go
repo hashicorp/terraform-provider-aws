@@ -51,6 +51,7 @@ import (
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
@@ -776,6 +777,10 @@ func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.Loc
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
 	return errs.Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs))
+}
+
+func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sdkv2.Client {
+	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics))
 }
 
 func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
