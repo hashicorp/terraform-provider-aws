@@ -104,8 +104,8 @@ github.com/aws/aws-sdk-go-v2/service/ec2 v1.140.0 h1:joMAX3jOjpbgIYzXgyMLAYly0kz
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.140.0/go.mod h1:d1hAqgLDOPaSO1Piy/0bBmj6oAplFwv6p0cquHntNHM=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.24.3 h1:+sbyLjtAq0Xg9ZOQ2mBibklsGUyX6I2OfRTDsha9uU4=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.24.3/go.mod h1:/m9MiYl5Ds0cZqy/bbeSUWxKLwTarGugjXxSgiXNQFc=
-github.com/aws/aws-sdk-go-v2/service/eks v1.35.2 h1:G1gPnbhGBEKedQLoSI71u3+IMJ+uIPxCNB0ZPmv6dpk=
-github.com/aws/aws-sdk-go-v2/service/eks v1.35.2/go.mod h1:HZ5xGhvvZEs7iBPbwhLWZWvAxWezzOFn/HrepDivCgQ=
+github.com/aws/aws-sdk-go-v2/service/eks v1.35.3 h1:l7ucCZKpubBcFA8cOtHsnE98CqFq4KdTf+7+/aCAh+g=
+github.com/aws/aws-sdk-go-v2/service/eks v1.35.3/go.mod h1:HZ5xGhvvZEs7iBPbwhLWZWvAxWezzOFn/HrepDivCgQ=
 github.com/aws/aws-sdk-go-v2/service/emr v1.35.2 h1:Q4nxzsfd61L/d83LDDD/UhDk1Tktd4+8QPhRLyRUVIs=
 github.com/aws/aws-sdk-go-v2/service/emr v1.35.2/go.mod h1:5b5nmwLzdnx3NFVML8Tndobsr2x48Sw2pd9hisiCyB8=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.2 h1:X8kxgp3t9on1NdoV1iv75dwOXVPx0inKUzffTKqMxFI=
