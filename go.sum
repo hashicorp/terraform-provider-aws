@@ -108,8 +108,8 @@ github.com/aws/aws-sdk-go-v2/service/eks v1.35.3 h1:l7ucCZKpubBcFA8cOtHsnE98CqFq
 github.com/aws/aws-sdk-go-v2/service/eks v1.35.3/go.mod h1:HZ5xGhvvZEs7iBPbwhLWZWvAxWezzOFn/HrepDivCgQ=
 github.com/aws/aws-sdk-go-v2/service/emr v1.35.3 h1:cbUc67Wo4CB/b4p0GIGRPu2QeVMR6Kgpwgp9HL+8qmA=
 github.com/aws/aws-sdk-go-v2/service/emr v1.35.3/go.mod h1:5b5nmwLzdnx3NFVML8Tndobsr2x48Sw2pd9hisiCyB8=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.2 h1:X8kxgp3t9on1NdoV1iv75dwOXVPx0inKUzffTKqMxFI=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.2/go.mod h1:U/ein8iexyPO/PJwQo2OfBwQSQxVgWtbJTBg0pvJXiQ=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.3 h1:ur3W7dJNflF6v/gwFvtC3Z/1srJw05ougnp5uCEjZ9k=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.3/go.mod h1:U/ein8iexyPO/PJwQo2OfBwQSQxVgWtbJTBg0pvJXiQ=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.16.2 h1:srah2FtvBRCG6IyvBhMzZNxkX2CfyG2MEcZ4OX9uVXY=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.16.2/go.mod h1:EnmNHEz4/3uex/eUVX14WB44HzBV+ivtIZBgh0O/3ko=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.19.0 h1:TjO2V8oL+q1HTF7OAHQpFeXZjKLTM7AU2yNVXaqU6Rw=
