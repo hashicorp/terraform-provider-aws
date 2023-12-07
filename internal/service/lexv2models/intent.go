@@ -1096,11 +1096,11 @@ type IntentConfirmationSetting struct {
 }
 
 type PromptSpecification struct {
-	MaxRetries               types.Int64                                   `tfsdk:"max_retries"`
-	MessageGroup             fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_groups"`
-	AllowInterrupt           types.Bool                                    `tfsdk:"allow_interrupt"`
-	MessageSelectionStrategy types.String                                  `tfsdk:"message_selection_strategy"`
-	//PromptAttemptsSpecification map[string]PromptAttemptSpecification         `tfsdk:"prompt_attempts_specification"`
+	MaxRetries                  types.Int64                                           `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]         `tfsdk:"message_groups"`
+	AllowInterrupt              types.Bool                                            `tfsdk:"allow_interrupt"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy] `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.ObjectMapValueOf[PromptAttemptSpecification]  `tfsdk:"prompt_attempts_specification"`
 }
 
 type PromptAttemptSpecification struct {
