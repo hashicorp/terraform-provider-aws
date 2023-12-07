@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.3
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.2
 	github.com/beevik/etree v1.2.0
 	github.com/davecgh/go-spew v1.1.1
