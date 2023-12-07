@@ -37,7 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.139.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.140.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/emr v1.35.2
