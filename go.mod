@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.3
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.29.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.18.2
