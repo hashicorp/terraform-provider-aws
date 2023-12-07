@@ -8,12 +8,14 @@ FEATURES:
 * **New Data Source:** `aws_ssoadmin_application` ([#34773](https://github.com/hashicorp/terraform-provider-aws/issues/34773))
 * **New Data Source:** `aws_ssoadmin_application_providers` ([#34670](https://github.com/hashicorp/terraform-provider-aws/issues/34670))
 * **New Resource:** `aws_codeguruprofiler_profiling_group` ([#34672](https://github.com/hashicorp/terraform-provider-aws/issues/34672))
+* **New Resource:** `aws_customerprofiles_domain` ([#34622](https://github.com/hashicorp/terraform-provider-aws/issues/34622))
+* **New Resource:** `aws_customerprofiles_profile` ([#34622](https://github.com/hashicorp/terraform-provider-aws/issues/34622))
 * **New Resource:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
 * **New Resource:** `aws_lb_trust_store_revocation` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_securitylake_data_lake` ([#34521](https://github.com/hashicorp/terraform-provider-aws/issues/34521))
 * **New Resource:** `aws_ssoadmin_application` ([#34723](https://github.com/hashicorp/terraform-provider-aws/issues/34723))
 * **New Resource:** `aws_ssoadmin_application_assignment` ([#34741](https://github.com/hashicorp/terraform-provider-aws/issues/34741))
 * **New Resource:** `aws_ssoadmin_application_assignment_configuration` ([#34752](https://github.com/hashicorp/terraform-provider-aws/issues/34752))
-* **New Resource:** `resource/aws_securitylake_data_lake` ([#34521](https://github.com/hashicorp/terraform-provider-aws/issues/34521))
 
 ENHANCEMENTS:
 
