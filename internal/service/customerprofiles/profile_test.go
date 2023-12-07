@@ -34,7 +34,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfileConfig_full(rName, accountNumber, email),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "account_number", accountNumber),
@@ -107,7 +107,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 			},
 			{
 				Config: testAccProfileConfig_fullUpdated(rName, accountNumberUpdated, emailUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "High Profile Customer"),
@@ -207,13 +207,9 @@ func testAccCheckProfileExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Customer Profiles Profile ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-		_, err := customerprofiles.FindProfileByIdAndDomain(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
+		_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
 
 		return err
 	}
@@ -228,7 +224,7 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := customerprofiles.FindProfileByIdAndDomain(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
+			_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
 				continue

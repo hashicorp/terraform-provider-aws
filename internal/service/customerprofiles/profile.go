@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	"github.com/aws/aws-sdk-go-v2/service/customerprofiles/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,10 +35,6 @@ func ResourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"account_number": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -70,6 +67,10 @@ func ResourceProfile() *schema.Resource {
 			"business_phone_number": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"domain_name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"email_address": {
 				Type:     schema.TypeString,
@@ -172,106 +173,105 @@ func customerProfileAddressSchema() *schema.Schema {
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
-	log.Print("[DEBUG] Creating Customer Profiles Profile")
 
-	params := &customerprofiles.CreateProfileInput{
+	input := &customerprofiles.CreateProfileInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
 	if v, ok := d.GetOk("account_number"); ok {
-		params.AccountNumber = aws.String(v.(string))
+		input.AccountNumber = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("additional_information"); ok {
-		params.AdditionalInformation = aws.String(v.(string))
+		input.AdditionalInformation = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("address"); ok {
-		params.Address = expandAddress(v.([]interface{}))
+		input.Address = expandAddress(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("attributes"); ok {
-		params.Attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("billing_address"); ok {
-		params.BillingAddress = expandAddress(v.([]interface{}))
+		input.BillingAddress = expandAddress(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("birth_date"); ok {
-		params.BirthDate = aws.String(v.(string))
+		input.BirthDate = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("business_email_address"); ok {
-		params.BusinessEmailAddress = aws.String(v.(string))
+		input.BusinessEmailAddress = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("business_name"); ok {
-		params.BusinessName = aws.String(v.(string))
+		input.BusinessName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("business_phone_number"); ok {
-		params.BusinessPhoneNumber = aws.String(v.(string))
+		input.BusinessPhoneNumber = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("email_address"); ok {
-		params.EmailAddress = aws.String(v.(string))
+		input.EmailAddress = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("first_name"); ok {
-		params.FirstName = aws.String(v.(string))
+		input.FirstName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("gender_string"); ok {
-		params.GenderString = aws.String(v.(string))
+		input.GenderString = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("home_phone_number"); ok {
-		params.HomePhoneNumber = aws.String(v.(string))
+		input.HomePhoneNumber = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("last_name"); ok {
-		params.LastName = aws.String(v.(string))
+		input.LastName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("mailing_address"); ok {
-		params.MailingAddress = expandAddress(v.([]interface{}))
+		input.MailingAddress = expandAddress(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("middle_name"); ok {
-		params.MiddleName = aws.String(v.(string))
+		input.MiddleName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("mobile_phone_number"); ok {
-		params.MobilePhoneNumber = aws.String(v.(string))
+		input.MobilePhoneNumber = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("party_type_string"); ok {
-		params.PartyTypeString = aws.String(v.(string))
+		input.PartyTypeString = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("personal_email_address"); ok {
-		params.PersonalEmailAddress = aws.String(v.(string))
+		input.PersonalEmailAddress = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("phone_number"); ok {
-		params.PhoneNumber = aws.String(v.(string))
+		input.PhoneNumber = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("shipping_address"); ok {
-		params.ShippingAddress = expandAddress(v.([]interface{}))
+		input.ShippingAddress = expandAddress(v.([]interface{}))
 	}
 
-	output, err := conn.CreateProfile(ctx, params)
+	output, err := conn.CreateProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Customer Profiles Profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Customer Profiles Profile: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.ProfileId))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindProfileByIdAndDomain(ctx, conn, d.Id(), d.Get("domain_name").(string))
+		return FindProfileByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
 	})
 
 	if err != nil {
@@ -286,10 +286,10 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
-	output, err := FindProfileByIdAndDomain(ctx, conn, d.Id(), domainName)
+	output, err := FindProfileByTwoPartKey(ctx, conn, d.Id(), domainName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Customer Profiles Profile with Id (%s) and DomainName (%s) not found, removing from state", d.Id(), domainName)
+		log.Printf("[WARN] Customer Profiles Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -327,117 +327,116 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
-	log.Print("[DEBUG] Updating Customer Profiles Profile")
 
-	params := &customerprofiles.UpdateProfileInput{
+	input := &customerprofiles.UpdateProfileInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 		ProfileId:  aws.String(d.Id()),
 	}
 
 	if d.HasChange("account_number") {
-		params.AccountNumber = aws.String(d.Get("account_number").(string))
+		input.AccountNumber = aws.String(d.Get("account_number").(string))
 	}
 
 	if d.HasChange("additional_information") {
-		params.AdditionalInformation = aws.String(d.Get("additional_information").(string))
+		input.AdditionalInformation = aws.String(d.Get("additional_information").(string))
 	}
 
 	if d.HasChange("address") {
-		params.Address = expandUpdateAddress(d.Get("address").([]interface{}))
+		input.Address = expandUpdateAddress(d.Get("address").([]interface{}))
 	}
 
 	if d.HasChange("attributes") {
-		params.Attributes = flex.ExpandStringValueMap(d.Get("attributes").(map[string]interface{}))
+		input.Attributes = flex.ExpandStringValueMap(d.Get("attributes").(map[string]interface{}))
 	}
 
 	if d.HasChange("billing_address") {
-		params.BillingAddress = expandUpdateAddress(d.Get("billing_address").([]interface{}))
+		input.BillingAddress = expandUpdateAddress(d.Get("billing_address").([]interface{}))
 	}
 
 	if d.HasChange("additional_information") {
-		params.AdditionalInformation = aws.String(d.Get("additional_information").(string))
+		input.AdditionalInformation = aws.String(d.Get("additional_information").(string))
 	}
 
 	if d.HasChange("birth_date") {
-		params.BirthDate = aws.String(d.Get("birth_date").(string))
+		input.BirthDate = aws.String(d.Get("birth_date").(string))
 	}
 
 	if d.HasChange("business_email_address") {
-		params.BusinessEmailAddress = aws.String(d.Get("business_email_address").(string))
+		input.BusinessEmailAddress = aws.String(d.Get("business_email_address").(string))
 	}
 
 	if d.HasChange("business_name") {
-		params.BusinessName = aws.String(d.Get("business_name").(string))
+		input.BusinessName = aws.String(d.Get("business_name").(string))
 	}
 
 	if d.HasChange("business_phone_number") {
-		params.BusinessPhoneNumber = aws.String(d.Get("business_phone_number").(string))
+		input.BusinessPhoneNumber = aws.String(d.Get("business_phone_number").(string))
 	}
 
 	if d.HasChange("email_address") {
-		params.EmailAddress = aws.String(d.Get("email_address").(string))
+		input.EmailAddress = aws.String(d.Get("email_address").(string))
 	}
 
 	if d.HasChange("first_name") {
-		params.FirstName = aws.String(d.Get("first_name").(string))
+		input.FirstName = aws.String(d.Get("first_name").(string))
 	}
 
 	if d.HasChange("gender_string") {
-		params.GenderString = aws.String(d.Get("gender_string").(string))
+		input.GenderString = aws.String(d.Get("gender_string").(string))
 	}
 
 	if d.HasChange("home_phone_number") {
-		params.HomePhoneNumber = aws.String(d.Get("home_phone_number").(string))
+		input.HomePhoneNumber = aws.String(d.Get("home_phone_number").(string))
 	}
 
 	if d.HasChange("last_name") {
-		params.LastName = aws.String(d.Get("last_name").(string))
+		input.LastName = aws.String(d.Get("last_name").(string))
 	}
 
 	if d.HasChange("mailing_address") {
-		params.MailingAddress = expandUpdateAddress(d.Get("mailing_address").([]interface{}))
+		input.MailingAddress = expandUpdateAddress(d.Get("mailing_address").([]interface{}))
 	}
 
 	if d.HasChange("middle_name") {
-		params.MiddleName = aws.String(d.Get("middle_name").(string))
+		input.MiddleName = aws.String(d.Get("middle_name").(string))
 	}
 
 	if d.HasChange("mobile_phone_number") {
-		params.MobilePhoneNumber = aws.String(d.Get("mobile_phone_number").(string))
+		input.MobilePhoneNumber = aws.String(d.Get("mobile_phone_number").(string))
 	}
 
 	if d.HasChange("party_type_string") {
-		params.PartyTypeString = aws.String(d.Get("party_type_string").(string))
+		input.PartyTypeString = aws.String(d.Get("party_type_string").(string))
 	}
 
 	if d.HasChange("personal_email_address") {
-		params.PersonalEmailAddress = aws.String(d.Get("personal_email_address").(string))
+		input.PersonalEmailAddress = aws.String(d.Get("personal_email_address").(string))
 	}
 
 	if d.HasChange("phone_number") {
-		params.PhoneNumber = aws.String(d.Get("phone_number").(string))
+		input.PhoneNumber = aws.String(d.Get("phone_number").(string))
 	}
 
 	if d.HasChange("shipping_address") {
-		params.ShippingAddress = expandUpdateAddress(d.Get("shipping_address").([]interface{}))
+		input.ShippingAddress = expandUpdateAddress(d.Get("shipping_address").([]interface{}))
 	}
 
-	_, err := conn.UpdateProfile(ctx, params)
+	_, err := conn.UpdateProfile(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("updating Customer Profiles Profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Customer Profiles Profile (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
-
-	domainName := d.Get("domain_name").(string)
 	_, err := conn.DeleteProfile(ctx, &customerprofiles.DeleteProfileInput{
-		DomainName: aws.String(domainName),
+		DomainName: aws.String(d.Get("domain_name").(string)),
 		ProfileId:  aws.String(d.Id()),
 	})
 
@@ -446,10 +445,10 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Customer Profiles Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Customer Profiles Profile (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceProfileImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -458,39 +457,41 @@ func resourceProfileImport(ctx context.Context, d *schema.ResourceData, meta int
 		return []*schema.ResourceData{}, fmt.Errorf("unexpected format of import ID (%s), use: 'domain-name/profile-id'", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
-	output, err := FindProfileByIdAndDomain(ctx, conn, parts[1], parts[0])
+	d.SetId(parts[1])
+	d.Set("domain_name", parts[0])
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func FindProfileByTwoPartKey(ctx context.Context, conn *customerprofiles.Client, profileId, domainName string) (*types.Profile, error) {
+	input := &customerprofiles.SearchProfilesInput{
+		DomainName: aws.String(domainName),
+		KeyName:    aws.String("_profileId"),
+		Values:     []string{profileId},
+	}
+
+	output, err := conn.SearchProfiles(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(parts[1])
-	d.Set("domain_name", parts[0])
-	d.Set("account_number", output.AccountNumber)
-	d.Set("additional_information", output.AdditionalInformation)
-	d.Set("address", flattenAddress(output.Address))
-	d.Set("account_number", output.AccountNumber)
-	d.Set("attributes", output.Attributes)
-	d.Set("billing_address", flattenAddress(output.BillingAddress))
-	d.Set("birth_date", output.BirthDate)
-	d.Set("business_email_address", output.BusinessEmailAddress)
-	d.Set("business_name", output.BusinessName)
-	d.Set("business_phone_number", output.BusinessPhoneNumber)
-	d.Set("email_address", output.EmailAddress)
-	d.Set("first_name", output.FirstName)
-	d.Set("gender_string", output.GenderString)
-	d.Set("home_phone_number", output.HomePhoneNumber)
-	d.Set("last_name", output.LastName)
-	d.Set("mailing_address", flattenAddress(output.MailingAddress))
-	d.Set("middle_name", output.MiddleName)
-	d.Set("mobile_phone_number", output.MobilePhoneNumber)
-	d.Set("party_type_string", output.PartyTypeString)
-	d.Set("personal_email_address", output.PersonalEmailAddress)
-	d.Set("phone_number", output.PhoneNumber)
-	d.Set("shipping_address", flattenAddress(output.ShippingAddress))
+	if output == nil || len(output.Items) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
 
-	return []*schema.ResourceData{d}, nil
+	if count := len(output.Items); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return &output.Items[0], nil
 }
 
 func flattenAddress(apiObject *types.Address) []interface{} {
