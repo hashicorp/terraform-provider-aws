@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.25.12
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.9
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.5
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.2
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.26.2
