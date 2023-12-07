@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.19.3
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/signer v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/sns v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.29.2
