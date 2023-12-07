@@ -15,6 +15,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceApplication,
+			Name:    "Application",
+		},
+		{
 			Factory: newDataSourceApplicationProviders,
 			Name:    "Application Providers",
 		},
@@ -31,6 +35,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceApplicationAssignment,
 			Name:    "Application Assignment",
+		},
+		{
+			Factory: newResourceApplicationAssignmentConfiguration,
+			Name:    "Application Assignment Configuration",
 		},
 	}
 }

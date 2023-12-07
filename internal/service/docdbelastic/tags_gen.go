@@ -18,12 +18,12 @@ import (
 // listTags lists docdbelastic service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *docdbelastic.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *docdbelastic.Client, identifier string, optFns ...func(*docdbelastic.Options)) (tftags.KeyValueTags, error) {
 	input := &docdbelastic.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -82,7 +82,7 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 // updateTags updates docdbelastic service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *docdbelastic.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *docdbelastic.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*docdbelastic.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -96,7 +96,7 @@ func updateTags(ctx context.Context, conn *docdbelastic.Client, identifier strin
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -111,7 +111,7 @@ func updateTags(ctx context.Context, conn *docdbelastic.Client, identifier strin
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
