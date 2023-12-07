@@ -174,7 +174,7 @@ func TestGenericExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 	testCases := []struct {
-		Context    context.Context //nolint:containedctx
+		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
 		Source     any
 		Target     any
@@ -531,7 +531,7 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"), //nolint:contextcheck // false positive
 			TestName: "resource name prefix",
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
@@ -768,7 +768,7 @@ func TestGenericFlatten(t *testing.T) {
 	ctx := context.Background()
 	testString := "test"
 	testCases := []struct {
-		Context    context.Context //nolint:containedctx
+		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
 		Source     any
 		Target     any
@@ -1182,7 +1182,7 @@ func TestGenericFlatten(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"), //nolint:contextcheck // false positive
 			TestName: "resource name prefix",
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
