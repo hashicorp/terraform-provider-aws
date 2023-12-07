@@ -4,7 +4,7 @@ account,account,account,account,,account,,,Account,Account,,,2,,aws_account_,,ac
 acm,acm,acm,acm,,acm,,,ACM,ACM,,,2,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,,,
 acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,1,,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,,,
 alexaforbusiness,alexaforbusiness,alexaforbusiness,alexaforbusiness,,alexaforbusiness,,,AlexaForBusiness,AlexaForBusiness,,1,,,aws_alexaforbusiness_,,alexaforbusiness_,Alexa for Business,,,x,,,,,
-amp,amp,prometheusservice,amp,,amp,,prometheus;prometheusservice,AMP,PrometheusService,,1,,aws_prometheus_,aws_amp_,,prometheus_,AMP (Managed Prometheus),Amazon,,,,,,,
+amp,amp,prometheusservice,amp,,amp,,prometheus;prometheusservice,AMP,PrometheusService,,1,2,aws_prometheus_,aws_amp_,,prometheus_,AMP (Managed Prometheus),Amazon,,,,,,,
 amplify,amplify,amplify,amplify,,amplify,,,Amplify,Amplify,,1,,,aws_amplify_,,amplify_,Amplify,AWS,,,,,,,
 amplifybackend,amplifybackend,amplifybackend,amplifybackend,,amplifybackend,,,AmplifyBackend,AmplifyBackend,,1,,,aws_amplifybackend_,,amplifybackend_,Amplify Backend,AWS,,x,,,,,
 amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,,amplifyuibuilder,,,AmplifyUIBuilder,AmplifyUIBuilder,,1,,,aws_amplifyuibuilder_,,amplifyuibuilder_,Amplify UI Builder,AWS,,x,,,,,

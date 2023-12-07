@@ -8,10 +8,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/amp"
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -79,14 +82,14 @@ func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.Pr
 	return output.RuleGroupsNamespace, nil
 }
 
-func FindScraperByID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.ScraperDescription, error) {
-	input := &prometheusservice.DescribeScraperInput{
+func FindScraperByID(ctx context.Context, conn *amp.Client, id string) (*types.ScraperDescription, error) {
+	input := &amp.DescribeScraperInput{
 		ScraperId: aws.String(id),
 	}
 
-	output, err := conn.DescribeScraperWithContext(ctx, input)
+	output, err := conn.DescribeScraper(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

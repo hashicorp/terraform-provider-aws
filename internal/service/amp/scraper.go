@@ -8,13 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amp"
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -118,7 +119,7 @@ const (
 
 func resourceScraperCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	uuid, err := uuid.GenerateUUID()
 	if err != nil {
@@ -127,26 +128,26 @@ func resourceScraperCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	scrapeConfig := d.Get("scrape_configuration").(string)
 
-	in := &prometheusservice.CreateScraperInput{
+	in := &amp.CreateScraperInput{
 		Source:      expandSource(d.Get("source").([]interface{})),
 		Destination: expandDestination(d.Get("destination").([]interface{})),
-		ScrapeConfiguration: &prometheusservice.ScrapeConfiguration{
-			ConfigurationBlob: []byte(scrapeConfig),
+		ScrapeConfiguration: &types.ScrapeConfigurationMemberConfigurationBlob{
+			Value: []byte(scrapeConfig),
 		},
 		ClientToken: aws.String(uuid),
-		Tags:        getTagsIn(ctx),
+		Tags:        getTagsInV2(ctx),
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
 		in.Alias = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateScraperWithContext(ctx, in)
+	out, err := conn.CreateScraper(ctx, in)
 	if err != nil {
 		return diag.Errorf("creating Amazon Managed Prometheus Scraper: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.ScraperId))
+	d.SetId(aws.ToString(out.ScraperId))
 
 	if _, err := waitScraperCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Amazon Managed Prometheus Scraper (%s) create: %s", d.Id(), err)
@@ -156,7 +157,7 @@ func resourceScraperCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceScraperRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	scraper, err := FindScraperByID(ctx, conn, d.Id())
 
@@ -170,19 +171,21 @@ func resourceScraperRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading Amazon Managed Prometheus Scraper Definition (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(scraper.ScraperId))
-	d.Set("alias", aws.StringValue(scraper.Alias))
-	d.Set("arn", aws.StringValue(scraper.Arn))
+	d.SetId(aws.ToString(scraper.ScraperId))
+	d.Set("alias", aws.ToString(scraper.Alias))
+	d.Set("arn", aws.ToString(scraper.Arn))
 	d.Set("destination", flattenDestination(scraper.Destination))
-	d.Set("scrape_configuration", string(scraper.ScrapeConfiguration.ConfigurationBlob))
+	if v, ok := scraper.ScrapeConfiguration.(*types.ScrapeConfigurationMemberConfigurationBlob); ok {
+		d.Set("scrape_configuration", string(v.Value))
+	}
 	d.Set("source", flattenSource(scraper.Source))
-	setTagsOut(ctx, scraper.Tags)
+	setTagsOutV2(ctx, scraper.Tags)
 
 	return nil
 }
 
 func resourceScraperDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[INFO] Deleting AMP Scraper %s", d.Id())
 
@@ -191,14 +194,14 @@ func resourceScraperDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("generating uuid for ClientToken for Prometheus Scraper (%s) %s", d.Id(), err)
 	}
 
-	input := &prometheusservice.DeleteScraperInput{
+	input := &amp.DeleteScraperInput{
 		ScraperId:   aws.String(d.Id()),
 		ClientToken: aws.String(uuid),
 	}
 
-	_, err = conn.DeleteScraperWithContext(ctx, input)
+	_, err = conn.DeleteScraper(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -213,80 +216,67 @@ func resourceScraperDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func flattenStringSet(sx []*string) []interface{} {
-	if len(sx) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, s := range sx {
-		if s == nil {
-			continue
-		}
-
-		l = append(l, aws.StringValue(s))
-	}
-
-	return l
-}
-
-func flattenSource(source *prometheusservice.Source) []interface{} {
+func flattenSource(source types.Source) []interface{} {
 	if source == nil {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	tfMap := map[string]interface{}{
-		"eks_cluster_arn": aws.StringValue(source.EksConfiguration.ClusterArn),
-		"subnet_ids":      flattenStringSet(source.EksConfiguration.SubnetIds),
+	if v, ok := source.(*types.SourceMemberEksConfiguration); ok {
+		tfMap := map[string]interface{}{
+			"eks_cluster_arn": aws.ToString(v.Value.ClusterArn),
+			"subnet_ids":      v.Value.SubnetIds,
+		}
+		if sg_ids := v.Value.SecurityGroupIds; sg_ids != nil {
+			tfMap["security_group_ids"] = sg_ids
+		}
+		tfList = append(tfList, tfMap)
 	}
-	if sg_ids := source.EksConfiguration.SecurityGroupIds; sg_ids != nil {
-		tfMap["security_group_ids"] = flattenStringSet(sg_ids)
-	}
-	tfList = append(tfList, tfMap)
 
 	return tfList
 }
 
-func expandSource(l []interface{}) *prometheusservice.Source {
+func expandSource(l []interface{}) types.Source {
 
 	m := l[0].(map[string]interface{})
 
-	eksConfig := &prometheusservice.EksConfiguration{
+	eksConfig := types.EksConfiguration{
 		ClusterArn: aws.String(m["eks_cluster_arn"].(string)),
-		SubnetIds:  aws.StringSlice(flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set))),
+		SubnetIds:  flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
 	}
 
 	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		eksConfig.SecurityGroupIds = aws.StringSlice(flex.ExpandStringValueSet(v))
+		eksConfig.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	return &prometheusservice.Source{EksConfiguration: eksConfig}
+	return &types.SourceMemberEksConfiguration{Value: eksConfig}
 }
 
-func flattenDestination(dest *prometheusservice.Destination) []interface{} {
+func flattenDestination(dest types.Destination) []interface{} {
 
 	if dest == nil {
 		return nil
 	}
+	var tfList []interface{}
 
-	tfMap := map[string]interface{}{
-		"aws_prometheus_workspace_arn": aws.StringValue(dest.AmpConfiguration.WorkspaceArn),
+	if v, ok := dest.(*types.DestinationMemberAmpConfiguration); ok {
+		tfMap := map[string]interface{}{
+			"aws_prometheus_workspace_arn": aws.ToString(v.Value.WorkspaceArn),
+		}
+		tfList = append(tfList, tfMap)
 	}
-	tfList := []interface{}{tfMap}
 
 	return tfList
 }
 
-func expandDestination(l []interface{}) *prometheusservice.Destination {
+func expandDestination(l []interface{}) types.Destination {
 
 	m := l[0].(map[string]interface{})
 
-	ampConfig := &prometheusservice.AmpConfiguration{
+	ampConfig := types.AmpConfiguration{
 		WorkspaceArn: aws.String(m["aws_prometheus_workspace_arn"].(string)),
 	}
 
-	return &prometheusservice.Destination{AmpConfiguration: ampConfig}
+	return &types.DestinationMemberAmpConfiguration{Value: ampConfig}
 }

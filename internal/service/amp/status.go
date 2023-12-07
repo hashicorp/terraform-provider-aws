@@ -6,6 +6,7 @@ package amp
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -44,7 +45,7 @@ func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.Prome
 	}
 }
 
-func statusScraper(ctx context.Context, conn *prometheusservice.PrometheusService, id string) retry.StateRefreshFunc {
+func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindScraperByID(ctx, conn, id)
 
@@ -56,7 +57,7 @@ func statusScraper(ctx context.Context, conn *prometheusservice.PrometheusServic
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.StatusCode), nil
+		return output, string(output.Status.StatusCode), nil
 	}
 }
 

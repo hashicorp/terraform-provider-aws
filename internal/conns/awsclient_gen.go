@@ -7,6 +7,7 @@ import (
 	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
+	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
@@ -240,6 +241,10 @@ func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
 
 func (c *AWSClient) AMPConn(ctx context.Context) *prometheusservice_sdkv1.PrometheusService {
 	return errs.Must(conn[*prometheusservice_sdkv1.PrometheusService](ctx, c, names.AMP))
+}
+
+func (c *AWSClient) AMPClient(ctx context.Context) *amp_sdkv2.Client {
+	return errs.Must(client[*amp_sdkv2.Client](ctx, c, names.AMP))
 }
 
 func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {

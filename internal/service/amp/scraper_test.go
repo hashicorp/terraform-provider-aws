@@ -8,15 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
+	"github.com/aws/aws-sdk-go-v2/service/amp"
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPScraper_basic(t *testing.T) {
@@ -26,14 +27,14 @@ func TestAccAMPScraper_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var scraper prometheusservice.ScraperDescription
+	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -64,14 +65,14 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var scraper prometheusservice.ScraperDescription
+	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 	eksClusterVersion := "1.28"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,14 +95,14 @@ func TestAccAMPScraper_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var scraper prometheusservice.ScraperDescription
+	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +128,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var v prometheusservice.ScraperDescription
+	var v types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
@@ -135,7 +136,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 
 func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_scraper" {
@@ -182,7 +183,7 @@ func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckScraperExists(ctx context.Context, name string, v *prometheusservice.ScraperDescription) resource.TestCheckFunc {
+func testAccCheckScraperExists(ctx context.Context, name string, v *types.ScraperDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -193,7 +194,7 @@ func testAccCheckScraperExists(ctx context.Context, name string, v *prometheusse
 			return fmt.Errorf("No Amazon Prometheus Scraper ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 		output, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -207,11 +208,11 @@ func testAccCheckScraperExists(ctx context.Context, name string, v *prometheusse
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-	input := &prometheusservice.ListScrapersInput{}
+	input := &amp.ListScrapersInput{}
 
-	_, err := conn.ListScrapersWithContext(ctx, input)
+	_, err := conn.ListScrapers(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

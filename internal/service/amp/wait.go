@@ -8,9 +8,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/amp"
+	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -129,26 +132,26 @@ func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.
 	return nil, err
 }
 
-func waitScraperCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string, timeout time.Duration) (*prometheusservice.ScraperDescription, error) {
+func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*types.ScraperDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.ScraperStatusCodeCreating},
-		Target:  []string{prometheusservice.ScraperStatusCodeActive},
+		Pending: enum.Slice(types.ScraperStatusCodeCreating),
+		Target:  enum.Slice(types.ScraperStatusCodeActive),
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if out, ok := outputRaw.(*prometheusservice.ScraperDescription); ok {
+	if out, ok := outputRaw.(*types.ScraperDescription); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitScraperDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string, timeout time.Duration) (*prometheusservice.ScraperDescription, error) {
+func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*types.ScraperDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.ScraperStatusCodeActive, prometheusservice.ScraperStatusCodeDeleting},
+		Pending: enum.Slice(types.ScraperStatusCodeActive, types.ScraperStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: statusScraper(ctx, conn, id),
 		Timeout: timeout,
@@ -156,7 +159,7 @@ func waitScraperDeleted(ctx context.Context, conn *prometheusservice.PrometheusS
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*prometheusservice.ScraperDescription); ok {
+	if output, ok := outputRaw.(*types.ScraperDescription); ok {
 		return output, err
 	}
 
