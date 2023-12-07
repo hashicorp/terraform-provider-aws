@@ -41,9 +41,15 @@ func ProblemStandardMessage(service, action, resource, id string, gotError error
 	}
 
 	if gotError == nil {
+		if id == "" {
+			return fmt.Sprintf("%s %s %s", action, hf, resource)
+		}
 		return fmt.Sprintf("%s %s %s (%s)", action, hf, resource, id)
 	}
 
+	if id == "" {
+		return fmt.Sprintf("%s %s %s: %s", action, hf, resource, gotError)
+	}
 	return fmt.Sprintf("%s %s %s (%s): %s", action, hf, resource, id, gotError)
 }
 
