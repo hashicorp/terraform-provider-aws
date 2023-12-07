@@ -29,7 +29,7 @@ const (
 	loadBalancerAttributeRoutingHTTPDesyncMitigationMode                 = "routing.http.desync_mitigation_mode"
 	loadBalancerAttributeRoutingHTTPDropInvalidHeaderFieldsEnabled       = "routing.http.drop_invalid_header_fields.enabled"
 	loadBalancerAttributeRoutingHTTPPreserveHostHeaderEnabled            = "routing.http.preserve_host_header.enabled"
-	loadBalancerAttributeRoutingHTTPXAmznTLSVersionAndCioherSuiteEnabled = "routing.http.x_amzn_tls_version_and_cipher_suite.enabled"
+	loadBalancerAttributeRoutingHTTPXAmznTLSVersionAndCipherSuiteEnabled = "routing.http.x_amzn_tls_version_and_cipher_suite.enabled"
 	loadBalancerAttributeRoutingHTTPXFFClientPortEnabled                 = "routing.http.xff_client_port.enabled"
 	loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode              = "routing.http.xff_header_processing.mode"
 	loadBalancerAttributeRoutingHTTP2Enabled                             = "routing.http2.enabled"
