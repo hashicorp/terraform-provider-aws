@@ -18,6 +18,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+type ResourcePrefixCtxKey string
+
+const (
+	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
+	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
+)
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -139,7 +146,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		if fieldName == "Tags" {
 			continue // Resource tags are handled separately.
 		}
-		toFieldVal := findFieldFuzzy(fieldName, valTo)
+		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
 		}
@@ -156,7 +163,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	return diags
 }
 
-func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo reflect.Value) reflect.Value {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
 		return v
@@ -188,6 +195,18 @@ func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
 	if plural.IsPlural(fieldNameFrom) {
 		if v := valTo.FieldByName(plural.Singular(fieldNameFrom)); v.IsValid() {
 			return v
+		}
+	}
+
+	// fourth precedence is using resource prefix
+	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+		if ctx.Value(ResourcePrefixRecurse) == nil {
+			// so it will only recurse once
+			ctx = context.WithValue(ctx, ResourcePrefixRecurse, true)
+			if strings.HasPrefix(fieldNameFrom, v) {
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo)
+			}
+			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo)
 		}
 	}
 
@@ -234,7 +253,6 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	case basetypes.MapValuable:
-
 		diags.Append(expander.map_(ctx, vFrom, vTo)...)
 		return diags
 
@@ -798,7 +816,7 @@ func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwt
 	m := reflect.MakeMap(vTo.Type())
 
 	for _, key := range f.MapKeys() {
-		// Create a new target structure and walk its fields.
+		// Create a new target map and populate it
 		target := reflect.New(tStruct)
 
 		fromInterface := f.MapIndex(key).Interface()
@@ -835,7 +853,7 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	}
 
 	tTo := valTo.Type(ctx)
-	switch vFrom.Kind() {
+	switch k := vFrom.Kind(); k {
 	case reflect.Bool:
 		diags.Append(flattener.bool(ctx, vFrom, tTo, vTo)...)
 		return diags
@@ -863,6 +881,12 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	case reflect.Map:
 		diags.Append(flattener.map_(ctx, vFrom, tTo, vTo)...)
 		return diags
+
+	case reflect.Struct:
+		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+			diags.Append(flattener.structToNestedObject(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -1202,6 +1226,17 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
 	case reflect.String:
 		switch tMapElem := vFrom.Type().Elem(); tMapElem.Kind() {
+		case reflect.Struct:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]struct -> fwtypes.ObjectMapOf[Object]
+				//
+				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
+					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
+					return diags
+				}
+			}
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:
@@ -1236,6 +1271,14 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 
 		case reflect.Ptr:
 			switch tMapElem.Elem().Kind() {
+			case reflect.Struct:
+				//
+				// map[string]*struct -> fwtypes.ObjectMapOf[Object]
+				//
+				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
+					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
+					return diags
+				}
 			case reflect.String:
 				switch tTo := tTo.(type) {
 				case basetypes.MapTypable:
@@ -1276,6 +1319,90 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		"to":   tTo,
 	})
 
+	return diags
+}
+
+func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom reflect.Value, tTo fwtypes.ObjectMapType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	to, d := tTo.New(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	t := reflect.ValueOf(to)
+
+	tStruct := t.Type().Elem()
+	if tStruct.Kind() == reflect.Ptr {
+		tStruct = tStruct.Elem()
+	}
+
+	for _, key := range vFrom.MapKeys() {
+		target := reflect.New(tStruct)
+
+		fromInterface := vFrom.MapIndex(key).Interface()
+		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
+			fromInterface = vFrom.MapIndex(key).Elem().Interface()
+		}
+
+		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), flattener)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if t.Type().Elem().Kind() == reflect.Struct {
+			t.SetMapIndex(key, target.Elem())
+		} else {
+			t.SetMapIndex(key, target)
+		}
+	}
+
+	val, d := tTo.ValueFromRawMap(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
+func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Create a new target structure and walk its fields.
+	to, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(autoFlexConvertStruct(ctx, vFrom.Interface(), to, flattener)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Set the target structure as a mapped Object.
+	val, d := tTo.ValueFromObjectPtr(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
 	return diags
 }
 

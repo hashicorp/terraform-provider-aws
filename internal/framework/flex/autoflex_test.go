@@ -159,6 +159,14 @@ type TestFlexAWS12 struct {
 	FieldUrl *string
 }
 
+type TestFlexTF16 struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type TestFlexAWS18 struct {
+	IntentName *string
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -166,6 +174,7 @@ func TestGenericExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
 		Source     any
 		Target     any
@@ -521,6 +530,17 @@ func TestGenericExpand(t *testing.T) {
 				FieldUrl: aws.String("h"),
 			},
 		},
+		{
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			TestName: "resource name prefix",
+			Source: &TestFlexTF16{
+				Name: types.StringValue("Ovodoghen"),
+			},
+			Target: &TestFlexAWS18{},
+			WantTarget: &TestFlexAWS18{
+				IntentName: aws.String("Ovodoghen"),
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -528,7 +548,12 @@ func TestGenericExpand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			err := Expand(ctx, testCase.Source, testCase.Target)
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Expand(testCtx, testCase.Source, testCase.Target)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
@@ -586,7 +611,7 @@ type TestFlexAWS17 struct {
 	FieldOuter TestFlexAWS14
 }
 
-func TestGenericExpand2(t *testing.T) {
+func TestGenericExpandAdvanced(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
@@ -743,6 +768,7 @@ func TestGenericFlatten(t *testing.T) {
 	ctx := context.Background()
 	testString := "test"
 	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
 		Source     any
 		Target     any
@@ -1153,6 +1179,193 @@ func TestGenericFlatten(t *testing.T) {
 			Target: &TestFlexTF10{},
 			WantTarget: &TestFlexTF10{
 				FieldURL: types.StringValue("h"),
+			},
+		},
+		{
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			TestName: "resource name prefix",
+			Source: &TestFlexAWS18{
+				IntentName: aws.String("Ovodoghen"),
+			},
+			Target: &TestFlexTF16{},
+			WantTarget: &TestFlexTF16{
+				Name: types.StringValue("Ovodoghen"),
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Flatten(testCtx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGenericFlattenAdvanced(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := []struct {
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName: "map string",
+			Source: &TestFlexAWS13{
+				FieldInner: map[string]string{
+					"x": "y",
+				},
+			},
+			Target: &TestFlexTF11{},
+			WantTarget: &TestFlexTF11{
+				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": types.StringValue("y"),
+				}),
+			},
+		},
+		{
+			TestName: "object map",
+			Source: &TestFlexAWS14{
+				FieldInner: map[string]TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF12{},
+			WantTarget: &TestFlexTF12{
+				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
+					"x": {
+						Field1: types.StringValue("a"),
+					}},
+				),
+			},
+		},
+		{
+			TestName: "object map ptr source",
+			Source: &TestFlexAWS15{
+				FieldInner: map[string]*TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF12{},
+			WantTarget: &TestFlexTF12{
+				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
+					map[string]TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+		},
+		{
+			TestName: "object map ptr target",
+			Source: &TestFlexAWS14{
+				FieldInner: map[string]TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF13{},
+			WantTarget: &TestFlexTF13{
+				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
+					map[string]*TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+		},
+		{
+			TestName: "object map ptr source and target",
+			Source: &TestFlexAWS15{
+				FieldInner: map[string]*TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF13{},
+			WantTarget: &TestFlexTF13{
+				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
+					map[string]*TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+		},
+		{
+			TestName: "nested string map",
+			Source: &TestFlexAWS16{
+				FieldOuter: TestFlexAWS13{
+					FieldInner: map[string]string{
+						"x": "y",
+					},
+				},
+			},
+			Target: &TestFlexTF14{},
+			WantTarget: &TestFlexTF14{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
+					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+						"x": types.StringValue("y"),
+					}),
+				}),
+			},
+		},
+		{
+			TestName: "nested object map",
+			Source: &TestFlexAWS17{
+				FieldOuter: TestFlexAWS14{
+					FieldInner: map[string]TestFlexAWS01{
+						"x": {
+							Field1: "a",
+						},
+					},
+				},
+			},
+			Target: &TestFlexTF15{},
+			WantTarget: &TestFlexTF15{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
+					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
+						map[string]TestFlexTF01{
+							"x": {
+								Field1: types.StringValue("a"),
+							},
+						},
+					),
+				}),
 			},
 		},
 	}
