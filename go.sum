@@ -234,8 +234,8 @@ github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.3 h1:wYQwstKYpRY9mlkviYc7D0
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.3/go.mod h1:2HcG+kwZZunl43oIezGd644Ey0vmgD08orNuwenRkuo=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.3 h1:9v5z88IDNAY8pfJmXeuztwWdkLqAmtP/A9B1bJnLZGE=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.3/go.mod h1:vTU7EVjgR0wB4WavlnJsUdWz3NwDOy4qjNKPnE9eW0M=
-github.com/aws/aws-sdk-go-v2/service/xray v1.23.2 h1:mFHM/R2FYnCkmUB52SqJncU5TWDCfI55uXlNTp96g3Y=
-github.com/aws/aws-sdk-go-v2/service/xray v1.23.2/go.mod h1:zz5H6SRVFHj93yt3lxA8Ql63c/pY90YjNvvalulrCTk=
+github.com/aws/aws-sdk-go-v2/service/xray v1.23.3 h1:NioXgvWfTw8vNNIrwwhDvojOtzgWMw0EJAnMv+xs5Ik=
+github.com/aws/aws-sdk-go-v2/service/xray v1.23.3/go.mod h1:zz5H6SRVFHj93yt3lxA8Ql63c/pY90YjNvvalulrCTk=
 github.com/aws/smithy-go v1.18.1 h1:pOdBTUfXNazOlxLrgeYalVnuTpKreACHtc62xLwIB3c=
 github.com/aws/smithy-go v1.18.1/go.mod h1:NukqUGpCZIILqqiV0NIjeFh24kd/FAa4beRb6nbIUPE=
 github.com/beevik/etree v1.2.0 h1:l7WETslUG/T+xOPs47dtd6jov2Ii/8/OjCldk5fYfQw=
