@@ -62,7 +62,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_full(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.%", "4"),
@@ -224,10 +224,6 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Customer Profiles Domain ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)

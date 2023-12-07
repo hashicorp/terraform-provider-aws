@@ -44,28 +44,3 @@ func FindProfileByIdAndDomain(ctx context.Context, conn *customerprofiles.Client
 
 	return &output.Items[0], nil
 }
-
-func FindDomainByDomainName(ctx context.Context, conn *customerprofiles.Client, domainName string) (*customerprofiles.GetDomainOutput, error) {
-	input := &customerprofiles.GetDomainInput{
-		DomainName: aws.String(domainName),
-	}
-
-	output, err := conn.GetDomain(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}

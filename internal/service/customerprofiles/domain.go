@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	"github.com/aws/aws-sdk-go-v2/service/customerprofiles/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -258,40 +259,40 @@ func exportingConfigSchema() *schema.Schema {
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
-	log.Print("[DEBUG] Creating Customer Profiles Domain")
 
-	params := &customerprofiles.CreateDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+	name := d.Get("domain_name").(string)
+	input := &customerprofiles.CreateDomainInput{
+		DomainName: aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("dead_letter_queue_url"); ok {
-		params.DeadLetterQueueUrl = aws.String(v.(string))
+		input.DeadLetterQueueUrl = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("default_encryption_key"); ok {
-		params.DefaultEncryptionKey = aws.String(v.(string))
+		input.DefaultEncryptionKey = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("default_expiration_days"); ok {
-		params.DefaultExpirationDays = aws.Int32(int32(v.(int)))
+		input.DefaultExpirationDays = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("matching"); ok {
-		params.Matching = expandMatching(v.([]interface{}))
+		input.Matching = expandMatching(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("rule_based_matching"); ok {
-		params.RuleBasedMatching = expandRuleBasedMatching(v.([]interface{}))
+		input.RuleBasedMatching = expandRuleBasedMatching(v.([]interface{}))
 	}
 
-	output, err := conn.CreateDomain(ctx, params)
+	output, err := conn.CreateDomain(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("creating Customer Profiles Domain: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Customer Profiles Domain (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.DomainName))
-	d.Set("arn", buildDomainARN(meta.(*conns.AWSClient), d.Id()))
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
@@ -328,36 +329,36 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
-	log.Print("[DEBUG] Updating Customer Profiles Domain")
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		params := &customerprofiles.UpdateDomainInput{
+		input := &customerprofiles.UpdateDomainInput{
 			DomainName: aws.String(d.Get("domain_name").(string)),
 		}
 
 		if d.HasChange("dead_letter_queue_url") {
-			params.DeadLetterQueueUrl = aws.String(d.Get("dead_letter_queue_url").(string))
+			input.DeadLetterQueueUrl = aws.String(d.Get("dead_letter_queue_url").(string))
 		}
 
 		if d.HasChange("default_encryption_key") {
-			params.DefaultEncryptionKey = aws.String(d.Get("default_encryption_key").(string))
+			input.DefaultEncryptionKey = aws.String(d.Get("default_encryption_key").(string))
 		}
 
 		if d.HasChange("default_expiration_days") {
-			params.DefaultExpirationDays = aws.Int32(int32(d.Get("default_expiration_days").(int)))
+			input.DefaultExpirationDays = aws.Int32(int32(d.Get("default_expiration_days").(int)))
 		}
 
 		if d.HasChange("matching") {
-			params.Matching = expandMatching(d.Get("matching").([]interface{}))
+			input.Matching = expandMatching(d.Get("matching").([]interface{}))
 		}
 
 		if d.HasChange("rule_based_matching") {
-			params.RuleBasedMatching = expandRuleBasedMatching(d.Get("rule_based_matching").([]interface{}))
+			input.RuleBasedMatching = expandRuleBasedMatching(d.Get("rule_based_matching").([]interface{}))
 		}
 
-		_, err := conn.UpdateDomain(ctx, params)
+		_, err := conn.UpdateDomain(ctx, input)
+
 		if err != nil {
-			return diag.Errorf("updating Customer Profiles Domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating Customer Profiles Domain (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -365,6 +366,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
@@ -377,10 +379,35 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Customer Profiles Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Customer Profiles Domain (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func FindDomainByDomainName(ctx context.Context, conn *customerprofiles.Client, domainName string) (*customerprofiles.GetDomainOutput, error) {
+	input := &customerprofiles.GetDomainInput{
+		DomainName: aws.String(domainName),
+	}
+
+	output, err := conn.GetDomain(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandMatching(tfMap []interface{}) *types.MatchingRequest {
