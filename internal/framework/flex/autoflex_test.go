@@ -531,7 +531,7 @@ func TestGenericExpand(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"), //nolint:contextcheck // false positive
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
 			TestName: "resource name prefix",
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
@@ -548,7 +548,7 @@ func TestGenericExpand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			testCtx := ctx
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
 			if testCase.Context != nil {
 				testCtx = testCase.Context
 			}
@@ -1182,7 +1182,7 @@ func TestGenericFlatten(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"), //nolint:contextcheck // false positive
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
 			TestName: "resource name prefix",
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
@@ -1199,7 +1199,7 @@ func TestGenericFlatten(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			testCtx := ctx
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
 			if testCase.Context != nil {
 				testCtx = testCase.Context
 			}
