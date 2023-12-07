@@ -64,10 +64,6 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"auto_merging": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -75,10 +71,6 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
 									"conflict_resolution": conflictResolutionSchema(),
 									"consolidation": {
 										Type:     schema.TypeList,
@@ -97,12 +89,20 @@ func ResourceDomain() *schema.Resource {
 											},
 										},
 									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
 									"min_allowed_confidence_score_for_merging": {
 										Type:     schema.TypeFloat,
 										Optional: true,
 									},
 								},
 							},
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
 						},
 						"exporting_config": exportingConfigSchema(),
 						"job_schedule": {
@@ -132,25 +132,21 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"attribute_types_selector": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"attribute_matching_model": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.AttributeMatchingModel](),
-									},
 									"address": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"attribute_matching_model": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.AttributeMatchingModel](),
 									},
 									"email_address": {
 										Type:     schema.TypeList,
@@ -166,7 +162,11 @@ func ResourceDomain() *schema.Resource {
 							},
 						},
 						"conflict_resolution": conflictResolutionSchema(),
-						"exporting_config":    exportingConfigSchema(),
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"exporting_config": exportingConfigSchema(),
 						"matching_rules": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -200,6 +200,7 @@ func ResourceDomain() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
