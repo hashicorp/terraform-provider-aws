@@ -192,8 +192,8 @@ github.com/aws/aws-sdk-go-v2/service/s3 v1.47.3 h1:j34+Cw6EzOZmk1V505oZimpNSco1e
 github.com/aws/aws-sdk-go-v2/service/s3 v1.47.3/go.mod h1:thjZng67jGsvMyVZnSxlcqKyLwB0XTG8bHIRZPTJ+Bs=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.41.3 h1:6WK+0BOoxVXW4BmATQVpQA1pkCZk8MubiqzFjQOa5GA=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.41.3/go.mod h1:ncWtwdZNXv8F+1WJMRomm+BD7Zr+tcKUrcRGk9njmU0=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.2 h1:ZunKAZuuHyem1gl8rrdFexnByQi/XIpu3epQWmhGoSA=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.2/go.mod h1:PT2RM0GVbnMJcuiAWn1r+NhpunkoqmtDAGE+inExOPI=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.3 h1:h7D4eDT5YmDSKu1p1Eukh+wwDjnmdlfKvdbIuf+sC3U=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.3/go.mod h1:PT2RM0GVbnMJcuiAWn1r+NhpunkoqmtDAGE+inExOPI=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.2 h1:80GQOnWZyXa1YXkpnAjlTPP+kX3+x1Oaa5FT97eY4RA=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.2/go.mod h1:/X1apZJfHsHPaVQJoAec6rv2pqo1M1v0jQvCLCUVuaQ=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.2 h1:5GhmUlfEwQ9M/OpI726gRKFWB3awwYbXLtHgcpghNYg=
