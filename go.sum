@@ -206,8 +206,8 @@ github.com/aws/aws-sdk-go-v2/service/signer v1.19.4 h1:3vrvBb29jDv8qzZ2Ri/koRThj
 github.com/aws/aws-sdk-go-v2/service/signer v1.19.4/go.mod h1:VKLO72Wf3fukMgkpPlYjzw+6U/aY083V4/E5ezLcYwQ=
 github.com/aws/aws-sdk-go-v2/service/sns v1.26.3 h1:nSgVs6B8jCHGRUd/4TxIPVgI7E3L7G3xggLLQToBpgs=
 github.com/aws/aws-sdk-go-v2/service/sns v1.26.3/go.mod h1:xrqjXxgN9OqArD8PTYpo8SBS17IqD0Hmn9nTG08375U=
-github.com/aws/aws-sdk-go-v2/service/sqs v1.29.2 h1:D7xR2SdV6s7x0YtFvrKKsqf0znov28CGrcj5S8LiQFo=
-github.com/aws/aws-sdk-go-v2/service/sqs v1.29.2/go.mod h1:enJbiMvMXQCop6h23PU+Q1bJiDPUqnLj670Bm1zjdLM=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.29.3 h1:l4llGwoF3wWh90bxIFSqCqp9gFRnF8UzqAgJ+A43U2U=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.29.3/go.mod h1:enJbiMvMXQCop6h23PU+Q1bJiDPUqnLj670Bm1zjdLM=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.44.2 h1:lmdmYCvG1EJKGLEsUsYDNO6MwZyBZROrRg04Vrb5TwA=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.44.2/go.mod h1:pHJ1md/3F3WkYfZ4JKOllPfXQi4NiWk7NxbeOD53HQc=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.2 h1:zXA2kK8YrRxu9eusvww5C3DUXeykGhVwNm/Dk4g9otc=
