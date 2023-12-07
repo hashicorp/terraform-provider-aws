@@ -256,6 +256,12 @@ func ResourceGroup() *schema.Resource {
 										Default:      90,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
+									"max_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntBetween(100, 200),
+									},
 									"scale_in_protected_instances": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -3376,6 +3382,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 
 	if v, ok := tfMap["min_healthy_percentage"].(int); ok {
 		apiObject.MinHealthyPercentage = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["max_healthy_percentage"].(int); ok {
+		apiObject.MaxHealthyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["scale_in_protected_instances"].(string); ok {
