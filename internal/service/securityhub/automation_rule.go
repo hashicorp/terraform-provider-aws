@@ -43,7 +43,7 @@ func ResourceAutomationRule() *schema.Resource {
 				Computed: true,
 			},
 			"actions": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -247,8 +247,8 @@ func resourceAutomationRuleCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.Get("actions").(*schema.Set); ok && v.Len() > 0 {
-		input.Actions = expandActions(v.List())
+	if v, ok := d.GetOk("actions"); ok {
+		input.Actions = expandActions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("rule_status"); ok {
@@ -991,7 +991,7 @@ func flattenRelatedFindings(apiObject []types.RelatedFinding) []interface{} {
 			tfMap["product_arn"] = aws.ToString(v)
 		}
 
-		output = append(output, relatedFinding)
+		output = append(output, tfMap)
 	}
 
 	return output

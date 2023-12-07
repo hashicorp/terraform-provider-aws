@@ -46,6 +46,68 @@ func testAccAutomationRule_basic(t *testing.T) {
 	})
 }
 
+func testAccAutomationRule_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_automation_rule.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutomationRuleConfig_full(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutomationRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "20"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "25"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.text", "This is a critical resource. Please review ASAP."),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "arn:aws:securityhub:us-east-2::product/aws/inspector"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelCritical)),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "0"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.0.status", string(types.WorkflowStatusSuppressed)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAutomationRuleConfig_fullUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutomationRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "10"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "15"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.text", "This is a non-critical resource. Please review in due time."),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "arn:aws:securityhub:us-east-2::product/aws/inspector"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelLow)),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "15.5"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.0.status", string(types.WorkflowStatusNew)),
+				),
+			},
+		},
+	})
+}
+
 func testAccAutomationRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_automation_rule.test"
@@ -337,6 +399,108 @@ resource "aws_securityhub_automation_rule" "test" {
     aws_account_id {
       comparison = "EQUALS"
       value      = "1234567890"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAutomationRuleConfig_full(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_automation_rule" "test" {
+  description = "test description"
+  rule_name   = %[1]q
+  rule_order  = 1
+
+  actions {
+    finding_fields_update {
+      confidence  = 20
+      criticality = 25
+      types       = ["Software and Configuration Checks/Industry and Regulatory Standards"]
+
+      note {
+        text       = "This is a critical resource. Please review ASAP."
+        updated_by = "sechub-automation"
+      }
+      related_findings {
+        id          = %[1]q
+        product_arn = "arn:aws:securityhub:us-east-2::product/aws/inspector"
+      }
+      severity {
+        label   = "CRITICAL"
+        product = "0"
+      }
+      user_defined_fields = {
+        key = "value"
+      }
+      workflow {
+        status = "SUPPRESSED"
+      }
+    }
+    type = "FINDING_FIELDS_UPDATE"
+  }
+
+  criteria {
+    aws_account_id {
+      comparison = "EQUALS"
+      value      = "1234567890"
+    }
+    created_at {
+      date_range {
+        unit  = "DAYS"
+        value = 10
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAutomationRuleConfig_fullUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_automation_rule" "test" {
+  description = "test description"
+  rule_name   = %[1]q
+  rule_order  = 1
+
+  actions {
+    finding_fields_update {
+      confidence  = 10
+      criticality = 15
+      types       = ["Software and Configuration Checks/Industry and Regulatory Standards"]
+
+      note {
+        text       = "This is a non-critical resource. Please review in due time."
+        updated_by = "sechub-automation"
+      }
+      related_findings {
+        id          = %[1]q
+        product_arn = "arn:aws:securityhub:us-east-2::product/aws/inspector"
+      }
+      severity {
+        label   = "LOW"
+        product = "15.5"
+      }
+      user_defined_fields = {
+        key = "value"
+      }
+      workflow {
+        status = "NEW"
+      }
+    }
+    type = "FINDING_FIELDS_UPDATE"
+  }
+
+  criteria {
+    aws_account_id {
+      comparison = "EQUALS"
+      value      = "1234567890"
+    }
+    created_at {
+      date_range {
+        unit  = "DAYS"
+        value = 10
+      }
     }
   }
 }

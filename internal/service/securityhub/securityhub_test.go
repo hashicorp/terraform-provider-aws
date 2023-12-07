@@ -23,6 +23,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"AutomationRule": {
 			"basic":         testAccAutomationRule_basic,
+			"full":          testAccAutomationRule_full,
 			"disappears":    testAccAutomationRule_disappears,
 			"stringFilters": testAccAutomationRule_stringFilters,
 			"numberFilters": testAccAutomationRule_numberFilters,
