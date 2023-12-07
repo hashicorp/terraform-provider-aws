@@ -473,7 +473,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(LEAST_OUTSTANDING_REQUESTS|RANDOM)`), ""),
+										ValidateFunc: validation.StringInSlice(sagemaker.RoutingStrategy_Values(), false),
 									},
 								},
 							},
@@ -734,6 +734,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 			l["instance_type"] = aws.StringValue(i.InstanceType)
 		}
 
+		if i.RoutingConfig != nil {
+			l["routing_config"] = flattenRoutingConfig(i.RoutingConfig)
+		}
+
 		if i.ServerlessConfig != nil {
 			l["serverless_config"] = flattenServerlessConfig(i.ServerlessConfig)
 		}
@@ -959,7 +963,7 @@ func expandRoutingConfig(configured []interface{}) *sagemaker.ProductionVariantR
 
 	c := &sagemaker.ProductionVariantRoutingConfig{}
 
-	if v, ok := m["routing_strategy"].(string); ok {
+	if v, ok := m["routing_strategy"].(string); ok && v != "" {
 		c.RoutingStrategy = aws.String(v)
 	}
 
@@ -1083,6 +1087,20 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 
 	if config.IncludeInferenceResponseIn != nil {
 		cfg["include_inference_response_in"] = flex.FlattenStringSet(config.IncludeInferenceResponseIn)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenRoutingConfig(config *sagemaker.ProductionVariantRoutingConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.RoutingStrategy != nil {
+		cfg["routing_strategy"] = aws.StringValue(config.RoutingStrategy)
 	}
 
 	return []map[string]interface{}{cfg}

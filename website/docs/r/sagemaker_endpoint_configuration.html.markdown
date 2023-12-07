@@ -55,6 +55,7 @@ This resource supports the following arguments:
 * `initial_variant_weight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
 * `model_data_download_timeout_in_seconds` - (Optional) The timeout value, in seconds, to download and extract the model that you want to host from Amazon S3 to the individual inference instance associated with this production variant. Valid values between `60` and `3600`.
 * `model_name` - (Required) The name of the model to use.
+* `routing_strategy` - (Optional) Sets how the endpoint routes incoming traffic.
 * `serverless_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
 * `variant_name` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volume_size_in_gb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
