@@ -56,50 +56,6 @@ func (r *resourceSlot) Metadata(_ context.Context, req resource.MetadataRequest,
 	resp.TypeName = "aws_lexv2models_slot"
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	slotValueOverrideO := types.ObjectType{
 		AttrTypes: map[string]attr.Type{
@@ -147,27 +103,6 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"button": schema.ListNestedBlock{
 							Nestedobject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									
-								}
-							}
-						}
-					}
-				},
-			}
-
-		}
-		"message": schema.NestedBlockObject{
-			Required: true,
-			Blocks: map[string]schema.Block{
-
-
-					Blocks: map[string]schema.Block{
-						"buttons": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[strings]schema.Attribute{
 									"text": schema.StringAttribute{
 										Required: true,
 									},
@@ -179,15 +114,25 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 						},
 					},
 				},
-				"plain_text_message": schema.SingleNestedBlock{
-					Attributes: map[strings]schema.Attribute{
+			},
+			"plain_text_message": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
 							Required: true,
 						},
 					},
 				},
-				"ssml_message": schema.SingleNestedBlock{
-					Attributes: map[strings]schema.Attribute{
+			},
+			"ssml_message": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
 							Required: true,
 						},
@@ -196,7 +141,151 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 		},
 	}
+	messageGroupLNB := schema.ListNestedAttributeBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"message": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1,1),
+					},
+					NestedObject: messageNBO,
+				},
+				"variations": schema.ListNestedBlock{
+					NestedObject: messageNBO,
+				},
+			},
+		},
+	}
 
+	dialogStateNBO := schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			"session_attributes": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"dialog_action": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NesredObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							Required: true,
+						},
+						"slot_to_elicit": schema.StringAttribute{
+							Optional: true,
+						},
+						"suppress_next_message": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+			"intent": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"slots": schema.MapAttribute{
+							Optional: true,
+							ElementType: slotValueOverrideO,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	responseSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"allow_interrupt": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"message_group": messageGroupLNB,
+			},
+		},
+	}
+
+	conditionalSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"active": schema.BoolAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"conditional_branch": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeAtLeast(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"name": schema.StringAttribute{
+								Required: true,
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"condition": schema.ListNestedBlock{
+								Validators: []validator.List{
+									listvalidator.SizeBetween(1, 1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"expression_string": schema.StringAttribute{
+											Required: true,
+										},
+									},
+								},
+							},
+							"next_step": schema.ListNestedBlock{
+								Validators: []validator.List{
+									listvalidator.SizeBetween(1, 1),
+								},
+								NestedObject: dialogStateNBO,
+							},
+							"response": responseSpecificationLNB,
+						},
+					},
+				},
+				"default_branch": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"next_step": schema.ListNestedBlock{
+								Validators: []validator.List{
+									listvalidator.SizeBetween(1, 1),
+								},
+								NestedObject: dialogStateNBO,
+							},
+							"response": responseSpecificationLNB,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	//////////
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			// "arn": framework.ARNAttributeComputedOnly(),
@@ -265,212 +354,97 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 							},
 						},
 					},
-					"prompt_specification": schema.SingleNestedBlock{
-						Attributes: map[string]schema.Attribute{
-							"max_retries": schema.Int32Attribute{
-								Required: true,
-							},
-							"allow_interrupt": schema.BoolAttribute{
-								Optional: true,
-							},
-							"message_selection_strategy": schema.StringAttribute{
-								Optional: true,
-								Validators: []validator.String{
-									enum.FrameworkValidate[awstypes.MessageSelectionStrategy](),
-								},
-							},
+					"prompt_specification": schema.ListNestedBlock{
+						Validators: []validator.List{
+							listvalidator.SizeBetween(1, 1),
 						},
-						Blocks: map[string]schema.Block{
-							"message_groups": schema.ListNestedBlock{
-								Validators: []validator.List{
-									listvalidator.SizeAtLeast(1),
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"max_retries": schema.Int32Attribute{
+									Required: true,
 								},
-								Blocks: map[string]schema.Block{
-									"message": schema.SingleNestedBlock{
-										Required: true,
-										Blocks: map[string]schema.Block{
-											"custom_payload": schema.SingleNestedBlock{
-												NestedObject: schema.NestedBlockObject{
-													Attributes: map[string]schema.Attribute{
-														"value": schema.StringAttribute{
-															Required: true,
-														},
-													},
-												},
-											},
-											"image_response_card": schema.SingleNestedBlock{
-												Attributes: map[strings]schema.Attribute{
-													"title": schema.StringAttribute{
+								"allow_interrupt": schema.BoolAttribute{
+									Optional: true,
+								},
+								"message_selection_strategy": schema.StringAttribute{
+									Optional: true,
+									Validators: []validator.String{
+										enum.FrameworkValidate[awstypes.MessageSelectionStrategy](),
+									},
+								},
+								"message_groups": messageGroupLNB,
+								"prompt_attempts_specification": schema.MapAttribute{
+									Optional: true,
+									ElementType: types.ObjectType{
+										AttrTypes: map[string]attr.Type{
+											"allow_input_types": schema.ObjectType{
+												AttrTypes: map[string]attr.Type{
+													"allow_audio_input": schema.BoolAttribute{
 														Required: true,
 													},
-													"image_url": schema.StringAttribute{
-														Optional: true,
-													},
-													"subtitle": schema.StringAttribute{
-														Optional: true,
+													"allow_dtmf_input": schema.BoolAttribute{
+														Required: true,
 													},
 												},
-												Blocks: map[string]schema.Block{
-													"buttons": schema.ListNestedBlock{
-														Validators: []validator.List{
-															listvalidator.SizeAtMost(1),
+											"allow_interrupts": schema.BoolAttribute{
+												Optional: true,
+											},
+											"audio_and_dtmf_input_specification": types.ObjectType{
+												AttrTypes: map[string]attr.Type{
+													"start_timeout_ms": schema.Int32Attribute{
+														Required: true,
+													},
+													"audio_specification": types.ObjectType{
+														Optional: true,
+														AttrTypes: map[strings]attr.Type{
+															"end_timeout_ms": schema.Int32Attribute{
+																Required: true,
+															},
+															"max_length_ms": schema.Int32Attribute{
+																Required: true,
+															},
 														},
-														NestedObject: schema.NestedBlockObject{
-															Attributes: map[strings]schema.Attribute{
-																"text": schema.StringAttribute{
-																	Required: true,
-																},
-																"value": schema.StringAttribute{
-																	Required: true,
-																},
+													},
+													"dtmf_specification": schema.SingleNestedBlock{
+														Optional: true,
+														Attributes: map[strings]schema.Attribute{
+															"deletion_character": schema.StringAttribute{
+																Required: true,
+															},
+															"end_character": schema.StringAttribute{
+																Required: true,
+															},
+															"end_timeout_ms": schema.StringAttribute{
+																Required: true,
+															},
+															"max_length": schema.Int32Attribute{
+																Required: true,
 															},
 														},
 													},
 												},
 											},
-											"plain_text_message": schema.SingleNestedBlock{
+											"text_input_specification": schema.SingleNestedBlock{
+												Optional: true,
 												Attributes: map[strings]schema.Attribute{
-													"value": schema.StringAttribute{
-														Required: true,
-													},
-												},
-											},
-											"ssml_message": schema.SingleNestedBlock{
-												Attributes: map[strings]schema.Attribute{
-													"value": schema.StringAttribute{
-														Required: true,
-													},
-												},
-											},
-										},
-									"variations": schema.ListNestedBlock{
-										Blocks: map[string]schema.Block{
-											"custom_payload": schema.SingleNestedBlock{
-												Attributes: map[string]schema.Attribute{
-													"value": schema.StringAttribute{
-														Required: true,
-													},
-												},
-											},
-											"image_response_card": schema.SingleNestedBlock{
-												Attributes: map[strings]schema.Attribute{
-													"title": schema.StringAttribute{
-														Required: true,
-													},
-													"image_url": schema.StringAttribute{
-														Optional: true,
-													},
-													"subtitle": schema.StringAttribute{
-														Optional: true,
-													},
-												},
-												Blocks: map[string]schema.Block{
-													"buttons": schema.ListNestedBlock{
-														Validators: []validator.List{
-															listvalidator.SizeAtMost(1),
-														},
-														NestedObject: schema.NestedBlockObject{
-															Attributes: map[strings]schema.Attribute{
-																"text": schema.StringAttribute{
-																	Required: true,
-																},
-																"value": schema.StringAttribute{
-																	Required: true,
-																},
-															},
-														},
-													},
-												},
-											},
-											"plain_text_message": schema.SingleNestedBlock{
-												Attributes: map[strings]schema.Attribute{
-													"value": schema.StringAttribute{
-														Required: true,
-													},
-												},
-											},
-											"ssml_message": schema.SingleNestedBlock{
-												Attributes: map[strings]schema.Attribute{
-													"value": schema.StringAttribute{
+													"start_timeout_ms": schema.Int32Attribute{
 														Required: true,
 													},
 												},
 											},
 										},
 									},
-								},
-							},
-							"prompt_attempts_specification": schema.MapAttribute{
-								Optional: true,
-								Attributes: map[strings]schema.Attribute{
-									"allow_interrupts": schema.BoolAttribute{
-										Optional: true,
-									},
-								},
-								Blocks: map[strings]schema.Block{
-									"allow_input_types": schema.SingleNestedBlock{
-										Attributes: map[strings]schema.Attribute{
-											"allow_audio_input": schema.BoolAttribute{
-												Required: true,
-											},
-											"allow_dtmf_input": schema.BoolAttribute{
-												Required: true,
-											},
-										},
-									},
-									"audio_and_dtmf_input_specification": schema.SingleNestedBlock{
-										Optional: true,
-										Attributes: map[strings]schema.Attribute{
-											"start_timeout_ms": schema.Int32Attribute{
-												Required: true,
-											},
-										},
-										"audio_specification": schema.SingleNestedBlock{
-											Optional: true,
-											Attributes: map[strings]schema.Attribute{
-												"end_timeout_ms": schema.Int32Attribute{
-													Required: true,
-												},
-												"max_length_ms": schema.Int32Attribute{
-													Required: true,
-												},
-											},
-										},
-										"dtmf_specification": schema.SingleNestedBlock{
-											Optional: true,
-											Attributes: map[strings]schema.Attribute{
-												"deletion_character": schema.StringAttribute{
-													Required: true,
-												},
-												"end_character": schema.StringAttribute{
-													Required: true,
-												},
-												"end_timeout_ms": schema.StringAttribute{
-													Required: true,
-												},
-												"max_length": schema.Int32Attribute{
-													Required: true,
-												},
-											},
-										},
-									},
-									"text_input_specification": schema.SingleNestedBlock{
-										Optional: true,
-										Attributes: map[strings]schema.Attribute{
-											"start_timeout_ms": schema.Int32Attribute{
-												Required: true,
-											},
-										},
-									},
-								},
+								}, //end of prompt specification
 							},
 						},
 					},
 					"sample_utterances": schema.ListNestedBlock{
 						Optional: true,
-						Attributes: map[strings]schema.Attribute{
-							"utterance": schema.StringAttribute{
-								Required: true,
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[strings]schema.Attribute{
+								"utterance": schema.StringAttribute{
+									Required: true,
+								},
 							},
 						},
 					},
@@ -480,92 +454,9 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 							"capture_conditional": schema.SingleNestedBlock{
 								Optional: true,
 								Blocks: map[string]schema.Block{
-									"condition_specification": schema.SingleNestedBlock{
-										Optional: true,
-										Attributes: map[string]schema.Attribute{
-											"active": schema.BoolAttribute{
-												Required: true,
-											},
-										},
-										Blocks: map[string]schema.Block{
-											"conditional_branch": schema.ListNestedBlock{
-												Required: true,
-												NestedObject: schema.NestedBlockObject{
-													Attributes: map[string]schema.Attribute{
-														"name": schema.StringAttribute{
-															Required: true,
-														},
-													},
-													Blocks: map[string]schema.Block{
-														"condition": schema.SingleNestedBlock{
-															Validators: []validator.Object{
-																objectvalidator.IsRequired(),
-															},
-															Attributes: map[string]schema.Attribute{
-																"expression_string": schema.StringAttribute{
-																	Required: true,
-																},
-															},
-														},
-														"next_step": schema.SingleNestedBlock{
-															Validators: []validator.Object{
-																objectvalidator.IsRequired(),
-															},
-															NestedObject: schema.NestedBlockObject{
-																Blocks: map[string]schema.SingleNestedBlock{
-																	"dialog_state": schema.SingleNestedBlock{
-																		Optional: true,
-																		Blocks: map[string]SingleNestedBlock{
-																			"dialog_action": schema.SingleNestedBlock{
-																				Optional: true,
-																				Attributes: map[string]schema.Attribute{
-																					"slot_to_elicit": schema.StringAttribute{
-																						Optional: true,
-																					},
-																					"supress_next_message": schema.BoolAttribute{
-																						Optional: true,
-																					},
-																				},
-																				Blocks: map[string]schema.Block{
-																					"type": schema.StringAttribute{
-																						Required: true,
-																						Validators: []validator.String{
-																							enum.FrameworkValidate[awstypes.DialogActionType](),
-																						},
-																					},
-																				},
-																			},
-																			"intent": schema.SingleNestedBlock{
-																				Optional: true,
-																				Attributes: map[string]schema.Attribute{
-																					"intent_overide": schema.NestedBlockObject{
-																						Attributes: map[string]schema.Attribute{
-																							"name": schema.StringAttribute{
-																								Optional: true,
-																							},
-																							NestedObject: schema.NestedBlockObject{
-																								Blocks: map[string]schema.Block{
-																								"slots": schema.MapAttribute{
-																									NestedObject: slotValueOverrideO,
-																								},
-																							},
-																						},
-																					},
-																				},
-																			},
-																			"session_attributes": schema.MapAttribute{
-																				ElementType: types.StringType,
-																			},
-																		},
-																	},
-																},
-																"response"
-															},
-														},
-													},
-												},
-											},
-										},
+									"condition_specification": conditionalSpecificationLNB,
+									"capture_next_step": dialogStateNBO,
+									"capture_resonse": responseSpecificationLNB,
 									},
 								},
 							},
