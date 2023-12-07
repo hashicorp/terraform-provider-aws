@@ -3579,18 +3579,3 @@ rules:
             - pattern-regex: "(?i)ComputeOptimizer"
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
-  - id: computeoptimizer-in-test-name
-    languages:
-      - go
-    message: Include "ComputeOptimizer" in test name
-    paths:
-      include:
-        - internal/service/computeoptimizer/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccComputeOptimizer"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING

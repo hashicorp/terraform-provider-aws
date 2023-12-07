@@ -128,7 +128,6 @@ val services = mapOf(
     "lightsail" to ServiceSpec("Lightsail", regionOverride = "us-east-1"),
     "location" to ServiceSpec("Location"),
     "logs" to ServiceSpec("CloudWatch Logs"),
-    "lookoutmetrics" to ServiceSpec("Lookout for Metrics"),
     "macie2" to ServiceSpec("Macie"),
     "mediaconnect" to ServiceSpec("Elemental MediaConnect"),
     "mediaconvert" to ServiceSpec("Elemental MediaConvert"),
