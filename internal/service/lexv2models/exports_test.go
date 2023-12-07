@@ -8,4 +8,7 @@ var (
 	ResourceBot        = newResourceBot
 	ResourceBotLocale  = newResourceBotLocale
 	ResourceBotVersion = newResourceBotVersion
+	ResourceSlot       = newResourceSlot
+
+	FindSlotByID = findSlotByID
 )
