@@ -441,7 +441,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

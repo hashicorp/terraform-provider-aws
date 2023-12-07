@@ -375,7 +375,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
