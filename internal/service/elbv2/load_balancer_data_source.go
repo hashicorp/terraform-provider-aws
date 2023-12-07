@@ -6,7 +6,6 @@ package elbv2
 import (
 	"context"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -72,6 +70,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dns_record_client_routing_policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -258,74 +260,22 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
-	attributesResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
-		LoadBalancerArn: aws.String(d.Id()),
-	})
+	attributes, err := FindLoadBalancerAttributesByARN(ctx, conn, d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving LB Attributes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) attributes: %s", d.Id(), err)
 	}
 
-	accessLogMap := map[string]interface{}{
-		"bucket":  "",
-		"enabled": false,
-		"prefix":  "",
-	}
-
-	for _, attr := range attributesResp.Attributes {
-		switch aws.StringValue(attr.Key) {
-		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = flex.StringToBoolValue(attr.Value)
-		case "access_logs.s3.bucket":
-			accessLogMap["bucket"] = aws.StringValue(attr.Value)
-		case "access_logs.s3.prefix":
-			accessLogMap["prefix"] = aws.StringValue(attr.Value)
-		case "idle_timeout.timeout_seconds":
-			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "parsing ALB timeout: %s", err)
-			}
-			d.Set("idle_timeout", timeout)
-		case "routing.http.drop_invalid_header_fields.enabled":
-			dropInvalidHeaderFieldsEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
-		case "routing.http.preserve_host_header.enabled":
-			preserveHostHeaderEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("preserve_host_header", preserveHostHeaderEnabled)
-		case "deletion_protection.enabled":
-			protectionEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_deletion_protection", protectionEnabled)
-		case "routing.http2.enabled":
-			http2Enabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_http2", http2Enabled)
-		case "waf.fail_open.enabled":
-			wafFailOpenEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
-		case "load_balancing.cross_zone.enabled":
-			crossZoneLbEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
-		case "routing.http.desync_mitigation_mode":
-			desyncMitigationMode := aws.StringValue(attr.Value)
-			d.Set("desync_mitigation_mode", desyncMitigationMode)
-		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
-			tlsVersionAndCipherEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_tls_version_and_cipher_suite_headers", tlsVersionAndCipherEnabled)
-		case "routing.http.xff_client_port.enabled":
-			xffClientPortEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_xff_client_port", xffClientPortEnabled)
-		case "routing.http.xff_header_processing.mode":
-			xffHeaderProcMode := aws.StringValue(attr.Value)
-			d.Set("xff_header_processing_mode", xffHeaderProcMode)
-		}
-	}
-
-	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
+	if err := d.Set("access_logs", []interface{}{flattenLoadBalancerAccessLogsAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
+
+	loadBalancerAttributes.flatten(d, attributes)
 
 	tags, err := listTags(ctx, conn, d.Id())
 
 	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer (%s): %s", d.Id(), err)
 		return diags
 	}
 
