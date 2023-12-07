@@ -1784,19 +1784,15 @@ func testAccCheckLoadBalancerAttribute(ctx context.Context, n, key, value string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No LB ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
-		attributesResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
-			LoadBalancerArn: aws.String(rs.Primary.ID),
-		})
+
+		attributes, err := tfelbv2.FindLoadBalancerAttributesByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Error retrieving LB Attributes: %s", err)
+			return err
 		}
 
-		for _, attr := range attributesResp.Attributes {
+		for _, attr := range attributes {
 			if aws.StringValue(attr.Key) == key {
 				if aws.StringValue(attr.Value) == value {
 					return nil
