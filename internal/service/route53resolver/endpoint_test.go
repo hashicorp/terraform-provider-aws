@@ -18,14 +18,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
+func TestAccRoute53ResolverEndpoint_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"ResolverEndpoint": {
+			"basic":                      testAccResolverEndpoint_basic,
+			"disappears":                 testAccResolverEndpoint_disappears,
+			"tags":                       testAccResolverEndpoint_tags,
+			"updateOutbound":             testAccResolverEndpoint_updateOutbound,
+			"updateResolverEndpointType": testAccResolverEndpoint_updateResolverEndpointType,
+			"ipv6":                       testAccResolverEndpoint_ipv6,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccResolverEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,13 +70,13 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
+func testAccResolverEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -77,13 +94,13 @@ func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
+func testAccResolverEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -123,7 +140,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
+func testAccResolverEndpoint_updateOutbound(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
@@ -131,7 +148,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	initialName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -154,6 +171,78 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 				),
+			},
+		},
+	})
+}
+
+func testAccResolverEndpoint_updateResolverEndpointType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep route53resolver.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	initialResolverEndpointType := "IPV4"
+	updatedResolverEndpointType := "DUALSTACK"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_ResolverEndpointType(rName, initialResolverEndpointType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", initialResolverEndpointType),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_updatedResolverEndpointType(rName, updatedResolverEndpointType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", updatedResolverEndpointType),
+				),
+			},
+		},
+	})
+}
+
+func testAccResolverEndpoint_ipv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep route53resolver.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_ipv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
+					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV6"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -230,6 +319,7 @@ func testAccEndpointConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -239,11 +329,15 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 3
+  count = 6
 
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id                                         = aws_vpc.test.id
+  availability_zone                              = data.aws_availability_zones.available.names[count.index %% 3]
+  cidr_block                                     = count.index <= 2 ? cidrsubnet(aws_vpc.test.cidr_block, 8, count.index) : null
+  ipv6_native                                    = count.index > 2 ? true : false
+  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation                = count.index > 2 ? true : false
+  enable_resource_name_dns_aaaa_record_on_launch = count.index > 2 ? true : false
 
   tags = {
     Name = %[1]q
@@ -379,4 +473,76 @@ resource "aws_route53_resolver_endpoint" "test" {
   }
 }
 `, name))
+}
+
+func testAccEndpointConfig_ResolverEndpointType(rName, ResolverEndpointType string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  resolver_endpoint_type = %[1]q
+}
+`, ResolverEndpointType))
+}
+
+func testAccEndpointConfig_updatedResolverEndpointType(rName, ResolverEndpointType string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  resolver_endpoint_type = %[1]q
+}
+`, ResolverEndpointType))
+}
+
+func testAccEndpointConfig_ipv6(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), `
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[3].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[4].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[5].id
+  }
+
+  resolver_endpoint_type = "IPV6"
+}
+`)
 }

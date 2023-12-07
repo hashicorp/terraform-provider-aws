@@ -86,6 +86,12 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validResolverName,
 			},
+			"resolver_endpoint_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(route53resolver.ResolverEndpointType_Values(), false),
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -123,6 +129,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Name = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("resolver_endpoint_type"); ok {
+		input.ResolverEndpointType = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateResolverEndpointWithContext(ctx, input)
 
 	if err != nil {
@@ -158,6 +168,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("direction", ep.Direction)
 	d.Set("host_vpc_id", ep.HostVPCId)
 	d.Set("name", ep.Name)
+	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
@@ -227,6 +238,21 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("resolver_endpoint_type") {
+		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
+			ResolverEndpointType: aws.String(d.Get("resolver_endpoint_type").(string)),
+			ResolverEndpointId:   aws.String(d.Id()),
+		})
+
+		if err != nil {
+			return diag.Errorf("updating Route53 Resolver Endpoint (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
