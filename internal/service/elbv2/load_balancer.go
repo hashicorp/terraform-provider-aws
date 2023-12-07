@@ -401,7 +401,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if lbType == elbv2.LoadBalancerTypeEnumApplication || lbType == elbv2.LoadBalancerTypeEnumNetwork {
 		if v, ok := d.GetOk("access_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]interface{})[0].(map[string]interface{}))...)
+			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]interface{})[0].(map[string]interface{}), false)...)
 		} else {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
@@ -508,7 +508,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("access_logs") {
 		if v, ok := d.GetOk("access_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]interface{})[0].(map[string]interface{}))...)
+			attributes = append(attributes, expandLoadBalancerAccessLogsAttributes(v.([]interface{})[0].(map[string]interface{}), true)...)
 		} else {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
@@ -1051,7 +1051,7 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	return nil
 }
 
-func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}) []*elbv2.LoadBalancerAttribute {
+func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}, update bool) []*elbv2.LoadBalancerAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1065,14 +1065,14 @@ func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}) []*elb
 		})
 
 		if v {
-			if v, ok := tfMap["bucket"].(string); ok && v != "" {
+			if v, ok := tfMap["bucket"].(string); ok && (update || v != "") {
 				apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
 					Key:   aws.String(loadBalancerAttributeAccessLogsS3Bucket),
 					Value: aws.String(v),
 				})
 			}
 
-			if v, ok := tfMap["prefix"].(string); ok && v != "" {
+			if v, ok := tfMap["prefix"].(string); ok && (update || v != "") {
 				apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
 					Key:   aws.String(loadBalancerAttributeAccessLogsS3Prefix),
 					Value: aws.String(v),
