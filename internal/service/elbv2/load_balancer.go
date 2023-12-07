@@ -127,7 +127,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				Default:          false,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
@@ -144,7 +144,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				Default:          true,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
 			"enable_tls_version_and_cipher_suite_headers": {
 				Type:             schema.TypeBool,
@@ -156,7 +156,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				Default:          false,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
 			"enable_xff_client_port": {
 				Type:             schema.TypeBool,
@@ -175,7 +175,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:             schema.TypeInt,
 				Optional:         true,
 				Default:          60,
-				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
 			"internal": {
 				Type:     schema.TypeBool,
@@ -735,9 +735,10 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 		loadBalancerTypesSupported: []string{elbv2.LoadBalancerTypeEnumApplication},
 	},
 	"enable_cross_zone_load_balancing": {
-		apiAttributeKey:            loadBalancerAttributeLoadBalancingCrossZoneEnabled,
-		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: []string{elbv2.LoadBalancerTypeEnumApplication, elbv2.LoadBalancerTypeEnumNetwork, elbv2.LoadBalancerTypeEnumGateway},
+		apiAttributeKey: loadBalancerAttributeLoadBalancingCrossZoneEnabled,
+		tfType:          schema.TypeBool,
+		// Although this attribute is supported for ALBs, it must always be true.
+		loadBalancerTypesSupported: []string{elbv2.LoadBalancerTypeEnumNetwork, elbv2.LoadBalancerTypeEnumGateway},
 	},
 	"enable_deletion_protection": {
 		apiAttributeKey:            loadBalancerAttributeDeletionProtectionEnabled,
@@ -831,7 +832,7 @@ func (m loadBalancerAttributeMap) flatten(d *schema.ResourceData, apiObjects []*
 			continue
 		}
 
-		switch v, t := apiObjects[i].Key, attributeInfo.tfType; t {
+		switch v, t := apiObjects[i].Value, attributeInfo.tfType; t {
 		case schema.TypeBool:
 			d.Set(tfAttributeName, flex.StringToBoolValue(v))
 		case schema.TypeInt:
