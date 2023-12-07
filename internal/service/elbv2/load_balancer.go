@@ -412,11 +412,35 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	attributes = append(attributes, loadBalancerAttributes.expand(d, false)...)
 
+	wait := false
 	if len(attributes) > 0 {
 		if err := modifyLoadBalancerAttributes(ctx, conn, d.Id(), attributes); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
+		wait = true
+	}
+
+	if v, ok := d.GetOk("enforce_security_group_inbound_rules_on_private_link_traffic"); ok && lbType == elbv2.LoadBalancerTypeEnumNetwork {
+		input := &elbv2.SetSecurityGroupsInput{
+			EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic: aws.String(v.(string)),
+			LoadBalancerArn: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("security_groups"); ok {
+			input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		_, err := conn.SetSecurityGroupsWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) security groups: %s", d.Id(), err)
+		}
+
+		wait = true
+	}
+
+	if wait {
 		if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) create: %s", d.Id(), err)
 		}
