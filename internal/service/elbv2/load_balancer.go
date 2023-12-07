@@ -4,7 +4,7 @@
 package elbv2
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
-	"bytes"
+
 	"context"
 	"errors"
 	"fmt"
@@ -257,18 +257,6 @@ func ResourceLoadBalancer() *schema.Resource {
 							ForceNew: true,
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
-					if m["allocation_id"] != "" {
-						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
-					}
-					if m["private_ipv4_address"] != "" {
-						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
-					}
-					return create.StringHashcode(buf.String())
 				},
 			},
 			"subnets": {
