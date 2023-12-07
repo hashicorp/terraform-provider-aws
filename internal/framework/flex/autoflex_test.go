@@ -173,8 +173,8 @@ func TestGenericExpand(t *testing.T) {
 	ctx := context.Background()
 	testString := "test"
 	testStringResult := "a"
-	testCases := []struct { //nolint:containedctx
-		Context    context.Context
+	testCases := []struct {
+		Context    context.Context //nolint:containedctx
 		TestName   string
 		Source     any
 		Target     any
@@ -767,8 +767,8 @@ func TestGenericFlatten(t *testing.T) {
 
 	ctx := context.Background()
 	testString := "test"
-	testCases := []struct { //nolint:containedctx
-		Context    context.Context
+	testCases := []struct {
+		Context    context.Context //nolint:containedctx
 		TestName   string
 		Source     any
 		Target     any
