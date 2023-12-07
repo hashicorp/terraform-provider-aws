@@ -254,7 +254,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if data.ForceDestroy.ValueBool() {
 			// Empty the bucket and try again.
-			_, err = emptyBucket(ctx, conn, data.ID.ValueString(), false)
+			_, err = emptyDirectoryBucket(ctx, conn, data.ID.ValueString())
 
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())

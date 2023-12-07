@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_datapipeline_pipeline_definition")
@@ -112,6 +113,8 @@ func DataSourcePipelineDefinition() *schema.Resource {
 }
 
 func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
@@ -122,19 +125,19 @@ func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceDat
 	resp, err := conn.GetPipelineDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting DataPipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "getting DataPipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if err = d.Set("parameter_object", flattenPipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	if err = d.Set("parameter_value", flattenPipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	if err = d.Set("pipeline_object", flattenPipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	d.SetId(pipelineID)
 
-	return nil
+	return diags
 }

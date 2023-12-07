@@ -106,11 +106,11 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateKxDatabase(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.DatabaseArn == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDatabase, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	idParts := []string{
@@ -119,7 +119,7 @@ func resourceKxDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	id, err := flex.FlattenResourceId(idParts, kxDatabaseIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDatabase, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDatabase, d.Get("name").(string), err)
 	}
 
 	d.SetId(id)
@@ -139,7 +139,7 @@ func resourceKxDatabaseRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxDatabase, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDatabase, d.Id(), err)
 	}
 
 	d.Set("arn", out.DatabaseArn)
@@ -165,7 +165,7 @@ func resourceKxDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		_, err := conn.UpdateKxDatabase(ctx, in)
 		if err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxDatabase, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxDatabase, d.Id(), err)
 		}
 	}
 
@@ -189,7 +189,7 @@ func resourceKxDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta 
 			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxDatabase, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxDatabase, d.Id(), err)
 	}
 
 	return diags

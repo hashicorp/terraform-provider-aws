@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -92,6 +93,8 @@ func DataSourceNATGateway() *schema.Resource {
 
 func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	var diags diag.Diagnostics
+
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNatGatewaysInput{
@@ -125,7 +128,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	ngw, err := FindNATGateway(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 NAT Gateway", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 NAT Gateway", err))
 	}
 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
@@ -159,8 +162,8 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
 
 	if err := d.Set("tags", KeyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -88,7 +88,7 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 	stopInstance := func() {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		err := tfec2.StopInstance(ctx, conn, aws.StringValue(i.InstanceId), 10*time.Minute)
+		err := tfec2.StopInstance(ctx, conn, aws.StringValue(i.InstanceId), false, 10*time.Minute)
 
 		if err != nil {
 			t.Fatal(err)

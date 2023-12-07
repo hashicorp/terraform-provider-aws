@@ -162,7 +162,7 @@ func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

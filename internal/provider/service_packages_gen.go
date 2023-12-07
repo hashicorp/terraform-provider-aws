@@ -49,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codeguruprofiler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
@@ -262,6 +263,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
 		codecommit.ServicePackage(ctx),
+		codeguruprofiler.ServicePackage(ctx),
 		codegurureviewer.ServicePackage(ctx),
 		codepipeline.ServicePackage(ctx),
 		codestarconnections.ServicePackage(ctx),

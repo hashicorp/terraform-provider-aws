@@ -19,12 +19,12 @@ import (
 // listTags lists sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *sns.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *sns.Client, identifier string, optFns ...func(*sns.Options)) (tftags.KeyValueTags, error) {
 	input := &sns.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,7 +109,7 @@ func createTags(ctx context.Context, conn *sns.Client, identifier string, tags [
 // updateTags updates sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *sns.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *sns.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*sns.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -123,7 +123,7 @@ func updateTags(ctx context.Context, conn *sns.Client, identifier string, oldTag
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -138,7 +138,7 @@ func updateTags(ctx context.Context, conn *sns.Client, identifier string, oldTag
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

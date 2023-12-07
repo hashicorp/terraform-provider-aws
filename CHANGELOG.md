@@ -1,4 +1,70 @@
-## 5.29.0 (Unreleased)
+## 5.30.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_codeguruprofiler_profiling_group` ([#34672](https://github.com/hashicorp/terraform-provider-aws/issues/34672))
+* **New Data Source:** `aws_ecr_repositories` ([#34446](https://github.com/hashicorp/terraform-provider-aws/issues/34446))
+* **New Data Source:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Data Source:** `aws_ssoadmin_application_providers` ([#34670](https://github.com/hashicorp/terraform-provider-aws/issues/34670))
+* **New Resource:** `aws_codeguruprofiler_profiling_group` ([#34672](https://github.com/hashicorp/terraform-provider-aws/issues/34672))
+* **New Resource:** `aws_lb_trust_store` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_lb_trust_store_revocation` ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* **New Resource:** `aws_ssoadmin_application` ([#34723](https://github.com/hashicorp/terraform-provider-aws/issues/34723))
+* **New Resource:** `aws_ssoadmin_application_assignment` ([#34741](https://github.com/hashicorp/terraform-provider-aws/issues/34741))
+* **New Resource:** `aws_ssoadmin_application_assignment_configuration` ([#34752](https://github.com/hashicorp/terraform-provider-aws/issues/34752))
+
+ENHANCEMENTS:
+
+* data-source/aws_appconfig_configuration_profile: Add `kms_key_identifier` attribute ([#34725](https://github.com/hashicorp/terraform-provider-aws/issues/34725))
+* data-source/aws_lb: Add `enforce_security_group_inbound_rules_on_private_link_traffic` attribute ([#33767](https://github.com/hashicorp/terraform-provider-aws/issues/33767))
+* data-source/aws_lb_listener: Add `mutual_authentication` attribute ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* resource/aws_appconfig_configuration_profile: Add `kms_key_identifier` attribute ([#34725](https://github.com/hashicorp/terraform-provider-aws/issues/34725))
+* resource/aws_appconfig_deployment: Add `kms_key_identifier` attribute ([#34739](https://github.com/hashicorp/terraform-provider-aws/issues/34739))
+* resource/aws_cloudwatch_log_group: Add `log_group_class` argument ([#34679](https://github.com/hashicorp/terraform-provider-aws/issues/34679))
+* resource/aws_lb: Add `enforce_security_group_inbound_rules_on_private_link_traffic` argument ([#33767](https://github.com/hashicorp/terraform-provider-aws/issues/33767))
+* resource/aws_lb_listener: Add `mutual_authentication` configuration block ([#34584](https://github.com/hashicorp/terraform-provider-aws/issues/34584))
+* resource/aws_s3_bucket: Fix `stack overflow` fatal errors on resource Delete when `force_destroy` is `true` and the bucket contains delete markers ([#34712](https://github.com/hashicorp/terraform-provider-aws/issues/34712))
+* resource/aws_sagemaker_app: Add `resource_spec.sagemaker_image_version_alias` argument ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_app_image_config: Add `jupyter_lab_image_config` configuration block ([#34696](https://github.com/hashicorp/terraform-provider-aws/issues/34696))
+* resource/aws_sagemaker_domain: Add `default_user_settings.code_editor_app_settings`, `default_user_settings.custom_file_system_config`, `default_user_settings.custom_posix_user_config`, `default_user_settings.default_landing_uri`, `default_user_settings.jupyter_lab_app_settings`, `default_user_settings.space_storage_settings`, `default_user_settings.studio_web_portal` arguments ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_domain: Add `sagemaker_image_version_alias` argument under all `default_resource_spec` blocks ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_domain: Add `single_sign_on_application_arn` attribute ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_space: Add `sagemaker_image_version_alias` argument under all `default_resource_spec` blocks ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_space: Add `space_display_name` argument ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_space: Add `url` attribute ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_user_profile: Add `sagemaker_image_version_alias` argument under all `default_resource_spec` blocks ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_sagemaker_user_profile: Add `user_settings.code_editor_app_settings`, `user_settings.custom_file_system_config`, `user_settings.custom_posix_user_config`, `user_settings.default_landing_uri`, `user_settings.jupyter_lab_app_settings`, `user_settings.space_storage_settings`, `user_settings.studio_web_portal` arguments ([#34729](https://github.com/hashicorp/terraform-provider-aws/issues/34729))
+* resource/aws_transfer_server: Add support for `TransferSecurityPolicy-FIPS-2023-05` `security_policy_name` value ([#34709](https://github.com/hashicorp/terraform-provider-aws/issues/34709))
+
+BUG FIXES:
+
+* resource/aws_ami: Correctly sets `deprecation_time` on creation and update due to eventual consistency ([#34691](https://github.com/hashicorp/terraform-provider-aws/issues/34691))
+* resource/aws_ami: Correctly sets `description` on update due to eventual consistency ([#34691](https://github.com/hashicorp/terraform-provider-aws/issues/34691))
+* resource/aws_ami: Now allows removing `deprecation_time` ([#34691](https://github.com/hashicorp/terraform-provider-aws/issues/34691))
+* resource/aws_appflow_flow: Fix perpetual diff on `destination_flow_config` ([#34770](https://github.com/hashicorp/terraform-provider-aws/issues/34770))
+* resource/aws_backup_vault_policy: Fix eventual consistency error when waiting for IAM ([#34671](https://github.com/hashicorp/terraform-provider-aws/issues/34671))
+* resource/aws_eks_pod_identity_association: Retry IAM eventual consistency errors on create and update ([#34717](https://github.com/hashicorp/terraform-provider-aws/issues/34717))
+* resource/aws_glue_connection: Fix crash while creating resource with empty `physical_connection_requirements` configuration block ([#34737](https://github.com/hashicorp/terraform-provider-aws/issues/34737))
+
+## 5.29.0 (November 30, 2023)
+
+FEATURES:
+
+* **New Resource:** `aws_docdbelastic_cluster` ([#31033](https://github.com/hashicorp/terraform-provider-aws/issues/31033))
+* **New Resource:** `aws_eks_pod_identity_association` ([#34566](https://github.com/hashicorp/terraform-provider-aws/issues/34566))
+
+ENHANCEMENTS:
+
+* resource/aws_docdb_cluster: Add `storage_type` argument ([#34637](https://github.com/hashicorp/terraform-provider-aws/issues/34637))
+* resource/aws_neptune_parameter_group: Add `name_prefix` argument ([#34500](https://github.com/hashicorp/terraform-provider-aws/issues/34500))
+
+BUG FIXES:
+
+* resource/aws_networkmanager_attachment_accepter: Now revokes attachment on deletion for VPC Attachments ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_networkmanager_vpc_attachment: Fixes error when modifying `options` fields while waiting for acceptance ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_networkmanager_vpc_attachment: Fixes error where VPC Attachments waiting for acceptance could not be deleted ([#34547](https://github.com/hashicorp/terraform-provider-aws/issues/34547))
+* resource/aws_s3_directory_bucket: Fix `NotImplemented: This bucket does not support Object Versioning` errors on resource Delete when `force_destroy` is `true` ([#34647](https://github.com/hashicorp/terraform-provider-aws/issues/34647))
+
 ## 5.28.0 (November 29, 2023)
 
 FEATURES:
@@ -60,6 +126,7 @@ BUG FIXES:
 FEATURES:
 
 * **New Data Source:** `aws_iot_registration_code` ([#15098](https://github.com/hashicorp/terraform-provider-aws/issues/15098))
+* **New Resource:** `aws_bedrock_model_invocation_logging_configuration` ([#34303](https://github.com/hashicorp/terraform-provider-aws/issues/34303))
 * **New Resource:** `aws_iot_billing_group` ([#31237](https://github.com/hashicorp/terraform-provider-aws/issues/31237))
 * **New Resource:** `aws_iot_ca_certificate` ([#15098](https://github.com/hashicorp/terraform-provider-aws/issues/15098))
 * **New Resource:** `aws_iot_event_configurations` ([#31237](https://github.com/hashicorp/terraform-provider-aws/issues/31237))
