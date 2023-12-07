@@ -50,6 +50,7 @@ func newResourceJobQueue(_ context.Context) (resource.ResourceWithConfigure, err
 
 const (
 	ResNameJobQueue = "Job Queue"
+	queueNotFound   = "does not exist"
 )
 
 type resourceJobQueue struct {
@@ -59,8 +60,7 @@ type resourceJobQueue struct {
 
 func (r *resourceJobQueue) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
-		// ExactlyOneOf is better?
-		resourcevalidator.Conflicting(
+		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("compute_environments"),
 			path.MatchRoot("compute_environment_order"),
 		),
@@ -155,10 +155,10 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		Tags:         getTagsIn(ctx),
 	}
 
-	if !data.ComputeEnvironments.IsNull() {
-		input.ComputeEnvironmentOrder = expandComputeEnvironments(flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments))
-	} else {
+	if !data.ComputeEnvironmentOrder.IsNull() {
 		flex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)
+	} else {
+		input.ComputeEnvironmentOrder = expandComputeEnvironments(flex.ExpandFrameworkStringValueList(ctx, data.ComputeEnvironments))
 	}
 	if !data.SchedulingPolicyARN.IsNull() {
 		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
@@ -188,10 +188,10 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	if !data.ComputeEnvironments.IsNull() {
-		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
-	} else {
+	if !data.ComputeEnvironmentOrder.IsNull() {
 		flex.Flatten(ctx, out.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)
+	} else {
+		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	}
 	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
@@ -223,10 +223,10 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	if !data.ComputeEnvironments.IsNull() {
-		data.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
-	} else {
+	if !data.ComputeEnvironmentOrder.IsNull() {
 		flex.Flatten(ctx, out.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)
+	} else {
+		data.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	}
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -325,9 +325,9 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	status, err := disableJobQueue(ctx, conn, data.ID.ValueString(), deleteTimeout)
+	found, err := disableJobQueue(ctx, conn, data.ID.ValueString(), deleteTimeout)
 
-	if status == "does not exist." {
+	if !found {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -459,18 +459,18 @@ func findJobQueueByName(ctx context.Context, conn *batch.Batch, sn string) (*bat
 	return nil, nil
 }
 
-func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (string, error) {
+func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (bool, error) {
 	_, err := conn.UpdateJobQueueWithContext(ctx, &batch.UpdateJobQueueInput{
 		JobQueue: aws.String(id),
 		State:    aws.String(batch.JQStateDisabled),
 	})
 
 	if err != nil {
-		// if queue err is not found, it means it's already deleted
-		if err.Error() == "does not exist." {
-			return "does not exist.", nil
+		notFound := regexache.MustCompile(queueNotFound)
+		if notFound.MatchString(err.Error()) {
+			return false, nil
 		}
-		return "", err
+		return true, err
 	}
 
 	stateChangeConf := &retry.StateChangeConf{
@@ -482,7 +482,7 @@ func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout 
 		MinTimeout: 3 * time.Second,
 	}
 	_, err = stateChangeConf.WaitForStateContext(ctx)
-	return "", err
+	return true, err
 }
 
 func waitJobQueueCreated(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (*batch.JobQueueDetail, error) {
