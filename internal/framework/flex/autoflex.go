@@ -1047,7 +1047,7 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 			//
 			// *struct -> types.List(OfObject).
 			//
-			diags.Append(flattener.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.ptrToStructNestedObject(ctx, vElem, isNilFrom, tTo, vTo)...)
 			return diags
 		}
 	}
@@ -1403,10 +1403,10 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 }
 
 // ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if vFrom.IsNil() {
+	if isNullFrom {
 		val, d := tTo.NullValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -1424,7 +1424,7 @@ func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFro
 		return diags
 	}
 
-	diags.Append(autoFlexConvertStruct(ctx, vFrom.Elem().Interface(), to, flattener)...)
+	diags.Append(autoFlexConvertStruct(ctx, vFrom.Interface(), to, flattener)...)
 	if diags.HasError() {
 		return diags
 	}
