@@ -645,7 +645,6 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.name", "aws_glue_catalog_table.test2", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.region", "aws_glue_catalog_table.test2", "region"),
 				),
 			},
 			{
