@@ -49,8 +49,8 @@ func resourceGroup() *schema.Resource {
 			"log_group_class": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ForceNew:         true,
-				Default:          types.LogGroupClassStandard,
 				ValidateDiagFunc: enum.Validate[types.LogGroupClass](),
 			},
 			"name": {
