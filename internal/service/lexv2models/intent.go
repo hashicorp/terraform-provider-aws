@@ -159,7 +159,13 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 		},
 	}
-	slotValueOverrideO.AttrTypes["values"] = slotValueOverrideO // recursive type
+
+	// This recursive type blows up autoflex and potentially schema.
+	// In order to continue work, we are intentionally leaving this out for now
+	// and will need to return to it when needed.
+
+	//slotValueOverrideO.AttrTypes["values"] = slotValueOverrideO
+
 	dialogStateNBO := schema.NestedBlockObject{
 		Attributes: map[string]schema.Attribute{
 			"session_attributes": schema.MapAttribute{
@@ -1054,9 +1060,9 @@ type DialogState struct {
 }
 
 type DialogAction struct {
-	Type                types.String `tfsdk:"type"`
-	SlotToElicit        types.String `tfsdk:"slot_to_elicit"`
-	SuppressNextMessage types.Bool   `tfsdk:"suppress_next_message"`
+	Type                fwtypes.StringEnum[awstypes.DialogActionType] `tfsdk:"type"`
+	SlotToElicit        types.String                                  `tfsdk:"slot_to_elicit"`
+	SuppressNextMessage types.Bool                                    `tfsdk:"suppress_next_message"`
 }
 
 type IntentOverride struct {
