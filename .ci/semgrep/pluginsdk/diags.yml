@@ -54,17 +54,6 @@ rules:
     fix: create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
 
-  - id: avoid-create_DiagSettingError
-    languages: [go]
-    message: Prefer `create.AppendDiagSettingError` to `create.DiagSettingError`
-    paths:
-      exclude:
-        - internal/service/networkmanager
-        - internal/service/[o-z]*
-    pattern: create.DiagSettingError($...ARGS)
-    fix: create.AppendDiagSettingError(diags, $...ARGS)
-    severity: WARNING
-
   - id: append-Read-to-diags
     languages: [go]
     message: Append results of $READFN to diags instead of returning directly
