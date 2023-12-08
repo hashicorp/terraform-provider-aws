@@ -345,6 +345,7 @@ func ResourceCatalogTable() *schema.Resource {
 						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
 					},
 				},
 			},
