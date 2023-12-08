@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -103,6 +104,8 @@ func ResourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("name").(string)
@@ -120,7 +123,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MQ Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MQ Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
@@ -138,14 +141,16 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.UpdateConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationRead(ctx, d, meta)
+	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	configuration, err := FindConfigurationByID(ctx, conn, d.Id())
@@ -153,11 +158,11 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MQ Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MQ Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", configuration.Arn)
@@ -175,23 +180,25 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err != nil {
-		return diag.Errorf("reading MQ Configuration (%s) revision (%s): %s", d.Id(), revision, err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Configuration (%s) revision (%s): %s", d.Id(), revision, err)
 	}
 
 	data, err := base64.StdEncoding.DecodeString(aws.StringValue(configurationRevision.Data))
 
 	if err != nil {
-		return diag.Errorf("base64 decoding: %s", err)
+		return sdkdiag.AppendErrorf(diags, "base64 decoding: %s", err)
 	}
 
 	d.Set("data", string(data))
 
 	setTagsOut(ctx, configuration.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	if d.HasChanges("data", "description") {
@@ -207,11 +214,11 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.UpdateConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationRead(ctx, d, meta)
+	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
 func FindConfigurationByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeConfigurationOutput, error) {
