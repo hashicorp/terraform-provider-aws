@@ -102,7 +102,7 @@ func sweepObjects(region string) error {
 
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
-			return nil
+			break // Allow objects in general purpose buckets to be deleted.
 		}
 
 		if err != nil {
