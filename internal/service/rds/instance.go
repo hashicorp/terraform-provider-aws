@@ -2364,7 +2364,7 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 	}
 
 	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get("engine").(string); engine {
-	case InstanceEngineDb2Advanced, InstanceEngineDb2Standard
+	case InstanceEngineDb2Advanced, InstanceEngineDb2Standard:
 		return allocatedStorage < 100
 	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
 		return allocatedStorage < 400

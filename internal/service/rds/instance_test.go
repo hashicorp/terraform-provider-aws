@@ -618,6 +618,44 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_Db2_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	// Requires an IBM DB2 License set as environmental variable
+	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html
+	key1 := "RDS_DB2_CUSTOMER_ID"
+	key2 := "RDS_DB2_SITE_ID"
+	customer_id := os.Getenv(key1)
+	site_id := os.Getenv(key2)
+
+	if customer_id == "" || site_id == "" {
+		t.Skipf("Environment variables %s and %s are not set", key1, key2)
+	}
+
+	var dbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_db2engine(rName, customer_id, site_id),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_dbSubnetGroupName(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -6059,37 +6097,39 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_db2engine(rName string) string {
+func testAccInstanceConfig_db2engine(rName, customerId, siteId string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassDb2(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = "tf-db2-pg-%[1]s"
   family = data.aws_rds_engine_version.default.parameter_group_family
-  "ParameterName=rds.ibm_customer_id,ParameterValue=0000000,ApplyMethod=immediate" \
 
   parameter {
-    name  = "rds.ibm_customer_id"
-    value = 0000000
+    apply_method = "immediate"
+    name         = "rds.ibm_customer_id"
+    value        = %[2]s
   }
   parameter {
+    apply_method = "immediate"
+    name         = "rds.ibm_site_id"
+    value        = %[3]s
+  }
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
+  allocated_storage    = 100
+  db_name              = "test"
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier           = %[1]q
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "test"
+  parameter_group_name = aws_db_parameter_group.test.name
   password             = "avoid-plaintext-passwords"
   username             = "tfacctest"
-
-  allocated_storage    = 10
   skip_final_snapshot  = true
-
-  apply_immediately = true
 }
-`, rName))
+`, rName, customerId, siteId))
 }
 
 func testAccInstanceConfig_manage_password(rName string) string {
