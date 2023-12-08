@@ -35,9 +35,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceCollection,
 			TypeName: "aws_rekognition_collection",
 			Name:     "Collection",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
-			},
 		},
 	}
 }

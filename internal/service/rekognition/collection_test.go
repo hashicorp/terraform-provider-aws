@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
+func TestAccRekognitionCollection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	// var collection rekognition.CreateCollectionOutput
@@ -33,7 +33,8 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rCollectionId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rCollectionId),
-					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
 				),
 			},
 			{
