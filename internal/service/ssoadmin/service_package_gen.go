@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Application",
 		},
 		{
+			Factory: newDataSourceApplicationAssignments,
+			Name:    "Application Assignments",
+		},
+		{
 			Factory: newDataSourceApplicationProviders,
 			Name:    "Application Providers",
 		},
