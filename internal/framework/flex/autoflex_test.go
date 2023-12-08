@@ -611,16 +611,16 @@ type TestFlexAWS17 struct {
 	FieldOuter TestFlexAWS14
 }
 
-type AWSEnum string
+type TestEnum string
 
 // Enum values for SlotShape
 const (
-	AWSEnumScalar AWSEnum = "Scalar"
-	AWSEnumList   AWSEnum = "List"
+	TestEnumScalar TestEnum = "Scalar"
+	TestEnumList   TestEnum = "List"
 )
 
-func (AWSEnum) Values() []AWSEnum {
-	return []AWSEnum{
+func (TestEnum) Values() []TestEnum {
+	return []TestEnum{
 		"Scalar",
 		"List",
 	}
@@ -638,12 +638,12 @@ type TestFlexComplexNestAWS01 struct { // ie, DialogState
 }
 
 type TestFlexComplexNestTF02 struct { // ie, DialogAction
-	Type                fwtypes.StringEnum[AWSEnum] `tfsdk:"type"`
-	SlotToElicit        types.String                `tfsdk:"slot_to_elicit"`
-	SuppressNextMessage types.Bool                  `tfsdk:"suppress_next_message"`
+	Type                fwtypes.StringEnum[TestEnum] `tfsdk:"type"`
+	SlotToElicit        types.String                 `tfsdk:"slot_to_elicit"`
+	SuppressNextMessage types.Bool                   `tfsdk:"suppress_next_message"`
 }
 type TestFlexComplexNestAWS02 struct { // ie, DialogAction
-	Type                AWSEnum
+	Type                TestEnum
 	SlotToElicit        *string
 	SuppressNextMessage *bool
 }
@@ -658,11 +658,11 @@ type TestFlexComplexNestAWS03 struct { // ie, IntentOverride
 }
 
 type TestFlexComplexNestTF04 struct { // ie, TestFlexComplexNestAWS04
-	Shape fwtypes.StringEnum[AWSEnum]                              `tfsdk:"shape"`
+	Shape fwtypes.StringEnum[TestEnum]                             `tfsdk:"shape"`
 	Value fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF05] `tfsdk:"value"`
 }
 type TestFlexComplexNestAWS04 struct { // ie, SlotValueOverride
-	Shape  AWSEnum
+	Shape  TestEnum
 	Value  *TestFlexComplexNestAWS05
 	Values []TestFlexComplexNestAWS04 // recursive type
 }
@@ -812,7 +812,7 @@ func TestGenericExpandAdvanced(t *testing.T) {
 			TestName: "complex nesting",
 			Source: &TestFlexComplexNestTF01{
 				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
-					Type:                fwtypes.StringEnumValue(AWSEnumList),
+					Type:                fwtypes.StringEnumValue(TestEnumList),
 					SlotToElicit:        types.StringValue("x"),
 					SuppressNextMessage: types.BoolValue(true),
 				}),
@@ -820,7 +820,7 @@ func TestGenericExpandAdvanced(t *testing.T) {
 					Name: types.StringValue("x"),
 					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
 						"x": {
-							Shape: fwtypes.StringEnumValue(AWSEnumList),
+							Shape: fwtypes.StringEnumValue(TestEnumList),
 							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
 								InterpretedValue: types.StringValue("y"),
 							}),
@@ -834,7 +834,7 @@ func TestGenericExpandAdvanced(t *testing.T) {
 			Target: &TestFlexComplexNestAWS01{},
 			WantTarget: &TestFlexComplexNestAWS01{
 				DialogAction: &TestFlexComplexNestAWS02{
-					Type:                AWSEnumList,
+					Type:                TestEnumList,
 					SlotToElicit:        aws.String("x"),
 					SuppressNextMessage: aws.Bool(true),
 				},
@@ -842,7 +842,7 @@ func TestGenericExpandAdvanced(t *testing.T) {
 					Name: aws.String("x"),
 					Slots: map[string]TestFlexComplexNestAWS04{
 						"x": {
-							Shape: AWSEnumList,
+							Shape: TestEnumList,
 							Value: &TestFlexComplexNestAWS05{
 								InterpretedValue: aws.String("y"),
 							},
@@ -1559,7 +1559,7 @@ func TestGenericFlattenAdvanced(t *testing.T) {
 			TestName: "complex nesting",
 			Source: &TestFlexComplexNestAWS01{
 				DialogAction: &TestFlexComplexNestAWS02{
-					Type:                AWSEnumList,
+					Type:                TestEnumList,
 					SlotToElicit:        aws.String("x"),
 					SuppressNextMessage: aws.Bool(true),
 				},
@@ -1567,7 +1567,7 @@ func TestGenericFlattenAdvanced(t *testing.T) {
 					Name: aws.String("x"),
 					Slots: map[string]TestFlexComplexNestAWS04{
 						"x": {
-							Shape: AWSEnumList,
+							Shape: TestEnumList,
 							Value: &TestFlexComplexNestAWS05{
 								InterpretedValue: aws.String("y"),
 							},
@@ -1581,7 +1581,7 @@ func TestGenericFlattenAdvanced(t *testing.T) {
 			Target: &TestFlexComplexNestTF01{},
 			WantTarget: &TestFlexComplexNestTF01{
 				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
-					Type:                fwtypes.StringEnumValue(AWSEnumList),
+					Type:                fwtypes.StringEnumValue(TestEnumList),
 					SlotToElicit:        types.StringValue("x"),
 					SuppressNextMessage: types.BoolValue(true),
 				}),
@@ -1589,7 +1589,7 @@ func TestGenericFlattenAdvanced(t *testing.T) {
 					Name: types.StringValue("x"),
 					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
 						"x": {
-							Shape: fwtypes.StringEnumValue(AWSEnumList),
+							Shape: fwtypes.StringEnumValue(TestEnumList),
 							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
 								InterpretedValue: types.StringValue("y"),
 							}),
