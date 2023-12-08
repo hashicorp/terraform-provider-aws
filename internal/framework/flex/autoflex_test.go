@@ -611,6 +611,77 @@ type TestFlexAWS17 struct {
 	FieldOuter TestFlexAWS14
 }
 
+type TestEnum string
+
+// Enum values for SlotShape
+const (
+	TestEnumScalar TestEnum = "Scalar"
+	TestEnumList   TestEnum = "List"
+)
+
+func (TestEnum) Values() []TestEnum {
+	return []TestEnum{
+		"Scalar",
+		"List",
+	}
+}
+
+type TestFlexComplexNestTF01 struct { // ie, DialogState
+	DialogAction      fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF02] `tfsdk:"dialog_action"`
+	Intent            fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF03] `tfsdk:"intent"`
+	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]                `tfsdk:"session_attributes"`
+}
+type TestFlexComplexNestAWS01 struct { // ie, DialogState
+	DialogAction      *TestFlexComplexNestAWS02
+	Intent            *TestFlexComplexNestAWS03
+	SessionAttributes map[string]string
+}
+
+type TestFlexComplexNestTF02 struct { // ie, DialogAction
+	Type                fwtypes.StringEnum[TestEnum] `tfsdk:"type"`
+	SlotToElicit        types.String                 `tfsdk:"slot_to_elicit"`
+	SuppressNextMessage types.Bool                   `tfsdk:"suppress_next_message"`
+}
+type TestFlexComplexNestAWS02 struct { // ie, DialogAction
+	Type                TestEnum
+	SlotToElicit        *string
+	SuppressNextMessage *bool
+}
+
+type TestFlexComplexNestTF03 struct { // ie, IntentOverride
+	Name  types.String                                      `tfsdk:"name"`
+	Slots fwtypes.ObjectMapValueOf[TestFlexComplexNestTF04] `tfsdk:"slots"`
+}
+type TestFlexComplexNestAWS03 struct { // ie, IntentOverride
+	Name  *string
+	Slots map[string]TestFlexComplexNestAWS04
+}
+
+type TestFlexComplexNestTF04 struct { // ie, TestFlexComplexNestAWS04
+	Shape fwtypes.StringEnum[TestEnum]                             `tfsdk:"shape"`
+	Value fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF05] `tfsdk:"value"`
+}
+type TestFlexComplexNestAWS04 struct { // ie, SlotValueOverride
+	Shape  TestEnum
+	Value  *TestFlexComplexNestAWS05
+	Values []TestFlexComplexNestAWS04 // recursive type
+}
+
+type TestFlexComplexNestTF05 struct { // ie, SlotValue
+	InterpretedValue types.String `tfsdk:"interpreted_value"`
+}
+type TestFlexComplexNestAWS05 struct { // ie, SlotValue
+	InterpretedValue *string
+}
+
+type TestFlexPluralityTF01 struct {
+	Value types.String `tfsdk:"Value"`
+}
+type TestFlexPluralityAWS01 struct {
+	Value  string
+	Values string
+}
+
 func TestGenericExpandAdvanced(t *testing.T) {
 	t.Parallel()
 
@@ -734,6 +805,52 @@ func TestGenericExpandAdvanced(t *testing.T) {
 							Field1: "a",
 						},
 					},
+				},
+			},
+		},
+		{
+			TestName: "complex nesting",
+			Source: &TestFlexComplexNestTF01{
+				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
+					Type:                fwtypes.StringEnumValue(TestEnumList),
+					SlotToElicit:        types.StringValue("x"),
+					SuppressNextMessage: types.BoolValue(true),
+				}),
+				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
+					Name: types.StringValue("x"),
+					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
+						"x": {
+							Shape: fwtypes.StringEnumValue(TestEnumList),
+							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
+								InterpretedValue: types.StringValue("y"),
+							}),
+						},
+					}),
+				}),
+				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": basetypes.NewStringValue("y"),
+				}),
+			},
+			Target: &TestFlexComplexNestAWS01{},
+			WantTarget: &TestFlexComplexNestAWS01{
+				DialogAction: &TestFlexComplexNestAWS02{
+					Type:                TestEnumList,
+					SlotToElicit:        aws.String("x"),
+					SuppressNextMessage: aws.Bool(true),
+				},
+				Intent: &TestFlexComplexNestAWS03{
+					Name: aws.String("x"),
+					Slots: map[string]TestFlexComplexNestAWS04{
+						"x": {
+							Shape: TestEnumList,
+							Value: &TestFlexComplexNestAWS05{
+								InterpretedValue: aws.String("y"),
+							},
+						},
+					},
+				},
+				SessionAttributes: map[string]string{
+					"x": "y",
 				},
 			},
 		},
@@ -1424,6 +1541,63 @@ func TestGenericFlattenAdvanced(t *testing.T) {
 							},
 						},
 					),
+				}),
+			},
+		},
+		{
+			TestName: "strange plurality",
+			Source: &TestFlexPluralityAWS01{
+				Value:  "a",
+				Values: "b",
+			},
+			Target: &TestFlexPluralityTF01{},
+			WantTarget: &TestFlexPluralityTF01{
+				Value: types.StringValue("a"),
+			},
+		},
+		{
+			TestName: "complex nesting",
+			Source: &TestFlexComplexNestAWS01{
+				DialogAction: &TestFlexComplexNestAWS02{
+					Type:                TestEnumList,
+					SlotToElicit:        aws.String("x"),
+					SuppressNextMessage: aws.Bool(true),
+				},
+				Intent: &TestFlexComplexNestAWS03{
+					Name: aws.String("x"),
+					Slots: map[string]TestFlexComplexNestAWS04{
+						"x": {
+							Shape: TestEnumList,
+							Value: &TestFlexComplexNestAWS05{
+								InterpretedValue: aws.String("y"),
+							},
+						},
+					},
+				},
+				SessionAttributes: map[string]string{
+					"x": "y",
+				},
+			},
+			Target: &TestFlexComplexNestTF01{},
+			WantTarget: &TestFlexComplexNestTF01{
+				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
+					Type:                fwtypes.StringEnumValue(TestEnumList),
+					SlotToElicit:        types.StringValue("x"),
+					SuppressNextMessage: types.BoolValue(true),
+				}),
+				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
+					Name: types.StringValue("x"),
+					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
+						"x": {
+							Shape: fwtypes.StringEnumValue(TestEnumList),
+							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
+								InterpretedValue: types.StringValue("y"),
+							}),
+						},
+					}),
+				}),
+				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": basetypes.NewStringValue("y"),
 				}),
 			},
 		},
