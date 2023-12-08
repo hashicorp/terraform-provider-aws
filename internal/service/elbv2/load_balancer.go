@@ -216,15 +216,18 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"ipv6_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.IsIPv6Address,
 						},
 						"outpost_id": {
@@ -234,11 +237,13 @@ func ResourceLoadBalancer() *schema.Resource {
 						"private_ipv4_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -597,19 +602,6 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.SetSubnetsWithContext(ctx, params)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "failure Setting LB Subnets: %s", err)
-		}
-	}
-	if d.HasChange("subnet_mapping") && !d.IsNewResource() {
-		params := &elbv2.SetSubnetsInput{
-			LoadBalancerArn: aws.String(d.Id()),
-		}
-		if v, ok := d.GetOk("subnet_mapping"); ok && v.(*schema.Set).Len() > 0 {
-			params.SubnetMappings = expandSubnetMappings(v.(*schema.Set).List())
-		}
-
-		_, err := conn.SetSubnetsWithContext(ctx, params)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "failure Setting LB Subnet Mapping: %s", err)
 		}
 	}
 
@@ -1048,15 +1040,9 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	// Get diff for subnets.
 	o, n := diff.GetChange("subnets")
 	os, ns := o.(*schema.Set), n.(*schema.Set)
-	if del := os.Difference(ns).List(); len(del) > 0 {
+
+	if add, del := ns.Difference(os).List(), os.Difference(ns).List(); len(del) > 0 || len(add) > 0 {
 		if err := diff.ForceNew("subnets"); err != nil {
-			return err
-		}
-	}
-	o, n = diff.GetChange("subnet_mapping")
-	os, ns = o.(*schema.Set), n.(*schema.Set)
-	if del := os.Difference(ns).List(); len(del) > 0 {
-		if err := diff.ForceNew("subnet_mapping"); err != nil {
 			return err
 		}
 	}
