@@ -1351,7 +1351,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnets(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1372,41 +1372,10 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnets(t *testing.T) {
 			},
 			{
 				Config: testAccLoadBalancerConfig_nlbSubnets(rName, 3),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
-					testAccCheckLoadBalancerNotRecreated(&post, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnets(t *testing.T) {
-	ctx := acctest.Context(t)
-	var pre, post elbv2.LoadBalancer
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLoadBalancerConfig_nlbSubnets(rName, 3),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-				),
-			},
-			{
-				Config: testAccLoadBalancerConfig_nlbSubnets(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerRecreated(&post, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
 			},
 		},

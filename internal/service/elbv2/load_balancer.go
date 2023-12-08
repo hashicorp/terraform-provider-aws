@@ -1048,12 +1048,11 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	// Get diff for subnets.
 	o, n := diff.GetChange("subnets")
 	os, ns := o.(*schema.Set), n.(*schema.Set)
-	// TODO the test cases do not see adding subnets because they are only known after apply
-	//if del := os.Difference(ns).List(); len(del) > 0 {
-	//	if err := diff.ForceNew("subnets"); err != nil {
-	//		return err
-	//	}
-	//}
+	if del := os.Difference(ns).List(); len(del) > 0 {
+		if err := diff.ForceNew("subnets"); err != nil {
+			return err
+		}
+	}
 	o, n = diff.GetChange("subnet_mapping")
 	os, ns = o.(*schema.Set), n.(*schema.Set)
 	if del := os.Difference(ns).List(); len(del) > 0 {
