@@ -32,7 +32,7 @@ func testAccPreCheckManagedKxLicenseEnabled(t *testing.T) {
 	}
 }
 
-func TestAccFinSpaceKxCluster_basic(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +69,7 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,7 +101,7 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_description(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -132,7 +132,7 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_database(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_database(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -164,7 +164,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -195,7 +195,7 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -233,7 +233,7 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -271,7 +271,7 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_code(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_code(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -319,7 +319,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_multiAZ(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -350,7 +350,7 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_rdb(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -381,7 +381,7 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_executionRole(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -412,7 +412,7 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_autoScaling(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -443,7 +443,7 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_initializationScript(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -484,7 +484,7 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -527,7 +527,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_tags(t *testing.T) {
+func TestAccSKIPFinSpaceKxCluster_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -570,6 +570,134 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSKIPFinSpaceKxCluster_ScalingGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfig_ScalingGroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSKIPFinSpaceKxRDBClusterInScalingGroup_withKxVolume(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxRDBClusterConfigInScalingGroup_withKxVolume(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxTPClusterInScalingGroup_withKxVolume(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxTPClusterConfigInScalingGroup_withKxVolume(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxClusterInScalingGroup_withKxDataview(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxcluster finspace.GetKxClusterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+			testAccPreCheckManagedKxLicenseEnabled(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxClusterConfigInScalingGroup_withKxDataview(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -746,6 +874,50 @@ resource "aws_route" "r" {
 `, rName)
 }
 
+func testAccKxClusterConfigScalingGroupBase(rName string) string {
+	return fmt.Sprintf(`
+  resource "aws_finspace_kx_scaling_group" "test" {
+    name                 = %[1]q
+    environment_id       = aws_finspace_kx_environment.test.id
+    availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+    host_type            = "kx.sg.4xlarge"
+  }
+  `, rName)
+}
+
+func testAccKxClusterConfigKxVolumeBase(rName string) string {
+	return fmt.Sprintf(`
+		resource "aws_finspace_kx_volume" "test" {
+			name                 = %[1]q
+			environment_id       = aws_finspace_kx_environment.test.id
+			availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+			az_mode              = "SINGLE"
+			type                 = "NAS_1"
+			nas1_configuration {
+				type= "SSD_1000"
+				size= 1200
+			}
+ 		}
+	`, rName)
+}
+
+func testAccKxClusterConfigKxDataviewBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_finspace_kx_database" "test" {
+   name                 = %[1]q
+   environment_id       = aws_finspace_kx_environment.test.id
+}
+
+resource "aws_finspace_kx_dataview" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  database_name        = aws_finspace_kx_database.test.name
+  auto_update          = true
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
+`, rName)
+}
 func testAccKxClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccKxClusterConfigBase(rName),
@@ -767,6 +939,149 @@ resource "aws_finspace_kx_cluster" "test" {
     security_group_ids = [aws_security_group.test.id]
     subnet_ids         = [aws_subnet.test.id]
     ip_address_type    = "IP_V4"
+  }
+}
+`, rName))
+}
+
+func testAccKxClusterConfig_ScalingGroup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		testAccKxClusterConfigScalingGroupBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+  scaling_group_configuration {
+    scaling_group_name = aws_finspace_kx_scaling_group.test.name
+    memory_limit = 200
+    memory_reservation = 100
+    node_count = 1
+    cpu = 0.5
+  }
+}
+`, rName))
+}
+
+func testAccKxRDBClusterConfigInScalingGroup_withKxVolume(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		testAccKxClusterConfigKxVolumeBase(rName),
+		testAccKxClusterConfigScalingGroupBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_database" "test" {
+    name           = %[1]q
+    environment_id = aws_finspace_kx_environment.test.id
+    }
+
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "RDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+  scaling_group_configuration {
+    scaling_group_name = aws_finspace_kx_scaling_group.test.name
+    memory_limit = 200
+    memory_reservation = 100
+    node_count = 1
+    cpu = 0.5
+  }
+  database {
+    database_name = aws_finspace_kx_database.test.name
+  }
+  savedown_storage_configuration {
+    volume_name = aws_finspace_kx_volume.test.name
+  }
+}
+`, rName))
+}
+
+func testAccKxTPClusterConfigInScalingGroup_withKxVolume(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		testAccKxClusterConfigKxVolumeBase(rName),
+		testAccKxClusterConfigScalingGroupBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "TICKERPLANT"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+  scaling_group_configuration {
+    scaling_group_name = aws_finspace_kx_scaling_group.test.name
+    memory_limit = 200
+    memory_reservation = 100
+    node_count = 1
+    cpu = 0.5
+  }
+  tickerplant_log_configuration {
+    tickerplant_log_volumes = [aws_finspace_kx_volume.test.name]
+  }
+}
+`, rName))
+}
+
+func testAccKxClusterConfigInScalingGroup_withKxDataview(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxClusterConfigBase(rName),
+		testAccKxClusterConfigScalingGroupBase(rName),
+		testAccKxClusterConfigKxDataviewBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_cluster" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  type                 = "HDB"
+  release_label        = "1.0"
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  vpc_configuration {
+    vpc_id             = aws_vpc.test.id
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = [aws_subnet.test.id]
+    ip_address_type    = "IP_V4"
+  }
+
+  scaling_group_configuration {
+    scaling_group_name = aws_finspace_kx_scaling_group.test.name
+    memory_limit = 200
+    memory_reservation = 100
+    node_count = 1
+    cpu = 0.5
+  }
+
+  database {
+    database_name = aws_finspace_kx_database.test.name
+	dataview_name = aws_finspace_kx_dataview.test.name
+  }
+
+  lifecycle {
+    ignore_changes = [database]
   }
 }
 `, rName))
