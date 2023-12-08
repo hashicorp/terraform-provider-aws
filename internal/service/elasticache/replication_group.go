@@ -735,9 +735,16 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), err)
 			}
 		} else if d.HasChange("num_cache_clusters") {
-			err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "num_cache_clusters")
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) clusters: %s", d.Id(), err)
+			o, n := d.GetChange("num_cache_clusters")
+			oldNumberCacheClusters := o.(int)
+			newNumberCacheClusters := n.(int)
+			if newNumberCacheClusters > oldNumberCacheClusters {
+				err := increaseReplicationGroupNumCacheClusters(ctx, conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "increasing ElastiCache Replication size (%s) clusters: %s", d.Id(), err)
+				}
+			} else if newNumberCacheClusters < oldNumberCacheClusters {
+				// deferring size in until after cluster modifications
 			}
 		}
 
@@ -927,6 +934,18 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) auth_token change: %s", d.Id(), err)
+			}
+		}
+
+		if d.HasChange("num_cache_clusters") {
+			o, n := d.GetChange("num_cache_clusters")
+			oldNumberCacheClusters := o.(int)
+			newNumberCacheClusters := n.(int)
+			if oldNumberCacheClusters < newNumberCacheClusters {
+				err := decreaseReplicationGroupNumCacheClusters(ctx, conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "decreasing ElastiCache Replication size (%s) clusters: %s", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1141,20 +1160,6 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 	}
 
 	return nil
-}
-
-func modifyReplicationGroupNumCacheClusters(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData, argument string) error {
-	o, n := d.GetChange(argument)
-	oldNumberCacheClusters := o.(int)
-	newNumberCacheClusters := n.(int)
-
-	var err error
-	if newNumberCacheClusters > oldNumberCacheClusters {
-		err = increaseReplicationGroupNumCacheClusters(ctx, conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
-	} else if newNumberCacheClusters < oldNumberCacheClusters {
-		err = decreaseReplicationGroupNumCacheClusters(ctx, conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
-	}
-	return err
 }
 
 func increaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
