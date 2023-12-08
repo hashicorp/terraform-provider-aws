@@ -22,8 +22,8 @@ resource "aws_ssoadmin_application" "example" {
   instance_arn             = tolist(data.aws_ssoadmin_instances.example.arns)[0]
 }
 
-resource "aws_ssoadmin_application_access_scope" "test" {
-  application_arn    = aws_ssoadmin_application.test.application_arn
+resource "aws_ssoadmin_application_access_scope" "example" {
+  application_arn    = aws_ssoadmin_application.example.application_arn
   authorized_targets = ["arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901"]
   scope              = "sso:account:access"
 }
