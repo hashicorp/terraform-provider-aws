@@ -65,6 +65,7 @@ import (
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
+	rekognition_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rekognition"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -202,6 +203,7 @@ import (
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
+	rekognition_sdkv1 "github.com/aws/aws-sdk-go/service/rekognition"
 	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
@@ -913,6 +915,14 @@ func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
 	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless))
+}
+
+func (c *AWSClient) RekognitionConn(ctx context.Context) *rekognition_sdkv1.Rekognition {
+	return errs.Must(conn[*rekognition_sdkv1.Rekognition](ctx, c, names.Rekognition))
+}
+
+func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition_sdkv2.Client {
+	return errs.Must(client[*rekognition_sdkv2.Client](ctx, c, names.Rekognition))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {

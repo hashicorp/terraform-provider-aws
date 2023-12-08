@@ -165,6 +165,7 @@ const (
 	Redshift                     = "redshift"
 	RedshiftData                 = "redshiftdata"
 	RedshiftServerless           = "redshiftserverless"
+	Rekognition                  = "rekognition"
 	ResourceExplorer2            = "resourceexplorer2"
 	ResourceGroups               = "resourcegroups"
 	ResourceGroupsTaggingAPI     = "resourcegroupstaggingapi"
