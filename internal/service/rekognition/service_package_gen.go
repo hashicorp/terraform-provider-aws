@@ -39,16 +39,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "id",
 			},
 		},
-		{
-			Factory:  ResourceProject,
-			TypeName: "aws_rekognition_project",
-			Name:     "Project",
-		},
-		{
-			Factory:  ResourceStreamProcessor,
-			TypeName: "aws_rekognition_stream_processor",
-			Name:     "Stream Processor",
-		},
 	}
 }
 
