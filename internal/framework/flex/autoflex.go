@@ -855,19 +855,19 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	tTo := valTo.Type(ctx)
 	switch k := vFrom.Kind(); k {
 	case reflect.Bool:
-		diags.Append(flattener.bool(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.float(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Int32, reflect.Int64:
-		diags.Append(flattener.int(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.int(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
-		diags.Append(flattener.string(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Ptr:
@@ -898,12 +898,16 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 }
 
 // bool copies an AWS API bool value to a compatible Plugin Framework value.
-func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.BoolTypable:
-		v, d := tTo.ValueFromBool(ctx, types.BoolValue(vFrom.Bool()))
+		boolValue := types.BoolNull()
+		if !isNullFrom {
+			boolValue = types.BoolValue(vFrom.Bool())
+		}
+		v, d := tTo.ValueFromBool(ctx, boolValue)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -925,12 +929,16 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tT
 }
 
 // float copies an AWS API float value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
-		v, d := tTo.ValueFromFloat64(ctx, types.Float64Value(vFrom.Float()))
+		float64Value := types.Float64Null()
+		if !isNullFrom {
+			float64Value = types.Float64Value(vFrom.Float())
+		}
+		v, d := tTo.ValueFromFloat64(ctx, float64Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -952,12 +960,16 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, t
 }
 
 // int copies an AWS API int value to a compatible Plugin Framework value.
-func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Int64Typable:
-		v, d := tTo.ValueFromInt64(ctx, types.Int64Value(vFrom.Int()))
+		int64Value := types.Int64Null()
+		if !isNullFrom {
+			int64Value = types.Int64Value(vFrom.Int())
+		}
+		v, d := tTo.ValueFromInt64(ctx, int64Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -979,12 +991,16 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo
 }
 
 // string copies an AWS API string value to a compatible Plugin Framework value.
-func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.StringTypable:
-		v, d := tTo.ValueFromString(ctx, types.StringValue(vFrom.String()))
+		stringValue := types.StringNull()
+		if !isNullFrom {
+			stringValue = types.StringValue(vFrom.String())
+		}
+		v, d := tTo.ValueFromString(ctx, stringValue)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1009,41 +1025,21 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	switch vElem := vFrom.Elem(); vFrom.Type().Elem().Kind() {
+	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
 	case reflect.Bool:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.BoolNull()))
-			return diags
-		}
-
-		diags.Append(flattener.bool(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Float32, reflect.Float64:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.Float64Null()))
-			return diags
-		}
-
-		diags.Append(flattener.float(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.float(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Int32, reflect.Int64:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.Int64Null()))
-			return diags
-		}
-
-		diags.Append(flattener.int(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.int(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.StringNull()))
-			return diags
-		}
-
-		diags.Append(flattener.string(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Struct:
