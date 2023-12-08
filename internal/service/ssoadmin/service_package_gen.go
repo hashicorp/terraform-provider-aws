@@ -63,6 +63,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssoadmin_account_assignment",
 		},
 		{
+			Factory:  ResourceApplicationAccessScope,
+			TypeName: "aws_ssoadmin_application_access_scope",
+		},
+		{
 			Factory:  ResourceCustomerManagedPolicyAttachment,
 			TypeName: "aws_ssoadmin_customer_managed_policy_attachment",
 		},
