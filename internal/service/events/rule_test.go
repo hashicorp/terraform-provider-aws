@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,7 +84,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_basic(rName1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName1))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -95,6 +96,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
@@ -111,7 +113,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_basic(rName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					testAccCheckRuleRecreated(&v1, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
@@ -121,12 +123,13 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
 			{
 				Config: testAccRuleConfig_defaultBusName(rName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					testAccCheckRuleNotRecreated(&v2, &v3),
@@ -155,7 +158,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_busName(rName1, busName1, "description 1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName1),
@@ -169,7 +172,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_busName(rName1, busName1, "description 2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					testAccCheckRuleNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -178,7 +181,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_busName(rName2, busName2, "description 2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
 					testAccCheckRuleRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -205,7 +208,7 @@ func TestAccEventsRule_role(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_role(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
@@ -234,7 +237,7 @@ func TestAccEventsRule_description(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_description(rName, "description1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -247,7 +250,7 @@ func TestAccEventsRule_description(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_description(rName, "description2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -271,7 +274,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.ec2\"]}"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
@@ -285,7 +288,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.lambda\"]}"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.lambda\"]}"),
@@ -309,7 +312,7 @@ func TestAccEventsRule_patternJSONEncoder(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_patternJSONEncoder(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
@@ -334,7 +337,7 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_scheduleAndPattern(rName, "{\"source\":[\"aws.ec2\"]}"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
@@ -364,7 +367,7 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_namePrefix(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
@@ -392,7 +395,7 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_nameGenerated,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
@@ -421,7 +424,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -434,7 +437,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -443,7 +446,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -467,9 +470,10 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_isEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
 			},
@@ -480,19 +484,84 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 			},
 			{
 				Config: testAccRuleConfig_isEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccRuleConfig_isEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEventsRule_state(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3 eventbridge.DescribeRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateDisabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateDisabled),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabled),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v3),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -518,13 +587,14 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_partnerBus(rName, busName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
@@ -555,13 +625,14 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_busARN(rName, eventBusName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", "arn"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
@@ -575,6 +646,154 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccEventsRule_migrateV0(t *testing.T) {
+	const resourceName = "aws_cloudwatch_event_rule.test"
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		config            string
+		expectedIsEnabled string
+		expectedState     string
+	}{
+		"basic": {
+			config:            testAccRuleConfig_basic(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+			expectedIsEnabled: "true",
+			expectedState:     "ENABLED",
+		},
+
+		"enabled": {
+			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), true),
+			expectedIsEnabled: "true",
+			expectedState:     "ENABLED",
+		},
+
+		"disabled": {
+			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), false),
+			expectedIsEnabled: "false",
+			expectedState:     "DISABLED",
+		},
+	}
+
+	for name, testcase := range testcases { //nolint:paralleltest
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var v eventbridge.DescribeRuleOutput
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:     func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+				CheckDestroy: testAccCheckRuleDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						ExternalProviders: map[string]resource.ExternalProvider{
+							"aws": {
+								Source:            "hashicorp/aws",
+								VersionConstraint: "5.26.0",
+							},
+						},
+						Config: testcase.config,
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckRuleExists(ctx, resourceName, &v),
+							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
+							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
+						),
+					},
+					{
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						Config:                   testcase.config,
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								plancheck.ExpectEmptyPlan(),
+							},
+						},
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
+							resource.TestCheckResourceAttr(resourceName, "state", testcase.expectedState),
+							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
+	const resourceName = "aws_cloudwatch_event_rule.test"
+
+	t.Parallel()
+
+	testcases := map[string]struct {
+		enabled           bool
+		state             string
+		expectedIsEnabled string
+		expectedState     string
+	}{
+		"enabled": {
+			enabled:           true,
+			state:             eventbridge.RuleStateEnabled,
+			expectedIsEnabled: "true",
+			expectedState:     eventbridge.RuleStateEnabled,
+		},
+
+		"disabled": {
+			enabled:           false,
+			state:             eventbridge.RuleStateDisabled,
+			expectedIsEnabled: "false",
+			expectedState:     eventbridge.RuleStateDisabled,
+		},
+	}
+
+	for name, testcase := range testcases { //nolint:paralleltest
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			var v eventbridge.DescribeRuleOutput
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:     func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+				CheckDestroy: testAccCheckRuleDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						ExternalProviders: map[string]resource.ExternalProvider{
+							"aws": {
+								Source:            "hashicorp/aws",
+								VersionConstraint: "5.26.0",
+							},
+						},
+						Config: testAccRuleConfig_isEnabled(rName, testcase.enabled),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckRuleExists(ctx, resourceName, &v),
+							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
+							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
+						),
+					},
+					{
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						Config:                   testAccRuleConfig_state(rName, testcase.state),
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								plancheck.ExpectEmptyPlan(),
+							},
+						},
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
+							resource.TestCheckResourceAttr(resourceName, "state", testcase.expectedState),
+							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
+						),
+					},
+				},
+			})
+		})
+	}
 }
 
 func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
@@ -788,6 +1007,16 @@ resource "aws_cloudwatch_event_rule" "test" {
   is_enabled          = %[2]t
 }
 `, rName, enabled)
+}
+
+func testAccRuleConfig_state(rName, state string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+  state               = %[2]q
+}
+`, rName, state)
 }
 
 func testAccRuleConfig_namePrefix(namePrefix string) string {

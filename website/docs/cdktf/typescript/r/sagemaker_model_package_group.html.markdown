@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 * `modelPackageGroupName` - (Required) The name of the model group.
 * `modelPackageGroupDescription` - (Optional) A description for the model group.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the Model Package Group.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Model Package Group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -74,4 +74,4 @@ Using `terraform import`, import SageMaker Model Package Groups using the `name`
 % terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6cbdd92d6f2cf691b1eaf71a2be21368117e7d969b21a38c0f34bdf3312ebe2d -->
+<!-- cache-key: cdktf-0.19.0 input-6cbdd92d6f2cf691b1eaf71a2be21368117e7d969b21a38c0f34bdf3312ebe2d -->

@@ -49,7 +49,7 @@ whose data will be exported as attributes.
 
 The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`describeNetworkInsightsPaths`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInsightsPaths.html) API Reference.
+* `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeNetworkInsightsPaths`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInsightsPaths.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
@@ -67,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sourceIp` - IP address of the AWS resource that is the source of the path.
 * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-445b5efe4c93146386518473af01d6da2f1f20f20f9a688cc7349f4a0720df0a -->
+<!-- cache-key: cdktf-0.19.0 input-445b5efe4c93146386518473af01d6da2f1f20f20f9a688cc7349f4a0720df0a -->

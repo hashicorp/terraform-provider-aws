@@ -64,17 +64,17 @@ The following arguments are required:
 
 * `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
 * `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket.
-    * `abortIncompleteMultipartUpload` - (Optional) Configuration block containing settings for abort incomplete multipart upload.
-        * `daysAfterInitiation` - (Required) Number of days after which Amazon S3 aborts an incomplete multipart upload.
+    * `abort_incomplete_multipart_upload` - (Optional) Configuration block containing settings for abort incomplete multipart upload.
+        * `days_after_initiation` - (Required) Number of days after which Amazon S3 aborts an incomplete multipart upload.
     * `expiration` - (Optional) Configuration block containing settings for expiration of objects.
-        * `date` - (Optional) Date the object is to be deleted. Should be in `yyyyMmDd` date format, e.g., `20200930`.
+        * `date` - (Optional) Date the object is to be deleted. Should be in `YYYY-MM-DD` date format, e.g., `2020-09-30`.
         * `days` - (Optional) Number of days before the object is to be deleted.
-        * `expiredObjectDeleteMarker` - (Optional) Enable to remove a delete marker with no noncurrent versions. Cannot be specified with `date` or `days`.
+        * `expired_object_delete_marker` - (Optional) Enable to remove a delete marker with no noncurrent versions. Cannot be specified with `date` or `days`.
     * `filter` - (Optional) Configuration block containing settings for filtering.
         * `prefix` - (Optional) Object prefix for rule filtering.
         * `tags` - (Optional) Key-value map of object tags for rule filtering.
     * `id` - (Required) Unique identifier for the rule.
-    * `status` - (Optional) Status of the rule. Valid values: `enabled` and `disabled`. Defaults to `enabled`.
+    * `status` - (Optional) Status of the rule. Valid values: `Enabled` and `Disabled`. Defaults to `Enabled`.
 
 ## Attribute Reference
 
@@ -104,4 +104,4 @@ Using `terraform import`, import S3 Control Bucket Lifecycle Configurations usin
 % terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-edd708f39cae61085d23015d0a484630286f25fd5088717d8cc3d17bdb735870 -->
+<!-- cache-key: cdktf-0.19.0 input-edd708f39cae61085d23015d0a484630286f25fd5088717d8cc3d17bdb735870 -->

@@ -366,4 +366,4 @@ Using `terraform import`, import Security Hub insights using the ARN. For exampl
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3d847819c495e43242ec5ec238846c5d4424861a5d61bc30612afcfd23a2887 -->
+<!-- cache-key: cdktf-0.19.0 input-d3d847819c495e43242ec5ec238846c5d4424861a5d61bc30612afcfd23a2887 -->

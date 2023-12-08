@@ -80,4 +80,4 @@ Using `terraform import`, import SageMaker Human Task UIs using the `human_task_
 % terraform import aws_sagemaker_human_task_ui.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0347aefb03f4de7b1e49c0835befda079c2fb5ecf326b1ae8183cd0caffa6dc5 -->
+<!-- cache-key: cdktf-0.19.0 input-0347aefb03f4de7b1e49c0835befda079c2fb5ecf326b1ae8183cd0caffa6dc5 -->

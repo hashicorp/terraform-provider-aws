@@ -55,7 +55,7 @@ This resource supports the following arguments:
 * `dbInstanceIdentifier` - (Required) The DB Instance Identifier from which to take the snapshot.
 * `dbSnapshotIdentifier` - (Required) The Identifier for the snapshot.
 * `sharedAccounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -75,14 +75,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `sourceRegion` - The region that the DB snapshot was created in or copied from.
 * `status` - Specifies the status of this DB snapshot.
 * `storageType` - Specifies the storage type associated with DB snapshot.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - Provides the VPC ID associated with the DB snapshot.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `20M`)
+- `create` - (Default `20m`)
 
 ## Import
 
@@ -106,4 +106,4 @@ Using `terraform import`, import `awsDbSnapshot` using the snapshot identifier. 
 % terraform import aws_db_snapshot.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-41ad054e1cd5f9035a73439b5851601fe3048ea049009ee39814356714bc4d11 -->
+<!-- cache-key: cdktf-0.19.0 input-41ad054e1cd5f9035a73439b5851601fe3048ea049009ee39814356714bc4d11 -->

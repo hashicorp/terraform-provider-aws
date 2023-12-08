@@ -119,4 +119,4 @@ Using `terraform import`, import RAM Principal Associations using their Resource
 % terraform import aws_ram_principal_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-623c2b071e2dcf8be643331968c3fa3f7507a8b07a6370bcf13bd342be258453 -->
+<!-- cache-key: cdktf-0.19.0 input-623c2b071e2dcf8be643331968c3fa3f7507a8b07a6370bcf13bd342be258453 -->

@@ -44,19 +44,19 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `functionName` - (Required) The name (or ARN) of the Lambda function.
-* `qualifier` - (Optional) Alias name or `"$latest"`.
+* `qualifier` - (Optional) Alias name or `"$LATEST"`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `authorizationType` - Type of authentication that the function URL uses.
-* `cors` - The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. See the [`awsLambdaFunctionUrl` resource](/docs/providers/aws/r/lambda_function_url.html) documentation for more details.
+* `cors` - The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. See the [`aws_lambda_function_url` resource](/docs/providers/aws/r/lambda_function_url.html) documentation for more details.
 * `creationTime` - When the function URL was created, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `functionArn` - ARN of the function.
-* `functionUrl` - HTTP URL endpoint for the function in the format `https://<urlId>LambdaUrl.<region>OnAws`.
-* `invokeMode` - Whether the Lambda function responds in `buffered` or `responseStream` mode.
+* `functionUrl` - HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws`.
+* `invokeMode` - Whether the Lambda function responds in `BUFFERED` or `RESPONSE_STREAM` mode.
 * `lastModifiedTime` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `urlId` - Generated ID for the endpoint.
 
-<!-- cache-key: cdktf-0.18.0 input-0a5c606b8160ad05d35175dbe2ca99c3d1ab9ce2b9e1e2ff92b850ec19ea50b9 -->
+<!-- cache-key: cdktf-0.19.0 input-0a5c606b8160ad05d35175dbe2ca99c3d1ab9ce2b9e1e2ff92b850ec19ea50b9 -->

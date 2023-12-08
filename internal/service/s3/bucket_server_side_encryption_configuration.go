@@ -99,6 +99,10 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		return conn.PutBucketEncryption(ctx, input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ServerSideEncryptionConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Server-side Encryption Configuration: %s", bucket, err)
 	}
@@ -271,7 +275,7 @@ func expandBucketServerSideEncryptionConfigurationRules(l []interface{}) []types
 		}
 
 		if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
-			rule.BucketKeyEnabled = v
+			rule.BucketKeyEnabled = aws.Bool(v)
 		}
 		rules = append(rules, rule)
 	}

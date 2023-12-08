@@ -6,7 +6,7 @@ package logs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,6 +31,10 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_group_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -45,20 +49,21 @@ func dataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	logGroup, err := FindLogGroupByName(ctx, conn, name)
+	logGroup, err := findLogGroupByName(ctx, conn, name)
 
 	if err != nil {
 		return diag.Errorf("reading CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
-	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(logGroup.Arn)))
+	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set("creation_time", logGroup.CreationTime)
 	d.Set("kms_key_id", logGroup.KmsKeyId)
+	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
 	tags, err := listLogGroupTags(ctx, conn, name)

@@ -5,10 +5,12 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
+Amazon Bedrock
 Amplify
 App Mesh
 App Runner
 AppConfig
+AppFabric
 AppFlow
 AppIntegrations
 AppStream 2.0
@@ -46,6 +48,7 @@ CodeBuild
 CodeCatalyst
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
 CodeGuru Reviewer
 CodePipeline
 CodeStar Connections
@@ -56,6 +59,8 @@ Comprehend
 Compute Optimizer
 Config
 Connect
+Connect Cases
+Connect Customer Profiles
 Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
@@ -92,6 +97,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage Version 2
 Elemental MediaStore
 EventBridge
 EventBridge Pipes
@@ -131,6 +137,7 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
+Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
@@ -143,6 +150,7 @@ Neptune
 Network Firewall
 Network Manager
 OpenSearch
+OpenSearch Ingestion
 OpenSearch Serverless
 OpsWorks
 Organizations

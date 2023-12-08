@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `repository_endpoint` - URL of the returned endpoint.
 
-<!-- cache-key: cdktf-0.18.0 input-845ec7d27ada856d0ad7aca19277d5091cd5696d048ed754b76ab9909399306c -->
+<!-- cache-key: cdktf-0.19.0 input-845ec7d27ada856d0ad7aca19277d5091cd5696d048ed754b76ab9909399306c -->

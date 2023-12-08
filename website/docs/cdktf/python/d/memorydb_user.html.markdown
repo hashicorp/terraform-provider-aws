@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `minimum_engine_version` - The minimum engine version supported for the user.
 * `tags` - Map of tags assigned to the subnet group.
 
-<!-- cache-key: cdktf-0.18.0 input-c6f19bc84dfa577edf03fcc5ca3f615821c417f424a780c64de232dacc41af5a -->
+<!-- cache-key: cdktf-0.19.0 input-c6f19bc84dfa577edf03fcc5ca3f615821c417f424a780c64de232dacc41af5a -->

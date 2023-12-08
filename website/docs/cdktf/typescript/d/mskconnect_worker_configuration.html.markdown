@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `latestRevision` - an ID of the latest successfully created revision of the worker configuration.
 * `propertiesFileContent` - contents of connect-distributed.properties file.
 
-<!-- cache-key: cdktf-0.18.0 input-a4a19bc8bace9a17fd9c5067fbaf9f50bdef230bacb36537455d33cae493f587 -->
+<!-- cache-key: cdktf-0.19.0 input-a4a19bc8bace9a17fd9c5067fbaf9f50bdef230bacb36537455d33cae493f587 -->

@@ -71,10 +71,10 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional) The name of the DocumentDB event subscription. Conflicts with `name`.
 * `snsTopic` - (Required) The SNS topic to send events to.
 * `sourceIds` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a source_type must also be specified.
-* `sourceType` - (Optional) The type of source that will be generating the events. Valid options are `dbInstance`, `dbCluster`, `dbParameterGroup`, `dbSecurityGroup`,` db-cluster-snapshot`. If not set, all sources will be subscribed to.
+* `sourceType` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-cluster`, `db-parameter-group`, `db-security-group`,` db-cluster-snapshot`. If not set, all sources will be subscribed to.
 * `eventCategories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See https://docs.aws.amazon.com/documentdb/latest/developerguide/API_Event.html or run `aws docdb describe-event-categories`.
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -83,15 +83,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the DocumentDB event notification subscription
 * `arn` - The Amazon Resource Name of the DocumentDB event notification subscription
 * `customerAwsId` - The AWS customer account associated with the DocumentDB event notification subscription
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `40M`)
-- `delete` - (Default `40M`)
-- `update` - (Default `40M`)
+- `create` - (Default `40m`)
+- `delete` - (Default `40m`)
+- `update` - (Default `40m`)
 
 ## Import
 
@@ -115,4 +115,4 @@ Using `terraform import`, import DocumentDB Event Subscriptions using the `name`
 % terraform import aws_docdb_event_subscription.example event-sub
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-01289746062c0ecfee11e0fdbb6b08b84b9bb7709018031af990b6ef46d1dc7b -->
+<!-- cache-key: cdktf-0.19.0 input-01289746062c0ecfee11e0fdbb6b08b84b9bb7709018031af990b6ef46d1dc7b -->

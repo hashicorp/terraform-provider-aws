@@ -82,9 +82,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import Global Accelerator custom routing listeners usi
 % terraform import aws_globalaccelerator_custom_routing_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7d9b14c85b89fb6ec7d4fa26f1cd657180812dab00b0742e6d404be95e64a568 -->
+<!-- cache-key: cdktf-0.19.0 input-7d9b14c85b89fb6ec7d4fa26f1cd657180812dab00b0742e6d404be95e64a568 -->

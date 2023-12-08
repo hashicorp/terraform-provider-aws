@@ -119,4 +119,4 @@ Using `terraform import`, import SageMaker Code Repositories using the `name`. F
 % terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f41c8a9771692edb44a7045ff9315ec42a11e03a25966ecdac6ca144a79c5a90 -->
+<!-- cache-key: cdktf-0.19.0 input-f41c8a9771692edb44a7045ff9315ec42a11e03a25966ecdac6ca144a79c5a90 -->

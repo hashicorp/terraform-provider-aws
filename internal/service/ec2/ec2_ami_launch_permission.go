@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -71,6 +72,8 @@ func ResourceAMILaunchPermission() *schema.Resource {
 }
 
 func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID := d.Get("image_id").(string)
@@ -91,21 +94,23 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	_, err := conn.ModifyImageAttributeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AMI Launch Permission (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating AMI Launch Permission (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceAMILaunchPermissionRead(ctx, d, meta)
+	return append(diags, resourceAMILaunchPermissionRead(ctx, d, meta)...)
 }
 
 func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID, accountID, group, organizationARN, organizationalUnitARN, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
@@ -113,11 +118,11 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AMI Launch Permission %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AMI Launch Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
@@ -126,16 +131,18 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("organization_arn", organizationARN)
 	d.Set("organizational_unit_arn", organizationalUnitARN)
 
-	return nil
+	return diags
 }
 
 func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID, accountID, group, organizationARN, organizationalUnitARN, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ec2.ModifyImageAttributeInput{
@@ -150,14 +157,14 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	_, err = conn.ModifyImageAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AMI Launch Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

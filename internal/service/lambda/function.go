@@ -377,6 +377,11 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -397,15 +402,16 @@ func ResourceFunction() *schema.Resource {
 				// Suppress diffs if the VPC configuration is provided, but empty
 				// which is a valid Lambda function configuration. e.g.
 				//   vpc_config {
-				//     security_group_ids = []
-				//     subnet_ids         = []
+				//     ipv6_allowed_for_dual_stack = false
+				//     security_group_ids          = []
+				//     subnet_ids                  = []
 				//   }
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Id() == "" || old == "1" || new == "0" {
 						return false
 					}
 
-					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 						return false
 					}
 
@@ -533,8 +539,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input.VpcConfig = &types.VpcConfig{
-			SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-			SubnetIds:        flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
+			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+			SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 		}
 	}
 
@@ -849,17 +856,19 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				input.VpcConfig = &types.VpcConfig{
-					SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-					SubnetIds:        flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
+					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+					SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 				}
 			} else {
 				input.VpcConfig = &types.VpcConfig{
-					SecurityGroupIds: []string{},
-					SubnetIds:        []string{},
+					Ipv6AllowedForDualStack: aws.Bool(false),
+					SecurityGroupIds:        []string{},
+					SubnetIds:               []string{},
 				}
 			}
 		}
@@ -1250,6 +1259,7 @@ func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
+		d.HasChange("vpc_config.0.ipv6_allowed_for_dual_stack") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||

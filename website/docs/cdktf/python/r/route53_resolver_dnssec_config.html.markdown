@@ -74,4 +74,4 @@ Using `terraform import`, import  Route 53 Resolver DNSSEC configs using the Rou
 % terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65576be1323a01047ddd84b194036361eced4cbe29a22e9031f40a7283d1af9a -->
+<!-- cache-key: cdktf-0.19.0 input-65576be1323a01047ddd84b194036361eced4cbe29a22e9031f40a7283d1af9a -->

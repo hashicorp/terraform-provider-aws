@@ -113,4 +113,4 @@ Using `terraform import`, import `awsApiGatewayRestApiPolicy` using the REST API
 % terraform import aws_api_gateway_rest_api_policy.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a578ab2cbd9dbd4f544af9402983cad6a4047d176dace00d2077faadb4d78cfa -->
+<!-- cache-key: cdktf-0.19.0 input-a578ab2cbd9dbd4f544af9402983cad6a4047d176dace00d2077faadb4d78cfa -->

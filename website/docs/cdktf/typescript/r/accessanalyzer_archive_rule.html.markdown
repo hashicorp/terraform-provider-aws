@@ -73,7 +73,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Resource ID in the format: `analyzerName/ruleName`.
+* `id` - Resource ID in the format: `analyzer_name/rule_name`.
 
 ## Import
 
@@ -97,4 +97,4 @@ Using `terraform import`, import AccessAnalyzer ArchiveRule using the `analyzerN
 % terraform import aws_accessanalyzer_archive_rule.example example-analyzer/example-rule
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6c3a5ffb045f96a752c714c3e446067414c5c96251a4373be0b926978dc5643a -->
+<!-- cache-key: cdktf-0.19.0 input-6c3a5ffb045f96a752c714c3e446067414c5c96251a4373be0b926978dc5643a -->

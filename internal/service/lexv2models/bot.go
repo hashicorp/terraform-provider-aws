@@ -77,12 +77,12 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"test_bot_alias_tags": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -162,7 +162,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		BotName:                 aws.String(plan.Name.ValueString()),
 		DataPrivacy:             dpInput,
 		IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
-		RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+		RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
 		BotTags:                 getTagsIn(ctx),
 	}
 
@@ -178,6 +178,10 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	if !plan.Members.IsNull() {
 		bmInput := expandMembers(ctx, bm)
 		in.BotMembers = bmInput
+	}
+
+	if !plan.Type.IsNull() {
+		in.BotType = awstypes.BotType(plan.Type.ValueString())
 	}
 
 	out, err := conn.CreateBot(ctx, &in)
@@ -222,7 +226,6 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 
 func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	var diags diag.Diagnostics
 	var state resourceBotData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -250,12 +253,19 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
 	}.String()
 	state.ARN = flex.StringValueToFramework(ctx, botArn)
-	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
+	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 	state.ID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
+
+	members, errDiags := flattenMembers(ctx, out.BotMembers)
+	resp.Diagnostics.Append(errDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.Members = members
 
 	datap, _ := flattenDataPrivacy(out.DataPrivacy)
 	if resp.Diagnostics.HasError() {
@@ -295,7 +305,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			BotName:                 flex.StringFromFramework(ctx, plan.Name),
 			IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
 			DataPrivacy:             dpInput,
-			RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+			RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
 		}
 
 		if !plan.Description.IsNull() {
@@ -308,6 +318,10 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			if resp.Diagnostics.HasError() {
 				return
 			}
+		}
+
+		if !plan.Type.IsNull() {
+			in.BotType = awstypes.BotType(plan.Type.ValueString())
 		}
 
 		_, err := conn.UpdateBot(ctx, &in)
@@ -498,6 +512,35 @@ func flattenDataPrivacy(apiObject *awstypes.DataPrivacy) (types.List, diag.Diagn
 	return listVal, diags
 }
 
+func flattenMembers(ctx context.Context, apiObject []awstypes.BotMember) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: botMembersAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, source := range apiObject {
+		obj := map[string]attr.Value{
+			"alias_name": flex.StringToFramework(ctx, source.BotMemberAliasName),
+			"alias_id":   flex.StringToFramework(ctx, source.BotMemberAliasId),
+			"id":         flex.StringToFramework(ctx, source.BotMemberId),
+			"name":       flex.StringToFramework(ctx, source.BotMemberName),
+			"version":    flex.StringToFramework(ctx, source.BotMemberVersion),
+		}
+		objVal, d := types.ObjectValue(botMembersAttrTypes, obj)
+		diags.Append(d...)
+
+		elems = append(elems, objVal)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
 func expandDataPrivacy(ctx context.Context, tfList []dataPrivacyData) *awstypes.DataPrivacy {
 	if len(tfList) == 0 {
 		return nil
@@ -537,7 +580,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	if out == nil {
 		return diags
 	}
-	rd.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
+	rd.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 	rd.ID = flex.StringToFramework(ctx, out.BotId)
 	rd.Name = flex.StringToFramework(ctx, out.BotName)
 	rd.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
@@ -581,4 +624,12 @@ type membersData struct {
 
 var dataPrivacyAttrTypes = map[string]attr.Type{
 	"child_directed": types.BoolType,
+}
+
+var botMembersAttrTypes = map[string]attr.Type{
+	"alias_id":   types.StringType,
+	"alias_name": types.StringType,
+	"id":         types.StringType,
+	"name":       types.StringType,
+	"version":    types.StringType,
 }

@@ -94,7 +94,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `type` - (Required) The type of encryption. Set to `kms` to use your own key for encryption. Set to `none` for default encryption.
+* `type` - (Required) The type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
 * `keyId` - (Optional) An AWS KMS customer master key (CMK) ARN.
 
 ## Attribute Reference
@@ -125,4 +125,4 @@ Using `terraform import`, import XRay Encryption Config using the region name. F
 % terraform import aws_xray_encryption_config.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-55d226205a72425f4aa1a56a07d4e3a41a8d86c6c3b3f83bf024e6de8c19b0ed -->
+<!-- cache-key: cdktf-0.19.0 input-55d226205a72425f4aa1a56a07d4e3a41a8d86c6c3b3f83bf024e6de8c19b0ed -->

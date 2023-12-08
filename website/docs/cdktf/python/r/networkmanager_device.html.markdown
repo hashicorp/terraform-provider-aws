@@ -85,4 +85,4 @@ Using `terraform import`, import `aws_networkmanager_device` using the device AR
 % terraform import aws_networkmanager_device.example arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/device-07f6fd08867abc123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-75ef73ba82c65c2eb02fee62646d84caef3f0d89552cdf12c29281e3363f4d2e -->
+<!-- cache-key: cdktf-0.19.0 input-75ef73ba82c65c2eb02fee62646d84caef3f0d89552cdf12c29281e3363f4d2e -->

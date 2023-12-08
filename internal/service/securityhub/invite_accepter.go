@@ -5,16 +5,19 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_securityhub_invite_accepter")
@@ -23,20 +26,20 @@ func ResourceInviteAccepter() *schema.Resource {
 		CreateWithoutTimeout: resourceInviteAccepterCreate,
 		ReadWithoutTimeout:   resourceInviteAccepterRead,
 		DeleteWithoutTimeout: resourceInviteAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"invitation_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"master_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-
-			"invitation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -44,22 +47,27 @@ func ResourceInviteAccepter() *schema.Resource {
 
 func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
-	log.Print("[DEBUG] Accepting Security Hub invitation")
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	invitationId, err := resourceInviteAccepterGetInvitationID(ctx, conn, d.Get("master_id").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "accepting Security Hub invitation: %s", err)
-	}
-
-	_, err = conn.AcceptInvitationWithContext(ctx, &securityhub.AcceptInvitationInput{
-		InvitationId: aws.String(invitationId),
-		MasterId:     aws.String(d.Get("master_id").(string)),
+	masterID := d.Get("master_id").(string)
+	invitation, err := findInvitation(ctx, conn, &securityhub.ListInvitationsInput{}, func(v *types.Invitation) bool {
+		return aws.ToString(v.AccountId) == masterID
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "accepting Security Hub invitation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Invitation (%s): %s", masterID, err)
+	}
+
+	invitationID := aws.ToString(invitation.InvitationId)
+	input := &securityhub.AcceptInvitationInput{
+		InvitationId: aws.String(invitationID),
+		MasterId:     aws.String(masterID),
+	}
+
+	_, err = conn.AcceptInvitation(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "accepting Security Hub Invitation (%s): %s", invitationID, err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -67,46 +75,20 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInviteAccepterGetInvitationID(ctx context.Context, conn *securityhub.SecurityHub, masterId string) (string, error) {
-	log.Printf("[DEBUG] Getting InvitationId for MasterId %s", masterId)
-
-	resp, err := conn.ListInvitationsWithContext(ctx, &securityhub.ListInvitationsInput{})
-
-	if err != nil {
-		return "", fmt.Errorf("listing Security Hub invitations: %w", err)
-	}
-
-	for _, invitation := range resp.Invitations {
-		log.Printf("[DEBUG] Invitation: %s", invitation)
-		if aws.StringValue(invitation.AccountId) == masterId {
-			return *invitation.InvitationId, nil
-		}
-	}
-
-	return "", fmt.Errorf("Cannot find InvitationId for MasterId %s", masterId)
-}
-
 func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
-	log.Print("[DEBUG] Reading Security Hub master account")
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	resp, err := conn.GetMasterAccountWithContext(ctx, &securityhub.GetMasterAccountInput{})
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-		log.Print("[WARN] Security Hub master account not found, removing from state")
+	master, err := FindMasterAccount(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Master Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving Security Hub master account: %s", err)
-	}
-
-	master := resp.Master
-
-	if master == nil {
-		log.Print("[WARN] Security Hub master account not found, removing from state")
-		d.SetId("")
-		return diags
+		return diag.Errorf("reading Security Hub Master Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set("invitation_id", master.InvitationId)
@@ -117,17 +99,80 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
-	log.Print("[DEBUG] Disassociating from Security Hub master account")
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	_, err := conn.DisassociateFromMasterAccountWithContext(ctx, &securityhub.DisassociateFromMasterAccountInput{})
+	log.Printf("[DEBUG] Dissasociating from Security Hub Master Account: %s", d.Id())
+	_, err := conn.DisassociateFromMasterAccount(ctx, &securityhub.DisassociateFromMasterAccountInput{})
 
-	if tfawserr.ErrMessageContains(err, "BadRequestException", "The request is rejected because the current account is not associated to a master account") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disassociating from Security Hub master account: %s", err)
+		return sdkdiag.AppendErrorf(diags, "disassociating from Security Hub Master Account (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.Invitation, error) {
+	input := &securityhub.GetMasterAccountInput{}
+
+	output, err := conn.GetMasterAccount(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Master == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Master, nil
+}
+
+func findInvitation(ctx context.Context, conn *securityhub.Client, input *securityhub.ListInvitationsInput, filter tfslices.Predicate[*types.Invitation]) (*types.Invitation, error) {
+	output, err := findInvitations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findInvitations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListInvitationsInput, filter tfslices.Predicate[*types.Invitation]) ([]*types.Invitation, error) {
+	var output []*types.Invitation
+
+	pages := securityhub.NewListInvitationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Invitations {
+			v := v
+			if v := &v; filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

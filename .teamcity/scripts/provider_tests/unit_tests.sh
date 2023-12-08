@@ -19,12 +19,14 @@ go test \
     ./internal/logging/... \
     ./internal/maps/... \
     ./internal/provider/... \
+    ./internal/retry/... \
     ./internal/sdktypes/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
+    ./internal/ujson/... \
     ./internal/vault/... \
     ./internal/verify/... \
     -json

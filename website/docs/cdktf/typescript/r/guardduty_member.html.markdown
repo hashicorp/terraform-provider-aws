@@ -55,7 +55,7 @@ This resource supports the following arguments:
 * `accountId` - (Required) AWS account ID for member account.
 * `detectorId` - (Required) The detector ID of the GuardDuty account where you want to create member accounts.
 * `email` - (Required) Email address for member account.
-* `invite` - (Optional) Boolean whether to invite the account to GuardDuty as a member. Defaults to `false`. To detect if an invitation needs to be (re-)sent, the Terraform state value is `true` based on a `relationshipStatus` of `disabled`, `enabled`, `invited`, or `emailVerificationInProgress`.
+* `invite` - (Optional) Boolean whether to invite the account to GuardDuty as a member. Defaults to `false`. To detect if an invitation needs to be (re-)sent, the Terraform state value is `true` based on a `relationship_status` of `Disabled`, `Enabled`, `Invited`, or `EmailVerificationInProgress`.
 * `invitationMessage` - (Optional) Message for invitation.
 * `disableEmailNotification` - (Optional) Boolean whether an email notification is sent to the accounts. Defaults to `false`.
 
@@ -70,8 +70,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1M`)
-- `update` - (Default `1M`)
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import GuardDuty members using the primary GuardDuty d
 % terraform import aws_guardduty_member.MyMember 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8c795e9bdb95e2477dec1e7c539b60d6a51b31c90c42c663ecd2ece13c210023 -->
+<!-- cache-key: cdktf-0.19.0 input-8c795e9bdb95e2477dec1e7c539b60d6a51b31c90c42c663ecd2ece13c210023 -->

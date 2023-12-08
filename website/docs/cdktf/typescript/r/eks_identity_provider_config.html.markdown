@@ -45,7 +45,7 @@ This resource supports the following arguments:
 
 * `clusterName` – (Required) Name of the EKS Cluster.
 * `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### oidc Configuration Block
 
@@ -65,14 +65,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the EKS Identity Provider Configuration.
 * `id` - EKS Cluster name and EKS Identity Provider Configuration name separated by a colon (`:`).
 * `status` - Status of the EKS Identity Provider Configuration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `40M`)
-* `delete` - (Default `40M`)
+* `create` - (Default `40m`)
+* `delete` - (Default `40m`)
 
 ## Import
 
@@ -96,4 +96,4 @@ Using `terraform import`, import EKS Identity Provider Configurations using the 
 % terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5c1f7e41459f3297aafc7d76e5e6f234ff3ac373c8e28f3c212e15d50db41a0f -->
+<!-- cache-key: cdktf-0.19.0 input-5c1f7e41459f3297aafc7d76e5e6f234ff3ac373c8e28f3c212e15d50db41a0f -->

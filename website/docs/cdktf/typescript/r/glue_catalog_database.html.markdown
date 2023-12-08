@@ -69,13 +69,13 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `catalogId` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
-* `createTableDefaultPermission` - (Optional) Creates a set of default permissions on the table for principals. See [`createTableDefaultPermission`](#create_table_default_permission) below.
+* `createTableDefaultPermission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
 * `description` - (Optional) Description of the database.
 * `locationUri` - (Optional) Location of the database (for example, an HDFS path).
 * `name` - (Required) Name of the database. The acceptable characters are lowercase letters, numbers, and the underscore character.
 * `parameters` - (Optional) List of key-value pairs that define parameters and properties of the database.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `targetDatabase` - (Optional) Configuration block for a target database for resource linking. See [`targetDatabase`](#target_database) below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `targetDatabase` - (Optional) Configuration block for a target database for resource linking. See [`target_database`](#target_database) below.
 
 ### target_database
 
@@ -98,7 +98,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Glue Catalog Database.
 * `id` - Catalog ID and name of the database.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -122,4 +122,4 @@ Using `terraform import`, import Glue Catalog Databases using the `catalogId:nam
 % terraform import aws_glue_catalog_database.database 123456789012:my_database
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-556c19f9f828a7b00dcbf12d311ec9ce93276130015a07072b31615d6edc75d0 -->
+<!-- cache-key: cdktf-0.19.0 input-556c19f9f828a7b00dcbf12d311ec9ce93276130015a07072b31615d6edc75d0 -->

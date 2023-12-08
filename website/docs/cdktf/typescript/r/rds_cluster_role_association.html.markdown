@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `dbClusterIdentifier` - (Required) DB Cluster Identifier to associate with the IAM Role.
-* `featureName` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `supportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
+* `featureName` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
 * `roleArn` - (Required) Amazon Resource Name (ARN) of the IAM Role to associate with the DB Cluster.
 
 ## Attribute Reference
@@ -57,8 +57,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import `awsRdsClusterRoleAssociation` using the DB Clu
 % terraform import aws_rds_cluster_role_association.example my-db-cluster,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f164c7c9d93e5509da4cca9e9ef20bfa3b9c5d4d57057579c41a0162d8f04659 -->
+<!-- cache-key: cdktf-0.19.0 input-f164c7c9d93e5509da4cca9e9ef20bfa3b9c5d4d57057579c41a0162d8f04659 -->

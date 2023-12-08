@@ -52,7 +52,7 @@ class MyConvertedCode extends TerraformStack {
 
 The arguments of an `awsDefaultVpc` differ slightly from those of [`awsVpc`](vpc.html):
 
-* The `cidrBlock` and `instanceTenancy` arguments become computed attributes
+* The `cidrBlock` and `instance_tenancy` arguments become computed attributes
 * The default value for `enableDnsHostnames` is `true`
 
 This resource supports the following additional arguments:
@@ -88,4 +88,4 @@ Using `terraform import`, import Default VPCs using the VPC `id`. For example:
 % terraform import aws_default_vpc.default vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-23d964c1dc88c45ec1734d4089d10399fa0b6a694656d6ed659894a9f0b6dd98 -->
+<!-- cache-key: cdktf-0.19.0 input-23d964c1dc88c45ec1734d4089d10399fa0b6a694656d6ed659894a9f0b6dd98 -->

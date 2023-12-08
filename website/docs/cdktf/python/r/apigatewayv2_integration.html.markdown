@@ -212,4 +212,4 @@ Using `terraform import`, import `aws_apigatewayv2_integration` using the API id
 
 -> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-bd3868bb1d19101e5d7a5a40cefadf4031666c5772ea0394fa37f1396d869e4c -->
+<!-- cache-key: cdktf-0.19.0 input-bd3868bb1d19101e5d7a5a40cefadf4031666c5772ea0394fa37f1396d869e4c -->

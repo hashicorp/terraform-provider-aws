@@ -62,7 +62,10 @@ Tests can then be run by specifying a regular expression defining the tests to
 run and the package in which the tests are defined:
 
 ```console
-% make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
+make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
+```
+
+```
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
 === RUN   TestAccCloudWatchDashboard_updateName
@@ -75,11 +78,14 @@ ok  	github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch	25.
 
 Entire resource test suites can be targeted by using the naming convention to
 write the regular expression. For example, to run all tests of the
-`aws_cloudwatch_dashboard` resource rather than just the updateName test, you
+`aws_cloudwatch_dashboard` resource rather than just the `updateName` test, you
 can start testing like this:
 
 ```console
-% make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
+make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
+```
+
+```
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic
@@ -109,7 +115,10 @@ Please Note: On macOS 10.14 and later (and some Linux distributions), the defaul
 Certain testing requires multiple AWS accounts. This additional setup is not typically required and the testing will return an error (shown below) if your current setup does not have the secondary AWS configuration:
 
 ```console
-$ make testacc TESTS=TestAccRDSInstance_DBSubnetGroupName_ramShared PKG=rds
+make testacc TESTS=TestAccRDSInstance_DBSubnetGroupName_ramShared PKG=rds
+```
+
+```
 TF_ACC=1 go test ./internal/service/rds/... -v -count 1 -parallel 20 -run=TestAccRDSInstance_DBSubnetGroupName_ramShared -timeout 180m
 === RUN   TestAccRDSInstance_DBSubnetGroupName_ramShared
 === PAUSE TestAccRDSInstance_DBSubnetGroupName_ramShared
@@ -152,13 +161,13 @@ If you want to run only short-running tests, you can use either one of these equ
 For example:
 
 ```console
-$ make testacc TESTS='TestAccECSTaskDefinition_' PKG=ecs TESTARGS=-short
+make testacc TESTS='TestAccECSTaskDefinition_' PKG=ecs TESTARGS=-short
 ```
 
 Or:
 
 ```console
-$ TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestAccECSTaskDefinition_' -short -timeout 180m
+TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestAccECSTaskDefinition_' -short -timeout 180m
 ```
 
 ## Writing an Acceptance Test
@@ -274,9 +283,9 @@ When executing the test, the following steps are taken for each `TestStep`:
    expected value if possible. The testing framework provides helper functions
    for several common types of check - for example:
 
-    ```go
-    resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
-    ```
+   ```go
+   resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
+   ```
 
 1. The resources created by the test are destroyed. This step happens
    automatically, and is the equivalent of calling `terraform destroy`.
@@ -1001,7 +1010,8 @@ func TestAccExampleThing_serial(t *testing.T) {
 }
 ```
 
-_NOTE: Future iterations of these acceptance testing concurrency instructions will include the ability to handle more than one component at a time including service quota lookup, if supported by the service API._
+!!! note
+    Future iterations of these acceptance testing concurrency instructions will include the ability to handle more than one component at a time including service quota lookup, if supported by the service API.
 
 ### Data Source Acceptance Testing
 
@@ -1066,18 +1076,19 @@ When running the acceptance tests, especially when developing or troubleshooting
 
 ### Running Test Sweepers
 
-**WARNING: Test Sweepers will destroy AWS infrastructure and backups in the target AWS account and region! These are designed to override any API deletion protection. Never run these outside a development AWS account that should be completely empty of resources.**
+!!! warning
+    Test Sweepers will destroy AWS infrastructure and backups in the target AWS account and region! These are designed to override any API deletion protection. Never run these outside a development AWS account that should be completely empty of resources. <!-- markdownlint-disable-line code-block-style -->
 
 To run the sweepers for all resources in `us-west-2` and `us-east-1` (default testing regions):
 
 ```console
-$ make sweep
+make sweep
 ```
 
 To run a specific resource sweeper:
 
 ```console
-$ SWEEPARGS=-sweep-run=aws_example_thing make sweep
+SWEEPARGS=-sweep-run=aws_example_thing make sweep
 ```
 
 To run sweepers with an assumed role, use the following additional environment variables:
@@ -1097,16 +1108,13 @@ To run sweepers with an assumed role, use the following additional environment v
 Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
 
 ```go
-//go:build sweep
-// +build sweep
-
 package example
 ```
 
-Next, initialize the resource into the test sweeper framework:
+Next, register the resource into the test sweeper framework:
 
 ```go
-func init() {
+func RegisterSweepers() {
   resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
     Name: "aws_example_thing",
     F:    sweepThings,
@@ -1167,7 +1175,7 @@ func sweepThings(region string) error {
     return !lastPage
   })
 
-  if sweep.SkipSweepError(err) {
+  if awsv1.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1204,7 +1212,7 @@ func sweepThings(region string) error {
 
   for {
     output, err := conn.ListThings(input)
-    if sweep.SkipSweepError(err) {
+    if awsv1.SkipSweepError(err) {
       log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
       return nil
     }

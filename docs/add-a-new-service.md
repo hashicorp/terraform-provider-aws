@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New AWS Service
 
 AWS frequently launches new services, and Terraform support is frequently desired by the community shortly after launch. Depending on the API surface area of the new service, this could be a major undertaking. The following steps should be followed to prepare for adding the resources that allow for Terraform management of that service.
@@ -27,17 +28,25 @@ To add an AWS SDK for Go service client:
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
 1. In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
-  **_Be very careful when adding or changing data in `names_data.csv`!
-  The Provider and generators depend on the file being correct.
-  We strongly recommend using an editor with CSV support._**
+
+    !!! tip
+        Be very careful when adding or changing data in `names_data.csv`!
+        The Provider and generators depend on the file being correct.
+        We strongly recommend using an editor with CSV support.
 
 To generate the client, run the following then submit the pull request:
 
-  ```sh
-  make gen
-  make test
-  go mod tidy
-  ```
+```console
+make gen
+```
+
+```console
+make test
+```
+
+```console
+go mod tidy
+```
 
 Once the service client has been added, implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md) in a separate PR.
 
@@ -51,8 +60,7 @@ If an AWS service must be created in a non-standard way, for example the service
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client factory function, for example:
 
-<!-- markdownlint-disable code-block-style -->
-=== "aws-go-sdk-v2"
+=== "AWS Go SDK V2 (Preferred)"
 
     ```go
     package route53domains
@@ -80,7 +88,7 @@ If an AWS service must be created in a non-standard way, for example the service
     }
     ```
 
-=== "aws-go-sdk"
+=== "AWS Go SDK V1"
 
     ```go
     package globalaccelerator
@@ -107,7 +115,6 @@ If an AWS service must be created in a non-standard way, for example the service
         return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
     }
     ```
-<!-- markdownlint-enable code-block-style -->
 
 ## Customizing a new Service Client
 
@@ -115,8 +122,7 @@ If an AWS service must be customized after creation, for example retry handling 
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
-<!-- markdownlint-disable code-block-style -->
-=== "aws-go-sdk"
+=== "AWS Go SDK V1"
 
     ```go
     package chime
@@ -145,4 +151,3 @@ If an AWS service must be customized after creation, for example retry handling 
     	return conn, nil
     }
     ```
-<!-- markdownlint-enable code-block-style -->
