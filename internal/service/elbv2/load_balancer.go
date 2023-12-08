@@ -1048,29 +1048,15 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	}
 
 	// Get diff for security groups.
-	sgCountKnown := diff.NewValueKnown("security_groups.#")
-	o, n = diff.GetChange("security_groups.#")
-	oi, ni := o.(int), n.(int)
+	o, n = diff.GetChange("security_groups")
+	os, ns = o.(*schema.Set), n.(*schema.Set)
 
-	// If the final values for the security_groups field is known, then we can compare the old and new security_group
-	// counts.  If one value is zero and the other value is non-zero, then trigger a replacement
-	if sgCountKnown {
-		if (oi == 0 && ni > 0) || (ni == 0 && oi > 0) {
-			if err := diff.ForceNew("security_groups"); err != nil {
-				return err
-			}
-		}
-		// Here's where things get complicated.  If the value is computed, then the final output could be zero or non-zero
-		// This code block is going to make the assumption that when the value is computed, it is the intent of the
-		// developer for that final computed value to be non-zero.
-	} else {
-		log.Println("[DEBUG] security_groups is a computed value, will assume  the final is greater than 0")
-		if oi == 0 {
-			if err := diff.ForceNew("security_groups"); err != nil {
-				return err
-			}
+	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
+		if err := diff.ForceNew("security_groups"); err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
