@@ -762,6 +762,65 @@ func TestGenericExpandAdvanced(t *testing.T) {
 	}
 }
 
+type TestFlexTF17 struct {
+	Field1 fwtypes.ARN `tfsdk:"field1"`
+}
+
+func TestGenericExpandCustomStringType(t *testing.T) {
+	t.Parallel()
+
+	a := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
+	ctx := context.Background()
+	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName:   "single ARN Source and single string Target",
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+			Target:     &TestFlexAWS01{},
+			WantTarget: &TestFlexAWS01{Field1: a},
+		},
+		{
+			TestName:   "single ARN Source and single *string Target",
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+			Target:     &TestFlexAWS02{},
+			WantTarget: &TestFlexAWS02{Field1: aws.String(a)},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Expand(testCtx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -1376,6 +1435,67 @@ func TestGenericFlattenAdvanced(t *testing.T) {
 			t.Parallel()
 
 			err := Flatten(ctx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGenericFlattenCustomStringType(t *testing.T) {
+	t.Parallel()
+
+	a := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
+	ctx := context.Background()
+	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName:   "single string Source and single ARN Target",
+			Source:     &TestFlexAWS01{Field1: a},
+			Target:     &TestFlexTF17{},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+		},
+		{
+			TestName:   "single *string Source and single ARN Target",
+			Source:     &TestFlexAWS02{Field1: aws.String(a)},
+			Target:     &TestFlexTF17{},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+		},
+		{
+			TestName:   "single nil *string Source and single ARN Target",
+			Source:     &TestFlexAWS02{},
+			Target:     &TestFlexTF17{},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNNull()},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Flatten(testCtx, testCase.Source, testCase.Target)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
