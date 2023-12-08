@@ -19,10 +19,16 @@ resource "aws_batch_job_queue" "test_queue" {
   name     = "tf-test-batch-job-queue"
   state    = "ENABLED"
   priority = 1
-  compute_environments = [
-    aws_batch_compute_environment.test_environment_1.arn,
-    aws_batch_compute_environment.test_environment_2.arn,
-  ]
+
+  compute_environment_order {
+    order               = 1
+    compute_environment = aws_batch_compute_environment.test_environment_1.arn
+  }
+
+  compute_environment_order {
+    order               = 2
+    compute_environment = aws_batch_compute_environment.test_environment_2.arn
+  }
 }
 ```
 
@@ -50,10 +56,15 @@ resource "aws_batch_job_queue" "example" {
   state                 = "ENABLED"
   priority              = 1
 
-  compute_environments = [
-    aws_batch_compute_environment.test_environment_1.arn,
-    aws_batch_compute_environment.test_environment_2.arn,
-  ]
+  compute_environment_order {
+    order               = 1
+    compute_environment = aws_batch_compute_environment.test_environment_1.arn
+  }
+
+  compute_environment_order {
+    order               = 2
+    compute_environment = aws_batch_compute_environment.test_environment_2.arn
+  }
 }
 ```
 
@@ -87,7 +98,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-When importing a AWS Batch Job Queue, the parameter `compute_environment_order` will always be used over the deprecated `compute_environments`. Please adjust your HCL accordingly.
+When importing a AWS Batch Job Queue, the parameter `compute_environments` will always be used over `compute_environment_order`. Please adjust your HCL accordingly.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Queue using the `arn`. For example:
 

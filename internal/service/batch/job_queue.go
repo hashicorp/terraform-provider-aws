@@ -248,11 +248,19 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 		JobQueue: flex.StringFromFramework(ctx, plan.JobQueueName),
 	}
 
-	if !plan.ComputeEnvironments.Equal(state.ComputeEnvironments) {
-		ceo := flex.ExpandFrameworkStringValueList(ctx, plan.ComputeEnvironments)
-		input.ComputeEnvironmentOrder = expandComputeEnvironments(ceo)
+	if !plan.ComputeEnvironmentOrder.IsNull() {
+		if !plan.ComputeEnvironmentOrder.Equal(state.ComputeEnvironmentOrder) {
+			flex.Expand(ctx, plan.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)
 
-		update = true
+			update = true
+		}
+	} else {
+		if !plan.ComputeEnvironments.Equal(state.ComputeEnvironments) {
+			ceo := flex.ExpandFrameworkStringValueList(ctx, plan.ComputeEnvironments)
+			input.ComputeEnvironmentOrder = expandComputeEnvironments(ceo)
+
+			update = true
+		}
 	}
 
 	if !plan.Priority.Equal(state.Priority) {

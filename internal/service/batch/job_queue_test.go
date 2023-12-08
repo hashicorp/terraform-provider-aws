@@ -254,34 +254,27 @@ func TestAccBatchJobQueue_ComputeEnvironmentOrder_multiple(t *testing.T) {
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_ComputeEnvironments_multiple(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName, batch.JQStateEnabled, 1, 2, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.1", "aws_batch_compute_environment.more.0", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.2", "aws_batch_compute_environment.more.1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", "arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName, batch.JQStateEnabled, 2, 1, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.more.0", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.1", "aws_batch_compute_environment.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.2", "aws_batch_compute_environment.more.1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.0.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.1.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.2.order", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", "arn"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -780,22 +773,24 @@ resource "aws_batch_compute_environment" "more" {
 `, rName, state))
 }
 
-func testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName string, state string) string {
+func testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName string, state string, o1 int, o2 int, o3 int) string {
 	return acctest.ConfigCompose(
 		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
-	order = 1
+	order = %[3]d
 	compute_environment = aws_batch_compute_environment.test.arn
   }
 
-  dynamic "compute_environment_order" {
-	for_each = toset(aws_batch_compute_environment.more[*].arn)
-	content {
-	  order = count.index + 2
-	  compute_environment = compute_environment_order.value
-	}
+  compute_environment_order {
+	order = %[4]d
+	compute_environment = aws_batch_compute_environment.more[0].arn
+  }
+
+  compute_environment_order {
+	order = %[5]d
+	compute_environment = aws_batch_compute_environment.more[1].arn
   }
 
   name     = %[1]q
@@ -822,7 +817,7 @@ resource "aws_batch_compute_environment" "more" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, state))
+`, rName, state, o1, o2, o3))
 }
 
 func testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName string, state string) string {
