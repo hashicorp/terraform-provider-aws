@@ -138,10 +138,12 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	_, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
+	log.Printf("[INFO] Emptying S3 Bucket (%s)", os.bucket)
+	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
+	log.Printf("[INFO] Deleted %d S3 Objects from S3 Bucket (%s)", n, os.bucket)
 	return nil
 }
 
@@ -151,10 +153,12 @@ type directoryBucketObjectSweeper struct {
 }
 
 func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	_, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
+	log.Printf("[INFO] Emptying S3 Directory Bucket (%s)", os.bucket)
+	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Directory Bucket (%s) objects: %w", os.bucket, err)
 	}
+	log.Printf("[INFO] Deleted %d S3 Objects from S3 Directory Bucket (%s)", n, os.bucket)
 	return nil
 }
 
