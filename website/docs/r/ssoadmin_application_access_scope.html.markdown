@@ -24,7 +24,7 @@ resource "aws_ssoadmin_application" "example" {
 
 resource "aws_ssoadmin_application_access_scope" "test" {
   application_arn    = aws_ssoadmin_application.test.application_arn
-  authorized_targets = [ "arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901" ]
+  authorized_targets = ["arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901"]
   scope              = "sso:account:access"
 }
 ```
