@@ -163,7 +163,7 @@ func ApplicationAccessScopeParseResourceID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPLICATION_ARN%[2]sSCOPE%[2]s", id, applicationAccessScopeIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPLICATION_ARN%[2]sSCOPE", id, applicationAccessScopeIDSeparator)
 }
 
 func FindApplicationAccessScopeByScopeAndApplicationARN(ctx context.Context, conn *ssoadmin.Client, applicationARN, scope string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {

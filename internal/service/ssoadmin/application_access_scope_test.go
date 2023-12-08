@@ -52,7 +52,6 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_access_scope.test"
-	applicationResourceName := "aws_ssoadmin_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -64,7 +63,7 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 				Config: testAccApplicationAccessScopeConfig_basic(rName, "sso:account:access"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, ssoadmin.ResourceApplicationAccessScope(), applicationResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, ssoadmin.ResourceApplicationAccessScope(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
