@@ -169,7 +169,7 @@ resource "aws_db_instance" "example" {
 ### RDS Db2 Usage 
 
 ```terraform
-# Lookup the default version for the engine. Db2 Standard Edition is `db2-ae`, Db2 Advanced Edition is `db2-ae`.
+# Lookup the default version for the engine. Db2 Standard Edition is `db2-se`, Db2 Advanced Edition is `db2-ae`.
 data "aws_rds_engine_version" "default" {
   engine = "db2-se" #Standard Edition
 }
