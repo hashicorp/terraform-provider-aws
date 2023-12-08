@@ -52,4 +52,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `items` - List of JSON representations of maps of attribute names to [AttributeValue](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html) objects.
 * `item_count` - The number of items in the `items` list.
 * `scanned_count` - The number of items evaluated, before any QueryFilter is applied. A high ScannedCount value with few, or no, Count results indicates an inefficient Query operation.
-* `query_count` - The number of queries that were performed. As discussed earlier, the data source handles pagination internally, hence this number represents the number of query calls that were done against Dynamo until the output_limit (if specified) was reached.
+* `query_count` - The number of queries that were performed. As discussed earlier, the data source handles pagination internally, hence this number represents the number of query calls that were done against Dynamo until the output_limit, if specified, was reached or until the LastEvaluatedKey returns null.
