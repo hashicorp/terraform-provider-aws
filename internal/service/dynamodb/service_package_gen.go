@@ -33,6 +33,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceTableItem,
 			TypeName: "aws_dynamodb_table_item",
 		},
+		{
+			Factory:  DataSourceTableQuery,
+			TypeName: "aws_dynamodb_table_query",
+		},
 	}
 }
 
