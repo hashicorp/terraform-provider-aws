@@ -6106,14 +6106,14 @@ resource "aws_db_parameter_group" "test" {
   family = data.aws_rds_engine_version.default.parameter_group_family
 
   parameter {
-    apply_method = "immediate"
     name         = "rds.ibm_customer_id"
     value        = %[2]s
+    apply_method = "immediate"
   }
   parameter {
-    apply_method = "immediate"
     name         = "rds.ibm_site_id"
     value        = %[3]s
+    apply_method = "immediate"
   }
 }
 
