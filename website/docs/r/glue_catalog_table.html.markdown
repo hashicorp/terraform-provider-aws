@@ -190,6 +190,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `catalog_id` - (Required) ID of the Data Catalog in which the table resides.
 * `database_name` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
+* `region` - (Optional) Region of the target table.
 
 ## Attribute Reference
 
