@@ -50,7 +50,7 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 func testAccCollectionConfig_basic(rCollectionId string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
-  collection_id             = %s
+  collection_id             = "%s"
 }
 `, rCollectionId)
 }
