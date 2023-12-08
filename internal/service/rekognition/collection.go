@@ -31,11 +31,11 @@ import (
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/rekognition/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
+	// types.<Type Name>. 
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log" 
 	"reflect"
 	"regexp"
 	"strings"
@@ -76,104 +76,25 @@ import (
 // @Tags(identifierAttribute="id")
 func ResourceCollection() *schema.Resource {
 	return &schema.Resource{
-		// TIP: ==== ASSIGN CRUD FUNCTIONS ====
-		// These 4 functions handle CRUD responsibilities below.
 		CreateWithoutTimeout: resourceCollectionCreate,
 		ReadWithoutTimeout:   resourceCollectionRead,
 		UpdateWithoutTimeout: resourceCollectionUpdate,
 		DeleteWithoutTimeout: resourceCollectionDelete,
-		
-		// TIP: ==== TERRAFORM IMPORTING ====
-		// If Read can get all the information it needs from the Identifier
-		// (i.e., d.Id()), you can use the Passthrough importer. Otherwise,
-		// you'll need a custom import function.
-		//
-		// See more:
-		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		
-		// TIP: ==== CONFIGURABLE TIMEOUTS ====
-		// Users can configure timeout lengths but you need to use the times they
-		// provide. Access the timeout they configure (or the defaults) using,
-		// e.g., d.Timeout(schema.TimeoutCreate) (see below). The times here are
-		// the defaults if they don't configure timeouts.
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		
-		// TIP: ==== SCHEMA ====
-		// In the schema, add each of the attributes in snake case (e.g.,
-		// delete_automated_backups).
-		//
-		// Formatting rules:
-		// * Alphabetize attributes to make them easier to find.
-		// * Do not add a blank line between attributes.
-		//
-		// Attribute basics:
-		// * If a user can provide a value ("configure a value") for an
-		//   attribute (e.g., instances = 5), we call the attribute an
-		//   "argument."
-		// * You change the way users interact with attributes using:
-		//     - Required
-		//     - Optional
-		//     - Computed
-		// * There are only four valid combinations:
-		//
-		// 1. Required only - the user must provide a value
-		// Required: true,
-		//
-		// 2. Optional only - the user can configure or omit a value; do not
-		//    use Default or DefaultFunc
-		// Optional: true,
-		//
-		// 3. Computed only - the provider can provide a value but the user
-		//    cannot, i.e., read-only
-		// Computed: true,
-		//
-		// 4. Optional AND Computed - the provider or user can provide a value;
-		//    use this combination if you are using Default or DefaultFunc
-		// Optional: true,
-		// Computed: true,
-		//
-		// You will typically find arguments in the input struct
-		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-		// the modify operation.
-		//
-		// For more about schema options, visit
-		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		Schema: map[string]*schema.Schema{
-			"arn": { // TIP: Many, but not all, resources have an `arn` attribute.
+			"name": { 
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replace_with_arguments": { // TIP: Add all your arguments and attributes.
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"complex_argument": { // TIP: See setting, getting, flattening, expanding examples below for this complex argument.
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sub_field_one": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"sub_field_two": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
+				Required: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -188,45 +109,12 @@ const (
 
 func resourceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a create input structure
-	// 3. Call the AWS create/put function
-	// 4. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work. At a minimum, set the
-	//    resource ID. E.g., d.SetId(<Identifier, such as AWS ID or ARN>)
-	// 5. Use a waiter to wait for create to complete
-	// 6. Call the Read function in the Create return
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
 	
-	// TIP: -- 2. Populate a create input structure
 	in := &rekognition.CreateCollectionInput{
-		// TIP: Mandatory or fields that will always be present can be set when
-		// you create the Input structure. (Replace these with real fields.)
-		CollectionName: aws.String(d.Get("name").(string)),
-		CollectionType: aws.String(d.Get("type").(string)),
-		
-		// TIP: Not all resources support tags and tags don't always make sense. If
-		// your resource doesn't need tags, you can remove the tags lines here and
-		// below. Many resources do include tags so this a reminder to include them
-		// where possible.
-		Tags: getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("max_size"); ok {
-		// TIP: Optional fields should be set based on whether or not they are
-		// used.
-		in.MaxSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
-		// TIP: Use an expander to assign a complex argument.
-		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
+		CollectionId: aws.String(d.Get("name").(string)),
+		Tags: getTagsIn(ctx), 
 	}
 
 	
@@ -353,7 +241,7 @@ func resourceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
-	
+
 	// TIP: -- 2. Populate a modify input structure and check for changes
 	//
 	// When creating the input structure, only include mandatory fields. Other
@@ -362,8 +250,8 @@ func resourceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	// whether to call the AWS update function.
 	update := false
 
-	in := &rekognition.UpdateCollectionInput{
-		Id: aws.String(d.Id()),
+	in := &rekognition.CreateCollectionInput{
+		CollectionId: aws.String(d.Id()),
 	}
 
 	if d.HasChanges("an_argument") {
