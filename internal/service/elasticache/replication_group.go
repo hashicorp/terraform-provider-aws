@@ -1107,8 +1107,8 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 
 var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
-	validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
-	validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with a letter"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )

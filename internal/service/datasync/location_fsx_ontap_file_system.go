@@ -244,6 +244,12 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 	d.Set("arn", output.LocationArn)
 	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
+	// SMB Password is not returned from the API.
+	if output.Protocol != nil && output.Protocol.SMB != nil && aws.StringValue(output.Protocol.SMB.Password) == "" {
+		if smbPassword := d.Get("protocol.0.smb.0.password").(string); smbPassword != "" {
+			output.Protocol.SMB.Password = aws.String(smbPassword)
+		}
+	}
 	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}

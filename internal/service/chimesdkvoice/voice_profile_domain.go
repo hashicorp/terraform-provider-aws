@@ -67,7 +67,7 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 200),
-					validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9 _.-]+`), "Name must match expression: ^[0-9a-zA-Z._-]+"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_ .-]+`), "Name must match expression: ^[0-9A-Za-z_ .-]+"),
 				),
 			},
 			"server_side_encryption_configuration": {

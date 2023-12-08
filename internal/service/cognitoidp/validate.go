@@ -76,7 +76,7 @@ func validUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string
 
 func validUserPoolID(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[\w-]+_[0-9a-zA-Z]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[\w-]+_[0-9A-Za-z]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be the region name followed by an underscore and then alphanumeric pattern", k))
 	}
 	return

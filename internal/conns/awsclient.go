@@ -10,12 +10,10 @@ import (
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,6 +42,14 @@ type AWSClient struct {
 	stsRegion                 string                                    // From provider configuration.
 }
 
+// CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
+func (client *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
+	if client.awsConfig == nil {
+		return nil
+	}
+	return client.awsConfig.Credentials
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
@@ -58,11 +64,9 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3_sdkv1.S3 {
-	config := client.S3Conn(ctx).Config
-	config.DisableRestProtocolURICleaning = aws_sdkv1.Bool(true)
-
-	return s3_sdkv1.New(client.Session.Copy(&config))
+// S3UsePathStyle returns the s3_force_path_style provider configuration value.
+func (client *AWSClient) S3UsePathStyle() bool {
+	return client.s3UsePathStyle
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.

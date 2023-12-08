@@ -108,6 +108,7 @@ The `publicAccessBlock` block supports the following:
 The `region` block supports the following:
 
 * `bucket` - (Required) The name of the associated bucket for the Region.
+* `bucketAccountId` - (Optional) The AWS account ID that owns the Amazon S3 bucket that's associated with this Multi-Region Access Point.
 
 ## Attribute Reference
 
@@ -141,4 +142,4 @@ Using `terraform import`, import Multi-Region Access Points using the `accountId
 % terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8ef4fe81b65a3b78826f15274241695dc169c65fe23d1b9abda92e343bb5d211 -->
+<!-- cache-key: cdktf-0.18.0 input-561f76eaf08b8898b3aa821b8c028e27dcb6512218497d376c771b48c1350f6b -->

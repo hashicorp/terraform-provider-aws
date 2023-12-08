@@ -366,9 +366,8 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds))
 	d.Set("vpc_id", filecache.VpcId)
 
-	if err := d.Set("data_repository_association_ids", filecache.DataRepositoryAssociationIds); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
-	}
+	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
+	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
 	if err := d.Set("lustre_configuration", flattenFileCacheLustreConfiguration(filecache.LustreConfiguration)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
@@ -381,7 +380,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Lookup and set Data Repository Associations
 
-	dataRepositoryAssociations, _ := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
+	dataRepositoryAssociations, _ := findDataRepositoryAssociationsByIDs(ctx, conn, dataRepositoryAssociationIDs)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -615,4 +614,12 @@ func expandFileCacheLustreMetadataConfiguration(l []interface{}) *fsx.FileCacheL
 		req.StorageCapacity = aws.Int64(int64(v))
 	}
 	return req
+}
+
+func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids []string) ([]*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: aws.StringSlice(ids),
+	}
+
+	return findDataRepositoryAssociations(ctx, conn, input)
 }

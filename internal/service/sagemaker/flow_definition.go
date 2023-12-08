@@ -49,7 +49,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
 				),
 			},
 			"human_loop_activation_config": {
@@ -165,7 +165,7 @@ func ResourceFlowDefinition() *schema.Resource {
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 30),
-									validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9]+( [A-Za-z0-9]+)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+( [0-9A-Za-z]+)*$`), ""),
 								),
 							},
 						},

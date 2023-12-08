@@ -30,7 +30,7 @@ func TestAccElasticBeanstalkEnvironment_basic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_environment.test"
 	beanstalkAsgNameRegexp := regexache.MustCompile("awseb.+?AutoScalingGroup[^,]+")
 	beanstalkElbNameRegexp := regexache.MustCompile("awseb.+?EBLoa[^,]+")
-	beanstalkInstancesNameRegexp := regexache.MustCompile("i-([0-9a-fA-F]{8}|[0-9a-fA-F]{17})")
+	beanstalkInstancesNameRegexp := regexache.MustCompile("i-([0-9A-Fa-f]{8}|[0-9A-Fa-f]{17})")
 	beanstalkLcNameRegexp := regexache.MustCompile("awseb.+?AutoScalingLaunch[^,]+")
 	beanstalkEndpointURL := regexache.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 

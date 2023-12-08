@@ -282,6 +282,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00Sun:09:
 * `snapshotWindow` - (Optional, Redis only) Daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
 * `subnetGroupName` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transitEncryptionEnabled` - (Optional) Enable encryption in-transit. Supported only with Memcached versions `1612` and later, running in a VPC. See the [ElastiCache in-transit encryption](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/in-transit-encryption-mc.html) documentation for more details.
 
 ### Log Delivery Configuration
 
@@ -333,4 +334,4 @@ Using `terraform import`, import ElastiCache Clusters using the `clusterId`. For
 % terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5591a8f1ffa197a34b24403858384b28ffb480640f444f76154737b771bdb4b1 -->
+<!-- cache-key: cdktf-0.18.0 input-e428d2872588cde7553e6c9d9a4922fa80f9f9c6c271f3cb7b9948c5c3f5d87d -->

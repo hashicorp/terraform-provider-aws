@@ -48,6 +48,7 @@ const (
 	engineNamePostgres                   = "postgres"
 	engineNameRedis                      = "redis"
 	engineNameRedshift                   = "redshift"
+	engineNameRedshiftServerless         = "redshift-serverless"
 	engineNameS3                         = "s3"
 	engineNameSQLServer                  = "sqlserver"
 	engineNameSybase                     = "sybase"
@@ -79,6 +80,7 @@ func engineName_Values() []string {
 		engineNamePostgres,
 		engineNameRedis,
 		engineNameRedshift,
+		engineNameRedshiftServerless,
 		engineNameS3,
 		engineNameSQLServer,
 		engineNameSybase,
@@ -131,6 +133,27 @@ func encryptionMode_Values() []string {
 		encryptionModeSseS3,
 	}
 }
+
+const (
+	replicationStatusCreated              = "created"
+	replicationStatusReady                = "ready"
+	replicationStatusRunning              = "running"
+	replicationStatusStopping             = "stopping"
+	replicationStatusStopped              = "stopped"
+	replicationStatusFailed               = "failed"
+	replicationStatusInitialising         = "initializing"
+	replicationStatusMetadataResources    = "preparing_metadata_resources"
+	replicationStatusTestingConnection    = "testing_connection"
+	replicationStatusFetchingMetadata     = "fetching_metadata"
+	replicationStatusCalculatingCapacity  = "calculating_capacity"
+	replicationStatusProvisioningCapacity = "provisioning_capacity"
+	replicationStatusReplicationStarting  = "replication_starting"
+)
+
+const (
+	replicationTypeValueStartReplication = "creating"
+	replicationTypeValueResumeProcessing = "resume-processing"
+)
 
 const (
 	networkTypeDual = "DUAL"

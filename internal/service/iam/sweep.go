@@ -53,6 +53,8 @@ func init() {
 			"aws_iam_group",
 			"aws_iam_role",
 			"aws_iam_user",
+			"aws_quicksight_group",
+			"aws_quicksight_user",
 		},
 	})
 
@@ -82,6 +84,7 @@ func init() {
 			"aws_redshift_cluster",
 			"aws_redshift_scheduled_action",
 			"aws_spot_fleet_request",
+			"aws_vpc",
 		},
 		F: sweepRoles,
 	})
@@ -430,6 +433,12 @@ func sweepPolicies(region string) error {
 
 		for _, v := range page.Policies {
 			arn := aws.StringValue(v.Arn)
+
+			if n := aws.Int64Value(v.AttachmentCount); n > 0 {
+				log.Printf("[INFO] Skipping IAM Policy %s: AttachmentCount=%d", arn, n)
+				continue
+			}
+
 			r := ResourcePolicy()
 			d := r.Data(nil)
 			d.SetId(arn)
@@ -851,7 +860,7 @@ func roleNameFilter(name string) bool {
 
 	// Some acceptance tests use sdkacctest.RandString(10) rather than sdkacctest.RandomWithPrefix()
 	// Others use other lengths, e.g. sdkacctest.RandString(8), but this one is risky enough, so leave it as-is
-	randString10 := regexache.MustCompile(`^[a-zA-Z0-9]{10}$`)
+	randString10 := regexache.MustCompile(`^[0-9A-Za-z]{10}$`)
 	if randString10.MatchString(name) {
 		return true
 	}

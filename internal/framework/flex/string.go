@@ -5,10 +5,8 @@ package flex
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -16,31 +14,36 @@ import (
 
 // StringFromFramework converts a Framework String value to a string pointer.
 // A null String is converted to a nil string pointer.
-func StringFromFramework(_ context.Context, v types.String) *string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
+func StringFromFramework(ctx context.Context, v types.String) *string {
+	var output *string
 
-	return aws.String(v.ValueString())
+	panicOnError(Expand(ctx, v, &output))
+
+	return output
 }
 
 // StringFromFramework converts a single Framework String value to a string pointer slice.
 // A null String is converted to a nil slice.
-func StringSliceFromFramework(_ context.Context, v types.String) []*string {
+func StringSliceFromFramework(ctx context.Context, v types.String) []*string {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
 	}
 
-	return aws.StringSlice([]string{v.ValueString()})
+	return []*string{StringFromFramework(ctx, v)}
 }
 
 // StringValueToFramework converts a string value to a Framework String value.
 // An empty string is converted to a null String.
-func StringValueToFramework[T ~string](_ context.Context, v T) types.String {
+func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 	if v == "" {
 		return types.StringNull()
 	}
-	return types.StringValue(string(v))
+
+	var output types.String
+
+	panicOnError(Flatten(ctx, v, &output))
+
+	return output
 }
 
 // StringValueToFrameworkLegacy converts a string value to a Framework String value.
@@ -51,12 +54,12 @@ func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.Strin
 
 // StringToFramework converts a string pointer to a Framework String value.
 // A nil string pointer is converted to a null String.
-func StringToFramework(_ context.Context, v *string) types.String {
-	if v == nil {
-		return types.StringNull()
-	}
+func StringToFramework(ctx context.Context, v *string) types.String {
+	var output types.String
 
-	return types.StringValue(aws.ToString(v))
+	panicOnError(Flatten(ctx, v, &output))
+
+	return output
 }
 
 // StringToFrameworkLegacy converts a string pointer to a Framework String value.
@@ -65,39 +68,20 @@ func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 	return types.StringValue(aws.ToString(v))
 }
 
-// StringToFrameworkWithTransform converts a string pointer to a Framework String value.
-// A nil string pointer is converted to a null String.
-// A non-nil string pointer has its value transformed by `f`.
-func StringToFrameworkWithTransform(_ context.Context, v *string, f func(string) string) types.String {
-	if v == nil {
-		return types.StringNull()
-	}
+func ARNStringFromFramework(ctx context.Context, v fwtypes.ARN) *string {
+	var output *string
 
-	return types.StringValue(f(aws.ToString(v)))
-}
+	panicOnError(Expand(ctx, v, &output))
 
-func ARNStringFromFramework(_ context.Context, v fwtypes.ARN) *string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	return aws.String(v.ValueARN().String())
+	return output
 }
 
 func StringToFrameworkARN(ctx context.Context, v *string, diags *diag.Diagnostics) fwtypes.ARN {
-	if v == nil {
-		return fwtypes.ARNNull()
-	}
+	var output fwtypes.ARN
 
-	a, err := arn.Parse(aws.ToString(v))
-	if err != nil {
-		diags.AddError(
-			"Parsing Error",
-			fmt.Sprintf("String %s cannot be parsed as an ARN.", aws.ToString(v)),
-		)
-	}
+	diags.Append(Flatten(ctx, v, &output)...)
 
-	return fwtypes.ARNValue(a)
+	return output
 }
 
 func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {

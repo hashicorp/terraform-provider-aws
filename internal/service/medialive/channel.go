@@ -695,7 +695,12 @@ func ResourceChannel() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_zones": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"network_interface_ids": {
+								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
@@ -705,14 +710,14 @@ func ResourceChannel() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"security_group_ids": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
 								Optional: true,
 								Computed: true,
 								MaxItems: 5,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"subnet_ids": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
@@ -1161,6 +1166,9 @@ func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment
 		if v, ok := m["input_settings"].([]interface{}); ok && len(v) > 0 {
 			a.InputSettings = expandInputAttachmentInputSettings(v)
 		}
+		if v, ok := m["automatic_input_failover_settings"].([]interface{}); ok && len(v) > 0 {
+			a.AutomaticInputFailoverSettings = expandInputAttachmentAutomaticInputFailoverSettings(v)
+		}
 
 		attachments = append(attachments, a)
 	}
@@ -1602,6 +1610,125 @@ func expandNetworkInputSettingsHLSInputSettings(tfList []interface{}) *types.Hls
 	return &out
 }
 
+func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *types.AutomaticInputFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AutomaticInputFailoverSettings
+	if v, ok := m["secondary_input_id"].(string); ok && v != "" {
+		out.SecondaryInputId = aws.String(v)
+	}
+	if v, ok := m["error_clear_time_msec"].(int); ok {
+		out.ErrorClearTimeMsec = int32(v)
+	}
+	if v, ok := m["failover_conditions"].(*schema.Set); ok && v.Len() > 0 {
+		out.FailoverConditions = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(v.List())
+	}
+	if v, ok := m["input_preference"].(string); ok && v != "" {
+		out.InputPreference = types.InputPreference(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []interface{}) []types.FailoverCondition {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.FailoverCondition
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.FailoverCondition
+		if v, ok := m["failover_condition_settings"].([]interface{}); ok && len(v) > 0 {
+			o.FailoverConditionSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(v)
+		}
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(tfList []interface{}) *types.FailoverConditionSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FailoverConditionSettings
+	if v, ok := m["audio_silence_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AudioSilenceSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(v)
+	}
+	if v, ok := m["input_loss_settings"].([]interface{}); ok && len(v) > 0 {
+		out.InputLossSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(v)
+	}
+	if v, ok := m["video_black_settings"].([]interface{}); ok && len(v) > 0 {
+		out.VideoBlackSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(tfList []interface{}) *types.AudioSilenceFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioSilenceFailoverSettings
+	if v, ok := m["audio_selector_name"].(string); ok && v != "" {
+		out.AudioSelectorName = aws.String(v)
+	}
+	if v, ok := m["audio_silence_threshold_msec"].(int); ok {
+		out.AudioSilenceThresholdMsec = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(tfList []interface{}) *types.InputLossFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.InputLossFailoverSettings
+	if v, ok := m["input_loss_threshold_msec"].(int); ok {
+		out.InputLossThresholdMsec = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(tfList []interface{}) *types.VideoBlackFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.VideoBlackFailoverSettings
+	if v, ok := m["black_detect_threshold"].(float32); ok {
+		out.BlackDetectThreshold = float64(v)
+	}
+	if v, ok := m["video_black_threshold_msec"].(int); ok {
+		out.VideoBlackThresholdMsec = int32(v)
+	}
+
+	return &out
+}
+
 func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{} {
 	if len(tfList) == 0 {
 		return nil
@@ -1611,13 +1738,15 @@ func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{
 
 	for _, item := range tfList {
 		m := map[string]interface{}{
-			"input_id":              aws.ToString(item.InputId),
-			"input_attachment_name": aws.ToString(item.InputAttachmentName),
-			"input_settings":        flattenInputAttachmentsInputSettings(item.InputSettings),
+			"input_id":                          aws.ToString(item.InputId),
+			"input_attachment_name":             aws.ToString(item.InputAttachmentName),
+			"input_settings":                    flattenInputAttachmentsInputSettings(item.InputSettings),
+			"automatic_input_failover_settings": flattenInputAttachmentAutomaticInputFailoverSettings(item.AutomaticInputFailoverSettings),
 		}
 
 		out = append(out, m)
 	}
+
 	return out
 }
 
@@ -1917,6 +2046,90 @@ func flattenNetworkInputSettingsHLSInputSettings(in *types.HlsInputSettings) []i
 	return []interface{}{m}
 }
 
+func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInputFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"secondary_input_id":    aws.ToString(in.SecondaryInputId),
+		"error_clear_time_msec": int(in.ErrorClearTimeMsec),
+		"failover_conditions":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
+		"input_preference":      string(in.InputPreference),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []types.FailoverCondition) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, item := range tfList {
+		m := map[string]interface{}{
+			"failover_condition_settings": flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(item.FailoverConditionSettings),
+		}
+
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(in *types.FailoverConditionSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_silence_settings": flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in.AudioSilenceSettings),
+		"input_loss_settings":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in.InputLossSettings),
+		"video_black_settings":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in.VideoBlackSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in *types.AudioSilenceFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_selector_name":          aws.ToString(in.AudioSelectorName),
+		"audio_silence_threshold_msec": int(in.AudioSilenceThresholdMsec),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in *types.InputLossFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"input_loss_threshold_msec": int(in.InputLossThresholdMsec),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in *types.VideoBlackFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"black_detect_threshold":     float32(in.BlackDetectThreshold),
+		"video_black_threshold_msec": int(in.VideoBlackThresholdMsec),
+	}
+
+	return []interface{}{m}
+}
+
 func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpecification {
 	if tfList == nil {
 		return nil
@@ -2210,14 +2423,14 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	m := tfList[0].(map[string]interface{})
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := m["security_group_ids"].([]string); ok && len(v) > 0 {
-		settings.SecurityGroupIds = v
+	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["subnet_ids"].([]string); ok && len(v) > 0 {
-		settings.SubnetIds = v
+	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.SubnetIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["public_address_allocation_ids"].([]string); ok && len(v) > 0 {
-		settings.PublicAddressAllocationIds = v
+	if v, ok := m["public_address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.PublicAddressAllocationIds = flex.ExpandStringValueSet(v)
 	}
 
 	return settings
@@ -2229,8 +2442,10 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueList(apiObject.SecurityGroupIds),
-		"subnet_ids":         flex.FlattenStringValueList(apiObject.SubnetIds),
+		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		"subnet_ids":            flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 

@@ -3448,3 +3448,18 @@ rules:
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
     severity: WARNING
+  - id: configservice-in-func-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in func name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING

@@ -147,7 +147,8 @@ The following arguments are optional:
 
 * `input_attachment_name` - (Optional) User-specified name for the attachment.
 * `input_id` - (Required) The ID of the input.
-* `input_settings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details
+* `input_settings` - (Optional) Settings of an input. See [Input Settings](#input-settings) for more details.
+* `automatic_input_failover_settings` - (Optional) User-specified settings for defining what the conditions are for declaring the input unhealthy and failing over to a different input. See [Automatic Input Failover Settings](#automatic-input-failover-settings) for more details.
 
 ### Input Settings
 
@@ -165,11 +166,99 @@ The following arguments are optional:
 ### Audio Selectors
 
 * `name` - (Required) The name of the audio selector.
+* `selector_settings` - (Optional) The audio selector settings. See [Audio Selector Settings](#audio-selector-settings) for more details.
+
+### Audio Selector Settings
+
+* `audio_hls_rendition_selection` - (Optional) Audio HLS Rendition Selection. See [Audio HLS Rendition Selection](#audio-hls-rendition-selection) for more details.
+* `audio_language_selection` - (Optional) Audio Language Selection. See [Audio Language Selection](#audio-language-selection) for more details.
+* `audio_pid_selection` - (Optional) Audio Pid Selection. See [Audio PID Selection](#audio-pid-selection) for more details.
+* `audio_track_selection` - (Optional) Audio Track Selection. See [Audio Track Selection](#audio-track-selection) for more details.
+
+### Audio HLS Rendition Selection
+
+* `group_id` - (Required) Specifies the GROUP-ID in the #EXT-X-MEDIA tag of the target HLS audio rendition.
+* `name` - (Required) Specifies the NAME in the #EXT-X-MEDIA tag of the target HLS audio rendition.
+
+### Audio Language Selection
+
+* `language_code` - (Required) Selects a specific three-letter language code from within an audio source.
+* `language_selection_policy` - (Optional) When set to “strict”, the transport stream demux strictly identifies audio streams by their language descriptor. If a PMT update occurs such that an audio stream matching the initially selected language is no longer present then mute will be encoded until the language returns. If “loose”, then on a PMT update the demux will choose another audio stream in the program with the same stream type if it can’t find one with the same language.
+
+### Audio PID Selection
+
+* `pid` - (Required) Selects a specific PID from within a source.
+
+### Audio Track Selection
+
+* `tracks` - (Required) Selects one or more unique audio tracks from within a source. See [Audio Tracks](#audio-tracks) for more details.
+* `dolby_e_decode` - (Optional) Configure decoding options for Dolby E streams - these should be Dolby E frames carried in PCM streams tagged with SMPTE-337. See [Dolby E Decode](#dolby-e-decode) for more details.
+
+### Audio Tracks
+
+* `track` - (Required) 1-based integer value that maps to a specific audio track.
+
+### Dolby E Decode
+
+* `program_selection` - (Required) Applies only to Dolby E. Enter the program ID (according to the metadata in the audio) of the Dolby E program to extract from the specified track. One program extracted per audio selector. To select multiple programs, create multiple selectors with the same Track and different Program numbers. “All channels” means to ignore the program IDs and include all the channels in this selector; useful if metadata is known to be incorrect.
 
 ### Caption Selectors
 
 * `name` - (Optional) The name of the caption selector.
 * `language_code` - (Optional) When specified this field indicates the three letter language code of the caption track to extract from the source.
+* `selector_settings` - (Optional) Caption selector settings. See [Caption Selector Settings](#caption-selector-settings) for more details.
+
+### Caption Selector Settings
+
+* `ancillary_source_settings` - (Optional) Ancillary Source Settings. See [Ancillary Source Settings](#ancillary-source-settings) for more details.
+* `arib_source_settings` - (Optional) Arib Source Settings.
+* `dvb_sub_source_settings` - (Optional) DVB Sub Source Settings. See [DVB Sub Source Settings](#dvb-sub-source-settings) for more details.
+* `embedded_source_settings` - (Optional) Embedded Source Settings. See [Embedded Source Settings](#embedded-source-settings) for more details.
+* `scte20_source_settings` - (Optional) SCTE20 Source Settings. See [SCTE 20 Source Settings](#scte-20-source-settings) for more details.
+* `scte27_source_settings` - (Optional) SCTE27 Source Settings. See [SCTE 27 Source Settings](#scte-27-source-settings) for more details.
+* `teletext_source_settings` - (Optional) Teletext Source Settings. See [Teletext Source Settings](#teletext-source-settings) for more details.
+
+### Ancillary Source Settings
+
+* `source_ancillary_channel_number` - (Optional) Specifies the number (1 to 4) of the captions channel you want to extract from the ancillary captions. If you plan to convert the ancillary captions to another format, complete this field. If you plan to choose Embedded as the captions destination in the output (to pass through all the channels in the ancillary captions), leave this field blank because MediaLive ignores the field.
+
+### DVB Sub Source Settings
+
+* `ocr_language` - (Optional) If you will configure a WebVTT caption description that references this caption selector, use this field to provide the language to consider when translating the image-based source to text.
+* `pid` - (Optional) When using DVB-Sub with Burn-In or SMPTE-TT, use this PID for the source content. Unused for DVB-Sub passthrough. All DVB-Sub content is passed through, regardless of selectors.
+
+### Embedded Source Settings
+
+* `convert_608_to_708` - (Optional) If upconvert, 608 data is both passed through via the “608 compatibility bytes” fields of the 708 wrapper as well as translated into 708. 708 data present in the source content will be discarded.
+* `scte20_detection` - (Optional) Set to “auto” to handle streams with intermittent and/or non-aligned SCTE-20 and Embedded captions.
+* `source_608_channel_number` - (Optional) Specifies the 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
+
+### SCTE 20 Source Settings
+
+* `convert_608_to_708` – (Optional) If upconvert, 608 data is both passed through via the “608 compatibility bytes” fields of the 708 wrapper as well as translated into 708. 708 data present in the source content will be discarded.
+* `source_608_channel_number` - (Optional) Specifies the 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
+
+### SCTE 20 Source Settings
+
+* `ocr_language` - (Optional) If you will configure a WebVTT caption description that references this caption selector, use this field to provide the language to consider when translating the image-based source to text.
+* `pid` - (Optional) The pid field is used in conjunction with the caption selector languageCode field as follows: - Specify PID and Language: Extracts captions from that PID; the language is “informational”. - Specify PID and omit Language: Extracts the specified PID. - Omit PID and specify Language: Extracts the specified language, whichever PID that happens to be. - Omit PID and omit Language: Valid only if source is DVB-Sub that is being passed through; all languages will be passed through.
+
+### SCTE 27 Source Settings
+
+* `ocr_language` - (Optional) If you will configure a WebVTT caption description that references this caption selector, use this field to provide the language to consider when translating the image-based source to text.
+* `pid` - (Optional) The pid field is used in conjunction with the caption selector languageCode field as follows: - Specify PID and Language: Extracts captions from that PID; the language is "informational". - Specify PID and omit Language: Extracts the specified PID. - Omit PID and specify Language: Extracts the specified language, whichever PID that happens to be. - Omit PID and omit Language: Valid only if source is DVB-Sub that is being passed through; all languages will be passed through.
+
+### Teletext Source Settings
+
+* `output_rectangle` - (Optional) Optionally defines a region where TTML style captions will be displayed. See [Caption Rectangle](#caption-rectangle) for more details.
+* `page_number` - (Optional) Specifies the teletext page number within the data stream from which to extract captions. Range of 0x100 (256) to 0x8FF (2303). Unused for passthrough. Should be specified as a hexadecimal string with no “0x” prefix.
+
+### Caption Rectangle
+
+* `height` - (Required) See the description in left\_offset. For height, specify the entire height of the rectangle as a percentage of the underlying frame height. For example, "80" means the rectangle height is 80% of the underlying frame height. The top\_offset and rectangle\_height must add up to 100% or less. This field corresponds to tts:extent - Y in the TTML standard.
+* `left_offset` - (Required) Applies only if you plan to convert these source captions to EBU-TT-D or TTML in an output. (Make sure to leave the default if you don’t have either of these formats in the output.) You can define a display rectangle for the captions that is smaller than the underlying video frame. You define the rectangle by specifying the position of the left edge, top edge, bottom edge, and right edge of the rectangle, all within the underlying video frame. The units for the measurements are percentages. If you specify a value for one of these fields, you must specify a value for all of them. For leftOffset, specify the position of the left edge of the rectangle, as a percentage of the underlying frame width, and relative to the left edge of the frame. For example, "10" means the measurement is 10% of the underlying frame width. The rectangle left edge starts at that position from the left edge of the frame. This field corresponds to tts:origin - X in the TTML standard.
+* `top_offset` - (Required) See the description in left\_offset. For top\_offset, specify the position of the top edge of the rectangle, as a percentage of the underlying frame height, and relative to the top edge of the frame. For example, "10" means the measurement is 10% of the underlying frame height. The rectangle top edge starts at that position from the top edge of the frame. This field corresponds to tts:origin - Y in the TTML standard.
+* `width` - (Required) See the description in left\_offset. For width, specify the entire width of the rectangle as a percentage of the underlying frame width. For example, "80" means the rectangle width is 80% of the underlying frame width. The left\_offset and rectangle\_width must add up to 100% or less. This field corresponds to tts:extent - X in the TTML standard.
 
 ### Network Input Settings
 
@@ -183,6 +272,37 @@ The following arguments are optional:
 * `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
 * `retry_interval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
 * `scte35_source_type` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
+
+### Automatic Input Failover Settings
+
+* `secondary_input_id` - (Required) The input ID of the secondary input in the automatic input failover pair.
+* `error_clear_time_msec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
+* `failover_conditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `input_preference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
+
+### Failover Conditions
+
+* `failover_condition_settings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
+
+### Failover Condition Settings
+
+* `audio_silence_settings` - (Optional) MediaLive will perform a failover if the specified audio selector is silent for the specified period. See [Audio Silence Failover Settings](#audio-silence-failover-settings) for more details.
+* `input_loss_settings` - (Optional) MediaLive will perform a failover if content is not detected in this input for the specified period. See [Input Loss Failover Settings](#input-loss-failover-settings) for more details.
+* `video_black_settings` - (Optional) MediaLive will perform a failover if content is considered black for the specified period. See [Video Black Failover Settings](#video-black-failover-settings) for more details.
+
+### Audio Silence Failover Settings
+
+* `audio_selector_name` - (Required) The name of the audio selector in the input that MediaLive should monitor to detect silence. Select your most important rendition. If you didn't create an audio selector in this input, leave blank.
+* `audio_silence_threshold_msec` - (Optional) The amount of time (in milliseconds) that the active input must be silent before automatic input failover occurs. Silence is defined as audio loss or audio quieter than -50 dBFS.
+
+### Input Loss Failover Settings
+
+* `input_loss_threshold_msec` - (Optional) The amount of time (in milliseconds) that no input is detected. After that time, an input failover will occur.
+
+### Video Black Failover Settings
+
+* `black_detect_threshold` - (Optional) A value used in calculating the threshold below which MediaLive considers a pixel to be 'black'. For the input to be considered black, every pixel in a frame must be below this threshold. The threshold is calculated as a percentage (expressed as a decimal) of white. Therefore .1 means 10% white (or 90% black). Note how the formula works for any color depth. For example, if you set this field to 0.1 in 10-bit color depth: (10230.1=102.3), which means a pixel value of 102 or less is 'black'. If you set this field to .1 in an 8-bit color depth: (2550.1=25.5), which means a pixel value of 25 or less is 'black'. The range is 0.0 to 1.0, with any number of decimal places.
+* `video_black_threshold_msec` - (Optional) The amount of time (in milliseconds) that the active input must be black before automatic input failover occurs.
 
 ### Maintenance
 
@@ -456,17 +576,17 @@ The following arguments are optional:
 
 * `arib_destination_settings` - (Optional) Arib Destination Settings.
 * `burn_in_destination_settings` - (Optional) Burn In Destination Settings. See [Burn In Destination Settings](#burn-in-destination-settings) for more details.
-* `dvb_sub_destination_settings` - (Optional) Dvb Sub Destination Settings. See [Dvb Sub Destination Settings](#dvb-sub-destination-settings) for more details.
-* `ebu_tt_d_destination_settings` - (Optional) Ebu Tt D Destination Settings. See [Ebu Tt D Destination Settings](#ebu-tt-d-destination-settings) for more details.
+* `dvb_sub_destination_settings` - (Optional) DVB Sub Destination Settings. See [DVB Sub Destination Settings](#dvb-sub-destination-settings) for more details.
+* `ebu_tt_d_destination_settings` - (Optional) EBU TT D Destination Settings. See [EBU TT D Destination Settings](#ebu-tt-d-destination-settings) for more details.
 * `embedded_destination_settings` - (Optional) Embedded Destination Settings.
-* `embedded_plus_scte20_destination_settings` - (Optional) Embedded Plus Scte20 Destination Settings.
-* `rtmp_caption_info_destination_settings` - (Optional) Rtmp Caption Info Destination Settings.
-* `scte20_plus_embedded_destination_settings` - (Optional) Scte20 Plus Embedded Destination Settings.
-* `scte27_destination_settings` – (Optional) Scte27 Destination Settings.
-* `smpteTt_destination_settings` – (Optional) Smpte Tt Destination Settings.
+* `embedded_plus_scte20_destination_settings` - (Optional) Embedded Plus SCTE20 Destination Settings.
+* `rtmp_caption_info_destination_settings` - (Optional) RTMP Caption Info Destination Settings.
+* `scte20_plus_embedded_destination_settings` - (Optional) SCTE20 Plus Embedded Destination Settings.
+* `scte27_destination_settings` – (Optional) SCTE27 Destination Settings.
+* `smpte_tt_destination_settings` – (Optional) SMPTE TT Destination Settings.
 * `teletext_destination_settings` – (Optional) Teletext Destination Settings.
-* `ttml_destination_settings` – (Optional) Ttml Destination Settings. See [Ttml Destination Settings](#ttml-destination-settings) for more details.
-* `webvtt_destination_settings` - (Optional) Webvtt Destination Settings. See [Webvtt Destination Settings](#webvtt-destination-settings) for more details.
+* `ttml_destination_settings` – (Optional) TTML Destination Settings. See [TTML Destination Settings](#ttml-destination-settings) for more details.
+* `webvtt_destination_settings` - (Optional) WebVTT Destination Settings. See [WebVTT Destination Settings](#webvtt-destination-settings) for more details.
 
 ### Burn In Destination Settings
 
@@ -488,7 +608,7 @@ The following arguments are optional:
 * `x_position` – (Optional) Specifies the horizontal position of the caption relative to the left side of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the left of the output. If no explicit xPosition is provided, the horizontal caption position will be determined by the alignment parameter. All burn-in and DVB-Sub font settings must match.
 * `y_position` – (Optional) Specifies the vertical position of the caption relative to the top of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the top of the output. If no explicit yPosition is provided, the caption will be positioned towards the bottom of the output. All burn-in and DVB-Sub font settings must match.
 
-### Dvb Sub Destination Settings
+### DVB Sub Destination Settings
 
 * `alignment` – (Optional) If no explicit xPosition or yPosition is provided, setting alignment to centered will place the captions at the bottom center of the output. Similarly, setting a left alignment will align captions to the bottom left of the output. If x and y positions are given in conjunction with the alignment parameter, the font will be justified (either left or centered) relative to those coordinates. Selecting “smart” justification will left-justify live subtitles and center-justify pre-recorded subtitles. This option is not valid for source captions that are STL or 608/embedded. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
 * `background_color` – (Optional) Specifies the color of the rectangle behind the captions. All burn-in and DVB-Sub font settings must match.
@@ -508,18 +628,18 @@ The following arguments are optional:
 * `x_position` – (Optional) Specifies the horizontal position of the caption relative to the left side of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the left of the output. If no explicit xPosition is provided, the horizontal caption position will be determined by the alignment parameter. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
 * `y_position` – (Optional) Specifies the vertical position of the caption relative to the top of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the top of the output. If no explicit yPosition is provided, the caption will be positioned towards the bottom of the output. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
 
-### Ebu Tt D Destination Settings
+### EBU TT D Destination Settings
 
 * `copyright_holder` – (Optional) Complete this field if you want to include the name of the copyright holder in the copyright tag in the captions metadata.
 * `fill_line_gap` – (Optional) Specifies how to handle the gap between the lines (in multi-line captions). - enabled: Fill with the captions background color (as specified in the input captions). - disabled: Leave the gap unfilled.
 * `font_family` – (Optional) Specifies the font family to include in the font data attached to the EBU-TT captions. Valid only if styleControl is set to include. If you leave this field empty, the font family is set to “monospaced”. (If styleControl is set to exclude, the font family is always set to “monospaced”.) You specify only the font family. All other style information (color, bold, position and so on) is copied from the input captions. The size is always set to 100% to allow the downstream player to choose the size. - Enter a list of font families, as a comma-separated list of font names, in order of preference. The name can be a font family (such as “Arial”), or a generic font family (such as “serif”), or “default” (to let the downstream player choose the font). - Leave blank to set the family to “monospace”.
 * `style_control` – (Optional) Specifies the style information (font color, font position, and so on) to include in the font data that is attached to the EBU-TT captions. - include: Take the style information (font color, font position, and so on) from the source captions and include that information in the font data attached to the EBU-TT captions. This option is valid only if the source captions are Embedded or Teletext. - exclude: In the font data attached to the EBU-TT captions, set the font family to “monospaced”. Do not include any other style information.
 
-### Ttml Destination Settings
+### TTML Destination Settings
 
 * `style_control` – (Optional) This field is not currently supported and will not affect the output styling. Leave the default value.
 
-### Webvtt Destination Settings
+### WebVTT Destination Settings
 
 * `style_control` - (Optional) Controls whether the color and position of the source captions is passed through to the WebVTT output captions. PASSTHROUGH - Valid only if the source captions are EMBEDDED or TELETEXT. NO\_STYLE\_DATA - Don’t pass through the style. The output captions will not contain any font styling information.
 
@@ -613,7 +733,7 @@ The following arguments are optional:
 * `media_package_output_settings` - (Optional) Media package output settings. This can be set as an empty block.
 * `multiplex_output_settings` - (Optional) Multiplex output settings. See [Multiplex Output Settings](#multiplex-output-settings) for more details.
 * `rtmp_output_settings` - (Optional) RTMP output settings. See [RTMP Output Settings](#rtmp-output-settings) for more details.
-* `udp_output_settings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details
+* `udp_output_settings` - (Optional) UDP output settings. See [UDP Output Settings](#udp-output-settings) for more details.
 
 ### Archive Output Settings
 
@@ -684,4 +804,4 @@ Using `terraform import`, import MediaLive Channel using the `channel_id`. For e
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b2632228d70a56c38e79cb5880595a3febc859ce8953ea3693cd017c49640cbc -->
+<!-- cache-key: cdktf-0.18.0 input-571a359c838df10c2be2ed2e92dddd2426f2b9fcd68054cf3c5dbeb6ceb93a31 -->

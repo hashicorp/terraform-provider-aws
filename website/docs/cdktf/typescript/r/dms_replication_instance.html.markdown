@@ -134,6 +134,7 @@ This resource supports the following arguments:
 * `engineVersion` - (Optional) The engine version number of the replication instance.
 * `kmsKeyArn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kmsKeyArn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `multiAz` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availabilityZone` parameter if the `multiAz` parameter is set to `true`.
+* `networkType` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `ipv4`, `dual`.
 * `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
     - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
@@ -193,4 +194,4 @@ Using `terraform import`, import replication instances using the `replicationIns
 % terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1936c3edf1b520f3f467f7bcf99799f223777022e6c52634bdc02c72a3c70ee0 -->
+<!-- cache-key: cdktf-0.18.0 input-2a8ab503ceaef9d74fa0c9b95408ac59f3a841f451a3553fdde42db11c32ef45 -->

@@ -502,6 +502,42 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 		}})
 }
 
+func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1781,6 +1817,39 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 		}})
 }
 
+func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_softwareUpdateOptions(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_softwareUpdateOptions(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", "true"),
+				),
+			},
+		},
+	})
+}
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2356,6 +2425,45 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccDomainConfig_multiAzWithStandbyEnabled(rName string, enableStandby bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_2.7"
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-0-2019-07"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 20
+  }
+
+  auto_tune_options {
+    desired_state       = "ENABLED"
+    rollback_on_disable = "NO_ROLLBACK"
+  }
+
+  cluster_config {
+    zone_awareness_enabled   = true
+    instance_count           = 3
+    instance_type            = "m6g.large.search"
+    dedicated_master_enabled = true
+    dedicated_master_count   = 3
+    dedicated_master_type    = "m6g.large.search"
+
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+
+    multi_az_with_standby_enabled = %[2]t
+  }
+}
+`, rName, enableStandby)
 }
 
 func testAccDomainConfig_clusterUpdate(rName string, instanceInt, snapshotInt int) string {
@@ -3427,4 +3535,21 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, h, m)
+}
+
+func testAccDomainConfig_softwareUpdateOptions(rName string, option bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  software_update_options {
+    auto_software_update_enabled = %[2]t
+  }
+}
+`, rName, option)
 }

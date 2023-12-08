@@ -86,7 +86,8 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         example = S3Bucket(self, "example",
-            bucket="example"
+            bucket="example",
+            force_destroy=True
         )
         acmpca_bucket_access = DataAwsIamPolicyDocument(self, "acmpca_bucket_access",
             statement=[DataAwsIamPolicyDocumentStatement(
@@ -121,7 +122,8 @@ class MyConvertedCode(TerraformStack):
                     custom_cname="crl.example.com",
                     enabled=True,
                     expiration_in_days=7,
-                    s3_bucket_name=example.id
+                    s3_bucket_name=example.id,
+                    s3_object_acl="BUCKET_OWNER_FULL_CONTROL"
                 )
             )
         )
@@ -224,4 +226,4 @@ Using `terraform import`, import `aws_acmpca_certificate_authority` using the ce
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e6e34f8e8d6b5f35f42228dc6dd5821798129f8f7ca85131b3ed051e6ea6e8db -->
+<!-- cache-key: cdktf-0.18.0 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->

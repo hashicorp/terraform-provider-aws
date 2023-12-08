@@ -396,6 +396,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		v := v.(string)
 
 		inputC.KmsKeyId = aws.String(v)
+		inputR.KmsKeyId = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {

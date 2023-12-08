@@ -218,6 +218,7 @@ The following arguments are optional:
 * `acl` - (Optional) [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Valid values are `private`, `publicRead`, `publicReadWrite`, `awsExecRead`, `authenticatedRead`, `bucketOwnerRead`, and `bucketOwnerFullControl`.
 * `bucketKeyEnabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cacheControl` - (Optional) Caching behavior along the request/reply chain Read [w3c cache_control](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9) for further details.
+* `checksumAlgorithm` - (Optional) Indicates the algorithm used to create the checksum for the object. If a value is specified and the object is encrypted with KMS, you must have permission to use the `kms:decrypt` action. Valid values: `crc32`, `crc32C`, `sha1`, `sha256`.
 * `contentBase64` - (Optional, conflicts with `source` and `content`) Base64-encoded data that will be decoded and uploaded as raw bytes for the object content. This allows safely uploading non-UTF8 binary data, but is recommended only for small content such as the result of the `gzipbase64` function with small text strings. For larger objects, use `source` to stream the content from a disk file.
 * `contentDisposition` - (Optional) Presentational information for the object. Read [w3c content_disposition](http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1) for further information.
 * `contentEncoding` - (Optional) Content encodings that have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field. Read [w3c content encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11) for further information.
@@ -246,6 +247,10 @@ If no content is provided through `source`, `content` or `contentBase64`, then t
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `checksumCrc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
+* `checksumCrc32C` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksumSha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
+* `checksumSha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `id` - `key` of the resource supplied above
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -297,4 +302,4 @@ Import using S3 URL syntax:
 % terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3bebaa4492fa4515a6ce11f945788ec4bb500fc1bbd4491fe691fd0496c8802 -->
+<!-- cache-key: cdktf-0.18.0 input-313d011adadfcc4b1dac5806690d7004dca8bb94690486322b189890ab15b7de -->
