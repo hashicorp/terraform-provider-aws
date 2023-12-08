@@ -53,9 +53,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceKxScalingGroup,
+			TypeName: "aws_finspace_kx_scaling_group",
+			Name:     "Kx Scaling Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceKxUser,
 			TypeName: "aws_finspace_kx_user",
 			Name:     "Kx User",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceKxVolume,
+			TypeName: "aws_finspace_kx_volume",
+			Name:     "Kx Volume",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
