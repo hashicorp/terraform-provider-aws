@@ -1621,6 +1621,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Logs"
     severity: WARNING
+  - id: lookoutmetrics-in-func-name
+    languages:
+      - go
+    message: Do not use "LookoutMetrics" in func name inside lookoutmetrics package
+    paths:
+      include:
+        - internal/service/lookoutmetrics
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LookoutMetrics"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: lookoutmetrics-in-test-name
+    languages:
+      - go
+    message: Include "LookoutMetrics" in test name
+    paths:
+      include:
+        - internal/service/lookoutmetrics/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccLookoutMetrics"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: lookoutmetrics-in-const-name
+    languages:
+      - go
+    message: Do not use "LookoutMetrics" in const name inside lookoutmetrics package
+    paths:
+      include:
+        - internal/service/lookoutmetrics
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LookoutMetrics"
+    severity: WARNING
+  - id: lookoutmetrics-in-var-name
+    languages:
+      - go
+    message: Do not use "LookoutMetrics" in var name inside lookoutmetrics package
+    paths:
+      include:
+        - internal/service/lookoutmetrics
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LookoutMetrics"
+    severity: WARNING
   - id: macie2-in-func-name
     languages:
       - go
@@ -1953,6 +2011,64 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaPackage"
+    severity: WARNING
+  - id: mediapackagev2-in-func-name
+    languages:
+      - go
+    message: Do not use "MediaPackageV2" in func name inside mediapackagev2 package
+    paths:
+      include:
+        - internal/service/mediapackagev2
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MediaPackageV2"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mediapackagev2-in-test-name
+    languages:
+      - go
+    message: Include "MediaPackageV2" in test name
+    paths:
+      include:
+        - internal/service/mediapackagev2/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccMediaPackageV2"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mediapackagev2-in-const-name
+    languages:
+      - go
+    message: Do not use "MediaPackageV2" in const name inside mediapackagev2 package
+    paths:
+      include:
+        - internal/service/mediapackagev2
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MediaPackageV2"
+    severity: WARNING
+  - id: mediapackagev2-in-var-name
+    languages:
+      - go
+    message: Do not use "MediaPackageV2" in var name inside mediapackagev2 package
+    paths:
+      include:
+        - internal/service/mediapackagev2
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MediaPackageV2"
     severity: WARNING
   - id: mediastore-in-func-name
     languages:
@@ -3478,61 +3594,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccRDS"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: rds-in-const-name
-    languages:
-      - go
-    message: Do not use "RDS" in const name inside rds package
-    paths:
-      include:
-        - internal/service/rds
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)RDS"
-    severity: WARNING
-  - id: rds-in-var-name
-    languages:
-      - go
-    message: Do not use "RDS" in var name inside rds package
-    paths:
-      include:
-        - internal/service/rds
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)RDS"
-    severity: WARNING
-  - id: recyclebin-in-func-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in func name inside rbin package
-    paths:
-      include:
-        - internal/service/rbin
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: recyclebin-in-const-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in const name inside rbin package
-    paths:
-      include:
-        - internal/service/rbin
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
     severity: WARNING

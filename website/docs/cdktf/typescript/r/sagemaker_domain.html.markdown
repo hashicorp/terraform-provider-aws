@@ -139,7 +139,8 @@ The following arguments are required:
 
 * `authMode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `defaultSpaceSettings` - (Required) The default space settings. See [Default Space Settings](#default_space_settings) below.
-* `defaultUserSettings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.* `domain_name` - (Required) The domain name.
+* `defaultUserSettings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.
+* `domainName` - (Required) The domain name.
 * `subnetIds` - (Required) The VPC subnets that Studio uses for communication.
 * `vpcId` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 
@@ -310,4 +311,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-4ac9570374257ed0e6bc0747e6cbaa715ec8416dbd36b9831ea65f1217a9b793 -->
+<!-- cache-key: cdktf-0.19.0 input-5ae7f9d4fb95bedbc773dd1a2a1eaaa5660af3ec9975d1fb36ff06e6dd9d7bfc -->

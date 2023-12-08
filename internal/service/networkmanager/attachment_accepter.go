@@ -10,14 +10,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing tyupe
+// AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing type
 // To facilitate querying and waiters on specific attachment types, attachment_type set to required
 
 // @SDKResource("aws_networkmanager_attachment_accepter")
@@ -25,10 +27,10 @@ func ResourceAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentAccepterCreate,
 		ReadWithoutTimeout:   resourceAttachmentAccepterRead,
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceAttachmentAccepterDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -82,6 +84,8 @@ func ResourceAttachmentAccepter() *schema.Resource {
 }
 
 func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	var state string
@@ -150,8 +154,8 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		switch attachmentType {
 		case networkmanager.AttachmentTypeVpc:
-			if _, err := waitVPCAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", attachmentID, err)
+			if _, err := waitVPCAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) to be attached: %s", attachmentID, err)
 			}
 
 		case networkmanager.AttachmentTypeSiteToSiteVpn:
@@ -171,10 +175,12 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	return resourceAttachmentAccepterRead(ctx, d, meta)
+	return append(diags, resourceAttachmentAccepterRead(ctx, d, meta)...)
 }
 
 func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	var a *networkmanager.Attachment
@@ -186,7 +192,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -201,7 +207,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Site To Site VPN Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -216,7 +222,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Connect Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -231,7 +237,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
@@ -250,5 +256,32 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("segment_name", a.SegmentName)
 	d.Set("state", a.State)
 
-	return nil
+	return diags
+}
+
+func resourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+
+	switch d.Get("attachment_type") {
+	case networkmanager.AttachmentTypeVpc:
+		_, err := conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
+			AttachmentId: aws.String(d.Id()),
+		})
+
+		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitVPCAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
+		}
+	}
+
+	return diags
 }

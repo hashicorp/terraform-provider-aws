@@ -57,6 +57,8 @@ service/appconfig:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfig_'
 service/appconfigdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfigdata_'
+service/appfabric:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appfabric_'
 service/appflow:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appflow_'
 service/appintegrations:
@@ -250,7 +252,7 @@ service/elastictranscoder:
 service/elb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)'
 service/elbv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s|_trust_store)'
 service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
@@ -425,6 +427,8 @@ service/medialive:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_medialive_'
 service/mediapackage:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_package_'
+service/mediapackagev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_packagev2_'
 service/mediapackagevod:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mediapackagevod_'
 service/mediastore:
@@ -552,7 +556,7 @@ service/route53resolver:
 service/rum:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rum_'
 service/s3:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:

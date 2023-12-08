@@ -297,13 +297,11 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
+	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
+		setTagsOut(ctx, Tags(tags))
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -365,7 +363,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			o, n := expandObjectDate(oraw.(string)), expandObjectDate(nraw.(string))
 
 			if n == nil || (o != nil && n.Before(*o)) {
-				input.BypassGovernanceRetention = true
+				input.BypassGovernanceRetention = aws.Bool(true)
 			}
 		}
 
@@ -487,7 +485,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		input.BucketKeyEnabled = v.(bool)
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {

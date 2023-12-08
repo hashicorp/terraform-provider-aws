@@ -159,7 +159,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if out.DeleteMarker {
+	if aws.ToBool(out.DeleteMarker) {
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 

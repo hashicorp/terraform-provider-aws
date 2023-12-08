@@ -87,7 +87,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	d.Set("account_id", accountId)
@@ -101,7 +101,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -119,7 +119,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.IsNewResource() && aggregationAuthorization == nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)

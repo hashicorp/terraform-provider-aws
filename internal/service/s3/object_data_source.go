@@ -5,6 +5,7 @@ package s3
 
 import (
 	"context"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -179,7 +181,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if output.DeleteMarker {
+	if aws.ToBool(output.DeleteMarker) {
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 
@@ -249,14 +251,12 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("body", string(buf.Bytes()))
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
+	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
+		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		}
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

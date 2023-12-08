@@ -92,6 +92,8 @@ func DataSourceTags() *schema.Resource {
 }
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.GetTagsInput{
@@ -117,14 +119,14 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
 	}
 
 	d.Set("tags", flex.FlattenStringList(resp.Tags))
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return nil
+	return diags
 }
 
 func expandTagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
