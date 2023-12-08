@@ -46,10 +46,10 @@ func testAccLandingZone_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLandingZoneConfig_basic("v1.0.0"),
+				Config: testAccLandingZoneConfig_basic("1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "version", "v1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
 				),
 			},
 		},
@@ -71,7 +71,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLandingZoneConfig_basic("v1.0.0"),
+				Config: testAccLandingZoneConfig_basic("1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
 				),
