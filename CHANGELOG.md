@@ -1,4 +1,9 @@
 ## 5.31.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_ssoadmin_application_assignments` ([#34796](https://github.com/hashicorp/terraform-provider-aws/issues/34796))
+
 ## 5.30.0 (December  7, 2023)
 
 FEATURES:
