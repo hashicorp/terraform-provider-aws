@@ -75,17 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot Locale using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot Locale using the `id`. For example:
 
 ```terraform
 import {
   to = aws_lexv2models_bot_locale.example
-  id = "bot_locale-id-12345678"
+  id = "en_US,abcd-12345678,1"
 }
 ```
 
 Using `terraform import`, import Lex V2 Models Bot Locale using the `id`. For example:
 
 ```console
-% terraform import aws_lexv2models_bot_locale.example bot_locale-id-12345678
+% terraform import aws_lexv2models_bot_locale.example en_US,abcd-12345678,1
 ```

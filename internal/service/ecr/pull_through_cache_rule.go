@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -55,6 +56,8 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 }
 
 func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.ecr-in-func-name
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
@@ -67,15 +70,17 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	_, err := conn.CreatePullThroughCacheRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return sdkdiag.AppendErrorf(diags, "creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(repositoryPrefix)
 
-	return resourcePullThroughCacheRuleRead(ctx, d, meta)
+	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
 }
 
 func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, d.Id())
@@ -83,21 +88,23 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Pull Through Cache Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
 
-	return nil
+	return diags
 }
 
 func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Rule: (%s)", d.Id())
@@ -107,12 +114,12 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if tfawserr.ErrCodeEquals(err, ecr.ErrCodePullThroughCacheRuleNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

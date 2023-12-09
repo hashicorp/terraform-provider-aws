@@ -14,6 +14,8 @@ Manages a S3 Bucket Notification Configuration. For additional information, see 
 
 ~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `awsS3BucketNotification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add notification configuration to SNS Topic
@@ -481,4 +483,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-2b3d5922ed8d8483ab9bf6365c4cf548c1d93fbe385ee90435be6dfab425db07 -->
+<!-- cache-key: cdktf-0.19.0 input-806af2b73f38b1023adb097eb9375961d9c80b720fc588a2e4a83e327c3bfb93 -->

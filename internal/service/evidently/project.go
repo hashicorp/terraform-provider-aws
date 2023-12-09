@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -159,6 +160,8 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
@@ -178,19 +181,21 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateProject(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Evidently Project (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Evidently Project (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.Project.Name))
 
 	if _, err := waitProjectCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Project (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceProjectRead(ctx, d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
@@ -198,15 +203,15 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Evidently Project (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Evidently Project (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_delivery", flattenDataDelivery(project.DataDelivery)); err != nil {
-		return diag.Errorf("setting data_delivery: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting data_delivery: %s", err)
 	}
 
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
@@ -223,10 +228,12 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	setTagsOut(ctx, project.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	// Project has 2 update APIs
@@ -240,11 +247,11 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		})
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch Evidently Project (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Evidently Project (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitProjectUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -258,7 +265,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		tfMap, ok := dataDelivery[0].(map[string]interface{})
 
 		if !ok {
-			return diag.Errorf("updating Project (%s)", d.Id())
+			return sdkdiag.AppendErrorf(diags, "updating Project (%s)", d.Id())
 		}
 
 		// You can't specify both cloudWatchLogs and s3Destination in the same operation.
@@ -273,18 +280,20 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateProjectDataDelivery(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch Evidently Project (%s) data delivery: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Evidently Project (%s) data delivery: %s", d.Id(), err)
 		}
 
 		if _, err := waitProjectUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceProjectRead(ctx, d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Project: %s", d.Id())
@@ -293,18 +302,18 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Evidently Project (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Evidently Project (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitProjectDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Project (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDataDelivery(dataDelivery []interface{}) *awstypes.ProjectDataDeliveryConfig {

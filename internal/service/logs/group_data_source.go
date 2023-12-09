@@ -31,6 +31,10 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_group_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -59,6 +63,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set("creation_time", logGroup.CreationTime)
 	d.Set("kms_key_id", logGroup.KmsKeyId)
+	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
 	tags, err := listLogGroupTags(ctx, conn, name)

@@ -1651,17 +1651,30 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+	var (
+		v   *rds.DBInstance
+		err error
+	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get("identifier").(string))
-		d.SetId("")
-		return nil
+	if d.IsNewResource() {
+		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+	} else {
+		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+		if tfresource.NotFound(err) {
+			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get("identifier").(string))
+			if tfresource.NotFound(err) {
+				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get("identifier").(string))
+				d.SetId("")
+				return nil
+			}
+		}
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 	}
+
+	d.SetId(aws.StringValue(v.DbiResourceId))
 
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set("arn", v.DBInstanceArn)
@@ -1831,21 +1844,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"password",
 		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
-			handler := newInstanceHandler(conn)
-			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
-			defer func() {
-				if len(cleaupWaiters) == 0 {
-					return
-				}
+			defer orchestrator.CleanUp(ctx)
 
-				waiter, waiters := cleaupWaiters[0], cleaupWaiters[1:]
-				waiter()
-				for _, waiter := range waiters {
-					// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
-					// to complete, we don't need to run them concurrently, saving on network traffic.
-					waiter(tfresource.WithDelay(0))
-				}
-			}()
+			handler := newInstanceHandler(conn)
 
 			err := handler.precondition(ctx, d)
 			if err != nil {
@@ -1856,7 +1857,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creating Blue/Green Deployment", d.Get("identifier").(string))
 
-			dep, err := orchestrator.createDeployment(ctx, createIn)
+			dep, err := orchestrator.CreateDeployment(ctx, createIn)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
@@ -1883,7 +1884,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return
 				}
 
-				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+				orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
 					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
 					if err != nil {
 						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Get("identifier").(string), err)
@@ -1912,7 +1913,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get("identifier").(string))
 
-			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
+			dep, err = orchestrator.Switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
@@ -1968,7 +1969,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get("identifier").(string), err)
 			}
 
-			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+			orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
 				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), sourceARN.Identifier, deadline.Remaining(), optFns...)
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get("identifier").(string), err)
@@ -2605,7 +2606,7 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 	return nil, err
 }
 
-func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,
@@ -2648,7 +2649,7 @@ func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, i
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,

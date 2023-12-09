@@ -201,7 +201,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 // deletePageOfDeleteMarkers deletes a page (<= 1000) of S3 object delete markers.
 // Returns the number of delete markers deleted.
 func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectVersionsOutput) (int64, error) {
-	toDelete := tfslices.ApplyToAll(page.Versions, func(v types.ObjectVersion) types.ObjectIdentifier {
+	toDelete := tfslices.ApplyToAll(page.DeleteMarkers, func(v types.DeleteMarkerEntry) types.ObjectIdentifier {
 		return types.ObjectIdentifier{
 			Key:       v.Key,
 			VersionId: v.VersionId,

@@ -248,7 +248,7 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 
 	// Re-use regular AWS Route Table READ.
 	// This is an extra API call but saves us from trying to manually keep parity.
-	return resourceRouteTableRead(ctx, d, meta)
+	return resourceRouteTableRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
 }
 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

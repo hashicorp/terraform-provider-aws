@@ -21,6 +21,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
 	}
+	// Example (GovCloud): AccessGrantsInstanceNotExistsError: Access Grants Instance does not exist
+	if tfawserr.ErrCodeEquals(err, "AccessGrantsInstanceNotExistsError") {
+		return true
+	}
 
 	return false
 }
