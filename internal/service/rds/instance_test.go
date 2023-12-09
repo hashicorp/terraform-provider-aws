@@ -5423,7 +5423,6 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccRDSInstance_gp3MySQL(t *testing.T) {

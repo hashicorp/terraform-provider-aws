@@ -17,13 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc) //nolint:unused // WIP
-
-type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
+type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc)
 
 type blueGreenOrchestrator struct {
 	conn           *rds_sdkv2.Client
-	cleanupWaiters []cleanupWaiterFunc //nolint:unused // WIP
+	cleanupWaiters []cleanupWaiterFunc
 }
 
 func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
