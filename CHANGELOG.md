@@ -13,6 +13,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cloudwatch_log_group: Remove default value (`STANDARD`) for `log_group_class` argument and mark as Computed. This fixes `InvalidParameterException: Only Standard log class is supported` errors in AWS Regions other than AWS Commercial ([#34812](https://github.com/hashicorp/terraform-provider-aws/issues/34812))
+* resource/aws_db_instance: Fix error where Terraform loses track of resource if Blue/Green Deployment is applied outside of Terraform ([#34728](https://github.com/hashicorp/terraform-provider-aws/issues/34728))
 * resource/aws_lb: Fix `InvalidConfigurationRequest: Load balancer attribute key 'dns_record.client_routing_policy' is not supported on load balancers with type 'network'` errors on resource Create in AWS GovCloud (US) ([#34135](https://github.com/hashicorp/terraform-provider-aws/issues/34135))
 * resource/aws_securitylake_data_lake: Fix `reflect.Set: value of type basetypes.StringValue is not assignable to type types.ARN` panic when importing resources with `nil` ARN fields ([#34820](https://github.com/hashicorp/terraform-provider-aws/issues/34820))
 
