@@ -31,11 +31,11 @@ The following arguments are required:
 
 * `table_name` - (Required) The name of the table containing the requested item.
 * `key_condition_expression` - (Required) The condition that specifies the key values for items to be retrieved by the Query action.
+* `expression_attribute_values` - (Required) - One or more values that can be substituted in an expression. Use the `:` character in an expression to dereference an attribute value. The values must be valid JSON, for example: {":value" = "{\"S\": \"0000A\"}"} or {":value"= jsonencode({"S" = %q})}
 
 The following arguments are optional:
 
 * `expression_attribute_name` - (Optional) - One or more substitution tokens for attribute names in an expression. Use the `#` character in an expression to dereference an attribute name.
-* `expression_attribute_values` - (Optional) - One or more values that can be substituted in an expression. Use the `:` character in an expression to dereference an attribute value. The values must be valid JSON, for example: {":value" = "{\"S\": \"0000A\"}"} or {":value"= jsonencode({"S" = %q})}
 * `output_limit` - (Optional) - The total number of items to include in the result. This data source handles pagination internally (using the ExclusiveStartKey and LastEvaluatedKey parameters). It will stop performing additional queries once this `output_limit` is reached. When not specified, it will keep querying until the LastEvaluatedKey is null.
 * `projection_expression` - (Optional) A string that identifies one or more attributes to retrieve from the table. These attributes can include scalars, sets, or elements of a JSON document. The attributes in the expression must be separated by commas.
 If no attribute names are specified, then all attributes are returned. If any of the requested attributes are not found, they do not appear in the result.

@@ -36,16 +36,16 @@ func DataSourceTableQuery() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"expression_attribute_values": {
+				Type:     schema.TypeMap,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"consistent_read": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"expression_attribute_names": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"expression_attribute_values": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
