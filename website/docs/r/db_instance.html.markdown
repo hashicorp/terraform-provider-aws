@@ -31,7 +31,7 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 
 ## RDS Instance Class Types
 
-Amazon RDS supports instance classes for the following use cases: [General-purpose](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html#Concepts.DBInstanceClass.Types.general-purpose), [Memory-optimized](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html#Concepts.DBInstanceClass.Types.memory), [Burstable Performance](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html#Concepts.DBInstanceClass.Types.burstable), and [Optimized-reads](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html#Concepts.DBInstanceClass.Types.optimized-reads).
+Amazon RDS supports instance classes for the following use cases: General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads.
 For more information please read the AWS RDS documentation about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
 
 ## Low-Downtime Updates
@@ -166,7 +166,7 @@ resource "aws_db_instance" "example" {
 }
 ```
 
-### RDS Db2 Usage 
+### RDS Db2 Usage
 
 ```terraform
 # Lookup the default version for the engine. Db2 Standard Edition is `db2-se`, Db2 Advanced Edition is `db2-ae`.
@@ -183,7 +183,7 @@ data "aws_rds_orderable_db_instance" "example" {
   preferred_instance_classes = ["db.t3.small", "db.r6i.large", "db.m6i.large"]
 }
 
-# The RDS Db2 instance resource requires licensing information. Create a new paramter group using the default paramater group as a source, and set license information.
+# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default paramater group as a source, and set license information.
 resource "aws_db_parameter_group" "example" {
   name   = "db-db2-params"
   family = data.aws_rds_engine_version.default.parameter_group_family
@@ -207,7 +207,7 @@ resource "aws_db_instance" "example" {
   db_name                 = "test"
   engine                  = data.aws_rds_orderable_db_instance.example.engine
   engine_version          = data.aws_rds_orderable_db_instance.example.engine_version
-  identifier              = %[1]q
+  identifier              = "db2-instance-demo"
   instance_class          = data.aws_rds_orderable_db_instance.example.instance_class
   parameter_group_name    = aws_db_parameter_group.example.name
   password                = "avoid-plaintext-passwords"

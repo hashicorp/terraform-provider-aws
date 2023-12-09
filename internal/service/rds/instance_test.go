@@ -8806,34 +8806,35 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_parameter_group" "test" {
-  name   = "%[1]s-group"
   family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
 
   parameter {
-    name  = "rds.ibm_customer_id"
-    value = 0000000
-    apply_method = "immediate"
-  }
-  parameter {
-    name         = "rds.ibm_site_id"
-    value        = 0000000000
-    apply_method = "immediate"
+    name  = "sync_binlog"
+    value = 0
   }
 }
 
-resource "aws_db_instance" "test" {
-  allocated_storage       = 20
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier              = %[1]q
+  identifier              = "%[1]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model           = "bring-your-own-license"
-  parameter_group_name    = aws_db_parameter_group.test.name
+  parameter_group_name    = aws_db_parameter_group.source.name
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
-  storage_type            = "gp3"
+}
+
+resource "aws_db_parameter_group" "source" {
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = "%[1]s-source"
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
 }
 `, rName))
 }
