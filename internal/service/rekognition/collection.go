@@ -28,9 +28,9 @@ import (
 // @SDKResource("aws_rekognition_collection", name="Collection")
 func ResourceCollection() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceCollectionCreate,
-		ReadWithoutTimeout:   resourceCollectionRead,
-		DeleteWithoutTimeout: resourceCollectionDelete,
+		CreateWithoutTimeout: Create,
+		ReadWithoutTimeout:   Read,
+		DeleteWithoutTimeout: Delete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -57,8 +57,7 @@ func ResourceCollection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaForceNew(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -68,7 +67,7 @@ const (
 	ResNameCollection = "Collection"
 )
 
-func resourceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
@@ -89,15 +88,15 @@ func resourceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", out.CollectionArn)
 	d.Set("face_model_version", out.FaceModelVersion)
 
-	return append(diags, resourceCollectionRead(ctx, d, meta)...)
+	return append(diags, Read(ctx, d, meta)...)
 }
 
-func resourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
 
-	out, err := findCollectionByID(ctx, conn, d.Id())
+	out, err := FindCollectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Rekognition Collection (%s) not found, removing from state", d.Id())
@@ -115,7 +114,7 @@ func resourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
@@ -136,7 +135,7 @@ func resourceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
+func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
 	in := &rekognition.DescribeCollectionInput{
 		CollectionId: aws.String(id),
 	}
