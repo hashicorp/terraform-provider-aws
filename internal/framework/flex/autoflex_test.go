@@ -159,6 +159,14 @@ type TestFlexAWS12 struct {
 	FieldUrl *string
 }
 
+type TestFlexTF16 struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type TestFlexAWS18 struct {
+	IntentName *string
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -166,6 +174,7 @@ func TestGenericExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
 		Source     any
 		Target     any
@@ -521,6 +530,17 @@ func TestGenericExpand(t *testing.T) {
 				FieldUrl: aws.String("h"),
 			},
 		},
+		{
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			TestName: "resource name prefix",
+			Source: &TestFlexTF16{
+				Name: types.StringValue("Ovodoghen"),
+			},
+			Target: &TestFlexAWS18{},
+			WantTarget: &TestFlexAWS18{
+				IntentName: aws.String("Ovodoghen"),
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -528,7 +548,12 @@ func TestGenericExpand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			err := Expand(ctx, testCase.Source, testCase.Target)
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Expand(testCtx, testCase.Source, testCase.Target)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
@@ -586,7 +611,78 @@ type TestFlexAWS17 struct {
 	FieldOuter TestFlexAWS14
 }
 
-func TestGenericExpand2(t *testing.T) {
+type TestEnum string
+
+// Enum values for SlotShape
+const (
+	TestEnumScalar TestEnum = "Scalar"
+	TestEnumList   TestEnum = "List"
+)
+
+func (TestEnum) Values() []TestEnum {
+	return []TestEnum{
+		"Scalar",
+		"List",
+	}
+}
+
+type TestFlexComplexNestTF01 struct { // ie, DialogState
+	DialogAction      fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF02] `tfsdk:"dialog_action"`
+	Intent            fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF03] `tfsdk:"intent"`
+	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]                `tfsdk:"session_attributes"`
+}
+type TestFlexComplexNestAWS01 struct { // ie, DialogState
+	DialogAction      *TestFlexComplexNestAWS02
+	Intent            *TestFlexComplexNestAWS03
+	SessionAttributes map[string]string
+}
+
+type TestFlexComplexNestTF02 struct { // ie, DialogAction
+	Type                fwtypes.StringEnum[TestEnum] `tfsdk:"type"`
+	SlotToElicit        types.String                 `tfsdk:"slot_to_elicit"`
+	SuppressNextMessage types.Bool                   `tfsdk:"suppress_next_message"`
+}
+type TestFlexComplexNestAWS02 struct { // ie, DialogAction
+	Type                TestEnum
+	SlotToElicit        *string
+	SuppressNextMessage *bool
+}
+
+type TestFlexComplexNestTF03 struct { // ie, IntentOverride
+	Name  types.String                                      `tfsdk:"name"`
+	Slots fwtypes.ObjectMapValueOf[TestFlexComplexNestTF04] `tfsdk:"slots"`
+}
+type TestFlexComplexNestAWS03 struct { // ie, IntentOverride
+	Name  *string
+	Slots map[string]TestFlexComplexNestAWS04
+}
+
+type TestFlexComplexNestTF04 struct { // ie, TestFlexComplexNestAWS04
+	Shape fwtypes.StringEnum[TestEnum]                             `tfsdk:"shape"`
+	Value fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF05] `tfsdk:"value"`
+}
+type TestFlexComplexNestAWS04 struct { // ie, SlotValueOverride
+	Shape  TestEnum
+	Value  *TestFlexComplexNestAWS05
+	Values []TestFlexComplexNestAWS04 // recursive type
+}
+
+type TestFlexComplexNestTF05 struct { // ie, SlotValue
+	InterpretedValue types.String `tfsdk:"interpreted_value"`
+}
+type TestFlexComplexNestAWS05 struct { // ie, SlotValue
+	InterpretedValue *string
+}
+
+type TestFlexPluralityTF01 struct {
+	Value types.String `tfsdk:"Value"`
+}
+type TestFlexPluralityAWS01 struct {
+	Value  string
+	Values string
+}
+
+func TestGenericExpandAdvanced(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
@@ -712,6 +808,52 @@ func TestGenericExpand2(t *testing.T) {
 				},
 			},
 		},
+		{
+			TestName: "complex nesting",
+			Source: &TestFlexComplexNestTF01{
+				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
+					Type:                fwtypes.StringEnumValue(TestEnumList),
+					SlotToElicit:        types.StringValue("x"),
+					SuppressNextMessage: types.BoolValue(true),
+				}),
+				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
+					Name: types.StringValue("x"),
+					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
+						"x": {
+							Shape: fwtypes.StringEnumValue(TestEnumList),
+							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
+								InterpretedValue: types.StringValue("y"),
+							}),
+						},
+					}),
+				}),
+				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": basetypes.NewStringValue("y"),
+				}),
+			},
+			Target: &TestFlexComplexNestAWS01{},
+			WantTarget: &TestFlexComplexNestAWS01{
+				DialogAction: &TestFlexComplexNestAWS02{
+					Type:                TestEnumList,
+					SlotToElicit:        aws.String("x"),
+					SuppressNextMessage: aws.Bool(true),
+				},
+				Intent: &TestFlexComplexNestAWS03{
+					Name: aws.String("x"),
+					Slots: map[string]TestFlexComplexNestAWS04{
+						"x": {
+							Shape: TestEnumList,
+							Value: &TestFlexComplexNestAWS05{
+								InterpretedValue: aws.String("y"),
+							},
+						},
+					},
+				},
+				SessionAttributes: map[string]string{
+					"x": "y",
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -737,12 +879,72 @@ func TestGenericExpand2(t *testing.T) {
 	}
 }
 
+type TestFlexTF17 struct {
+	Field1 fwtypes.ARN `tfsdk:"field1"`
+}
+
+func TestGenericExpandCustomStringType(t *testing.T) {
+	t.Parallel()
+
+	a := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
+	ctx := context.Background()
+	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName:   "single ARN Source and single string Target",
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+			Target:     &TestFlexAWS01{},
+			WantTarget: &TestFlexAWS01{Field1: a},
+		},
+		{
+			TestName:   "single ARN Source and single *string Target",
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+			Target:     &TestFlexAWS02{},
+			WantTarget: &TestFlexAWS02{Field1: aws.String(a)},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Expand(testCtx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	testString := "test"
 	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
 		Source     any
 		Target     any
@@ -1155,6 +1357,250 @@ func TestGenericFlatten(t *testing.T) {
 				FieldURL: types.StringValue("h"),
 			},
 		},
+		{
+			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
+			TestName: "resource name prefix",
+			Source: &TestFlexAWS18{
+				IntentName: aws.String("Ovodoghen"),
+			},
+			Target: &TestFlexTF16{},
+			WantTarget: &TestFlexTF16{
+				Name: types.StringValue("Ovodoghen"),
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Flatten(testCtx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGenericFlattenAdvanced(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := []struct {
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName: "map string",
+			Source: &TestFlexAWS13{
+				FieldInner: map[string]string{
+					"x": "y",
+				},
+			},
+			Target: &TestFlexTF11{},
+			WantTarget: &TestFlexTF11{
+				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": types.StringValue("y"),
+				}),
+			},
+		},
+		{
+			TestName: "object map",
+			Source: &TestFlexAWS14{
+				FieldInner: map[string]TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF12{},
+			WantTarget: &TestFlexTF12{
+				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
+					"x": {
+						Field1: types.StringValue("a"),
+					}},
+				),
+			},
+		},
+		{
+			TestName: "object map ptr source",
+			Source: &TestFlexAWS15{
+				FieldInner: map[string]*TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF12{},
+			WantTarget: &TestFlexTF12{
+				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
+					map[string]TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+		},
+		{
+			TestName: "object map ptr target",
+			Source: &TestFlexAWS14{
+				FieldInner: map[string]TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF13{},
+			WantTarget: &TestFlexTF13{
+				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
+					map[string]*TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+		},
+		{
+			TestName: "object map ptr source and target",
+			Source: &TestFlexAWS15{
+				FieldInner: map[string]*TestFlexAWS01{
+					"x": {
+						Field1: "a",
+					},
+				},
+			},
+			Target: &TestFlexTF13{},
+			WantTarget: &TestFlexTF13{
+				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
+					map[string]*TestFlexTF01{
+						"x": {
+							Field1: types.StringValue("a"),
+						},
+					},
+				),
+			},
+		},
+		{
+			TestName: "nested string map",
+			Source: &TestFlexAWS16{
+				FieldOuter: TestFlexAWS13{
+					FieldInner: map[string]string{
+						"x": "y",
+					},
+				},
+			},
+			Target: &TestFlexTF14{},
+			WantTarget: &TestFlexTF14{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
+					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+						"x": types.StringValue("y"),
+					}),
+				}),
+			},
+		},
+		{
+			TestName: "nested object map",
+			Source: &TestFlexAWS17{
+				FieldOuter: TestFlexAWS14{
+					FieldInner: map[string]TestFlexAWS01{
+						"x": {
+							Field1: "a",
+						},
+					},
+				},
+			},
+			Target: &TestFlexTF15{},
+			WantTarget: &TestFlexTF15{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
+					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
+						map[string]TestFlexTF01{
+							"x": {
+								Field1: types.StringValue("a"),
+							},
+						},
+					),
+				}),
+			},
+		},
+		{
+			TestName: "strange plurality",
+			Source: &TestFlexPluralityAWS01{
+				Value:  "a",
+				Values: "b",
+			},
+			Target: &TestFlexPluralityTF01{},
+			WantTarget: &TestFlexPluralityTF01{
+				Value: types.StringValue("a"),
+			},
+		},
+		{
+			TestName: "complex nesting",
+			Source: &TestFlexComplexNestAWS01{
+				DialogAction: &TestFlexComplexNestAWS02{
+					Type:                TestEnumList,
+					SlotToElicit:        aws.String("x"),
+					SuppressNextMessage: aws.Bool(true),
+				},
+				Intent: &TestFlexComplexNestAWS03{
+					Name: aws.String("x"),
+					Slots: map[string]TestFlexComplexNestAWS04{
+						"x": {
+							Shape: TestEnumList,
+							Value: &TestFlexComplexNestAWS05{
+								InterpretedValue: aws.String("y"),
+							},
+						},
+					},
+				},
+				SessionAttributes: map[string]string{
+					"x": "y",
+				},
+			},
+			Target: &TestFlexComplexNestTF01{},
+			WantTarget: &TestFlexComplexNestTF01{
+				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
+					Type:                fwtypes.StringEnumValue(TestEnumList),
+					SlotToElicit:        types.StringValue("x"),
+					SuppressNextMessage: types.BoolValue(true),
+				}),
+				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
+					Name: types.StringValue("x"),
+					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
+						"x": {
+							Shape: fwtypes.StringEnumValue(TestEnumList),
+							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
+								InterpretedValue: types.StringValue("y"),
+							}),
+						},
+					}),
+				}),
+				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					"x": basetypes.NewStringValue("y"),
+				}),
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -1163,6 +1609,67 @@ func TestGenericFlatten(t *testing.T) {
 			t.Parallel()
 
 			err := Flatten(ctx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestGenericFlattenCustomStringType(t *testing.T) {
+	t.Parallel()
+
+	a := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
+	ctx := context.Background()
+	testCases := []struct {
+		Context    context.Context //nolint:containedctx // testing context use
+		TestName   string
+		Source     any
+		Target     any
+		WantErr    bool
+		WantTarget any
+	}{
+		{
+			TestName:   "single string Source and single ARN Target",
+			Source:     &TestFlexAWS01{Field1: a},
+			Target:     &TestFlexTF17{},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+		},
+		{
+			TestName:   "single *string Source and single ARN Target",
+			Source:     &TestFlexAWS02{Field1: aws.String(a)},
+			Target:     &TestFlexTF17{},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(a)},
+		},
+		{
+			TestName:   "single nil *string Source and single ARN Target",
+			Source:     &TestFlexAWS02{},
+			Target:     &TestFlexTF17{},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNNull()},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Flatten(testCtx, testCase.Source, testCase.Target)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {

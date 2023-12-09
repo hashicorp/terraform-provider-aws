@@ -18,6 +18,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+type ResourcePrefixCtxKey string
+
+const (
+	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
+	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
+)
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -139,13 +146,14 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		if fieldName == "Tags" {
 			continue // Resource tags are handled separately.
 		}
-		toFieldVal := findFieldFuzzy(fieldName, valTo)
+		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo, valFrom)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
 		}
 		if !toFieldVal.CanSet() {
 			continue // Corresponding field value can't be changed.
 		}
+
 		diags.Append(flexer.convert(ctx, valFrom.Field(i), toFieldVal)...)
 		if diags.HasError() {
 			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
@@ -156,11 +164,17 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	return diags
 }
 
-func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value) reflect.Value {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
 		return v
 	}
+
+	// If a "from" field fuzzy matches a "to" field, we are certain the fuzzy match
+	// is NOT correct if "from" also contains a field by the fuzzy matched name.
+	// For example, if "from" has "Value" and "Values", "Values" should *never*
+	// fuzzy match "Value" in "to" since "from" also has "Value". We check "from"
+	// to make sure fuzzy matches are not in "from".
 
 	// second precedence is exact match (case insensitive)
 	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
@@ -172,27 +186,47 @@ func findFieldFuzzy(fieldNameFrom string, valTo reflect.Value) reflect.Value {
 		if fieldNameTo == "Tags" {
 			continue // Resource tags are handled separately.
 		}
-		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) {
+		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
 			// probably could assume validity here since reflect gave the field name
 			return v
 		}
 	}
 
 	// third precedence is singular/plural
-	if plural.IsSingular(fieldNameFrom) {
+	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(plural.Plural(fieldNameFrom), valFrom) {
 		if v := valTo.FieldByName(plural.Plural(fieldNameFrom)); v.IsValid() {
 			return v
 		}
 	}
 
-	if plural.IsPlural(fieldNameFrom) {
+	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(plural.Singular(fieldNameFrom), valFrom) {
 		if v := valTo.FieldByName(plural.Singular(fieldNameFrom)); v.IsValid() {
 			return v
 		}
 	}
 
-	// no finds, fuzzy or otherwise - return invalid
+	// fourth precedence is using resource prefix
+	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+		if ctx.Value(ResourcePrefixRecurse) == nil {
+			// so it will only recurse once
+			ctx = context.WithValue(ctx, ResourcePrefixRecurse, true)
+			if strings.HasPrefix(fieldNameFrom, v) {
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom)
+			}
+			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom)
+		}
+	}
+
+	// no finds, fuzzy or otherwise - return zero value
 	return valTo.FieldByName(fieldNameFrom)
+}
+
+func fieldExistsInStruct(field string, str reflect.Value) bool {
+	if v := str.FieldByName(field); v.IsValid() {
+		return true
+	}
+
+	return false
 }
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.
@@ -234,7 +268,6 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	case basetypes.MapValuable:
-
 		diags.Append(expander.map_(ctx, vFrom, vTo)...)
 		return diags
 
@@ -798,7 +831,7 @@ func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwt
 	m := reflect.MakeMap(vTo.Type())
 
 	for _, key := range f.MapKeys() {
-		// Create a new target structure and walk its fields.
+		// Create a new target map and populate it
 		target := reflect.New(tStruct)
 
 		fromInterface := f.MapIndex(key).Interface()
@@ -835,21 +868,21 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	}
 
 	tTo := valTo.Type(ctx)
-	switch vFrom.Kind() {
+	switch k := vFrom.Kind(); k {
 	case reflect.Bool:
-		diags.Append(flattener.bool(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Float32, reflect.Float64:
-		diags.Append(flattener.float(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.float(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Int32, reflect.Int64:
-		diags.Append(flattener.int(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.int(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
-		diags.Append(flattener.string(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 
 	case reflect.Ptr:
@@ -863,6 +896,12 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	case reflect.Map:
 		diags.Append(flattener.map_(ctx, vFrom, tTo, vTo)...)
 		return diags
+
+	case reflect.Struct:
+		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+			diags.Append(flattener.structToNestedObject(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -874,12 +913,16 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 }
 
 // bool copies an AWS API bool value to a compatible Plugin Framework value.
-func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.BoolTypable:
-		v, d := tTo.ValueFromBool(ctx, types.BoolValue(vFrom.Bool()))
+		boolValue := types.BoolNull()
+		if !isNullFrom {
+			boolValue = types.BoolValue(vFrom.Bool())
+		}
+		v, d := tTo.ValueFromBool(ctx, boolValue)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -901,12 +944,16 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tT
 }
 
 // float copies an AWS API float value to a compatible Plugin Framework value.
-func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Float64Typable:
-		v, d := tTo.ValueFromFloat64(ctx, types.Float64Value(vFrom.Float()))
+		float64Value := types.Float64Null()
+		if !isNullFrom {
+			float64Value = types.Float64Value(vFrom.Float())
+		}
+		v, d := tTo.ValueFromFloat64(ctx, float64Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -928,12 +975,16 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, t
 }
 
 // int copies an AWS API int value to a compatible Plugin Framework value.
-func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.Int64Typable:
-		v, d := tTo.ValueFromInt64(ctx, types.Int64Value(vFrom.Int()))
+		int64Value := types.Int64Null()
+		if !isNullFrom {
+			int64Value = types.Int64Value(vFrom.Int())
+		}
+		v, d := tTo.ValueFromInt64(ctx, int64Value)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -955,12 +1006,16 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo
 }
 
 // string copies an AWS API string value to a compatible Plugin Framework value.
-func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
 	case basetypes.StringTypable:
-		v, d := tTo.ValueFromString(ctx, types.StringValue(vFrom.String()))
+		stringValue := types.StringNull()
+		if !isNullFrom {
+			stringValue = types.StringValue(vFrom.String())
+		}
+		v, d := tTo.ValueFromString(ctx, stringValue)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -985,41 +1040,21 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	switch vElem := vFrom.Elem(); vFrom.Type().Elem().Kind() {
+	switch vElem, isNilFrom := vFrom.Elem(), vFrom.IsNil(); vFrom.Type().Elem().Kind() {
 	case reflect.Bool:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.BoolNull()))
-			return diags
-		}
-
-		diags.Append(flattener.bool(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Float32, reflect.Float64:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.Float64Null()))
-			return diags
-		}
-
-		diags.Append(flattener.float(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.float(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Int32, reflect.Int64:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.Int64Null()))
-			return diags
-		}
-
-		diags.Append(flattener.int(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.int(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
-		if vFrom.IsNil() {
-			vTo.Set(reflect.ValueOf(types.StringNull()))
-			return diags
-		}
-
-		diags.Append(flattener.string(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vElem, isNilFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Struct:
@@ -1027,7 +1062,7 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 			//
 			// *struct -> types.List(OfObject).
 			//
-			diags.Append(flattener.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.ptrToStructNestedObject(ctx, vElem, isNilFrom, tTo, vTo)...)
 			return diags
 		}
 	}
@@ -1202,6 +1237,17 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
 	case reflect.String:
 		switch tMapElem := vFrom.Type().Elem(); tMapElem.Kind() {
+		case reflect.Struct:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]struct -> fwtypes.ObjectMapOf[Object]
+				//
+				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
+					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
+					return diags
+				}
+			}
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:
@@ -1236,6 +1282,14 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 
 		case reflect.Ptr:
 			switch tMapElem.Elem().Kind() {
+			case reflect.Struct:
+				//
+				// map[string]*struct -> fwtypes.ObjectMapOf[Object]
+				//
+				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
+					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
+					return diags
+				}
 			case reflect.String:
 				switch tTo := tTo.(type) {
 				case basetypes.MapTypable:
@@ -1279,11 +1333,95 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 	return diags
 }
 
-// ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom reflect.Value, tTo fwtypes.ObjectMapType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	to, d := tTo.New(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	t := reflect.ValueOf(to)
+
+	tStruct := t.Type().Elem()
+	if tStruct.Kind() == reflect.Ptr {
+		tStruct = tStruct.Elem()
+	}
+
+	for _, key := range vFrom.MapKeys() {
+		target := reflect.New(tStruct)
+
+		fromInterface := vFrom.MapIndex(key).Interface()
+		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
+			fromInterface = vFrom.MapIndex(key).Elem().Interface()
+		}
+
+		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), flattener)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if t.Type().Elem().Kind() == reflect.Struct {
+			t.SetMapIndex(key, target.Elem())
+		} else {
+			t.SetMapIndex(key, target)
+		}
+	}
+
+	val, d := tTo.ValueFromRawMap(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
+func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Create a new target structure and walk its fields.
+	to, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(autoFlexConvertStruct(ctx, vFrom.Interface(), to, flattener)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Set the target structure as a mapped Object.
+	val, d := tTo.ValueFromObjectPtr(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue value.
+func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if isNullFrom {
 		val, d := tTo.NullValue(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -1301,7 +1439,7 @@ func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFro
 		return diags
 	}
 
-	diags.Append(autoFlexConvertStruct(ctx, vFrom.Elem().Interface(), to, flattener)...)
+	diags.Append(autoFlexConvertStruct(ctx, vFrom.Interface(), to, flattener)...)
 	if diags.HasError() {
 		return diags
 	}
