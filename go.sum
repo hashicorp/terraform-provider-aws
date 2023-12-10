@@ -236,6 +236,8 @@ github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.2 h1:GszpTlt312Rst
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.2/go.mod h1:QJoz7ojCJ/cT0q9sV+K9ZZBETBVoSpJXyRzvEt4BuSg=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.4 h1:hldvPoqHidHJ4ooxrvqmHAB2Ry7rdMQMcU+7DxRCftY=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.4/go.mod h1:Avxrq4VqhpuKgGdZifhrJP5a9DsDt7cESkdhaZHnYp0=
+github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.27.5 h1:isPkFgrCJtDGPp430pQadWuCc6kANjjc9qWtfQZ8kQI=
+github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.27.5/go.mod h1:hhsSlDZUW8Q/CFs55fPzYgy4PjaX3uUtPHreRpNgaD0=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.4 h1:Y5RHVHAdzntPYybJw+xj6dJSJgszGOuEZwpLRIEL+hc=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.4/go.mod h1:vkYsJdF9sZl/o1eoK8tSSjzAT+R87QjswOGSTZfyO0Y=
 github.com/aws/aws-sdk-go-v2/service/xray v1.23.4 h1:r4MARvTuP7rvWQNEfGWyfWVJoqEDSrJvuL37RDCe5qo=

@@ -373,7 +373,7 @@ waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFR
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,No SDK support
 ,,,,,wavelength,ec2,,Wavelength,,,,,aws_ec2_carrier_gateway,aws_wavelength_,wavelength_,ec2_carrier_,Wavelength,AWS,x,,,x,,,Part of EC2
 budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,1,,,aws_budgets_,,budgets_,Web Services Budgets,Amazon,,,,,,,
-wellarchitected,wellarchitected,wellarchitected,wellarchitected,,wellarchitected,,,WellArchitected,WellArchitected,,1,,,aws_wellarchitected_,,wellarchitected_,Well-Architected Tool,AWS,,x,,,,,
+wellarchitected,wellarchitected,wellarchitected,wellarchitected,,wellarchitected,,,WellArchitected,WellArchitected,,,2,,aws_wellarchitected_,,wellarchitected_,Well-Architected Tool,AWS,,,,,,,
 workdocs,workdocs,workdocs,workdocs,,workdocs,,,WorkDocs,WorkDocs,,1,,,aws_workdocs_,,workdocs_,WorkDocs,Amazon,,x,,,,,
 worklink,worklink,worklink,worklink,,worklink,,,WorkLink,WorkLink,,1,,,aws_worklink_,,worklink_,WorkLink,Amazon,,,,,,,
 workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,1,,,aws_workmail_,,workmail_,WorkMail,Amazon,,x,,,,,

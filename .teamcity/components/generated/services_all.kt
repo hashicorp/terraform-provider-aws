@@ -208,6 +208,7 @@ val services = mapOf(
     "waf" to ServiceSpec("WAF Classic", regionOverride = "us-east-1"),
     "wafregional" to ServiceSpec("WAF Classic Regional"),
     "wafv2" to ServiceSpec("WAF"),
+    "wellarchitected" to ServiceSpec("Well-Architected Tool"),
     "worklink" to ServiceSpec("WorkLink"),
     "workspaces" to ServiceSpec("WorkSpaces", vpcLock = true),
     "xray" to ServiceSpec("X-Ray"),
