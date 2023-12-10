@@ -107,7 +107,7 @@ func resourceStartDeploymentRead(ctx context.Context, d *schema.ResourceData, me
 
 func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string) (*types.OperationSummary, error) {
 	const (
-		timeout = 5 * time.Minute
+		timeout = 15 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
