@@ -103,6 +103,12 @@ func ResourcePipeline() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
+			"pipeline_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      codepipeline.PipelineTypeV1,
+				ValidateFunc: validation.StringInSlice(codepipeline.PipelineType_Values(), false),
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -208,6 +214,26 @@ func ResourcePipeline() *schema.Resource {
 					},
 				},
 			},
+			"variable": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -284,6 +310,12 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", arn)
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
+
+	d.Set("pipeline_type", pipeline.PipelineType)
+
+	if err := d.Set("variable", flattenVariableDeclarations(d, pipeline.Variables)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
+	}
 
 	return diags
 }
@@ -435,12 +467,20 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*codepipeline.PipelineDe
 		apiObject.Name = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("pipeline_type"); ok {
+		apiObject.PipelineType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("role_arn"); ok {
 		apiObject.RoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("stage"); ok && len(v.([]interface{})) > 0 {
 		apiObject.Stages = expandStageDeclarations(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("variable"); ok && len(v.([]interface{})) > 0 {
+		apiObject.Variables = expandVariableDeclarations(v.([]interface{}))
 	}
 
 	return apiObject, nil
@@ -696,6 +736,54 @@ func expandOutputArtifacts(tfList []interface{}) []*codepipeline.OutputArtifact 
 	return apiObjects
 }
 
+func expandVariableDeclaration(tfMap map[string]interface{}) *codepipeline.PipelineVariableDeclaration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &codepipeline.PipelineVariableDeclaration{}
+
+	if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		apiObject.DefaultValue = aws.String(v)
+	}
+
+	if v, ok := tfMap["description"].(string); ok && v != "" {
+		apiObject.Description = aws.String(v)
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandVariableDeclarations(tfList []interface{}) []*codepipeline.PipelineVariableDeclaration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*codepipeline.PipelineVariableDeclaration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandVariableDeclaration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
 func flattenArtifactStore(apiObject *codepipeline.ArtifactStore) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -917,4 +1005,44 @@ func flattenOutputArtifacts(apiObjects []*codepipeline.OutputArtifact) []string 
 	}
 
 	return aws.StringValueSlice(tfList)
+}
+
+func flattenVariableDeclaration(d *schema.ResourceData, i int, apiObject *codepipeline.PipelineVariableDeclaration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DefaultValue; v != nil {
+		tfMap["default_value"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenVariableDeclarations(d *schema.ResourceData, apiObjects []*codepipeline.PipelineVariableDeclaration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for i, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenVariableDeclaration(d, i, apiObject))
+	}
+
+	return tfList
 }
