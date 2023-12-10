@@ -50,11 +50,10 @@ The following arguments are optional:
 
 * `oidc_jwt_configuration` - (Optional) A block that describes the settings for a trusted token issuer that works with OpenID Connect (OIDC) by using JSON Web Tokens (JWT). See [Documented below](#oidc_jwt_configuration-argument-reference) below.
 
-
 ### `oidc_jwt_configuration` Argument Reference
 
 * `claim_attribute_path` - (Required) Specifies the path of the source attribute in the JWT from the trusted token issuer.
-* `identity_store_attribute_path` - (Required) Specifies path of the destination attribute in a JWT from IAM Identity Center. The attribute mapped by this JMESPath expression is compared against the attribute mapped by `claim_attribute_path` when a trusted token issuer token is exchanged for an IAM Identity Center token. 
+* `identity_store_attribute_path` - (Required) Specifies path of the destination attribute in a JWT from IAM Identity Center. The attribute mapped by this JMESPath expression is compared against the attribute mapped by `claim_attribute_path` when a trusted token issuer token is exchanged for an IAM Identity Center token.
 * `issuer_url` - (Required) Specifies the URL that IAM Identity Center uses for OpenID Discovery. OpenID Discovery is used to obtain the information required to verify the tokens that the trusted token issuer generates.
 * `jwks_retrieval_option` - (Required) The method that the trusted token issuer can use to retrieve the JSON Web Key Set used to verify a JWT. Valid values are `OPEN_ID_DISCOVERY`
 
