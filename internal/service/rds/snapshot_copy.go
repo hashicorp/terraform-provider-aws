@@ -192,7 +192,7 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	if err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
-	
+
 	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
 		input := &rds.ModifyDBSnapshotAttributeInput{
 			AttributeName:        aws.String("restore"),
