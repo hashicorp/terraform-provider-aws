@@ -254,7 +254,7 @@ func FindTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, tru
 }
 
 // Instance ID is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
-// Instance ID can be extracted from the Trusted Token Issuer ARN
+// Instance ID can be extracted from the Trusted Token Issuer ARN.
 func TrustedTokenIssuerParseInstanceID(conn *conns.AWSClient, id string) (string, error) {
 	parts := strings.Split(id, "/")
 
