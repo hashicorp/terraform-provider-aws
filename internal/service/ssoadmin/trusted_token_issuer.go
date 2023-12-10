@@ -150,7 +150,7 @@ func resourceTrustedTokenIssuerRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading SSO Trusted Token Issuer (%s): %s", d.Id(), err)
 	}
 
-	instanceARN, _ := TrustedTokenIssuerParseInstanceID(meta.(*conns.AWSClient), d.Id())
+	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(meta.(*conns.AWSClient), d.Id())
 
 	d.Set("name", output.Name)
 	d.Set("arn", output.TrustedTokenIssuerArn)
@@ -253,16 +253,16 @@ func FindTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, tru
 	return output, nil
 }
 
-// Instance ID is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
-// Instance ID can be extracted from the Trusted Token Issuer ARN.
-func TrustedTokenIssuerParseInstanceID(conn *conns.AWSClient, id string) (string, error) {
+// Instance ARN is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
+// Instance ARN can be extracted from the Trusted Token Issuer ARN.
+func TrustedTokenIssuerParseInstanceARN(conn *conns.AWSClient, id string) (string, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 		return fmt.Sprintf("arn:%s:sso:::instance/%s", conn.Partition, parts[1]), nil
 	}
 
-	return "", fmt.Errorf("unable to determine Instance ID from Trusted Token Issuer ARN: %s", id)
+	return "", fmt.Errorf("unable to construct Instance ARN from Trusted Token Issuer ARN: %s", id)
 }
 
 func expandTrustedTokenIssuerConfiguration(tfMap []interface{}) types.TrustedTokenIssuerConfiguration {
