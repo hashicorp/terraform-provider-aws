@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_apprunner_start_deployment", name="Start Deployment")
@@ -43,6 +44,10 @@ func resourceStartDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ended_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -56,55 +61,37 @@ func resourceStartDeploymentCreate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	name := d.Get("service_arn").(string)
+	service_arn := d.Get("service_arn").(string)
 	input := &apprunner.StartDeploymentInput{
-		ServiceArn: aws.String(name),
+		ServiceArn: aws.String(service_arn),
 	}
 
 	output, err := conn.StartDeployment(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "starting App Runner Deployment (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "initiating App Runner Start Deployment Operation (%s): %s", service_arn, err)
 	}
 
 	d.SetId(aws.ToString(output.OperationId))
+
+	waitStartDeploymentSucceeded(ctx, meta.(*conns.AWSClient).AppRunnerClient(ctx), service_arn)
 
 	return append(diags, resourceStartDeploymentRead(ctx, d, meta)...)
 }
 
 func resourceStartDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	input := &apprunner.ListOperationsInput{
-		ServiceArn: aws.String(d.Id()),
-	}
-
-	output, err := conn.ListOperations(ctx, input)
+	output, err := findStartDeploymentOperationByServiceARN(ctx, meta.(*conns.AWSClient).AppRunnerClient(ctx), d.Get("service_arn").(string))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading App Runner Deployment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "finding App Runner Start Deployment Operation (%s): %s", d.Id(), err)
 	}
 
-	if len(output.OperationSummaryList) == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading App Runner Deployment (%s): not found", d.Id())
-	}
-
-	var operation types.OperationSummary
-	for _, op := range output.OperationSummaryList {
-		if aws.ToString(op.Id) == d.Id() {
-			operation = op
-			break
-		}
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Account Summary: %s", err)
-	}
-
-	d.Set("operation_id", operation.Id)
-	d.Set("valid_until", aws.ToTime(operation.StartedAt).Format(time.RFC3339))
-	d.Set("status", operation.Status)
+	d.Set("operation_id", output.Id)
+	d.Set("started_at", aws.ToTime(output.StartedAt).Format(time.RFC3339))
+	d.Set("ended_at", aws.ToTime(output.EndedAt).Format(time.RFC3339))
+	d.Set("status", output.Status)
 
 	return diags
 }
@@ -116,7 +103,7 @@ func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, a
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.OperationStatusSucceeded),
-		Refresh: statusObservabilityConfiguration(ctx, conn, arn),
+		Refresh: statusStartDeployment(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
@@ -127,4 +114,54 @@ func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, a
 	}
 
 	return nil, err
+}
+
+func statusStartDeployment(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findStartDeploymentOperationByServiceARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.OperationSummary, error) {
+	input := &apprunner.ListOperationsInput{
+		ServiceArn: aws.String(arn),
+	}
+
+	output, err := conn.ListOperations(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.OperationSummaryList) == 0 {
+		return nil, &retry.NotFoundError{
+			Message:     "start deployment operation not found",
+			LastRequest: input,
+		}
+	}
+
+	var operation types.OperationSummary
+	for _, op := range output.OperationSummaryList {
+		if aws.ToString(op.TargetArn) == arn {
+			operation = op
+			break
+		} else {
+			return nil, &retry.NotFoundError{
+				Message:     "start deployment operation not found",
+				LastRequest: input,
+			}
+		}
+	}
+
+	return &operation, nil
 }
