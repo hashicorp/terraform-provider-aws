@@ -96,6 +96,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourcePermissionsBoundaryAttachment,
 			TypeName: "aws_ssoadmin_permissions_boundary_attachment",
 		},
+		{
+			Factory:  ResourceTrustedTokenIssuer,
+			TypeName: "aws_ssoadmin_trusted_token_issuer",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
