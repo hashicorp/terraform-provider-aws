@@ -70,13 +70,13 @@ func resourceStartDeploymentCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.StartDeployment(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "initiating App Runner Start Deployment Operation (%s): %s", service_arn, err)
+		return sdkdiag.AppendErrorf(diags, "initiating App Runner Start Deployment Operation (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.ToString(output.OperationId))
 
 	if _, err := waitStartDeploymentSucceeded(ctx, conn, service_arn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Start Deployment Operation (%s) create: %s", service_arn, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Start Deployment Operation (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceStartDeploymentRead(ctx, d, meta)...)
@@ -94,7 +94,7 @@ func resourceStartDeploymentRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding App Runner Start Deployment Operation (%s): %s", d.Get("service_arn"), err)
+		return sdkdiag.AppendErrorf(diags, "finding App Runner Start Deployment Operation (%s): %s", d.Id(), err)
 	}
 
 	d.Set("operation_id", output.Id)
