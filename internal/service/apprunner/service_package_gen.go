@@ -71,6 +71,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  resourceStartDeployment,
+			TypeName: "aws_apprunner_start_deployment",
+			Name:     "Start Deployment",
+		},
+		{
 			Factory:  resourceVPCConnector,
 			TypeName: "aws_apprunner_vpc_connector",
 			Name:     "VPC Connector",
