@@ -5,6 +5,7 @@ package apprunner
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -74,7 +75,9 @@ func resourceStartDeploymentCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(output.OperationId))
 
-	waitStartDeploymentSucceeded(ctx, meta.(*conns.AWSClient).AppRunnerClient(ctx), service_arn)
+	if _, err := waitStartDeploymentSucceeded(ctx, conn, service_arn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Start Deployment Operation (%s) create: %s", service_arn, err)
+	}
 
 	return append(diags, resourceStartDeploymentRead(ctx, d, meta)...)
 }
@@ -84,8 +87,14 @@ func resourceStartDeploymentRead(ctx context.Context, d *schema.ResourceData, me
 
 	output, err := findStartDeploymentOperationByServiceARN(ctx, meta.(*conns.AWSClient).AppRunnerClient(ctx), d.Get("service_arn").(string))
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] App Runner Start Deployment Operation (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding App Runner Start Deployment Operation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "finding App Runner Start Deployment Operation (%s): %s", d.Get("service_arn"), err)
 	}
 
 	d.Set("operation_id", output.Id)
