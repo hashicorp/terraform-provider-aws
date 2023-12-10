@@ -194,7 +194,7 @@ func resourceTrustedTokenIssuerUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	// listTags requires both trusted token issuer and instance ARN, so must be called
+	// updateTags requires both trusted token issuer and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
 	if d.HasChange("tags_all") {
 		oldTagsAll, newTagsAll := d.GetChange("tags_all")
