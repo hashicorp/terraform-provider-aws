@@ -277,14 +277,14 @@ func expandTrustedTokenIssuerConfiguration(tfMap []interface{}) types.TrustedTok
 
 	if v, ok := tfList["oidc_jwt_configuration"]; ok {
 		return &types.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration{
-			Value: expandOidcJwtConfiguration(v.([]interface{})),
+			Value: expandOIDCJWTConfiguration(v.([]interface{})),
 		}
 	}
 
 	return nil
 }
 
-func expandOidcJwtConfiguration(tfMap []interface{}) types.OidcJwtConfiguration {
+func expandOIDCJWTConfiguration(tfMap []interface{}) types.OidcJwtConfiguration {
 	apiObject := types.OidcJwtConfiguration{}
 
 	if len(tfMap) == 0 {
@@ -327,14 +327,14 @@ func expandTrustedTokenIssuerUpdateConfiguration(tfMap []interface{}) types.Trus
 
 	if v, ok := tfList["oidc_jwt_configuration"]; ok {
 		return &types.TrustedTokenIssuerUpdateConfigurationMemberOidcJwtConfiguration{
-			Value: expandOidcJwtUpdateConfiguration(v.([]interface{})),
+			Value: expandOIDCJWTUpdateConfiguration(v.([]interface{})),
 		}
 	}
 
 	return nil
 }
 
-func expandOidcJwtUpdateConfiguration(tfMap []interface{}) types.OidcJwtUpdateConfiguration {
+func expandOIDCJWTUpdateConfiguration(tfMap []interface{}) types.OidcJwtUpdateConfiguration {
 	apiObject := types.OidcJwtUpdateConfiguration{}
 
 	if len(tfMap) == 0 {
@@ -370,7 +370,7 @@ func flattenTrustedTokenIssuerConfiguration(apiObject types.TrustedTokenIssuerCo
 
 	switch v := apiObject.(type) {
 	case *types.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration:
-		tfMap["oidc_jwt_configuration"] = flattenOidcJwtConfiguration(v.Value)
+		tfMap["oidc_jwt_configuration"] = flattenOIDCJWTConfiguration(v.Value)
 	default:
 		log.Println("union is nil or unknown type")
 	}
@@ -378,7 +378,7 @@ func flattenTrustedTokenIssuerConfiguration(apiObject types.TrustedTokenIssuerCo
 	return []interface{}{tfMap}
 }
 
-func flattenOidcJwtConfiguration(apiObject types.OidcJwtConfiguration) []interface{} {
+func flattenOIDCJWTConfiguration(apiObject types.OidcJwtConfiguration) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClaimAttributePath; v != nil {
