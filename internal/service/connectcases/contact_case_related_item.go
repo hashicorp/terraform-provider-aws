@@ -125,9 +125,14 @@ func resourceRelatedItemCreate(ctx context.Context, d *schema.ResourceData, meta
 		CaseId:   aws.String(d.Get("case_id").(string)),
 		DomainId: aws.String(d.Get("domain_id").(string)),
 		Type:     types.RelatedItemType(d.Get("type").(string)),
-		//TODO: fix this
-		//	Content: expandContent(d.Get("content").([]interface{})),
+		// TODO:
+		// Content:  expandContent(d.Get("content").([]interface{})),
 	}
+
+	// TODO:
+	// if v, ok := d.GetOk("performed_by"); ok {
+	// 	input.PerformedBy = expandPerformedBy(v.([]interface{}))
+	// }
 
 	output, err := conn.CreateRelatedItem(ctx, input)
 
@@ -164,6 +169,26 @@ func resourceRelatedItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
+// TODO: uncomment this and continue
+// func expandPerformedBy(tfList []interface{}) *types.UserUnionMemberUserArn {
+// 	if len(tfList) == 0 || tfList[0] == nil {
+// 		return nil
+// 	}
+
+// 	tfMap, ok := tfList[0].(map[string]interface{})
+// 	if !ok {
+// 		return nil
+// 	}
+
+// 	apiObject := &types.UserUnionMemberUserArn{}
+
+// 	if v, ok := tfMap["user_arn"].(string); ok && v != "" {
+// 		apiObject.Value = *aws.String(v)
+// 	}
+
+// 	return apiObject
+// }
+
 // func expandContent(l []interface{}) *types.RelatedItemContent {
 // 	if len(l) == 0 || l[0] == nil {
 // 		return nil
@@ -183,6 +208,50 @@ func resourceRelatedItemRead(ctx context.Context, d *schema.ResourceData, meta i
 
 // 	if v, ok := tfMap["contact"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 // 		result.Contact = expandContact(v)
+// 	}
+
+// 	return result
+// }
+
+// func expandComment(l []interface{}) *types.CommentContent {
+// 	if len(l) == 0 || l[0] == nil {
+// 		return nil
+// 	}
+
+// 	tfMap, ok := l[0].(map[string]interface{})
+
+// 	if !ok {
+// 		return nil
+// 	}
+
+// 	result := &types.CommentContent{}
+
+// 	if v, ok := tfMap["body"].(string); ok && v != "" {
+// 		result.Body = aws.String(v)
+// 	}
+
+// 	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+// 		result.ContentType = types.CommentBodyTextType(v)
+// 	}
+
+// 	return result
+// }
+
+// func expandContact(l []interface{}) *types.ContactContent {
+// 	if len(l) == 0 || l[0] == nil {
+// 		return nil
+// 	}
+
+// 	tfMap, ok := l[0].(map[string]interface{})
+
+// 	if !ok {
+// 		return nil
+// 	}
+
+// 	result := &types.ContactContent{}
+
+// 	if v, ok := tfMap["body"].(string); ok && v != "" {
+// 		result.ContactArn = aws.String(v)
 // 	}
 
 // 	return result
