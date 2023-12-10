@@ -49,6 +49,21 @@ func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string)
 	}
 }
 
+func statusImport(ctx context.Context, conn *dynamodb.DynamoDB, importArn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		describeImportInput := &dynamodb.DescribeImportInput{
+			ImportArn: &importArn,
+		}
+		output, err := conn.DescribeImportWithContext(ctx, describeImportInput)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ImportTableDescription.ImportStatus), nil
+	}
+}
+
 func statusReplicaUpdate(ctx context.Context, conn *dynamodb.DynamoDB, tableName, region string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
