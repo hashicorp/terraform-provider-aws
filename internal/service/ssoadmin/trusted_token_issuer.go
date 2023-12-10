@@ -150,7 +150,7 @@ func resourceTrustedTokenIssuerRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading SSO Trusted Token Issuer (%s): %s", d.Id(), err)
 	}
 
-	instanceARN, _ := TrustedTokenIssuerParseInstanceID(d.Id())
+	instanceARN, _ := TrustedTokenIssuerParseInstanceID(meta.(*conns.AWSClient), d.Id())
 
 	d.Set("name", output.Name)
 	d.Set("arn", output.TrustedTokenIssuerArn)
@@ -255,11 +255,11 @@ func FindTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, tru
 
 // Instance ID is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
 // Instance ID can be extracted from the Trusted Token Issuer ARN
-func TrustedTokenIssuerParseInstanceID(id string) (string, error) {
+func TrustedTokenIssuerParseInstanceID(conn *conns.AWSClient, id string) (string, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return fmt.Sprintf("arn:aws:sso:::instance/%s", parts[1]), nil
+		return fmt.Sprintf("arn:%s:sso:::instance/%s", conn.Partition, parts[1]), nil
 	}
 
 	return "", fmt.Errorf("unable to determine Instance ID from Trusted Token Issuer ARN: %s", id)
