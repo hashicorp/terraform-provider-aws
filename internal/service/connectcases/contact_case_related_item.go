@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connectcases/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,9 +30,10 @@ func ResourceRelatedItem() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{string(types.RelatedItemTypeComment), string(types.RelatedItemTypeContact)}, false),
 			},
 			"content": {
 				Type:     schema.TypeList,
@@ -71,6 +73,22 @@ func ResourceRelatedItem() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+				ExactlyOneOf: []string{"content.0.comment", "content.0.contact"},
+			},
+			"performed_by": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"user_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
