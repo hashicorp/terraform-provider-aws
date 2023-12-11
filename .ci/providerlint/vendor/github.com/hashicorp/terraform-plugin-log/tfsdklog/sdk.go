@@ -35,6 +35,14 @@ func NewRootSDKLogger(ctx context.Context, options ...logging.Option) context.Co
 	if opts.Level == hclog.NoLevel {
 		opts.Level = hclog.Trace
 	}
+
+	// Cache root logger level outside context for performance reasons.
+	rootLevelMutex.Lock()
+
+	rootLevel = opts.Level
+
+	rootLevelMutex.Unlock()
+
 	loggerOptions := &hclog.LoggerOptions{
 		Name:                     opts.Name,
 		Level:                    opts.Level,

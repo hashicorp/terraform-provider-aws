@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
@@ -182,7 +185,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
@@ -216,7 +219,7 @@ func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, sam
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 		_, err := tfopensearch.FindDomainByName(ctx, conn, options.Primary.Attributes["domain_name"])
 
 		return err

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,7 +56,7 @@ func ResourceDataIntegration() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 				),
 			},
 			"schedule_config": {
@@ -74,7 +78,7 @@ func ResourceDataIntegration() *schema.Resource {
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 							),
 						},
 						"schedule_expression": {
@@ -92,7 +96,7 @@ func ResourceDataIntegration() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(regexp.MustCompile(`^\w+\:\/\/\w+\/[\w/!@#+=.-]+$`), "should be a valid source uri"),
+					validation.StringMatch(regexache.MustCompile(`^\w+\:\/\/\w+\/[\w/!@#+=.-]+$`), "should be a valid source uri"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -104,7 +108,9 @@ func ResourceDataIntegration() *schema.Resource {
 }
 
 func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appintegrationsservice.CreateDataIntegrationInput{
@@ -113,7 +119,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -123,16 +129,18 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.CreateDataIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AppIntegrations Data Integration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppIntegrations Data Integration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	return resourceDataIntegrationRead(ctx, d, meta)
+	return append(diags, resourceDataIntegrationRead(ctx, d, meta)...)
 }
 
 func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	output, err := conn.GetDataIntegrationWithContext(ctx, &appintegrationsservice.GetDataIntegrationInput{
 		Identifier: aws.String(d.Id()),
@@ -141,11 +149,11 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appintegrationsservice.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] AppIntegrations Data Integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppIntegrations Data Integration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Data Integration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
@@ -153,17 +161,19 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("kms_key", output.KmsKey)
 	d.Set("name", output.Name)
 	if err := d.Set("schedule_config", flattenScheduleConfig(output.ScheduleConfiguration)); err != nil {
-		return diag.Errorf("schedule_config tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "schedule_config tags: %s", err)
 	}
 	d.Set("source_uri", output.SourceURI)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	if d.HasChanges("description", "name") {
 		_, err := conn.UpdateDataIntegrationWithContext(ctx, &appintegrationsservice.UpdateDataIntegrationInput{
@@ -173,25 +183,27 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 		})
 
 		if err != nil {
-			return diag.Errorf("updating AppIntegrations Data Integration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppIntegrations Data Integration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceDataIntegrationRead(ctx, d, meta)
+	return append(diags, resourceDataIntegrationRead(ctx, d, meta)...)
 }
 
 func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	_, err := conn.DeleteDataIntegrationWithContext(ctx, &appintegrationsservice.DeleteDataIntegrationInput{
 		DataIntegrationIdentifier: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting AppIntegrations Data Integration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppIntegrations Data Integration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandScheduleConfig(scheduleConfig []interface{}) *appintegrationsservice.ScheduleConfiguration {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rbin_test
 
 import (
@@ -32,12 +35,12 @@ func TestAccRBinRule_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basic(description, resourceType),
+				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
@@ -45,8 +48,8 @@ func TestAccRBinRule_basic(t *testing.T) {
 						"retention_period_unit":  "DAYS",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
-						"resource_tag_key":   "some_tag",
-						"resource_tag_value": "",
+						"resource_tag_key":   "some_tag1",
+						"resource_tag_value": "some_value1",
 					}),
 				),
 			},
@@ -54,6 +57,26 @@ func TestAccRBinRule_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_basic2(description, resourceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
+						"retention_period_value": "10",
+						"retention_period_unit":  "DAYS",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
+						"resource_tag_key":   "some_tag3",
+						"resource_tag_value": "some_value3",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
+						"resource_tag_key":   "some_tag4",
+						"resource_tag_value": "some_value4",
+					}),
+				),
 			},
 		},
 	})
@@ -73,12 +96,12 @@ func TestAccRBinRule_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basic(description, resourceType),
+				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rbinrule),
+					testAccCheckRuleExists(ctx, resourceName, &rbinrule),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrbin.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,12 +123,12 @@ func TestAccRBinRule_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RBin),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfigTags1(resourceType, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -118,7 +141,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 			{
 				Config: testAccRuleConfigTags2(resourceType, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -127,7 +150,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 			{
 				Config: testAccRuleConfigTags1(resourceType, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -149,12 +172,12 @@ func TestAccRBinRule_lock_config(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rbin.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_lockConfig(resourceType, "DAYS", "7"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_unit", "DAYS"),
@@ -165,33 +188,34 @@ func TestAccRBinRule_lock_config(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
-	ctx := context.Background()
+func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rbin_rule" {
-			continue
-		}
-
-		_, err := conn.GetRule(ctx, &rbin.GetRuleInput{
-			Identifier: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rbin_rule" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetRule(ctx, &rbin.GetRuleInput{
+				Identifier: aws.String(rs.Primary.ID),
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.RBin, create.ErrActionCheckingDestroyed, tfrbin.ResNameRule, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.RBin, create.ErrActionCheckingDestroyed, tfrbin.ResNameRule, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, name string, rbinrule *rbin.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -202,8 +226,8 @@ func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.
 			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient()
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
+
 		resp, err := conn.GetRule(ctx, &rbin.GetRuleInput{
 			Identifier: aws.String(rs.Primary.ID),
 		})
@@ -218,15 +242,39 @@ func testAccCheckRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.
 	}
 }
 
-func testAccRuleConfig_basic(description, resourceType string) string {
+func testAccRuleConfig_basic1(description, resourceType string) string {
 	return fmt.Sprintf(`
 resource "aws_rbin_rule" "test" {
   description   = %[1]q
   resource_type = %[2]q
 
   resource_tags {
-    resource_tag_key   = "some_tag"
-    resource_tag_value = ""
+    resource_tag_key   = "some_tag1"
+    resource_tag_value = "some_value1"
+  }
+
+  retention_period {
+    retention_period_value = 10
+    retention_period_unit  = "DAYS"
+  }
+}
+`, description, resourceType)
+}
+
+func testAccRuleConfig_basic2(description, resourceType string) string {
+	return fmt.Sprintf(`
+resource "aws_rbin_rule" "test" {
+  description   = %[1]q
+  resource_type = %[2]q
+
+  resource_tags {
+    resource_tag_key   = "some_tag3"
+    resource_tag_value = "some_value3"
+  }
+
+  resource_tags {
+    resource_tag_key   = "some_tag4"
+    resource_tag_value = "some_value4"
   }
 
   retention_period {

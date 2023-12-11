@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose
 
 import (
@@ -9,7 +12,7 @@ import (
 
 // Custom Kinesis Firehose service lister functions using the same format as generated code.
 
-func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
+func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListDeliveryStreamsWithContext(ctx, input)
 		if err != nil {

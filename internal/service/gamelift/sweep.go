@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package gamelift
 
@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_gamelift_alias", &resource.Sweeper{
 		Name: "aws_gamelift_alias",
 		Dependencies: []string{
@@ -56,11 +56,11 @@ func init() {
 
 func sweepAliases(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	err = listAliases(ctx, &gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
 		if len(resp.Aliases) == 0 {
@@ -83,7 +83,7 @@ func sweepAliases(region string) error {
 		return nil
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping GameLift Alias sweep for %s: %s", region, err)
 			return nil
 		}
@@ -95,15 +95,15 @@ func sweepAliases(region string) error {
 
 func sweepBuilds(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	resp, err := conn.ListBuildsWithContext(ctx, &gamelift.ListBuildsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
 			return nil
 		}
@@ -133,15 +133,15 @@ func sweepBuilds(region string) error {
 
 func sweepScripts(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	resp, err := conn.ListScriptsWithContext(ctx, &gamelift.ListScriptsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelife Script sweep for %s: %s", region, err)
 			return nil
 		}
@@ -171,11 +171,11 @@ func sweepScripts(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -212,11 +212,11 @@ func sweepFleets(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing GameLift Fleet for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping GameLift Fleet for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GameLift Fleet sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -226,11 +226,11 @@ func sweepFleets(region string) error {
 
 func sweepGameServerGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -267,11 +267,11 @@ func sweepGameServerGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing GameLift Game Server Group for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping GameLift Game Server Group for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GameLift Game Server Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -281,15 +281,15 @@ func sweepGameServerGroups(region string) error {
 
 func sweepGameSessionQueue(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn()
+	conn := client.GameLiftConn(ctx)
 
 	out, err := conn.DescribeGameSessionQueuesWithContext(ctx, &gamelift.DescribeGameSessionQueuesInput{})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
 		return nil
 	}

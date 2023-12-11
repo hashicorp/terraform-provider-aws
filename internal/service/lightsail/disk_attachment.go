@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
@@ -5,9 +8,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -47,7 +52,7 @@ func ResourceDiskAttachment() *schema.Resource {
 }
 
 func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.AttachDiskInput{
 		DiskName:     aws.String(d.Get("disk_name").(string)),
@@ -55,13 +60,13 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 		InstanceName: aws.String(d.Get("instance_name").(string)),
 	}
 
-	out, err := conn.AttachDiskWithContext(ctx, &in)
+	out, err := conn.AttachDisk(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string), err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeAttachDisk), ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string))
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string))
 
 	if diag != nil {
 		return diag
@@ -79,7 +84,7 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDiskAttachmentById(ctx, conn, d.Id())
 
@@ -101,65 +106,65 @@ func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	dName := id_parts[0]
 	iName := id_parts[1]
 
 	// A Disk can only be detached from a stopped instance
-	iStateOut, err := waitInstanceStateWithContext(ctx, conn, &iName)
+	iStateOut, err := waitInstanceState(ctx, conn, &iName)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, iName, errors.New("Error waiting for Instance to enter running or stopped state"))
 	}
 
-	if aws.StringValue(iStateOut.State.Name) == "running" {
-		stopOut, err := conn.StopInstanceWithContext(ctx, &lightsail.StopInstanceInput{
+	if aws.ToString(iStateOut.State.Name) == "running" {
+		stopOut, err := conn.StopInstance(ctx, &lightsail.StopInstanceInput{
 			InstanceName: aws.String(iName),
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeStopInstance, ResInstance, iName, err)
+			return create.DiagError(names.Lightsail, string(types.OperationTypeStopInstance), ResInstance, iName, err)
 		}
 
-		diag := expandOperations(ctx, conn, stopOut.Operations, lightsail.OperationTypeStopInstance, ResInstance, iName)
+		diag := expandOperations(ctx, conn, stopOut.Operations, types.OperationTypeStopInstance, ResInstance, iName)
 
 		if diag != nil {
 			return diag
 		}
 	}
 
-	out, err := conn.DetachDiskWithContext(ctx, &lightsail.DetachDiskInput{
+	out, err := conn.DetachDisk(ctx, &lightsail.DetachDiskInput{
 		DiskName: aws.String(dName),
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string), err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeDetachDisk), ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string))
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string))
 
 	if diag != nil {
 		return diag
 	}
 
-	iStateOut, err = waitInstanceStateWithContext(ctx, conn, &iName)
+	iStateOut, err = waitInstanceState(ctx, conn, &iName)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, iName, errors.New("Error waiting for Instance to enter running or stopped state"))
 	}
 
-	if aws.StringValue(iStateOut.State.Name) != "running" {
-		startOut, err := conn.StartInstanceWithContext(ctx, &lightsail.StartInstanceInput{
+	if aws.ToString(iStateOut.State.Name) != "running" {
+		startOut, err := conn.StartInstance(ctx, &lightsail.StartInstanceInput{
 			InstanceName: aws.String(iName),
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeStartInstance, ResInstance, iName, err)
+			return create.DiagError(names.Lightsail, string(types.OperationTypeStartInstance), ResInstance, iName, err)
 		}
 
-		diag := expandOperations(ctx, conn, startOut.Operations, lightsail.OperationTypeStartInstance, ResInstance, iName)
+		diag := expandOperations(ctx, conn, startOut.Operations, types.OperationTypeStartInstance, ResInstance, iName)
 
 		if diag != nil {
 			return diag
@@ -167,4 +172,40 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
+}
+
+func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Client, id string) (*types.Disk, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid Disk Attachment id")
+	}
+
+	dName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetDiskInput{
+		DiskName: aws.String(dName),
+	}
+
+	out, err := conn.GetDisk(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	disk := out.Disk
+
+	if disk == nil || !aws.ToBool(disk.IsAttached) || aws.ToString(disk.Name) != dName || aws.ToString(disk.AttachedTo) != iName {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Disk, nil
 }

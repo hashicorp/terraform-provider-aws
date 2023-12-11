@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -54,7 +57,7 @@ const (
 
 func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	listenerArn := d.Get("listener_arn").(string)
 	certificateArn := d.Get("certificate_arn").(string)
@@ -88,7 +91,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionCreating, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionCreating, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
@@ -98,11 +101,11 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -127,11 +130,11 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	d.Set("certificate_arn", certificateArn)
@@ -142,7 +145,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 
 func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	certificateArn := d.Get("certificate_arn").(string)
 	listenerArn := d.Get("listener_arn").(string)
@@ -165,7 +168,7 @@ func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceDa
 			return diags
 		}
 
-		return create.DiagError(names.ELBV2, create.ErrActionDeleting, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionDeleting, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	return diags
@@ -181,6 +184,12 @@ func findListenerCertificate(ctx context.Context, conn *elbv2.ELBV2, certificate
 	}
 
 	resp, err := conn.DescribeListenerCertificatesWithContext(ctx, params)
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+		return &retry.NotFoundError{
+			LastRequest: params,
+			LastError:   err,
+		}
+	}
 	if err != nil {
 		return err
 	}

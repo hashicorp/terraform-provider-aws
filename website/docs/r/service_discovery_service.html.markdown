@@ -73,7 +73,7 @@ resource "aws_service_discovery_service" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, ForceNew) The name of the service.
 * `description` - (Optional) The description of the service.
@@ -87,7 +87,7 @@ The following arguments are supported:
 
 ### dns_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `namespace_id` - (Required, ForceNew) The ID of the namespace to use for DNS configuration.
 * `dns_records` - (Required) An array that contains one DnsRecord object for each resource record set.
@@ -95,14 +95,14 @@ The following arguments are supported:
 
 #### dns_records
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `ttl` - (Required) The amount of time, in seconds, that you want DNS resolvers to cache the settings for this resource record set.
 * `type` - (Required, ForceNew) The type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV, CNAME
 
 ### health_check_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `failure_threshold` - (Optional) The number of consecutive health checks. Maximum value of 10.
 * `resource_path` - (Optional) The path that you want Route 53 to request when performing health checks. Route 53 automatically adds the DNS name for the service. If you don't specify a value, the default value is /.
@@ -110,13 +110,13 @@ The following arguments are supported:
 
 ### health_check_custom_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `failure_threshold` - (Optional, ForceNew) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
@@ -124,8 +124,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Discovery Service can be imported using the service ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Discovery Service using the service ID. For example:
 
+```terraform
+import {
+  to = aws_service_discovery_service.example
+  id = "0123456789"
+}
 ```
-$ terraform import aws_service_discovery_service.example 0123456789
+
+Using `terraform import`, import Service Discovery Service using the service ID. For example:
+
+```console
+% terraform import aws_service_discovery_service.example 0123456789
 ```

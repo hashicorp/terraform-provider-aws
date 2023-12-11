@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -22,7 +26,7 @@ func DataSourceNATGateways() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -38,7 +42,9 @@ func DataSourceNATGateways() *schema.Resource {
 }
 
 func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNatGatewaysInput{}
 
@@ -56,7 +62,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 		)...)
 	}
 
-	input.Filter = append(input.Filter, BuildFiltersDataSource(
+	input.Filter = append(input.Filter, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -67,7 +73,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindNATGateways(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 NAT Gateways: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateways: %s", err)
 	}
 
 	var natGatewayIDs []string
@@ -79,5 +85,5 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", natGatewayIDs)
 
-	return nil
+	return diags
 }

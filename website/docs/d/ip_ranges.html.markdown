@@ -53,7 +53,9 @@ CIDR blocks, Terraform will fail.
 
 * `url` - (Optional) Custom URL for source JSON file. Syntax must match [AWS IP Address Ranges documentation][1]. Defaults to `https://ip-ranges.amazonaws.com/ip-ranges.json`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `cidr_blocks` - Lexically ordered list of CIDR blocks.
 * `ipv6_cidr_blocks` - Lexically ordered list of IPv6 CIDR blocks.

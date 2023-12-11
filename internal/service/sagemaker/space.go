@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -44,13 +47,17 @@ func ResourceSpace() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"domain_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"space_display_name": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"space_settings": {
 				Type:     schema.TypeList,
@@ -99,6 +106,10 @@ func ResourceSpace() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -145,6 +156,10 @@ func ResourceSpace() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -164,7 +179,7 @@ func ResourceSpace() *schema.Resource {
 									"custom_image": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MaxItems: 30,
+										MaxItems: 200,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"app_image_config_name": {
@@ -194,6 +209,10 @@ func ResourceSpace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -202,18 +221,22 @@ func ResourceSpace() *schema.Resource {
 
 func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainId := d.Get("domain_id").(string)
 	spaceName := d.Get("space_name").(string)
 	input := &sagemaker.CreateSpaceInput{
 		SpaceName: aws.String(spaceName),
 		DomainId:  aws.String(domainId),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
 		input.SpaceSettings = expandSpaceSettings(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("space_display_name"); ok {
+		input.SpaceDisplayName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
@@ -233,7 +256,7 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
@@ -251,10 +274,12 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.StringValue(Space.SpaceArn)
-	d.Set("space_name", Space.SpaceName)
-	d.Set("domain_id", Space.DomainId)
 	d.Set("arn", arn)
+	d.Set("domain_id", Space.DomainId)
 	d.Set("home_efs_file_system_uid", Space.HomeEfsFileSystemUid)
+	d.Set("space_display_name", Space.SpaceDisplayName)
+	d.Set("space_name", Space.SpaceName)
+	d.Set("url", Space.Url)
 
 	if err := d.Set("space_settings", flattenSpaceSettings(Space.SpaceSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
@@ -265,16 +290,23 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChange("space_settings") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		domainID := d.Get("domain_id").(string)
 		name := d.Get("space_name").(string)
 
 		input := &sagemaker.UpdateSpaceInput{
-			SpaceName:     aws.String(name),
-			DomainId:      aws.String(domainID),
-			SpaceSettings: expandSpaceSettings(d.Get("space_settings").([]interface{})),
+			SpaceName: aws.String(name),
+			DomainId:  aws.String(domainID),
+		}
+
+		if d.HasChanges("space_settings") {
+			input.SpaceSettings = expandSpaceSettings(d.Get("space_settings").([]interface{}))
+		}
+
+		if d.HasChange("space_display_name") {
+			input.SpaceDisplayName = aws.String(d.Get("space_display_name").(string))
 		}
 
 		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)
@@ -293,7 +325,7 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("space_name").(string)
 	domainID := d.Get("domain_id").(string)

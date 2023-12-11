@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 				Config: testAccSecretConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexp.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -316,7 +319,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "description", "San Holo feat. Duskus"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
+						regexache.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
 			},
 			{
@@ -332,7 +335,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
+						regexache.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
 			},
 		},
@@ -341,7 +344,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 
 func testAccCheckSecretDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret" {
@@ -376,7 +379,7 @@ func testAccCheckSecretExists(ctx context.Context, n string, v *secretsmanager.D
 			return fmt.Errorf("No Secrets Manager Secret ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)
 
@@ -391,7 +394,7 @@ func testAccCheckSecretExists(ctx context.Context, n string, v *secretsmanager.D
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	input := &secretsmanager.ListSecretsInput{}
 

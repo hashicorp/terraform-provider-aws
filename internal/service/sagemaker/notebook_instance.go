@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -116,7 +119,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2)$`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2)$`), ""),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
@@ -159,7 +162,7 @@ func ResourceNotebookInstance() *schema.Resource {
 
 func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
@@ -168,7 +171,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get("role_arn").(string)),
 		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
-		Tags:                                 GetTagsIn(ctx),
+		Tags:                                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accelerator_types"); ok && v.(*schema.Set).Len() > 0 {
@@ -229,7 +232,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	notebookInstance, err := FindNotebookInstanceByName(ctx, conn, d.Id())
 
@@ -270,7 +273,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateNotebookInstanceInput{
@@ -365,7 +368,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	notebook, err := FindNotebookInstanceByName(ctx, conn, d.Id())
 

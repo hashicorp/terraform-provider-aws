@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediastore
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -38,7 +41,7 @@ func ResourceContainer() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -58,11 +61,11 @@ func ResourceContainer() *schema.Resource {
 
 func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.CreateContainerInput{
 		ContainerName: aws.String(d.Get("name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateContainerWithContext(ctx, input)
@@ -91,7 +94,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.DescribeContainerInput{
 		ContainerName: aws.String(d.Id()),
@@ -124,7 +127,7 @@ func resourceContainerUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.DeleteContainerInput{
 		ContainerName: aws.String(d.Id()),

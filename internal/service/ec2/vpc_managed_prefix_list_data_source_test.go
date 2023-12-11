@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,7 +19,7 @@ import (
 
 func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, name string, id *string, arn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := conn.DescribeManagedPrefixListsWithContext(ctx, &ec2.DescribeManagedPrefixListsInput{
 			Filters: []*ec2.Filter{
@@ -163,7 +166,7 @@ func TestAccVPCManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCManagedPrefixListDataSourceConfig_matchesTooMany,
-				ExpectError: regexp.MustCompile(`multiple EC2 Managed Prefix Lists matched`),
+				ExpectError: regexache.MustCompile(`multiple EC2 Managed Prefix Lists matched`),
 			},
 		},
 	})

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -175,7 +178,7 @@ func ResourceIntegration() *schema.Resource {
 
 func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateIntegrationInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -243,7 +246,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -270,11 +273,11 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
-	err = d.Set("request_parameters", flex.PointersMapToStringList(resp.RequestParameters))
+	err = d.Set("request_parameters", flex.FlattenStringMap(resp.RequestParameters))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_parameters: %s", err)
 	}
-	err = d.Set("request_templates", flex.PointersMapToStringList(resp.RequestTemplates))
+	err = d.Set("request_templates", flex.FlattenStringMap(resp.RequestTemplates))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_templates: %s", err)
 	}
@@ -293,7 +296,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -334,7 +337,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := flex.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {
@@ -400,7 +403,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration (%s)", d.Id())
 	_, err := conn.DeleteIntegrationWithContext(ctx, &apigatewayv2.DeleteIntegrationInput{
@@ -426,7 +429,7 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 	apiId := parts[0]
 	integrationId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(apiId),

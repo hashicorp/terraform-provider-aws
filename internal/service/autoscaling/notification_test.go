@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -125,7 +128,7 @@ func testAccCheckASGNotificationExists(ctx context.Context, n string, groups []s
 			return fmt.Errorf("No ASG Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: aws.StringSlice(groups),
 			MaxRecords:            aws.Int64(100),
@@ -150,7 +153,7 @@ func testAccCheckASGNDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			groups := []*string{aws.String("foobar1-terraform-test")}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 			opts := &autoscaling.DescribeNotificationConfigurationsInput{
 				AutoScalingGroupNames: groups,
 			}

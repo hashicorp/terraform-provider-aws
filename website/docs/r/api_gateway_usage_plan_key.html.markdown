@@ -41,15 +41,15 @@ resource "aws_api_gateway_usage_plan_key" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `key_id` - (Required) Identifier of the API key resource.
 * `key_type` - (Required) Type of the API key resource. Currently, the valid key type is API_KEY.
 * `usage_plan_id` - (Required) Id of the usage plan resource representing to associate the key to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of a usage plan key.
 * `key_id` - Identifier of the API gateway key resource.
@@ -60,8 +60,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS API Gateway Usage Plan Key can be imported using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS API Gateway Usage Plan Key using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`. For example:
 
-```sh
-$ terraform import aws_api_gateway_usage_plan_key.key 12345abcde/zzz
+```terraform
+import {
+  to = aws_api_gateway_usage_plan_key.key
+  id = "12345abcde/zzz"
+}
+```
+
+Using `terraform import`, import AWS API Gateway Usage Plan Key using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_usage_plan_key.key 12345abcde/zzz
 ```

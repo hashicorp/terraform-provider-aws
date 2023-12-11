@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rum
 
 import (
@@ -53,7 +56,7 @@ func ResourceMetricsDestination() *schema.Resource {
 }
 
 func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn()
+	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	name := d.Get("app_monitor_name").(string)
 	input := &cloudwatchrum.PutRumMetricsDestinationInput{
@@ -83,7 +86,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn()
+	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	dest, err := FindMetricsDestinationByName(ctx, conn, d.Id())
 
@@ -106,7 +109,7 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn()
+	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
 		AppMonitorName: aws.String(d.Id()),

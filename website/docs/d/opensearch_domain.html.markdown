@@ -20,13 +20,13 @@ data "aws_opensearch_domain" "my_domain" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `domain_name` – (Required) Name of the domain.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `access_policies` – Policy document attached to the domain.
 * `advanced_options` - Key-value string pairs to specify advanced configuration options.
@@ -84,9 +84,17 @@ The following attributes are exported:
     * `enabled` - Whether log publishing is enabled.
 * `node_to_node_encryption` - Domain in transit encryption related options.
     * `enabled` - Whether node to node encryption is enabled.
+* `off_peak_window_options` - Off Peak update options
+    * `enabled` - Enabled disabled toggle for off-peak update window
+    * `off_peak_window`
+        * `window_start_time` - 10h window for updates
+            * `hours` - Starting hour of the 10-hour window for updates
+            * `minutes` - Starting minute of the 10-hour window for updates
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
+* `software_update_options` - Software update options for the domain
+    * `auto_software_update_enabled` - Enabled or disabled.
 * `tags` - Tags assigned to the domain.
 * `vpc_options` - VPC Options for private OpenSearch domains.
     * `availability_zones` - Availability zones used by the domain.

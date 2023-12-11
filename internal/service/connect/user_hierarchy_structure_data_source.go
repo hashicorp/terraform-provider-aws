@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -10,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_connect_user_hierarchy_structure")
@@ -79,7 +82,9 @@ func userHierarchyLevelDataSourceSchema() *schema.Schema {
 }
 
 func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 
@@ -88,18 +93,18 @@ func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.Resourc
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Structure for Connect Instance (%s): %w", instanceID, err))
+		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
 	}
 
 	if resp == nil || resp.HierarchyStructure == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID))
+		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID)
 	}
 
 	if err := d.Set("hierarchy_structure", flattenUserHierarchyStructure(resp.HierarchyStructure)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID))
+		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID)
 	}
 
 	d.SetId(instanceID)
 
-	return nil
+	return diags
 }

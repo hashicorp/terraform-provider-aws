@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,7 +51,7 @@ func ResourceServiceLinkedRole() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.`), "must be a full service hostname e.g. elasticbeanstalk.amazonaws.com"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.`), "must be a full service hostname e.g. elasticbeanstalk.amazonaws.com"),
 			},
 			"create_date": {
 				Type:     schema.TypeString,
@@ -90,7 +93,7 @@ func ResourceServiceLinkedRole() *schema.Resource {
 
 func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	serviceName := d.Get("aws_service_name").(string)
 	input := &iam.CreateServiceLinkedRoleInput{
@@ -113,7 +116,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.Role.Arn))
 
-	if tags := GetTagsIn(ctx); len(tags) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 		if err != nil {
@@ -137,7 +140,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
 
@@ -170,14 +173,14 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
 
-	SetTagsOut(ctx, role.Tags)
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }
 
 func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
@@ -218,7 +221,7 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
@@ -227,29 +230,40 @@ func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting IAM Service Linked Role: %s", d.Id())
-	output, err := conn.DeleteServiceLinkedRoleWithContext(ctx, &iam.DeleteServiceLinkedRoleInput{
+	if err := DeleteServiceLinkedRole(ctx, conn, roleName); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+// DeleteServiceLinkedRole is called from the service/ram package.
+func DeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, roleName string) error {
+	input := &iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
-	})
+	}
+
+	output, err := conn.DeleteServiceLinkedRoleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Service Linked Role (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM Service Linked Role (%s): %w", roleName, err)
 	}
 
 	deletionTaskID := aws.StringValue(output.DeletionTaskId)
 
 	if deletionTaskID == "" {
-		return diags
+		return nil
 	}
 
 	if err := waitServiceLinkedRoleDeleted(ctx, conn, deletionTaskID); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for IAM Service Linked Role (%s) delete: %s", d.Id(), err)
+		return fmt.Errorf("waiting for IAM Service Linked Role (%s) delete: %w", roleName, err)
 	}
 
-	return diags
+	return nil
 }
 
 func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.IAM, id string) error {
@@ -265,13 +279,13 @@ func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.IAM, id string)
 
 	if output, ok := outputRaw.(*iam.GetServiceLinkedRoleDeletionStatusOutput); ok {
 		if reason := output.Reason; reason != nil {
-			var errs *multierror.Error
+			var errs []error
 
 			for _, v := range reason.RoleUsageList {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(v.Region), strings.Join(aws.StringValueSlice(v.Resources), ", ")))
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(v.Region), strings.Join(aws.StringValueSlice(v.Resources), ", ")))
 			}
 
-			tfresource.SetLastError(err, fmt.Errorf("%s: %w", aws.StringValue(reason.Reason), errs.ErrorOrNil()))
+			tfresource.SetLastError(err, fmt.Errorf("%s: %w", aws.StringValue(reason.Reason), errors.Join(errs...)))
 		}
 
 		return err

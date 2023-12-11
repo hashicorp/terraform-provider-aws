@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `workspace_id` - (Required) Prometheus workspace ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Prometheus workspace.
 * `created_date` - Creation date of the Prometheus workspace.

@@ -23,23 +23,32 @@ resource "aws_api_gateway_request_validator" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the request validator
 * `rest_api_id` - (Required) ID of the associated Rest API
 * `validate_request_body` - (Optional) Boolean whether to validate request body. Defaults to `false`.
 * `validate_request_parameters` - (Optional) Boolean whether to validate request parameters. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the request validator
 
 ## Import
 
-`aws_api_gateway_request_validator` can be imported using `REST-API-ID/REQUEST-VALIDATOR-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_request_validator` using `REST-API-ID/REQUEST-VALIDATOR-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_request_validator.example
+  id = "12345abcde/67890fghij"
+}
 ```
-$ terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij
+
+Using `terraform import`, import `aws_api_gateway_request_validator` using `REST-API-ID/REQUEST-VALIDATOR-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij
 ```

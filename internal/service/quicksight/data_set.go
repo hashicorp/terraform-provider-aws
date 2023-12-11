@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -35,307 +38,309 @@ func ResourceDataSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"column_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 8,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"geo_spatial_column_group": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"columns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 16,
-										Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"column_groups": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 8,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"geo_spatial_column_group": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"columns": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 16,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+										"country_code": {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(quicksight.GeoSpatialCountryCode_Values(), false),
+										},
+										"name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 64),
 										},
 									},
-									"country_code": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(quicksight.GeoSpatialCountryCode_Values(), false),
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 64),
+								},
+							},
+						},
+					},
+				},
+				"column_level_permission_rules": {
+					Type:     schema.TypeList,
+					MinItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"column_names": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principals": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 100,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"data_set_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"data_set_usage_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"disable_use_as_direct_query_source": {
+								Type:     schema.TypeBool,
+								Computed: true,
+								Optional: true,
+							},
+							"disable_use_as_imported_source": {
+								Type:     schema.TypeBool,
+								Computed: true,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"field_folders": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_folders_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 5000,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"description": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 500),
+							},
+						},
+					},
+				},
+				"import_mode": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(quicksight.DataSetImportMode_Values(), false),
+				},
+				"logical_table_map": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					MaxItems: 64,
+					Elem:     logicalTableMapSchema(),
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"output_columns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"description": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"permissions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 20,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+					},
+				},
+				"physical_table_map": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 32,
+					Elem:     physicalTableMapSchema(),
+				},
+				"row_level_permission_data_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"format_version": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionFormatVersion_Values(), false),
+							},
+							"namespace": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 64),
+							},
+							"permission_policy": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionPolicy_Values(), false),
+							},
+							"status": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+							},
+						},
+					},
+				},
+				"row_level_permission_tag_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"status": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+							},
+							"tag_rules": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 50,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.NoZeroValues,
+										},
+										"match_all_value": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"tag_key": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										"tag_multi_value_delimiter": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 10),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"column_level_permission_rules": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"column_names": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principals": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 100,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"data_set_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"data_set_usage_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"disable_use_as_direct_query_source": {
-							Type:     schema.TypeBool,
-							Computed: true,
-							Optional: true,
-						},
-						"disable_use_as_imported_source": {
-							Type:     schema.TypeBool,
-							Computed: true,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"field_folders": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_folders_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"columns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 5000,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 500),
-						},
-					},
-				},
-			},
-			"import_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(quicksight.DataSetImportMode_Values(), false),
-			},
-			"logical_table_map": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 64,
-				Elem:     logicalTableMapSchema(),
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"output_columns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
-						},
-					},
-				},
-			},
-			"physical_table_map": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MaxItems: 32,
-				Elem:     physicalTableMapSchema(),
-			},
-			"row_level_permission_data_set": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"format_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionFormatVersion_Values(), false),
-						},
-						"namespace": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 64),
-						},
-						"permission_policy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionPolicy_Values(), false),
-						},
-						"status": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
-						},
-					},
-				},
-			},
-			"row_level_permission_tag_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"status": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
-						},
-						"tag_rules": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 50,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"column_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.NoZeroValues,
-									},
-									"match_all_value": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"tag_key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									"tag_multi_value_delimiter": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 10),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"refresh_properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"refresh_configuration": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"incremental_refresh": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"lookback_window": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"column_name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"size": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-															"size_unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(quicksight.LookbackWindowSizeUnit_Values(), false),
+				"refresh_properties": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"refresh_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"incremental_refresh": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"lookback_window": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"column_name": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																},
+																"size": {
+																	Type:     schema.TypeInt,
+																	Required: true,
+																},
+																"size_unit": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(quicksight.LookbackWindowSizeUnit_Values(), false),
+																},
 															},
 														},
 													},
@@ -348,10 +353,11 @@ func ResourceDataSet() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
+
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				mode := diff.Get("import_mode").(string)
@@ -832,7 +838,7 @@ func physicalTableMapSchema() *schema.Resource {
 }
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -848,7 +854,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
 		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -871,8 +877,8 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LogicalTableMap = expandDataSetLogicalTableMap(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -885,7 +891,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.CreateDataSetWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error creating QuickSight Data Set: %s", err)
+		return diag.Errorf("creating QuickSight Data Set: %s", err)
 	}
 
 	if v, ok := d.GetOk("refresh_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -897,7 +903,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.PutDataSetRefreshPropertiesWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error putting QuickSight Data Set Refresh Properties: %s", err)
+			return diag.Errorf("putting QuickSight Data Set Refresh Properties: %s", err)
 		}
 	}
 
@@ -905,7 +911,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
@@ -926,11 +932,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Set (%s): %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataSet == nil {
-		return diag.Errorf("error describing QuickSight Data Set (%s): empty output", d.Id())
+		return diag.Errorf("describing QuickSight Data Set (%s): empty output", d.Id())
 	}
 
 	dataSet := output.DataSet
@@ -942,39 +948,39 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
-		return diag.Errorf("error setting column_groups: %s", err)
+		return diag.Errorf("setting column_groups: %s", err)
 	}
 
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
-		return diag.Errorf("error setting column_level_permission_rules: %s", err)
+		return diag.Errorf("setting column_level_permission_rules: %s", err)
 	}
 
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
-		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
+		return diag.Errorf("setting data_set_usage_configuration: %s", err)
 	}
 
 	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
-		return diag.Errorf("error setting field_folders: %s", err)
+		return diag.Errorf("setting field_folders: %s", err)
 	}
 
 	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapSchema())); err != nil {
-		return diag.Errorf("error setting logical_table_map: %s", err)
+		return diag.Errorf("setting logical_table_map: %s", err)
 	}
 
 	if err := d.Set("output_columns", flattenOutputColumns(dataSet.OutputColumns)); err != nil {
-		return diag.Errorf("error setting output_columns: %s", err)
+		return diag.Errorf("setting output_columns: %s", err)
 	}
 
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
-		return diag.Errorf("error setting physical_table_map: %s", err)
+		return diag.Errorf("setting physical_table_map: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
-		return diag.Errorf("error setting row_level_permission_data_set: %s", err)
+		return diag.Errorf("setting row_level_permission_data_set: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
-		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
+		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
@@ -983,11 +989,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 
 	propsResp, err := conn.DescribeDataSetRefreshPropertiesWithContext(ctx, &quicksight.DescribeDataSetRefreshPropertiesInput{
@@ -995,13 +1001,13 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		DataSetId:    aws.String(dataSetId),
 	})
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return diag.Errorf("error describing refresh properties (%s): %s", d.Id(), err)
+	if err != nil && !(tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, quicksight.ErrCodeInvalidParameterValueException, "not a SPICE dataset")) {
+		return diag.Errorf("describing refresh properties (%s): %s", d.Id(), err)
 	}
 
 	if err == nil {
 		if err := d.Set("refresh_properties", flattenRefreshProperties(propsResp.DataSetRefreshProperties)); err != nil {
-			return diag.Errorf("error setting refresh properties: %s", err)
+			return diag.Errorf("setting refresh properties: %s", err)
 		}
 	}
 
@@ -1009,7 +1015,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permissions", "tags", "tags_all", "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1041,7 +1047,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err = conn.UpdateDataSetWithContext(ctx, params)
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Data Set (%s): %s", d.Id(), err)
+			return diag.Errorf("updating QuickSight Data Set (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1052,10 +1058,10 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateDataSetPermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),
@@ -1073,7 +1079,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.UpdateDataSetPermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
+			return diag.Errorf("updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
 		}
 	}
 
@@ -1092,7 +1098,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				DataSetId:    aws.String(dataSetId),
 			})
 			if err != nil {
-				return diag.Errorf("error deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+				return diag.Errorf("deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
 			}
 		} else {
 			_, err = conn.PutDataSetRefreshPropertiesWithContext(ctx, &quicksight.PutDataSetRefreshPropertiesInput{
@@ -1101,7 +1107,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				DataSetRefreshProperties: expandDataSetRefreshProperties(d.Get("refresh_properties").([]interface{})),
 			})
 			if err != nil {
-				return diag.Errorf("error updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+				return diag.Errorf("updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -1110,7 +1116,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1130,7 +1136,7 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting QuickSight Data Set (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -1313,8 +1319,8 @@ func expandDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.L
 	if v, ok := tfMap["physical_table_id"].(string); ok && v != "" {
 		logicalTableSource.PhysicalTableId = aws.String(v)
 	}
-	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok && len(v) > 0 {
-		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v)
+	if v, ok := tfMap["join_instruction"].([]interface{}); ok && len(v) > 0 {
+		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v[0].(map[string]interface{}))
 	}
 
 	return logicalTableSource
@@ -1644,10 +1650,6 @@ func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagCo
 }
 
 func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
-	if tfSet.Len() == 0 {
-		return nil
-	}
-
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
 	for _, v := range tfSet.List() {
 		vMap, ok := v.(map[string]interface{})
@@ -2426,10 +2428,6 @@ func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[strin
 }
 
 func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
-	if len(apiObject) == 0 {
-		return nil
-	}
-
 	var tfList []interface{}
 	for k, v := range apiObject {
 		if v == nil {

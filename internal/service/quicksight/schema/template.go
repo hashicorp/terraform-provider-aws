@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DefinitionSchema() *schema.Schema {
+func TemplateDefinitionSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TemplateVersionDefinition.html
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -24,19 +26,7 @@ func DefinitionSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_configuration": dataSetConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetConfiguration.html
 				"analysis_defaults":      analysisDefaultSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
-				"calculated_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 100,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-							"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
-						},
-					},
-				},
+				"calculated_fields":      calculatedFieldsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -44,7 +34,7 @@ func DefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
@@ -174,6 +164,22 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 	}
 }
 
+func calculatedFieldsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
+		Type:     schema.TypeSet,
+		MinItems: 1,
+		MaxItems: 500,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"expression":          stringSchema(true, validation.StringLenBetween(1, 32000)),
+				"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
+			},
+		},
+	}
+}
+
 func numericalAggregationFunctionSchema(required bool) *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 		Type:     schema.TypeList,
@@ -210,17 +216,18 @@ func idSchema() *schema.Schema {
 		Required: true,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 512),
-			validation.StringMatch(regexp.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
+			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
 	}
 }
 
-func columnSchema() *schema.Schema {
+func columnSchema(required bool) *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 		Type:     schema.TypeList,
 		MinItems: 1,
 		MaxItems: 1,
-		Required: true,
+		Required: required,
+		Optional: !required,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
@@ -321,7 +328,7 @@ func rollingDateConfigurationSchema() *schema.Schema {
 	}
 }
 
-func SourceEntitySchema() *schema.Schema {
+func TemplateSourceEntitySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -344,24 +351,7 @@ func SourceEntitySchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: verify.ValidARN,
 							},
-							"data_set_references": {
-								Type:     schema.TypeList,
-								Required: true,
-								MinItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"data_set_arn": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: verify.ValidARN,
-										},
-										"data_set_placeholder": {
-											Type:     schema.TypeString,
-											Required: true,
-										},
-									},
-								},
-							},
+							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
 				},
@@ -385,7 +375,7 @@ func SourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
+func ExpandTemplateSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -400,7 +390,7 @@ func ExpandSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
 	if v, ok := tfMap["source_analysis"].([]interface{}); ok && len(v) > 0 {
 		sourceEntity.SourceAnalysis = expandSourceAnalysis(v[0].(map[string]interface{}))
 	} else if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		sourceEntity.SourceTemplate = expandSourceTemplate(v[0].(map[string]interface{}))
+		sourceEntity.SourceTemplate = expandTemplateSourceTemplate(v[0].(map[string]interface{}))
 	}
 
 	return sourceEntity
@@ -461,7 +451,7 @@ func expandDataSetReference(tfMap map[string]interface{}) *quicksight.DataSetRef
 	return dataSetReference
 }
 
-func expandSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSourceTemplate {
+func expandTemplateSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -474,7 +464,7 @@ func expandSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSour
 	return sourceTemplate
 }
 
-func ExpandDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinition {
+func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -489,8 +479,8 @@ func ExpandDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinitio
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["calculated_fields"].([]interface{}); ok && len(v) > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v)
+	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
+		definition.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
 		definition.ColumnConfigurations = expandColumnConfigurations(v)
@@ -501,8 +491,8 @@ func ExpandDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinitio
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
 		definition.FilterGroups = expandFilterGroups(v)
 	}
-	if v, ok := tfMap["parameters_declarations"].([]interface{}); ok && len(v) > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v)
+	if v, ok := tfMap["parameters_declarations"].(*schema.Set); ok && v.Len() > 0 {
+		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
 		definition.Sheets = expandSheetDefinitions(v)
@@ -956,7 +946,7 @@ func expandRollingDateConfiguration(tfList []interface{}) *quicksight.RollingDat
 
 	config := &quicksight.RollingDateConfiguration{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok {
+	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		config.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap["expression"].(string); ok {

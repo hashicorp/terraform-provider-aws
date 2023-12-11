@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfprotov5
 
 import (
@@ -7,6 +10,13 @@ import (
 // ProviderServer is an interface that reflects that Terraform protocol.
 // Providers must implement this interface.
 type ProviderServer interface {
+	// GetMetadata returns upfront information about server capabilities and
+	// supported resource types without requiring the server to instantiate all
+	// schema information, which may be memory intensive. This RPC is optional,
+	// where clients may receive an unimplemented RPC error. Clients should
+	// ignore the error and call the GetProviderSchema RPC as a fallback.
+	GetMetadata(context.Context, *GetMetadataRequest) (*GetMetadataResponse, error)
+
 	// GetProviderSchema is called when Terraform needs to know what the
 	// provider's schema is, along with the schemas of all its resources
 	// and data sources.
@@ -37,6 +47,27 @@ type ProviderServer interface {
 	// data source is to terraform-plugin-go, so they're their own
 	// interface that is composed into ProviderServer.
 	DataSourceServer
+}
+
+// GetMetadataRequest represents a GetMetadata RPC request.
+type GetMetadataRequest struct{}
+
+// GetMetadataResponse represents a GetMetadata RPC response.
+type GetMetadataResponse struct {
+	// ServerCapabilities defines optionally supported protocol features,
+	// such as forward-compatible Terraform behavior changes.
+	ServerCapabilities *ServerCapabilities
+
+	// Diagnostics report errors or warnings related to returning the
+	// provider's schemas. Returning an empty slice indicates success, with
+	// no errors or warnings generated.
+	Diagnostics []*Diagnostic
+
+	// DataSources returns metadata for all data resources.
+	DataSources []DataSourceMetadata
+
+	// Resources returns metadata for all managed resources.
+	Resources []ResourceMetadata
 }
 
 // GetProviderSchemaRequest represents a Terraform RPC request for the

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -126,7 +129,7 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 
 func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_snapshot_copy" {
@@ -161,7 +164,7 @@ func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *rds.DBSnap
 			return fmt.Errorf("No RDS DB Snapshot Copy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

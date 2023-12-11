@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,9 +24,9 @@ func TestAccEC2OutpostsCoIPPoolDataSource_filter(t *testing.T) {
 			{
 				Config: testAccOutpostsCoIPPoolDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexp.MustCompile(`^lgw-rtb-`)),
-					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexp.MustCompile(`^ipv4pool-coip-`)),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_cidrs.#", "0"),
+					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
+					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexache.MustCompile(`^ipv4pool-coip-`)),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_cidrs.#", 0),
 				),
 			},
 		},
@@ -42,10 +45,10 @@ func TestAccEC2OutpostsCoIPPoolDataSource_id(t *testing.T) {
 			{
 				Config: testAccOutpostsCoIPPoolDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexp.MustCompile(`^lgw-rtb-`)),
-					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexp.MustCompile(`^ipv4pool-coip-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ec2", regexp.MustCompile(`coip-pool/ipv4pool-coip-.+$`)),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_cidrs.#", "0"),
+					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
+					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexache.MustCompile(`^ipv4pool-coip-`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ec2", regexache.MustCompile(`coip-pool/ipv4pool-coip-.+$`)),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_cidrs.#", 0),
 				),
 			},
 		},

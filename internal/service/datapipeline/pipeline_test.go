@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline_test
 
 import (
@@ -165,7 +168,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 
 func testAccCheckPipelineDisappears(ctx context.Context, conf *datapipeline.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
 		params := &datapipeline.DeletePipelineInput{
 			PipelineId: conf.PipelineId,
 		}
@@ -180,7 +183,7 @@ func testAccCheckPipelineDisappears(ctx context.Context, conf *datapipeline.Pipe
 
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datapipeline_pipeline" {
@@ -217,7 +220,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *datapipeline.P
 			return fmt.Errorf("No DataPipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
 
 		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
 
@@ -234,7 +237,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *datapipeline.P
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
 
 	input := &datapipeline.ListPipelinesInput{}
 

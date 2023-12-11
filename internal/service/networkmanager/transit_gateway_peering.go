@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -87,13 +90,13 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 }
 
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
 	input := &networkmanager.CreateTransitGatewayPeeringInput{
 		CoreNetworkId:     aws.String(coreNetworkID),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		TransitGatewayArn: aws.String(transitGatewayARN),
 	}
 
@@ -114,7 +117,7 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	transitGatewayPeering, err := FindTransitGatewayPeeringByID(ctx, conn, d.Id())
 
@@ -145,7 +148,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 
-	SetTagsOut(ctx, p.Tags)
+	setTagsOut(ctx, p.Tags)
 
 	return nil
 }
@@ -156,7 +159,7 @@ func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
 	_, err := conn.DeletePeeringWithContext(ctx, &networkmanager.DeletePeeringInput{

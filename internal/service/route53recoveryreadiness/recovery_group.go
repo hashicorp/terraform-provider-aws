@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness
 
 import (
@@ -64,7 +67,7 @@ func ResourceRecoveryGroup() *schema.Resource {
 
 func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	name := d.Get("recovery_group_name").(string)
 	input := &route53recoveryreadiness.CreateRecoveryGroupInput{
@@ -80,7 +83,7 @@ func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.RecoveryGroupName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.RecoveryGroupArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(output.RecoveryGroupArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Recovery Group (%s) tags: %s", d.Id(), err)
 	}
 
@@ -89,7 +92,7 @@ func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRecoveryGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	input := &route53recoveryreadiness.GetRecoveryGroupInput{
 		RecoveryGroupName: aws.String(d.Id()),
@@ -115,7 +118,7 @@ func resourceRecoveryGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRecoveryGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &route53recoveryreadiness.UpdateRecoveryGroupInput{
@@ -135,7 +138,7 @@ func resourceRecoveryGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRecoveryGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Recovery Readiness Recovery Group: %s", d.Id())
 	_, err := conn.DeleteRecoveryGroupWithContext(ctx, &route53recoveryreadiness.DeleteRecoveryGroupInput{

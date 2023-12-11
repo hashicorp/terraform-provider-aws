@@ -33,15 +33,15 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0"
-    - linters:
-        - staticcheck
-      path: internal/conns/
-      text: "SA1019: s3Config.DisableRestProtocolURICleaning is deprecated"
     # Per-Service
     - linters:
         - staticcheck
       path: internal/service/batch/
       text: "SA1019: apiObject.ImageId is deprecated: This field is deprecated"
+    - linters:
+        - staticcheck
+      path: internal/service/chime/
+      text: "SA1019: conn.\\w+ is deprecated: Replaced by \\w+ in the Amazon Chime SDK Voice Namespace"
     - linters:
         - staticcheck
       path: "internal/service/cloudfront"
@@ -53,7 +53,7 @@ issues:
     - linters:
         - staticcheck
       path: internal/service/detective/
-      text: "SA1019: resp.VolumeUsageInBytes is deprecated: This property is deprecated. Use VolumeUsageByDatasourcePackage instead"
+      text: "SA1019: member.VolumeUsageInBytes is deprecated: This property is deprecated. Use VolumeUsageByDatasourcePackage instead"
     - linters:
         - staticcheck
       path: internal/service/ecr/
@@ -86,6 +86,10 @@ issues:
         - staticcheck
       path: "internal/service/s3"
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/s3"
+      text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
     - linters:
         - staticcheck
       path: internal/service/securityhub/

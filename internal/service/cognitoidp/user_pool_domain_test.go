@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -165,7 +168,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		_, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, rs.Primary.ID)
 
@@ -175,7 +178,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckUserPoolDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool_domain" {
@@ -219,7 +222,7 @@ func testAccCheckUserPoolDomainCertMatches(ctx context.Context, cognitoResourceN
 			return errors.New("No ACM Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		domain, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, cognitoResource.Primary.ID)
 

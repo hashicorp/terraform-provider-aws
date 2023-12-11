@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -94,21 +97,21 @@ func ResourceParameterGroup() *schema.Resource {
 }
 
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateParameterGroupInput{
 		Description:        aws.String(d.Get("description").(string)),
 		Family:             aws.String(d.Get("family").(string)),
 		ParameterGroupName: aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB Parameter Group: %s", input)
 	output, err := conn.CreateParameterGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MemoryDB Parameter Group (%s): %s", name, err)
+		return diag.Errorf("creating MemoryDB Parameter Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -121,7 +124,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -148,7 +151,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			err := resetParameterGroupParameters(ctx, conn, d.Get("name").(string), paramsToReset)
 
 			if err != nil {
-				return diag.Errorf("error resetting MemoryDB Parameter Group (%s) parameters to defaults: %s", d.Id(), err)
+				return diag.Errorf("resetting MemoryDB Parameter Group (%s) parameters to defaults: %s", d.Id(), err)
 			}
 		}
 
@@ -163,7 +166,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			err := modifyParameterGroupParameters(ctx, conn, d.Get("name").(string), paramsToModify)
 
 			if err != nil {
-				return diag.Errorf("error modifying MemoryDB Parameter Group (%s) parameters: %s", d.Id(), err)
+				return diag.Errorf("modifying MemoryDB Parameter Group (%s) parameters: %s", d.Id(), err)
 			}
 		}
 	}
@@ -172,7 +175,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	group, err := FindParameterGroupByName(ctx, conn, d.Id())
 
@@ -183,7 +186,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", group.ARN)
@@ -196,7 +199,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	parameters, err := listParameterGroupParameters(ctx, conn, d.Get("family").(string), d.Id(), userDefinedParameters)
 	if err != nil {
-		return diag.Errorf("error listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return diag.Errorf("listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
@@ -207,7 +210,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Parameter Group: (%s)", d.Id())
 	_, err := conn.DeleteParameterGroupWithContext(ctx, &memorydb.DeleteParameterGroupInput{
@@ -219,7 +222,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	return nil

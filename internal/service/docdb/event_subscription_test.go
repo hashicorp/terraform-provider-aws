@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
@@ -240,9 +243,9 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
-			_, err := tfdocdb.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
+			_, err := tfdocdb.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -270,9 +273,9 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 			return fmt.Errorf("No DocumentDB Event Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
-		res, err := tfdocdb.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
+		res, err := tfdocdb.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

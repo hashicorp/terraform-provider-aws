@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -49,6 +52,10 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -63,7 +70,7 @@ func DataSourceDomain() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"start_at": {
+									"cron_expression_for_recurrence": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -72,18 +79,18 @@ func DataSourceDomain() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
 												"unit": {
 													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"value": {
+													Type:     schema.TypeInt,
 													Computed: true,
 												},
 											},
 										},
 									},
-									"cron_expression_for_recurrence": {
+									"start_at": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -97,25 +104,121 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"cluster_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"dedicated_master_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"dedicated_master_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"dedicated_master_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"warm_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"zone_awareness_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone_count": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"zone_awareness_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
+			"cognito_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"created": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"dashboard_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deleted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"domain_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			"domain_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"ebs_options": {
 				Type:     schema.TypeList,
@@ -161,10 +264,38 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
 				Deprecated: "use 'dashboard_endpoint' attribute instead",
+			},
+			"log_publishing_options": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_group_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"log_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"node_to_node_encryption": {
 				Type:     schema.TypeList,
@@ -178,73 +309,46 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"cluster_config": {
+			"off_peak_window_options": {
 				Type:     schema.TypeList,
-				Computed: true,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cold_storage_options": {
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"off_peak_window": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeBool,
+									"window_start_time": {
+										Type:     schema.TypeList,
 										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hours": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"minutes": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
 									},
 								},
 							},
-						},
-						"dedicated_master_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"dedicated_master_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"dedicated_master_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"instance_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"zone_awareness_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"availability_zone_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"warm_type": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 					},
 				},
+			},
+			"processing": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"snapshot_options": {
 				Type:     schema.TypeList,
@@ -258,6 +362,19 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"software_update_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_software_update_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -267,7 +384,6 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							//Set:      schema.HashString,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
@@ -286,76 +402,13 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cloudwatch_log_group_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"engine_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cognito_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"user_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"role_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
-			"created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"deleted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"processing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
@@ -388,7 +441,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", flex.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.FlattenStringMap(ds.AdvancedOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 
@@ -428,12 +481,16 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
 
+	if err := d.Set("software_update_options", flattenSoftwareUpdateOptions(ds.SoftwareUpdateOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting software_update_options: %s", err)
+	}
+
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
+		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
-		endpoints := flex.PointersMapToStringList(ds.Endpoints)
+		endpoints := flex.FlattenStringMap(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
@@ -463,12 +520,19 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
 	}
 
+	if ds.OffPeakWindowOptions != nil {
+		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
+		}
+	} else {
+		d.Set("off_peak_window_options", nil)
+	}
+
 	d.Set("created", ds.Created)
 	d.Set("deleted", ds.Deleted)
-
 	d.Set("processing", ds.Processing)
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for OpenSearch Cluster (%s): %s", d.Id(), err)

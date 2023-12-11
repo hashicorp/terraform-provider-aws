@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels_test
 
 import (
@@ -748,7 +751,7 @@ func testAccCheckBotExistsWithVersion(ctx context.Context, rName, botVersion str
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		output, err := tflexmodels.FindBotVersionByName(ctx, conn, rs.Primary.ID, botVersion)
 
@@ -768,7 +771,7 @@ func testAccCheckBotExists(ctx context.Context, rName string, output *lexmodelbu
 
 func testAccCheckBotNotExists(ctx context.Context, botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		_, err := tflexmodels.FindBotVersionByName(ctx, conn, botName, botVersion)
 
@@ -786,7 +789,7 @@ func testAccCheckBotNotExists(ctx context.Context, botName, botVersion string) r
 
 func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_bot" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -23,7 +26,7 @@ const (
 	ImageVersionDeletedTimeout         = 10 * time.Minute
 	DomainInServiceTimeout             = 10 * time.Minute
 	DomainDeletedTimeout               = 10 * time.Minute
-	FeatureGroupCreatedTimeout         = 10 * time.Minute
+	FeatureGroupCreatedTimeout         = 20 * time.Minute
 	FeatureGroupDeletedTimeout         = 10 * time.Minute
 	UserProfileInServiceTimeout        = 10 * time.Minute
 	UserProfileDeletedTimeout          = 10 * time.Minute

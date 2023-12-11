@@ -25,9 +25,9 @@ data "aws_dx_location" "example" {
 
 * `location_code` - (Required) Code for the location to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `available_macsec_port_speeds` - The available MAC Security (MACsec) port speeds for the location.
 * `available_port_speeds` - The available port speeds for the location.

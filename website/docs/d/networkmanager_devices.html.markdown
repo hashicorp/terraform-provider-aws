@@ -28,8 +28,8 @@ data "aws_networkmanager_devices" "example" {
 * `site_id` - (Optional) ID of the site of the devices to retrieve.
 * `tags` - (Optional) Restricts the list to the devices with these tags.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - IDs of the devices.

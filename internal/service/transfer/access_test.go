@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer_test
 
 import (
@@ -182,9 +185,9 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.Describ
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
-		output, err := tftransfer.FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
+		output, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 		if err != nil {
 			return err
@@ -198,7 +201,7 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.Describ
 
 func testAccCheckAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_access" {
@@ -210,7 +213,7 @@ func testAccCheckAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 			if err != nil {
 				return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 			}
-			_, err = tftransfer.FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
+			_, err = tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -315,11 +318,6 @@ resource "aws_transfer_server" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role_policy" "test" {

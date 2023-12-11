@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -59,13 +62,13 @@ func ResourceFirewallDomainList() *schema.Resource {
 }
 
 func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateFirewallDomainListWithContext(ctx, input)
@@ -96,7 +99,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, d.Id())
 
@@ -139,7 +142,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChange("domains") {
 		o, n := d.GetChange("domains")
@@ -179,7 +182,7 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceFirewallDomainListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Domain List: %s", d.Id())
 	_, err := conn.DeleteFirewallDomainListWithContext(ctx, &route53resolver.DeleteFirewallDomainListInput{

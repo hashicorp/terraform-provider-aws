@@ -34,9 +34,9 @@ exported as attributes.
 
 * `endpoint` - (Optional) EC2 endpoint of the region to select.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` - Name of the selected region.
 

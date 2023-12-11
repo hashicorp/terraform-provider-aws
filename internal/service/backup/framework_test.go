@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -488,7 +491,7 @@ func testAccFramework_disappears(t *testing.T) {
 }
 
 func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 	_, err := conn.ListFrameworksWithContext(ctx, &backup.ListFrameworksInput{})
 
@@ -503,7 +506,7 @@ func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_framework" {
 				continue
@@ -534,7 +537,7 @@ func testAccCheckFrameworkExists(ctx context.Context, name string, framework *ba
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		input := &backup.DescribeFrameworkInput{
 			FrameworkName: aws.String(rs.Primary.ID),
 		}

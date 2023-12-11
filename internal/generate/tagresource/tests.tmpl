@@ -18,7 +18,7 @@ import (
 
 func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_{{ .ServicePackage }}_tag" {
@@ -64,7 +64,7 @@ func testAccCheckTagExists(ctx context.Context, resourceName string) resource.Te
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Conn(ctx)
 
 		_, err = tf{{ .ServicePackage }}.{{ .GetTagFunc }}{{ if .WithContext }}WithContext{{ end }}(ctx, conn, identifier, key)
 

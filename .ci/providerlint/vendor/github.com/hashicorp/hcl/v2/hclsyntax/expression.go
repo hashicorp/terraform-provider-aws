@@ -696,8 +696,95 @@ func (e *ConditionalExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostic
 		return cty.UnknownVal(resultType), diags
 	}
 	if !condResult.IsKnown() {
-		return cty.UnknownVal(resultType), diags
+		// we use the unmarked values throughout the unknown branch
+		_, condResultMarks := condResult.Unmark()
+		trueResult, trueResultMarks := trueResult.Unmark()
+		falseResult, falseResultMarks := falseResult.Unmark()
+
+		// use a value to merge marks
+		_, resMarks := cty.DynamicVal.WithMarks(condResultMarks, trueResultMarks, falseResultMarks).Unmark()
+
+		trueRange := trueResult.Range()
+		falseRange := falseResult.Range()
+
+		// if both branches are known to be null, then the result must still be null
+		if trueResult.IsNull() && falseResult.IsNull() {
+			return cty.NullVal(resultType).WithMarks(resMarks), diags
+		}
+
+		// We might be able to offer a refined range for the result based on
+		// the two possible outcomes.
+		if trueResult.Type() == cty.Number && falseResult.Type() == cty.Number {
+			ref := cty.UnknownVal(cty.Number).Refine()
+			if trueRange.DefinitelyNotNull() && falseRange.DefinitelyNotNull() {
+				ref = ref.NotNull()
+			}
+
+			falseLo, falseLoInc := falseRange.NumberLowerBound()
+			falseHi, falseHiInc := falseRange.NumberUpperBound()
+			trueLo, trueLoInc := trueRange.NumberLowerBound()
+			trueHi, trueHiInc := trueRange.NumberUpperBound()
+
+			if falseLo.IsKnown() && trueLo.IsKnown() {
+				lo, loInc := falseLo, falseLoInc
+				switch {
+				case trueLo.LessThan(falseLo).True():
+					lo, loInc = trueLo, trueLoInc
+				case trueLo.Equals(falseLo).True():
+					loInc = trueLoInc || falseLoInc
+				}
+
+				ref = ref.NumberRangeLowerBound(lo, loInc)
+			}
+
+			if falseHi.IsKnown() && trueHi.IsKnown() {
+				hi, hiInc := falseHi, falseHiInc
+				switch {
+				case trueHi.GreaterThan(falseHi).True():
+					hi, hiInc = trueHi, trueHiInc
+				case trueHi.Equals(falseHi).True():
+					hiInc = trueHiInc || falseHiInc
+				}
+				ref = ref.NumberRangeUpperBound(hi, hiInc)
+			}
+
+			return ref.NewValue().WithMarks(resMarks), diags
+		}
+
+		if trueResult.Type().IsCollectionType() && falseResult.Type().IsCollectionType() {
+			if trueResult.Type().Equals(falseResult.Type()) {
+				ref := cty.UnknownVal(resultType).Refine()
+				if trueRange.DefinitelyNotNull() && falseRange.DefinitelyNotNull() {
+					ref = ref.NotNull()
+				}
+
+				falseLo := falseRange.LengthLowerBound()
+				falseHi := falseRange.LengthUpperBound()
+				trueLo := trueRange.LengthLowerBound()
+				trueHi := trueRange.LengthUpperBound()
+
+				lo := falseLo
+				if trueLo < falseLo {
+					lo = trueLo
+				}
+
+				hi := falseHi
+				if trueHi > falseHi {
+					hi = trueHi
+				}
+
+				ref = ref.CollectionLengthLowerBound(lo).CollectionLengthUpperBound(hi)
+				return ref.NewValue().WithMarks(resMarks), diags
+			}
+		}
+
+		ret := cty.UnknownVal(resultType)
+		if trueRange.DefinitelyNotNull() && falseRange.DefinitelyNotNull() {
+			ret = ret.RefineNotNull()
+		}
+		return ret.WithMarks(resMarks), diags
 	}
+
 	condResult, err := convert.Convert(condResult, cty.Bool)
 	if err != nil {
 		diags = append(diags, &hcl.Diagnostic{
@@ -1188,9 +1275,9 @@ func (e *ObjectConsKeyExpr) UnwrapExpression() Expression {
 
 // ForExpr represents iteration constructs:
 //
-//     tuple = [for i, v in list: upper(v) if i > 2]
-//     object = {for k, v in map: k => upper(v)}
-//     object_of_tuples = {for v in list: v.key: v...}
+//	tuple = [for i, v in list: upper(v) if i > 2]
+//	object = {for k, v in map: k => upper(v)}
+//	object_of_tuples = {for v in list: v.key: v...}
 type ForExpr struct {
 	KeyVar string // empty if ignoring the key
 	ValVar string
@@ -1632,11 +1719,15 @@ func (e *SplatExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
 		// example, it is valid to use a splat on a single object to retrieve a
 		// list of a single attribute, but we still need to check if that
 		// attribute actually exists.
-		upgradedUnknown = !sourceVal.IsKnown()
+		if !sourceVal.IsKnown() {
+			sourceRng := sourceVal.Range()
+			if sourceRng.CouldBeNull() {
+				upgradedUnknown = true
+			}
+		}
 
 		sourceVal = cty.TupleVal([]cty.Value{sourceVal})
 		sourceTy = sourceVal.Type()
-
 	}
 
 	// We'll compute our result type lazily if we need it. In the normal case
@@ -1675,7 +1766,21 @@ func (e *SplatExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
 		// checking to proceed.
 		ty, tyDiags := resultTy()
 		diags = append(diags, tyDiags...)
-		return cty.UnknownVal(ty), diags
+		ret := cty.UnknownVal(ty)
+		if ty != cty.DynamicPseudoType {
+			ret = ret.RefineNotNull()
+		}
+		if ty.IsListType() && sourceVal.Type().IsCollectionType() {
+			// We can refine the length of an unknown list result based on
+			// the source collection's own length.
+			sv, _ := sourceVal.Unmark()
+			sourceRng := sv.Range()
+			ret = ret.Refine().
+				CollectionLengthLowerBound(sourceRng.LengthLowerBound()).
+				CollectionLengthUpperBound(sourceRng.LengthUpperBound()).
+				NewValue()
+		}
+		return ret.WithSameMarks(sourceVal), diags
 	}
 
 	// Unmark the collection, and save the marks to apply to the returned

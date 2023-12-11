@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -120,7 +123,7 @@ func ResourceConnectPeer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment and then have 8 to 17 characters"),
 				),
 			},
 			"connect_peer_id": {
@@ -133,7 +136,7 @@ func ResourceConnectPeer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexp.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+					validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
 				),
 			},
 			"core_network_id": {
@@ -150,7 +153,7 @@ func ResourceConnectPeer() *schema.Resource {
 			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 				MaxItems: 2,
 				Elem: &schema.Schema{
@@ -164,7 +167,15 @@ func ResourceConnectPeer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexp.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+					validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+				),
+			},
+			"subnet_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 500),
+					validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:subnet\/subnet-[0-9a-f]{8,17}$|^$`), "Must be a valid subnet ARN"),
 				),
 			},
 			"state": {
@@ -178,16 +189,16 @@ func ResourceConnectPeer() *schema.Resource {
 }
 
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
-	insideCIDRBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
+	// insideCIDRBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
 	peerAddress := d.Get("peer_address").(string)
 	input := &networkmanager.CreateConnectPeerInput{
 		ConnectAttachmentId: aws.String(connectAttachmentID),
-		InsideCidrBlocks:    insideCIDRBlocks,
-		PeerAddress:         aws.String(peerAddress),
-		Tags:                GetTagsIn(ctx),
+		// InsideCidrBlocks:    insideCIDRBlocks,
+		PeerAddress: aws.String(peerAddress),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]interface{})) > 0 {
@@ -196,6 +207,15 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("core_network_address"); ok {
 		input.CoreNetworkAddress = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("inside_cidr_blocks"); ok {
+		insideCIDRBlocks := flex.ExpandStringList(v.([]interface{}))
+		input.InsideCidrBlocks = insideCIDRBlocks
+	}
+
+	if v, ok := d.GetOk("subnet_arn"); ok {
+		input.SubnetArn = aws.String(v.(string))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
@@ -238,7 +258,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectPeer, err := FindConnectPeerByID(ctx, conn, d.Id())
 
@@ -274,9 +294,10 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("connect_attachment_id", connectPeer.ConnectAttachmentId)
 	d.Set("inside_cidr_blocks", connectPeer.Configuration.InsideCidrBlocks)
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
+	d.Set("subnet_arn", connectPeer.SubnetArn)
 	d.Set("state", connectPeer.State)
 
-	SetTagsOut(ctx, connectPeer.Tags)
+	setTagsOut(ctx, connectPeer.Tags)
 
 	return nil
 }
@@ -287,7 +308,7 @@ func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Peer: %s", d.Id())
 	_, err := conn.DeleteConnectPeerWithContext(ctx, &networkmanager.DeleteConnectPeerInput{
@@ -439,7 +460,7 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	return nil, err
 }
 
-// validationExceptionMessageContains returns true if the error matches all these conditions:
+// validationExceptionMessage_Contains returns true if the error matches all these conditions:
 //   - err is of type networkmanager.ValidationException
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Message_ contains message

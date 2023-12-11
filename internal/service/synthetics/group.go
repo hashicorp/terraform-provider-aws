@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -54,12 +57,12 @@ func ResourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	name := d.Get("name").(string)
 	in := &synthetics.CreateGroupInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateGroupWithContext(ctx, in)
@@ -79,7 +82,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	group, err := FindGroupByName(ctx, conn, d.Id())
 
@@ -97,7 +100,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("group_id", group.Id)
 	d.Set("name", group.Name)
 
-	SetTagsOut(ctx, group.Tags)
+	setTagsOut(ctx, group.Tags)
 
 	return diags
 }
@@ -109,7 +112,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Synthetics Group %s", d.Id())
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -28,6 +31,7 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "in_progress_validation_batches", resourceName, "in_progress_validation_batches"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified_time", resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "web_acl_id", resourceName, "web_acl_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "aliases.#", resourceName, "aliases.#"),
 				),
 			},

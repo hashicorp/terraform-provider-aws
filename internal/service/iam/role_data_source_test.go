@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -74,7 +77,6 @@ const testAccRoleDataSourceConfig_AssumeRolePolicy_ExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
       "Principal": {

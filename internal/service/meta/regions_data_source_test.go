@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
@@ -21,7 +24,7 @@ func TestAccMetaRegionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -40,7 +43,7 @@ func TestAccMetaRegionsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_optInStatusFilter("opt-in-not-required"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -59,7 +62,7 @@ func TestAccMetaRegionsDataSource_allRegions(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},

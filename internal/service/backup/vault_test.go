@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -219,7 +222,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 
 func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault" {
 				continue
@@ -253,7 +256,7 @@ func testAccCheckVaultExists(ctx context.Context, name string, v *backup.Describ
 			return fmt.Errorf("No Backup Vault ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
 
@@ -270,7 +273,7 @@ func testAccCheckVaultExists(ctx context.Context, name string, v *backup.Describ
 func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) resource.TestCheckFunc { // nosemgrep:ci.backup-in-func-name
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := client.BackupConn()
+		conn := client.BackupConn(ctx)
 
 		iamRoleARN := arn.ARN{
 			Partition: client.Partition,
@@ -308,7 +311,7 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.ListBackupVaultsInput{}
 
