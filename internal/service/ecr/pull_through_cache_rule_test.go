@@ -97,7 +97,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	})
 }
 
-func TestAccECRPullThroughCacheRule_ecrRepositoryPrefixWithSlash(t *testing.T) {
+func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test/" + sdkacctest.RandString(22)
 	resourceName := "aws_ecr_pull_through_cache_rule.test"

@@ -33,7 +33,7 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccECRPullThroughCacheRuleDataSource_ecrRepositoryPrefixWithSlash(t *testing.T) {
+func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test/" + sdkacctest.RandString(22)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
@@ -45,7 +45,7 @@ func TestAccECRPullThroughCacheRuleDataSource_ecrRepositoryPrefixWithSlash(t *te
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleDataSourceConfig_ecrRepositoryPrefixWithSlash(repositoryPrefix),
+				Config: testAccPullThroughCacheRuleDataSourceConfig_repositoryPrefixWithSlash(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
 					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
@@ -68,7 +68,7 @@ data "aws_ecr_pull_through_cache_rule" "test" {
 `
 }
 
-func testAccPullThroughCacheRuleDataSourceConfig_ecrRepositoryPrefixWithSlash(repositoryPrefix string) string {
+func testAccPullThroughCacheRuleDataSourceConfig_repositoryPrefixWithSlash(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = %[1]q
