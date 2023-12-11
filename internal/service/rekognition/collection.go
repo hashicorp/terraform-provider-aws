@@ -5,185 +5,189 @@ package rekognition
 
 import (
 	"context"
-	"log"
+	"errors"
+	"regexp"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
-	"github.com/aws/aws-sdk-go-v2/service/rekognition/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rekognition_collection", name="Collection")
-func ResourceCollection() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: Create,
-		ReadWithoutTimeout:   Read,
-		DeleteWithoutTimeout: Delete,
+// @FrameworkResource(name="Collection")
+// @Tags(identifierAttribute="arn")
+func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceCollection{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("collection_id", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
-		},
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultReadTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"collection_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`), "must conform to: ^[a-zA-Z0-9_.\\-]+$"),
-			},
-			"face_model_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		},
-		CustomizeDiff: verify.SetTagsDiff,
-	}
+type resourceCollection struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
 }
 
 const (
 	ResNameCollection = "Collection"
 )
 
-func Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_rekognition_collection"
+}
 
-	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
+func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	collectionRegex, _ := regexp.Compile(`^[a-zA-Z0-9_.\-]+$`)
 
-	collectionId := d.Get("collection_id").(string)
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"collection_id": schema.StringAttribute{
+				Description: "The name of the Rekognition collection",
+				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(255),
+					stringvalidator.RegexMatches(collectionRegex, "must conform to: ^[a-zA-Z0-9_.\\-]+$"),
+				},
+			},
+			"id":                 framework.IDAttribute(),
+			"face_model_version": schema.StringAttribute{Computed: true},
+			names.AttrTags:       tftags.TagsAttribute(),
+			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
+		},
+		Version: 1,
+	}
+}
+
+func (r *resourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().RekognitionClient(ctx)
+
+	var plan resourceCollectionData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	in := &rekognition.CreateCollectionInput{
-		CollectionId: aws.String(collectionId),
+		CollectionId: plan.CollectionId.ValueStringPointer(),
 		Tags:         getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateCollection(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionCreating, ResNameCollection, collectionId, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionId.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.SetId(collectionId)
-	d.Set("arn", out.CollectionArn)
-	d.Set("face_model_version", out.FaceModelVersion)
-
-	tags, err := GetResourceTags(ctx, conn, "arn:"+*out.CollectionArn)
-	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, collectionId, err)
+	if out == nil || out.CollectionArn == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionId.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	d.Set("tags_all", tags.Tags)
+	state := plan
+	state.Arn = flex.StringToFramework(ctx, out.CollectionArn)
+	state.Id = flex.StringToFramework(ctx, state.CollectionId.ValueStringPointer())
+	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
 
-	return append(diags, Read(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().RekognitionClient(ctx)
 
-	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
+	var state resourceCollectionData
 
-	collectionId := d.Id()
-
-	out, err := FindCollectionByID(ctx, conn, collectionId)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Rekognition Collection (%s) not found, removing from state", collectionId)
-		return diags
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := FindCollectionByID(ctx, conn, state.Id.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, collectionId, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameCollection, state.Id.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.Set("arn", out.CollectionARN)
-	d.Set("face_model_version", out.FaceModelVersion)
-	d.Set("face_model_version", out.FaceModelVersion)
+	state.Arn = flex.StringToFramework(ctx, out.CollectionARN)
+	state.Id = flex.StringToFramework(ctx, state.CollectionId.ValueStringPointer())
+	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
 
-	tags, err := GetResourceTags(ctx, conn, *out.CollectionARN)
-	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, collectionId, err)
-	}
-
-	d.Set("tags_all", tags.Tags)
-
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	collectionId := d.Id()
-
-	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
-
-	log.Printf("[INFO] Deleting Rekognition Collection %s", collectionId)
-
-	_, err := conn.DeleteCollection(ctx, &rekognition.DeleteCollectionInput{
-		CollectionId: aws.String(collectionId),
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return diags
-	}
-	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionDeleting, ResNameCollection, collectionId, err)
-	}
-
-	return diags
+func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// update not supported
 }
 
-// resource tags can only be retrieved with a separate operation
-func GetResourceTags(ctx context.Context, conn *rekognition.Client, arn string) (*rekognition.ListTagsForResourceOutput, error) {
-	in := &rekognition.ListTagsForResourceInput{
-		ResourceArn: aws.String(arn),
+func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().RekognitionClient(ctx)
+
+	var state resourceCollectionData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.ListTagsForResource(ctx, in)
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+	in := &rekognition.DeleteCollectionInput{
+		CollectionId: state.CollectionId.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteCollection(ctx, in)
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
 		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameCollection, state.Id.String(), err),
+			err.Error(),
+		)
+		return
 	}
+}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
 }
 
 func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
@@ -192,20 +196,31 @@ func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 	}
 
 	out, err := conn.DescribeCollection(ctx, in)
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
 		return nil, err
 	}
 
-	if out == nil {
+	if out == nil || out.CollectionARN == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	return out, nil
+}
+
+type resourceCollectionData struct {
+	Arn              types.String   `tfsdk:"arn"`
+	CollectionId     types.String   `tfsdk:"collection_id"`
+	FaceModelVersion types.String   `tfsdk:"face_model_version"`
+	Id               types.String   `tfsdk:"id"`
+	Tags             types.Map      `tfsdk:"tags"`
+	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }
