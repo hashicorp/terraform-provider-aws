@@ -90,6 +90,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	conn := r.Meta().RekognitionClient(ctx)
 
 	var plan resourceCollectionData
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -118,8 +119,8 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	state := plan
+	state.Id = plan.CollectionId
 	state.Arn = flex.StringToFramework(ctx, out.CollectionArn)
-	state.Id = flex.StringToFramework(ctx, state.CollectionId.ValueStringPointer())
 	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -142,15 +143,15 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameCollection, state.Id.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameCollection, state.Id.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	state.Arn = flex.StringToFramework(ctx, out.CollectionARN)
-	state.Id = flex.StringToFramework(ctx, state.CollectionId.ValueStringPointer())
 	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
+	state.CollectionId = flex.StringToFramework(ctx, state.Id.ValueStringPointer())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -169,7 +170,7 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &rekognition.DeleteCollectionInput{
-		CollectionId: state.CollectionId.ValueStringPointer(),
+		CollectionId: state.Id.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteCollection(ctx, in)
@@ -179,7 +180,7 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameCollection, state.Id.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameCollection, state.Id.ValueString(), err),
 			err.Error(),
 		)
 		return
