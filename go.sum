@@ -34,8 +34,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.16.12 h1:v/WgB8NxprNvr5inKIiVVrXPuuT
 github.com/aws/aws-sdk-go-v2/credentials v1.16.12/go.mod h1:X21k0FjEJe+/pauud82HYiQbEr9jRKY3kXEIQ4hXeTQ=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10 h1:w98BT5w+ao1/r5sUuiH6JkVzjowOKeOJRHERyy1vh58=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10/go.mod h1:K2WGI7vUvkIv1HoNbfBA1bvIZ+9kL3YVmWxeKuLQsiw=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.6 h1:y6QFni67bLmpq8O+bXQOB17awtNl8eeB4u20NfeQlpE=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.6/go.mod h1:FzN3TluFcECZhRe08kXuK+oOL4iL8Daoy5OS2Diu5eU=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.7 h1:FnLf60PtjXp8ZOzQfhJVsqF0OtYKQZWQfqOLshh8YXg=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.7/go.mod h1:tDVvl8hyU6E9B8TrnNrZQEVkQlB8hjJwcgpPhgtlnNg=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.9 h1:v+HbZaCGmOwnTTVS86Fleq0vPzOd7tnJGbFhP0stNLs=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.9/go.mod h1:Xjqy+Nyj7VDLBtCMkQYOw1QYfAEZCVLrfI0ezve8wd4=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.9 h1:N94sVhRACtXyVcjXxrwK1SKFIJrA9pOJ5yu2eSHnmls=
@@ -192,8 +192,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.4 h1:cFjm//gLakBGm30vj4Y
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.4/go.mod h1:e2+mEoq1rHtFpX8p6WcgiFgnDz0zG6y1BY/g8us9g2I=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.20.4 h1:rMx6crFN/TzAKPU5IyPYCnoW9zRr8f/Xj317XMDhACY=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.20.4/go.mod h1:7fnaaVoKfZaWJ8RuNYTYV3SkqD6BkFYlRuFDEkHajpc=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.47.4 h1:iEkLh6fe2ATtH5PGynlJ1SdnbZuZgoWLdvSedjwmqKk=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.47.4/go.mod h1:vADO6Jn+Rq4nDtfwNjhgR84qkZwiC6FqCaXdw/kYwjA=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.47.5 h1:Keso8lIOS+IzI2MkPZyK6G0LYcK3My2LQ+T5bxghEAY=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.47.5/go.mod h1:vADO6Jn+Rq4nDtfwNjhgR84qkZwiC6FqCaXdw/kYwjA=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.41.4 h1:+qIR4e8i5p1tTApa9zdpnahynG3GlBey256Uu9jGb+c=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.41.4/go.mod h1:sjVex3IIN70lry8Diga0vdi1DoHFwyFXY68ols4I8VI=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.4 h1:+enAKdqvm3r5u5dKe8+pCa6IZR6wvx/J6oeasOCiV7Y=
