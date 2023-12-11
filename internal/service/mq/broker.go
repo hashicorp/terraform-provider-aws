@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -362,6 +363,8 @@ func ResourceBroker() *schema.Resource {
 }
 
 func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("broker_name").(string)
@@ -412,20 +415,22 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	out, err := conn.CreateBrokerWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MQ Broker (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MQ Broker (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
 	if _, err := waitBrokerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MQ Broker (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBrokerRead(ctx, d, meta)
+	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	output, err := FindBrokerByID(ctx, conn, d.Id())
@@ -433,11 +438,11 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
 		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.BrokerArn)
@@ -455,11 +460,11 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
 	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
-		return diag.Errorf("setting configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
-		return diag.Errorf("setting encryption_options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
 	}
 
 	var password string
@@ -468,33 +473,35 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
-		return diag.Errorf("setting ldap_server_metadata: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
 	}
 
 	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
-		return diag.Errorf("setting logs: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
 	}
 
 	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
-		return diag.Errorf("setting maintenance_window_start_time: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
 	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker (%s) users: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
 	}
 
 	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return diag.Errorf("setting user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
 	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	requiresReboot := false
@@ -506,7 +513,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) security groups: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) security groups: %s", d.Id(), err)
 		}
 	}
 
@@ -519,7 +526,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) configuration: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -534,7 +541,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		usersUpdated, err = updateBrokerUsers(ctx, conn, d.Id(), o.(*schema.Set).List(), n.(*schema.Set).List())
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) users: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) users: %s", d.Id(), err)
 		}
 
 		if usersUpdated {
@@ -549,7 +556,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) host instance type: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) host instance type: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -562,7 +569,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -575,7 +582,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -587,18 +594,20 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("rebooting MQ Broker (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "rebooting MQ Broker (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitBrokerRebooted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
@@ -607,18 +616,18 @@ func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MQ Broker (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MQ Broker (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitBrokerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MQ Broker (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
