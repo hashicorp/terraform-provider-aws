@@ -6,12 +6,14 @@ package flex
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -167,12 +169,29 @@ type TestFlexAWS18 struct {
 	IntentName *string
 }
 
+type TestFlexTimeTF01 struct {
+	CreationDateTime fwtypes.Timestamp `tfsdk:"creation_date_time"`
+}
+type TestFlexTimeAWS01 struct {
+	CreationDateTime *time.Time
+}
+
+type TestFlexTimeTF02 struct {
+	CreationDateTime fwtypes.Timestamp `tfsdk:"creation_date_time"`
+}
+type TestFlexTimeAWS02 struct {
+	CreationDateTime time.Time
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	testString := "test"
 	testStringResult := "a"
+	testTimeStr := "2023-12-08T09:34:01Z"
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
+
 	testCases := []struct {
 		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
@@ -539,6 +558,26 @@ func TestGenericExpand(t *testing.T) {
 			Target: &TestFlexAWS18{},
 			WantTarget: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
+			},
+		},
+		{
+			TestName: "timestamp pointer",
+			Source: &TestFlexTimeTF01{
+				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+			},
+			Target: &TestFlexTimeAWS01{},
+			WantTarget: &TestFlexTimeAWS01{
+				CreationDateTime: &testTimeTime,
+			},
+		},
+		{
+			TestName: "timestamp",
+			Source: &TestFlexTimeTF02{
+				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+			},
+			Target: &TestFlexTimeAWS02{},
+			WantTarget: &TestFlexTimeAWS02{
+				CreationDateTime: testTimeTime,
 			},
 		},
 	}
@@ -943,6 +982,8 @@ func TestGenericFlatten(t *testing.T) {
 
 	ctx := context.Background()
 	testString := "test"
+	testTimeStr := "2023-12-08T09:34:01Z"
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 	testCases := []struct {
 		Context    context.Context //nolint:containedctx // testing context use
 		TestName   string
@@ -1366,6 +1407,26 @@ func TestGenericFlatten(t *testing.T) {
 			Target: &TestFlexTF16{},
 			WantTarget: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
+			},
+		},
+		{
+			TestName: "timestamp pointer",
+			Source: &TestFlexTimeAWS01{
+				CreationDateTime: &testTimeTime,
+			},
+			Target: &TestFlexTimeTF01{},
+			WantTarget: &TestFlexTimeTF01{
+				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+			},
+		},
+		{
+			TestName: "timestamp",
+			Source: &TestFlexTimeAWS02{
+				CreationDateTime: testTimeTime,
+			},
+			Target: &TestFlexTimeTF02{},
+			WantTarget: &TestFlexTimeTF02{
+				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
 			},
 		},
 	}
