@@ -57,6 +57,7 @@ func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testi
 
 func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 	ctx := acctest.Context(t)
+	upstreamRegistryUrl := "registry-1.docker.io"
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,7 +68,7 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_credentialArn(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "registry-1.docker.io"),
+					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", upstreamRegistryUrl),
 					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
 					resource.TestCheckResourceAttrSet(dataSource, "credential_arn"),
 				),
@@ -106,19 +107,19 @@ data "aws_ecr_pull_through_cache_rule" "test" {
 func testAccPullThroughCacheRuleDataSourceConfig_credentialArn() string {
 	return `
 resource "aws_secretsmanager_secret" "test" {
-  name = "ecr-pullthroughcache/docker-hub"
+  name                    = "ecr-pullthroughcache/docker-hub"
   recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id = aws_secretsmanager_secret.test.id
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test"
 }
 
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = "ecr-public"
   upstream_registry_url = "registry-1.docker.io"
-  credential_arn = aws_secretsmanager_secret.test.arn
+  credential_arn        = aws_secretsmanager_secret.test.arn
 }
 
 data "aws_ecr_pull_through_cache_rule" "test" {
