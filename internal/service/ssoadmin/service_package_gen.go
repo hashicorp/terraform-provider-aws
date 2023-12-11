@@ -48,6 +48,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceApplicationAssignmentConfiguration,
 			Name:    "Application Assignment Configuration",
 		},
+		{
+			Factory: newResourceTrustedTokenIssuer,
+			Name:    "Trusted Token Issuer",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
@@ -95,11 +100,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePermissionsBoundaryAttachment,
 			TypeName: "aws_ssoadmin_permissions_boundary_attachment",
-		},
-		{
-			Factory:  ResourceTrustedTokenIssuer,
-			TypeName: "aws_ssoadmin_trusted_token_issuer",
-			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }

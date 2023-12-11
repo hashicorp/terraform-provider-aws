@@ -5,87 +5,121 @@ package ssoadmin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
-	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_trusted_token_issuer")
+// @FrameworkResource(name="Trusted Token Issuer")
 // @Tags
-func ResourceTrustedTokenIssuer() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceTrustedTokenIssuerCreate,
-		ReadWithoutTimeout:   resourceTrustedTokenIssuerRead,
-		UpdateWithoutTimeout: resourceTrustedTokenIssuerUpdate,
-		DeleteWithoutTimeout: resourceTrustedTokenIssuerDelete,
+func newResourceTrustedTokenIssuer(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceTrustedTokenIssuer{}, nil
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"client_token": {
-				Type:     schema.TypeString,
-				ForceNew: true,
+const (
+	ResNameTrustedTokenIssuer = "Trusted Token Issuer"
+)
+
+type resourceTrustedTokenIssuer struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *resourceTrustedTokenIssuer) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_ssoadmin_trusted_token_issuer"
+}
+
+func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"client_token": schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+			"id": framework.IDAttribute(),
+			"instance_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"name": {
-				Type:     schema.TypeString,
+			"name": schema.StringAttribute{
 				Required: true,
 			},
-			"trusted_token_issuer_configuration": {
-				Type:     schema.TypeList,
+			"trusted_token_issuer_type": schema.StringAttribute{
 				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"oidc_jwt_configuration": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"claim_attribute_path": {
-										Type:     schema.TypeString,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.TrustedTokenIssuerType](),
+				},
+			},
+
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"trusted_token_issuer_configuration": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.IsRequired(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"oidc_jwt_configuration": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.IsRequired(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"claim_attribute_path": schema.StringAttribute{
 										Required: true,
 									},
-									"identity_store_attribute_path": {
-										Type:     schema.TypeString,
+									"identity_store_attribute_path": schema.StringAttribute{
 										Required: true,
 									},
-									"issuer_url": {
-										Type:     schema.TypeString,
+									"issuer_url": schema.StringAttribute{
 										Required: true,
-										ForceNew: true, // Not part of OidcJwtUpdateConfiguration struct, have to recreate at change
+										PlanModifiers: []planmodifier.String{ // Not part of OidcJwtUpdateConfiguration struct, have to recreate at change
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
-									"jwks_retrieval_option": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.JwksRetrievalOption](),
+									"jwks_retrieval_option": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											enum.FrameworkValidate[awstypes.JwksRetrievalOption](),
+										},
 									},
 								},
 							},
@@ -93,307 +127,406 @@ func ResourceTrustedTokenIssuer() *schema.Resource {
 					},
 				},
 			},
-			"trusted_token_issuer_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.TrustedTokenIssuerType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTrustedTokenIssuerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
+func (r *resourceTrustedTokenIssuer) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
 
-	input := &ssoadmin.CreateTrustedTokenIssuerInput{
-		InstanceArn:                     aws.String(d.Get("instance_arn").(string)),
-		Name:                            aws.String(d.Get("name").(string)),
-		TrustedTokenIssuerConfiguration: expandTrustedTokenIssuerConfiguration(d.Get("trusted_token_issuer_configuration").([]interface{})),
-		TrustedTokenIssuerType:          types.TrustedTokenIssuerType(d.Get("trusted_token_issuer_type").(string)),
-		Tags:                            getTagsIn(ctx),
+	var plan resourceTrustedTokenIssuerData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("client_token"); ok {
-		input.ClientToken = aws.String(v.(string))
+	in := &ssoadmin.CreateTrustedTokenIssuerInput{
+		InstanceArn:            aws.String(plan.InstanceARN.ValueString()),
+		Name:                   aws.String(plan.Name.ValueString()),
+		TrustedTokenIssuerType: awstypes.TrustedTokenIssuerType(plan.TrustedTokenIssuerType.ValueString()),
+		Tags:                   getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateTrustedTokenIssuer(ctx, input)
+	if !plan.ClientToken.IsNull() {
+		in.ClientToken = aws.String(plan.ClientToken.ValueString())
+	}
 
+	if !plan.TrustedTokenIssuerConfiguration.IsNull() {
+		var tfList []TrustedTokenIssuerConfigurationData
+		resp.Diagnostics.Append(plan.TrustedTokenIssuerConfiguration.ElementsAs(ctx, &tfList, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		trustedTokenIssuerConfiguration, d := expandTrustedTokenIssuerConfiguration(ctx, tfList)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		in.TrustedTokenIssuerConfiguration = trustedTokenIssuerConfiguration
+	}
+
+	out, err := conn.CreateTrustedTokenIssuer(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSO Trusted Token Issuer (%s): %s", d.Get("name").(string), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameTrustedTokenIssuer, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(output.TrustedTokenIssuerArn))
+	if out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameTrustedTokenIssuer, plan.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
 
-	return append(diags, resourceTrustedTokenIssuerRead(ctx, d, meta)...)
+	plan.ARN = flex.StringToFramework(ctx, out.TrustedTokenIssuerArn)
+	plan.ID = flex.StringToFramework(ctx, out.TrustedTokenIssuerArn)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func resourceTrustedTokenIssuerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
+func (r *resourceTrustedTokenIssuer) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
 
-	output, err := FindTrustedTokenIssuerByARN(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SSO Trusted Token Issuer (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	var state resourceTrustedTokenIssuerData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findTrustedTokenIssuerByARN(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSO Trusted Token Issuer (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionSetting, ResNameTrustedTokenIssuer, state.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(meta.(*conns.AWSClient), d.Id())
+	instanceARN, _ := TrustedTokenIssuerParseInstanceARN(r.Meta(), aws.ToString(out.TrustedTokenIssuerArn))
 
-	d.Set("name", output.Name)
-	d.Set("arn", output.TrustedTokenIssuerArn)
-	d.Set("instance_arn", instanceARN)
-	d.Set("trusted_token_issuer_configuration", flattenTrustedTokenIssuerConfiguration(output.TrustedTokenIssuerConfiguration))
-	d.Set("trusted_token_issuer_type", output.TrustedTokenIssuerType)
+	state.ARN = flex.StringToFramework(ctx, out.TrustedTokenIssuerArn)
+	state.Name = flex.StringToFramework(ctx, out.Name)
+	state.ID = flex.StringToFramework(ctx, out.TrustedTokenIssuerArn)
+	state.InstanceARN = flex.StringToFrameworkARN(ctx, aws.String(instanceARN))
+	state.TrustedTokenIssuerType = flex.StringValueToFramework(ctx, out.TrustedTokenIssuerType)
+
+	trustedTokenIssuerConfiguration, d := flattenTrustedTokenIssuerConfiguration(ctx, out.TrustedTokenIssuerConfiguration)
+	resp.Diagnostics.Append(d...)
+	state.TrustedTokenIssuerConfiguration = trustedTokenIssuerConfiguration
 
 	// listTags requires both trusted token issuer and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
-	tags, err := listTags(ctx, conn, d.Id(), instanceARN)
+	tags, err := listTags(ctx, conn, state.ARN.ValueString(), state.InstanceARN.ValueString())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSO Trusted Token Issuer (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionSetting, ResNameTrustedTokenIssuer, state.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
-
 	setTagsOut(ctx, Tags(tags))
 
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceTrustedTokenIssuerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
+func (r *resourceTrustedTokenIssuer) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &ssoadmin.UpdateTrustedTokenIssuerInput{
-			TrustedTokenIssuerArn: aws.String(d.Id()),
+	var plan, state resourceTrustedTokenIssuerData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.Name.Equal(state.Name) || !plan.TrustedTokenIssuerConfiguration.Equal(state.TrustedTokenIssuerConfiguration) {
+
+		in := &ssoadmin.UpdateTrustedTokenIssuerInput{
+			TrustedTokenIssuerArn: aws.String(plan.ID.ValueString()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if !plan.Name.IsNull() {
+			in.Name = aws.String(plan.Name.ValueString())
 		}
 
-		if d.HasChange("trusted_token_issuer_configuration") {
-			input.TrustedTokenIssuerConfiguration = expandTrustedTokenIssuerUpdateConfiguration(d.Get("trusted_token_issuer_configuration").([]interface{}))
+		if !plan.TrustedTokenIssuerConfiguration.IsNull() {
+			var tfList []TrustedTokenIssuerConfigurationData
+			resp.Diagnostics.Append(plan.TrustedTokenIssuerConfiguration.ElementsAs(ctx, &tfList, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			trustedTokenIssuerUpdateConfiguration, d := expandTrustedTokenIssuerUpdateConfiguration(ctx, tfList)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			in.TrustedTokenIssuerConfiguration = trustedTokenIssuerUpdateConfiguration
 		}
 
-		_, err := conn.UpdateTrustedTokenIssuer(ctx, input)
-
+		out, err := conn.UpdateTrustedTokenIssuer(ctx, in)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSO Trusted Token Issuer (%s): %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionUpdating, ResNameTrustedTokenIssuer, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionUpdating, ResNameTrustedTokenIssuer, plan.ID.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
 		}
 	}
 
-	// updateTags requires both trusted token issuer and instance ARN, so must be called
+	// updateTags requires both application and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
-	if d.HasChange("tags_all") {
-		oldTagsAll, newTagsAll := d.GetChange("tags_all")
-		if err := updateTags(ctx, conn, d.Id(), d.Get("instance_arn").(string), oldTagsAll, newTagsAll); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSO Trusted Token Issuer (%s): %s", d.Id(), err)
+	if oldTagsAll, newTagsAll := state.TagsAll, plan.TagsAll; !newTagsAll.Equal(oldTagsAll) {
+		if err := updateTags(ctx, conn, plan.ID.ValueString(), plan.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionUpdating, ResNameTrustedTokenIssuer, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceTrustedTokenIssuerRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceTrustedTokenIssuerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
+func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
 
-	input := &ssoadmin.DeleteTrustedTokenIssuerInput{
-		TrustedTokenIssuerArn: aws.String(d.Id()),
+	var state resourceTrustedTokenIssuerData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	log.Printf("[INFO] Deleting SSO Trusted Token Issuer: %s", d.Id())
-	_, err := conn.DeleteTrustedTokenIssuer(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return diags
+	in := &ssoadmin.DeleteTrustedTokenIssuerInput{
+		TrustedTokenIssuerArn: aws.String(state.ID.ValueString()),
 	}
 
+	_, err := conn.DeleteTrustedTokenIssuer(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSO Trusted Token Issuer (%s): %s", d.Id(), err)
-	}
-
-	return diags
-}
-
-func FindTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, trustedTokenIssuerARN string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {
-	input := &ssoadmin.DescribeTrustedTokenIssuerInput{
-		TrustedTokenIssuerArn: aws.String(trustedTokenIssuerARN),
-	}
-
-	output, err := conn.DescribeTrustedTokenIssuer(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
 		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionDeleting, ResNameTrustedTokenIssuer, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
+func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeTrustedTokenIssuerOutput, error) {
+	in := &ssoadmin.DescribeTrustedTokenIssuerInput{
+		TrustedTokenIssuerArn: aws.String(arn),
 	}
 
+	out, err := conn.DescribeTrustedTokenIssuer(ctx, in)
 	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return output, nil
+	return out, nil
 }
 
-// Instance ARN is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
-// Instance ARN can be extracted from the Trusted Token Issuer ARN.
-func TrustedTokenIssuerParseInstanceARN(conn *conns.AWSClient, id string) (string, error) {
-	parts := strings.Split(id, "/")
+func expandTrustedTokenIssuerConfiguration(ctx context.Context, tfList []TrustedTokenIssuerConfigurationData) (awstypes.TrustedTokenIssuerConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return fmt.Sprintf("arn:%s:sso:::instance/%s", conn.Partition, parts[1]), nil
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+	tfObj := tfList[0]
+
+	var OIDCJWTConfigurationData []OIDCJWTConfigurationData
+	diags.Append(tfObj.OIDCJWTConfiguration.ElementsAs(ctx, &OIDCJWTConfigurationData, false)...)
+
+	apiObject := &awstypes.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration{
+		Value: *expandOIDCJWTConfiguration(OIDCJWTConfigurationData),
 	}
 
-	return "", fmt.Errorf("unable to construct Instance ARN from Trusted Token Issuer ARN: %s", id)
+	return apiObject, diags
 }
 
-func expandTrustedTokenIssuerConfiguration(tfMap []interface{}) types.TrustedTokenIssuerConfiguration {
-	if len(tfMap) == 0 {
+func expandOIDCJWTConfiguration(tfList []OIDCJWTConfigurationData) *awstypes.OidcJwtConfiguration {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
+	tfObj := tfList[0]
 
-	if v, ok := tfList["oidc_jwt_configuration"]; ok {
-		return &types.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration{
-			Value: expandOIDCJWTConfiguration(v.([]interface{})),
-		}
-	}
-
-	return nil
-}
-
-func expandOIDCJWTConfiguration(tfMap []interface{}) types.OidcJwtConfiguration {
-	apiObject := types.OidcJwtConfiguration{}
-
-	if len(tfMap) == 0 {
-		return apiObject
-	}
-
-	tfList, ok := tfMap[0].(map[string]interface{})
-	if !ok {
-		return apiObject
-	}
-
-	if v, ok := tfList["claim_attribute_path"]; ok {
-		apiObject.ClaimAttributePath = aws.String(v.(string))
-	}
-
-	if v, ok := tfList["identity_store_attribute_path"]; ok {
-		apiObject.IdentityStoreAttributePath = aws.String(v.(string))
-	}
-
-	if v, ok := tfList["issuer_url"]; ok {
-		apiObject.IssuerUrl = aws.String(v.(string))
-	}
-
-	if v, ok := tfList["jwks_retrieval_option"]; ok {
-		apiObject.JwksRetrievalOption = types.JwksRetrievalOption(v.(string))
+	apiObject := &awstypes.OidcJwtConfiguration{
+		ClaimAttributePath:         aws.String(tfObj.ClaimAttributePath.ValueString()),
+		IdentityStoreAttributePath: aws.String(tfObj.IdentityStoreAttributePath.ValueString()),
+		IssuerUrl:                  aws.String(tfObj.IssuerUrl.ValueString()),
+		JwksRetrievalOption:        awstypes.JwksRetrievalOption(tfObj.JWKSRetrievalOption.ValueString()),
 	}
 
 	return apiObject
 }
 
-func expandTrustedTokenIssuerUpdateConfiguration(tfMap []interface{}) types.TrustedTokenIssuerUpdateConfiguration {
-	if len(tfMap) == 0 {
-		return nil
+func expandTrustedTokenIssuerUpdateConfiguration(ctx context.Context, tfList []TrustedTokenIssuerConfigurationData) (awstypes.TrustedTokenIssuerUpdateConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+	tfObj := tfList[0]
+
+	var OIDCJWTConfigurationData []OIDCJWTConfigurationData
+	diags.Append(tfObj.OIDCJWTConfiguration.ElementsAs(ctx, &OIDCJWTConfigurationData, false)...)
+
+	apiObject := &awstypes.TrustedTokenIssuerUpdateConfigurationMemberOidcJwtConfiguration{
+		Value: *expandOIDCJWTUpdateConfiguration(OIDCJWTConfigurationData),
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	if v, ok := tfList["oidc_jwt_configuration"]; ok {
-		return &types.TrustedTokenIssuerUpdateConfigurationMemberOidcJwtConfiguration{
-			Value: expandOIDCJWTUpdateConfiguration(v.([]interface{})),
-		}
-	}
-
-	return nil
+	return apiObject, diags
 }
 
-func expandOIDCJWTUpdateConfiguration(tfMap []interface{}) types.OidcJwtUpdateConfiguration {
-	apiObject := types.OidcJwtUpdateConfiguration{}
-
-	if len(tfMap) == 0 {
-		return apiObject
+func expandOIDCJWTUpdateConfiguration(tfList []OIDCJWTConfigurationData) *awstypes.OidcJwtUpdateConfiguration {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
-	if !ok {
-		return apiObject
-	}
+	tfObj := tfList[0]
 
-	if v, ok := tfList["claim_attribute_path"]; ok {
-		apiObject.ClaimAttributePath = aws.String(v.(string))
-	}
-
-	if v, ok := tfList["identity_store_attribute_path"]; ok {
-		apiObject.IdentityStoreAttributePath = aws.String(v.(string))
-	}
-
-	if v, ok := tfList["jwks_retrieval_option"]; ok {
-		apiObject.JwksRetrievalOption = types.JwksRetrievalOption(v.(string))
+	apiObject := &awstypes.OidcJwtUpdateConfiguration{
+		ClaimAttributePath:         aws.String(tfObj.ClaimAttributePath.ValueString()),
+		IdentityStoreAttributePath: aws.String(tfObj.IdentityStoreAttributePath.ValueString()),
+		JwksRetrievalOption:        awstypes.JwksRetrievalOption(tfObj.JWKSRetrievalOption.ValueString()),
 	}
 
 	return apiObject
 }
 
-func flattenTrustedTokenIssuerConfiguration(apiObject types.TrustedTokenIssuerConfiguration) []interface{} {
+func flattenTrustedTokenIssuerConfiguration(ctx context.Context, apiObject awstypes.TrustedTokenIssuerConfiguration) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: TrustedTokenIssuerConfigurationAttrTypes}
+
 	if apiObject == nil {
-		return nil
+		return types.ListNull(elemType), diags
 	}
 
-	tfMap := map[string]interface{}{}
+	obj := map[string]attr.Value{}
 
 	switch v := apiObject.(type) {
-	case *types.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration:
-		tfMap["oidc_jwt_configuration"] = flattenOIDCJWTConfiguration(v.Value)
+	case *awstypes.TrustedTokenIssuerConfigurationMemberOidcJwtConfiguration:
+		oidcJWTConfiguration, d := flattenOIDCJWTConfiguration(ctx, &v.Value)
+		obj["oidc_jwt_configuration"] = oidcJWTConfiguration
+		diags.Append(d...)
 	default:
 		log.Println("union is nil or unknown type")
 	}
 
-	return []interface{}{tfMap}
+	objVal, d := types.ObjectValue(TrustedTokenIssuerConfigurationAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
 }
 
-func flattenOIDCJWTConfiguration(apiObject types.OidcJwtConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenOIDCJWTConfiguration(ctx context.Context, apiObject *awstypes.OidcJwtConfiguration) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: OIDCJWTConfigurationAttrTypes}
 
-	if v := apiObject.ClaimAttributePath; v != nil {
-		tfMap["claim_attribute_path"] = aws.ToString(v)
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
 	}
 
-	if v := apiObject.IdentityStoreAttributePath; v != nil {
-		tfMap["identity_store_attribute_path"] = aws.ToString(v)
+	obj := map[string]attr.Value{
+		"claim_attribute_path":          flex.StringToFramework(ctx, apiObject.ClaimAttributePath),
+		"identity_store_attribute_path": flex.StringToFramework(ctx, apiObject.IdentityStoreAttributePath),
+		"issuer_url":                    flex.StringToFramework(ctx, apiObject.IssuerUrl),
+		"jwks_retrieval_option":         flex.StringValueToFramework(ctx, apiObject.JwksRetrievalOption),
 	}
 
-	if v := apiObject.IssuerUrl; v != nil {
-		tfMap["issuer_url"] = aws.ToString(v)
+	objVal, d := types.ObjectValue(OIDCJWTConfigurationAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
+// Instance ARN is not returned by DescribeTrustedTokenIssuer but is needed for schema consistency when importing and tagging.
+// Instance ARN can be extracted from the Trusted Token Issuer ARN.
+func TrustedTokenIssuerParseInstanceARN(conn *conns.AWSClient, id string) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	parts := strings.Split(id, "/")
+
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return fmt.Sprintf("arn:%s:sso:::instance/%s", conn.Partition, parts[1]), diags
 	}
 
-	tfMap["jwks_retrieval_option"] = string(apiObject.JwksRetrievalOption)
+	return "", diags
+}
 
-	return []interface{}{tfMap}
+type resourceTrustedTokenIssuerData struct {
+	ARN                             types.String `tfsdk:"arn"`
+	ClientToken                     types.String `tfsdk:"client_token"`
+	ID                              types.String `tfsdk:"id"`
+	InstanceARN                     fwtypes.ARN  `tfsdk:"instance_arn"`
+	Name                            types.String `tfsdk:"name"`
+	TrustedTokenIssuerConfiguration types.List   `tfsdk:"trusted_token_issuer_configuration"`
+	TrustedTokenIssuerType          types.String `tfsdk:"trusted_token_issuer_type"`
+	Tags                            types.Map    `tfsdk:"tags"`
+	TagsAll                         types.Map    `tfsdk:"tags_all"`
+}
+
+type TrustedTokenIssuerConfigurationData struct {
+	OIDCJWTConfiguration types.List `tfsdk:"oidc_jwt_configuration"`
+}
+
+type OIDCJWTConfigurationData struct {
+	ClaimAttributePath         types.String `tfsdk:"claim_attribute_path"`
+	IdentityStoreAttributePath types.String `tfsdk:"identity_store_attribute_path"`
+	IssuerUrl                  types.String `tfsdk:"issuer_url"`
+	JWKSRetrievalOption        types.String `tfsdk:"jwks_retrieval_option"`
+}
+
+var TrustedTokenIssuerConfigurationAttrTypes = map[string]attr.Type{
+	"oidc_jwt_configuration": types.ListType{ElemType: types.ObjectType{AttrTypes: OIDCJWTConfigurationAttrTypes}},
+}
+
+var OIDCJWTConfigurationAttrTypes = map[string]attr.Type{
+	"claim_attribute_path":          types.StringType,
+	"identity_store_attribute_path": types.StringType,
+	"issuer_url":                    types.StringType,
+	"jwks_retrieval_option":         types.StringType,
 }
