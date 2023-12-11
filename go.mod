@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.5
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.32.4
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.32.5
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.43.2
