@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.5.5
-	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.13.4
+	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.4
