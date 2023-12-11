@@ -180,8 +180,8 @@ github.com/aws/aws-sdk-go-v2/service/rbin v1.14.3 h1:5rT2pGAFgU2c/nkAZM2iDVVkLce
 github.com/aws/aws-sdk-go-v2/service/rbin v1.14.3/go.mod h1:yX/8MJOGKdhrLvzOHppNzJvBQh5OKocDq4sP3CtXxgE=
 github.com/aws/aws-sdk-go-v2/service/rds v1.64.5 h1:HzkVXbafwf/N+uwNzuXaOpXwG2z8mi7nYFRKHeH/hFQ=
 github.com/aws/aws-sdk-go-v2/service/rds v1.64.5/go.mod h1:MYzRMSdY70kcS8AFg0aHmk/xj6VAe0UfaCCoLrBWPow=
-github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.4 h1:g91UtR4wmWV1nnkp8e6MUWmbIcmXSK7p5FFgAQzr4p8=
-github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.4/go.mod h1:nJQaSBV7r9td6WMmDDGKtlwE8D9BIDEDIpANfN+gMPE=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.5 h1:jGGtFvVJ7RwXtAYOxLoUzWw5WjvsO1NYWuMawL64gZU=
+github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.5/go.mod h1:nJQaSBV7r9td6WMmDDGKtlwE8D9BIDEDIpANfN+gMPE=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.4 h1:TlQsUP0a1rPveK+X4VWwmeQ0z2Y5GUpJ3e3xj3zcJCU=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.4/go.mod h1:/zyGxTiN9z6xm3bEF4nJJLCqnbfcua+oLGrtr3xNiuE=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.4 h1:awCgJDTXILwF9E893OfvmWkV0QDeozvDDBvCw6L1bkQ=
