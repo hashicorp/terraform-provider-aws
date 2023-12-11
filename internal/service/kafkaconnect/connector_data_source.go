@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -41,6 +42,8 @@ func DataSourceConnector() *schema.Resource {
 }
 
 func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
@@ -61,7 +64,7 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		return diag.Errorf("listing MSK Connect Connectors: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Connect Connectors: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {
@@ -71,7 +74,7 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Connector", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Connect Connector", err))
 	}
 
 	connector := output[0]
@@ -83,5 +86,5 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", connector.ConnectorName)
 	d.Set("version", connector.CurrentVersion)
 
-	return nil
+	return diags
 }

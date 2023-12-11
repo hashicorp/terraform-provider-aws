@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -298,6 +299,8 @@ func ResourceLaunch() *schema.Resource {
 }
 
 func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
@@ -328,7 +331,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := conn.CreateLaunch(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
 	}
 
 	// the GetLaunch API call uses the Launch name and Project ARN
@@ -336,19 +339,21 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(output.Launch.Name), aws.ToString(output.Launch.Project)))
 
 	if _, err := waitLaunchCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) creation: %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Launch (%s) for Project (%s) creation: %s", name, project, err)
 	}
 
-	return resourceLaunchRead(ctx, d, meta)
+	return append(diags, resourceLaunchRead(ctx, d, meta)...)
 }
 
 func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	launchName, projectNameOrARN, err := LaunchParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	launch, err := FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
@@ -356,27 +361,27 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Launch (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Evidently Launch (%s) for Project (%s): %s", launchName, projectNameOrARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Evidently Launch (%s) for Project (%s): %s", launchName, projectNameOrARN, err)
 	}
 
 	if err := d.Set("execution", flattenExecution(launch.Execution)); err != nil {
-		return diag.Errorf("setting execution: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting execution: %s", err)
 	}
 
 	if err := d.Set("groups", flattenGroups(launch.Groups)); err != nil {
-		return diag.Errorf("setting groups: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting groups: %s", err)
 	}
 
 	if err := d.Set("metric_monitors", flattenMetricMonitors(launch.MetricMonitors)); err != nil {
-		return diag.Errorf("setting metric_monitors: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting metric_monitors: %s", err)
 	}
 
 	if err := d.Set("scheduled_splits_config", flattenScheduledSplitsDefinition(launch.ScheduledSplitsDefinition)); err != nil {
-		return diag.Errorf("setting scheduled_splits_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting scheduled_splits_config: %s", err)
 	}
 
 	d.Set("arn", launch.Arn)
@@ -392,10 +397,12 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	setTagsOut(ctx, launch.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	if d.HasChanges("description", "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
@@ -415,18 +422,20 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err := conn.UpdateLaunch(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
 		}
 
 		if _, err := waitLaunchUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) update: %s", name, project, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Launch (%s) for Project (%s) update: %s", name, project, err)
 		}
 	}
 
-	return resourceLaunchRead(ctx, d, meta)
+	return append(diags, resourceLaunchRead(ctx, d, meta)...)
 }
 
 func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
@@ -439,18 +448,18 @@ func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Evidently Launch (%s) for Project (%s): %s", name, project, err)
 	}
 
 	if _, err := waitLaunchDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Evidently Launch (%s) for Project (%s) deletion: %s", name, project, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Evidently Launch (%s) for Project (%s) deletion: %s", name, project, err)
 	}
 
-	return nil
+	return diags
 }
 
 func LaunchParseID(id string) (string, string, error) {
