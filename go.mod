@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.5
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.5
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.4
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.24.4
