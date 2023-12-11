@@ -82,10 +82,10 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 					),
 				},
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"standby_replicas": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
 				Computed: true,
 			},

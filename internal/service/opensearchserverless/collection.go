@@ -111,8 +111,6 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 						`must start with any lower case letter and can can include any lower case letter, number, or "-"`),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"standby_replicas": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -124,6 +122,8 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.StandbyReplicas](),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
