@@ -87,6 +87,8 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
@@ -1114,6 +1116,139 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogsPrefix(t *testin
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.prefix", "prefix1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogs(true, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "true"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogs(false, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "false"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogs(true, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "true"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogsNoBlocks(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "false"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogsPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogs(true, rName, "prefix1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "true"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogs(true, rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "true"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_albConnectionLogs(true, rName, "prefix1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.bucket", rName),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.enabled", "true"),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "connection_logs.s3.prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.prefix", "prefix1"),
 				),
 			},
 		},
@@ -2519,6 +2654,32 @@ resource "aws_lb" "test" {
 }
 
 func testAccLoadBalancerConfig_albAccessLogsNoBlocks(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal = true
+  name     = %[1]q
+  subnets  = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_albConnectionLogs(enabled bool, rName, bucketPrefix string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal = true
+  name     = %[1]q
+  subnets  = aws_subnet.test[*].id
+
+  connection_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = %[2]t
+    prefix  = %[3]q
+  }
+}
+`, rName, enabled, bucketPrefix))
+}
+
+func testAccLoadBalancerConfig_albConnectionLogsNoBlocks(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal = true
