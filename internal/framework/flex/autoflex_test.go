@@ -189,7 +189,7 @@ func TestGenericExpand(t *testing.T) {
 	ctx := context.Background()
 	testString := "test"
 	testStringResult := "a"
-	testTimeStr := "2023-12-08T09:34:01Z"
+	testTimeStr := "2013-09-25T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
 	testCases := []struct {
@@ -982,7 +982,7 @@ func TestGenericFlatten(t *testing.T) {
 
 	ctx := context.Background()
 	testString := "test"
-	testTimeStr := "2023-12-08T09:34:01Z"
+	testTimeStr := "2013-09-25T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 	testCases := []struct {
 		Context    context.Context //nolint:containedctx // testing context use
