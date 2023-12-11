@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.5
-	github.com/aws/aws-sdk-go-v2/service/swf v1.20.4
+	github.com/aws/aws-sdk-go-v2/service/swf v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.2
