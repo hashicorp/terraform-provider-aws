@@ -28,6 +28,14 @@ func TimestampValue(value string) Timestamp {
 	}
 }
 
+func TimestampZero() Timestamp {
+	var t time.Time
+	return Timestamp{
+		StringValue: basetypes.NewStringValue(t.Format(time.RFC3339)),
+		value:       t,
+	}
+}
+
 var (
 	_ basetypes.StringValuable = (*Timestamp)(nil)
 )
