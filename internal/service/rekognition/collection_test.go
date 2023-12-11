@@ -44,6 +44,8 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rCollectionId),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{

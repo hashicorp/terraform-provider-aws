@@ -60,7 +60,12 @@ func ResourceCollection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaForceNew(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -91,6 +96,13 @@ func Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.
 	d.Set("arn", out.CollectionArn)
 	d.Set("face_model_version", out.FaceModelVersion)
 
+	tags, err := GetResourceTags(ctx, conn, "arn:"+*out.CollectionArn)
+	if err != nil {
+		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, collectionId, err)
+	}
+
+	d.Set("tags_all", tags.Tags)
+
 	return append(diags, Read(ctx, d, meta)...)
 }
 
@@ -99,20 +111,29 @@ func Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Di
 
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
 
-	out, err := FindCollectionByID(ctx, conn, d.Id())
+	collectionId := d.Id()
+
+	out, err := FindCollectionByID(ctx, conn, collectionId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Rekognition Collection (%s) not found, removing from state", d.Id())
-		d.SetId("")
+		log.Printf("[WARN] Rekognition Collection (%s) not found, removing from state", collectionId)
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, d.Id(), err)
+		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, collectionId, err)
 	}
 
 	d.Set("arn", out.CollectionARN)
 	d.Set("face_model_version", out.FaceModelVersion)
+	d.Set("face_model_version", out.FaceModelVersion)
+
+	tags, err := GetResourceTags(ctx, conn, *out.CollectionARN)
+	if err != nil {
+		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionReading, ResNameCollection, collectionId, err)
+	}
+
+	d.Set("tags_all", tags.Tags)
 
 	return diags
 }
@@ -120,22 +141,49 @@ func Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Di
 func Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	collectionId := d.Id()
+
 	conn := meta.(*conns.AWSClient).RekognitionClient(ctx)
 
-	log.Printf("[INFO] Deleting Rekognition Collection %s", d.Id())
+	log.Printf("[INFO] Deleting Rekognition Collection %s", collectionId)
 
 	_, err := conn.DeleteCollection(ctx, &rekognition.DeleteCollectionInput{
-		CollectionId: aws.String(d.Id()),
+		CollectionId: aws.String(collectionId),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 	if err != nil {
-		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionDeleting, ResNameCollection, d.Id(), err)
+		return create.AppendDiagError(diags, names.Rekognition, create.ErrActionDeleting, ResNameCollection, collectionId, err)
 	}
 
 	return diags
+}
+
+// resource tags can only be retrieved with a separate operation
+func GetResourceTags(ctx context.Context, conn *rekognition.Client, arn string) (*rekognition.ListTagsForResourceOutput, error) {
+	in := &rekognition.ListTagsForResourceInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	out, err := conn.ListTagsForResource(ctx, in)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
 func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
@@ -150,6 +198,7 @@ func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 			LastRequest: in,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
