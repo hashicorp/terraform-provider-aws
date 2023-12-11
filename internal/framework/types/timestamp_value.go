@@ -54,3 +54,13 @@ func (v Timestamp) Type(_ context.Context) attr.Type {
 func (v Timestamp) ValueTimestamp() time.Time {
 	return v.value
 }
+
+// ValueStringPointer returns a pointer to the known string value, nil for a
+// null value, or a pointer to "" for an unknown value.
+func (v Timestamp) ValueTimestampPointer() *time.Time {
+	if v.IsNull() {
+		return nil
+	}
+
+	return &v.value
+}
