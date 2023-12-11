@@ -482,7 +482,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
 		const (
-			timeout = 20 * time.Minute // IPAM eventual consistency
+			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
 			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
