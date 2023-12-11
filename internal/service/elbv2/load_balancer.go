@@ -1016,19 +1016,24 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		return nil
 	}
 
-	// Get diff for subnets.
-	o, n := diff.GetChange("subnets")
-	os, ns := o.(*schema.Set), n.(*schema.Set)
+	config := diff.GetRawConfig()
 
-	if add, del := ns.Difference(os).List(), os.Difference(ns).List(); len(del) > 0 || len(add) > 0 {
-		if err := diff.ForceNew("subnets"); err != nil {
-			return err
+	// Get diff for subnets.
+	if v := config.GetAttr("subnets"); v.IsWhollyKnown() && diff.HasChange("subnets") {
+		o, n := diff.GetChange("subnets")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		// In-place increase in number of subnets.
+		if os.Difference(ns).Len() > 0 {
+			if err := diff.ForceNew("subnets"); err != nil {
+				return err
+			}
 		}
 	}
 
 	// Get diff for security groups.
-	o, n = diff.GetChange("security_groups")
-	os, ns = o.(*schema.Set), n.(*schema.Set)
+	o, n := diff.GetChange("security_groups")
+	os, ns := o.(*schema.Set), n.(*schema.Set)
 
 	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
 		if err := diff.ForceNew("security_groups"); err != nil {
