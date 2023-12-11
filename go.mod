@@ -40,7 +40,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.141.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/eks v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/emr v1.35.4
+	github.com/aws/aws-sdk-go-v2/service/emr v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.19.2
