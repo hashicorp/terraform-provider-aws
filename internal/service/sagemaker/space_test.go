@@ -100,6 +100,66 @@ func testAccSpace_tags(t *testing.T) {
 	})
 }
 
+func testAccSpace_appType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_appType(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type.#", "JupyterLab"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSpace_customFileSystem(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_customFileConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.custom_file_system.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.custom_file_system.0.efs_file_system.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "space_settings.0.custom_file_system.0.efs_file_system.0.file_system_id", "aws_efs_file_system.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccSpace_kernelGatewayAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
@@ -191,6 +251,99 @@ func testAccSpace_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttrPair(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSpace_storageSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_storageSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.ebs_storage_settings.0.ebs_volume_size_in_gb", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSpace_codeEditorAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_codeEditorAppSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "system"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSpace_jupyterLabAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_jupyterLabAppSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "system"),
 				),
 			},
 			{
@@ -392,6 +545,57 @@ resource "aws_sagemaker_space" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
+func testAccSpaceConfig_storageSettings(rName string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {
+    space_storage_settings {
+      ebs_storage_settings {
+        ebs_volume_size_in_gb = 10
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccSpaceConfig_codeEditorAppSettings(rName string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {
+    code_editor_app_settings {
+      default_resource_spec {
+        instance_type = "system"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccSpaceConfig_jupyterLabAppSettings(rName string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "system"
+      }
+    }
+  }
+}
+`, rName))
+}
+
 func testAccSpaceConfig_jupyterServerAppSettings(rName string) string {
 	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_space" "test" {
@@ -402,6 +606,47 @@ resource "aws_sagemaker_space" "test" {
     jupyter_server_app_settings {
       default_resource_spec {
         instance_type = "system"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccSpaceConfig_appType(rName string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {
+    app_type = "JupyterLab"
+  }
+}
+`, rName))
+}
+
+func testAccSpaceConfig_customFileConfig(rName string) string {
+	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_settings {
+    custom_file_system {
+      efs_file_system {
+        file_system_id = aws_efs_mount_target.test.file_system_id
       }
     }
   }

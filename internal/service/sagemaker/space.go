@@ -65,6 +65,130 @@ func ResourceSpace() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"app_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.AppType_Values(), false),
+						},
+						"code_editor_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_file_system": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"efs_file_system": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"file_system_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"jupyter_lab_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -193,6 +317,28 @@ func ResourceSpace() *schema.Resource {
 												"image_version_number": {
 													Type:     schema.TypeInt,
 													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"space_storage_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ebs_storage_settings": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
 												},
 											},
 										},
@@ -378,12 +524,32 @@ func expandSpaceSettings(l []interface{}) *sagemaker.SpaceSettings {
 
 	config := &sagemaker.SpaceSettings{}
 
+	if v, ok := m["app_type"].(string); ok {
+		config.AppType = aws.String(v)
+	}
+
+	if v, ok := m["code_editor_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.CodeEditorAppSettings = expandSpaceCodeEditorAppSettings(v)
+	}
+
+	if v, ok := m["custom_file_system"].([]interface{}); ok && len(v) > 0 {
+		config.CustomFileSystems = expandCustomFileSystems(v)
+	}
+
+	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.JupyterLabAppSettings = expandSpaceJupyterLabAppSettings(v)
+	}
+
 	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
 		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
 	}
 
 	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
+	}
+
+	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+		config.SpaceStorageSettings = expandSpaceStorageSettings(v)
 	}
 
 	return config
@@ -396,6 +562,22 @@ func flattenSpaceSettings(config *sagemaker.SpaceSettings) []map[string]interfac
 
 	m := map[string]interface{}{}
 
+	if config.AppType != nil {
+		m["app_type"] = aws.StringValue(config.AppType)
+	}
+
+	if config.CodeEditorAppSettings != nil {
+		m["code_editor_app_settings"] = flattenSpaceCodeEditorAppSettings(config.CodeEditorAppSettings)
+	}
+
+	if config.CustomFileSystems != nil {
+		m["custom_file_system"] = flattenCustomFileSystems(config.CustomFileSystems)
+	}
+
+	if config.JupyterLabAppSettings != nil {
+		m["jupyter_lab_app_settings"] = flattenSpaceJupyterLabAppSettings(config.JupyterLabAppSettings)
+	}
+
 	if config.JupyterServerAppSettings != nil {
 		m["jupyter_server_app_settings"] = flattenDomainJupyterServerAppSettings(config.JupyterServerAppSettings)
 	}
@@ -404,5 +586,237 @@ func flattenSpaceSettings(config *sagemaker.SpaceSettings) []map[string]interfac
 		m["kernel_gateway_app_settings"] = flattenDomainKernelGatewayAppSettings(config.KernelGatewayAppSettings)
 	}
 
+	if config.SpaceStorageSettings != nil {
+		m["space_storage_settings"] = flattenSpaceStorageSettings(config.SpaceStorageSettings)
+	}
+
 	return []map[string]interface{}{m}
+}
+
+func expandSpaceCodeEditorAppSettings(l []interface{}) *sagemaker.SpaceCodeEditorAppSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.SpaceCodeEditorAppSettings{}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	return config
+}
+
+func flattenSpaceCodeEditorAppSettings(config *sagemaker.SpaceCodeEditorAppSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.DefaultResourceSpec != nil {
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandSpaceJupyterLabAppSettings(l []interface{}) *sagemaker.SpaceJupyterLabAppSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.SpaceJupyterLabAppSettings{}
+
+	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
+		config.CodeRepositories = expandCodeRepositories(v.List())
+	}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	return config
+}
+
+func flattenSpaceJupyterLabAppSettings(config *sagemaker.SpaceJupyterLabAppSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.CodeRepositories != nil {
+		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
+	}
+
+	if config.DefaultResourceSpec != nil {
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandSpaceStorageSettings(l []interface{}) *sagemaker.SpaceStorageSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.SpaceStorageSettings{}
+
+	if v, ok := m["ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
+		config.EbsStorageSettings = expandEbsStorageSettings(v)
+	}
+
+	return config
+}
+
+func flattenSpaceStorageSettings(config *sagemaker.SpaceStorageSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.EbsStorageSettings != nil {
+		m["ebs_storage_settings"] = flattenEbsStorageSettings(config.EbsStorageSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandEbsStorageSettings(l []interface{}) *sagemaker.EbsStorageSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.EbsStorageSettings{}
+
+	if v, ok := m["ebs_volume_size_in_gb"].(int); ok {
+		config.EbsVolumeSizeInGb = aws.Int64(int64(v))
+	}
+
+	return config
+}
+
+func flattenEbsStorageSettings(config *sagemaker.EbsStorageSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.EbsVolumeSizeInGb != nil {
+		m["ebs_volume_size_in_gb"] = aws.Int64Value(config.EbsVolumeSizeInGb)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandCustomFileSystem(tfMap map[string]interface{}) *sagemaker.CustomFileSystem {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &sagemaker.CustomFileSystem{}
+
+	if v, ok := tfMap["efs_file_system_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EFSFileSystem = expandEFSFileSystem(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCustomFileSystems(tfList []interface{}) []*sagemaker.CustomFileSystem {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*sagemaker.CustomFileSystem
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCustomFileSystem(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandEFSFileSystem(tfMap map[string]interface{}) *sagemaker.EFSFileSystem {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &sagemaker.EFSFileSystem{}
+
+	if v, ok := tfMap["file_system_id"].(string); ok {
+		apiObject.FileSystemId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenCustomFileSystem(apiObject *sagemaker.CustomFileSystem) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.EFSFileSystem != nil {
+		tfMap["efs_file_system"] = flattenEFSFileSystem(apiObject.EFSFileSystem)
+	}
+
+	return tfMap
+}
+
+func flattenCustomFileSystems(apiObjects []*sagemaker.CustomFileSystem) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenCustomFileSystem(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenEFSFileSystem(apiObject *sagemaker.EFSFileSystem) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.FileSystemId != nil {
+		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+	}
+
+	return []map[string]interface{}{tfMap}
 }
