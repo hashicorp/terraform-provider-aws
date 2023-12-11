@@ -227,7 +227,6 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allocation_id": {
@@ -534,10 +533,21 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("subnets") {
+	if d.HasChanges("subnet_mapping", "subnets") {
 		input := &elbv2.SetSubnetsInput{
 			LoadBalancerArn: aws.String(d.Id()),
-			Subnets:         flex.ExpandStringSet(d.Get("subnets").(*schema.Set)),
+		}
+
+		if d.HasChange("subnet_mapping") {
+			if v, ok := d.GetOk("subnet_mapping"); ok && v.(*schema.Set).Len() > 0 {
+				input.SubnetMappings = expandSubnetMappings(v.(*schema.Set).List())
+			}
+		}
+
+		if d.HasChange("subnets") {
+			if v, ok := d.GetOk("subnets"); ok {
+				input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
+			}
 		}
 
 		_, err := conn.SetSubnetsWithContext(ctx, input)
@@ -1001,7 +1011,7 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")
-	// - there are actual changes to be made in the subnets
+	// - there are subnet removals
 	//   OR security groups are being added where none currently exist
 	//   OR all security groups are being removed
 	//
@@ -1018,17 +1028,17 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		return nil
 	}
 
-	config := diff.GetRawConfig()
-
 	// Get diff for subnets.
-	if v := config.GetAttr("subnets"); v.IsWhollyKnown() && diff.HasChange("subnets") {
-		o, n := diff.GetChange("subnets")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
+	for _, key := range []string{"subnet_mapping", "subnets"} {
+		if diff.NewValueKnown(key) && diff.HasChange(key) {
+			o, n := diff.GetChange(key)
+			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		// In-place increase in number of subnets.
-		if os.Difference(ns).Len() > 0 {
-			if err := diff.ForceNew("subnets"); err != nil {
-				return err
+			// In-place increase in number of subnets.
+			if os.Difference(ns).Len() > 0 {
+				if err := diff.ForceNew(key); err != nil {
+					return err
+				}
 			}
 		}
 	}
