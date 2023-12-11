@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/athena v1.37.3
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.4
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.4

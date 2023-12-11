@@ -60,8 +60,8 @@ github.com/aws/aws-sdk-go-v2/service/apprunner v1.25.5 h1:YpUU6SUj7EYB+l4kGQk2ch
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.25.5/go.mod h1:W1Z87aVGwtb3egdiWLrnMyj5oHzShACix2iebsixuVA=
 github.com/aws/aws-sdk-go-v2/service/athena v1.37.3 h1:qNLkDi/rOaauOuh33a4MNZjyfxvwIgC5qsDiHPvjDk0=
 github.com/aws/aws-sdk-go-v2/service/athena v1.37.3/go.mod h1:MlpC6swcjh1Il80u6XoeY2BTHIZRZWvoXOfaq3rfh8I=
-github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.4 h1:tw3b7Cj+UTsU0ep8gmvhFqTgv+75hLa4YyO1qIMC5sY=
-github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.4/go.mod h1:5zHM7qND9NI5fVAHwcNwFeIG4E51Dq8tBPrtkBg9IFk=
+github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.5 h1:sV05+Tgq3hsUBe9iLeGyZy31EJ59X5twiz/Mrzcin/o=
+github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.5/go.mod h1:5zHM7qND9NI5fVAHwcNwFeIG4E51Dq8tBPrtkBg9IFk=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.5.4 h1:cGz30Fz+4PeYLFclSoJzA2DjmOrZ7PGDilXWC+rWJv8=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.5.4/go.mod h1:BV0qlxGaHddZC0s61iQ91+bLER+H0fZBOHuD4oqB8/s=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.13.4 h1:bS0LAeoNDTAJmfZ1Z0Lz+F0vO5f2jRIL+uJAlnHcaIQ=
