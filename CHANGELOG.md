@@ -9,10 +9,13 @@ ENHANCEMENTS:
 
 * data-source/aws_cloudwatch_log_group: Add `log_group_class` attribute ([#34812](https://github.com/hashicorp/terraform-provider-aws/issues/34812))
 * data-source/aws_lb: Add `dns_record_client_routing_policy` attribute ([#34135](https://github.com/hashicorp/terraform-provider-aws/issues/34135))
+* data-source/aws_opensearchserverless_collection: Add `standby_replicas` attribute ([#34677](https://github.com/hashicorp/terraform-provider-aws/issues/34677))
+* resource/aws_opensearchserverless_collection: Add `standby_replicas` attribute ([#34677](https://github.com/hashicorp/terraform-provider-aws/issues/34677))
 
 BUG FIXES:
 
 * data-source/aws_ecr_pull_through_cache_rule: Fix plan time validation for `ecr_repository_prefix` ([#34716](https://github.com/hashicorp/terraform-provider-aws/issues/34716))
+* resource/aws_cloudwatch_log_group: Fix `invalid new value for .skip_destroy: was cty.False, but now null` errors ([#30354](https://github.com/hashicorp/terraform-provider-aws/issues/30354))
 * resource/aws_cloudwatch_log_group: Remove default value (`STANDARD`) for `log_group_class` argument and mark as Computed. This fixes `InvalidParameterException: Only Standard log class is supported` errors in AWS Regions other than AWS Commercial ([#34812](https://github.com/hashicorp/terraform-provider-aws/issues/34812))
 * resource/aws_db_instance: Fix error where Terraform loses track of resource if Blue/Green Deployment is applied outside of Terraform ([#34728](https://github.com/hashicorp/terraform-provider-aws/issues/34728))
 * resource/aws_ecr_pull_through_cache_rule: Fix plan time validation for `ecr_repository_prefix` ([#34716](https://github.com/hashicorp/terraform-provider-aws/issues/34716))
