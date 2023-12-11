@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.43.3
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.28.4
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.4
