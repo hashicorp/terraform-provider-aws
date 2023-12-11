@@ -96,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.5 h1:a//AdeswzibpC4f
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.5/go.mod h1:Dst4mNfdyggL9PHmkYdSiVgJvwhfboruXtzQZpy46Xs=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.5 h1:i/7aXIrjTdVZtch90MSQ3EC03dh5XgTmJtbAqFtzysk=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.5/go.mod h1:KTFSRANgKK34D1LNNtOkPLWVgjhbx172XAQ1cDkP+08=
-github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.4 h1:Esehjf2vV6A8OHZ4zV7PW1uaXyqXLvtcrZYVd66Ve5s=
-github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.4/go.mod h1:XEY63kzpXT3wMrE6yBqWCY+K1bq5Fixq32eCZYFhwpA=
+github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.5 h1:ikZu83oYYnSdtc73OP1HCBXuSxQ9AXDEebHhgnTpGDA=
+github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.5/go.mod h1:XEY63kzpXT3wMrE6yBqWCY+K1bq5Fixq32eCZYFhwpA=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.2 h1:IPMh5Selz3UKr1rY8FaNTv4Dx/Tl/G/yGpnZlhyuk+A=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.2/go.mod h1:Mj372IvfZ9ftME7Kdo74stz3KAjMA+WC7Fzzry9uCDI=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.140.1 h1:vDpi/wU7ZF3psU1cl9ZxOf7RuAETRXdOUml0FGV9eXQ=
