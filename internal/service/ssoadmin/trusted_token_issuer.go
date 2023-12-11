@@ -249,7 +249,6 @@ func (r *resourceTrustedTokenIssuer) Update(ctx context.Context, req resource.Up
 	}
 
 	if !plan.Name.Equal(state.Name) || !plan.TrustedTokenIssuerConfiguration.Equal(state.TrustedTokenIssuerConfiguration) {
-
 		in := &ssoadmin.UpdateTrustedTokenIssuerInput{
 			TrustedTokenIssuerArn: aws.String(plan.ID.ValueString()),
 		}
