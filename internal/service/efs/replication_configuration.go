@@ -55,7 +55,8 @@ func ResourceReplicationConfiguration() *schema.Resource {
 						},
 						"file_system_id": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Optional: true,
+							ForceNew: true,
 						},
 						"kms_key_id": {
 							Type:     schema.TypeString,
@@ -218,6 +219,10 @@ func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToC
 
 	if v, ok := tfMap["region"].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
+	}
+
+	if v, ok := tfMap["file_system_id"].(string); ok && v != "" {
+		apiObject.FileSystemId = aws.String(v)
 	}
 
 	return apiObject
