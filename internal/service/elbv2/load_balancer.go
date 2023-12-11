@@ -51,6 +51,7 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
+			customizeDiffALB,
 			customizeDiffNLB,
 			verify.SetTagsDiff,
 		),
@@ -232,12 +233,10 @@ func ResourceLoadBalancer() *schema.Resource {
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 						"ipv6_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IsIPv6Address,
 						},
 						"outpost_id": {
@@ -247,13 +246,11 @@ func ResourceLoadBalancer() *schema.Resource {
 						"private_ipv4_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -965,28 +962,27 @@ func loadBalancerNameFromARN(s string) (string, error) {
 	return matches[1], nil
 }
 
-func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []string {
-	return tfslices.ApplyToAll(availabilityZones, func(v *elbv2.AvailabilityZone) string {
-		return aws.StringValue(v.SubnetId)
+func flattenSubnetsFromAvailabilityZones(apiObjects []*elbv2.AvailabilityZone) []string {
+	return tfslices.ApplyToAll(apiObjects, func(apiObject *elbv2.AvailabilityZone) string {
+		return aws.StringValue(apiObject.SubnetId)
 	})
 }
 
-func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
-	l := make([]map[string]interface{}, 0)
-	for _, availabilityZone := range availabilityZones {
-		m := make(map[string]interface{})
-		m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
-		m["outpost_id"] = aws.StringValue(availabilityZone.OutpostId)
-
-		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
-			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
-			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
-			m["ipv6_address"] = aws.StringValue(loadBalancerAddress.IPv6Address)
+func flattenSubnetMappingsFromAvailabilityZones(apiObjects []*elbv2.AvailabilityZone) []map[string]interface{} {
+	return tfslices.ApplyToAll(apiObjects, func(apiObject *elbv2.AvailabilityZone) map[string]interface{} {
+		tfMap := map[string]interface{}{
+			"outpost_id": aws.StringValue(apiObject.OutpostId),
+			"subnet_id":  aws.StringValue(apiObject.SubnetId),
+		}
+		if apiObjects := apiObject.LoadBalancerAddresses; len(apiObjects) > 0 {
+			apiObject := apiObjects[0]
+			tfMap["allocation_id"] = aws.StringValue(apiObject.AllocationId)
+			tfMap["ipv6_address"] = aws.StringValue(apiObject.IPv6Address)
+			tfMap["private_ipv4_address"] = aws.StringValue(apiObject.PrivateIPv4Address)
 		}
 
-		l = append(l, m)
-	}
-	return l
+		return tfMap
+	})
 }
 
 func SuffixFromARN(arn *string) string {
@@ -1028,19 +1024,31 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		return nil
 	}
 
-	// Get diff for subnets.
-	for _, key := range []string{"subnet_mapping", "subnets"} {
-		if diff.NewValueKnown(key) && diff.HasChange(key) {
-			o, n := diff.GetChange(key)
+	// Subnet diffs.
+	subnetDiff := func(k1, k2 string) error {
+		if diff.NewValueKnown(k1) && diff.HasChange(k1) {
+			o, n := diff.GetChange(k1)
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
 			// In-place increase in number of subnets.
 			if os.Difference(ns).Len() > 0 {
-				if err := diff.ForceNew(key); err != nil {
+				if err := diff.ForceNew(k1); err != nil {
+					return err
+				}
+			} else {
+				if err := diff.SetNewComputed(k2); err != nil {
 					return err
 				}
 			}
 		}
+
+		return nil
+	}
+	if err := subnetDiff("subnet_mapping", "subnets"); err != nil {
+		return err
+	}
+	if err := subnetDiff("subnets", "subnet_mapping"); err != nil {
+		return err
 	}
 
 	// Get diff for security groups.
@@ -1049,6 +1057,62 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 
 	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
 		if err := diff.ForceNew("security_groups"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func customizeDiffALB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if lbType := diff.Get("load_balancer_type").(string); lbType != elbv2.LoadBalancerTypeEnumApplication {
+		return nil
+	}
+
+	if diff.Id() == "" {
+		return nil
+	}
+
+	config := diff.GetRawConfig()
+
+	// Subnet diffs.
+	// Check for changes here -- SetNewComputed will modify HasChange.
+	hasSubnetMappingChanges, hasSubnetsChanges := diff.HasChange("subnet_mapping"), diff.HasChange("subnets")
+	if hasSubnetMappingChanges {
+		if v := config.GetAttr("subnet_mapping"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("subnet_mapping")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+
+			deltaN := ns.Len() - os.Len()
+			switch {
+			case deltaN == 0:
+				// No change in number of subnet mappings, but one of the mappings did change.
+				if err := diff.ForceNew("subnet_mapping"); err != nil {
+					return err
+				}
+			case deltaN < 0:
+				// Subnet mappings removed. Ensure that the remaining mappings didn't change.
+				if os.Intersection(ns).Len() != ns.Len() {
+					if err := diff.ForceNew("subnet_mapping"); err != nil {
+						return err
+					}
+				}
+			case deltaN > 0:
+				// Subnet mappings added. Ensure that the previous mappings didn't change.
+				if ns.Intersection(os).Len() != os.Len() {
+					if err := diff.ForceNew("subnet_mapping"); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		if err := diff.SetNewComputed("subnets"); err != nil {
+			return err
+		}
+	}
+	if hasSubnetsChanges {
+		if err := diff.SetNewComputed("subnet_mapping"); err != nil {
 			return err
 		}
 	}
