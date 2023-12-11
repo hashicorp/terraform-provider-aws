@@ -12,6 +12,7 @@ import (
 	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -114,16 +115,14 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"validation_data_config": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeBetween(0, 10),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"validators": schema.SetAttribute{
-							ElementType: types.StringType,
-							Optional:    true,
+			"validation_data_config": schema.SingleNestedBlock{
+				Attributes: map[string]schema.Attribute{
+					"validators": schema.SetAttribute{
+						Validators: []validator.Set{
+							setvalidator.SizeBetween(0, 10),
 						},
+						ElementType: types.StringType,
+						Optional:    true,
 					},
 				},
 			},
@@ -145,10 +144,15 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"training_metrics": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"training_loss": schema.Float64Attribute{
-						Computed: true,
+			"training_metrics": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"training_loss": schema.Float64Attribute{
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -192,7 +196,7 @@ func (r *resourceCustomModel) Create(ctx context.Context, req resource.CreateReq
 			S3Uri: data.OutputDataConfig.ValueStringPointer(),
 		},
 		CustomModelTags:      getTagsIn(ctx),
-		ValidationDataConfig: expandValidationDataConfig(ctx, data.ValidationDataConfig),
+		ValidationDataConfig: expandValidationDataConfig(ctx, data.ValidationDataConfig, diag.Diagnostics{}),
 	}
 
 	var hp map[string]string
@@ -242,6 +246,9 @@ func (r *resourceCustomModel) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Successfully started job. Save the id now
+	// data.ID = flex.StringValueToFramework(ctx, "tf-acc-test-1531621220222582981")
+	// data.JobArn = flex.StringValueToFramework(ctx, "arn:aws:bedrock:us-east-1:219858395663:model-customization-job/amazon.titan-text-express-v1:0:8k/pc2v9cmxjzlq")
+
 	data.ID = data.CustomModelName
 	// Also save job arn into state now incase we need to cancel and destroy.
 	data.JobArn = flex.StringToFramework(ctx, jobStart.JobArn)
@@ -317,30 +324,30 @@ func waitForModelCustomizationJob(ctx context.Context, conn *bedrock.Client, job
 }
 
 type resourceCustomModelModel struct {
-	ID                   types.String          `tfsdk:"id"`
-	BaseModelId          types.String          `tfsdk:"base_model_id"`
-	ClientRequestToken   types.String          `tfsdk:"client_request_token"`
-	CustomModelKmsKeyId  types.String          `tfsdk:"custom_model_kms_key_id"`
-	CustomModelName      types.String          `tfsdk:"custom_model_name"`
-	HyperParameters      types.Map             `tfsdk:"hyper_parameters"`
-	JobName              types.String          `tfsdk:"job_name"`
-	JobTags              types.Map             `tfsdk:"job_tags"`
-	OutputDataConfig     types.String          `tfsdk:"output_data_config"`
-	RoleArn              types.String          `tfsdk:"role_arn"`
-	TrainingDataConfig   types.String          `tfsdk:"training_data_config"`
-	BaseModelArn         types.String          `tfsdk:"base_model_arn"`
-	CreationTime         types.String          `tfsdk:"creation_time"`
-	JobArn               types.String          `tfsdk:"job_arn"`
-	ModelArn             types.String          `tfsdk:"model_arn"`
-	ModelKmsKeyArn       types.String          `tfsdk:"model_kms_key_arn"`
-	ModelName            types.String          `tfsdk:"model_name"`
-	ValidationDataConfig *validationDataConfig `tfsdk:"validation_data_config"`
-	VpcConfig            types.List            `tfsdk:"vpc_config"`
-	TrainingMetrics      *trainingMetrics      `tfsdk:"training_metrics"`
-	ValidationMetrics    []validationMetrics   `tfsdk:"validation_metrics"`
-	Tags                 types.Map             `tfsdk:"tags"`
-	TagsAll              types.Map             `tfsdk:"tags_all"`
-	Timeouts             timeouts.Value        `tfsdk:"timeouts"`
+	ID                   types.String        `tfsdk:"id"`
+	BaseModelId          types.String        `tfsdk:"base_model_id"`
+	ClientRequestToken   types.String        `tfsdk:"client_request_token"`
+	CustomModelKmsKeyId  types.String        `tfsdk:"custom_model_kms_key_id"`
+	CustomModelName      types.String        `tfsdk:"custom_model_name"`
+	HyperParameters      types.Map           `tfsdk:"hyper_parameters"`
+	JobName              types.String        `tfsdk:"job_name"`
+	JobTags              types.Map           `tfsdk:"job_tags"`
+	OutputDataConfig     types.String        `tfsdk:"output_data_config"`
+	RoleArn              types.String        `tfsdk:"role_arn"`
+	TrainingDataConfig   types.String        `tfsdk:"training_data_config"`
+	BaseModelArn         types.String        `tfsdk:"base_model_arn"`
+	CreationTime         types.String        `tfsdk:"creation_time"`
+	JobArn               types.String        `tfsdk:"job_arn"`
+	ModelArn             types.String        `tfsdk:"model_arn"`
+	ModelKmsKeyArn       types.String        `tfsdk:"model_kms_key_arn"`
+	ModelName            types.String        `tfsdk:"model_name"`
+	ValidationDataConfig types.Object        `tfsdk:"validation_data_config"`
+	VpcConfig            types.List          `tfsdk:"vpc_config"`
+	TrainingMetrics      types.List          `tfsdk:"training_metrics"`
+	ValidationMetrics    []validationMetrics `tfsdk:"validation_metrics"`
+	Tags                 types.Map           `tfsdk:"tags"`
+	TagsAll              types.Map           `tfsdk:"tags_all"`
+	Timeouts             timeouts.Value      `tfsdk:"timeouts"`
 }
 
 func (data *resourceCustomModelModel) refresh(ctx context.Context, conn *bedrock.Client) diag.Diagnostics {

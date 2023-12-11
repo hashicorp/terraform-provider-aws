@@ -150,7 +150,7 @@ type customModel struct {
 	ModelKmsKeyArn       types.String          `tfsdk:"model_kms_key_arn"`
 	HyperParameters      types.Map             `tfsdk:"hyper_parameters"`
 	TrainingDataConfig   types.String          `tfsdk:"training_data_config"`
-	TrainingMetrics      *trainingMetrics      `tfsdk:"training_metrics"`
+	TrainingMetrics      types.List            `tfsdk:"training_metrics"`
 	ValidationDataConfig *validationDataConfig `tfsdk:"validation_data_config"`
 	ValidationMetrics    []validationMetrics   `tfsdk:"validation_metrics"`
 	OutputDataConfig     types.String          `tfsdk:"output_data_config"`

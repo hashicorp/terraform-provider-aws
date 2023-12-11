@@ -7,8 +7,12 @@ import (
 	"context"
 
 	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 type vpcConfig struct {
@@ -45,8 +49,14 @@ func expandVPCConfig(ctx context.Context, tfList []vpcConfig) []bedrock_types.Vp
 	return vpcConfigs
 }
 
-func expandValidationDataConfig(ctx context.Context, model *validationDataConfig) *bedrock_types.ValidationDataConfig {
-	if model == nil {
+func expandValidationDataConfig(ctx context.Context, object types.Object, diags diag.Diagnostics) *bedrock_types.ValidationDataConfig {
+	if object.IsNull() {
+		return nil
+	}
+
+	var model validationDataConfig
+	diags.Append(object.As(ctx, &model, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
 		return nil
 	}
 
@@ -61,19 +71,26 @@ func expandValidationDataConfig(ctx context.Context, model *validationDataConfig
 	return apiObject
 }
 
-func flattenTrainingMetrics(ctx context.Context, apiObject *bedrock_types.TrainingMetrics) *trainingMetrics {
-	model := &trainingMetrics{}
+func flattenTrainingMetrics(ctx context.Context, apiObject *bedrock_types.TrainingMetrics) types.List {
+	attributeTypes := fwtypes.AttributeTypesMust[trainingMetrics](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
-	if apiObject != nil {
-		trainingLoss := float64(*apiObject.TrainingLoss)
-		model.TrainingLoss = flex.Float64ToFramework(ctx, &trainingLoss)
+	if apiObject == nil {
+		return types.ListNull(elemType)
 	}
 
-	return model
+	attrs := make([]attr.Value, 0, 1)
+	attr := map[string]attr.Value{}
+	trainingLoss := float64(*apiObject.TrainingLoss)
+	attr["training_loss"] = flex.Float64ToFramework(ctx, &trainingLoss)
+	val := types.ObjectValueMust(attributeTypes, attr)
+	attrs = append(attrs, val)
+
+	return types.ListValueMust(elemType, attrs)
 }
 
 func flattenValidationMetrics(ctx context.Context, apiObjects []bedrock_types.ValidatorMetric) []validationMetrics {
-	if apiObjects != nil {
+	if apiObjects == nil {
 		return nil
 	}
 
@@ -88,16 +105,23 @@ func flattenValidationMetrics(ctx context.Context, apiObjects []bedrock_types.Va
 	return model
 }
 
-func flattenValidationDataConfig(ctx context.Context, apiObject *bedrock_types.ValidationDataConfig) *validationDataConfig {
-	model := &validationDataConfig{}
+func flattenValidationDataConfig(ctx context.Context, apiObject *bedrock_types.ValidationDataConfig) types.Object {
+	attributeTypes := fwtypes.AttributeTypesMust[validationDataConfig](ctx)
+	attributeTypes["validators"] = types.SetType{ElemType: types.StringType}
+
+	if apiObject == nil {
+		return types.ObjectNull(attributeTypes)
+	}
 
 	validators := []*string{}
 	if apiObject != nil {
 		for _, validator := range apiObject.Validators {
 			validators = append(validators, validator.S3Uri)
 		}
-		model.Validators = flex.FlattenFrameworkStringSet(ctx, validators)
+	}
+	attrs := map[string]attr.Value{
+		"validators": flex.FlattenFrameworkStringSet(ctx, validators),
 	}
 
-	return model
+	return types.ObjectValueMust(attributeTypes, attrs)
 }

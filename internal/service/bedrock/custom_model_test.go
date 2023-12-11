@@ -39,6 +39,33 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 	})
 }
 
+// func TestAccBedrockCustomModel_basic(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	rName := "tf-acc-test-1531621220222582981" // sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	customModelResourceName := "aws_bedrock_custom_model.test"
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccCustomModelConfig_basic2(rName),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
+// 					resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
+// 					resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
+// 					resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
+// 				),
+// 			},
+// 			{
+// 				ResourceName:      customModelResourceName,
+// 				ImportState:       true,
+// 				ImportStateVerify: true,
+// 			},
+// 		},
+// 	})
+// }
+
 func testAccCustomModelConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -178,3 +205,22 @@ resource "aws_bedrock_custom_model" "test" {
 }
 `, rName)
 }
+
+// func testAccCustomModelConfig_basic2(rName string) string {
+// 	return fmt.Sprintf(`
+// resource "aws_bedrock_custom_model" "test" {
+//   custom_model_name = %[1]q
+//   job_name          = %[1]q
+//   base_model_id     = "amazon.titan-text-express-v1"
+//   role_arn          = "arn:aws:iam::219858395663:role/bedrock-fine-tuning-tf-acc-test-1531621220222582981"
+//   hyper_parameters = {
+//     "epochCount"              = "1"
+//     "batchSize"               = "1"
+//     "learningRate"            = "0.005"
+//     "learningRateWarmupSteps" = "0"
+//   }
+//   output_data_config   = "s3://bedrock-output-data-tf-acc-test-1531621220222582981/myfolder/"
+//   training_data_config = "s3://bedrock-training-data-tf-acc-test-1531621220222582981/myfolder/training_data.jsonl"
+// }
+// `, rName)
+// }
