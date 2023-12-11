@@ -160,15 +160,19 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 	}
 
 	var operation types.OperationSummary
+	var found bool
 	for _, op := range output.OperationSummaryList {
 		if aws.ToString(op.TargetArn) == arn {
 			operation = op
+			found = true
 			break
-		} else {
-			return nil, &retry.NotFoundError{
-				Message:     "start deployment operation not found",
-				LastRequest: input,
-			}
+		}
+	}
+
+	if !found {
+		return nil, &retry.NotFoundError{
+			Message:     "start deployment operation not found",
+			LastRequest: input,
 		}
 	}
 
