@@ -61,7 +61,7 @@ func TestAccOpenSearchServerlessCollection_standbyReplicas(t *testing.T) {
 	ctx := acctest.Context(t)
 	var collection types.CollectionDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rStandbyReplicas := "DISABLED"
+	standbyReplicas := "DISABLED"
 	resourceName := "aws_opensearchserverless_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,15 +75,14 @@ func TestAccOpenSearchServerlessCollection_standbyReplicas(t *testing.T) {
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollectionConfig_standbyReplicas(rName, rStandbyReplicas),
+				Config: testAccCollectionConfig_standbyReplicas(rName, standbyReplicas),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
 					resource.TestCheckResourceAttrSet(resourceName, "type"),
 					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "standby_replicas"),
-					resource.TestCheckResourceAttr(resourceName, "standby_replicas", rStandbyReplicas),
+					resource.TestCheckResourceAttr(resourceName, "standby_replicas", standbyReplicas),
 				),
 			},
 			{
@@ -303,17 +302,17 @@ resource "aws_opensearchserverless_collection" "test" {
 	)
 }
 
-func testAccCollectionConfig_standbyReplicas(rName string, rStandbyReplicas string) string {
+func testAccCollectionConfig_standbyReplicas(rName string, standbyReplicas string) string {
 	return acctest.ConfigCompose(
 		testAccCollectionBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_opensearchserverless_collection" "test" {
-  name = %[1]q
-  standby_replicas = %2q
+  name             = %[1]q
+  standby_replicas = %[2]q
 
   depends_on = [aws_opensearchserverless_security_policy.test]
 }
-`, rName, rStandbyReplicas),
+`, rName, standbyReplicas),
 	)
 }
 
