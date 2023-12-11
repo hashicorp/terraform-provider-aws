@@ -39,14 +39,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceModelInvocationLoggingConfiguration,
-			Name:    "Model Invocation Logging Configuration",
-		},
-		{
 			Factory: newResourceCustomModel,
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "model_arn",
 			},
+		},
+		{
+			Factory: newResourceModelInvocationLoggingConfiguration,
+			Name:    "Model Invocation Logging Configuration",
 		},
 	}
 }
