@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -24,6 +25,9 @@ const (
 	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
 	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
 )
+
+// Expand  = TF -->  AWS
+// Flatten = AWS --> TF
 
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
@@ -428,7 +432,13 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		//
 		vTo.SetString(v.ValueString())
 		return diags
-
+	case reflect.Struct:
+		//
+		// fwtypes.Timestamp --> time.Time
+		//
+		if t, ok := vFrom.(fwtypes.Timestamp); ok {
+			vTo.Set(reflect.ValueOf(t.ValueTimestamp()))
+		}
 	case reflect.Ptr:
 		switch vTo.Type().Elem().Kind() {
 		case reflect.String:
@@ -437,6 +447,13 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			//
 			vTo.Set(reflect.ValueOf(v.ValueStringPointer()))
 			return diags
+		case reflect.Struct:
+			//
+			// fwtypes.Timestamp --> *time.Time
+			//
+			if t, ok := vFrom.(fwtypes.Timestamp); ok {
+				vTo.Set(reflect.ValueOf(t.ValueTimestampPointer()))
+			}
 		}
 	}
 
@@ -898,6 +915,11 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 
 	case reflect.Struct:
+		if _, ok := vFrom.Interface().(time.Time); ok {
+			diags.Append(flattener.time(ctx, vFrom, vTo)...)
+			return diags
+		}
+
 		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
 			diags.Append(flattener.structToNestedObject(ctx, vFrom, tTo, vTo)...)
 			return diags
@@ -1036,6 +1058,41 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	return diags
 }
 
+func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valTo, ok := vTo.Interface().(attr.Value)
+	if !ok {
+		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
+		return diags
+	}
+
+	_, ok = valTo.(fwtypes.Timestamp)
+	if !ok {
+		diags.AddError("AutoFlEx", fmt.Sprintf("time.Time flattens to fwtypes.Timestamp, not: %s", vTo.Kind()))
+		return diags
+	}
+
+	// time.Time --> fwtypes.Timestamp
+	if from, ok := vFrom.Interface().(time.Time); ok {
+		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		return diags
+	}
+
+	// *time.Time --> fwtypes.Timestamp
+	if from, ok := vFrom.Elem().Interface().(time.Time); ok {
+		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		return diags
+	}
+
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   vTo,
+	})
+
+	return diags
+}
+
 // ptr copies an AWS API pointer value to a compatible Plugin Framework value.
 func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -1058,6 +1115,14 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 		return diags
 
 	case reflect.Struct:
+		if _, ok := vElem.Interface().(time.Time); ok {
+			//
+			// *time.Time --> fwtypes.TimestampValue(t)
+			//
+			diags.Append(flattener.time(ctx, vFrom, vTo)...)
+			return diags
+		}
+
 		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
 			//
 			// *struct -> types.List(OfObject).
