@@ -31,3 +31,5 @@ This data source exports the following attributes in addition to the arguments a
 - `id` - The repository name prefix.
 - `upstream_registry_url` - The registry URL of the upstream public registry to use as the source.
 - `registry_id` - The registry ID where the repository was created.
+- `credential_arn` - ARN of the Secret which will be used to authenticate against the registry.
+
