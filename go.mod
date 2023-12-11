@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.29.5
-	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.10.4
+	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.21.4
