@@ -82,8 +82,8 @@ github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.18.5 h1:Jw0fM7521qn4edN
 github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.18.5/go.mod h1:RDeY2hgSGG8yoZBaBH8I9h89Wz7BVhnVRtaNaKQRELM=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.21.5 h1:AlmfzS3CBH1OMXjFU8sy7JMa1xIPC1n0Ke4zvOaEHRo=
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.21.5/go.mod h1:vTqieaH9W3irEs13g5QuwNCOhmJUqpkIswlh4Twhq/Y=
-github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.4 h1:I3KUV/O40q0ObTVvBcPLEb7RG6HQf078JvEbPQI37Is=
-github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.4/go.mod h1:oapZWAj2ivHtbARQ7WCy7Omszz1SMX4TsuvzOzf/nbQ=
+github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.5 h1:lz+cMe5wjevIaayclzOnz5kXLR++VjHiZnVnieOpd+c=
+github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.5/go.mod h1:oapZWAj2ivHtbARQ7WCy7Omszz1SMX4TsuvzOzf/nbQ=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.4 h1:UYDnfsD60JTTeq9M5+W20NYOjG3dhsMpt2aDgwm2aYU=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.4/go.mod h1:j22SPKm/C8/bzS5LdxF9DKQNZH2xDt4xBc88pcn3+w4=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.31.4 h1:IMVa16/Vt7LVHbFcs4xuTpWM1Dp2jvSPQpydt0VXdfk=
