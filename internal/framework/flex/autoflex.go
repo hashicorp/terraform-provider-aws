@@ -438,6 +438,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		//
 		if t, ok := vFrom.(fwtypes.Timestamp); ok {
 			vTo.Set(reflect.ValueOf(t.ValueTimestamp()))
+			return diags
 		}
 	case reflect.Ptr:
 		switch vTo.Type().Elem().Kind() {
@@ -453,6 +454,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			//
 			if t, ok := vFrom.(fwtypes.Timestamp); ok {
 				vTo.Set(reflect.ValueOf(t.ValueTimestampPointer()))
+				return diags
 			}
 		}
 	}
@@ -915,15 +917,8 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 
 	case reflect.Struct:
-		if _, ok := vFrom.Interface().(time.Time); ok {
-			diags.Append(flattener.time(ctx, vFrom, vTo)...)
-			return diags
-		}
-
-		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
-			diags.Append(flattener.structToNestedObject(ctx, vFrom, tTo, vTo)...)
-			return diags
-		}
+		diags.Append(flattener.struct_(ctx, vFrom, false, tTo, vTo)...)
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -1058,8 +1053,13 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	return diags
 }
 
-func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.Timestamp, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if isNullFrom {
+		vTo.Set(reflect.ValueOf(fwtypes.TimestampNull()))
+		return diags
+	}
 
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
@@ -1115,27 +1115,41 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 		return diags
 
 	case reflect.Struct:
-		if _, ok := vElem.Interface().(time.Time); ok {
-			//
-			// *time.Time --> fwtypes.TimestampValue(t)
-			//
-			diags.Append(flattener.time(ctx, vFrom, vTo)...)
-			return diags
-		}
-
-		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
-			//
-			// *struct -> types.List(OfObject).
-			//
-			diags.Append(flattener.ptrToStructNestedObject(ctx, vElem, isNilFrom, tTo, vTo)...)
-			return diags
-		}
+		diags.Append(flattener.struct_(ctx, vElem, isNilFrom, tTo, vTo)...)
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
+
+	return diags
+}
+
+// struct_ copies an AWS API struct value to a compatible Plugin Framework value.
+func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value, isNilFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+		//
+		// *struct -> types.List(OfObject).
+		//
+		diags.Append(flattener.structToNestedObject(ctx, vFrom, isNilFrom, tTo, vTo)...)
+		return diags
+	}
+
+	interfaceAttrVal, ok := vTo.Interface().(attr.Value)
+	if !ok {
+		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
+		return diags
+	}
+
+	switch vToType := interfaceAttrVal.(type) {
+	case fwtypes.Timestamp:
+		diags.Append(flattener.time(ctx, vFrom, isNilFrom, vToType, vTo)...)
+		return diags
+	}
 
 	return diags
 }
@@ -1456,34 +1470,7 @@ func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom r
 }
 
 // structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Create a new target structure and walk its fields.
-	to, d := tTo.NewObjectPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	diags.Append(autoFlexConvertStruct(ctx, vFrom.Interface(), to, flattener)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Set the target structure as a mapped Object.
-	val, d := tTo.ValueFromObjectPtr(ctx, to)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	vTo.Set(reflect.ValueOf(val))
-	return diags
-}
-
-// ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if isNullFrom {
