@@ -175,10 +175,6 @@ type TestFlexTimeTF01 struct {
 type TestFlexTimeAWS01 struct {
 	CreationDateTime *time.Time
 }
-
-type TestFlexTimeTF02 struct {
-	CreationDateTime fwtypes.Timestamp `tfsdk:"creation_date_time"`
-}
 type TestFlexTimeAWS02 struct {
 	CreationDateTime time.Time
 }
@@ -572,7 +568,7 @@ func TestGenericExpand(t *testing.T) {
 		},
 		{
 			TestName: "timestamp",
-			Source: &TestFlexTimeTF02{
+			Source: &TestFlexTimeTF01{
 				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
 			},
 			Target: &TestFlexTimeAWS02{},
@@ -1424,9 +1420,25 @@ func TestGenericFlatten(t *testing.T) {
 			Source: &TestFlexTimeAWS02{
 				CreationDateTime: testTimeTime,
 			},
-			Target: &TestFlexTimeTF02{},
-			WantTarget: &TestFlexTimeTF02{
+			Target: &TestFlexTimeTF01{},
+			WantTarget: &TestFlexTimeTF01{
 				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+			},
+		},
+		{
+			TestName: "timestamp nil",
+			Source:   &TestFlexTimeAWS01{},
+			Target:   &TestFlexTimeTF01{},
+			WantTarget: &TestFlexTimeTF01{
+				CreationDateTime: fwtypes.TimestampNull(),
+			},
+		},
+		{
+			TestName: "timestamp empty",
+			Source:   &TestFlexTimeAWS02{},
+			Target:   &TestFlexTimeTF01{},
+			WantTarget: &TestFlexTimeTF01{
+				CreationDateTime: fwtypes.TimestampZero(),
 			},
 		},
 	}
