@@ -87,6 +87,9 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
