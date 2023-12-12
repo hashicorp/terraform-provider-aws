@@ -6231,7 +6231,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, license, storage, classes)
 }
 
-func testAccInstanceConfig_orderableClassDb2() string {
+func testAccInstanceConfig_orderableClassDb2() string { // nosemgrep:ci.caps5-in-func-name
 	return testAccInstanceConfig_orderableClass("db2-se", "bring-your-own-license", "gp3", db2PreferredInstanceClasses)
 }
 
