@@ -229,18 +229,6 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	valTo, ok := vTo.Interface().(attr.Value)
-	if !ok {
-		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
-		return diags
-	}
-
-	_, ok = valTo.(fwtypes.Timestamp)
-	if !ok {
-		diags.AddError("AutoFlEx", fmt.Sprintf("time.Time flattens to fwtypes.Timestamp, not: %s", vTo.Kind()))
-		return diags
-	}
-
 	// time.Time --> fwtypes.Timestamp
 	if from, ok := vFrom.Interface().(time.Time); ok {
 		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
@@ -307,13 +295,13 @@ func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value,
 		return diags
 	}
 
-	interfaceAttrVal, ok := vTo.Interface().(attr.Value)
+	iTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
 		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
 		return diags
 	}
 
-	switch interfaceAttrVal.(type) {
+	switch iTo.(type) {
 	case fwtypes.Timestamp:
 		diags.Append(flattener.time(ctx, vFrom, isNilFrom, vTo)...)
 		return diags
