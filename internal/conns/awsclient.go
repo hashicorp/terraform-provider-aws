@@ -79,13 +79,19 @@ func (c *AWSClient) RegionalHostname(prefix string) string {
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
 func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
+	s3Client := c.S3Client(ctx)
+
 	c.lock.Lock() // OK since a non-default client is created.
 	defer c.lock.Unlock()
 
 	if c.s3ExpressClient == nil {
-		c.s3ExpressClient = errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
-			"s3_us_east_1_regional_endpoint": endpoints_sdkv1.RegionalS3UsEast1Endpoint,
-		}))
+		if s3Client.Options().Region == names.GlobalRegionID {
+			c.s3ExpressClient = errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
+				"s3_us_east_1_regional_endpoint": endpoints_sdkv1.RegionalS3UsEast1Endpoint,
+			}))
+		} else {
+			c.s3ExpressClient = s3Client
+		}
 	}
 
 	return c.s3ExpressClient
