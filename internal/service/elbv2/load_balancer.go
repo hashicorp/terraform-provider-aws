@@ -1078,12 +1078,16 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	}
 
 	// Get diff for security groups.
-	o, n := diff.GetChange("security_groups")
-	os, ns := o.(*schema.Set), n.(*schema.Set)
+	if diff.HasChange("security_groups") {
+		if v := config.GetAttr("security_groups"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("security_groups")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-		if err := diff.ForceNew("security_groups"); err != nil {
-			return err
+			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
+				if err := diff.ForceNew("security_groups"); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
