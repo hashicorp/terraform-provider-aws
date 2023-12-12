@@ -233,7 +233,7 @@ import (
 )
 
 func (c *AWSClient) ACMClient(ctx context.Context) *acm_sdkv2.Client {
-	return errs.Must(client[*acm_sdkv2.Client](ctx, c, names.ACM))
+	return errs.Must(client[*acm_sdkv2.Client](ctx, c, names.ACM, make(map[string]any)))
 }
 
 func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
@@ -253,11 +253,11 @@ func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.Ap
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer_sdkv2.Client {
-	return errs.Must(client[*accessanalyzer_sdkv2.Client](ctx, c, names.AccessAnalyzer))
+	return errs.Must(client[*accessanalyzer_sdkv2.Client](ctx, c, names.AccessAnalyzer, make(map[string]any)))
 }
 
 func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
-	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account))
+	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
 func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
@@ -273,15 +273,15 @@ func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfi
 }
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
-	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig))
+	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig, make(map[string]any)))
 }
 
 func (c *AWSClient) AppFabricClient(ctx context.Context) *appfabric_sdkv2.Client {
-	return errs.Must(client[*appfabric_sdkv2.Client](ctx, c, names.AppFabric))
+	return errs.Must(client[*appfabric_sdkv2.Client](ctx, c, names.AppFabric, make(map[string]any)))
 }
 
 func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
-	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow))
+	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow, make(map[string]any)))
 }
 
 func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
@@ -293,7 +293,7 @@ func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
 }
 
 func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {
-	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner))
+	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner, make(map[string]any)))
 }
 
 func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
@@ -309,11 +309,11 @@ func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationins
 }
 
 func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
-	return errs.Must(client[*athena_sdkv2.Client](ctx, c, names.Athena))
+	return errs.Must(client[*athena_sdkv2.Client](ctx, c, names.Athena, make(map[string]any)))
 }
 
 func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
-	return errs.Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager))
+	return errs.Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager, make(map[string]any)))
 }
 
 func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.AutoScaling {
@@ -333,7 +333,7 @@ func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
 }
 
 func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock_sdkv2.Client {
-	return errs.Must(client[*bedrock_sdkv2.Client](ctx, c, names.Bedrock))
+	return errs.Must(client[*bedrock_sdkv2.Client](ctx, c, names.Bedrock, make(map[string]any)))
 }
 
 func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
@@ -353,15 +353,15 @@ func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
 }
 
 func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines_sdkv2.Client {
-	return errs.Must(client[*chimesdkmediapipelines_sdkv2.Client](ctx, c, names.ChimeSDKMediaPipelines))
+	return errs.Must(client[*chimesdkmediapipelines_sdkv2.Client](ctx, c, names.ChimeSDKMediaPipelines, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeSDKVoiceClient(ctx context.Context) *chimesdkvoice_sdkv2.Client {
-	return errs.Must(client[*chimesdkvoice_sdkv2.Client](ctx, c, names.ChimeSDKVoice))
+	return errs.Must(client[*chimesdkvoice_sdkv2.Client](ctx, c, names.ChimeSDKVoice, make(map[string]any)))
 }
 
 func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {
-	return errs.Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms))
+	return errs.Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms, make(map[string]any)))
 }
 
 func (c *AWSClient) Cloud9Conn(ctx context.Context) *cloud9_sdkv1.Cloud9 {
@@ -369,7 +369,7 @@ func (c *AWSClient) Cloud9Conn(ctx context.Context) *cloud9_sdkv1.Cloud9 {
 }
 
 func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol_sdkv2.Client {
-	return errs.Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl))
+	return errs.Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv1.CloudFormation {
@@ -405,7 +405,7 @@ func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuil
 }
 
 func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.Client {
-	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst))
+	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
@@ -413,7 +413,7 @@ func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCo
 }
 
 func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {
-	return errs.Must(client[*codeguruprofiler_sdkv2.Client](ctx, c, names.CodeGuruProfiler))
+	return errs.Must(client[*codeguruprofiler_sdkv2.Client](ctx, c, names.CodeGuruProfiler, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {
@@ -425,11 +425,11 @@ func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.Co
 }
 
 func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections_sdkv2.Client {
-	return errs.Must(client[*codestarconnections_sdkv2.Client](ctx, c, names.CodeStarConnections))
+	return errs.Must(client[*codestarconnections_sdkv2.Client](ctx, c, names.CodeStarConnections, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarnotifications_sdkv2.Client {
-	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications))
+	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications, make(map[string]any)))
 }
 
 func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
@@ -441,11 +441,11 @@ func (c *AWSClient) CognitoIdentityConn(ctx context.Context) *cognitoidentity_sd
 }
 
 func (c *AWSClient) ComprehendClient(ctx context.Context) *comprehend_sdkv2.Client {
-	return errs.Must(client[*comprehend_sdkv2.Client](ctx, c, names.Comprehend))
+	return errs.Must(client[*comprehend_sdkv2.Client](ctx, c, names.Comprehend, make(map[string]any)))
 }
 
 func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimizer_sdkv2.Client {
-	return errs.Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer))
+	return errs.Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer, make(map[string]any)))
 }
 
 func (c *AWSClient) ConfigServiceConn(ctx context.Context) *configservice_sdkv1.ConfigService {
@@ -457,15 +457,15 @@ func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
 }
 
 func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.Client {
-	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases))
+	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases, make(map[string]any)))
 }
 
 func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower_sdkv2.Client {
-	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower))
+	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower, make(map[string]any)))
 }
 
 func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
-	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles))
+	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles, make(map[string]any)))
 }
 
 func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
@@ -485,7 +485,7 @@ func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.Director
 }
 
 func (c *AWSClient) DSClient(ctx context.Context) *directoryservice_sdkv2.Client {
-	return errs.Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS))
+	return errs.Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS, make(map[string]any)))
 }
 
 func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.DataExchange {
@@ -501,7 +501,7 @@ func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
 }
 
 func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
-	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy))
+	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy, make(map[string]any)))
 }
 
 func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
@@ -521,7 +521,7 @@ func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
 }
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
-	return errs.Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic))
+	return errs.Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic, make(map[string]any)))
 }
 
 func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
@@ -533,7 +533,7 @@ func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
 }
 
 func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
-	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2))
+	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2, make(map[string]any)))
 }
 
 func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
@@ -541,7 +541,7 @@ func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
 }
 
 func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
-	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR))
+	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR, make(map[string]any)))
 }
 
 func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
@@ -557,7 +557,7 @@ func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
 }
 
 func (c *AWSClient) EKSClient(ctx context.Context) *eks_sdkv2.Client {
-	return errs.Must(client[*eks_sdkv2.Client](ctx, c, names.EKS))
+	return errs.Must(client[*eks_sdkv2.Client](ctx, c, names.EKS, make(map[string]any)))
 }
 
 func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
@@ -573,7 +573,7 @@ func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
 }
 
 func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
-	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR))
+	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
@@ -581,7 +581,7 @@ func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.
 }
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
-	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless))
+	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
@@ -605,11 +605,11 @@ func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBrid
 }
 
 func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently_sdkv2.Client {
-	return errs.Must(client[*evidently_sdkv2.Client](ctx, c, names.Evidently))
+	return errs.Must(client[*evidently_sdkv2.Client](ctx, c, names.Evidently, make(map[string]any)))
 }
 
 func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {
-	return errs.Must(client[*fis_sdkv2.Client](ctx, c, names.FIS))
+	return errs.Must(client[*fis_sdkv2.Client](ctx, c, names.FIS, make(map[string]any)))
 }
 
 func (c *AWSClient) FMSConn(ctx context.Context) *fms_sdkv1.FMS {
@@ -621,7 +621,7 @@ func (c *AWSClient) FSxConn(ctx context.Context) *fsx_sdkv1.FSx {
 }
 
 func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
-	return errs.Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace))
+	return errs.Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace, make(map[string]any)))
 }
 
 func (c *AWSClient) FirehoseConn(ctx context.Context) *firehose_sdkv1.Firehose {
@@ -633,7 +633,7 @@ func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
 }
 
 func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {
-	return errs.Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier))
+	return errs.Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier, make(map[string]any)))
 }
 
 func (c *AWSClient) GlobalAcceleratorConn(ctx context.Context) *globalaccelerator_sdkv1.GlobalAccelerator {
@@ -657,7 +657,7 @@ func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDut
 }
 
 func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Client {
-	return errs.Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake))
+	return errs.Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake, make(map[string]any)))
 }
 
 func (c *AWSClient) IAMConn(ctx context.Context) *iam_sdkv1.IAM {
@@ -669,11 +669,11 @@ func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
 }
 
 func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
-	return errs.Must(client[*ivschat_sdkv2.Client](ctx, c, names.IVSChat))
+	return errs.Must(client[*ivschat_sdkv2.Client](ctx, c, names.IVSChat, make(map[string]any)))
 }
 
 func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv2.Client {
-	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore))
+	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore, make(map[string]any)))
 }
 
 func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
@@ -685,11 +685,11 @@ func (c *AWSClient) InspectorConn(ctx context.Context) *inspector_sdkv1.Inspecto
 }
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Client {
-	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2))
+	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2, make(map[string]any)))
 }
 
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor_sdkv2.Client {
-	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor))
+	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
 }
 
 func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
@@ -713,7 +713,7 @@ func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
 }
 
 func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
-	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka))
+	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka, make(map[string]any)))
 }
 
 func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {
@@ -721,11 +721,11 @@ func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.Ka
 }
 
 func (c *AWSClient) KendraClient(ctx context.Context) *kendra_sdkv2.Client {
-	return errs.Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra))
+	return errs.Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra, make(map[string]any)))
 }
 
 func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces_sdkv2.Client {
-	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces))
+	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
@@ -753,7 +753,7 @@ func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
 }
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
-	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda))
+	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda, make(map[string]any)))
 }
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
@@ -761,7 +761,7 @@ func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_
 }
 
 func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Client {
-	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models))
+	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models, make(map[string]any)))
 }
 
 func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
@@ -769,7 +769,7 @@ func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv
 }
 
 func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client {
-	return errs.Must(client[*lightsail_sdkv2.Client](ctx, c, names.Lightsail))
+	return errs.Must(client[*lightsail_sdkv2.Client](ctx, c, names.Lightsail, make(map[string]any)))
 }
 
 func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
@@ -777,11 +777,11 @@ func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.Loc
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
-	return errs.Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs))
+	return errs.Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs, make(map[string]any)))
 }
 
 func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sdkv2.Client {
-	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics))
+	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
 }
 
 func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
@@ -797,7 +797,7 @@ func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect_sdkv2.Client {
-	return errs.Must(client[*mediaconnect_sdkv2.Client](ctx, c, names.MediaConnect))
+	return errs.Must(client[*mediaconnect_sdkv2.Client](ctx, c, names.MediaConnect, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.MediaConvert {
@@ -805,15 +805,15 @@ func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.Me
 }
 
 func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client {
-	return errs.Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive))
+	return errs.Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.Client {
-	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage))
+	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2_sdkv2.Client {
-	return errs.Must(client[*mediapackagev2_sdkv2.Client](ctx, c, names.MediaPackageV2))
+	return errs.Must(client[*mediapackagev2_sdkv2.Client](ctx, c, names.MediaPackageV2, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {
@@ -837,7 +837,7 @@ func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv
 }
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_sdkv2.Client {
-	return errs.Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager))
+	return errs.Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
@@ -845,11 +845,11 @@ func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1
 }
 
 func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis_sdkv2.Client {
-	return errs.Must(client[*osis_sdkv2.Client](ctx, c, names.OpenSearchIngestion))
+	return errs.Must(client[*osis_sdkv2.Client](ctx, c, names.OpenSearchIngestion, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless_sdkv2.Client {
-	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless))
+	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
@@ -869,19 +869,19 @@ func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
 }
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
-	return errs.Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes))
+	return errs.Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes, make(map[string]any)))
 }
 
 func (c *AWSClient) PollyClient(ctx context.Context) *polly_sdkv2.Client {
-	return errs.Must(client[*polly_sdkv2.Client](ctx, c, names.Polly))
+	return errs.Must(client[*polly_sdkv2.Client](ctx, c, names.Polly, make(map[string]any)))
 }
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
-	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing))
+	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing, make(map[string]any)))
 }
 
 func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
-	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB))
+	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB, make(map[string]any)))
 }
 
 func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
@@ -893,7 +893,7 @@ func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {
 }
 
 func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
-	return errs.Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin))
+	return errs.Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin, make(map[string]any)))
 }
 
 func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
@@ -901,7 +901,7 @@ func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
 }
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
-	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS))
+	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS, make(map[string]any)))
 }
 
 func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatchRUM {
@@ -913,7 +913,7 @@ func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
 }
 
 func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.Client {
-	return errs.Must(client[*redshiftdata_sdkv2.Client](ctx, c, names.RedshiftData))
+	return errs.Must(client[*redshiftdata_sdkv2.Client](ctx, c, names.RedshiftData, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
@@ -921,19 +921,19 @@ func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverl
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {
-	return errs.Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2))
+	return errs.Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceGroupsClient(ctx context.Context) *resourcegroups_sdkv2.Client {
-	return errs.Must(client[*resourcegroups_sdkv2.Client](ctx, c, names.ResourceGroups))
+	return errs.Must(client[*resourcegroups_sdkv2.Client](ctx, c, names.ResourceGroups, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceGroupsTaggingAPIClient(ctx context.Context) *resourcegroupstaggingapi_sdkv2.Client {
-	return errs.Must(client[*resourcegroupstaggingapi_sdkv2.Client](ctx, c, names.ResourceGroupsTaggingAPI))
+	return errs.Must(client[*resourcegroupstaggingapi_sdkv2.Client](ctx, c, names.ResourceGroupsTaggingAPI, make(map[string]any)))
 }
 
 func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv2.Client {
-	return errs.Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere))
+	return errs.Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
@@ -941,7 +941,7 @@ func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
 }
 
 func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sdkv2.Client {
-	return errs.Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains))
+	return errs.Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53RecoveryControlConfigConn(ctx context.Context) *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
@@ -961,11 +961,11 @@ func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
 }
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
-	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3))
+	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, make(map[string]any)))
 }
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client {
-	return errs.Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control))
+	return errs.Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control, make(map[string]any)))
 }
 
 func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outposts {
@@ -977,7 +977,7 @@ func (c *AWSClient) SESConn(ctx context.Context) *ses_sdkv1.SES {
 }
 
 func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2_sdkv2.Client {
-	return errs.Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2))
+	return errs.Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2, make(map[string]any)))
 }
 
 func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
@@ -985,11 +985,11 @@ func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
 }
 
 func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
-	return errs.Must(client[*sns_sdkv2.Client](ctx, c, names.SNS))
+	return errs.Must(client[*sns_sdkv2.Client](ctx, c, names.SNS, make(map[string]any)))
 }
 
 func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
-	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS))
+	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
@@ -997,19 +997,19 @@ func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
 }
 
 func (c *AWSClient) SSMClient(ctx context.Context) *ssm_sdkv2.Client {
-	return errs.Must(client[*ssm_sdkv2.Client](ctx, c, names.SSM))
+	return errs.Must(client[*ssm_sdkv2.Client](ctx, c, names.SSM, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Client {
-	return errs.Must(client[*ssmcontacts_sdkv2.Client](ctx, c, names.SSMContacts))
+	return errs.Must(client[*ssmcontacts_sdkv2.Client](ctx, c, names.SSMContacts, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
-	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
+	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents, make(map[string]any)))
 }
 
 func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {
-	return errs.Must(client[*ssoadmin_sdkv2.Client](ctx, c, names.SSOAdmin))
+	return errs.Must(client[*ssoadmin_sdkv2.Client](ctx, c, names.SSOAdmin, make(map[string]any)))
 }
 
 func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
@@ -1017,11 +1017,11 @@ func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
 }
 
 func (c *AWSClient) STSClient(ctx context.Context) *sts_sdkv2.Client {
-	return errs.Must(client[*sts_sdkv2.Client](ctx, c, names.STS))
+	return errs.Must(client[*sts_sdkv2.Client](ctx, c, names.STS, make(map[string]any)))
 }
 
 func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
-	return errs.Must(client[*swf_sdkv2.Client](ctx, c, names.SWF))
+	return errs.Must(client[*swf_sdkv2.Client](ctx, c, names.SWF, make(map[string]any)))
 }
 
 func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
@@ -1029,7 +1029,7 @@ func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMake
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {
-	return errs.Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler))
+	return errs.Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler, make(map[string]any)))
 }
 
 func (c *AWSClient) SchemasConn(ctx context.Context) *schemas_sdkv1.Schemas {
@@ -1041,11 +1041,11 @@ func (c *AWSClient) SecretsManagerConn(ctx context.Context) *secretsmanager_sdkv
 }
 
 func (c *AWSClient) SecurityHubClient(ctx context.Context) *securityhub_sdkv2.Client {
-	return errs.Must(client[*securityhub_sdkv2.Client](ctx, c, names.SecurityHub))
+	return errs.Must(client[*securityhub_sdkv2.Client](ctx, c, names.SecurityHub, make(map[string]any)))
 }
 
 func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake_sdkv2.Client {
-	return errs.Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake))
+	return errs.Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake, make(map[string]any)))
 }
 
 func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
@@ -1061,7 +1061,7 @@ func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_
 }
 
 func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
-	return errs.Must(client[*servicequotas_sdkv2.Client](ctx, c, names.ServiceQuotas))
+	return errs.Must(client[*servicequotas_sdkv2.Client](ctx, c, names.ServiceQuotas, make(map[string]any)))
 }
 
 func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
@@ -1069,7 +1069,7 @@ func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
 }
 
 func (c *AWSClient) SignerClient(ctx context.Context) *signer_sdkv2.Client {
-	return errs.Must(client[*signer_sdkv2.Client](ctx, c, names.Signer))
+	return errs.Must(client[*signer_sdkv2.Client](ctx, c, names.Signer, make(map[string]any)))
 }
 
 func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
@@ -1085,11 +1085,11 @@ func (c *AWSClient) SyntheticsConn(ctx context.Context) *synthetics_sdkv1.Synthe
 }
 
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
-	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite))
+	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite, make(map[string]any)))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
-	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe))
+	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe, make(map[string]any)))
 }
 
 func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
@@ -1097,11 +1097,11 @@ func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
 }
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice_sdkv2.Client {
-	return errs.Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice))
+	return errs.Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice, make(map[string]any)))
 }
 
 func (c *AWSClient) VerifiedPermissionsClient(ctx context.Context) *verifiedpermissions_sdkv2.Client {
-	return errs.Must(client[*verifiedpermissions_sdkv2.Client](ctx, c, names.VerifiedPermissions))
+	return errs.Must(client[*verifiedpermissions_sdkv2.Client](ctx, c, names.VerifiedPermissions, make(map[string]any)))
 }
 
 func (c *AWSClient) WAFConn(ctx context.Context) *waf_sdkv1.WAF {
@@ -1121,9 +1121,9 @@ func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
-	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces))
+	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces, make(map[string]any)))
 }
 
 func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {
-	return errs.Must(client[*xray_sdkv2.Client](ctx, c, names.XRay))
+	return errs.Must(client[*xray_sdkv2.Client](ctx, c, names.XRay, make(map[string]any)))
 }

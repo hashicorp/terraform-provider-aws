@@ -25,7 +25,7 @@ func (c *AWSClient) {{ .ProviderNameUpper }}Conn(ctx context.Context) *{{ .GoV1P
 
 	{{if eq .SDKVersion "2" "1,2" }}
 func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoV2Package }}_sdkv2.Client {
-	return errs.Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}))
+	return errs.Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
 }
 	{{- end }}
 {{ end }}
