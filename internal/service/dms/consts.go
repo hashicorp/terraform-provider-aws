@@ -39,8 +39,8 @@ const (
 	engineNameAzuredb                    = "azuredb"
 	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
 	engineNameBabelfish                  = "babelfish"
-	engineNameDb2                        = "db2"     // nosemgrep:ci.caps5-in-const-name, ci.caps5-in-var-name
-	engineNameDb2zOS                     = "db2-zos" // nosemgrep:ci.caps5-in-const-name, ci.caps5-in-var-name
+	engineNameDb2                        = "db2"
+	engineNameDb2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
