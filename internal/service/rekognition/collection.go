@@ -72,10 +72,15 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id":                 framework.IDAttribute(),
-			"face_model_version": schema.StringAttribute{Computed: true},
-			names.AttrTags:       tftags.TagsAttribute(),
-			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
+			"id": framework.IDAttribute(),
+			"face_model_version": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
