@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func expandEksPodProperties(podPropsMap map[string]interface{}) (*batch.EksPodProperties, error) {
+func expandEKSPodProperties(podPropsMap map[string]interface{}) (*batch.EksPodProperties, error) {
 	podProps := &batch.EksPodProperties{}
 
 	if v, ok := podPropsMap["containers"]; ok {

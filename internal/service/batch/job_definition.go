@@ -304,7 +304,7 @@ func ResourceJobDefinition() *schema.Resource {
 													Default:  "Default",
 												},
 												"secret": {
-													Type:     schema.TypeSet,
+													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
@@ -485,7 +485,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
 				if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
-					props, err := expandEksPodProperties(podProps[0].(map[string]interface{}))
+					props, err := expandEKSPodProperties(podProps[0].(map[string]interface{}))
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 					}
@@ -662,7 +662,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("eks_properties"); ok {
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-				props, err := expandEksPodProperties(podProps[0].(map[string]interface{}))
+				props, err := expandEKSPodProperties(podProps[0].(map[string]interface{}))
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
 				}
