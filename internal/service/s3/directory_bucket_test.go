@@ -106,7 +106,7 @@ func testAccCheckDirectoryBucketDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			err := tfs3.FindBucket(ctx, conn, rs.Primary.ID)
+			err := tfs3.FindBucket(ctx, conn, rs.Primary.ID, tfs3.UseRegionalEndpointInUSEast1)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -132,7 +132,7 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
+		return tfs3.FindBucket(ctx, conn, rs.Primary.ID, tfs3.UseRegionalEndpointInUSEast1)
 	}
 }
 
