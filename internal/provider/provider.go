@@ -758,27 +758,6 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 	}
 }
 
-func endpointsSchema() *schema.Schema {
-	endpointsAttributes := make(map[string]*schema.Schema)
-
-	for _, serviceKey := range names.Aliases() {
-		endpointsAttributes[serviceKey] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Use this to override the default service endpoint URL",
-		}
-	}
-
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: endpointsAttributes,
-		},
-	}
-}
-
 func expandAssumeRoles(ctx context.Context, path cty.Path, tfList []any) (result []awsbase.AssumeRole, diags diag.Diagnostics) {
 	result = make([]awsbase.AssumeRole, len(tfList))
 
