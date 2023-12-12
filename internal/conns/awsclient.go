@@ -19,6 +19,7 @@ import (
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/maps"
 )
 
 type AWSClient struct {
@@ -214,7 +215,9 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
 	}
 
-	conn, err := v.NewConn(ctx, c.apiClientConfig(servicePackageName))
+	config := c.apiClientConfig(servicePackageName)
+	maps.Copy(config, extra) // Extras overwrite per-service defaults.
+	conn, err := v.NewConn(ctx, config)
 	if err != nil {
 		var zero T
 		return zero, err
@@ -263,7 +266,9 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
-	client, err := v.NewClient(ctx, c.apiClientConfig(servicePackageName))
+	config := c.apiClientConfig(servicePackageName)
+	maps.Copy(config, extra) // Extras overwrite per-service defaults.
+	client, err := v.NewClient(ctx, config)
 	if err != nil {
 		var zero T
 		return zero, err
