@@ -99,10 +99,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccCollectionConfig_basic(rCollectionId string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
-  collection_id             = "%s"
+  collection_id = "%s"
 
   tags = {
-	test = 1
+    test = 1
   }
 }
 `, rCollectionId)
