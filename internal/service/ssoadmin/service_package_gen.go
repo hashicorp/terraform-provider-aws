@@ -33,6 +33,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory: newResourceApplicationAccessScope,
+			Name:    "Application Access Scope",
+		},
+		{
 			Factory: newResourceApplicationAssignment,
 			Name:    "Application Assignment",
 		},
@@ -61,10 +65,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccountAssignment,
 			TypeName: "aws_ssoadmin_account_assignment",
-		},
-		{
-			Factory:  ResourceApplicationAccessScope,
-			TypeName: "aws_ssoadmin_application_access_scope",
 		},
 		{
 			Factory:  ResourceCustomerManagedPolicyAttachment,

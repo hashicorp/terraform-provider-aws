@@ -5,155 +5,188 @@ package ssoadmin
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
-	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_application_access_scope")
-func ResourceApplicationAccessScope() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceApplicationAccessScopeCreate,
-		ReadWithoutTimeout:   resourceApplicationAccessScopeRead,
-		DeleteWithoutTimeout: resourceApplicationAccessScopeDelete,
+// @FrameworkResource(name="Application Access Scope")
+func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceApplicationAccessScope{}, nil
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+const (
+	ResNameApplicationAccessScope = "Application Access Scope"
+)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
-		},
+type resourceApplicationAccessScope struct {
+	framework.ResourceWithConfigure
+}
 
-		Schema: map[string]*schema.Schema{
-			"application_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"authorized_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+func (r *resourceApplicationAccessScope) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_ssoadmin_application_access_scope"
+}
+
+func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"application_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"scope": {
-				Type:     schema.TypeString,
+			"authorized_targets": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+			},
+			"id": framework.IDAttribute(),
+			"scope": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
 }
 
-func resourceApplicationAccessScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
+func (r *resourceApplicationAccessScope) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
 
-	applicationARN := d.Get("application_arn").(string)
-	scope := d.Get("scope").(string)
-	id := ApplicationAccessScopeCreateResourceID(applicationARN, scope)
+	var plan resourceApplicationAccessScopeData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	input := &ssoadmin.PutApplicationAccessScopeInput{
+	in := &ssoadmin.PutApplicationAccessScopeInput{
+		ApplicationArn: aws.String(plan.ApplicationARN.ValueString()),
+		Scope:          aws.String(plan.Scope.ValueString()),
+	}
+
+	if !plan.AuthorizedTargets.IsNull() {
+		in.AuthorizedTargets = flex.ExpandFrameworkStringValueList(ctx, plan.AuthorizedTargets)
+	}
+
+	out, err := conn.PutApplicationAccessScope(ctx, in)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameApplicationAccessScope, plan.ApplicationARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameApplicationAccessScope, plan.ApplicationARN.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	plan.ID = flex.StringToFramework(ctx, ApplicationAccessScopeCreateResourceID(plan.ApplicationARN.ValueString(), plan.Scope.ValueString()))
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
+
+	var state resourceApplicationAccessScopeData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	applicationARN, scope, err := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
+
+	out, err := findApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionSetting, ResNameApplicationAccessScope, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state.ApplicationARN = flex.StringToFrameworkARN(ctx, aws.String(applicationARN))
+	state.AuthorizedTargets = flex.FlattenFrameworkStringValueList(ctx, out.AuthorizedTargets)
+	state.Scope = flex.StringToFramework(ctx, out.Scope)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceApplicationAccessScope) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	//Update is no-op.
+}
+
+func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().SSOAdminClient(ctx)
+
+	var state resourceApplicationAccessScopeData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	applicationARN, scope, err := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
+	in := &ssoadmin.DeleteApplicationAccessScopeInput{
 		ApplicationArn: aws.String(applicationARN),
 		Scope:          aws.String(scope),
 	}
 
-	if v, ok := d.GetOk("authorized_targets"); ok {
-		input.AuthorizedTargets = flex.ExpandStringValueList(v.([]interface{}))
-	}
-
-	_, err := conn.PutApplicationAccessScope(ctx, input)
-
+	_, err = conn.DeleteApplicationAccessScope(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSO Application Access Scope (%s): %s", id, err)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionDeleting, ResNameApplicationAccessScope, state.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
-
-	d.SetId(id)
-
-	return append(diags, resourceApplicationAccessScopeRead(ctx, d, meta)...)
 }
 
-func resourceApplicationAccessScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
-
-	applicationARN, scope, err := ApplicationAccessScopeParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	output, err := FindApplicationAccessScopeByScopeAndApplicationARN(ctx, conn, applicationARN, scope)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SSO Application Access Scope (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSO Application Access Scope (%s): %s", d.Id(), err)
-	}
-
-	d.Set("application_arn", applicationARN)
-	d.Set("scope", output.Scope)
-	d.Set("authorized_targets", output.AuthorizedTargets)
-
-	return diags
-}
-
-func resourceApplicationAccessScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
-
-	applicationARN, scope, err := ApplicationAccessScopeParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	log.Printf("[INFO] Deleting SSO Application Access Scope: %s", d.Id())
-	_, err = conn.DeleteApplicationAccessScope(ctx, &ssoadmin.DeleteApplicationAccessScopeInput{
-		ApplicationArn: aws.String(applicationARN),
-		Scope:          aws.String(scope),
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSO Application Access Scope (%s): %s", d.Id(), err)
-	}
-
-	return diags
+func (r *resourceApplicationAccessScope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 const applicationAccessScopeIDSeparator = ","
 
-func ApplicationAccessScopeCreateResourceID(applicationARN, scope string) string {
+func ApplicationAccessScopeCreateResourceID(applicationARN, scope string) *string {
 	parts := []string{applicationARN, scope}
 	id := strings.Join(parts, applicationAccessScopeIDSeparator)
 
-	return id
+	return &id
 }
 
 func ApplicationAccessScopeParseResourceID(id string) (string, string, error) {
@@ -166,28 +199,34 @@ func ApplicationAccessScopeParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPLICATION_ARN%[2]sSCOPE", id, applicationAccessScopeIDSeparator)
 }
 
-func FindApplicationAccessScopeByScopeAndApplicationARN(ctx context.Context, conn *ssoadmin.Client, applicationARN, scope string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {
-	input := &ssoadmin.GetApplicationAccessScopeInput{
+func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, applicationARN, scope string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {
+	in := &ssoadmin.GetApplicationAccessScopeInput{
 		ApplicationArn: aws.String(applicationARN),
 		Scope:          aws.String(scope),
 	}
 
-	output, err := conn.GetApplicationAccessScope(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
+	out, err := conn.GetApplicationAccessScope(ctx, in)
 	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return output, nil
+	return out, nil
+}
+
+type resourceApplicationAccessScopeData struct {
+	ApplicationARN    fwtypes.ARN  `tfsdk:"application_arn"`
+	AuthorizedTargets types.List   `tfsdk:"authorized_targets"`
+	ID                types.String `tfsdk:"id"`
+	Scope             types.String `tfsdk:"scope"`
 }

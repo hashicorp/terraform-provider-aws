@@ -5,16 +5,19 @@ package ssoadmin_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,32 +66,12 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 				Config: testAccApplicationAccessScopeConfig_basic(rName, "sso:account:access"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, ssoadmin.ResourceApplicationAccessScope(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceApplicationAccessScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckApplicationAccessScopeExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
-
-		applicationARN, scope, err := ssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = ssoadmin.FindApplicationAccessScopeByScopeAndApplicationARN(ctx, conn, applicationARN, scope)
-
-		return err
-	}
 }
 
 func testAccCheckApplicationAccessScopeDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -100,22 +83,39 @@ func testAccCheckApplicationAccessScopeDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			var applicationARN, scope, err = ssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
+			applicationARN, scope, err := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
+			_, err = tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+			if errs.IsA[*types.ResourceNotFoundException](err) {
+				return nil
+			}
 			if err != nil {
-				return err
+				return create.Error(names.SSOAdmin, create.ErrActionCheckingDestroyed, tfssoadmin.ResNameApplicationAccessScope, rs.Primary.ID, err)
 			}
 
-			_, err = ssoadmin.FindApplicationAccessScopeByScopeAndApplicationARN(ctx, conn, applicationARN, scope)
+			return create.Error(names.SSOAdmin, create.ErrActionCheckingDestroyed, tfssoadmin.ResNameApplicationAccessScope, rs.Primary.ID, errors.New("not destroyed"))
+		}
 
-			if tfresource.NotFound(err) {
-				continue
-			}
+		return nil
+	}
+}
 
-			if err != nil {
-				return err
-			}
+func testAccCheckApplicationAccessScopeExists(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAccessScope, name, errors.New("not found"))
+		}
 
-			return fmt.Errorf("SSO Application Access Scope %s still exists", rs.Primary.ID)
+		if rs.Primary.ID == "" {
+			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAccessScope, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+
+		applicationARN, scope, err := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
+		_, err = tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+		if err != nil {
+			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAccessScope, rs.Primary.ID, err)
 		}
 
 		return nil

@@ -8,8 +8,10 @@ var (
 	ResourceApplication                        = newResourceApplication
 	ResourceApplicationAssignment              = newResourceApplicationAssignment
 	ResourceApplicationAssignmentConfiguration = newResourceApplicationAssignmentConfiguration
+	ResourceApplicationAccessScope             = newResourceApplicationAccessScope
 
 	FindApplicationByID                        = findApplicationByID
 	FindApplicationAssignmentByID              = findApplicationAssignmentByID
 	FindApplicationAssignmentConfigurationByID = findApplicationAssignmentConfigurationByID
+	FindApplicationAccessScopeByID             = findApplicationAccessScopeByID
 )
