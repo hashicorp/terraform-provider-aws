@@ -182,20 +182,20 @@ func expandVolumeMounts(volumeMounts []interface{}) []*batch.EksContainerVolumeM
 	return result
 }
 
-func flattenEksProperties(eksProperties *batch.EksProperties) []interface{} {
+func flattenEKSProperties(eksProperties *batch.EksProperties) []interface{} {
 	var eksPropertiesList []interface{}
 	if v := eksProperties.PodProperties; v != nil {
 		eksPropertiesList = append(eksPropertiesList, map[string]interface{}{
-			"pod_properties": flattenEksPodProperties(eksProperties.PodProperties),
+			"pod_properties": flattenEKSPodProperties(eksProperties.PodProperties),
 		})
 	}
 	return eksPropertiesList
 }
 
-func flattenEksPodProperties(podProperties *batch.EksPodProperties) (tfList []interface{}) {
+func flattenEKSPodProperties(podProperties *batch.EksPodProperties) (tfList []interface{}) {
 	tfMap := make(map[string]interface{}, 0)
 	if v := podProperties.Containers; v != nil {
-		tfMap["containers"] = flattenEksContainers(v)
+		tfMap["containers"] = flattenEKSContainers(v)
 	}
 
 	if v := podProperties.DnsPolicy; v != nil {
@@ -219,14 +219,14 @@ func flattenEksPodProperties(podProperties *batch.EksPodProperties) (tfList []in
 	}
 
 	if v := podProperties.Volumes; v != nil {
-		tfMap["volumes"] = flattenEksVolumes(v)
+		tfMap["volumes"] = flattenEKSVolumes(v)
 	}
 
 	tfList = append(tfList, tfMap)
 	return
 
 }
-func flattenEksContainers(containers []*batch.EksContainer) (tfList []interface{}) {
+func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{}) {
 	for _, container := range containers {
 		tfMap := map[string]interface{}{}
 
@@ -239,7 +239,7 @@ func flattenEksContainers(containers []*batch.EksContainer) (tfList []interface{
 		}
 
 		if v := container.Env; v != nil {
-			tfMap["env"] = flattenEksContainerEnvironmentVariables(v)
+			tfMap["env"] = flattenEKSContainerEnvironmentVariables(v)
 		}
 
 		if v := container.Image; v != nil {
@@ -272,7 +272,7 @@ func flattenEksContainers(containers []*batch.EksContainer) (tfList []interface{
 		}
 
 		if v := container.VolumeMounts; v != nil {
-			tfMap["volume_mounts"] = flattenEksContainerVolumeMounts(v)
+			tfMap["volume_mounts"] = flattenEKSContainerVolumeMounts(v)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -280,7 +280,7 @@ func flattenEksContainers(containers []*batch.EksContainer) (tfList []interface{
 	return
 }
 
-func flattenEksContainerEnvironmentVariables(env []*batch.EksContainerEnvironmentVariable) (tfList []interface{}) {
+func flattenEKSContainerEnvironmentVariables(env []*batch.EksContainerEnvironmentVariable) (tfList []interface{}) {
 	for _, e := range env {
 		tfMap := map[string]interface{}{}
 
@@ -296,7 +296,7 @@ func flattenEksContainerEnvironmentVariables(env []*batch.EksContainerEnvironmen
 	return
 }
 
-func flattenEksContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMount) (tfList []interface{}) {
+func flattenEKSContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMount) (tfList []interface{}) {
 	for _, v := range volumeMounts {
 		tfMap := map[string]interface{}{}
 
@@ -317,7 +317,7 @@ func flattenEksContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMou
 	return
 }
 
-func flattenEksVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
+func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
 	for _, v := range volumes {
 		tfMap := map[string]interface{}{}
 

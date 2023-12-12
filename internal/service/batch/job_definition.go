@@ -590,7 +590,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
 	}
 
-	if err := d.Set("eks_properties", flattenEksProperties(jobDefinition.EksProperties)); err != nil {
+	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
 	}
 
