@@ -64,17 +64,6 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// {
-			// 	// Validates the imported state matches `compute_environment_order`
-			// 	Config: testAccJobQueueConfig_stateCEO(rName, batch.JQStateEnabled),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-			// 		resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", "arn"),
-			// 		resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "0"),
-			// 	),
-			// 	PlanOnly: true,
-			// },
 		},
 	})
 }
@@ -711,11 +700,11 @@ func testAccJobQueueConfig_state(rName string, state string) string {
 		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-   compute_environments = [aws_batch_compute_environment.test.arn]
+  compute_environments = [aws_batch_compute_environment.test.arn]
 
-  name                 = %[1]q
-  priority             = 1
-  state                = %[2]q
+  name     = %[1]q
+  priority = 1
+  state    = %[2]q
 }
 `, rName, state))
 }
@@ -727,12 +716,12 @@ func testAccJobQueueConfig_stateCEO(rName string, state string) string {
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
     compute_environment = aws_batch_compute_environment.test.arn
-	order = 1
+    order               = 1
   }
 
-  name                 = %[1]q
-  priority             = 1
-  state                = %[2]q
+  name     = %[1]q
+  priority = 1
+  state    = %[2]q
 }
 `, rName, state))
 }
@@ -779,18 +768,18 @@ func testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName string, state 
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
-	order = %[3]d
-	compute_environment = aws_batch_compute_environment.test.arn
+    order               = %[3]d
+    compute_environment = aws_batch_compute_environment.test.arn
   }
 
   compute_environment_order {
-	order = %[4]d
-	compute_environment = aws_batch_compute_environment.more[0].arn
+    order               = %[4]d
+    compute_environment = aws_batch_compute_environment.more[0].arn
   }
 
   compute_environment_order {
-	order = %[5]d
-	compute_environment = aws_batch_compute_environment.more[1].arn
+    order               = %[5]d
+    compute_environment = aws_batch_compute_environment.more[1].arn
   }
 
   name     = %[1]q

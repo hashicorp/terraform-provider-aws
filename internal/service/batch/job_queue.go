@@ -13,7 +13,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -127,8 +126,8 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 						Required: true,
 					},
 					"compute_environment": schema.StringAttribute{
-						// CustomType: fwtypes.ARNType,
-						Required: true,
+						CustomType: fwtypes.ARNType,
+						Required:   true,
 					},
 				},
 			},
@@ -405,8 +404,8 @@ type resourceJobQueueData struct {
 }
 
 type computeEnvironmentOrder struct {
-	ComputeEnvironment types.String `tfsdk:"compute_environment"`
-	Order              types.Int64  `tfsdk:"order"`
+	ComputeEnvironment fwtypes.ARN `tfsdk:"compute_environment"`
+	Order              types.Int64 `tfsdk:"order"`
 }
 
 func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam

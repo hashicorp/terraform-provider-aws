@@ -66,37 +66,22 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 				Update: true,
 				Delete: true,
 			}),
-			"compute_environment_order": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[computeEnvironmentOrder](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"order": schema.Int64Attribute{
-							Required: true,
-						},
-						"compute_environment": schema.StringAttribute{
-							// CustomType: fwtypes.ARNType,
-							Required: true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
 
 func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
 	type resourceJobQueueDataV0 struct {
-		ARN                     types.String                                             `tfsdk:"arn"`
-		ComputeEnvironments     types.List                                               `tfsdk:"compute_environments"`
-		ComputeEnvironmentOrder fwtypes.ListNestedObjectValueOf[computeEnvironmentOrder] `tfsdk:"compute_environment_order"`
-		ID                      types.String                                             `tfsdk:"id"`
-		Name                    types.String                                             `tfsdk:"name"`
-		Priority                types.Int64                                              `tfsdk:"priority"`
-		SchedulingPolicyARN     types.String                                             `tfsdk:"scheduling_policy_arn"`
-		State                   types.String                                             `tfsdk:"state"`
-		Tags                    types.Map                                                `tfsdk:"tags"`
-		TagsAll                 types.Map                                                `tfsdk:"tags_all"`
-		Timeouts                timeouts.Value                                           `tfsdk:"timeouts"`
+		ARN                 types.String   `tfsdk:"arn"`
+		ComputeEnvironments types.List     `tfsdk:"compute_environments"`
+		ID                  types.String   `tfsdk:"id"`
+		Name                types.String   `tfsdk:"name"`
+		Priority            types.Int64    `tfsdk:"priority"`
+		SchedulingPolicyARN types.String   `tfsdk:"scheduling_policy_arn"`
+		State               types.String   `tfsdk:"state"`
+		Tags                types.Map      `tfsdk:"tags"`
+		TagsAll             types.Map      `tfsdk:"tags_all"`
+		Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	}
 
 	var jobQueueDataV0 resourceJobQueueDataV0
@@ -105,8 +90,7 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	var ceo fwtypes.ListNestedObjectValueOf[computeEnvironmentOrder]
+	ceo := fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrder](ctx)
 
 	jobQueueDataV2 := resourceJobQueueData{
 		ComputeEnvironments:     jobQueueDataV0.ComputeEnvironments,
