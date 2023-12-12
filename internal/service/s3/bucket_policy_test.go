@@ -460,6 +460,10 @@ func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			}
+
 			_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
@@ -485,6 +489,9 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		policy, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
 

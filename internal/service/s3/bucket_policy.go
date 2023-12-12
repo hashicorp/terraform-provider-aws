@@ -64,6 +64,9 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketPolicyInput{
 		Bucket: aws.String(bucket),
 		Policy: aws.String(policy),
@@ -95,6 +98,9 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	if isDirectoryBucket(d.Id()) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	policy, err := findBucketPolicy(ctx, conn, d.Id())
 
@@ -122,6 +128,9 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	if isDirectoryBucket(d.Id()) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Policy: %s", d.Id())
 	_, err := conn.DeleteBucketPolicy(ctx, &s3.DeleteBucketPolicyInput{
