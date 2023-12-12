@@ -629,7 +629,7 @@ func TestAccRDSInstance_Db2_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// Requires an IBM DB2 License set as environmental variable
+	// Requires an IBM Db2 License set as environmental variable
 	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html
 	key1 := "RDS_DB2_CUSTOMER_ID"
 	key2 := "RDS_DB2_SITE_ID"
@@ -652,7 +652,7 @@ func TestAccRDSInstance_Db2_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_db2engine(rName, customer_id, site_id),
+				Config: testAccInstanceConfig_Db2engine(rName, customer_id, site_id),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 				),
@@ -6322,7 +6322,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_db2engine(rName, customerId, siteId string) string {
+func testAccInstanceConfig_Db2engine(rName, customerId, siteId string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassDb2(),
 		fmt.Sprintf(`
