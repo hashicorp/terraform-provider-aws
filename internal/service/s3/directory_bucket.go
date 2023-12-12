@@ -33,6 +33,10 @@ var (
 	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)--x-s3$`)
 )
 
+func isDirectoryBucket(bucket string) bool {
+	return directoryBucketNameRegex.MatchString(bucket)
+}
+
 // @FrameworkResource(name="Directory Bucket")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
