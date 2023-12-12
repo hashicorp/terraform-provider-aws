@@ -623,7 +623,7 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_Db2_basic(t *testing.T) {
+func TestAccRDSInstance_DB2_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -652,7 +652,7 @@ func TestAccRDSInstance_Db2_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_Db2engine(rName, customer_id, site_id),
+				Config: testAccInstanceConfig_db2engine(rName, customer_id, site_id),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 				),
@@ -6231,7 +6231,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, license, storage, classes)
 }
 
-func testAccInstanceConfig_orderableClassDb2() string {
+func testAccInstanceConfig_orderableClassDB2() string {
 	return testAccInstanceConfig_orderableClass("db2-se", "bring-your-own-license", "gp3", db2PreferredInstanceClasses)
 }
 
@@ -6322,9 +6322,9 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_Db2engine(rName, customerId, siteId string) string {
+func testAccInstanceConfig_db2engine(rName, customerId, siteId string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassDb2(),
+		testAccInstanceConfig_orderableClassDB2(),
 		fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = "tf-db2-pg-%[1]s"
