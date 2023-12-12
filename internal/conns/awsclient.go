@@ -187,7 +187,7 @@ func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]a
 }
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
-func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string) (T, error) {
+func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
