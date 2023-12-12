@@ -87,6 +87,10 @@ func waitImportComplete(ctx context.Context, conn *dynamodb.DynamoDB, importArn 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
+	if err != nil {
+		err = fmt.Errorf("ImportArn %q : %w", importArn, err)
+	}
+
 	if output, ok := outputRaw.(*dynamodb.DescribeImportOutput); ok {
 		return output, err
 	}
