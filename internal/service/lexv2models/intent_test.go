@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -626,6 +628,52 @@ func TestIntentAutoFlex(t *testing.T) {
 		SlotPriorities:            slotPrioritiesAWS,
 	}
 
+	testTimeStr := "2023-12-08T09:34:01Z"
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
+
+	intentDescribeTF := tflexv2models.ResourceIntentData{
+		BotID:                  types.StringValue(testString),
+		BotVersion:             types.StringValue(testString),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
+		CreationDateTime:       fwtypes.TimestampValue(testTimeStr),
+		Description:            types.StringValue(testString),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
+		ID:                     types.StringValue(testString),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
+		LastUpdatedDateTime:    fwtypes.TimestampValue(testTimeStr),
+		LocaleID:               types.StringValue(testString),
+		Name:                   types.StringValue(testString),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		ParentIntentSignature:  types.StringValue(testString),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
+	}
+	intentDescribeAWS := lexmodelsv2.DescribeIntentOutput{
+		BotId:                     aws.String(testString),
+		BotVersion:                aws.String(testString),
+		CreationDateTime:          aws.Time(testTimeTime),
+		Description:               aws.String(testString),
+		DialogCodeHook:            &dialogCodeHookSettingsAWS,
+		FulfillmentCodeHook:       &fulfillmentCodeHookSettingsAWS,
+		InitialResponseSetting:    &initialResponseSettingAWS,
+		InputContexts:             inputContextsAWS,
+		IntentClosingSetting:      &intentClosingSettingAWS,
+		IntentConfirmationSetting: &intentConfirmationSettingAWS,
+		IntentId:                  aws.String(testString),
+		IntentName:                aws.String(testString),
+		KendraConfiguration:       &kendraConfigurationAWS,
+		LastUpdatedDateTime:       aws.Time(testTimeTime),
+		LocaleId:                  aws.String(testString),
+		OutputContexts:            outputContextsAWS,
+		ParentIntentSignature:     aws.String(testString),
+		SampleUtterances:          sampleUtterancesAWS,
+		SlotPriorities:            slotPrioritiesAWS,
+	}
+
 	testCases := []struct {
 		TestName   string
 		Expand     bool
@@ -774,9 +822,16 @@ func TestIntentAutoFlex(t *testing.T) {
 			AWS:        &intentModifyAWS,
 			WantTarget: &intentModifyTF,
 		},
+		{
+			TestName:   "describe intent",
+			Expand:     false,
+			TF:         &tflexv2models.ResourceIntentData{},
+			AWS:        &intentDescribeAWS,
+			WantTarget: &intentDescribeTF,
+		},
 	}
 
-	opts := cmpopts.IgnoreUnexported(
+	ignoreExpoOpts := cmpopts.IgnoreUnexported(
 		lexmodelsv2.CreateIntentInput{},
 		lexmodelsv2.UpdateIntentInput{},
 		lextypes.AllowedInputTypes{},
@@ -849,11 +904,17 @@ func TestIntentAutoFlex(t *testing.T) {
 					t.Errorf("err = %q", diags)
 				}
 			} else if testCase.Expand {
-				if diff := cmp.Diff(testCase.AWS, testCase.WantTarget, opts); diff != "" {
+				if diff := cmp.Diff(testCase.AWS, testCase.WantTarget, ignoreExpoOpts); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			} else {
-				if diff := cmp.Diff(testCase.TF, testCase.WantTarget, opts); diff != "" {
+				// because TF type has .Equal method, cmp can act strangely - string comparison shortcut
+				// avoids
+				if fmt.Sprint(testCase.TF) == fmt.Sprint(testCase.WantTarget) {
+					return
+				}
+
+				if diff := cmp.Diff(testCase.TF, testCase.WantTarget, ignoreExpoOpts); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
