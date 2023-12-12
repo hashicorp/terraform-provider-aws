@@ -240,7 +240,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	if vFrom.Elem().CanInterface() {
+	if !vFrom.Elem().CanInterface() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
 		return diags
 	}
