@@ -1616,6 +1616,80 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, post elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// GovCloud Regions don't always have 3 AZs.
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					testAccCheckLoadBalancerNotRecreated(&pre, &post),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, post elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// GovCloud Regions don't always have 3 AZs.
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					testAccCheckLoadBalancerRecreated(&pre, &post),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, mid, post elbv2.LoadBalancer
@@ -1974,7 +2048,7 @@ func testAccLoadBalancerConfig_subnetMappingCount(rName string, subnetCount int)
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, subnetCount), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
-  internal        = true
+  internal        = trueadd
   security_groups = [aws_security_group.test.id]
 
   idle_timeout               = 30

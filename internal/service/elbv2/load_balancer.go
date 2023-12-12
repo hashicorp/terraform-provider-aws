@@ -53,6 +53,7 @@ func ResourceLoadBalancer() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffALB,
 			customizeDiffNLB,
+			customizeDiffGWLB,
 			verify.SetTagsDiff,
 		),
 
@@ -1024,31 +1025,56 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		return nil
 	}
 
+	config := diff.GetRawConfig()
+
 	// Subnet diffs.
-	subnetDiff := func(k1, k2 string) error {
-		if diff.NewValueKnown(k1) && diff.HasChange(k1) {
-			o, n := diff.GetChange(k1)
+	// Check for changes here -- SetNewComputed will modify HasChange.
+	hasSubnetMappingChanges, hasSubnetsChanges := diff.HasChange("subnet_mapping"), diff.HasChange("subnets")
+	if hasSubnetMappingChanges {
+		if v := config.GetAttr("subnet_mapping"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("subnet_mapping")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-			// In-place increase in number of subnets.
-			if os.Difference(ns).Len() > 0 {
-				if err := diff.ForceNew(k1); err != nil {
+			deltaN := ns.Len() - os.Len()
+			switch {
+			case deltaN == 0:
+				// No change in number of subnet mappings, but one of the mappings did change.
+				fallthrough
+			case deltaN < 0:
+				// Subnet mappings removed.
+				if err := diff.ForceNew("subnet_mapping"); err != nil {
 					return err
 				}
-			} else {
-				if err := diff.SetNewComputed(k2); err != nil {
+			case deltaN > 0:
+				// Subnet mappings added. Ensure that the previous mappings didn't change.
+				if ns.Intersection(os).Len() != os.Len() {
+					if err := diff.ForceNew("subnet_mapping"); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		if err := diff.SetNewComputed("subnets"); err != nil {
+			return err
+		}
+	}
+	if hasSubnetsChanges {
+		if v := config.GetAttr("subnets"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("subnets")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+
+			// In-place increase in number of subnets only.
+			if deltaN := ns.Len() - os.Len(); deltaN <= 0 {
+				if err := diff.ForceNew("subnets"); err != nil {
 					return err
 				}
 			}
 		}
 
-		return nil
-	}
-	if err := subnetDiff("subnet_mapping", "subnets"); err != nil {
-		return err
-	}
-	if err := subnetDiff("subnets", "subnet_mapping"); err != nil {
-		return err
+		if err := diff.SetNewComputed("subnet_mapping"); err != nil {
+			return err
+		}
 	}
 
 	// Get diff for security groups.
@@ -1115,6 +1141,18 @@ func customizeDiffALB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		if err := diff.SetNewComputed("subnet_mapping"); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func customizeDiffGWLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if lbType := diff.Get("load_balancer_type").(string); lbType != elbv2.LoadBalancerTypeEnumGateway {
+		return nil
+	}
+
+	if diff.Id() == "" {
+		return nil
 	}
 
 	return nil
