@@ -79,9 +79,16 @@ func (c *AWSClient) RegionalHostname(prefix string) string {
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
 func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
-	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
-		"s3_us_east_1_regional_endpoint": endpoints_sdkv1.RegionalS3UsEast1Endpoint,
-	}))
+	c.lock.Lock() // OK since a non-default client is created.
+	defer c.lock.Unlock()
+
+	if c.s3ExpressClient == nil {
+		c.s3ExpressClient = errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
+			"s3_us_east_1_regional_endpoint": endpoints_sdkv1.RegionalS3UsEast1Endpoint,
+		}))
+	}
+
+	return c.s3ExpressClient
 }
 
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
@@ -191,13 +198,14 @@ func (c *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
 }
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
+// The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	isDefault := len(extra) == 0
 	// Default service client is cached.
 	if isDefault {
+		c.lock.Lock()
+		defer c.lock.Unlock() // Runs at function exit, NOT block.
+
 		if raw, ok := c.conns[servicePackageName]; ok {
 			if conn, ok := raw.(T); ok {
 				return conn, nil
@@ -249,13 +257,14 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 }
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
+// The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	isDefault := len(extra) == 0
 	// Default service client is cached.
 	if isDefault {
+		c.lock.Lock()
+		defer c.lock.Unlock() // Runs at function exit, NOT block.
+
 		if raw, ok := c.clients[servicePackageName]; ok {
 			if client, ok := raw.(T); ok {
 				return client, nil
