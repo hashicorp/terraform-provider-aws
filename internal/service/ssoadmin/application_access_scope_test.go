@@ -83,8 +83,8 @@ func testAccCheckApplicationAccessScopeDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			applicationARN, scope, err := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
-			_, err = tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+			applicationARN, scope, _ := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
+			_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -112,8 +112,8 @@ func testAccCheckApplicationAccessScopeExists(ctx context.Context, name string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		applicationARN, scope, err := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
-		_, err = tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+		applicationARN, scope, _ := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
+		_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
 		if err != nil {
 			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAccessScope, rs.Primary.ID, err)
 		}

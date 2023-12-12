@@ -122,7 +122,7 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 		return
 	}
 
-	applicationARN, scope, err := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
+	applicationARN, scope, _ := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
 
 	out, err := findApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
 	if tfresource.NotFound(err) {
@@ -157,13 +157,13 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	applicationARN, scope, err := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
+	applicationARN, scope, _ := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
 	in := &ssoadmin.DeleteApplicationAccessScopeInput{
 		ApplicationArn: aws.String(applicationARN),
 		Scope:          aws.String(scope),
 	}
 
-	_, err = conn.DeleteApplicationAccessScope(ctx, in)
+	_, err := conn.DeleteApplicationAccessScope(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
