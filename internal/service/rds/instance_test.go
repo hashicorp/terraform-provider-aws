@@ -629,21 +629,14 @@ func TestAccRDSInstance_DB2_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// Requires an IBM Db2 License set as environmental variable
-	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html
-	key1 := "RDS_DB2_CUSTOMER_ID"
-	key2 := "RDS_DB2_SITE_ID"
-	customer_id := os.Getenv(key1)
-	site_id := os.Getenv(key2)
-
-	if customer_id == "" || site_id == "" {
-		t.Skipf("Environment variables %s and %s are not set", key1, key2)
-	}
-
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
+	// Requires an IBM Db2 License set as environmental variable.
+	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html.
+	customerID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_CUSTOMER_ID")
+	siteID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_SITE_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -652,7 +645,7 @@ func TestAccRDSInstance_DB2_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_db2engine(rName, customer_id, site_id),
+				Config: testAccInstanceConfig_db2engine(rName, customerID, siteID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 				),
