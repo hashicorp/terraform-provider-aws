@@ -203,7 +203,6 @@ import (
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	rekognition_sdkv1 "github.com/aws/aws-sdk-go/service/rekognition"
 	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
@@ -915,10 +914,6 @@ func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
 	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless))
-}
-
-func (c *AWSClient) RekognitionConn(ctx context.Context) *rekognition_sdkv1.Rekognition {
-	return errs.Must(conn[*rekognition_sdkv1.Rekognition](ctx, c, names.Rekognition))
 }
 
 func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition_sdkv2.Client {

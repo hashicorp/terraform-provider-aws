@@ -293,7 +293,7 @@ rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,,2,,aws_rbin_,,rbin
 redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,,2,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,,,
 redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,
-rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,1,2,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,,,
+rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,,2,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,x,,,,,
 resource-explorer-2,resourceexplorer2,resourceexplorer2,resourceexplorer2,,resourceexplorer2,,,ResourceExplorer2,ResourceExplorer2,,,2,,aws_resourceexplorer2_,,resourceexplorer2_,Resource Explorer,AWS,,,,,,,
 resource-groups,resourcegroups,resourcegroups,resourcegroups,,resourcegroups,,,ResourceGroups,ResourceGroups,,,2,,aws_resourcegroups_,,resourcegroups_,Resource Groups,AWS,,,,,,,
