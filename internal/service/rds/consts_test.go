@@ -5,7 +5,7 @@ package rds_test
 
 const (
 	// Please make sure GovCloud and commercial support these since they vary
-	db2PreferredInstanceClasses             = `"db.t3.small", "db.r6i.large", "db.m6i.large"`
+	db2PreferredInstanceClasses             = `"db.t3.small", "db.r6i.large", "db.m6i.large"` // nosemgrep:ci.caps5-in-const-name, ci.caps5-in-var-name
 	mariaDBPreferredInstanceClasses         = `"db.t3.micro", "db.t3.small", "db.t2.small", "db.t2.medium"`
 	mySQLPreferredInstanceClasses           = `"db.t3.micro", "db.t3.small", "db.t2.small", "db.t2.medium"`
 	oraclePreferredInstanceClasses          = `"db.t3.medium", "db.t2.medium", "db.t3.large", "db.t2.large"` // Oracle requires at least a medium instance as a replica source
