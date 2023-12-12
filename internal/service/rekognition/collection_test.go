@@ -24,7 +24,6 @@ import (
 func TestAccRekognitionCollection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	// var collection rekognition.CreateCollectionOutput
 	rCollectionId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_collection.test"
 
