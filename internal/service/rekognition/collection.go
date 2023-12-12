@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -65,6 +67,9 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 					stringvalidator.RegexMatches(collectionRegex, "must conform to: ^[a-zA-Z0-9_.\\-]+$"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"id":                 framework.IDAttribute(),
@@ -143,7 +148,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameCollection, state.Id.ValueString(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameCollection, state.Id.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -157,7 +162,16 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// update not supported
+	// resource update not supported, but tag updates are supported
+	var plan resourceCollectionData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	var state resourceCollectionData
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+
+	state.Tags = plan.Tags
+	state.TagsAll = plan.TagsAll
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

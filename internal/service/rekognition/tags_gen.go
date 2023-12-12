@@ -3,12 +3,16 @@ package rekognition
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // listTags lists rekognition service tags.
@@ -73,4 +77,52 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
+}
+
+// updateTags updates rekognition service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn *rekognition.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*rekognition.Options)) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Rekognition)
+	if len(removedTags) > 0 {
+		input := &rekognition.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     removedTags.Keys(),
+		}
+
+		_, err := conn.UntagResource(ctx, input, optFns...)
+
+		if err != nil {
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Rekognition)
+	if len(updatedTags) > 0 {
+		input := &rekognition.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        Tags(updatedTags),
+		}
+
+		_, err := conn.TagResource(ctx, input, optFns...)
+
+		if err != nil {
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateTags updates rekognition service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).RekognitionClient(ctx), identifier, oldTags, newTags)
 }
