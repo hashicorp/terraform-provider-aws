@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_directory_bucket: Fix `no such host` errors in `us-east-1`
+```
