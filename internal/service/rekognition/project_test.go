@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,29 +20,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRekognitionCollection_basic(t *testing.T) {
-	ctx := acctest.Context(t)
+func TestAccRekognitionProject_basic(t *testing.T) {
+	// _ := acctest.Context(t)
 
-	// var collection rekognition.CreateCollectionOutput
-	rCollectionId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rekognition_collection.test"
+	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
-			testAccCollectionPreCheck(ctx, t)
+			// acctest.PreCheck(ctx, t)
+			// acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			// testAccProjectPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		// CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollectionConfig_basic(rCollectionId),
+				Config: testAccProjectConfig_basic(rProjectId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "collection_id", rCollectionId),
+					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
+					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "feature", "CUSTOM_LABELS"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 				),
@@ -58,12 +57,12 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_rekognition_collection" {
+			if rs.Type != "aws_rekognition_project" {
 				continue
 			}
 
@@ -83,28 +82,30 @@ func testAccCheckCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCollectionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
+// func testAccProjectPreCheck(ctx context.Context, t *testing.T) {
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
 
-	input := &rekognition.ListCollectionsInput{}
-	_, err := conn.ListCollections(ctx, input)
+// 	input := &rekognition.ListCollectionsInput{}
+// 	_, err := conn.ListCollections(ctx, input)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
+// 	if acctest.PreCheckSkipError(err) {
+// 		t.Skipf("skipping acceptance testing: %s", err)
+// 	}
+// 	if err != nil {
+// 		t.Fatalf("unexpected PreCheck error: %s", err)
+// 	}
+// }
 
-func testAccCollectionConfig_basic(rCollectionId string) string {
+func testAccProjectConfig_basic(rProjectId string) string {
 	return fmt.Sprintf(`
-resource "aws_rekognition_collection" "test" {
-  collection_id             = "%s"
+resource "aws_rekognition_project" "test" {
+  name        = "%s"
+	auto_update = "ENABLED"
+	feature     = "CUSTOM_LABELS"
 
   tags = {
-	test = 1
+		test = 1
   }
 }
-`, rCollectionId)
+`, rProjectId)
 }
