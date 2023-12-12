@@ -78,6 +78,9 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
 func (client *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
+	if s3Client := client.S3Client(ctx); s3Client.Options().Region != names.GlobalRegionID {
+
+	}
 	return client.s3ExpressClient
 }
 
@@ -192,12 +195,15 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if raw, ok := c.conns[servicePackageName]; ok {
-		if conn, ok := raw.(T); ok {
-			return conn, nil
-		} else {
-			var zero T
-			return zero, fmt.Errorf("AWS SDK v1 API client (%s): %T, want %T", servicePackageName, raw, zero)
+	// Default service client is cached.
+	if len(extra) == 0 {
+		if raw, ok := c.conns[servicePackageName]; ok {
+			if conn, ok := raw.(T); ok {
+				return conn, nil
+			} else {
+				var zero T
+				return zero, fmt.Errorf("AWS SDK v1 API client (%s): %T, want %T", servicePackageName, raw, zero)
+			}
 		}
 	}
 
@@ -233,7 +239,10 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 		}
 	}
 
-	c.conns[servicePackageName] = conn
+	// Default service client is cached.
+	if len(extra) == 0 {
+		c.conns[servicePackageName] = conn
+	}
 
 	return conn, nil
 }
@@ -243,12 +252,15 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if raw, ok := c.clients[servicePackageName]; ok {
-		if client, ok := raw.(T); ok {
-			return client, nil
-		} else {
-			var zero T
-			return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+	// Default service client is cached.
+	if len(extra) == 0 {
+		if raw, ok := c.clients[servicePackageName]; ok {
+			if client, ok := raw.(T); ok {
+				return client, nil
+			} else {
+				var zero T
+				return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+			}
 		}
 	}
 
@@ -276,7 +288,10 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.
 
-	c.clients[servicePackageName] = client
+	// Default service client is cached.
+	if len(extra) == 0 {
+		c.clients[servicePackageName] = client
+	}
 
 	return client, nil
 }
