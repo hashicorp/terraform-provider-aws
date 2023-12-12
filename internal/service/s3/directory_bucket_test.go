@@ -99,14 +99,14 @@ func TestAccS3DirectoryBucket_forceDestroy(t *testing.T) {
 
 func testAccCheckDirectoryBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_directory_bucket" {
 				continue
 			}
 
-			err := tfs3.FindBucket(ctx, conn, rs.Primary.ID, tfs3.UseRegionalEndpointInUSEast1)
+			err := tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -130,9 +130,9 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 
-		return tfs3.FindBucket(ctx, conn, rs.Primary.ID, tfs3.UseRegionalEndpointInUSEast1)
+		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 	}
 }
 

@@ -31,7 +31,6 @@ var (
 	FindReplicationConfiguration          = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
-	UseRegionalEndpointInUSEast1          = useRegionalEndpointInUSEast1
 
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
