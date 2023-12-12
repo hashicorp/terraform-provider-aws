@@ -55,8 +55,8 @@ func StorageType_Values() []string {
 
 const (
 	InstanceEngineCustomPrefix        = "custom-"
-	InstanceEngineDb2Advanced         = "db2-ae" // nosemgrep:ci.caps5-in-const-name, ci.caps5-in-var-name
-	InstanceEngineDb2Standard         = "db2-se" // nosemgrep:ci.caps5-in-const-name, ci.caps5-in-var-name
+	InstanceEngineDb2Advanced         = "db2-ae"
+	InstanceEngineDb2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
