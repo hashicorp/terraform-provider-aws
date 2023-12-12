@@ -1677,7 +1677,7 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Db2_basic(t *testing.T) {
+func TestAccDMSEndpoint_Db2_basic(t *testing.T) { // nosemgrep:ci.caps5-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1718,7 +1718,7 @@ func TestAccDMSEndpoint_Db2_basic(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Db2zOS_basic(t *testing.T) {
+func TestAccDMSEndpoint_Db2zOS_basic(t *testing.T) { // nosemgrep:ci.caps5-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1800,7 +1800,7 @@ func TestAccDMSEndpoint_azureSQLManagedInstance(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Db2_secretID(t *testing.T) {
+func TestAccDMSEndpoint_Db2_secretID(t *testing.T) { // nosemgrep:ci.caps5-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1827,7 +1827,7 @@ func TestAccDMSEndpoint_Db2_secretID(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Db2zOS_secretID(t *testing.T) {
+func TestAccDMSEndpoint_Db2zOS_secretID(t *testing.T) { // nosemgrep:ci.caps5-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3982,7 +3982,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_Db2(rName string) string {
+func testAccEndpointConfig_Db2(rName string) string { // nosemgrep:ci.caps5-in-func-name
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
@@ -4006,7 +4006,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_Db2SecretID(rName string) string {
+func testAccEndpointConfig_Db2SecretID(rName string) string { // nosemgrep:ci.caps5-in-func-name
 	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
@@ -4028,7 +4028,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_Db2Update(rName string) string {
+func testAccEndpointConfig_Db2Update(rName string) string { // nosemgrep:ci.caps5-in-func-name
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
@@ -4052,7 +4052,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_Db2zOS(rName string) string {
+func testAccEndpointConfig_Db2zOS(rName string) string { // nosemgrep:ci.caps5-in-func-name
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
@@ -4076,7 +4076,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_Db2zOSSecretID(rName string) string {
+func testAccEndpointConfig_Db2zOSSecretID(rName string) string { // nosemgrep:ci.caps5-in-func-name
 	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
@@ -4098,7 +4098,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_Db2zOSUpdate(rName string) string {
+func testAccEndpointConfig_Db2zOSUpdate(rName string) string { // nosemgrep:ci.caps5-in-func-name
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
