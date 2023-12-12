@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmms
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.48.16 h1:mcj2/9J/MJ55Dov+ocMevhR8Jv6jW/fAxbrn4a1JFc8=
-github.com/aws/aws-sdk-go v1.48.16/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.49.0 h1:g9BkW1fo9GqKfwg2+zCD+TW/D36Ux+vtfJ8guF4AYmY=
+github.com/aws/aws-sdk-go v1.49.0/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.24.0 h1:890+mqQ+hTpNuw0gGP6/4akolQkSToDJgHfQE7AwGuk=
 github.com/aws/aws-sdk-go-v2 v1.24.0/go.mod h1:LNh45Br1YAkEKaAqvmE1m8FUx6a5b/V0oAKV7of29b4=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.4 h1:OCs21ST2LrepDfD3lwlQiOqIGp6JiEUqG84GzTDoyJs=
@@ -198,8 +198,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.41.5 h1:Rv7K8i7cvpy0XWt06r4vDK
 github.com/aws/aws-sdk-go-v2/service/s3control v1.41.5/go.mod h1:sjVex3IIN70lry8Diga0vdi1DoHFwyFXY68ols4I8VI=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.5 h1:RpON5qyMUJKOGdQt0K7RUmV0zTUVSSGWtjvh/0CAqd8=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.5/go.mod h1:CXWnhzgqEhXAYwTVg4vBZQcP+yb4KxXOkogYih2tFm8=
-github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.5 h1:lXjoZFvSuEvRGytYmGqVeADzlCJMSyC3DIuz2IkJC4Q=
-github.com/aws/aws-sdk-go-v2/service/securityhub v1.43.5/go.mod h1:f//4sy7Yk66HjLWyQcFb6Vtkp/HEforV7G99czcsq54=
+github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.0 h1:ft7wTBdLlWGoZpF22CHmDywWj//MTUjyJoevEXBRHZg=
+github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.0/go.mod h1:f//4sy7Yk66HjLWyQcFb6Vtkp/HEforV7G99czcsq54=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.5 h1:gZ1yiSTBmJuQ1LCDIXlFQ+1XvC91QzAwRIhJ1L4ROp0=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.5/go.mod h1:eTBmkdUxVPP+Dy47TDGw9ZV6i7Y2oxYMFrxSkEPNO3w=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.19.5 h1:IN/aY5wGoRMfZJuuZrp07bvdJt9M7Nh7+alOjae7mM4=
