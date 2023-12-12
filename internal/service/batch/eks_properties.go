@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func expandEKSPodProperties(podPropsMap map[string]interface{}) (*batch.EksPodProperties, error) {
+func expandEKSPodProperties(podPropsMap map[string]interface{}) *batch.EksPodProperties {
 	podProps := &batch.EksPodProperties{}
 
 	if v, ok := podPropsMap["containers"]; ok {
@@ -37,7 +37,8 @@ func expandEKSPodProperties(podPropsMap map[string]interface{}) (*batch.EksPodPr
 	if v, ok := podPropsMap["volumes"]; ok {
 		podProps.Volumes = expandVolumes(v.([]interface{}))
 	}
-	return podProps, nil
+
+	return podProps
 }
 
 func expandContainers(containers []interface{}) []*batch.EksContainer {
@@ -160,6 +161,7 @@ func expandVolumes(volumes []interface{}) []*batch.EksVolume {
 		}
 		result = append(result, volume)
 	}
+
 	return result
 }
 
@@ -179,6 +181,7 @@ func expandVolumeMounts(volumeMounts []interface{}) []*batch.EksContainerVolumeM
 		}
 		result = append(result, volumeMount)
 	}
+
 	return result
 }
 
@@ -189,6 +192,7 @@ func flattenEKSProperties(eksProperties *batch.EksProperties) []interface{} {
 			"pod_properties": flattenEKSPodProperties(eksProperties.PodProperties),
 		})
 	}
+
 	return eksPropertiesList
 }
 
@@ -223,8 +227,7 @@ func flattenEKSPodProperties(podProperties *batch.EksPodProperties) (tfList []in
 	}
 
 	tfList = append(tfList, tfMap)
-	return
-
+	return tfList
 }
 func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{}) {
 	for _, container := range containers {
@@ -277,7 +280,7 @@ func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{
 		tfList = append(tfList, tfMap)
 	}
 
-	return
+	return tfList
 }
 
 func flattenEKSContainerEnvironmentVariables(env []*batch.EksContainerEnvironmentVariable) (tfList []interface{}) {
@@ -293,7 +296,8 @@ func flattenEKSContainerEnvironmentVariables(env []*batch.EksContainerEnvironmen
 		}
 		tfList = append(tfList, tfMap)
 	}
-	return
+
+	return tfList
 }
 
 func flattenEKSContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMount) (tfList []interface{}) {
@@ -312,9 +316,9 @@ func flattenEKSContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMou
 			tfMap["read_only"] = aws.BoolValue(v)
 		}
 		tfList = append(tfList, tfMap)
-
 	}
-	return
+
+	return tfList
 }
 
 func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
@@ -346,5 +350,6 @@ func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
 		}
 		tfList = append(tfList, tfMap)
 	}
-	return
+
+	return tfList
 }
