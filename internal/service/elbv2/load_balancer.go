@@ -101,6 +101,35 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"connection_logs": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket": {
+							Type:     schema.TypeString,
+							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("connection_logs.0.enabled").(bool)
+							},
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("connection_logs.0.enabled").(bool)
+							},
+						},
+					},
+				},
+			},
 			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -397,6 +426,17 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	if lbType == elbv2.LoadBalancerTypeEnumApplication {
+		if v, ok := d.GetOk("connection_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			attributes = append(attributes, expandLoadBalancerConnectionLogsAttributes(v.([]interface{})[0].(map[string]interface{}), false)...)
+		} else {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
+				Value: flex.BoolValueToString(false),
+			})
+		}
+	}
+
 	attributes = append(attributes, loadBalancerAttributes.expand(d, false)...)
 
 	wait := false
@@ -459,7 +499,8 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
-	d.Set("load_balancer_type", lb.Type)
+	lbType := aws.StringValue(lb.Type)
+	d.Set("load_balancer_type", lbType)
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
@@ -482,6 +523,12 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
+	if lbType == elbv2.LoadBalancerTypeEnumApplication {
+		if err := d.Set("connection_logs", []interface{}{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
+		}
+	}
+
 	loadBalancerAttributes.flatten(d, attributes)
 
 	return diags
@@ -499,6 +546,17 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		} else {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
+				Value: flex.BoolValueToString(false),
+			})
+		}
+	}
+
+	if d.HasChange("connection_logs") {
+		if v, ok := d.GetOk("connection_logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			attributes = append(attributes, expandLoadBalancerConnectionLogsAttributes(v.([]interface{})[0].(map[string]interface{}), true)...)
+		} else {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
 				Value: flex.BoolValueToString(false),
 			})
 		}
@@ -1195,6 +1253,39 @@ func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}, update
 	return apiObjects
 }
 
+func expandLoadBalancerConnectionLogsAttributes(tfMap map[string]interface{}, update bool) []*elbv2.LoadBalancerAttribute {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObjects []*elbv2.LoadBalancerAttribute
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
+			Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
+			Value: flex.BoolValueToString(v),
+		})
+
+		if v {
+			if v, ok := tfMap["bucket"].(string); ok && (update || v != "") {
+				apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
+					Key:   aws.String(loadBalancerAttributeConnectionLogsS3Bucket),
+					Value: aws.String(v),
+				})
+			}
+
+			if v, ok := tfMap["prefix"].(string); ok && (update || v != "") {
+				apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
+					Key:   aws.String(loadBalancerAttributeConnectionLogsS3Prefix),
+					Value: aws.String(v),
+				})
+			}
+		}
+	}
+
+	return apiObjects
+}
+
 func flattenLoadBalancerAccessLogsAttributes(apiObjects []*elbv2.LoadBalancerAttribute) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
@@ -1209,6 +1300,27 @@ func flattenLoadBalancerAccessLogsAttributes(apiObjects []*elbv2.LoadBalancerAtt
 		case loadBalancerAttributeAccessLogsS3Bucket:
 			tfMap["bucket"] = aws.StringValue(v)
 		case loadBalancerAttributeAccessLogsS3Prefix:
+			tfMap["prefix"] = aws.StringValue(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenLoadBalancerConnectionLogsAttributes(apiObjects []*elbv2.LoadBalancerAttribute) map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	for _, apiObject := range apiObjects {
+		switch k, v := aws.StringValue(apiObject.Key), apiObject.Value; k {
+		case loadBalancerAttributeConnectionLogsS3Enabled:
+			tfMap["enabled"] = flex.StringToBoolValue(v)
+		case loadBalancerAttributeConnectionLogsS3Bucket:
+			tfMap["bucket"] = aws.StringValue(v)
+		case loadBalancerAttributeConnectionLogsS3Prefix:
 			tfMap["prefix"] = aws.StringValue(v)
 		}
 	}

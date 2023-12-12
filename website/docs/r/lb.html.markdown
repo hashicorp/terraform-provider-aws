@@ -102,6 +102,7 @@ resource "aws_lb" "example" {
 This resource supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
+* `connection_logs` - (Optional) A Connection Logs block. Connection Logs documented below. Only valid for Load Balancers of type `application`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
 * `dns_record_client_routing_policy` - (Optional) Indicates how traffic is distributed among the load balancer Availability Zones. Possible values are `any_availability_zone` (default), `availability_zone_affinity`, or `partial_availability_zone_affinity`. See   [Availability Zone DNS affinity](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#zonal-dns-affinity) for additional details. Only valid for `network` type load balancers.
@@ -132,6 +133,12 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 
 * `bucket` - (Required) The S3 bucket name to store the logs in.
 * `enabled` - (Optional) Boolean to enable / disable `access_logs`. Defaults to `false`, even when `bucket` is specified.
+* `prefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
+
+### connection_logs
+
+* `bucket` - (Required) The S3 bucket name to store the logs in.
+* `enabled` - (Optional) Boolean to enable / disable `connection_logs`. Defaults to `false`, even when `bucket` is specified.
 * `prefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
 
 ### subnet_mapping
