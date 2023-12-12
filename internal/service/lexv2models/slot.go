@@ -95,6 +95,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 		Blocks: map[string]schema.Block{
 			"value_elicitation_setting": lexschema.ValueElicitationSettingBlock(ctx),
+			"prompt_specification":      lexschema.PromptSpecificationBlock(ctx),
 		},
 	}
 }
