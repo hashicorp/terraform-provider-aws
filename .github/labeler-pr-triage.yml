@@ -1013,6 +1013,9 @@ service/ssmcontacts:
 service/ssmincidents:
   - 'internal/service/ssmincidents/**/*'
   - 'website/**/ssmincidents_*'
+service/ssmsap:
+  - 'internal/service/ssmsap/**/*'
+  - 'website/**/ssmsap_*'
 service/sso:
   - 'internal/service/sso/**/*'
   - 'website/**/sso_*'

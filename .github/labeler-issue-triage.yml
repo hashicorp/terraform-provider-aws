@@ -621,6 +621,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmsap:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sso_'
 service/ssoadmin:
