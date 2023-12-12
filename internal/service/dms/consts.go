@@ -39,8 +39,8 @@ const (
 	engineNameAzuredb                    = "azuredb"
 	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
 	engineNameBabelfish                  = "babelfish"
-	engineNameDB2                        = "db2"
-	engineNameDB2zOS                     = "db2-zos"
+	engineNameDb2                        = "db2"
+	engineNameDb2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
 	engineNameDynamoDB                   = "dynamodb"
@@ -71,8 +71,8 @@ func engineName_Values() []string {
 		engineNameAzuredb,
 		engineNameAzureSQLManagedInstance,
 		engineNameBabelfish,
-		engineNameDB2,
-		engineNameDB2zOS,
+		engineNameDb2,
+		engineNameDb2zOS,
 		engineNameTransfer,
 		engineNameDocDB,
 		engineNameDynamoDB,
