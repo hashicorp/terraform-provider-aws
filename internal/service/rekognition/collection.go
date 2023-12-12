@@ -162,16 +162,14 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// resource update not supported, but tag updates are supported
 	var plan resourceCollectionData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state resourceCollectionData
-	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	state.Tags = plan.Tags
-	state.TagsAll = plan.TagsAll
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

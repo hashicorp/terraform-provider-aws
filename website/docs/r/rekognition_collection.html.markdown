@@ -18,6 +18,15 @@ TIP: A few guiding principles for writing documentation:
 Terraform resource for managing an AWS Rekognition Collection.
 
 ## Example Usage
+```
+resource "aws_rekognition_collection" "test" {
+  collection_id             = "%s"
+
+  tags = {
+	test = 1
+  }
+}
+```
 
 ### Basic Usage
 
