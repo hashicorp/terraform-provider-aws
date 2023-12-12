@@ -1632,7 +1632,7 @@ func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *
 	if v, ok := m["error_clear_time_msec"].(int); ok && v != 0 {
 		out.ErrorClearTimeMsec = aws.Int32(int32(v))
 	}
-	if v, ok := m["failover_conditions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["failover_condition"].(*schema.Set); ok && v.Len() > 0 {
 		out.FailoverConditions = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(v.List())
 	}
 	if v, ok := m["input_preference"].(string); ok && v != "" {
@@ -2062,7 +2062,7 @@ func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInp
 	m := map[string]interface{}{
 		"secondary_input_id":    aws.ToString(in.SecondaryInputId),
 		"error_clear_time_msec": int(aws.ToInt32(in.ErrorClearTimeMsec)),
-		"failover_conditions":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
+		"failover_condition":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
 		"input_preference":      string(in.InputPreference),
 	}
 

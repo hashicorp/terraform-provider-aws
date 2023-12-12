@@ -263,10 +263,10 @@ The following arguments are optional:
 
 * `secondary_input_id` - (Required) The input ID of the secondary input in the automatic input failover pair.
 * `error_clear_time_msec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
-* `failover_conditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `failover_condition` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Condition Block](#failover-condition-block) for more details.
 * `input_preference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
 
-### Failover Conditions
+### Failover Condition Block
 
 * `failover_condition_settings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
 
