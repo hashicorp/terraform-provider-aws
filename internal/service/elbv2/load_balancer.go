@@ -499,7 +499,8 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
-	d.Set("load_balancer_type", lb.Type)
+	lbType := aws.StringValue(lb.Type)
+	d.Set("load_balancer_type", lbType)
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
@@ -522,8 +523,10 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
-	if err := d.Set("connection_logs", []interface{}{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
+	if lbType == elbv2.LoadBalancerTypeEnumApplication {
+		if err := d.Set("connection_logs", []interface{}{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
+		}
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)
