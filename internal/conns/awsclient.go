@@ -17,6 +17,7 @@ import (
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/maps"
@@ -49,96 +50,95 @@ type AWSClient struct {
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
-func (client *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
-	if client.awsConfig == nil {
+func (c *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
+	if c.awsConfig == nil {
 		return nil
 	}
-	return client.awsConfig.Credentials
+	return c.awsConfig.Credentials
 }
 
-func (client *AWSClient) AwsConfig() aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
-	return client.awsConfig.Copy()
+func (c *AWSClient) AwsConfig() aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
+	return c.awsConfig.Copy()
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
-func (client *AWSClient) PartitionHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s", prefix, client.DNSSuffix)
+func (c *AWSClient) PartitionHostname(prefix string) string {
+	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix)
 }
 
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
 // e.g. PREFIX.us-west-2.amazonaws.com
 // The prefix should not contain a trailing period.
-func (client *AWSClient) RegionalHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
+func (c *AWSClient) RegionalHostname(prefix string) string {
+	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix)
 }
 
 // S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
-func (client *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
-	if s3Client := client.S3Client(ctx); s3Client.Options().Region != names.GlobalRegionID {
-
-	}
-	return client.s3ExpressClient
+func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
+	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
+		"s3_us_east_1_regional_endpoint": endpoints_sdkv1.RegionalS3UsEast1Endpoint,
+	}))
 }
 
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
-func (client *AWSClient) S3UsePathStyle() bool {
-	return client.s3UsePathStyle
+func (c *AWSClient) S3UsePathStyle() bool {
+	return c.s3UsePathStyle
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
 // To have effect it must be called before the AWS SDK v1 Session is created.
-func (client *AWSClient) SetHTTPClient(httpClient *http.Client) {
-	if client.Session == nil {
-		client.httpClient = httpClient
+func (c *AWSClient) SetHTTPClient(httpClient *http.Client) {
+	if c.Session == nil {
+		c.httpClient = httpClient
 	}
 }
 
 // HTTPClient returns the http.Client used for AWS API calls.
-func (client *AWSClient) HTTPClient() *http.Client {
-	return client.httpClient
+func (c *AWSClient) HTTPClient() *http.Client {
+	return c.httpClient
 }
 
 // RegisterLogger places the configured logger into Context so it can be used via `tflog`.
-func (client *AWSClient) RegisterLogger(ctx context.Context) context.Context {
-	return baselogging.RegisterLogger(ctx, client.logger)
+func (c *AWSClient) RegisterLogger(ctx context.Context) context.Context {
+	return baselogging.RegisterLogger(ctx, c.logger)
 }
 
 // APIGatewayInvokeURL returns the Amazon API Gateway (REST APIs) invoke URL for the configured AWS Region.
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-call-api.html.
-func (client *AWSClient) APIGatewayInvokeURL(restAPIID, stageName string) string {
-	return fmt.Sprintf("https://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", restAPIID)), stageName)
+func (c *AWSClient) APIGatewayInvokeURL(restAPIID, stageName string) string {
+	return fmt.Sprintf("https://%s/%s", c.RegionalHostname(fmt.Sprintf("%s.execute-api", restAPIID)), stageName)
 }
 
 // APIGatewayV2InvokeURL returns the Amazon API Gateway v2 (WebSocket & HTTP APIs) invoke URL for the configured AWS Region.
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-publish.html and
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-set-up-websocket-deployment.html.
-func (client *AWSClient) APIGatewayV2InvokeURL(protocolType, apiID, stageName string) string {
+func (c *AWSClient) APIGatewayV2InvokeURL(protocolType, apiID, stageName string) string {
 	if protocolType == apigatewayv2_sdkv1.ProtocolTypeWebsocket {
-		return fmt.Sprintf("wss://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
+		return fmt.Sprintf("wss://%s/%s", c.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
 	}
 
 	if stageName == "$default" {
-		return fmt.Sprintf("https://%s/", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)))
+		return fmt.Sprintf("https://%s/", c.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)))
 	}
 
-	return fmt.Sprintf("https://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
+	return fmt.Sprintf("https://%s/%s", c.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
 }
 
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
-func (client *AWSClient) CloudFrontDistributionHostedZoneID() string {
-	if client.Partition == endpoints_sdkv1.AwsCnPartitionID {
+func (c *AWSClient) CloudFrontDistributionHostedZoneID() string {
+	if c.Partition == endpoints_sdkv1.AwsCnPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
 }
 
 // DefaultKMSKeyPolicy returns the default policy for KMS keys in the configured AWS partition.
-func (client *AWSClient) DefaultKMSKeyPolicy() string {
+func (c *AWSClient) DefaultKMSKeyPolicy() string {
 	return fmt.Sprintf(`
 {
 	"Id": "default",
@@ -155,36 +155,36 @@ func (client *AWSClient) DefaultKMSKeyPolicy() string {
 		}
 	]
 }	
-`, client.Partition, client.AccountID)
+`, c.Partition, c.AccountID)
 }
 
 // GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID
 // for AWS Global Accelerator accelerators in the configured AWS partition.
-func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
+func (c *AWSClient) GlobalAcceleratorHostedZoneID() string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
-func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
+func (c *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
 	m := map[string]any{
-		"aws_sdkv2_config": client.awsConfig,
-		"endpoint":         client.endpoints[servicePackageName],
-		"partition":        client.Partition,
-		"session":          client.Session,
+		"aws_sdkv2_config": c.awsConfig,
+		"endpoint":         c.endpoints[servicePackageName],
+		"partition":        c.Partition,
+		"session":          c.Session,
 	}
 	switch servicePackageName {
 	case names.S3:
-		m["s3_use_path_style"] = client.s3UsePathStyle
+		m["s3_use_path_style"] = c.s3UsePathStyle
 		// AWS SDK for Go v2 does not use the AWS_S3_US_EAST_1_REGIONAL_ENDPOINT environment variable during configuration.
 		// For compatibility, read it now.
-		if client.s3UsEast1RegionalEndpoint == endpoints_sdkv1.UnsetS3UsEast1Endpoint {
+		if c.s3UsEast1RegionalEndpoint == endpoints_sdkv1.UnsetS3UsEast1Endpoint {
 			if v, err := endpoints_sdkv1.GetS3UsEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT")); err == nil {
-				client.s3UsEast1RegionalEndpoint = v
+				c.s3UsEast1RegionalEndpoint = v
 			}
 		}
-		m["s3_us_east_1_regional_endpoint"] = client.s3UsEast1RegionalEndpoint
+		m["s3_us_east_1_regional_endpoint"] = c.s3UsEast1RegionalEndpoint
 	case names.STS:
-		m["sts_region"] = client.stsRegion
+		m["sts_region"] = c.stsRegion
 	}
 
 	return m
@@ -195,8 +195,9 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	isDefault := len(extra) == 0
 	// Default service client is cached.
-	if len(extra) == 0 {
+	if isDefault {
 		if raw, ok := c.conns[servicePackageName]; ok {
 			if conn, ok := raw.(T); ok {
 				return conn, nil
@@ -240,7 +241,7 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 	}
 
 	// Default service client is cached.
-	if len(extra) == 0 {
+	if isDefault {
 		c.conns[servicePackageName] = conn
 	}
 
@@ -252,8 +253,9 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	isDefault := len(extra) == 0
 	// Default service client is cached.
-	if len(extra) == 0 {
+	if isDefault {
 		if raw, ok := c.clients[servicePackageName]; ok {
 			if client, ok := raw.(T); ok {
 				return client, nil
@@ -288,8 +290,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.
 
-	// Default service client is cached.
-	if len(extra) == 0 {
+	if isDefault {
 		c.clients[servicePackageName] = client
 	}
 
