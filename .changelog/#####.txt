@@ -13,3 +13,7 @@ resource/aws_s3_bucket_policy: Fix `no such host` errors in `us-east-1` for dire
 ```release-note:bug
 resource/aws_s3_object: Fix `no such host` errors in `us-east-1` for directory buckets
 ```
+
+```release-note:bug
+data-source/aws_s3_object: Fix `no such host` errors in `us-east-1` for directory buckets
+```

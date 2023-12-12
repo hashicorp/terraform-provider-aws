@@ -160,6 +160,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
