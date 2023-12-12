@@ -254,6 +254,9 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string))
 
@@ -315,6 +318,9 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
 	if d.HasChange("acl") {
@@ -390,6 +396,9 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
 	var err error
@@ -428,6 +437,10 @@ func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	uploader := manager.NewUploader(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
@@ -476,7 +489,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &s3.PutObjectInput{
 		Body:   body,
-		Bucket: aws.String(d.Get("bucket").(string)),
+		Bucket: aws.String(bucket),
 		Key:    aws.String(sdkv1CompatibleCleanKey(d.Get("key").(string))),
 	}
 
