@@ -2048,7 +2048,7 @@ func testAccLoadBalancerConfig_subnetMappingCount(rName string, subnetCount int)
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, subnetCount), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
-  internal        = trueadd
+  internal        = true
   security_groups = [aws_security_group.test.id]
 
   idle_timeout               = 30
