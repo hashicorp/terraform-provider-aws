@@ -105,6 +105,7 @@ provider "aws" {
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
+  <li><code>cloudfrontkeyvaluestore</code></li>
   <li><code>cloudhsmv2</code> (or <code>cloudhsm</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudtrail</code></li>

@@ -49,6 +49,7 @@ variable "service_labels" {
     "clouddirectory",
     "cloudformation",
     "cloudfront",
+    "cloudfrontkeyvaluestore",
     "cloudhsmv2",
     "cloudsearch",
     "cloudsearchdomain",

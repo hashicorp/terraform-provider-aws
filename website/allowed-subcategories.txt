@@ -32,6 +32,7 @@ Cloud Map
 Cloud9
 CloudFormation
 CloudFront
+CloudFrontKeyValueStore
 CloudHSM
 CloudSearch
 CloudTrail

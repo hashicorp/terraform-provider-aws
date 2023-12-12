@@ -38,6 +38,7 @@ const (
 	CloudControl                 = "cloudcontrol"
 	CloudFormation               = "cloudformation"
 	CloudFront                   = "cloudfront"
+	CloudFrontKeyValueStore      = "cloudfrontkeyvaluestore"
 	CloudHSMV2                   = "cloudhsmv2"
 	CloudSearch                  = "cloudsearch"
 	CloudTrail                   = "cloudtrail"

@@ -209,6 +209,9 @@ service/cloudformation:
 service/cloudfront:
   - 'internal/service/cloudfront/**/*'
   - 'website/**/cloudfront_*'
+service/cloudfrontkeyvaluestore:
+  - 'internal/service/cloudfrontkeyvaluestore/**/*'
+  - 'website/**/cloudfrontkeyvaluestore_*'
 service/cloudhsmv2:
   - 'internal/service/cloudhsmv2/**/*'
   - 'website/**/cloudhsm*'
