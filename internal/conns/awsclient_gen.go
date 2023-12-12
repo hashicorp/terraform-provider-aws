@@ -60,6 +60,7 @@ import (
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
+	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
@@ -869,6 +870,10 @@ func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
 	return errs.Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes))
+}
+
+func (c *AWSClient) PollyClient(ctx context.Context) *polly_sdkv2.Client {
+	return errs.Must(client[*polly_sdkv2.Client](ctx, c, names.Polly))
 }
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
