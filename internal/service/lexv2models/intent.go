@@ -64,6 +64,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -76,6 +77,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCard](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"image_url": schema.StringAttribute{
@@ -90,6 +92,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 					Blocks: map[string]schema.Block{
 						"button": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[Button](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"text": schema.StringAttribute{
@@ -108,6 +111,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -120,6 +124,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -134,15 +139,18 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
 		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"message": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 					NestedObject: messageNBO,
 				},
 				"variations": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 					NestedObject: messageNBO,
 				},
 			},
@@ -178,6 +186,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[DialogAction](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -196,6 +205,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[IntentOverride](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -214,6 +224,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ResponseSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"allow_interrupt": schema.BoolAttribute{
@@ -229,6 +240,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ConditionalSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"active": schema.BoolAttribute{
@@ -240,6 +252,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					Validators: []validator.List{
 						listvalidator.SizeAtLeast(1),
 					},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ConditionalBranch](ctx),
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"name": schema.StringAttribute{
@@ -251,6 +264,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 								Validators: []validator.List{
 									listvalidator.SizeBetween(1, 1),
 								},
+								CustomType: fwtypes.NewListNestedObjectTypeOf[Condition](ctx),
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
 										"expression_string": schema.StringAttribute{
@@ -263,6 +277,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 								Validators: []validator.List{
 									listvalidator.SizeBetween(1, 1),
 								},
+								CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 								NestedObject: dialogStateNBO,
 							},
 							"response": responseSpecificationLNB,
@@ -273,12 +288,14 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[DefaultConditionalBranch](ctx),
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
 							"next_step": schema.ListNestedBlock{
 								Validators: []validator.List{
 									listvalidator.SizeAtMost(1),
 								},
+								CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 								NestedObject: dialogStateNBO,
 							},
 							"response": responseSpecificationLNB,
@@ -295,6 +312,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 				NestedObject: dialogStateNBO,
 			},
 			"failure_response":    responseSpecificationLNB,
@@ -303,6 +321,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 				NestedObject: dialogStateNBO,
 			},
 			"success_response":    responseSpecificationLNB,
@@ -311,6 +330,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 				NestedObject: dialogStateNBO,
 			},
 			"timeout_response": responseSpecificationLNB,
@@ -327,10 +347,18 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			"bot_version": schema.StringAttribute{
 				Required: true,
 			},
+			"creation_date_time": schema.StringAttribute{
+				Computed:   true,
+				CustomType: fwtypes.TimestampType,
+			},
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
 			"id": framework.IDAttribute(),
+			"last_updated_date_time": schema.StringAttribute{
+				Computed:   true,
+				CustomType: fwtypes.TimestampType,
+			},
 			"locale_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -349,6 +377,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookSettings](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"enabled": schema.BoolAttribute{
@@ -361,6 +390,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentCodeHookSettings](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"enabled": schema.BoolAttribute{
@@ -375,6 +405,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentUpdatesSpecification](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"active": schema.BoolAttribute{
@@ -389,6 +420,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentStartResponseSpecification](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"allow_interrupt": schema.BoolAttribute{
@@ -403,15 +435,18 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 													Validators: []validator.List{
 														listvalidator.SizeBetween(1, 5),
 													},
+													CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Blocks: map[string]schema.Block{
 															"message": schema.ListNestedBlock{
 																Validators: []validator.List{
 																	listvalidator.SizeBetween(1, 1),
 																},
+																CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 																NestedObject: messageNBO,
 															},
 															"variations": schema.ListNestedBlock{
+																CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 																NestedObject: messageNBO,
 															},
 														},
@@ -424,6 +459,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentUpdateResponseSpecification](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"allow_interrupt": schema.BoolAttribute{
@@ -445,6 +481,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							CustomType:   fwtypes.NewListNestedObjectTypeOf[FailureSuccessTimeout](ctx),
 							NestedObject: failureSuccessTimeoutNBO,
 						},
 					},
@@ -454,12 +491,14 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[InitialResponseSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"code_hook": schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookInvocationSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"active": schema.BoolAttribute{
@@ -477,6 +516,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 										Validators: []validator.List{
 											listvalidator.SizeBetween(1, 1),
 										},
+										CustomType:   fwtypes.NewListNestedObjectTypeOf[FailureSuccessTimeout](ctx),
 										NestedObject: failureSuccessTimeoutNBO,
 									},
 								},
@@ -488,6 +528,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 							NestedObject: dialogStateNBO,
 						},
 					},
@@ -497,6 +538,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(5),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[InputContext](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -509,6 +551,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[IntentClosingSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"active": schema.BoolAttribute{
@@ -522,6 +565,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 							NestedObject: dialogStateNBO,
 						},
 					},
@@ -531,6 +575,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"active": schema.BoolAttribute{
@@ -542,6 +587,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 1),
 							},
+							CustomType: fwtypes.NewListNestedObjectTypeOf[PromptSpecification](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"allow_interrupt": schema.BoolAttribute{
@@ -597,6 +643,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
 							NestedObject: dialogStateNBO,
 						},
 					},
@@ -606,6 +653,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[KendraConfiguration](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"index": schema.StringAttribute{
@@ -624,6 +672,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[OutputContext](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -639,6 +688,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"sample_utterance": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[SampleUtterance](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"utterance": schema.StringAttribute{
@@ -648,6 +698,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"slot_priority": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"priority": schema.Int64Attribute{
@@ -679,10 +730,14 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 
 	in := &lexmodelsv2.CreateIntentInput{}
 
+	fmt.Printf("plan: %+v\n", plan)
+
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	fmt.Printf("in: %+v\n", in)
 
 	out, err := conn.CreateIntent(ctx, in)
 	if err != nil {

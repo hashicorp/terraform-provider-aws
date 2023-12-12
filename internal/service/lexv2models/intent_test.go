@@ -5,10 +5,12 @@ package lexv2models_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
@@ -18,12 +20,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// TestIntentAutoFlex is designed to extensively evaluate the capabilities of Intent expansion and
+// flattening when utilizing the new feature called "autoflex." Given that autoflex is a recent
+// addition and has been built upon the foundation of Intent, these unit tests play a crucial role
+// in ensuring the reliability of the implementation.
+//
+// Looking ahead, for typical scenarios involving straightforward applications of autoflex's Expand
+// and Flatten, it is generally unnecessary to conduct tests at the same level of detail as seen in
+// this specific autoflex unit test. This guideline is applicable unless dealing with intricate
+// resource schemas or situations where there is a genuine concern about the overall functionality.
+// In such complex cases, it might still be advisable to perform thorough unit testing with
+// autoflex to ensure everything functions as expected.
 func TestIntentAutoFlex(t *testing.T) {
 	t.Parallel()
 
@@ -922,13 +942,6 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 }
 
-/*
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
 // Acceptance test access AWS and cost money to run.
 func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -938,7 +951,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var intent lexv2models.DescribeIntentResponse
+	var intent lexmodelsv2.DescribeIntentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 
@@ -964,7 +977,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lexv2models", regexache.MustCompile(`intent:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lexmodelsv2", regexache.MustCompile(`intent:+.`)),
 				),
 			},
 			{
@@ -977,13 +990,14 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 	})
 }
 
+/*
 func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var intent lexv2models.DescribeIntentResponse
+	var intent lexmodelsv2.DescribeIntentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_intent.test"
 
@@ -1015,6 +1029,8 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 	})
 }
 
+*/
+
 func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
@@ -1024,13 +1040,10 @@ func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &lexv2models.DescribeIntentInput{
-				IntentId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeIntent(ctx, &lexv2models.DescribeIntentInput{
+			_, err := conn.DescribeIntent(ctx, &lexmodelsv2.DescribeIntentInput{
 				IntentId: aws.String(rs.Primary.ID),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*lextypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
@@ -1044,7 +1057,7 @@ func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIntentExists(ctx context.Context, name string, intent *lexv2models.DescribeIntentResponse) resource.TestCheckFunc {
+func testAccCheckIntentExists(ctx context.Context, name string, intent *lexmodelsv2.DescribeIntentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1056,7 +1069,7 @@ func testAccCheckIntentExists(ctx context.Context, name string, intent *lexv2mod
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
-		resp, err := conn.DescribeIntent(ctx, &lexv2models.DescribeIntentInput{
+		resp, err := conn.DescribeIntent(ctx, &lexmodelsv2.DescribeIntentInput{
 			IntentId: aws.String(rs.Primary.ID),
 		})
 
@@ -1070,7 +1083,8 @@ func testAccCheckIntentExists(ctx context.Context, name string, intent *lexv2mod
 	}
 }
 
-func testAccCheckIntentNotRecreated(before, after *lexv2models.DescribeIntentResponse) resource.TestCheckFunc {
+/*
+func testAccCheckIntentNotRecreated(before, after *lexmodelsv2.DescribeIntentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.IntentId), aws.ToString(after.IntentId); before != after {
 			return create.Error(names.LexV2Models, create.ErrActionCheckingNotRecreated, tflexv2models.ResNameIntent, aws.ToString(before.IntentId), errors.New("recreated"))
@@ -1079,31 +1093,71 @@ func testAccCheckIntentNotRecreated(before, after *lexv2models.DescribeIntentRes
 		return nil
 	}
 }
-
-func testAccIntentConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_lexv2models_intent" "test" {
-  intent_name             = %[1]q
-  engine_type             = "ActiveLexV2Models"
-  engine_version          = %[2]q
-  host_instance_type      = "lexv2models.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
-}
-`, rName, version)
-}
 */
+
+func testAccIntentConfig_base(rName string, ttl int, dp bool) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lexv2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonLexFullAccess"
+}
+
+resource "aws_lexv2models_bot" "test" {
+  name                        = %[1]q
+  idle_session_ttl_in_seconds = %[2]d
+  role_arn                    = aws_iam_role.test.arn
+
+  data_privacy {
+    child_directed = %[3]t
+  }
+}
+
+resource "aws_lexv2models_bot_locale" "test" {
+  locale_id                        = "en_US"
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  n_lu_intent_confidence_threshold = 0.7
+}
+
+resource "aws_lexv2models_bot_version" "test" {
+  bot_id = aws_lexv2models_bot.test.id
+  locale_specification = {
+    (aws_lexv2models_bot_locale.test.locale_id) = {
+      source_bot_version = "DRAFT"
+    }
+  }
+}
+`, rName, ttl, dp)
+}
+
+func testAccIntentConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_version.test.bot_version
+  name        = %[1]q
+  locale_id   = "en_US"
+}
+`, rName))
+}
