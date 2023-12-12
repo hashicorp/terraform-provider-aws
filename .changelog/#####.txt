@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_s3_directory_bucket: Fix `no such host` errors in `us-east-1`
 ```
+
+```release-note:bug
+data-source/aws_s3_directory_buckets: Fix `no such host` errors in `us-east-1`
+```
