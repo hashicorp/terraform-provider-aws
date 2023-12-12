@@ -229,9 +229,19 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
+	if !vFrom.CanInterface() {
+		diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom))
+		return diags
+	}
+
 	// time.Time --> fwtypes.Timestamp
 	if from, ok := vFrom.Interface().(time.Time); ok {
 		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		return diags
+	}
+
+	if vFrom.Elem().CanInterface() {
+		diags.AddError("AutoFlEx", fmt.Sprintf("cannot create an interface for: %T", vFrom.Elem()))
 		return diags
 	}
 
