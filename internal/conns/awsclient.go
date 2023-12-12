@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -40,6 +41,7 @@ type AWSClient struct {
 	httpClient                *http.Client
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
+	s3ExpressClient           *s3_sdkv2.Client
 	s3UsePathStyle            bool                                      // From provider configuration.
 	s3UsEast1RegionalEndpoint endpoints_sdkv1.S3UsEast1RegionalEndpoint // From provider configuration.
 	stsRegion                 string                                    // From provider configuration.
@@ -69,6 +71,13 @@ func (client *AWSClient) PartitionHostname(prefix string) string {
 // The prefix should not contain a trailing period.
 func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
+}
+
+// S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
+// This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
+// In that case the returned client uses the regional S3 endpoint.
+func (client *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
+	return client.s3ExpressClient
 }
 
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
