@@ -1845,13 +1845,12 @@ func testAccCheckObjectVersionIDEquals(first, second *s3.GetObjectOutput) resour
 
 func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_object" {
 				continue
 			}
 
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 			if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
@@ -1922,6 +1921,7 @@ func testAccCheckObjectBody(obj *s3.GetObjectOutput, want string) resource.TestC
 func testAccCheckObjectACL(ctx context.Context, n string, want []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
@@ -1953,6 +1953,7 @@ func testAccCheckObjectACL(ctx context.Context, n string, want []string) resourc
 func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
@@ -1982,6 +1983,7 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resourc
 func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
@@ -2020,6 +2022,7 @@ func testAccObjectCreateTempFile(t *testing.T, data string) string {
 func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
@@ -2032,6 +2035,7 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)

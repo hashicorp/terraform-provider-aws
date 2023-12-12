@@ -453,13 +453,12 @@ func TestAccS3BucketPolicy_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_policy" {
 				continue
 			}
 
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
