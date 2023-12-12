@@ -624,6 +624,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		importArn := importTableOutput.(*dynamodb.ImportTableOutput).ImportTableDescription.ImportArn
 		if _, err = waitImportComplete(ctx, conn, *importArn, d.Timeout(schema.TimeoutCreate)); err != nil {
+			d.SetId(tableName)
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), err)
 		}
 	} else {
