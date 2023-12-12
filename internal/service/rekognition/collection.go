@@ -30,10 +30,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Collection")
-// @Tags(identifierAttribute="arn")
-func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCollection{}
+// @SDKResource("aws_rekognition_collection", name="Collection")
+func ResourceCollection() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: ResourceCollectionCreate,
+		ReadWithoutTimeout:   ResourceCollectionRead,
+		DeleteWithoutTimeout: ResourceCollectionDelete,
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultReadTimeout(30 * time.Minute)
@@ -51,9 +53,8 @@ const (
 	ResNameCollection = "Collection"
 )
 
-func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_collection"
-}
+func ResourceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	collectionRegex, _ := regexp.Compile(`^[a-zA-Z0-9_.\-]+$`)
@@ -128,11 +129,11 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	state.Arn = flex.StringToFramework(ctx, out.CollectionArn)
 	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	return append(diags, ResourceCollectionRead(ctx, d, meta)...)
 }
 
-func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RekognitionClient(ctx)
+func ResourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	var state resourceCollectionData
 
@@ -161,10 +162,8 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// resource update not supported, but tag updates are supported
-	var plan resourceCollectionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+func ResourceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	var state resourceCollectionData
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
