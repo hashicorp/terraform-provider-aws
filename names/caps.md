@@ -54,8 +54,6 @@ The caps enforced are as follows:
 | Csv | CSV | caps2 |
 | Dax | DAX | caps2 |
 | Db | DB | caps3 |
-| DB2 | Db2 | caps2 |
-| db2 | Db2 | caps3 |
 | Dhcp | DHCP | caps1 |
 | Dkim | DKIM | caps1 |
 | Dlm | DLM | caps2 |
@@ -97,13 +95,13 @@ The caps enforced are as follows:
 | Hvm | HVM | caps2 |
 | Iam | IAM | caps2 |
 | Iot | IoT | caps2 |
-| Ip | IP | caps4 |
+| Ip | IP | caps3 |
 | Ipam | IPAM | caps1 |
 | Ipset | IPSet | caps1 |
 | Iscsi | iSCSI | caps1 |
 | Jdbc | JDBC | caps1 |
 | Json | JSON | caps1 |
-| Kms | KMS | caps3 |
+| Kms | KMS | caps2 |
 | Mfa | MFA | caps3 |
 | Msk | MSK | caps3 |
 | Mwaa | MWAA | caps1 |
