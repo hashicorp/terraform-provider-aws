@@ -6322,7 +6322,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_Db2engine(rName, customerId, siteId string) string { // nosemgrep:ci.caps5-in-func-name
+func testAccInstanceConfig_Db2engine(rName, customerId, siteId string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassDb2(),
 		fmt.Sprintf(`
