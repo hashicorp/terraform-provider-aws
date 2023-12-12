@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"golang.org/x/exp/slices"
 )
 
 func RegisterSweepers() {
@@ -68,6 +70,15 @@ func sweepStackSetInstances(region string) error {
 				}
 
 				for _, v := range page.Summaries {
+					stackSetID := aws.StringValue(v.StackSetId)
+
+					if v.StackInstanceStatus != nil {
+						if status := aws.StringValue(v.StackInstanceStatus.DetailedStatus); status == cloudformation.StackInstanceDetailedStatusSkippedSuspendedAccount {
+							log.Printf("[INFO] Skipping CloudFormation StackSet Instance %s: DetailedStatus=%s", stackSetID, status)
+							continue
+						}
+					}
+
 					ouID := aws.StringValue(v.OrganizationalUnitId)
 					accountOrOrgID := aws.StringValue(v.Account)
 					if ouID != "" {
@@ -76,11 +87,7 @@ func sweepStackSetInstances(region string) error {
 
 					r := ResourceStackSetInstance()
 					d := r.Data(nil)
-					id := StackSetInstanceCreateResourceID(
-						aws.StringValue(v.StackSetId),
-						accountOrOrgID,
-						aws.StringValue(v.Region),
-					)
+					id := StackSetInstanceCreateResourceID(stackSetID, accountOrOrgID, aws.StringValue(v.Region))
 					d.SetId(id)
 					d.Set("call_as", cloudformation.CallAsSelf)
 					if ouID != "" {
@@ -135,15 +142,33 @@ func sweepStackSets(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	// Attempt to determine whether or not Organizations access is enabled.
+	orgAccessEnabled := false
+	if servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, client.OrganizationsConn(ctx)); err == nil {
+		orgAccessEnabled = slices.Contains(servicePrincipalNames, "member.org.stacksets.cloudformation.amazonaws.com")
+	}
+
 	err = conn.ListStackSetsPagesWithContext(ctx, input, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.Summaries {
+			name := aws.StringValue(v.StackSetName)
+
+			if status := aws.StringValue(v.Status); status == cloudformation.StackSetStatusDeleted {
+				log.Printf("[INFO] SkippingCloudFormation StackSet %s: Status=%s", name, status)
+				continue
+			}
+
+			if permissionModel := aws.StringValue(v.PermissionModel); permissionModel == cloudformation.PermissionModelsServiceManaged && !orgAccessEnabled {
+				log.Printf("[INFO] SkippingCloudFormation StackSet %s: PermissionModel=%s", name, permissionModel)
+				continue
+			}
+
 			r := ResourceStackSet()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.StackSetName))
+			d.SetId(name)
 			d.Set("call_as", cloudformation.CallAsSelf)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -173,11 +198,9 @@ func sweepStackSets(region string) error {
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.CloudFormationConn(ctx)
 	input := &cloudformation.ListStacksInput{
 		StackStatusFilter: aws.StringSlice([]string{
@@ -187,40 +210,33 @@ func sweepStacks(region string) error {
 			cloudformation.StackStatusUpdateComplete,
 		}),
 	}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListStacksPagesWithContext(ctx, input, func(page *cloudformation.ListStacksOutput, lastPage bool) bool {
-		for _, stack := range page.StackSummaries {
-			name := aws.StringValue(stack.StackName)
+		if page == nil {
+			return !lastPage
+		}
 
-			updateTerminationProtectionInput := &cloudformation.UpdateTerminationProtectionInput{
+		for _, v := range page.StackSummaries {
+			name := aws.StringValue(v.StackName)
+			inputU := &cloudformation.UpdateTerminationProtectionInput{
 				EnableTerminationProtection: aws.Bool(false),
-				StackName:                   stack.StackName,
+				StackName:                   aws.String(name),
 			}
 
 			log.Printf("[INFO] Disabling termination protection for CloudFormation Stack: %s", name)
-			_, err := conn.UpdateTerminationProtectionWithContext(ctx, updateTerminationProtectionInput)
+			_, err := conn.UpdateTerminationProtectionWithContext(ctx, inputU)
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error disabling termination protection for CloudFormation Stack (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				log.Printf("[ERROR] Disabling termination protection for CloudFormation Stack (%s): %s", name, err)
 				continue
 			}
 
-			input := &cloudformation.DeleteStackInput{
-				StackName: stack.StackName,
-			}
+			r := ResourceStack()
+			d := r.Data(nil)
+			d.SetId(name)
 
-			log.Printf("[INFO] Deleting CloudFormation Stack: %s", name)
-			_, err = conn.DeleteStackWithContext(ctx, input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudFormation Stack (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -235,5 +251,11 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error listing CloudFormation Stacks: %s", err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFormation Stacks (%s): %w", region, err)
+	}
+
+	return nil
 }

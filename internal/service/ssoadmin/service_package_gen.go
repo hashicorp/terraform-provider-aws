@@ -13,11 +13,42 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceApplication,
+			Name:    "Application",
+		},
+		{
+			Factory: newDataSourceApplicationAssignments,
+			Name:    "Application Assignments",
+		},
+		{
+			Factory: newDataSourceApplicationProviders,
+			Name:    "Application Providers",
+		},
+		{
+			Factory: newDataSourcePrincipalApplicationAssignments,
+			Name:    "Principal Application Assignments",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceApplication,
+			Name:    "Application",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newResourceApplicationAssignment,
+			Name:    "Application Assignment",
+		},
+		{
+			Factory: newResourceApplicationAssignmentConfiguration,
+			Name:    "Application Assignment Configuration",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

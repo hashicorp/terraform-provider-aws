@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,6 +112,8 @@ func ResourceVirtualCluster() *schema.Resource {
 }
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	name := d.Get("name").(string)
@@ -126,15 +129,17 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateVirtualClusterWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EMR Containers Virtual Cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Containers Virtual Cluster (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	return resourceVirtualClusterRead(ctx, d, meta)
+	return append(diags, resourceVirtualClusterRead(ctx, d, meta)...)
 }
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindVirtualClusterByID(ctx, conn, d.Id())
@@ -142,17 +147,17 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Virtual Cluster %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", vc.Arn)
 	if vc.ContainerProvider != nil {
 		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
-			return diag.Errorf("setting container_provider: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting container_provider: %s", err)
 		}
 	} else {
 		d.Set("container_provider", nil)
@@ -161,7 +166,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 
 	setTagsOut(ctx, vc.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -170,6 +175,8 @@ func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
@@ -178,18 +185,18 @@ func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitVirtualClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for EMR Containers Virtual Cluster (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EMR Containers Virtual Cluster (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandContainerProvider(tfMap map[string]interface{}) *emrcontainers.ContainerProvider {

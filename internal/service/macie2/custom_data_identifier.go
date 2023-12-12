@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -107,6 +108,8 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 }
 
 func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateCustomDataIdentifierInput{
@@ -151,15 +154,17 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("creating Macie CustomDataIdentifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie CustomDataIdentifier: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
 
-	return resourceCustomDataIdentifierRead(ctx, d, meta)
+	return append(diags, resourceCustomDataIdentifierRead(ctx, d, meta)...)
 }
 
 func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetCustomDataIdentifierInput{
@@ -172,19 +177,19 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 
 	d.Set("regex", resp.Regex)
 	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
-		return diag.Errorf("setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
 	}
 	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
-		return diag.Errorf("setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
 	d.Set("name", resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
@@ -201,10 +206,12 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
 
-	return nil
+	return diags
 }
 
 func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
@@ -215,9 +222,9 @@ func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.Errorf("deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

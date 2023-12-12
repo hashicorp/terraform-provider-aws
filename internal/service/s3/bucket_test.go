@@ -195,6 +195,30 @@ func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Basic_forceDestroyWithObjectVersions(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_forceDestroyObjectVersions(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					testAccCheckBucketAddObjects(ctx, resourceName, "data.txt", "prefix/more_data.txt"),
+					testAccCheckBucketDeleteObjects(ctx, resourceName, "data.txt"), // Creates a delete marker.
+					testAccCheckBucketAddObjects(ctx, resourceName, "data.txt"),
+				),
+			},
+		},
+	})
+}
+
 // By default, the AWS Go SDK cleans up URIs by removing extra slashes
 // when the service API requests use the URI as part of making a request.
 // While the aws_s3_object resource automatically cleans the key
@@ -2613,7 +2637,7 @@ func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string)
 			})
 
 			if err != nil {
-				return fmt.Errorf("PutObject error: %s", err)
+				return fmt.Errorf("PutObject error: %w", err)
 			}
 		}
 
@@ -2634,7 +2658,7 @@ func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, ke
 			})
 
 			if err != nil {
-				return fmt.Errorf("PutObject error: %s", err)
+				return fmt.Errorf("PutObject error: %w", err)
 			}
 		}
 
@@ -2654,7 +2678,27 @@ func testAccCheckBucketAddObjectWithMetadata(ctx context.Context, n string, key 
 		})
 
 		if err != nil {
-			return fmt.Errorf("PutObject error: %s", err)
+			return fmt.Errorf("PutObject error: %w", err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckBucketDeleteObjects(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		for _, key := range keys {
+			_, err := conn.DeleteObject(ctx, &s3_sdkv2.DeleteObjectInput{
+				Bucket: aws_sdkv2.String(rs.Primary.ID),
+				Key:    aws_sdkv2.String(key),
+			})
+
+			if err != nil {
+				return fmt.Errorf("DeleteObject error: %w", err)
+			}
 		}
 
 		return nil
@@ -4338,8 +4382,24 @@ resource "aws_s3_bucket_versioning" "test" {
 func testAccBucketConfig_forceDestroy(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "%s"
+  bucket        = %[1]q
   force_destroy = true
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_forceDestroyObjectVersions(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "bucket" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 `, bucketName)
 }
@@ -4347,7 +4407,7 @@ resource "aws_s3_bucket" "test" {
 func testAccBucketConfig_forceDestroyObjectLockEnabled(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "%s"
+  bucket        = %[1]q
   force_destroy = true
 
   object_lock_enabled = true

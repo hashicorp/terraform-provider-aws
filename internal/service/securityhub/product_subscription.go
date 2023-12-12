@@ -5,16 +5,20 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -24,124 +28,148 @@ func ResourceProductSubscription() *schema.Resource {
 		CreateWithoutTimeout: resourceProductSubscriptionCreate,
 		ReadWithoutTimeout:   resourceProductSubscriptionRead,
 		DeleteWithoutTimeout: resourceProductSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"product_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
+const (
+	productSubscriptionResourceIDPartCount = 2
+)
+
 func resourceProductSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
-	productArn := d.Get("product_arn").(string)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	log.Printf("[DEBUG] Enabling Security Hub Product Subscription for product %s", productArn)
-
-	resp, err := conn.EnableImportFindingsForProductWithContext(ctx, &securityhub.EnableImportFindingsForProductInput{
-		ProductArn: aws.String(productArn),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "enabling Security Hub Product Subscription for product %s: %s", productArn, err)
+	productARN := d.Get("product_arn").(string)
+	input := &securityhub.EnableImportFindingsForProductInput{
+		ProductArn: aws.String(productARN),
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", productArn, *resp.ProductSubscriptionArn))
+	output, err := conn.EnableImportFindingsForProduct(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "enabling Security Hub Product Subscription (%s): %s", productARN, err)
+	}
+
+	d.SetId(errs.Must(flex.FlattenResourceId([]string{productARN, aws.ToString(output.ProductSubscriptionArn)}, productSubscriptionResourceIDPartCount, false)))
 
 	return append(diags, resourceProductSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	productArn, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), productSubscriptionResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Product Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Reading Security Hub Product Subscriptions to find %s", d.Id())
+	productARN, productSubscriptionARN := parts[0], parts[1]
 
-	exists, err := ProductSubscriptionCheckExists(ctx, conn, productSubscriptionArn)
+	_, err = FindProductSubscriptionByARN(ctx, conn, productSubscriptionARN)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Product Subscription (%s): %s", d.Id(), err)
-	}
-
-	if !exists {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Product Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
-
-	d.Set("product_arn", productArn)
-	d.Set("arn", productSubscriptionArn)
-
-	return diags
-}
-
-func ProductSubscriptionCheckExists(ctx context.Context, conn *securityhub.SecurityHub, productSubscriptionArn string) (bool, error) {
-	input := &securityhub.ListEnabledProductsForImportInput{}
-	exists := false
-
-	err := conn.ListEnabledProductsForImportPagesWithContext(ctx, input, func(page *securityhub.ListEnabledProductsForImportOutput, lastPage bool) bool {
-		for _, readProductSubscriptionArn := range page.ProductSubscriptions {
-			if aws.StringValue(readProductSubscriptionArn) == productSubscriptionArn {
-				exists = true
-				return false
-			}
-		}
-		return !lastPage
-	})
 
 	if err != nil {
-		return false, err
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
-	return exists, nil
-}
+	d.Set("arn", productSubscriptionARN)
+	d.Set("product_arn", productARN)
 
-func ProductSubscriptionParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Expected Security Hub Product Subscription ID in format <product_arn>,<arn> - received: %s", id)
-	}
-
-	return parts[0], parts[1], nil
+	return diags
 }
 
 func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
-	log.Printf("[DEBUG] Disabling Security Hub Product Subscription %s", d.Id())
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	_, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), productSubscriptionResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Security Hub Product Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DisableImportFindingsForProductWithContext(ctx, &securityhub.DisableImportFindingsForProductInput{
-		ProductSubscriptionArn: aws.String(productSubscriptionArn),
+	productSubscriptionARN := parts[1]
+
+	log.Printf("[DEBUG] Deleting Security Hub Product Subscription: %s", d.Id())
+	_, err = conn.DisableImportFindingsForProduct(ctx, &securityhub.DisableImportFindingsForProductInput{
+		ProductSubscriptionArn: aws.String(productSubscriptionARN),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindProductSubscriptionByARN(ctx context.Context, conn *securityhub.Client, productSubscriptionARN string) (*string, error) {
+	input := &securityhub.ListEnabledProductsForImportInput{}
+
+	return findProductSubscription(ctx, conn, input, func(v string) bool {
+		return v == productSubscriptionARN
+	})
+}
+
+func findProductSubscription(ctx context.Context, conn *securityhub.Client, input *securityhub.ListEnabledProductsForImportInput, filter tfslices.Predicate[string]) (*string, error) {
+	output, err := findProductSubscriptions(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findProductSubscriptions(ctx context.Context, conn *securityhub.Client, input *securityhub.ListEnabledProductsForImportInput, filter tfslices.Predicate[string]) ([]string, error) {
+	var output []string
+
+	pages := securityhub.NewListEnabledProductsForImportPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ProductSubscriptions {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

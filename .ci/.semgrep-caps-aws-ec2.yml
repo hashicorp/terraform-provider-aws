@@ -266,7 +266,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|db2|Db|Ip)"
     severity: WARNING
   - id: caps5-in-const-name
     languages:
@@ -280,7 +280,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|db2|Db|Ip)"
     severity: WARNING
   - id: caps5-in-var-name
     languages:
@@ -294,7 +294,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|db2|Db|Ip)"
     severity: WARNING
   - id: ec2-in-func-name
     languages:

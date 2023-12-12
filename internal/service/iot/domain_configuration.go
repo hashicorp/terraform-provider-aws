@@ -188,7 +188,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("arn", output.DomainConfigurationArn)
 	if output.AuthorizerConfig != nil {
 		if err := d.Set("authorizer_config", []interface{}{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
-			return diag.Errorf("setting authorizer_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting authorizer_config: %s", err)
 		}
 	} else {
 		d.Set("authorizer_config", nil)
@@ -203,7 +203,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("status", output.DomainConfigurationStatus)
 	if output.TlsConfig != nil {
 		if err := d.Set("tls_config", []interface{}{flattenTlsConfig(output.TlsConfig)}); err != nil {
-			return diag.Errorf("setting tls_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
 		}
 	} else {
 		d.Set("tls_config", nil)

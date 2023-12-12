@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -96,6 +97,8 @@ func ResourceSegment() *schema.Resource {
 }
 
 func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	name := d.Get("name").(string)
@@ -112,15 +115,17 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateSegment(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Evidently Segment (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Evidently Segment (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.Segment.Arn))
 
-	return resourceSegmentRead(ctx, d, meta)
+	return append(diags, resourceSegmentRead(ctx, d, meta)...)
 }
 
 func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	segment, err := FindSegmentByNameOrARN(ctx, conn, d.Id())
@@ -128,11 +133,11 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Segment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Evidently Segment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Evidently Segment (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", segment.Arn)
@@ -146,7 +151,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	setTagsOut(ctx, segment.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -155,6 +160,8 @@ func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Segment: %s", d.Id())
@@ -163,12 +170,12 @@ func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Evidently Segment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Evidently Segment (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
