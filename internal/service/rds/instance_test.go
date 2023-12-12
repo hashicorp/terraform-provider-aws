@@ -623,7 +623,7 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_Db2_basic(t *testing.T) {
+func TestAccRDSInstance_Db2_basic(t *testing.T) { // nosemgrep:ci.caps5-in-func-name
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
