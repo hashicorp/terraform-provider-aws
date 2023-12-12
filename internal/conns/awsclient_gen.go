@@ -84,6 +84,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	ssmsap_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmsap"
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
@@ -1006,6 +1007,10 @@ func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Cl
 
 func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
 	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents))
+}
+
+func (c *AWSClient) SSMSAPClient(ctx context.Context) *ssmsap_sdkv2.Client {
+	return errs.Must(client[*ssmsap_sdkv2.Client](ctx, c, names.SSMSAP))
 }
 
 func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {
