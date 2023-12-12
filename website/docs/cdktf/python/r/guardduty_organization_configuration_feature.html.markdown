@@ -64,4 +64,4 @@ The `additional_configuration` block supports the following:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-af534c2b9dc87ad328aeada98eac41421489586c67758449e011a8a7d6b7e223 -->
+<!-- cache-key: cdktf-0.19.0 input-af534c2b9dc87ad328aeada98eac41421489586c67758449e011a8a7d6b7e223 -->

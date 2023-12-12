@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -95,6 +96,8 @@ func resourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	id := "default"
@@ -141,17 +144,19 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.PutContactInformation(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Account Primary Contact (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Account Primary Contact (%s): %s", id, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(id)
 	}
 
-	return resourcePrimaryContactRead(ctx, d, meta)
+	return append(diags, resourcePrimaryContactRead(ctx, d, meta)...)
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	contactInformation, err := findContactInformation(ctx, conn, d.Get("account_id").(string))
@@ -159,11 +164,11 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Account Primary Contact (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Account Primary Contact (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", d.Get("account_id"))
@@ -180,7 +185,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("state_or_region", contactInformation.StateOrRegion)
 	d.Set("website_url", contactInformation.WebsiteUrl)
 
-	return nil
+	return diags
 }
 
 func findContactInformation(ctx context.Context, conn *account.Client, accountID string) (*types.ContactInformation, error) {

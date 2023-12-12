@@ -133,4 +133,4 @@ Using `terraform import`, import Direct Connect connections using the connection
 % terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d13e1be5ac537438097f3cb1617cb8cb47731fc5c21629b7b4afb1e95a242b92 -->
+<!-- cache-key: cdktf-0.19.0 input-d13e1be5ac537438097f3cb1617cb8cb47731fc5c21629b7b4afb1e95a242b92 -->

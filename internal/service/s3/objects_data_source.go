@@ -100,7 +100,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("fetch_owner"); ok {
-		input.FetchOwner = v.(bool)
+		input.FetchOwner = aws.Bool(v.(bool))
 	}
 
 	// "input.MaxKeys" refers to max keys returned in a single request
@@ -108,7 +108,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	// through the results. "max_keys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		input.MaxKeys = int32(maxKeys)
+		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
 	if v, ok := d.GetOk("prefix"); ok {

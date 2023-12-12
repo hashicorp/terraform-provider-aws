@@ -78,14 +78,14 @@ This resource supports the following arguments:
 * `deleteUnusedFmManagedResources` - (Optional) If true, Firewall Manager will automatically remove protections from resources that leave the policy scope. Defaults to `false`. More information can be found here [AWS Firewall Manager policy contents](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html)
 * `description` - (Optional) The description of the AWS Network Firewall firewall policy.
 * `excludeMap` - (Optional) A map of lists of accounts and OU's to exclude from the policy.
-* `excludeResourceTags` - (Required, Forces new resource) A boolean value, if true the tags that are specified in the `resourceTags` are not protected by this policy. If set to false and resource_tags are populated, resources that contain tags will be protected by this policy.
+* `excludeResourceTags` - (Required, Forces new resource) A boolean value, if true the tags that are specified in the `resource_tags` are not protected by this policy. If set to false and resource_tags are populated, resources that contain tags will be protected by this policy.
 * `includeMap` - (Optional) A map of lists of accounts and OU's to include in the policy.
 * `remediationEnabled` - (Required) A boolean value, indicates if the policy should automatically applied to resources that already exist in the account.
 * `resourceTags` - (Optional) A map of resource tags, that if present will filter protections on resources based on the exclude_resource_tags.
-* `resourceType` - (Optional) A resource type to protect. Conflicts with `resourceTypeList`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
-* `resourceTypeList` - (Optional) A list of resource types to protect. Conflicts with `resourceType`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values. Lists with only one element are not supported, instead use `resourceType`.
+* `resourceType` - (Optional) A resource type to protect. Conflicts with `resource_type_list`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
+* `resourceTypeList` - (Optional) A list of resource types to protect. Conflicts with `resource_type`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values. Lists with only one element are not supported, instead use `resource_type`.
 * `securityServicePolicyData` - (Required) The objects to include in Security Service Policy Data. Documented below.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## `excludeMap` Configuration Block
 
@@ -103,7 +103,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 ## `securityServicePolicyData` Configuration Block
 
-* `managedServiceData` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `shieldAdvanced`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
+* `managedServiceData` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
 * `policyOption` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. Documented below.
 * `type` - (Required, Forces new resource) The service that the policy is using to protect the resources. For the current list of supported types, please refer to the [AWS Firewall Manager SecurityServicePolicyData API Type Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html#fms-Type-SecurityServicePolicyData-Type).
 
@@ -114,11 +114,11 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 ## `networkFirewallPolicy` Configuration Block
 
-* `firewallDeploymentModel` - (Optional) Defines the deployment model to use for the firewall policy. To use a distributed model, remove the `policyOption` section. Valid values are `centralized` and `distributed`.
+* `firewallDeploymentModel` - (Optional) Defines the deployment model to use for the firewall policy. To use a distributed model, remove the `policy_option` section. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
 ## `thirdpartyFirewallPolicy` Configuration Block
 
-* `firewallDeploymentModel` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `centralized` and `distributed`.
+* `firewallDeploymentModel` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
 ## Attribute Reference
 
@@ -126,7 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The AWS account ID of the AWS Firewall Manager administrator account.
 * `policyUpdateToken` - A unique identifier for each update to the policy.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import Firewall Manager policies using the policy ID. 
 % terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0ae1df390d47241169d44152adee2f18fc2ef166fb2e999418b584927f81b7b3 -->
+<!-- cache-key: cdktf-0.19.0 input-0ae1df390d47241169d44152adee2f18fc2ef166fb2e999418b584927f81b7b3 -->

@@ -49,7 +49,7 @@ This resource supports the following arguments:
 * `globalNetworkId` - (Required) The ID of the Global Network to create the site in.
 * `description` - (Optional) Description of the Site.
 * `location` - (Optional) The site location as documented below.
-* `tags` - (Optional) Key-value tags for the Site. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the Site. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `location` object supports the following:
 
@@ -62,7 +62,7 @@ The `location` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Site Amazon Resource Name (ARN)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsNetworkmanagerSite` using the site ARN. For
 % terraform import aws_networkmanager_site.example arn:aws:networkmanager::123456789012:site/global-network-0d47f6t230mz46dy4/site-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2d6d4d05d7119f51cca78b0e0f7b23a8b934476305b572e9b2f32c6097b5694 -->
+<!-- cache-key: cdktf-0.19.0 input-e2d6d4d05d7119f51cca78b0e0f7b23a8b934476305b572e9b2f32c6097b5694 -->

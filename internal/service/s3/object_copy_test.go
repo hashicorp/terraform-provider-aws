@@ -435,6 +435,80 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashesMigrated(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		// FIXME "Error running post-test destroy, there may be dangling resources: operation error S3: HeadObject, https response error StatusCode: 403, RequestID: 0033eada6b00018c1826f0b80509eee5684ca4b6, HostID: T7lA2Yxglq, api error Forbidden: Forbidden"
+		// CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_directoryBucket(rName1, sourceKey, rName2, targetKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "acl"),
+					resource.TestCheckResourceAttrSet(resourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_match"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_modified_since"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_none_match"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_unmodified_since"),
+					resource.TestCheckResourceAttr(resourceName, "customer_algorithm", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_key"),
+					resource.TestCheckResourceAttr(resourceName, "customer_key_md5", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "expected_bucket_owner"),
+					resource.TestCheckNoResourceAttr(resourceName, "expected_source_bucket_owner"),
+					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "expires"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_charged", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "request_payer"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
+					resource.TestCheckResourceAttrSet(resourceName, "source"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_customer_algorithm"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
+					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ONEZONE"),
+					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -703,4 +777,42 @@ resource "aws_s3_object_copy" "test" {
   force_destroy                 = true
 }
 `, sourceBucket, sourceKey, targetBucket, targetKey, legalHoldStatus)
+}
+
+func testAccObjectCopyConfig_directoryBucket(sourceBucket, sourceKey, targetBucket, targetKey string) string {
+	return acctest.ConfigCompose(testAccConfigAvailableAZsDirectoryBucket(), fmt.Sprintf(`
+locals {
+  location_name = data.aws_availability_zones.available.zone_ids[0]
+  source_bucket = "%[1]s--${local.location_name}--x-s3"
+  target_bucket = "%[3]s--${local.location_name}--x-s3"
+}
+
+resource "aws_s3_directory_bucket" "source" {
+  bucket = local.source_bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.target_bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_directory_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  key    = %[4]q
+  source = "${aws_s3_object.source.bucket}/${aws_s3_object.source.key}"
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey))
 }

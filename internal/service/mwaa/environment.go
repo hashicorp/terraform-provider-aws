@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -292,6 +293,8 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	name := d.Get("name").(string)
@@ -378,19 +381,21 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}, mwaa.ErrCodeValidationException, mwaa.ErrCodeInternalServerException)
 
 	if err != nil {
-		return diag.Errorf("creating MWAA Environment (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MWAA Environment (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MWAA Environment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MWAA Environment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceEnvironmentRead(ctx, d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
@@ -398,11 +403,11 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MWAA Environment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MWAA Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MWAA Environment (%s): %s", d.Id(), err)
 	}
 
 	d.Set("airflow_configuration_options", aws.StringValueMap(environment.AirflowConfigurationOptions))
@@ -414,16 +419,16 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("execution_role_arn", environment.ExecutionRoleArn)
 	d.Set("kms_key", environment.KmsKey)
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
-		return diag.Errorf("setting last_updated: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
 	if err := d.Set("logging_configuration", flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
-		return diag.Errorf("setting logging_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
 	d.Set("name", environment.Name)
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
-		return diag.Errorf("setting network_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	d.Set("plugins_s3_object_version", environment.PluginsS3ObjectVersion)
 	d.Set("plugins_s3_path", environment.PluginsS3Path)
@@ -441,10 +446,12 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	setTagsOut(ctx, environment.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -536,18 +543,20 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateEnvironmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MWAA Environment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MWAA Environment (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MWAA Environment (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MWAA Environment (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEnvironmentRead(ctx, d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
@@ -556,18 +565,18 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MWAA Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MWAA Environment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MWAA Environment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MWAA Environment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func environmentModuleLoggingConfigurationSchema() *schema.Resource {

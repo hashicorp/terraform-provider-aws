@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
@@ -70,6 +71,8 @@ func ResourceDirectoryConfig() *schema.Resource {
 }
 
 func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	directoryName := d.Get("directory_name").(string)
@@ -81,19 +84,21 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 
 	output, err := conn.CreateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("creating AppStream Directory Config (%s): %s", directoryName, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppStream Directory Config (%s): %s", directoryName, err)
 	}
 
 	if output == nil || output.DirectoryConfig == nil {
-		return diag.Errorf("creating AppStream Directory Config (%s): empty response", directoryName)
+		return sdkdiag.AppendErrorf(diags, "creating AppStream Directory Config (%s): empty response", directoryName)
 	}
 
 	d.SetId(aws.StringValue(output.DirectoryConfig.DirectoryName))
 
-	return resourceDirectoryConfigRead(ctx, d, meta)
+	return append(diags, resourceDirectoryConfigRead(ctx, d, meta)...)
 }
 
 func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(d.Id())}})
@@ -101,19 +106,19 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] AppStream Directory Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppStream Directory Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.DirectoryConfigs) == 0 {
-		return diag.Errorf("reading AppStream Directory Config (%s): %s", d.Id(), "empty response")
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Directory Config (%s): %s", d.Id(), "empty response")
 	}
 
 	if len(resp.DirectoryConfigs) > 1 {
-		return diag.Errorf("reading AppStream Directory Config (%s): %s", d.Id(), "multiple Directory Configs found")
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Directory Config (%s): %s", d.Id(), "multiple Directory Configs found")
 	}
 
 	directoryConfig := resp.DirectoryConfigs[0]
@@ -123,13 +128,15 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("organizational_unit_distinguished_names", flex.FlattenStringSet(directoryConfig.OrganizationalUnitDistinguishedNames))
 
 	if err = d.Set("service_account_credentials", flattenServiceAccountCredentials(directoryConfig.ServiceAccountCredentials, d)); err != nil {
-		return diag.Errorf("setting `%s` for AppStream Directory Config (%s): %s", "service_account_credentials", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for AppStream Directory Config (%s): %s", "service_account_credentials", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.UpdateDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
@@ -145,13 +152,15 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := conn.UpdateDirectoryConfigWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("updating AppStream Directory Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceDirectoryConfigRead(ctx, d, meta)
+	return append(diags, resourceDirectoryConfigRead(ctx, d, meta)...)
 }
 
 func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
@@ -160,14 +169,14 @@ func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AppStream Directory Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandServiceAccountCredentials(tfList []interface{}) *appstream.ServiceAccountCredentials {

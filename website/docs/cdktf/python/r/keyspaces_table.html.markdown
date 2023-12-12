@@ -150,4 +150,4 @@ Using `terraform import`, import a table using the `keyspace_name` and `table_na
 % terraform import aws_keyspaces_table.example my_keyspace/my_table
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2a472d7a9fbc6d115fb0eeeff221a8837a9848972c20cbad7590570183d75aa -->
+<!-- cache-key: cdktf-0.19.0 input-e2a472d7a9fbc6d115fb0eeeff221a8837a9848972c20cbad7590570183d75aa -->

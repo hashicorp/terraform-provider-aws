@@ -104,6 +104,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>apigatewayv2</code></li>
   <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
   <li><code>appconfig</code></li>
+  <li><code>appfabric</code></li>
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
@@ -136,6 +137,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>codebuild</code></li>
   <li><code>codecatalyst</code></li>
   <li><code>codecommit</code></li>
+  <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
   <li><code>codestarconnections</code></li>
@@ -146,8 +148,10 @@ class MyConvertedCode(TerraformStack):
   <li><code>computeoptimizer</code></li>
   <li><code>configservice</code> (or <code>config</code>)</li>
   <li><code>connect</code></li>
+  <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
+  <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -225,6 +229,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>mediaconvert</code></li>
   <li><code>medialive</code></li>
   <li><code>mediapackage</code></li>
+  <li><code>mediapackagev2</code></li>
   <li><code>mediastore</code></li>
   <li><code>memorydb</code></li>
   <li><code>mq</code></li>
@@ -237,6 +242,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -283,6 +289,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>
@@ -398,4 +405,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0e0dec25d22a19f39d4881dd603482a4765f842b794421afb1763a74aeea1795 -->
+<!-- cache-key: cdktf-0.19.0 input-b2b6c6c9d15a70961ae7496610c00d3015e62cc972020a5ff6ea81639e655cd8 -->

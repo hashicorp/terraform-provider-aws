@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `targetClusterArn` - The Amazon Resource Name (ARN) of the cluster.
 * `vpcId` - The VPC ID of the remote client.
 
-<!-- cache-key: cdktf-0.18.0 input-01122677f9ba30620563040b95b6c51a240e709b7fc3bc03683cde0b35bb7e29 -->
+<!-- cache-key: cdktf-0.19.0 input-01122677f9ba30620563040b95b6c51a240e709b7fc3bc03683cde0b35bb7e29 -->

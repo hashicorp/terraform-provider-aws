@@ -45,16 +45,16 @@ class MyConvertedCode extends TerraformStack {
 The following arguments supported:
 
 * `connectionName` - (Required) Name of the connection.
-* `providerType` - (Required) Source repository provider. Valid values: `github`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `providerType` - (Required) Source repository provider. Valid values: `GITHUB`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the connection.
-* `status` - Current state of the App Runner connection. When the state is `available`, you can use the connection to create an [`awsApprunnerService` resource](apprunner_service.html).
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `status` - Current state of the App Runner connection. When the state is `AVAILABLE`, you can use the connection to create an [`aws_apprunner_service` resource](apprunner_service.html).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import App Runner Connections using the `connectionNam
 % terraform import aws_apprunner_connection.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3223a9c42fae1a70b59eb72d4fd08310c6f33713ae95b548fcc20326e370a660 -->
+<!-- cache-key: cdktf-0.19.0 input-3223a9c42fae1a70b59eb72d4fd08310c6f33713ae95b548fcc20326e370a660 -->

@@ -92,4 +92,4 @@ Using `terraform import`, import SSO Account Assignments using the `instance_arn
 % terraform import aws_ssoadmin_instance_access_control_attributes.example arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0555b8646d1cd7133c5af6d918c5eb794a739e08734bb46a2e6ae815ff87af3f -->
+<!-- cache-key: cdktf-0.19.0 input-0555b8646d1cd7133c5af6d918c5eb794a739e08734bb46a2e6ae815ff87af3f -->

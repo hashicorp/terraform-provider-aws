@@ -110,11 +110,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - Name of the bucket.
 * `arn` - ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
-* `bucketDomainName` - Bucket domain name. Will be of format `bucketnameS3AmazonawsCom`.
+* `bucketDomainName` - Bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucketRegionalDomainName` - The bucket region-specific domain name. The bucket domain name including the region name. Please refer to the [S3 endpoints reference](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) for format. Note: AWS CloudFront allows specifying an S3 region-specific endpoint when creating an S3 origin. This will prevent redirect issues from CloudFront to the S3 Origin URL. For more information, see the [Virtual Hosted-Style Requests for Other Regions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#deprecated-global-endpoint) section in the AWS S3 User Guide.
 * `hostedZoneId` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `region` - AWS region this bucket resides in.
 * `websiteEndpoint` - Website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `websiteDomain` - Domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
 
-<!-- cache-key: cdktf-0.18.0 input-1b3882cef2e383d7b94a441272b1a5c90afe56f7bd4eade88c86484fd024b52a -->
+<!-- cache-key: cdktf-0.19.0 input-1b3882cef2e383d7b94a441272b1a5c90afe56f7bd4eade88c86484fd024b52a -->

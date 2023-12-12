@@ -134,6 +134,8 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	req := lightsail.CreateCertificateInput{
@@ -149,7 +151,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateCertificate(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get("name").(string), err)
 	}
 
 	id := d.Get("name").(string)
@@ -161,10 +163,12 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(id)
 
-	return resourceCertificateRead(ctx, d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	certificate, err := FindCertificateById(ctx, conn, d.Id())
@@ -172,11 +176,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
 	d.Set("arn", certificate.Arn)
@@ -188,7 +192,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	setTagsOut(ctx, certificate.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -197,6 +201,8 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	resp, err := conn.DeleteCertificate(ctx, &lightsail.DeleteCertificateInput{
@@ -204,11 +210,11 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResCertificate, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, resp.Operations, types.OperationTypeDeleteCertificate, ResCertificate, d.Id())
@@ -217,7 +223,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func domainValidationOptionsHash(v interface{}) int {

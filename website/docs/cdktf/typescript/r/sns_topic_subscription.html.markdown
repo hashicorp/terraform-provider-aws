@@ -334,7 +334,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `endpoint` - (Required) Endpoint to send data to. The contents vary with the protocol. See details below.
-* `protocol` - (Required) Protocol to use. Valid values are: `sqs`, `sms`, `lambda`, `firehose`, and `application`. Protocols `email`, `emailJson`, `http` and `https` are also valid but partially supported. See details below.
+* `protocol` - (Required) Protocol to use. Valid values are: `sqs`, `sms`, `lambda`, `firehose`, and `application`. Protocols `email`, `email-json`, `http` and `https` are also valid but partially supported. See details below.
 * `subscriptionRoleArn` - (Required if `protocol` is `firehose`) ARN of the IAM role to publish to Kinesis Data Firehose delivery stream. Refer to [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-firehose-as-subscriber.html).
 * `topicArn` - (Required) ARN of the SNS topic to subscribe to.
 
@@ -344,9 +344,10 @@ The following arguments are optional:
 * `deliveryPolicy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
 * `endpointAutoConfirms` - (Optional) Whether the endpoint is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) (e.g., PagerDuty). Default is `false`.
 * `filterPolicy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
-* `filterPolicyScope` - (Optional) Whether the `filterPolicy` applies to `messageAttributes` (default) or `messageBody`.
+* `filterPolicyScope` - (Optional) Whether the `filter_policy` applies to `MessageAttributes` (default) or `MessageBody`.
 * `rawMessageDelivery` - (Optional) Whether to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property). Default is `false`.
 * `redrivePolicy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
+* `replayPolicy` - (Optional) JSON String with the archived message replay policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-archiving-and-replay-subscriber.html) for more details.
 
 ### Protocol support
 
@@ -354,10 +355,10 @@ Supported values for `protocol` include:
 
 * `application` - Delivers JSON-encoded messages. `endpoint` is the endpoint ARN of a mobile app and device.
 * `firehose` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon Kinesis Data Firehose delivery stream (e.g.,
-`arn:aws:firehose:usEast1:123456789012:deliverystream/ticketUploadStream`).
+`arn:aws:firehose:us-east-1:123456789012:deliverystream/ticketUploadStream`).
 * `lambda` - Delivers JSON-encoded messages. `endpoint` is the ARN of an AWS Lambda function.
 * `sms` - Delivers text messages via SMS. `endpoint` is the phone number of an SMS-enabled device.
-* `sqs` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon SQS queue (e.g., `arn:aws:sqs:usWest2:123456789012:terraformQueueToo`).
+* `sqs` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon SQS queue (e.g., `arn:aws:sqs:us-west-2:123456789012:terraform-queue-too`).
 
 Partially supported values for `protocol` include:
 
@@ -400,4 +401,4 @@ Using `terraform import`, import SNS Topic Subscriptions using the subscription 
 % terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5b34e1ee5476100d66df854cd8d8f41ffb1973a2919f7c877f7e67fbb902e1f0 -->
+<!-- cache-key: cdktf-0.19.0 input-8335a789d68fa00f04ac50b0acd532b261ef42a17433eddf557b74baf4887b67 -->

@@ -68,26 +68,26 @@ This data source exports the following attributes in addition to the arguments a
 * `enaSupport` - Whether Elastic Network Adapter (ENA) is supported.
 * `encryptionInTransitSupported` - Indicates whether encryption in-transit between instances is supported.
 * `fpgas` - Describes the FPGA accelerator settings for the instance type.
-    * `fpgas.#Count` - The count of FPGA accelerators for the instance type.
-    * `fpgas.#Manufacturer` - The manufacturer of the FPGA accelerator.
-    * `fpgas.#MemorySize` - The size (in MiB) for the memory available to the FPGA accelerator.
-    * `fpgas.#Name` - The name of the FPGA accelerator.
+    * `fpgas.#.count` - The count of FPGA accelerators for the instance type.
+    * `fpgas.#.manufacturer` - The manufacturer of the FPGA accelerator.
+    * `fpgas.#.memory_size` - The size (in MiB) for the memory available to the FPGA accelerator.
+    * `fpgas.#.name` - The name of the FPGA accelerator.
 * `freeTierEligible` - `true` if the instance type is eligible for the free tier.
 * `gpus` - Describes the GPU accelerators for the instance type.
-    * `gpus.#Count` - The number of GPUs for the instance type.
-    * `gpus.#Manufacturer` - The manufacturer of the GPU accelerator.
-    * `gpus.#MemorySize` - The size (in MiB) for the memory available to the GPU accelerator.
-    * `gpus.#Name` - The name of the GPU accelerator.
+    * `gpus.#.count` - The number of GPUs for the instance type.
+    * `gpus.#.manufacturer` - The manufacturer of the GPU accelerator.
+    * `gpus.#.memory_size` - The size (in MiB) for the memory available to the GPU accelerator.
+    * `gpus.#.name` - The name of the GPU accelerator.
 * `hibernationSupported` - `true` if On-Demand hibernation is supported.
 * `hypervisor` - Hypervisor used for the instance type.
 * `inferenceAccelerators` Describes the Inference accelerators for the instance type.
-    * `inferenceAccelerators.#Count` - The number of Inference accelerators for the instance type.
-    * `inferenceAccelerators.#Manufacturer` - The manufacturer of the Inference accelerator.
-    * `inferenceAccelerators.#Name` - The name of the Inference accelerator.
+    * `inference_accelerators.#.count` - The number of Inference accelerators for the instance type.
+    * `inference_accelerators.#.manufacturer` - The manufacturer of the Inference accelerator.
+    * `inference_accelerators.#.name` - The name of the Inference accelerator.
 * `instanceDisks` - Describes the disks for the instance type.
-    * `instanceDisks.#Count` - The number of disks with this configuration.
-    * `instanceDisks.#Size` - The size of the disk in GB.
-    * `instanceDisks.#Type` - The type of disk.
+    * `instance_disks.#.count` - The number of disks with this configuration.
+    * `instance_disks.#.size` - The size of the disk in GB.
+    * `instance_disks.#.type` - The type of disk.
 * `instanceStorageSupported` - `true` if instance storage is supported.
 * `ipv6Supported` - `true` if IPv6 is supported.
 * `maximumIpv4AddressesPerInterface` - The maximum number of IPv4 addresses per network interface.
@@ -111,6 +111,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-b7277db3a541ce0f8fed6f01d3571ab61e9905732dcb0c8ed05bebf2a1116184 -->
+<!-- cache-key: cdktf-0.19.0 input-b7277db3a541ce0f8fed6f01d3571ab61e9905732dcb0c8ed05bebf2a1116184 -->

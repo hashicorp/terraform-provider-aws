@@ -103,8 +103,8 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
-* `serviceName` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `comAmazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `awsSagemaker.<region>Notebook`).
-* `serviceType` - (Optional) Service type, `gateway` or `interface`.
+* `serviceName` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `serviceType` - (Optional) Service type, `Gateway` or `Interface`.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
 
 ~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `serviceName` pattern of `comAmazonaws.<region>.<service>`.
@@ -136,6 +136,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-07124556ae240c2c16fc954fbeb348321b8ac1e928a8e3cc7a640d672a6dfb99 -->
+<!-- cache-key: cdktf-0.19.0 input-07124556ae240c2c16fc954fbeb348321b8ac1e928a8e3cc7a640d672a6dfb99 -->

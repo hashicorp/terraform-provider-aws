@@ -98,4 +98,4 @@ Using `terraform import`, import `aws_acmpca_policy` using the `resource_arn` va
 % terraform import aws_acmpca_policy.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3897a945f24b08cf8623246e958727ed8480522a140850c9c8a5a835f4ee024d -->
+<!-- cache-key: cdktf-0.19.0 input-3897a945f24b08cf8623246e958727ed8480522a140850c9c8a5a835f4ee024d -->

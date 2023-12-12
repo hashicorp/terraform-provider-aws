@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -41,6 +42,8 @@ func DataSourceNATGateways() *schema.Resource {
 }
 
 func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNatGatewaysInput{}
@@ -70,7 +73,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindNATGateways(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 NAT Gateways: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateways: %s", err)
 	}
 
 	var natGatewayIDs []string
@@ -82,5 +85,5 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", natGatewayIDs)
 
-	return nil
+	return diags
 }

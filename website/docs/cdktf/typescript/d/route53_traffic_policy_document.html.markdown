@@ -185,7 +185,7 @@ The following arguments are optional:
 ### `endpoint`
 
 * `id` - (Required) ID of an endpoint you want to assign.
-* `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `elasticLoadBalancer`, `s3Website`
+* `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `elastic-load-balancer`, `s3-website`
 * `region` - (Optional) To route traffic to an Amazon S3 bucket that is configured as a website endpoint, specify the region in which you created the bucket for `region`.
 * `value` - (Optional) Value of the `type`.
 
@@ -248,4 +248,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.18.0 input-9fc530bb661507b956e360642cff24bbe3a5634eccad12a1acf054528f189fc9 -->
+<!-- cache-key: cdktf-0.19.0 input-9fc530bb661507b956e360642cff24bbe3a5634eccad12a1acf054528f189fc9 -->

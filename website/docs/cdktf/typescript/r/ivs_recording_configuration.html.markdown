@@ -47,16 +47,16 @@ The following arguments are required:
 
 * `destinationConfiguration` - Object containing destination configuration for where recorded video will be stored.
     * `s3` - S3 destination configuration where recorded videos will be stored.
-        * `bucketName` - S3 bucket name where recorded videos will be stored.
+        * `bucket_name` - S3 bucket name where recorded videos will be stored.
 
 The following arguments are optional:
 
 * `name` - (Optional) Recording Configuration name.
 * `recordingReconnectWindowSeconds` - (Optional) If a broadcast disconnects and then reconnects within the specified interval, the multiple streams will be considered a single broadcast and merged together.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `thumbnailConfiguration` - (Optional) Object containing information to enable/disable the recording of thumbnails for a live session and modify the interval at which thumbnails are generated for the live session.
-    * `recordingMode` - (Optional) Thumbnail recording mode. Valid values: `disabled`, `interval`.
-    * `targetIntervalSeconds` (Configurable [and required] only if `recordingMode` is `interval`) - The targeted thumbnail-generation interval in seconds.
+    * `recording_mode` - (Optional) Thumbnail recording mode. Valid values: `DISABLED`, `INTERVAL`.
+    * `target_interval_seconds` (Configurable [and required] only if `recording_mode` is `INTERVAL`) - The targeted thumbnail-generation interval in seconds.
 
 ## Attribute Reference
 
@@ -64,14 +64,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Recording Configuration.
 * `state` -  The current state of the Recording Configuration.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import IVS (Interactive Video) Recording Configuration
 % terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-df7c61620a9731f6911320162a0d1f3273caabbf2762a59eb62c9ab821ea994d -->
+<!-- cache-key: cdktf-0.19.0 input-df7c61620a9731f6911320162a0d1f3273caabbf2762a59eb62c9ab821ea994d -->

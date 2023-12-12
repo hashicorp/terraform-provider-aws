@@ -88,7 +88,7 @@ class MyConvertedCode extends TerraformStack {
 
 The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `createBasePolicy` argument to `true` if your core network does not currently have any `live` policies (e.g. this is the first `terraform apply` with the core network resource), since a `live` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `live` policy, you may exclude the `createBasePolicy` argument. There are 2 options to implement this:
 
-- Option 1: Use the `basePolicyDocument` argument that allows the most customizations to a base policy. Use this to customize the `edgeLocations` `asn`. In the example below, `usWest2` and ASN `65500` are used in the base policy.
+- Option 1: Use the `basePolicyDocument` argument that allows the most customizations to a base policy. Use this to customize the `edge_locations` `asn`. In the example below, `us-west-2` and ASN `65500` are used in the base policy.
 - Option 2: Use the `createBasePolicy` argument only. This creates a base policy in the region specified in the `provider` block.
 
 #### Option 1 - using base_policy_document
@@ -295,8 +295,8 @@ class MyConvertedCode extends TerraformStack {
 
 The example below illustrates the scenario where your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Set the `createBasePolicy` argument of the [`awsNetworkmanagerCoreNetwork` resource](/docs/providers/aws/r/networkmanager_core_network.html) to `true` if your core network does not currently have any `live` policies (e.g. this is the first `terraform apply` with the core network resource), since a `live` policy is required before VPCs can be attached to the core network. Otherwise, if your core network already has a `live` policy, you may exclude the `createBasePolicy` argument. For multi-region in a core network that does not yet have a `live` policy, there are 2 options:
 
-- Option 1: Use the `basePolicyDocument` argument that allows the most customizations to a base policy. Use this to customize the `edgeLocations` `asn`. In the example below, `usWest2`, `usEast1` and specific ASNs are used in the base policy.
-- Option 2: Pass a list of regions to the `awsNetworkmanagerCoreNetwork` `basePolicyRegions` argument. In the example below, `usWest2` and `usEast1` are specified in the base policy.
+- Option 1: Use the `basePolicyDocument` argument that allows the most customizations to a base policy. Use this to customize the `edge_locations` `asn`. In the example below, `us-west-2`, `us-east-1` and specific ASNs are used in the base policy.
+- Option 2: Pass a list of regions to the `awsNetworkmanagerCoreNetwork` `base_policy_regions` argument. In the example below, `us-west-2` and `us-east-1` are specified in the base policy.
 
 #### Option 1 - using base_policy_document
 
@@ -553,10 +553,10 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Core Network.
-* `basePolicyDocument` - (Optional, conflicts with `basePolicyRegion`, `basePolicyRegions`) Sets the base policy document for the core network. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
-* `basePolicyRegion` - (Optional, **Deprecated** use the `basePolicyRegions` or `basePolicyDocument` argument instead) The base policy created by setting the `createBasePolicy` argument to `true` requires a region to be set in the `edgeLocations`, `location` key. If `basePolicyRegion` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
-* `basePolicyRegions` - (Optional, conflicts with `basePolicyRegion`, `basePolicyDocument`) A list of regions to add to the base policy. The base policy created by setting the `createBasePolicy` argument to `true` requires one or more regions to be set in the `edgeLocations`, `location` key. If `basePolicyRegions` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
-* `createBasePolicy` - (Optional) Specifies whether to create a base policy when a core network is created or updated. A base policy is created and set to `live` to allow attachments to the core network (e.g. VPC Attachments) before applying a policy document provided using the [`awsNetworkmanagerCoreNetworkPolicyAttachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). This base policy is needed if your core network does not have any `live` policies and your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Valid values are `true` or `false`. An example of this Terraform snippet can be found above [for VPC Attachment in a single region](#with-vpc-attachment-single-region) and [for VPC Attachment multi-region](#with-vpc-attachment-multi-region). An example base policy is shown below. This base policy is overridden with the policy that you specify in the [`awsNetworkmanagerCoreNetworkPolicyAttachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
+* `basePolicyDocument` - (Optional, conflicts with `base_policy_region`, `base_policy_regions`) Sets the base policy document for the core network. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
+* `basePolicyRegion` - (Optional, **Deprecated** use the `base_policy_regions` or `base_policy_document` argument instead) The base policy created by setting the `create_base_policy` argument to `true` requires a region to be set in the `edge-locations`, `location` key. If `base_policy_region` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
+* `basePolicyRegions` - (Optional, conflicts with `base_policy_region`, `base_policy_document`) A list of regions to add to the base policy. The base policy created by setting the `create_base_policy` argument to `true` requires one or more regions to be set in the `edge-locations`, `location` key. If `base_policy_regions` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
+* `createBasePolicy` - (Optional) Specifies whether to create a base policy when a core network is created or updated. A base policy is created and set to `LIVE` to allow attachments to the core network (e.g. VPC Attachments) before applying a policy document provided using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). This base policy is needed if your core network does not have any `LIVE` policies and your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Valid values are `true` or `false`. An example of this Terraform snippet can be found above [for VPC Attachment in a single region](#with-vpc-attachment-single-region) and [for VPC Attachment multi-region](#with-vpc-attachment-multi-region). An example base policy is shown below. This base policy is overridden with the policy that you specify in the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
 
 ```json
 {
@@ -584,15 +584,15 @@ This resource supports the following arguments:
 ```
 
 * `globalNetworkId` - (Required) The ID of the global network that a core network will be a part of.
-* `tags` - (Optional) Key-value tags for the Core Network. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the Core Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `delete` - (Default `30M`)
-* `update` - (Default `30M`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Attribute Reference
 
@@ -604,7 +604,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Core Network ID.
 * `segments` - One or more blocks detailing the segments within a core network. [Detailed below](#segments).
 * `state` - Current state of a core network.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `edges`
 
@@ -644,4 +644,4 @@ Using `terraform import`, import `awsNetworkmanagerCoreNetwork` using the core n
 % terraform import aws_networkmanager_core_network.example core-network-0d47f6t230mz46dy4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65bc1bb6eff4f779705d87b8ae3f33739b14d06acb55ff16a01c2f5413f72a00 -->
+<!-- cache-key: cdktf-0.19.0 input-65bc1bb6eff4f779705d87b8ae3f33739b14d06acb55ff16a01c2f5413f72a00 -->

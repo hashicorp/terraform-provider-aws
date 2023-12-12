@@ -68,21 +68,22 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: `=,.@`. User names are not distinguished by case. For example, you cannot create users named both "TESTUSER" and "testuser".
+* `name` - (Required) The user's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: `=,.@-_.`. User names are not distinguished by case. For example, you cannot create users named both "TESTUSER" and "testuser".
 * `path` - (Optional, default "/") Path in which to create the user.
 * `permissionsBoundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the user.
 * `forceDestroy` - (Optional, default false) When destroying this user, destroy even if it
-  has non-Terraform-managed IAM access keys, login profile or MFA devices. Without `forceDestroy`
+  has non-Terraform-managed IAM access keys, login profile or MFA devices. Without `force_destroy`
   a user with non-Terraform-managed access keys and login profile will fail to be destroyed.
-* `tags` - Key-value map of tags for the IAM user. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value map of tags for the IAM user. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN assigned by AWS for this user.
+* `id` - The user's name.
 * `name` - The user's name.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uniqueId` - The [unique ID][1] assigned by AWS.
 
   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
@@ -109,4 +110,4 @@ Using `terraform import`, import IAM Users using the `name`. For example:
 % terraform import aws_iam_user.lb loadbalancer
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7fa2a1117bc8c5d00748a3bbf9afeae418b9e72ed4e7d7c7c625a1d0f6a8b0b5 -->
+<!-- cache-key: cdktf-0.19.0 input-3764b72389be63601b5f731331ce123e9f977757dd5f86aa6384cb4a060eb497 -->

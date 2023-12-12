@@ -73,4 +73,4 @@ Using `terraform import`, import Security Hub members using their account ID. Fo
 % terraform import aws_securityhub_member.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b2f811f0ff3e2bff9fde29d7ad1d4c2d9fa7578b2c00bebd2e51ff8635a9fa1c -->
+<!-- cache-key: cdktf-0.19.0 input-b2f811f0ff3e2bff9fde29d7ad1d4c2d9fa7578b2c00bebd2e51ff8635a9fa1c -->

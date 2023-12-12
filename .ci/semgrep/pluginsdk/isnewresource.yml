@@ -23,4 +23,11 @@ rules:
           }
       - pattern-not-inside: |
           if <... !d.IsNewResource() ...> { ... }
+      - pattern-not-inside: |
+          if <... d.IsNewResource() ...> { ... } else {
+            ...
+            d.SetId("")
+            ...
+            return nil
+          }
     severity: WARNING

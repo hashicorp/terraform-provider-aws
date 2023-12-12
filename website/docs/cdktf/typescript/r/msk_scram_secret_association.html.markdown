@@ -168,4 +168,4 @@ Using `terraform import`, import MSK SCRAM Secret Associations using the `id`. F
 % terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ec732cf5141cf9fb92cf842bde1f6a37b2aeeb88245a75584896a69388c8d988 -->
+<!-- cache-key: cdktf-0.19.0 input-ec732cf5141cf9fb92cf842bde1f6a37b2aeeb88245a75584896a69388c8d988 -->

@@ -78,7 +78,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
 * `logConfiguration` - (Optional) The configuration for experiment logging. See below.
 
@@ -100,7 +100,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `target` (`action.*Target`)
 
-* `key` - (Required) Target type. Valid values are `cluster` (EKS Cluster), `clusters` (ECS Clusters), `dbInstances` (RDS DB Instances), `instances` (EC2 Instances), `nodegroups` (EKS Node groups), `roles` (IAM Roles), `spotInstances` (EC2 Spot Instances), `subnets` (VPC Subnets), `volumes` (EBS Volumes) , `pods` (EKS Pods), `tasks` (ECS Tasks). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
+* `key` - (Required) Target type. Valid values are `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Volumes` (EBS Volumes) , `Pods` (EKS Pods), `Tasks` (ECS Tasks). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stopCondition`
@@ -112,10 +112,10 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 * `name` - (Required) Friendly name given to the target.
 * `resourceType` - (Required) AWS resource type. The resource type must be supported for the specified action. To find out what resource types are supported, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#resource-types).
-* `selectionMode` - (Required) Scopes the identified resources. Valid values are `all` (all identified resources), `count(n)` (randomly select `n` of the identified resources), `percent(n)` (randomly select `n` percent of the identified resources).
+* `selectionMode` - (Required) Scopes the identified resources. Valid values are `ALL` (all identified resources), `COUNT(n)` (randomly select `n` of the identified resources), `PERCENT(n)` (randomly select `n` percent of the identified resources).
 * `filter` - (Optional) Filter(s) for the target. Filters can be used to select resources based on specific attributes returned by the respective describe action of the resource type. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters). See below.
-* `resourceArns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resourceTag`.
-* `resourceTag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resourceArns`. See below.
+* `resourceArns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resource_tag`.
+* `resourceTag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resource_arns`. See below.
 * `parameters` - (Optional) The resource type parameters.
 
 ~> **NOTE:** The `target` configuration block requires either `resourceArns` or `resourceTag`.
@@ -175,4 +175,4 @@ Using `terraform import`, import FIS Experiment Templates using the `id`. For ex
 % terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f86f6051a01d559c0189ce9cb6d94bc035f6fe628c05e2f0aba1d5a3f86e00b -->
+<!-- cache-key: cdktf-0.19.0 input-6f86f6051a01d559c0189ce9cb6d94bc035f6fe628c05e2f0aba1d5a3f86e00b -->

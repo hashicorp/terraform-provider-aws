@@ -42,8 +42,8 @@ func ResourceKxCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(45 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(4 * time.Hour),
+			Update: schema.DefaultTimeout(4 * time.Hour),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -370,7 +370,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	rID, err := flex.FlattenResourceId(idParts, kxClusterIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get("name").(string), err)
 	}
 	d.SetId(rID)
 
@@ -431,15 +431,15 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	out, err := conn.CreateKxCluster(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	if _, err := waitKxClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxCluster, d.Id(), err)
 	}
 
 	return append(diags, resourceKxClusterRead(ctx, d, meta)...)
@@ -457,7 +457,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxCluster, d.Id(), err)
 	}
 
 	d.Set("status", out.Status)
@@ -474,47 +474,47 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("initialization_script", out.InitializationScript)
 
 	if err := d.Set("capacity_configuration", flattenCapacityConfiguration(out.CapacityConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("vpc_configuration", flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("code", flattenCode(out.Code)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("auto_scaling_configuration", flattenAutoScalingConfiguration(out.AutoScalingConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("savedown_storage_configuration", flattenSavedownStorageConfiguration(
 		out.SavedownStorageConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("cache_storage_configurations", flattenCacheStorageConfigurations(
 		out.CacheStorageConfigurations)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("command_line_arguments", flattenCommandLineArguments(out.CommandLineArguments)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	// compose cluster ARN using environment ARN
 	parts, err := flex.ExpandResourceId(d.Id(), kxUserIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 	env, err := findKxEnvironmentByID(ctx, conn, parts[0])
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 	arn := fmt.Sprintf("%s/kxCluster/%s", aws.ToString(env.EnvironmentArn), aws.ToString(out.ClusterName))
 	d.Set("arn", arn)
@@ -565,20 +565,20 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if updateDb {
 		log.Printf("[DEBUG] Updating FinSpace KxClusterDatabases (%s): %#v", d.Id(), DatabaseConfigIn)
 		if _, err := conn.UpdateKxClusterDatabases(ctx, DatabaseConfigIn); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)
 		}
 		if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)
 		}
 	}
 
 	if updateCode {
 		log.Printf("[DEBUG] Updating FinSpace KxClusterCodeConfiguration (%s): %#v", d.Id(), CodeConfigIn)
 		if _, err := conn.UpdateKxClusterCodeConfiguration(ctx, CodeConfigIn); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)
 		}
 		if _, err := waitKxClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxCluster, d.Id(), err)
 		}
 	}
 
@@ -603,12 +603,12 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxCluster, d.Id(), err)
 	}
 
 	_, err = waitKxClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil && !tfresource.NotFound(err) {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)
 	}
 
 	return diags

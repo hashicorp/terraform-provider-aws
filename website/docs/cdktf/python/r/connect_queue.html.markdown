@@ -144,4 +144,4 @@ Using `terraform import`, import Amazon Connect Queues using the `instance_id` a
 % terraform import aws_connect_queue.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2ad77533b286fa62f6bf36fa4951ae8f0bd431d1f8cd5d285ecbbda98060e486 -->
+<!-- cache-key: cdktf-0.19.0 input-2ad77533b286fa62f6bf36fa4951ae8f0bd431d1f8cd5d285ecbbda98060e486 -->

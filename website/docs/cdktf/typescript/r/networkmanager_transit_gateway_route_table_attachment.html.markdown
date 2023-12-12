@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `peeringId` - (Required) The ID of the peer for the attachment.
-* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayRouteTableArn` - (Required) The ARN of the transit gateway route table for the attachment.
 
 ## Attribute Reference
@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `resourceArn` - The attachment resource ARN.
 * `segmentName` - The name of the segment attachment.
 * `state` - The state of the attachment.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsNetworkmanagerTransitGatewayRouteTableAttac
 % terraform import aws_networkmanager_transit_gateway_route_table_attachment.example attachment-0f8fa60d2238d1bd8
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1ea4ce87abed77ca848c109f032b462efb14526d9c3148fc83fd547b44feb72e -->
+<!-- cache-key: cdktf-0.19.0 input-1ea4ce87abed77ca848c109f032b462efb14526d9c3148fc83fd547b44feb72e -->
