@@ -102,7 +102,7 @@ func sweepObjects(region string) error {
 
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
-			return nil
+			break // Allow objects in general purpose buckets to be deleted.
 		}
 
 		if err != nil {
@@ -138,10 +138,12 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	_, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
+	log.Printf("[INFO] Emptying S3 Bucket (%s)", os.bucket)
+	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
+	log.Printf("[INFO] Deleted %d S3 Objects from S3 Bucket (%s)", n, os.bucket)
 	return nil
 }
 
@@ -151,10 +153,12 @@ type directoryBucketObjectSweeper struct {
 }
 
 func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	_, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
+	log.Printf("[INFO] Emptying S3 Directory Bucket (%s)", os.bucket)
+	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Directory Bucket (%s) objects: %w", os.bucket, err)
 	}
+	log.Printf("[INFO] Deleted %d S3 Objects from S3 Directory Bucket (%s)", n, os.bucket)
 	return nil
 }
 
@@ -231,6 +235,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tf-test",
 		"tftest.applicationversion",
 		"terraform-remote-s3-test",
+		"aws-security-data-lake-", // Orphaned by aws_securitylake_data_lake.
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
