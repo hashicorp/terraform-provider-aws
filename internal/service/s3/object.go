@@ -464,7 +464,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	uploader := manager.NewUploader(conn, manager.WithUploaderRequestOptions(optFns...))
 
 	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
 	if ignoreProviderDefaultTags(ctx, d) {
@@ -590,6 +589,8 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		// AWS SDK for Go v1 transparently added a Content-MD4 header.
 		input.ChecksumAlgorithm = types.ChecksumAlgorithmCrc32
 	}
+
+	uploader := manager.NewUploader(conn, manager.WithUploaderRequestOptions(optFns...))
 
 	if _, err := uploader.Upload(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "uploading S3 Object (%s) to Bucket (%s): %s", aws.ToString(input.Key), aws.ToString(input.Bucket), err)

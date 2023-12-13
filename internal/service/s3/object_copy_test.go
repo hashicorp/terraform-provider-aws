@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -595,7 +597,12 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "")
+			var optFns []func(*s3.Options)
+			if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+			}
+
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "", optFns...)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -624,7 +631,12 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "")
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "", optFns...)
 
 		return err
 	}
