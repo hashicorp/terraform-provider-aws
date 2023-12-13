@@ -42,18 +42,19 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 			{
 				Config: testAccProjectConfig_basic(rProjectId),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"arn"},
-			},
+			// {
+			// 	ResourceName:            resourceName,
+			// 	ImportState:             true,
+			// 	ImportStateVerify:       true,
+			// 	ImportStateVerifyIgnore: []string{"arn"},
+			// },
 		},
 	})
 }

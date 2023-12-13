@@ -129,11 +129,11 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 
 	state := plan
 	state.ARN = flex.StringValueToFramework(ctx, *out.ProjectArn)
-	state.Id = state.ARN
+	state.Id = state.Name
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
 	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, state.Name.ValueString(), in.Feature, createTimeout)
+	_, err = waitProjectCreated(ctx, conn, state.Id.ValueString(), in.Feature, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameProject, state.Id.String(), err),
@@ -153,7 +153,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := FindProjectByName(ctx, conn, state.Name.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
+	out, err := FindProjectByName(ctx, conn, state.Id.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
