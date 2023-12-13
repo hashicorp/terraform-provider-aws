@@ -1710,9 +1710,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// FIXME "Error running post-test destroy, there may be dangling resources: operation error S3: HeadObject, https response error StatusCode: 403, RequestID: 0033eada6b00018c1804fda905093646dd76f12a, HostID: SfKUL8OB, api error Forbidden: Forbidden"
-		// CheckDestroy:             testAccCheckObjectDestroy(ctx),
-		CheckDestroy: acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectConfig_directoryBucket(rName),
@@ -1783,9 +1781,7 @@ func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// FIXME "Error running post-test destroy, there may be dangling resources: operation error S3: HeadObject, https response error StatusCode: 403, RequestID: 0033eada6b00018c1804fda905093646dd76f12a, HostID: SfKUL8OB, api error Forbidden: Forbidden"
-		// CheckDestroy:             testAccCheckObjectDestroy(ctx),
-		CheckDestroy: acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectConfig_directoryBucket(rName),
