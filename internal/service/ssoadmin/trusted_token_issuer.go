@@ -289,7 +289,7 @@ func (r *resourceTrustedTokenIssuer) Update(ctx context.Context, req resource.Up
 		}
 	}
 
-	// updateTags requires both application and instance ARN, so must be called
+	// updateTags requires both trusted token issuer and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
 	if oldTagsAll, newTagsAll := state.TagsAll, plan.TagsAll; !newTagsAll.Equal(oldTagsAll) {
 		if err := updateTags(ctx, conn, plan.ID.ValueString(), plan.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
