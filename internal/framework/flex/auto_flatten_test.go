@@ -166,7 +166,7 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		{
-			TestName: "zero value slice/map of primtive primtive types Source and List/Set/Map of primtive types Target",
+			TestName: "zero value slice/map of primtive types Source and List/Set/Map of primtive types Target",
 			Source:   &TestFlexAWS05{},
 			Target:   &TestFlexTF04{},
 			WantTarget: &TestFlexTF04{
@@ -179,7 +179,7 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		{
-			TestName: "slice/map of primtive primtive types Source and List/Set/Map of primtive types Target",
+			TestName: "slice/map of primtive types Source and List/Set/Map of primtive types Target",
 			Source: &TestFlexAWS05{
 				Field1: []string{"a", "b"},
 				Field2: aws.StringSlice([]string{"a", "b"}),
@@ -211,6 +211,57 @@ func TestFlatten(t *testing.T) {
 					"B": types.StringValue("b"),
 				}),
 				Field6: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"A": types.StringValue("a"),
+					"B": types.StringValue("b"),
+				}),
+			},
+		},
+		{
+			TestName: "zero value slice/map of string type Source and List/Set/Map of string types Target",
+			Source:   &TestFlexAWS05{},
+			Target:   &TestFlexTF18{},
+			WantTarget: &TestFlexTF18{
+				Field1: fwtypes.NewListValueOfNull[types.String](ctx),
+				Field2: fwtypes.NewListValueOfNull[types.String](ctx),
+				Field3: fwtypes.NewSetValueOfNull[types.String](ctx),
+				Field4: fwtypes.NewSetValueOfNull[types.String](ctx),
+				Field5: fwtypes.NewMapValueOfNull[types.String](ctx),
+				Field6: fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+		},
+		{
+			TestName: "slice/map of string types Source and List/Set/Map of string types Target",
+			Source: &TestFlexAWS05{
+				Field1: []string{"a", "b"},
+				Field2: aws.StringSlice([]string{"a", "b"}),
+				Field3: []string{"a", "b"},
+				Field4: aws.StringSlice([]string{"a", "b"}),
+				Field5: map[string]string{"A": "a", "B": "b"},
+				Field6: aws.StringMap(map[string]string{"A": "a", "B": "b"}),
+			},
+			Target: &TestFlexTF18{},
+			WantTarget: &TestFlexTF18{
+				Field1: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field2: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field3: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field4: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field5: fwtypes.NewMapValueOf[types.String](ctx, map[string]basetypes.StringValue{
+					"A": types.StringValue("a"),
+					"B": types.StringValue("b"),
+				}),
+				Field6: fwtypes.NewMapValueOf[types.String](ctx, map[string]basetypes.StringValue{
 					"A": types.StringValue("a"),
 					"B": types.StringValue("b"),
 				}),
