@@ -73,7 +73,7 @@ resource "aws_batch_job_queue" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) Specifies the name of the job queue.
-* `compute_environments` - (Deprecated) (Optional) List of compute environment ARNs mapped to a job queue. The position of the compute environments in the list will dictate the order. When importing a AWS Batch Job Queue, the parameter `compute_environments` will always be used over `compute_environment_order`. Please adjust your HCL accordingly.
+* `compute_environments` - (Deprecated) (Optional) This parameter is deprecated, please use `compute_environment_order` instead. List of compute environment ARNs mapped to a job queue. The position of the compute environments in the list will dictate the order. When importing a AWS Batch Job Queue, the parameter `compute_environments` will always be used over `compute_environment_order`. Please adjust your HCL accordingly.
 * `compute_environment_order` - (Optional) The set of compute environments mapped to a job queue and their order relative to each other. The job scheduler uses this parameter to determine which compute environment runs a specific job. Compute environments must be in the VALID state before you can associate them with a job queue. You can associate up to three compute environments with a job queue.  
 * `priority` - (Required) The priority of the job queue. Job queues with a higher priority
     are evaluated first when associated with the same compute environment.

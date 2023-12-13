@@ -29,7 +29,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
 				ElementType: types.StringType,
-				// Required:    true,
+				Required:    true,
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
