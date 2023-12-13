@@ -39,6 +39,7 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
@@ -74,6 +75,7 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
@@ -108,6 +110,42 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v networkmanager.ConnectAttachment
+	resourceName := "aws_networkmanager_connect_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectAttachmentConfig_protocolNoEncap(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
+					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
+					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "NO_ENCAP"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -361,6 +399,44 @@ resource "aws_networkmanager_connect_attachment" "test" {
   tags = {
     segment = "shared"
   }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test2" {
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+}
+`)
+}
+
+func testAccConnectAttachmentConfig_protocolNoEncap(rName string) string {
+	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = aws_subnet.test[*].arn
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpc_arn         = aws_vpc.test.arn
+  tags = {
+    segment = "shared"
+  }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+}
+
+resource "aws_networkmanager_connect_attachment" "test" {
+  core_network_id         = aws_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
+  options {
+    protocol = "NO_ENCAP"
+  }
+  tags = {
+    segment = "shared"
+  }
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
 }
 
 resource "aws_networkmanager_attachment_accepter" "test2" {

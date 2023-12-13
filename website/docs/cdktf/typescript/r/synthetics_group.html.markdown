@@ -44,7 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Group.
 * `groupId` - ID of the Group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -76,4 +76,4 @@ Using `terraform import`, import CloudWatch Synthetics Group using the `name`. F
 % terraform import aws_synthetics_group.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a60f694e7f99a87c98a47c4127d04528abd45230d213848a0dd79453012e6e75 -->
+<!-- cache-key: cdktf-0.19.0 input-a60f694e7f99a87c98a47c4127d04528abd45230d213848a0dd79453012e6e75 -->

@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `availableProviders` - Names of the service providers for the location.
 * `locationName` - Name of the location. This includes the name of the colocation partner and the physical site of the building.
 
-<!-- cache-key: cdktf-0.18.0 input-d889468623dfe6cc7e6edbb487338f8e41ba42d426b71ce13bb577672f6b08e4 -->
+<!-- cache-key: cdktf-0.19.0 input-d889468623dfe6cc7e6edbb487338f8e41ba42d426b71ce13bb577672f6b08e4 -->

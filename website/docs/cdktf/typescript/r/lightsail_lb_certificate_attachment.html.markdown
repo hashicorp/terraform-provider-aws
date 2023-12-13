@@ -70,7 +70,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `lbName`,`certificateName`
+* `id` - A combination of attributes to create a unique id: `lb_name`,`certificate_name`
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import `awsLightsailLbCertificateAttachment` using the
 % terraform import aws_lightsail_lb_certificate_attachment.test example-load-balancer,example-certificate
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e1b37be33554c8bddba19e3fcbe7cf21f86639e8dfc8c4cce57fb7c7d7bf6028 -->
+<!-- cache-key: cdktf-0.19.0 input-e1b37be33554c8bddba19e3fcbe7cf21f86639e8dfc8c4cce57fb7c7d7bf6028 -->

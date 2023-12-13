@@ -116,9 +116,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `clientId` (Optional) The client ID for the client app. Defaults to `all`. If `all` is specified, the `css` and/or `imageFile` settings will be used for every client that has no UI customization set previously.
-* `css` (Optional) - The CSS values in the UI customization, provided as a String. At least one of `css` or `imageFile` is required.
-* `imageFile` (Optional) - The uploaded logo image for the UI customization, provided as a base64-encoded String. Drift detection is not possible for this argument. At least one of `css` or `imageFile` is required.
+* `clientId` (Optional) The client ID for the client app. Defaults to `ALL`. If `ALL` is specified, the `css` and/or `image_file` settings will be used for every client that has no UI customization set previously.
+* `css` (Optional) - The CSS values in the UI customization, provided as a String. At least one of `css` or `image_file` is required.
+* `imageFile` (Optional) - The uploaded logo image for the UI customization, provided as a base64-encoded String. Drift detection is not possible for this argument. At least one of `css` or `image_file` is required.
 * `userPoolId` (Required) - The user pool ID for the user pool.
 
 ## Attribute Reference
@@ -152,4 +152,4 @@ Using `terraform import`, import Cognito User Pool UI Customizations using the `
 % terraform import aws_cognito_user_pool_ui_customization.example us-west-2_ZCTarbt5C,12bu4fuk3mlgqa2rtrujgp6egq
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bf4b70b595c743ddb747623355c0d273cc993578aa1b9483b75e196d7e5ca18c -->
+<!-- cache-key: cdktf-0.19.0 input-bf4b70b595c743ddb747623355c0d273cc993578aa1b9483b75e196d7e5ca18c -->

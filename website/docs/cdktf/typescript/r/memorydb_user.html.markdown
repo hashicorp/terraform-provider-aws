@@ -62,7 +62,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### authentication_mode Configuration Block
 
@@ -73,12 +73,12 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Same as `userName`.
+* `id` - Same as `user_name`.
 * `arn` - The ARN of the user.
 * `minimumEngineVersion` - The minimum engine version supported for the user.
 * `authenticationMode` configuration block
-    * `passwordCount` - The number of passwords belonging to the user.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+    * `password_count` - The number of passwords belonging to the user.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -104,4 +104,4 @@ Using `terraform import`, import a user using the `userName`. For example:
 
 The `passwords` are not available for imported resources, as this information cannot be read back from the MemoryDB API.
 
-<!-- cache-key: cdktf-0.18.0 input-f5d027129bff54db7aaaaecf18b5e8da10653dddeb0e00e2f474bf78aa1508d7 -->
+<!-- cache-key: cdktf-0.19.0 input-f5d027129bff54db7aaaaecf18b5e8da10653dddeb0e00e2f474bf78aa1508d7 -->

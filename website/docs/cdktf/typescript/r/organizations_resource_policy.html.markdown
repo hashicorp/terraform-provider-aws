@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `content` - (Required) Content for the resource policy. The text must be correctly formatted JSON that complies with the syntax for the resource policy's type. See the [_AWS Organizations User Guide_](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_delegate_examples.html) for examples.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the resource policy.
 * `id` - The unique identifier (ID) of the resource policy.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -72,4 +72,4 @@ Using `terraform import`, import `awsOrganizationsResourcePolicy` using the reso
 % terraform import aws_organizations_resource_policy.example rp-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8ab0a24a6a925579576b2c3639c5565582765d7c5d8c19ab463df7b7d85f9483 -->
+<!-- cache-key: cdktf-0.19.0 input-8ab0a24a6a925579576b2c3639c5565582765d7c5d8c19ab463df7b7d85f9483 -->

@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `authenticationProtocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `pap`, `chap`, `msChaPv1`, `msChaPv2`.
+* `authenticationProtocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directoryId` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
 * `displayLabel` - (Required) Display label.
 * `radiusPort` - (Required) The port that your RADIUS server is using for communications. Your self-managed network must allow inbound traffic over this port from the AWS Directory Service servers.
@@ -90,4 +90,4 @@ Using `terraform import`, import RADIUS settings using the directory ID. For exa
 % terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->
+<!-- cache-key: cdktf-0.19.0 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->

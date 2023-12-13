@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `enabled` - Whether the API Key is enabled.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-a00d9aabc0922f53098450b1d3c7279484b52526cb4756e4cbbf4ebf71cc4ed2 -->
+<!-- cache-key: cdktf-0.19.0 input-a00d9aabc0922f53098450b1d3c7279484b52526cb4756e4cbbf4ebf71cc4ed2 -->

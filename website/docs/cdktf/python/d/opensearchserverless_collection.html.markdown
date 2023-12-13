@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
 
-<!-- cache-key: cdktf-0.18.0 input-c332ac6004d40b1ef96d276212bcda57926844a7182625fd0fc4322010b56bb6 -->
+<!-- cache-key: cdktf-0.19.0 input-c332ac6004d40b1ef96d276212bcda57926844a7182625fd0fc4322010b56bb6 -->

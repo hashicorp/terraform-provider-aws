@@ -163,8 +163,8 @@ The implementation of the `awsKmsSecret` data source, prior to Terraform AWS pro
 
 Terraform configuration migration steps:
 
-* Change the data source type from `awsKmsSecret` to `awsKmsSecrets`
-* Change any attribute reference (e.g., `"${dataAwsKmsSecretExampleAttribute}"`) from `attribute` to `plaintext["attribute"]`
+* Change the data source type from `awsKmsSecret` to `aws_kms_secrets`
+* Change any attribute reference (e.g., `"${dataAwsKmsSecretExampleAttribute}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
 
 As an example, lets take the below sample configuration and migrate it.
 
@@ -1560,4 +1560,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-603687597fabf51f83331995b133df850861a17c0d29ee4fbc2f2bfc3a7c98e8 -->
+<!-- cache-key: cdktf-0.19.0 input-603687597fabf51f83331995b133df850861a17c0d29ee4fbc2f2bfc3a7c98e8 -->

@@ -103,7 +103,7 @@ class MyConvertedCode(TerraformStack):
             artifacts=CodebuildProjectArtifacts(
                 type="NO_ARTIFACTS"
             ),
-            build_timeout=Token.as_number("5"),
+            build_timeout=5,
             cache=CodebuildProjectCache(
                 location=example.bucket,
                 type="S3"
@@ -163,7 +163,7 @@ class MyConvertedCode(TerraformStack):
             artifacts=CodebuildProjectArtifacts(
                 type="NO_ARTIFACTS"
             ),
-            build_timeout=Token.as_number("5"),
+            build_timeout=5,
             cache=CodebuildProjectCache(
                 modes=["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"],
                 type="LOCAL"
@@ -181,7 +181,7 @@ class MyConvertedCode(TerraformStack):
                 type="LINUX_CONTAINER"
             ),
             name="test-project-cache",
-            queued_timeout=Token.as_number("5"),
+            queued_timeout=5,
             service_role=Token.as_string(aws_iam_role_example.arn),
             source=CodebuildProjectSource(
                 git_clone_depth=1,
@@ -406,4 +406,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-93fcff04ca55f8527caaa8b92bc95852d6bfbb189d4beea468056693839e1422 -->
+<!-- cache-key: cdktf-0.19.0 input-1231db4e8811d1c6f118d55d81d8dd0ad67e7fea5670ef0ab686100249f240fc -->

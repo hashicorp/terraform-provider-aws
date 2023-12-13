@@ -59,6 +59,12 @@ class MyConvertedCode extends TerraformStack {
       environmentId: Token.asString(awsFinspaceKxEnvironmentExample.id),
       name: "my-tf-kx-cluster",
       releaseLabel: "1.0",
+      timeouts: [
+        {
+          create: "18h",
+          update: "18h",
+        },
+      ],
       type: "HDB",
       vpcConfiguration: {
         ipAddressType: "IP_V4",
@@ -92,7 +98,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `autoScalingConfiguration` - (Optional) Configuration based on which FinSpace will scale in or scale out nodes in your cluster. See [auto_scaling_configuration](#auto_scaling_configuration).
-* `availabilityZoneId` - (Optional) The availability zone identifiers for the requested regions. Required when `azMode` is set to SINGLE.
+* `availabilityZoneId` - (Optional) The availability zone identifiers for the requested regions. Required when `az_mode` is set to SINGLE.
 * `cacheStorageConfigurations` - (Optional) Configurations for a read only cache storage associated with a cluster. This cache will be stored as an FSx Lustre that reads from the S3 store. See [cache_storage_configuration](#cache_storage_configuration).
 * `code` - (Optional) Details of the custom code that you want to use inside a cluster when analyzing data. Consists of the S3 source bucket, location, object version, and the relative path from where the custom code is loaded into the cluster. See [code](#code).
 * `commandLineArguments` - (Optional) List of key-value pairs to make available inside the cluster.
@@ -101,16 +107,16 @@ The following arguments are optional:
 * `executionRole` - (Optional) An IAM role that defines a set of permissions associated with a cluster. These permissions are assumed when a cluster attempts to access another cluster.
 * `initializationScript` - (Optional) Path to Q program that will be run at launch of a cluster. This is a relative path within .zip file that contains the custom code, which will be loaded on the cluster. It must include the file name itself. For example, somedir/init.q.
 * `savedownStorageConfiguration` - (Optional) Size and type of the temporary storage that is used to hold data during the savedown process. This parameter is required when you choose `type` as RDB. All the data written to this storage space is lost when the cluster node is restarted. See [savedown_storage_configuration](#savedown_storage_configuration).
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### auto_scaling_configuration
 
 The auto_scaling_configuration block supports the following arguments:
 
 * `autoScalingMetric` - (Required) Metric your cluster will track in order to scale in and out. For example, CPU_UTILIZATION_PERCENTAGE is the average CPU usage across all nodes in a cluster.
-* `minNodeCount` - (Required) Lowest number of nodes to scale. Must be at least 1 and less than the `maxNodeCount`. If nodes in cluster belong to multiple availability zones, then `minNodeCount` must be at least 3.
+* `minNodeCount` - (Required) Lowest number of nodes to scale. Must be at least 1 and less than the `max_node_count`. If nodes in cluster belong to multiple availability zones, then `min_node_count` must be at least 3.
 * `maxNodeCount` - (Required) Highest number of nodes to scale. Cannot be greater than 5
-* `metricTarget` - (Required) Desired value of chosen `autoScalingMetric`. When metric drops below this value, cluster will scale in. When metric goes above this value, cluster will scale out. Can be set between 0 and 100 percent.
+* `metricTarget` - (Required) Desired value of chosen `auto_scaling_metric`. When metric drops below this value, cluster will scale in. When metric goes above this value, cluster will scale out. Can be set between 0 and 100 percent.
 * `scaleInCooldownSeconds` - (Required) Duration in seconds that FinSpace will wait after a scale in event before initiating another scaling event.
 * `scaleOutCooldownSeconds` - (Required) Duration in seconds that FinSpace will wait after a scale out event before initiating another scaling event.
 
@@ -135,8 +141,13 @@ The capacity_configuration block supports the following arguments:
 The cache_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of cache storage . The valid values are:
-    * CACHE_1000 - This type provides at least 1000 MB/s disk access throughput.
+    * CACHE_1000 - This type provides 1000 MB/s disk access throughput.
+    * CACHE_250 - This type provides 250 MB/s disk access throughput.
+    * CACHE_12 - This type provides 12 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
+
+Please note that create/update timeouts may have to be adjusted from the default 4 hours depending upon the
+volume of data being cached, as noted in the example configuration.
 
 ### code
 
@@ -186,15 +197,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdTimestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - A comma-delimited string joining environment ID and cluster name.
 * `lastModifiedTimestamp` - Last timestamp at which the cluster was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `2M`)
-* `delete` - (Default `40M`)
+* `create` - (Default `4h`)
+* `update` - (Default `4h`)
+* `delete` - (Default `60m`)
 
 ## Import
 
@@ -218,4 +229,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ba9e9b61695441ed5084a8e4f387258970bfe29d8d0cd1d2e3384bca3e7f1cee -->
+<!-- cache-key: cdktf-0.19.0 input-a62354273cd0579ac96ba9caa797f616e648f46241c8907e9d1077a7877ab7f0 -->

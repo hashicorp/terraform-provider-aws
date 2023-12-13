@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - Set of instance IDs of the matched SSM managed instances.
 
-<!-- cache-key: cdktf-0.18.0 input-e0bf0a9c24b0fa03c969992656b33d964fe9479c4bd864151f5158999bb3211a -->
+<!-- cache-key: cdktf-0.19.0 input-e0bf0a9c24b0fa03c969992656b33d964fe9479c4bd864151f5158999bb3211a -->

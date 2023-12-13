@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -45,6 +46,8 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 }
 
 func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
@@ -65,7 +68,7 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	})
 
 	if err != nil {
-		return diag.Errorf("listing MSK Connect Worker Configurations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Connect Worker Configurations: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {
@@ -75,14 +78,14 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Worker Configuration", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Connect Worker Configuration", err))
 	}
 
 	arn := aws.StringValue(output[0].WorkerConfigurationArn)
 	config, err := FindWorkerConfigurationByARN(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("reading MSK Connect Worker Configuration (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Worker Configuration (%s): %s", arn, err)
 	}
 
 	d.SetId(aws.StringValue(config.Name))
@@ -99,5 +102,5 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		d.Set("properties_file_content", nil)
 	}
 
-	return nil
+	return diags
 }

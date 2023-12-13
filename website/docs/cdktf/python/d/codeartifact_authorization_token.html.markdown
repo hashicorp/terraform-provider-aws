@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `authorization_token` - Temporary authorization token.
 * `expiration` - Time in UTC RFC3339 format when the authorization token expires.
 
-<!-- cache-key: cdktf-0.18.0 input-35ae5dc1307055f4be42f0268b760c21da97017124c46086e4dc01079119728a -->
+<!-- cache-key: cdktf-0.19.0 input-35ae5dc1307055f4be42f0268b760c21da97017124c46086e4dc01079119728a -->

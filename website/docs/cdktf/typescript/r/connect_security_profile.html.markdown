@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `name` - (Required) Specifies the name of the Security Profile.
 * `permissions` - (Optional) Specifies a list of permissions assigned to the security profile.
 * `tags` - (Optional) Tags to apply to the Security Profile. If configured with a provider
-[`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `organizationResourceId` - The organization resource identifier for the security profile.
 * `securityProfileId` - The identifier for the Security Profile.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Security Profile separated by a colon (`:`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import Amazon Connect Security Profiles using the `ins
 % terraform import aws_connect_security_profile.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-220f16e830e0261ed2fda1556d594951dc89e406092f917b2ad3ea75fafbac54 -->
+<!-- cache-key: cdktf-0.19.0 input-220f16e830e0261ed2fda1556d594951dc89e406092f917b2ad3ea75fafbac54 -->

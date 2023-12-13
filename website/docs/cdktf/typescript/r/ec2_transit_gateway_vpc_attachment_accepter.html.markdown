@@ -54,14 +54,14 @@ This resource supports the following arguments:
 * `transitGatewayAttachmentId` - (Required) The ID of the EC2 Transit Gateway Attachment to manage.
 * `transitGatewayDefaultRouteTableAssociation` - (Optional) Boolean whether the VPC Attachment should be associated with the EC2 Transit Gateway association default route table. Default value: `true`.
 * `transitGatewayDefaultRouteTablePropagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. Default value: `true`.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway VPC Attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway VPC Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `applianceModeSupport` - Whether Appliance Mode support is enabled. Valid values: `disable`, `enable`.
 * `dnsSupport` - Whether DNS support is enabled. Valid values: `disable`, `enable`.
 * `ipv6Support` - Whether IPv6 support is enabled. Valid values: `disable`, `enable`.
@@ -92,4 +92,4 @@ Using `terraform import`, import `awsEc2TransitGatewayVpcAttachmentAccepter` usi
 % terraform import aws_ec2_transit_gateway_vpc_attachment_accepter.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ecbf6dbf5eb02fc6c50aa5f135ccaddf1f97a389191703614a66b382e746bf66 -->
+<!-- cache-key: cdktf-0.19.0 input-ecbf6dbf5eb02fc6c50aa5f135ccaddf1f97a389191703614a66b382e746bf66 -->

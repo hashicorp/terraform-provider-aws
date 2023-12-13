@@ -39,8 +39,8 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `identifier` - (Required) Identifier of the CloudFormation resource type. For example, `vpc12345678`.
-* `typeName` - (Required) CloudFormation resource type name. For example, `aws::ec2::vpc`.
+* `identifier` - (Required) Identifier of the CloudFormation resource type. For example, `vpc-12345678`.
+* `typeName` - (Required) CloudFormation resource type name. For example, `AWS::EC2::VPC`.
 
 The following arguments are optional:
 
@@ -51,6 +51,6 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(dataAwsCloudcontrolapiResourceExampleProperties)["example"]`.
+* `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudcontrolapi_resource.example.properties)["example"]`.
 
-<!-- cache-key: cdktf-0.18.0 input-619243038d5099b2d587f9f52a10ce00ce779e82bd95bb840d0d03a6570a1a61 -->
+<!-- cache-key: cdktf-0.19.0 input-619243038d5099b2d587f9f52a10ce00ce779e82bd95bb840d0d03a6570a1a61 -->

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -58,27 +59,31 @@ func ResourceInstanceState() *schema.Resource {
 }
 
 func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	instanceId := d.Get("instance_id").(string)
 
-	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
+	instance, instanceErr := waitInstanceReady(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
 
 	if instanceErr != nil {
-		return create.DiagError(names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
+		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
 	}
 
-	err := UpdateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get("state").(string), d.Get("force").(bool))
+	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get("state").(string), d.Get("force").(bool))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(d.Get("instance_id").(string))
 
-	return resourceInstanceStateRead(ctx, d, meta)
+	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
 
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	state, err := FindInstanceStateByID(ctx, conn, d.Id())
@@ -86,97 +91,64 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.EC2, create.ErrActionReading, ResInstanceState, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionReading, ResInstanceState, d.Id(), err)
+		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstanceState, d.Id(), err)
 	}
 
 	d.Set("instance_id", d.Id())
 	d.Set("state", state.Name)
 	d.Set("force", d.Get("force").(bool))
 
-	return nil
+	return diags
 }
 
 func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	instance, instanceErr := waitInstanceReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if instanceErr != nil {
-		return create.DiagError(names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
+		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
 	}
 
 	if d.HasChange("state") {
 		o, n := d.GetChange("state")
-		err := UpdateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool))
+		err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool))
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceInstanceStateRead(ctx, d, meta)
+	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
 
 func resourceInstanceStateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] %s %s deleting an aws_ec2_instance_state resource only stops managing instance state, The Instance is left in its current state.: %s", names.EC2, ResInstanceState, d.Id())
 
-	return nil
+	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }
 
-func UpdateInstanceState(ctx context.Context, conn *ec2.EC2, id string, currentState string, configuredState string, force bool) diag.Diagnostics {
+func updateInstanceState(ctx context.Context, conn *ec2.EC2, id string, currentState string, configuredState string, force bool) error {
 	if currentState == configuredState {
 		return nil
 	}
 
 	if configuredState == "stopped" {
-		if err := StopInstanceWithContext(ctx, conn, id, force, InstanceStopTimeout); err != nil {
+		if err := stopInstance(ctx, conn, id, force, InstanceStopTimeout); err != nil {
 			return err
 		}
 	}
 
 	if configuredState == "running" {
-		if err := StartInstanceWithContext(ctx, conn, id, InstanceStartTimeout); err != nil {
+		if err := startInstance(ctx, conn, id, InstanceStartTimeout); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func StopInstanceWithContext(ctx context.Context, conn *ec2.EC2, id string, force bool, timeout time.Duration) diag.Diagnostics {
-	log.Printf("[INFO] Stopping EC2 Instance: %s, force: %t", id, force)
-	_, err := conn.StopInstancesWithContext(ctx, &ec2.StopInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-		Force:       aws.Bool(force),
-	})
-
-	if err != nil {
-		return create.DiagError(names.EC2, "stopping Instance", ResInstance, id, err)
-	}
-
-	if _, err := WaitInstanceStoppedWithContext(ctx, conn, id, timeout); err != nil {
-		return create.DiagError(names.EC2, "waiting for instance to stop", ResInstance, id, err)
-	}
-
-	return nil
-}
-
-func StartInstanceWithContext(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) diag.Diagnostics {
-	log.Printf("[INFO] Starting EC2 Instance: %s", id)
-	_, err := conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	})
-
-	if err != nil {
-		return create.DiagError(names.EC2, "starting Instance", ResInstance, id, err)
-	}
-
-	if _, err := WaitInstanceStartedWithContext(ctx, conn, id, timeout); err != nil {
-		return create.DiagError(names.EC2, "waiting for instance to start", ResInstance, id, err)
 	}
 
 	return nil

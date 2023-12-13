@@ -145,4 +145,4 @@ Using `terraform import`, import event data stores using their `arn`. For exampl
 % terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-606e5cb558b509aa1002c2f846e4174eed937e4e6b6708dfbb236e4bae1cfe9d -->
+<!-- cache-key: cdktf-0.19.0 input-606e5cb558b509aa1002c2f846e4174eed937e4e6b6708dfbb236e4bae1cfe9d -->

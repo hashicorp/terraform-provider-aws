@@ -73,4 +73,4 @@ class MyConvertedCode(TerraformStack):
 * `issuer_name` - Name of the source role. Only available if `arn` corresponds to an STS assumed role.
 * `session_name` - Name of the STS session. Only available if `arn` corresponds to an STS assumed role.
 
-<!-- cache-key: cdktf-0.18.0 input-2e84cd322ad745896d1da57edd8c38897f3e2a4e912db65dea1fc036c7a5e65a -->
+<!-- cache-key: cdktf-0.19.0 input-2e84cd322ad745896d1da57edd8c38897f3e2a4e912db65dea1fc036c7a5e65a -->

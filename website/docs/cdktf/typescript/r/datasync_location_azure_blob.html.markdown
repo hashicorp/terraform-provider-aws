@@ -46,14 +46,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `accessTier` - (Optional) The access tier that you want your objects or files transferred into. Valid values: `hot`, `cool` and `archive`. Default: `hot`.
+* `accessTier` - (Optional) The access tier that you want your objects or files transferred into. Valid values: `HOT`, `COOL` and `ARCHIVE`. Default: `HOT`.
 * `agentArns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
-* `authenticationType` - (Required) The authentication method DataSync uses to access your Azure Blob Storage. Valid values: `sas`.
-* `blobType` - (Optional) The type of blob that you want your objects or files to be when transferring them into Azure Blob Storage. Valid values: `blob`. Default: `blob`.
+* `authenticationType` - (Required) The authentication method DataSync uses to access your Azure Blob Storage. Valid values: `SAS`.
+* `blobType` - (Optional) The type of blob that you want your objects or files to be when transferring them into Azure Blob Storage. Valid values: `BLOB`. Default: `BLOB`.
 * `containerUrl` - (Required) The URL of the Azure Blob Storage container involved in your transfer.
 * `sasConfiguration` - (Optional) The SAS configuration that allows DataSync to access your Azure Blob Storage. See configuration below.
 * `subdirectory` - (Optional) Path segments if you want to limit your transfer to a virtual directory in the container.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### sas_configuration Argument Reference
 
@@ -64,7 +64,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import `awsDatasyncLocationAzureBlob` using the Amazon
 % terraform import aws_datasync_location_azure_blob.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-edba47394ea99b575175b683fe5ef747a098ab29d4224c1d53d79c12b0a9eadd -->
+<!-- cache-key: cdktf-0.19.0 input-edba47394ea99b575175b683fe5ef747a098ab29d4224c1d53d79c12b0a9eadd -->

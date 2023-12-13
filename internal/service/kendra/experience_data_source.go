@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_kendra_experience")
@@ -140,6 +141,8 @@ func DataSourceExperience() *schema.Resource {
 }
 
 func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	experienceID := d.Get("experience_id").(string)
@@ -148,7 +151,7 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	resp, err := FindExperienceByID(ctx, conn, experienceID, indexID)
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Experience (%s): %s", experienceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Experience (%s): %s", experienceID, err)
 	}
 
 	arn := arn.ARN{
@@ -170,14 +173,14 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("configuration", flattenConfiguration(resp.Configuration)); err != nil {
-		return diag.Errorf("setting configuration argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
 	if err := d.Set("endpoints", flattenEndpoints(resp.Endpoints)); err != nil {
-		return diag.Errorf("setting endpoints argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", experienceID, indexID))
 
-	return nil
+	return diags
 }

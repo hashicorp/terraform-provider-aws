@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `arn` - The Amazon Resource Name (ARN) of the contact or escalation plan.
 
-- `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+- `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -113,4 +113,4 @@ Using `terraform import`, import SSM Contact using the `arn`. For example:
 % terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2663536b417f222904b9f9c62ac959d51fabe5b14bf73e4c198bb18616b00366 -->
+<!-- cache-key: cdktf-0.19.0 input-2663536b417f222904b9f9c62ac959d51fabe5b14bf73e4c198bb18616b00366 -->

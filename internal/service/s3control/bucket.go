@@ -100,7 +100,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(output.BucketArn))
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTagsS3(ctx, getTagsInS3(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return diag.Errorf("adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -151,7 +151,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOutS3(ctx, tagsS3(tags))
 
 	return nil
 }
@@ -255,7 +255,7 @@ func bucketListTags(ctx context.Context, conn *s3control.Client, identifier stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagSet), nil
+	return keyValueTagsS3(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
@@ -284,7 +284,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.Client, identifier st
 			AccountId: aws.String(parsedArn.AccountID),
 			Bucket:    aws.String(identifier),
 			Tagging: &types.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: tagsS3(newTags.Merge(ignoredTags)),
 			},
 		}
 

@@ -73,4 +73,4 @@ Using `terraform import`, import `aws_networkmanager_transit_gateway_peering` us
 % terraform import aws_networkmanager_transit_gateway_peering.example peering-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-850761bfb6bc5f1c587cc31180329d6f710f011b3f0be9c3b8ba3055502f296f -->
+<!-- cache-key: cdktf-0.19.0 input-850761bfb6bc5f1c587cc31180329d6f710f011b3f0be9c3b8ba3055502f296f -->
