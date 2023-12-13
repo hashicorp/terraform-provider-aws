@@ -682,7 +682,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return append(diags, diag.FromErr(err)...)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -740,7 +740,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("global_cluster_identifier"); ok {
 		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return append(diags, diag.FromErr(err)...)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -750,7 +750,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state")
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

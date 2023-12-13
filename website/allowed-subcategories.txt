@@ -157,6 +157,7 @@ Organizations
 Outposts
 Outposts (EC2)
 Pinpoint
+Polly
 Pricing Calculator
 QLDB (Quantum Ledger Database)
 QuickSight
