@@ -866,6 +866,289 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_licenseARNs(t *te
 	})
 }
 
+func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_diskImageFormatRaw(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_diskImageFormat(rName, imagebuilder.DiskImageFormatRaw),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationConfig_diskImageFormat(rName, imagebuilder.DiskImageFormatRaw),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_diskImageFormatVhd(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_diskImageFormat(rName, imagebuilder.DiskImageFormatVhd),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatVhd,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationConfig_diskImageFormat(rName, imagebuilder.DiskImageFormatVhd),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatVhd,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_diskImageFormatVmdk(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_diskImageFormat(rName, imagebuilder.DiskImageFormatVmdk),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatVmdk,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationConfig_diskImageFormat(rName, imagebuilder.DiskImageFormatVmdk),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatVmdk,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_roleName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_roleName(rName, "role1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role1",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationConfig_roleName(rName, "role2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role2",
+						"s3_export_configuration.0.s3_bucket":         rName,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_s3Bucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+	bucketName1 := sdkacctest.RandomWithPrefix("bucket1")
+	bucketName2 := sdkacctest.RandomWithPrefix("bucket2")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_s3Bucket(rName, bucketName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         bucketName1,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationConfig_s3Bucket(rName, bucketName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         bucketName2,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionS3Export_s3Prefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationConfig_s3Prefix(rName, "prefix1/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+						"s3_export_configuration.0.s3_prefix":         "prefix1/",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfigurationConfig_s3Prefix(rName, "prefix2/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"s3_export_configuration.#":                   "1",
+						"s3_export_configuration.0.disk_image_format": imagebuilder.DiskImageFormatRaw,
+						"s3_export_configuration.0.role_name":         "role-name",
+						"s3_export_configuration.0.s3_bucket":         rName,
+						"s3_export_configuration.0.s3_prefix":         "prefix2/",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1560,6 +1843,103 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDistributionConfigurationConfig_diskImageFormat(rName string, diskImageFormat string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+
+  distribution {
+    s3_export_configuration {
+      disk_image_format = %[2]q
+      role_name = "role-name"
+      s3_bucket = aws_s3_bucket.test.id
+    }
+
+    region = data.aws_region.current.name
+  }
+}
+`, rName, diskImageFormat)
+}
+
+func testAccDistributionConfigurationConfig_roleName(rName string, roleName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+
+  distribution {
+    s3_export_configuration {
+      disk_image_format = "RAW"
+      role_name = %[2]q
+      s3_bucket = aws_s3_bucket.test.id
+    }
+
+    region = data.aws_region.current.name
+  }
+}
+`, rName, roleName)
+}
+
+func testAccDistributionConfigurationConfig_s3Bucket(rName string, s3Bucket string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[2]q
+}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+
+  distribution {
+    s3_export_configuration {
+      disk_image_format = "RAW"
+      role_name = "role-name"
+      s3_bucket = aws_s3_bucket.test.id
+    }
+
+    region = data.aws_region.current.name
+  }
+}
+`, rName, s3Bucket)
+}
+
+func testAccDistributionConfigurationConfig_s3Prefix(rName string, s3Prefix string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+
+  distribution {
+    s3_export_configuration {
+      disk_image_format = "RAW"
+      role_name = "role-name"
+      s3_bucket = aws_s3_bucket.test.id
+      s3_prefix = %[2]q
+    }
+
+    region = data.aws_region.current.name
+  }
+}
+`, rName, s3Prefix)
 }
 
 func testAccDistributionConfigurationConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
