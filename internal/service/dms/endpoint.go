@@ -348,6 +348,80 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
+			"postgres_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"babelfish_database_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"capture_ddls": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"database_mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ddl_artifacts_schema": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"fail_tasks_on_lob_truncation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"heartbeat_enable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"heartbeat_frequency": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"heartbeat_schema": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"map_boolean_as_boolean": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"map_jsonb_as_clob": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"map_long_varchar_as": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"plugin_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"slot_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"redis_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -752,24 +826,27 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
+		settings := &dms.PostgreSQLSettings{}
+		if _, ok := d.GetOk("postgres_settings"); ok {
+			settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]interface{})[0].(map[string]interface{}))
+		}
+
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-				DatabaseName:                aws.String(d.Get("database_name").(string)),
-			}
+			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+			settings.DatabaseName = aws.String(d.Get("database_name").(string))
 		} else {
-			input.PostgreSQLSettings = &dms.PostgreSQLSettings{
-				Username:     aws.String(d.Get("username").(string)),
-				Password:     aws.String(d.Get("password").(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int64(int64(d.Get("port").(int))),
-				DatabaseName: aws.String(d.Get("database_name").(string)),
-			}
+			settings.Username = aws.String(d.Get("username").(string))
+			settings.Password = aws.String(d.Get("password").(string))
+			settings.ServerName = aws.String(d.Get("server_name").(string))
+			settings.Port = aws.Int64(int64(d.Get("port").(int)))
+			settings.DatabaseName = aws.String(d.Get("database_name").(string))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+
+		input.PostgreSQLSettings = settings
 	case engineNameDynamoDB:
 		input.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
@@ -1476,6 +1553,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+		if err := d.Set("postgres_settings", flattenPostgreSQLSettings(endpoint.PostgreSQLSettings)); err != nil {
+			return fmt.Errorf("setting postgres_settings: %w", err)
+		}
 	case engineNameDynamoDB:
 		if endpoint.DynamoDbSettings != nil {
 			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
@@ -1636,9 +1716,6 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrati
 		switch aws.StringValue(task.Status) {
 		case replicationTaskStatusRunning:
 			err := stopReplicationTask(ctx, rtID, conn)
-			if tfawserr.ErrCodeEquals(err, dms.ErrCodeInvalidResourceStateFault) {
-				continue
-			}
 
 			if err != nil {
 				return stoppedTasks, err
@@ -2062,6 +2139,124 @@ func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interf
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &dms.PostgreSQLSettings{}
+
+	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
+		apiObject.AfterConnectScript = aws.String(v)
+	}
+	if v, ok := tfMap["babelfish_database_name"].(string); ok && v != "" {
+		apiObject.BabelfishDatabaseName = aws.String(v)
+	}
+	if v, ok := tfMap["capture_ddls"].(bool); ok {
+		apiObject.CaptureDdls = aws.Bool(v)
+	}
+	if v, ok := tfMap["database_mode"].(string); ok && v != "" {
+		apiObject.DatabaseMode = aws.String(v)
+	}
+	if v, ok := tfMap["ddl_artifacts_schema"].(string); ok && v != "" {
+		apiObject.DdlArtifactsSchema = aws.String(v)
+	}
+	if v, ok := tfMap["execute_timeout"].(int); ok {
+		apiObject.ExecuteTimeout = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["fail_tasks_on_lob_truncation"].(bool); ok {
+		apiObject.FailTasksOnLobTruncation = aws.Bool(v)
+	}
+	if v, ok := tfMap["heartbeat_enable"].(bool); ok {
+		apiObject.HeartbeatEnable = aws.Bool(v)
+	}
+	if v, ok := tfMap["heartbeat_frequency"].(int); ok {
+		apiObject.HeartbeatFrequency = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["heartbeat_schema"].(string); ok && v != "" {
+		apiObject.HeartbeatSchema = aws.String(v)
+	}
+	if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
+		apiObject.MapBooleanAsBoolean = aws.Bool(v)
+	}
+	if v, ok := tfMap["map_jsonb_as_clob"].(bool); ok {
+		apiObject.MapJsonbAsClob = aws.Bool(v)
+	}
+	if v, ok := tfMap["map_long_varchar_as"].(string); ok && v != "" {
+		apiObject.MapLongVarcharAs = aws.String(v)
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok {
+		apiObject.MaxFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
+		apiObject.PluginName = aws.String(v)
+	}
+	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
+		apiObject.SlotName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPostgreSQLSettings(apiObject *dms.PostgreSQLSettings) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AfterConnectScript; v != nil {
+		tfMap["after_connect_script"] = aws.StringValue(v)
+	}
+	if v := apiObject.BabelfishDatabaseName; v != nil {
+		tfMap["babelfish_database_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.CaptureDdls; v != nil {
+		tfMap["capture_ddls"] = aws.BoolValue(v)
+	}
+	if v := apiObject.DatabaseMode; v != nil {
+		tfMap["database_mode"] = aws.StringValue(v)
+	}
+	if v := apiObject.DdlArtifactsSchema; v != nil {
+		tfMap["ddl_artifacts_schema"] = aws.StringValue(v)
+	}
+	if v := apiObject.ExecuteTimeout; v != nil {
+		tfMap["execute_timeout"] = aws.Int64Value(v)
+	}
+	if v := apiObject.FailTasksOnLobTruncation; v != nil {
+		tfMap["fail_tasks_on_lob_truncation"] = aws.BoolValue(v)
+	}
+	if v := apiObject.HeartbeatEnable; v != nil {
+		tfMap["heartbeat_enable"] = aws.BoolValue(v)
+	}
+	if v := apiObject.HeartbeatFrequency; v != nil {
+		tfMap["heartbeat_frequency"] = aws.Int64Value(v)
+	}
+	if v := apiObject.HeartbeatSchema; v != nil {
+		tfMap["heartbeat_schema"] = aws.StringValue(v)
+	}
+	if v := apiObject.MapBooleanAsBoolean; v != nil {
+		tfMap["map_boolean_as_boolean"] = aws.BoolValue(v)
+	}
+	if v := apiObject.MapJsonbAsClob; v != nil {
+		tfMap["map_jsonb_as_clob"] = aws.BoolValue(v)
+	}
+	if v := apiObject.MapLongVarcharAs; v != nil {
+		tfMap["map_long_varchar_as"] = aws.StringValue(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.PluginName; v != nil {
+		tfMap["plugin_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.SlotName; v != nil {
+		tfMap["slot_name"] = aws.StringValue(v)
+	}
+
+	return []map[string]interface{}{tfMap}
 }
 
 func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {

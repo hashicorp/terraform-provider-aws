@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `postgres_settings` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_dms_endpoint: Add `postgres_settings` attribute
+```
