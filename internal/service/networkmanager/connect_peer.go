@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -189,6 +190,8 @@ func ResourceConnectPeer() *schema.Resource {
 }
 
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
@@ -245,19 +248,21 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 		})
 
 	if err != nil {
-		return diag.Errorf("creating Connect Peer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Peer: %s", err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*networkmanager.CreateConnectPeerOutput).ConnectPeer.ConnectPeerId))
 
 	if _, err := waitConnectPeerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connect Peer (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Peer (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConnectPeerRead(ctx, d, meta)
+	return append(diags, resourceConnectPeerRead(ctx, d, meta)...)
 }
 
 func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectPeer, err := FindConnectPeerByID(ctx, conn, d.Id())
@@ -265,11 +270,11 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Connect Peer %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Connect Peer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Peer (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -299,7 +304,7 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	setTagsOut(ctx, connectPeer.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -308,6 +313,8 @@ func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Peer: %s", d.Id())
@@ -316,18 +323,18 @@ func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Connect Peer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Connect Peer (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitConnectPeerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connect Peer (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Peer (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandPeerOptions(o map[string]interface{}) *networkmanager.BgpOptions {

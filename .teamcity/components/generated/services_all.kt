@@ -151,6 +151,7 @@ val services = mapOf(
     "outposts" to ServiceSpec("Outposts"),
     "pinpoint" to ServiceSpec("Pinpoint"),
     "pipes" to ServiceSpec("EventBridge Pipes"),
+    "polly" to ServiceSpec("Polly"),
     "pricing" to ServiceSpec("Pricing Calculator", regionOverride = "us-east-1"),
     "qldb" to ServiceSpec("QLDB (Quantum Ledger Database)"),
     "quicksight" to ServiceSpec("QuickSight"),

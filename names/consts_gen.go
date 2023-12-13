@@ -155,6 +155,7 @@ const (
 	Outposts                     = "outposts"
 	Pinpoint                     = "pinpoint"
 	Pipes                        = "pipes"
+	Polly                        = "polly"
 	Pricing                      = "pricing"
 	QLDB                         = "qldb"
 	QuickSight                   = "quicksight"
