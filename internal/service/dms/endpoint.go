@@ -826,26 +826,27 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			expandTopLevelConnectionInfo(d, input)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
-		postgres_settings := &dms.PostgreSQLSettings{}
+		settings := &dms.PostgreSQLSettings{}
 		if _, ok := d.GetOk("postgres_settings"); ok {
-			postgres_settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]interface{})[0].(map[string]interface{}))
+			settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]interface{})[0].(map[string]interface{}))
 		}
 
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			postgres_settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
-			postgres_settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
-			postgres_settings.DatabaseName = aws.String(d.Get("database_name").(string))
+			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+			settings.DatabaseName = aws.String(d.Get("database_name").(string))
 		} else {
-			postgres_settings.Username = aws.String(d.Get("username").(string))
-			postgres_settings.Password = aws.String(d.Get("password").(string))
-			postgres_settings.ServerName = aws.String(d.Get("server_name").(string))
-			postgres_settings.Port = aws.Int64(int64(d.Get("port").(int)))
-			postgres_settings.DatabaseName = aws.String(d.Get("database_name").(string))
+			settings.Username = aws.String(d.Get("username").(string))
+			settings.Password = aws.String(d.Get("password").(string))
+			settings.ServerName = aws.String(d.Get("server_name").(string))
+			settings.Port = aws.Int64(int64(d.Get("port").(int)))
+			settings.DatabaseName = aws.String(d.Get("database_name").(string))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-		input.PostgreSQLSettings = postgres_settings
+
+		input.PostgreSQLSettings = settings
 	case engineNameDynamoDB:
 		input.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
@@ -2141,58 +2142,62 @@ func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interf
 }
 
 func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSettings {
-	settings := &dms.PostgreSQLSettings{}
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &dms.PostgreSQLSettings{}
 
 	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
-		settings.AfterConnectScript = aws.String(v)
+		apiObject.AfterConnectScript = aws.String(v)
 	}
 	if v, ok := tfMap["babelfish_database_name"].(string); ok && v != "" {
-		settings.BabelfishDatabaseName = aws.String(v)
+		apiObject.BabelfishDatabaseName = aws.String(v)
 	}
 	if v, ok := tfMap["capture_ddls"].(bool); ok {
-		settings.CaptureDdls = aws.Bool(v)
+		apiObject.CaptureDdls = aws.Bool(v)
 	}
 	if v, ok := tfMap["database_mode"].(string); ok && v != "" {
-		settings.DatabaseMode = aws.String(v)
+		apiObject.DatabaseMode = aws.String(v)
 	}
 	if v, ok := tfMap["ddl_artifacts_schema"].(string); ok && v != "" {
-		settings.DdlArtifactsSchema = aws.String(v)
+		apiObject.DdlArtifactsSchema = aws.String(v)
 	}
 	if v, ok := tfMap["execute_timeout"].(int); ok {
-		settings.ExecuteTimeout = aws.Int64(int64(v))
+		apiObject.ExecuteTimeout = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["fail_tasks_on_lob_truncation"].(bool); ok {
-		settings.FailTasksOnLobTruncation = aws.Bool(v)
+		apiObject.FailTasksOnLobTruncation = aws.Bool(v)
 	}
 	if v, ok := tfMap["heartbeat_enable"].(bool); ok {
-		settings.HeartbeatEnable = aws.Bool(v)
+		apiObject.HeartbeatEnable = aws.Bool(v)
 	}
 	if v, ok := tfMap["heartbeat_frequency"].(int); ok {
-		settings.HeartbeatFrequency = aws.Int64(int64(v))
+		apiObject.HeartbeatFrequency = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["heartbeat_schema"].(string); ok && v != "" {
-		settings.HeartbeatSchema = aws.String(v)
+		apiObject.HeartbeatSchema = aws.String(v)
 	}
 	if v, ok := tfMap["map_boolean_as_boolean"].(bool); ok {
-		settings.MapBooleanAsBoolean = aws.Bool(v)
+		apiObject.MapBooleanAsBoolean = aws.Bool(v)
 	}
 	if v, ok := tfMap["map_jsonb_as_clob"].(bool); ok {
-		settings.MapJsonbAsClob = aws.Bool(v)
+		apiObject.MapJsonbAsClob = aws.Bool(v)
 	}
 	if v, ok := tfMap["map_long_varchar_as"].(string); ok && v != "" {
-		settings.MapLongVarcharAs = aws.String(v)
+		apiObject.MapLongVarcharAs = aws.String(v)
 	}
 	if v, ok := tfMap["max_file_size"].(int); ok {
-		settings.MaxFileSize = aws.Int64(int64(v))
+		apiObject.MaxFileSize = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
-		settings.PluginName = aws.String(v)
+		apiObject.PluginName = aws.String(v)
 	}
 	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
-		settings.SlotName = aws.String(v)
+		apiObject.SlotName = aws.String(v)
 	}
 
-	return settings
+	return apiObject
 }
 
 func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
