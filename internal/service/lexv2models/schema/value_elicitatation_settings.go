@@ -33,6 +33,8 @@ func ValueElicitationSettingBlock(ctx context.Context) schema.ListNestedBlock {
 			Blocks: map[string]schema.Block{
 				"default_value_specification": DefaultValueSpecificationBlock(ctx),
 				"slot_resolution_setting":     SlotResolutionSettingBlock(ctx),
+				"prompt_specification":        PromptSpecificationBlock(ctx),
+				"sample_utterance":            SampleUtteranceBlock(ctx),
 			},
 		},
 	}
@@ -42,4 +44,6 @@ type ValueElicitationSettingData struct {
 	SlotConstraint            fwtypes.StringEnum[awstypes.SlotConstraint]                    `tfsdk:"slot_constraint"`
 	DefaultValueSpecification fwtypes.ListNestedObjectValueOf[DefaultValueSpecificationData] `tfsdk:"default_value_specification"`
 	SlotResolutionSetting     fwtypes.ListNestedObjectValueOf[SlotResolutionSettingData]     `tfsdk:"slot_resolution_setting"`
+	PromptSpecification       fwtypes.ListNestedObjectValueOf[PromptSpecificationData]       `tfsdk:"prompt_specification"`
+	SampleUtterance           fwtypes.ListNestedObjectValueOf[SampleUtteranceData]           `tfsdk:"sample_utterance"`
 }

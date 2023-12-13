@@ -81,44 +81,44 @@ func PromptSpecificationBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-type PromptSpecification struct {
-	MaxRetries                  types.Int64                                           `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]         `tfsdk:"message_groups"`
-	AllowInterrupt              types.Bool                                            `tfsdk:"allow_interrupt"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy] `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.ObjectMapValueOf[PromptAttemptSpecification]  `tfsdk:"prompt_attempts_specification"`
+type PromptSpecificationData struct {
+	AllowInterrupt              types.Bool                                               `tfsdk:"allow_interrupt"`
+	MaxRetries                  types.Int64                                              `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroupData]        `tfsdk:"message_groups"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]    `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.ObjectMapValueOf[PromptAttemptSpecificationData] `tfsdk:"prompt_attempts_specification"`
 }
 
-type PromptAttemptSpecification struct {
-	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypes]              `tfsdk:"allowed_input_types"`
-	AllowInterrupt                 types.Bool                                                      `tfsdk:"allow_interrupt"`
-	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecification] `tfsdk:"audio_and_dtmf_input_specification"`
-	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecification]         `tfsdk:"text_input_specification"`
+type PromptAttemptSpecificationData struct {
+	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypesData]              `tfsdk:"allowed_input_types"`
+	AllowInterrupt                 types.Bool                                                          `tfsdk:"allow_interrupt"`
+	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecificationData] `tfsdk:"audio_and_dtmf_input_specification"`
+	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecificationData]         `tfsdk:"text_input_specification"`
 }
 
-type DTMFSpecification struct {
-	DeletionCharacter types.String `tfsdk:"deletion_character"`
+type DTMFSpecificationData struct {
 	EndCharacter      types.String `tfsdk:"end_character"`
 	EndTimeoutMs      types.Int64  `tfsdk:"end_timeout_ms"`
+	DeletionCharacter types.String `tfsdk:"deletion_character"`
 	MaxLength         types.Int64  `tfsdk:"max_length"`
 }
 
-type TextInputSpecification struct {
+type TextInputSpecificationData struct {
 	StartTimeoutMs types.Int64 `tfsdk:"start_timeout_ms"`
 }
 
-type AllowedInputTypes struct {
+type AllowedInputTypesData struct {
 	AllowAudioInput types.Bool `tfsdk:"allow_audio_input"`
 	AllowDTMFInput  types.Bool `tfsdk:"allow_dtmf_input"`
 }
 
-type AudioAndDTMFInputSpecification struct {
-	StartTimeoutMs     types.Int64                                         `tfsdk:"start_timeout_ms"`
-	AudioSpecification fwtypes.ListNestedObjectValueOf[AudioSpecification] `tfsdk:"audio_specification"`
-	DTMFSpecification  fwtypes.ListNestedObjectValueOf[DTMFSpecification]  `tfsdk:"dtmf_specification"`
+type AudioAndDTMFInputSpecificationData struct {
+	AudioSpecification fwtypes.ListNestedObjectValueOf[AudioSpecificationData] `tfsdk:"audio_specification"`
+	StartTimeoutMs     types.Int64                                             `tfsdk:"start_timeout_ms"`
+	DTMFSpecification  fwtypes.ListNestedObjectValueOf[DTMFSpecificationData]  `tfsdk:"dtmf_specification"`
 }
 
-type AudioSpecification struct {
+type AudioSpecificationData struct {
 	EndTimeoutMs types.Int64 `tfsdk:"end_timeout_ms"`
 	MaxLengthMs  types.Int64 `tfsdk:"max_length_ms"`
 }

@@ -20,7 +20,7 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayloadData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -33,7 +33,7 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCard](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCardData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"image_url": schema.StringAttribute{
@@ -48,7 +48,7 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 					Blocks: map[string]schema.Block{
 						"button": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[Button](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[ButtonData](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"text": schema.StringAttribute{
@@ -67,7 +67,7 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessageData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -80,7 +80,7 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessageData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -95,18 +95,18 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroupData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"message": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
 					NestedObject: messageNBO,
 				},
 				"variations": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
 					NestedObject: messageNBO,
 				},
 			},
@@ -114,37 +114,37 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-type CustomPayload struct {
+type CustomPayloadData struct {
 	Value types.String `tfsdk:"value"`
 }
 
-type ImageResponseCard struct {
-	Title    types.String                            `tfsdk:"title"`
-	Button   fwtypes.ListNestedObjectValueOf[Button] `tfsdk:"buttons"`
-	ImageURL types.String                            `tfsdk:"image_url"`
-	Subtitle types.String                            `tfsdk:"subtitle"`
+type ImageResponseCardData struct {
+	Title    types.String                                `tfsdk:"title"`
+	Button   fwtypes.ListNestedObjectValueOf[ButtonData] `tfsdk:"buttons"`
+	ImageURL types.String                                `tfsdk:"image_url"`
+	Subtitle types.String                                `tfsdk:"subtitle"`
 }
 
-type Button struct {
+type ButtonData struct {
 	Text  types.String `tfsdk:"text"`
 	Value types.String `tfsdk:"value"`
 }
 
-type PlainTextMessage struct {
+type PlainTextMessageData struct {
 	Value types.String `tfsdk:"value"`
 }
 
-type SSMLMessage struct {
+type SSMLMessageData struct {
 	Value types.String `tfsdk:"value"`
 }
-type MessageGroup struct {
-	Message    fwtypes.ListNestedObjectValueOf[Message] `tfsdk:"message"`
-	Variations fwtypes.ListNestedObjectValueOf[Message] `tfsdk:"variations"`
+type MessageGroupData struct {
+	Message    fwtypes.ListNestedObjectValueOf[MessageData] `tfsdk:"message"`
+	Variations fwtypes.ListNestedObjectValueOf[MessageData] `tfsdk:"variations"`
 }
 
-type Message struct {
-	CustomPayload     fwtypes.ListNestedObjectValueOf[CustomPayload]     `tfsdk:"custom_payload"`
-	ImageResponseCard fwtypes.ListNestedObjectValueOf[ImageResponseCard] `tfsdk:"image_response_card"`
-	PlainTextMessage  fwtypes.ListNestedObjectValueOf[PlainTextMessage]  `tfsdk:"plain_text_message"`
-	SSMLMessage       fwtypes.ListNestedObjectValueOf[SSMLMessage]       `tfsdk:"ssml_message"`
+type MessageData struct {
+	CustomPayload     fwtypes.ListNestedObjectValueOf[CustomPayloadData]     `tfsdk:"custom_payload"`
+	ImageResponseCard fwtypes.ListNestedObjectValueOf[ImageResponseCardData] `tfsdk:"image_response_card"`
+	PlainTextMessage  fwtypes.ListNestedObjectValueOf[PlainTextMessageData]  `tfsdk:"plain_text_message"`
+	SSMLMessage       fwtypes.ListNestedObjectValueOf[SSMLMessageData]       `tfsdk:"ssml_message"`
 }
