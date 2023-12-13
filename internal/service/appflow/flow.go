@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,7 +56,7 @@ func resourceFlow() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
 			},
 			"destination_flow_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -330,6 +331,7 @@ func resourceFlow() *schema.Resource {
 									"s3": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -341,23 +343,27 @@ func resourceFlow() *schema.Resource {
 												"bucket_prefix": {
 													Type:         schema.TypeString,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"s3_output_format_config": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"aggregation_config": {
 																Type:     schema.TypeList,
 																Optional: true,
+																Computed: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"aggregation_type": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
+																			Computed:         true,
 																			ValidateDiagFunc: enum.Validate[types.AggregationType](),
 																		},
 																	},
@@ -371,6 +377,7 @@ func resourceFlow() *schema.Resource {
 															"prefix_config": {
 																Type:     schema.TypeList,
 																Optional: true,
+																Computed: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -390,6 +397,7 @@ func resourceFlow() *schema.Resource {
 															"preserve_source_data_typing": {
 																Type:     schema.TypeBool,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -852,17 +860,20 @@ func resourceFlow() *schema.Resource {
 									"s3": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"bucket_name": {
 													Type:         schema.TypeString,
 													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
 												"bucket_prefix": {
 													Type:         schema.TypeString,
-													Optional:     true,
+													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"s3_input_format_config": {
@@ -1224,12 +1235,14 @@ func resourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(name),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
@@ -1247,15 +1260,17 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateFlow(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AppFlow Flow (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppFlow Flow (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.FlowArn))
 
-	return resourceFlowRead(ctx, d, meta)
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	flowDefinition, err := findFlowByARN(ctx, conn, d.Id())
@@ -1263,39 +1278,39 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, output.FlowArn)
 	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(output.DestinationFlowConfigList)); err != nil {
-		return diag.Errorf("setting destination_flow_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting destination_flow_config: %s", err)
 	}
 	d.Set("kms_arn", output.KmsArn)
 	d.Set(names.AttrName, output.FlowName)
 	if output.SourceFlowConfig != nil {
 		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(output.SourceFlowConfig)}); err != nil {
-			return diag.Errorf("setting source_flow_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting source_flow_config: %s", err)
 		}
 	} else {
 		d.Set("source_flow_config", nil)
 	}
 	if err := d.Set("task", flattenTasks(output.Tasks)); err != nil {
-		return diag.Errorf("setting task: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting task: %s", err)
 	}
 	if output.TriggerConfig != nil {
 		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
-			return diag.Errorf("setting trigger_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)
@@ -1303,15 +1318,17 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &appflow.UpdateFlowInput{
-			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
 			FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 			SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 			Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
@@ -1325,14 +1342,16 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateFlow(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceFlowRead(ctx, d, meta)
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Id())
@@ -1341,18 +1360,18 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFlowDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for AppFlow Flow (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findFlowByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.FlowDefinition, error) {

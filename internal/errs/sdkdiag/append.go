@@ -25,7 +25,7 @@ func AppendFromErr(diags diag.Diagnostics, err error) diag.Diagnostics {
 	if err == nil {
 		return diags
 	}
-	return append(diags, diag.FromErr(err)...) // nosemgrep:ci.semgrep.pluginsdk.avoid-diag_FromErr
+	return append(diags, diag.FromErr(err)...) // nosemgrep:ci.semgrep.pluginsdk.avoid-append-diag_FromErr
 }
 
 func WrapDiagsf(orig diag.Diagnostics, format string, a ...any) diag.Diagnostics {

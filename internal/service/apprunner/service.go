@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -431,6 +432,8 @@ func resourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("service_name").(string)
@@ -469,19 +472,21 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}, "Error in assuming instance role")
 
 	if err != nil {
-		return diag.Errorf("creating App Runner Service (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner Service (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*apprunner.CreateServiceOutput).Service.ServiceArn))
 
 	if _, err := waitServiceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner Service (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Service (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceServiceRead(ctx, d, meta)
+	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	service, err := findServiceByARN(ctx, conn, d.Id())
@@ -489,11 +494,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner Service (%s): %s", d.Id(), err)
 	}
 
 	serviceURL := aws.ToString(service.ServiceUrl)
@@ -509,7 +514,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 
 		if err != nil {
-			return diag.Errorf("reading App Runner Service (%s) custom domains: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading App Runner Service (%s) custom domains: %s", d.Id(), err)
 		}
 	}
 
@@ -520,32 +525,34 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("auto_scaling_configuration_arn", nil)
 	}
 	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
-		return diag.Errorf("setting encryption_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
-		return diag.Errorf("setting health_check_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting health_check_configuration: %s", err)
 	}
 	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
-		return diag.Errorf("setting instance_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
 	}
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return diag.Errorf("setting network_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
-		return diag.Errorf("setting observability_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting observability_configuration: %s", err)
 	}
 	d.Set("service_id", service.ServiceId)
 	d.Set("service_name", service.ServiceName)
 	d.Set("service_url", serviceURL)
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
-		return diag.Errorf("setting source_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting source_configuration: %s", err)
 	}
 	d.Set("status", service.Status)
 
-	return nil
+	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -580,18 +587,20 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateService(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating App Runner Service (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Runner Service (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitServiceUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for App Runner Service (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for App Runner Service (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceServiceRead(ctx, d, meta)
+	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Service: %s", d.Id())
@@ -600,18 +609,18 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner Service (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitServiceDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner Service (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Service (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.Service, error) {
