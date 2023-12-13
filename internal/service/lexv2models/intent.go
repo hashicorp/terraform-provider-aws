@@ -607,8 +607,23 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 										Optional:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.MessageSelectionStrategy](),
 									},
-									"prompt_attempts_specification": schema.MapAttribute{
-										Optional: true,
+									// New autoflex:
+									//  - MapNestedAttributeOf
+									//  - ObjectAttributeOf
+									// but, v5 v v6 and attributes not supported
+									//  - could model maps as blocks and frankenstein some autoflex
+									"prompt_attempts_specification1": schema.MapNestedAttribute{
+										Optional:   true,
+										CustomType: fwtypes.NewObjectMapTypeOf[PromptAttemptSpecification](ctx),
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"allowed_input_types": schema.ObjectAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+									"prompt_attempts_specification2": schema.MapAttribute{
 										ElementType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
 												"allowed_input_types": types.ObjectType{

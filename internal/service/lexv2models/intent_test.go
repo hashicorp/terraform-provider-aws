@@ -1008,6 +1008,38 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsIntent_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
@@ -1149,10 +1181,36 @@ resource "aws_lexv2models_intent" "test" {
     prompt_specification {
       allow_interrupt = true
       max_retries     = 1
+      message_selection_strategy = "Ordered"
 
-      next_step {
-        dialog_action {
-          type = "Close"
+      prompt_attempts_specification {
+        Attempt1 {
+          allowed_input_types {
+            allow_audio_input = true
+            allow_dtmf_input  = true
+          }
+
+          allow_interrupt = true
+
+          audio_and_dtmf_input_specification {
+            start_timeout_ms = 1
+
+            audio_specification {
+              end_timeout_ms = 1
+              max_length_ms = 1
+            }
+
+            dtmf_specification {
+              deletion_character = "#"
+              end_character      = "#"
+              end_timeout_ms     = 1
+              max_length         = 1
+            }
+          }
+
+          text_input_specification {
+            start_timeout_ms = 1
+          }
         }
       }
     }
