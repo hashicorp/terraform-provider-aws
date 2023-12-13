@@ -666,8 +666,8 @@ func findObjectByBucketAndKey(ctx context.Context, conn *s3.Client, bucket, key,
 	return findObject(ctx, conn, input)
 }
 
-func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
-	output, err := conn.HeadObject(ctx, input)
+func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
+	output, err := conn.HeadObject(ctx, input, optFns...)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
 		return nil, &retry.NotFoundError{
