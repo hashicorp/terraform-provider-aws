@@ -1553,6 +1553,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+		if err := d.Set("postgres_settings", flattenPostgreSQLSettings(endpoint.PostgreSQLSettings)); err != nil {
+			return fmt.Errorf("setting postgres_settings: %w", err)
+		}
 	case engineNameDynamoDB:
 		if endpoint.DynamoDbSettings != nil {
 			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
@@ -2198,6 +2201,65 @@ func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSetti
 	}
 
 	return apiObject
+}
+
+func flattenPostgreSQLSettings(apiObject *dms.PostgreSQLSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AfterConnectScript; v != nil {
+		tfMap["after_connect_script"] = aws.StringValue(v)
+	}
+	if v := apiObject.BabelfishDatabaseName; v != nil {
+		tfMap["babelfish_database_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.CaptureDdls; v != nil {
+		tfMap["capture_ddls"] = aws.BoolValue(v)
+	}
+	if v := apiObject.DatabaseMode; v != nil {
+		tfMap["database_mode"] = aws.StringValue(v)
+	}
+	if v := apiObject.DdlArtifactsSchema; v != nil {
+		tfMap["ddl_artifacts_schema"] = aws.StringValue(v)
+	}
+	if v := apiObject.ExecuteTimeout; v != nil {
+		tfMap["execute_timeout"] = aws.Int64Value(v)
+	}
+	if v := apiObject.FailTasksOnLobTruncation; v != nil {
+		tfMap["fail_tasks_on_lob_truncation"] = aws.BoolValue(v)
+	}
+	if v := apiObject.HeartbeatEnable; v != nil {
+		tfMap["heartbeat_enable"] = aws.BoolValue(v)
+	}
+	if v := apiObject.HeartbeatFrequency; v != nil {
+		tfMap["heartbeat_frequency"] = aws.Int64Value(v)
+	}
+	if v := apiObject.HeartbeatSchema; v != nil {
+		tfMap["heartbeat_schema"] = aws.StringValue(v)
+	}
+	if v := apiObject.MapBooleanAsBoolean; v != nil {
+		tfMap["map_boolean_as_boolean"] = aws.BoolValue(v)
+	}
+	if v := apiObject.MapJsonbAsClob; v != nil {
+		tfMap["map_jsonb_as_clob"] = aws.BoolValue(v)
+	}
+	if v := apiObject.MapLongVarcharAs; v != nil {
+		tfMap["map_long_varchar_as"] = aws.StringValue(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.PluginName; v != nil {
+		tfMap["plugin_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.SlotName; v != nil {
+		tfMap["slot_name"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
