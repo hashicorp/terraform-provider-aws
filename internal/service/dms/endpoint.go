@@ -2203,7 +2203,7 @@ func expandPostgreSQLSettings(tfMap map[string]interface{}) *dms.PostgreSQLSetti
 	return apiObject
 }
 
-func flattenPostgreSQLSettings(apiObject *dms.PostgreSQLSettings) map[string]interface{} {
+func flattenPostgreSQLSettings(apiObject *dms.PostgreSQLSettings) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2259,7 +2259,7 @@ func flattenPostgreSQLSettings(apiObject *dms.PostgreSQLSettings) map[string]int
 		tfMap["slot_name"] = aws.StringValue(v)
 	}
 
-	return tfMap
+	return []map[string]interface{}{tfMap}
 }
 
 func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
