@@ -230,13 +230,19 @@ func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name stri
 }
 
 func FindProjectByName(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) (*awstypes.ProjectDescription, error) {
+	features := []awstypes.CustomizationFeature{}
+	if len((string)(feature)) == 0 {
+		// we don't know the type on import, so we lookup both
+		features = append(features, awstypes.CustomizationFeatureContentModeration, awstypes.CustomizationFeatureCustomLabels)
+	} else {
+		features = append(features, feature)
+	}
+
 	in := &rekognition.DescribeProjectsInput{
 		ProjectNames: []string{
 			name,
 		},
-		Features: []awstypes.CustomizationFeature{
-			feature,
-		},
+		Features: features,
 	}
 
 	out, err := conn.DescribeProjects(ctx, in)

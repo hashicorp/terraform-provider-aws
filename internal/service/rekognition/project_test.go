@@ -49,12 +49,12 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
-			// {
-			// 	ResourceName:            resourceName,
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{"arn"},
-			// },
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"arn"},
+			},
 		},
 	})
 }
