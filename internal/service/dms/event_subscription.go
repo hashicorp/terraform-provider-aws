@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -137,29 +138,17 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.DescribeEventSubscriptionsInput{
-		SubscriptionName: aws.String(d.Id()),
-	}
+	subscription, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
-	response, err := conn.DescribeEventSubscriptionsWithContext(ctx, request)
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DMS event subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Event Subscription (%s): %s", d.Id(), err)
 	}
-
-	if response == nil || len(response.EventSubscriptionsList) == 0 || response.EventSubscriptionsList[0] == nil {
-		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	subscription := response.EventSubscriptionsList[0]
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -169,13 +158,12 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		Resource:  fmt.Sprintf("es:%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
 	d.Set("enabled", subscription.Enabled)
-	d.Set("sns_topic_arn", subscription.SnsTopicArn)
-	d.Set("source_type", subscription.SourceType)
+	d.Set("event_categories", aws.StringValueSlice(subscription.EventCategoriesList))
 	d.Set("name", d.Id())
-	d.Set("event_categories", flex.FlattenStringList(subscription.EventCategoriesList))
-	d.Set("source_ids", flex.FlattenStringList(subscription.SourceIdsList))
+	d.Set("sns_topic_arn", subscription.SnsTopicArn)
+	d.Set("source_ids", aws.StringValueSlice(subscription.SourceIdsList))
+	d.Set("source_type", subscription.SourceType)
 
 	return diags
 }
@@ -249,6 +237,55 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
+}
+
+func FindEventSubscriptionByName(ctx context.Context, conn *dms.DatabaseMigrationService, name string) (*dms.EventSubscription, error) {
+	input := &dms.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(name),
+	}
+
+	return findEventSubscription(ctx, conn, input)
+}
+
+func findEventSubscription(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEventSubscriptionsInput) (*dms.EventSubscription, error) {
+	output, err := findEventSubscriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEventSubscriptions(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEventSubscriptionsInput) ([]*dms.EventSubscription, error) {
+	var output []*dms.EventSubscription
+
+	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *dms.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.EventSubscriptionsList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func resourceEventSubscriptionStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, name string) retry.StateRefreshFunc {
