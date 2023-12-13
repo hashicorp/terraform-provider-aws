@@ -25,6 +25,12 @@ resource "aws_networkfirewall_firewall" "example" {
     Tag1 = "Value1"
     Tag2 = "Value2"
   }
+
+  timeouts {
+    create = "40m"
+    update = "50m"
+    delete = "1h"
+  }
 }
 ```
 
@@ -84,6 +90,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating a firewall.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

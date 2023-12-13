@@ -402,6 +402,55 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_timeout(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	policyResourceName := "aws_networkfirewall_firewall_policy.test"
+	subnetResourceName := "aws_subnet.test.0"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_timeout(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
+						"ip_address_type": networkfirewall.IPAddressTypeIpv4,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -600,6 +649,10 @@ resource "aws_networkfirewall_firewall" "test" {
   subnet_mapping {
     subnet_id = aws_subnet.example.id
   }
+
+  timeouts {
+	update = "1h"
+  }
 }
 `, rName))
 }
@@ -631,6 +684,10 @@ resource "aws_networkfirewall_firewall" "test" {
 
   subnet_mapping {
     subnet_id = aws_subnet.example.id
+  }
+
+  timeouts {
+	update = "1h"
   }
 }
 `, rName))
@@ -677,6 +734,25 @@ resource "aws_networkfirewall_firewall" "test" {
   subnet_mapping {
     subnet_id       = aws_subnet.test[0].id
     ip_address_type = "DUALSTACK"
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_timeout(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  timeouts {
+	create = "50m"
+	delete = "50m"
   }
 }
 `, rName))

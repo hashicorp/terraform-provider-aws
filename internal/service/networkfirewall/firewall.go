@@ -40,6 +40,12 @@ func ResourceFirewall() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("subnet_mapping")
@@ -191,7 +197,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Firewall.FirewallArn))
 
-	if _, err := waitFirewallCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitFirewallCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
 	}
 
@@ -362,7 +368,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "associating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
 			}
 
-			updateToken, err = waitFirewallUpdated(ctx, conn, d.Id())
+			updateToken, err = waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
@@ -379,7 +385,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.DisassociateSubnetsWithContext(ctx, input)
 
 			if err == nil {
-				/*updateToken*/ _, err = waitFirewallUpdated(ctx, conn, d.Id())
+				/*updateToken*/ _, err = waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
@@ -411,7 +417,7 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFirewallDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitFirewallDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) delete: %s", d.Id(), err)
 	}
 
@@ -459,16 +465,12 @@ func statusFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, 
 	}
 }
 
-const (
-	firewallTimeout = 20 * time.Minute
-)
-
-func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
+func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, timeout time.Duration, arn string) (*networkfirewall.Firewall, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
-		Timeout: firewallTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -480,12 +482,12 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirew
 	return nil, err
 }
 
-func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (string, error) {
+func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, timeout time.Duration, arn string) (string, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
-		Timeout: firewallTimeout,
+		Timeout: timeout,
 		// Delay added to account for Associate/DisassociateSubnet calls that return
 		// a READY status immediately after the method is called instead of immediately
 		// returning PROVISIONING
@@ -501,12 +503,12 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirew
 	return "", err
 }
 
-func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
+func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, timeout time.Duration, arn string) (*networkfirewall.Firewall, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueDeleting},
 		Target:  []string{},
 		Refresh: statusFirewall(ctx, conn, arn),
-		Timeout: firewallTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
