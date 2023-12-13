@@ -196,7 +196,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Event Subscription (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Event Subscription (%s): %s", d.Id(), err)
 		}
 
 		stateConf := &retry.StateChangeConf{
@@ -221,11 +221,10 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.DeleteEventSubscriptionInput{
+	log.Printf("[DEBUG] Deleting DMS Event Subscription: %s", d.Id())
+	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &dms.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteEventSubscriptionWithContext(ctx, request)
+	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return diags
