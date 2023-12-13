@@ -33,6 +33,7 @@ func ResourceEventSubscription() *schema.Resource {
 		ReadWithoutTimeout:   resourceEventSubscriptionRead,
 		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
 		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -56,7 +57,6 @@ func ResourceEventSubscription() *schema.Resource {
 			"event_categories": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 				Required: true,
 			},
 			"name": {
@@ -73,14 +73,12 @@ func ResourceEventSubscription() *schema.Resource {
 			"source_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				ForceNew: true,
 				Required: true,
+				ForceNew: true,
 			},
 			"source_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				// The API suppors modification but doing so loses all source_ids
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"replication-instance",
@@ -99,29 +97,24 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.CreateEventSubscriptionInput{
+	name := d.Get("name").(string)
+	input := &dms.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-		SubscriptionName: aws.String(d.Get("name").(string)),
+		SourceIds:        flex.ExpandStringSet(d.Get("source_ids").(*schema.Set)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
+		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("event_categories"); ok {
-		request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("source_ids"); ok {
-		request.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	_, err := conn.CreateEventSubscriptionWithContext(ctx, request)
+	_, err := conn.CreateEventSubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DMS Event Subscription (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Event Subscription (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
