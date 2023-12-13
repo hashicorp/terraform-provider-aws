@@ -30,6 +30,7 @@ var (
 	FindPublicAccessBlockConfiguration    = findPublicAccessBlockConfiguration
 	FindReplicationConfiguration          = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
+	IsDirectoryBucket                     = isDirectoryBucket
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration

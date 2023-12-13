@@ -90,13 +90,13 @@ func BucketUpdateTags(ctx context.Context, conn s3iface_sdkv1.S3API, identifier 
 }
 
 // ObjectListTags lists S3 object tags.
-func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string) (tftags.KeyValueTags, error) {
+func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string, optFns ...func(*s3_sdkv2.Options)) (tftags.KeyValueTags, error) {
 	input := &s3_sdkv2.GetObjectTaggingInput{
 		Bucket: aws_sdkv2.String(bucket),
 		Key:    aws_sdkv2.String(key),
 	}
 
-	output, err := conn.GetObjectTagging(ctx, input)
+	output, err := conn.GetObjectTagging(ctx, input, optFns...)
 
 	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
 		return tftags.New(ctx, nil), nil
@@ -110,12 +110,12 @@ func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key stri
 }
 
 // ObjectUpdateTags updates S3 object tags.
-func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string, oldTagsMap, newTagsMap any) error {
+func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string, oldTagsMap, newTagsMap any, optFns ...func(*s3_sdkv2.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := ObjectListTags(ctx, conn, bucket, key)
+	allTags, err := ObjectListTags(ctx, conn, bucket, key, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("listing resource tags (%s/%s): %w", bucket, key, err)
@@ -132,7 +132,7 @@ func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key st
 			},
 		}
 
-		_, err := conn.PutObjectTagging(ctx, input)
+		_, err := conn.PutObjectTagging(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("setting resource tags (%s/%s): %w", bucket, key, err)
@@ -143,7 +143,7 @@ func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key st
 			Key:    aws_sdkv2.String(key),
 		}
 
-		_, err := conn.DeleteObjectTagging(ctx, input)
+		_, err := conn.DeleteObjectTagging(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("deleting resource tags (%s/%s): %w", bucket, key, err)

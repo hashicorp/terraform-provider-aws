@@ -374,7 +374,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Instance (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindDBInstanceByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBInstance, error) {
