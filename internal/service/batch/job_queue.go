@@ -190,7 +190,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	if !data.ComputeEnvironmentOrder.IsNull() {
 		flex.Flatten(ctx, out.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)
 	} else {
-		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
+		state.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironments(out.ComputeEnvironmentOrder))
 	}
 	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
@@ -225,7 +225,7 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 	if !data.ComputeEnvironmentOrder.IsNull() {
 		flex.Flatten(ctx, out.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)
 	} else {
-		data.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
+		data.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironments(out.ComputeEnvironmentOrder))
 	}
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -432,7 +432,7 @@ func expandComputeEnvironments(order []string) (envs []*batch.ComputeEnvironment
 	return
 }
 
-func flattenComputeEnvironmentOrder(apiObject []*batch.ComputeEnvironmentOrder) []string {
+func flattenComputeEnvironments(apiObject []*batch.ComputeEnvironmentOrder) []string {
 	sort.Slice(apiObject, func(i, j int) bool {
 		return aws.ToInt64(apiObject[i].Order) < aws.ToInt64(apiObject[j].Order)
 	})
