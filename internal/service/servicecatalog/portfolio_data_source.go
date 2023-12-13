@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -15,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_servicecatalog_portfolio")
 func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
@@ -61,7 +65,7 @@ func DataSourcePortfolio() *schema.Resource {
 
 func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get("id").(string)),
@@ -95,7 +99,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags := KeyValueTags(output.Tags)
+	tags := KeyValueTags(ctx, output.Tags)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

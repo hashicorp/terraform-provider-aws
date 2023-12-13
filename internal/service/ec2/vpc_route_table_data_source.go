@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -17,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route_table")
 func DataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTableRead,
@@ -180,7 +184,7 @@ func DataSourceRouteTable() *schema.Resource {
 
 func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
@@ -203,7 +207,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		},
 	)
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		Tags(tftags.New(tags.(map[string]interface{}))),
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
@@ -239,7 +243,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_id", rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set("tags", KeyValueTags(rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"})).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -258,7 +262,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
-		if aws.StringValue(r.GatewayId) == "local" {
+		if gatewayID := aws.StringValue(r.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 

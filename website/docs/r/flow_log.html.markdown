@@ -27,48 +27,44 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_iam_role" "example" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "vpc-flow-logs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["vpc-flow-logs.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "example" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "example"
-  role = aws_iam_role.example.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  name   = "example"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -105,46 +101,42 @@ resource "aws_s3_bucket_acl" "example" {
   acl    = "private"
 }
 
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 resource "aws_iam_role" "example" {
   name               = "firehose_test_role"
-  assume_role_policy = <<EOF
- {
-   "Version":"2012-10-17",
-   "Statement": [
-     {
-       "Action":"sts:AssumeRole",
-       "Principal":{
-         "Service":"firehose.amazonaws.com"
-       },
-       "Effect":"Allow",
-       "Sid":""
-     }
-   ]
- }
- EOF
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  effect = "Allow"
+
+  actions = [
+    "logs:CreateLogDelivery",
+    "logs:DeleteLogDelivery",
+    "logs:ListLogDeliveries",
+    "logs:GetLogDelivery",
+    "firehose:TagDeliveryStream",
+  ]
+
+  resources = ["*"]
 }
 
 resource "aws_iam_role_policy" "example" {
   name   = "test"
   role   = aws_iam_role.example.id
-  policy = <<EOF
- {
-   "Version":"2012-10-17",
-   "Statement":[
-     {
-       "Action": [
-         "logs:CreateLogDelivery",
-         "logs:DeleteLogDelivery",
-         "logs:ListLogDeliveries",
-         "logs:GetLogDelivery",
-         "firehose:TagDeliveryStream"
-       ],
-       "Effect":"Allow",
-       "Resource":"*"
-     }
-   ]
- }
- EOF
+  policy = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -186,14 +178,15 @@ resource "aws_s3_bucket" "example" {
 
 ~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
+* `deliver_cross_account_role` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to
 * `iam_role_arn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
 * `log_destination_type` - (Optional) The type of the logging destination. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_destination` - (Optional) The ARN of the logging destination. Either `log_destination` or `log_group_name` must be set.
-* `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group. Either `log_group_name` or `log_destination` must be set.
+* `log_group_name` - (Optional) **Deprecated:** Use `log_destination` instead. The name of the CloudWatch log group. Either `log_group_name` or `log_destination` must be set.
 * `subnet_id` - (Optional) Subnet ID to attach to
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to
@@ -202,7 +195,7 @@ The following arguments are supported:
 * `max_aggregation_interval` - (Optional) The maximum interval of time
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
-  minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` _must_ be 60 seconds (1 minute).
+  minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
 * `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -214,9 +207,9 @@ Describes the destination options for a flow log.
 * `hive_compatible_partitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
 * `per_hour_partition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Flow Log ID
 * `arn` - The ARN of the Flow Log.
@@ -224,8 +217,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Flow Logs can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Flow Logs using the `id`. For example:
 
+```terraform
+import {
+  to = aws_flow_log.test_flow_log
+  id = "fl-1a2b3c4d"
+}
 ```
-$ terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
+
+Using `terraform import`, import Flow Logs using the `id`. For example:
+
+```console
+% terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
 ```

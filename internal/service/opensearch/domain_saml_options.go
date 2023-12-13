@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_opensearch_domain_saml_options")
 func ResourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainSAMLOptionsPut,
@@ -113,7 +117,7 @@ func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bo
 
 func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
@@ -140,7 +144,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}
@@ -168,7 +172,7 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}

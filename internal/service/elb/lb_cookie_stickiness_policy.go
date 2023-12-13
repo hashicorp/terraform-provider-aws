@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_lb_cookie_stickiness_policy")
 func ResourceCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCookieStickinessPolicyCreate,
@@ -51,7 +55,7 @@ func ResourceCookieStickinessPolicy() *schema.Resource {
 
 func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
@@ -95,7 +99,7 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 
 func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, policyName, err := LBCookieStickinessPolicyParseResourceID(d.Id())
 
@@ -132,7 +136,7 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 
 func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, policyName, err := LBCookieStickinessPolicyParseResourceID(d.Id())
 

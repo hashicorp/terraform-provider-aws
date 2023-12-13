@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -10,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_method")
 func ResourceMethod() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMethodCreate,
@@ -101,7 +105,7 @@ func ResourceMethod() *schema.Resource {
 
 func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.PutMethodInput{
 		ApiKeyRequired:    aws.Bool(d.Get("api_key_required").(bool)),
@@ -148,7 +152,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	method, err := FindMethodByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
 
@@ -176,7 +180,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -271,7 +275,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/operationName"),
 			Value: operation_name,
 		})
@@ -290,12 +294,54 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method (%s): %s", d.Id(), err)
 	}
 
+	// Get current cacheKeyParameters from integration before any request parameters are updated on method.
+	replacedRequestParameters := []string{}
+	var currentCacheKeyParameters []*string
+	if integration, err := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string)); err == nil {
+		currentCacheKeyParameters = integration.CacheKeyParameters
+
+		for _, operation := range operations {
+			if aws.StringValue(operation.Op) == apigateway.OpReplace && strings.HasPrefix(aws.StringValue(operation.Path), "/requestParameters") {
+				parts := strings.Split(aws.StringValue(operation.Path), "/")
+				replacedRequestParameters = append(replacedRequestParameters, parts[2])
+			}
+		}
+
+		// Update integration with cacheKeyParameters for replaced request parameters.
+		integrationOperations := make([]*apigateway.PatchOperation, 0)
+
+		for _, replacedRequestParameter := range replacedRequestParameters {
+			for _, cacheKeyParameter := range currentCacheKeyParameters {
+				if aws.StringValue(cacheKeyParameter) == replacedRequestParameter {
+					integrationOperations = append(integrationOperations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpAdd),
+						Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", replacedRequestParameter)),
+						Value: aws.String(""),
+					})
+				}
+			}
+		}
+
+		input := &apigateway.UpdateIntegrationInput{
+			HttpMethod:      aws.String(d.Get("http_method").(string)),
+			PatchOperations: integrationOperations,
+			ResourceId:      aws.String(d.Get("resource_id").(string)),
+			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+		}
+
+		_, err = conn.UpdateIntegrationWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration: %s", err)
+		}
+	}
+
 	return append(diags, resourceMethodRead(ctx, d, meta)...)
 }
 
 func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 	_, err := conn.DeleteMethodWithContext(ctx, &apigateway.DeleteMethodInput{
@@ -325,7 +371,7 @@ func FindMethodByThreePartKey(ctx context.Context, conn *apigateway.APIGateway, 
 	output, err := conn.GetMethodWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_domain_dkim")
 func ResourceDomainDKIM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainDKIMCreate,
@@ -38,7 +42,7 @@ func ResourceDomainDKIM() *schema.Resource {
 
 func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Get("domain").(string)
 
@@ -58,7 +62,7 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
 	d.Set("domain", domainName)

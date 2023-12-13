@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -10,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceClusterAuth() *schema.Resource {
+// @SDKDataSource("aws_eks_cluster_auth")
+func dataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterAuthRead,
 
@@ -20,7 +24,6 @@ func DataSourceClusterAuth() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-
 			"token": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -32,19 +35,20 @@ func DataSourceClusterAuth() *schema.Resource {
 
 func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).STSConn()
+	conn := meta.(*conns.AWSClient).STSConn(ctx)
+
 	name := d.Get("name").(string)
 	generator, err := NewGenerator(false, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting token generator: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	toke, err := generator.GetWithSTS(ctx, name, conn)
+	token, err := generator.GetWithSTS(ctx, name, conn)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting token: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s) Authentication Token: %s", name, err)
 	}
 
 	d.SetId(name)
-	d.Set("token", toke.Token)
+	d.Set("token", token.Token)
 
 	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -15,12 +18,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_attachment")
 func DataSourceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"association_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"association_transit_gateway_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +73,7 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 
 func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
@@ -97,6 +109,13 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	if v := transitGatewayAttachment.Association; v != nil {
+		d.Set("association_state", v.State)
+		d.Set("association_transit_gateway_route_table_id", v.TransitGatewayRouteTableId)
+	} else {
+		d.Set("association_state", nil)
+		d.Set("association_transit_gateway_route_table_id", nil)
+	}
 	d.Set("resource_id", transitGatewayAttachment.ResourceId)
 	d.Set("resource_owner_id", resourceOwnerID)
 	d.Set("resource_type", transitGatewayAttachment.ResourceType)
@@ -105,7 +124,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

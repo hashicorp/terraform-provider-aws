@@ -158,7 +158,7 @@ The following arguments are optional:
 
 The `alarms` configuration block supports the following:
 
-* `alarms_names` - (Required) One or more CloudWatch alarm names.
+* `alarm_names` - (Required) One or more CloudWatch alarm names.
 * `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
 * `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
@@ -272,9 +272,9 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `dns_name` - (Optional) The name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) The listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `cluster` - Amazon Resource Name (ARN) of cluster which the service runs on.
 * `desired_count` - Number of instances of the task definition.
@@ -293,8 +293,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS services can be imported using the `name` together with ecs cluster `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS services using the `name` together with ecs cluster `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_service.imported
+  id = "cluster-name/service-name"
+}
 ```
-$ terraform import aws_ecs_service.imported cluster-name/service-name
+
+Using `terraform import`, import ECS services using the `name` together with ecs cluster `name`. For example:
+
+```console
+% terraform import aws_ecs_service.imported cluster-name/service-name
 ```

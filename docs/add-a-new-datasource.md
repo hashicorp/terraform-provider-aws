@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Data Source
 
 New data sources are required when AWS adds a new service, or adds new features within an existing service which would require a new data source to allow practitioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a data source, but some are more useful than others.
@@ -32,7 +33,51 @@ Attribute names are to specified in `snake_case` as opposed to the AWS API which
 
 These will map the AWS API response to the data source schema. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
 
+### Register Data Source to the provider
+
+Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make gen` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+
+=== "Terraform Plugin Framework (Preferred)"
+
+    ```go
+    package something
+
+    import (
+        "github.com/hashicorp/terraform-plugin-framework/datasource"
+        "github.com/hashicorp/terraform-provider-aws/internal/framework"
+    )
+
+    // @FrameworkDataSource(name="Example")
+    func newResourceExample(_ context.Context) (datasource.ResourceWithConfigure, error) {
+    	return &dataSourceExample{}, nil
+    }
+
+    type dataSourceExample struct {
+	    framework.DataSourceWithConfigure
+    }
+
+    func (r *dataSourceExample) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+    	response.TypeName = "aws_something_example"
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    package something
+
+    import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+    // @SDKDataSource("aws_something_example", name="Example")
+    func DataSourceExample() *schema.Resource {
+    	return &schema.Resource{
+    	    // some configuration
+    	}
+    }
+    ```
+
 ### Write Passing Acceptance Tests
+
 In order to adequately test the data source we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the provider to read to state of the associated resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
 You will need at minimum:

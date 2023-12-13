@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_api_gateway_documentation_version")
 func ResourceDocumentationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentationVersionCreate,
@@ -47,7 +51,7 @@ func ResourceDocumentationVersion() *schema.Resource {
 
 func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 
@@ -73,7 +77,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 	log.Printf("[DEBUG] Reading API Gateway Documentation Version %s", d.Id())
 
 	apiId, docVersion, err := DecodeDocumentationVersionID(d.Id())
@@ -103,7 +107,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 	log.Printf("[DEBUG] Updating API Gateway Documentation Version %s", d.Id())
 
 	_, err := conn.UpdateDocumentationVersionWithContext(ctx, &apigateway.UpdateDocumentationVersionInput{
@@ -127,7 +131,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
 
 	_, err := conn.DeleteDocumentationVersionWithContext(ctx, &apigateway.DeleteDocumentationVersionInput{

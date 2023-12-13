@@ -1,34 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"sort"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dynamodb_global_table.test"
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckGlobalTable(ctx, t)
-			testAccGlobalTablePreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,23 +37,23 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
-				ExpectError: regexp.MustCompile("name length must be between 3 and 255 characters"),
+				ExpectError: regexache.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
 				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(256)),
-				ExpectError: regexp.MustCompile("name length must be between 3 and 255 characters"),
+				ExpectError: regexache.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
 				Config:      testAccGlobalTableConfig_invalidName("!!!!"),
-				ExpectError: regexp.MustCompile("name must only include alphanumeric, underscore, period, or hyphen characters"),
+				ExpectError: regexache.MustCompile("name must only include alphanumeric, underscore, period, or hyphen characters"),
 			},
 			{
-				Config: testAccGlobalTableConfig_basic(tableName),
+				Config: testAccGlobalTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalTableExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
+					testAccCheckGlobalTableExists(ctx, resourceName),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
 				),
 			},
 			{
@@ -67,45 +68,44 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dynamodb_global_table.test"
-	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckGlobalTable(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccGlobalTablePreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGlobalTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalTableConfig_multipleRegions1(tableName),
+				Config: testAccGlobalTableConfig_multipleRegions1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalTableExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
+					testAccCheckGlobalTableExists(ctx, resourceName),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
 				),
 			},
 			{
-				Config:            testAccGlobalTableConfig_multipleRegions1(tableName),
+				Config:            testAccGlobalTableConfig_multipleRegions1(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalTableConfig_multipleRegions2(tableName),
+				Config: testAccGlobalTableConfig_multipleRegions2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalTableExists(resourceName),
+					testAccCheckGlobalTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
 			{
-				Config: testAccGlobalTableConfig_multipleRegions1(tableName),
+				Config: testAccGlobalTableConfig_multipleRegions1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalTableExists(resourceName),
+					testAccCheckGlobalTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
@@ -115,45 +115,67 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 
 func testAccCheckGlobalTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_global_table" {
 				continue
 			}
 
-			input := &dynamodb.DescribeGlobalTableInput{
-				GlobalTableName: aws.String(rs.Primary.ID),
+			_, err := tfdynamodb.FindGlobalTableByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.DescribeGlobalTableWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
-					return nil
-				}
 				return err
 			}
 
-			return fmt.Errorf("Expected DynamoDB Global Table to be destroyed, %s found", rs.Primary.ID)
+			return fmt.Errorf("DynamoDB Global Table %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGlobalTableExists(name string) resource.TestCheckFunc {
+func testAccCheckGlobalTableExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		return nil
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DynamoDB Global Table ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+
+		_, err := tfdynamodb.FindGlobalTableByName(ctx, conn, rs.Primary.ID)
+
+		return err
 	}
 }
 
 func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+	// Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
+	supportedRegions := []string{
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApNortheast2RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuCentral1RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.EuWest2RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsEast2RegionID,
+		endpoints.UsWest1RegionID,
+		endpoints.UsWest2RegionID,
+	}
+	acctest.PreCheckRegion(t, supportedRegions...)
+
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 	input := &dynamodb.ListGlobalTablesInput{}
 
@@ -168,36 +190,13 @@ func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
 	}
 }
 
-// testAccGlobalTablePreCheck checks if aws_dynamodb_global_table (version 2017.11.29) can be used and skips test if not.
-// Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
-func testAccGlobalTablePreCheck(t *testing.T) {
-	supportRegionsSort := []string{
-		endpoints.ApNortheast1RegionID,
-		endpoints.ApNortheast2RegionID,
-		endpoints.ApSoutheast1RegionID,
-		endpoints.ApSoutheast2RegionID,
-		endpoints.EuCentral1RegionID,
-		endpoints.EuWest1RegionID,
-		endpoints.EuWest2RegionID,
-		endpoints.UsEast1RegionID,
-		endpoints.UsEast2RegionID,
-		endpoints.UsWest1RegionID,
-		endpoints.UsWest2RegionID,
-	}
-
-	if acctest.Region() != supportRegionsSort[sort.SearchStrings(supportRegionsSort, acctest.Region())] {
-		t.Skipf("skipping test; aws_dynamodb_global_table (DynamoDB v2017.11.29) not supported in region %s", acctest.Region())
-	}
-}
-
-func testAccGlobalTableConfig_basic(tableName string) string {
+func testAccGlobalTableConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 resource "aws_dynamodb_table" "test" {
   hash_key         = "myAttribute"
-  name             = "%s"
+  name             = %[1]q
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
   read_capacity    = 1
@@ -212,17 +211,17 @@ resource "aws_dynamodb_table" "test" {
 resource "aws_dynamodb_global_table" "test" {
   depends_on = [aws_dynamodb_table.test]
 
-  name = "%s"
+  name = %[1]q
 
   replica {
     region_name = data.aws_region.current.name
   }
 }
-`, tableName, tableName)
+`, rName)
 }
 
-func testAccGlobalTableConfig_MultipleRegions_tables(tableName string) string {
-	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
+func testAccGlobalTableConfig_baseMultipleRegions(tableName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
 }
@@ -258,11 +257,11 @@ resource "aws_dynamodb_table" "alternate" {
     type = "S"
   }
 }
-`, tableName)
+`, tableName))
 }
 
 func testAccGlobalTableConfig_multipleRegions1(tableName string) string {
-	return testAccGlobalTableConfig_MultipleRegions_tables(tableName) + `
+	return acctest.ConfigCompose(testAccGlobalTableConfig_baseMultipleRegions(tableName), `
 resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
@@ -270,11 +269,11 @@ resource "aws_dynamodb_global_table" "test" {
     region_name = data.aws_region.current.name
   }
 }
-`
+`)
 }
 
 func testAccGlobalTableConfig_multipleRegions2(tableName string) string {
-	return testAccGlobalTableConfig_MultipleRegions_tables(tableName) + `
+	return acctest.ConfigCompose(testAccGlobalTableConfig_baseMultipleRegions(tableName), `
 resource "aws_dynamodb_global_table" "test" {
   depends_on = [aws_dynamodb_table.alternate]
 
@@ -288,7 +287,7 @@ resource "aws_dynamodb_global_table" "test" {
     region_name = data.aws_region.current.name
   }
 }
-`
+`)
 }
 
 func testAccGlobalTableConfig_invalidName(tableName string) string {
@@ -296,7 +295,7 @@ func testAccGlobalTableConfig_invalidName(tableName string) string {
 data "aws_region" "current" {}
 
 resource "aws_dynamodb_global_table" "test" {
-  name = "%s"
+  name = %[1]q
 
   replica {
     region_name = data.aws_region.current.name

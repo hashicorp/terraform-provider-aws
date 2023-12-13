@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2_test
 
 import (
@@ -9,8 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -19,27 +22,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspector2OrganizationConfiguration_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccOrganizationConfiguration_basic,
-		"disappears": testAccOrganizationConfiguration_disappears,
-		"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccOrganizationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -64,9 +55,9 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -91,9 +82,9 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -112,9 +103,67 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 	})
 }
 
+func testAccOrganizationConfiguration_lambda(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_inspector2_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccOrganizationConfiguration_lambdaCode(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_inspector2_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		enabledDelAdAcct := false
 
@@ -145,7 +194,7 @@ func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.
 				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
 			}
 
-			if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) {
+			if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) && !aws.ToBool(out.AutoEnable.Lambda) && !aws.ToBool(out.AutoEnable.LambdaCode) {
 				if enabledDelAdAcct {
 					if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
 						return err
@@ -209,7 +258,7 @@ func testAccCheckOrganizationConfigurationExists(ctx context.Context, name strin
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameOrganizationConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		_, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 
@@ -238,4 +287,22 @@ resource "aws_inspector2_organization_configuration" "test" {
   depends_on = [aws_inspector2_delegated_admin_account.test]
 }
 `, ec2, ecr)
+}
+
+func testAccOrganizationConfigurationConfig_lambda(ec2, ecr, lambda, lambda_code bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+resource "aws_inspector2_organization_configuration" "test" {
+  auto_enable {
+    ec2         = %[1]t
+    ecr         = %[2]t
+    lambda      = %[3]t
+    lambda_code = %[4]t
+  }
+  depends_on = [aws_inspector2_delegated_admin_account.test]
+}
+`, ec2, ecr, lambda, lambda_code)
 }

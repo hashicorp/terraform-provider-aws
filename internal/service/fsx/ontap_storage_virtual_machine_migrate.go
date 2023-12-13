@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -9,9 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceOntapStorageVirtualMachineV0() *schema.Resource {
+func ResourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 0,
 		Schema: map[string]*schema.Schema{
@@ -196,8 +200,8 @@ func ResourceOntapStorageVirtualMachineV0() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(8, 50),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -206,7 +210,7 @@ func ResourceOntapStorageVirtualMachineV0() *schema.Resource {
 	}
 }
 
-func ResourceOntapStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func ResourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
 	rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"] = rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"]

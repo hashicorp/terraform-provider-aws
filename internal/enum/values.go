@@ -1,17 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package enum
 
-type valueser[T ~string] interface {
+type Valueser[T ~string] interface {
 	~string
 	Values() []T
 }
 
-func Values[T valueser[T]]() []string {
-	l := T("").Values()
-
-	return Slice(l...)
+func EnumValues[T Valueser[T]]() []T {
+	return T("").Values()
 }
 
-func Slice[T valueser[T]](l ...T) []string {
+func Values[T Valueser[T]]() []string {
+	return Slice(EnumValues[T]()...)
+}
+
+func Slice[T Valueser[T]](l ...T) []string {
 	result := make([]string, len(l))
 	for i, v := range l {
 		result[i] = string(v)

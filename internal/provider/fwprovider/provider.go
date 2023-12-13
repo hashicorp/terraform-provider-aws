@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwprovider
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"reflect"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +69,11 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			},
 			"http_proxy": schema.StringAttribute{
 				Optional:    true,
-				Description: "The address of an HTTP proxy to use when accessing the AWS API. Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
+				Description: "URL of a proxy to use for HTTP requests when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.",
+			},
+			"https_proxy": schema.StringAttribute{
+				Optional:    true,
+				Description: "URL of a proxy to use for HTTPS requests when accessing the AWS API. Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.",
 			},
 			"insecure": schema.BoolAttribute{
 				Optional:    true,
@@ -76,6 +83,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "The maximum number of times an AWS API request is\nbeing executed. If the API request still fails, an error is\nthrown.",
 			},
+			"no_proxy": schema.StringAttribute{
+				Optional:    true,
+				Description: "Comma-separated list of hosts that should not use HTTP or HTTPS proxies. Can also be set using the `NO_PROXY` or `no_proxy` environment variables.",
+			},
 			"profile": schema.StringAttribute{
 				Optional:    true,
 				Description: "The profile for API operations. If not set, the default profile\ncreated with `aws configure` will be used.",
@@ -84,14 +95,19 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 			},
-			"s3_force_path_style": schema.BoolAttribute{
-				Optional:           true,
-				Description:        "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-				DeprecationMessage: "Use s3_use_path_style instead.",
+			"retry_mode": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"s3_us_east_1_regional_endpoint": schema.StringAttribute{
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " + //lintignore:AWSAT003
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
 			},
 			"secret_key": schema.StringAttribute{
 				Optional:    true,
@@ -102,11 +118,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 			},
-			"shared_credentials_file": schema.StringAttribute{
-				Optional:           true,
-				Description:        "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-				DeprecationMessage: "Use shared_credentials_files instead.",
-			},
 			"shared_credentials_files": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -115,11 +126,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			"skip_credentials_validation": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
-			},
-			"skip_get_ec2_platforms": schema.BoolAttribute{
-				Optional:           true,
-				Description:        "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				DeprecationMessage: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": schema.StringAttribute{
 				Optional:    true,
@@ -161,11 +167,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							CustomType:  fwtypes.DurationType,
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-						},
-						"duration_seconds": schema.Int64Attribute{
-							Optional:           true,
-							Description:        "The duration, in seconds, of the role session.",
-							DeprecationMessage: "Use assume_role.duration instead",
 						},
 						"external_id": schema.StringAttribute{
 							Optional:    true,
@@ -298,25 +299,70 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // The data source type name is determined by the DataSource implementing
 // the Metadata method. All data sources must have unique names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var errs []error
 	var dataSources []func() datasource.DataSource
 
-	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+
 		for _, v := range sp.FrameworkDataSources(ctx) {
-			v, err := v(ctx)
+			v := v
+			inner, err := v.Factory(ctx)
 
 			if err != nil {
 				tflog.Warn(ctx, "creating data source", map[string]interface{}{
-					"service_package_name": sp.ServicePackageName(),
+					"service_package_name": n,
 					"error":                err.Error(),
 				})
 
 				continue
 			}
 
+			metadataResponse := datasource.MetadataResponse{}
+			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
+			typeName := metadataResponse.TypeName
+
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
+				if meta != nil {
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = meta.RegisterLogger(ctx)
+				}
+
+				return ctx
+			}
+			interceptors := dataSourceInterceptors{}
+
+			if v.Tags != nil {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := datasource.SchemaResponse{}
+				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if !v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+			}
+
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(v)
+				return newWrappedDataSource(bootstrapContext, inner, interceptors)
 			})
 		}
+	}
+
+	if err := errors.Join(errs...); err != nil {
+		tflog.Warn(ctx, "registering data sources", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	return dataSources
@@ -328,25 +374,75 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // The resource type name is determined by the Resource implementing
 // the Metadata method. All resources must have unique names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var errs []error
 	var resources []func() resource.Resource
 
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+
 		for _, v := range sp.FrameworkResources(ctx) {
-			v, err := v(ctx)
+			v := v
+			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				tflog.Warn(ctx, "creating resource", map[string]interface{}{
-					"service_package_name": sp.ServicePackageName(),
-					"error":                err.Error(),
-				})
-
+				errs = append(errs, fmt.Errorf("creating resource: %w", err))
 				continue
 			}
 
+			metadataResponse := resource.MetadataResponse{}
+			inner.Metadata(ctx, resource.MetadataRequest{}, &metadataResponse)
+			typeName := metadataResponse.TypeName
+
+			// bootstrapContext is run on all wrapped methods before any interceptors.
+			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
+				if meta != nil {
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = meta.RegisterLogger(ctx)
+				}
+
+				return ctx
+			}
+			interceptors := resourceInterceptors{}
+
+			if v.Tags != nil {
+				// The resource has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := resource.SchemaResponse{}
+				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
+					if !v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTagsAll, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
+			}
+
 			resources = append(resources, func() resource.Resource {
-				return newWrappedResource(v)
+				return newWrappedResource(bootstrapContext, inner, interceptors)
 			})
 		}
+	}
+
+	if err := errors.Join(errs...); err != nil {
+		tflog.Warn(ctx, "registering resources", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	return resources
@@ -366,157 +462,5 @@ func endpointsBlock() schema.SetNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: endpointsAttributes,
 		},
-	}
-}
-
-// wrappedDataSource wraps a data source, adding common functionality.
-type wrappedDataSource struct {
-	inner    datasource.DataSourceWithConfigure
-	typeName string
-}
-
-func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
-	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
-}
-
-func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	w.inner.Metadata(ctx, request, response)
-}
-
-func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	w.inner.Schema(ctx, request, response)
-}
-
-func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
-
-	w.inner.Read(ctx, request, response)
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
-}
-
-func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	w.inner.Configure(ctx, request, response)
-}
-
-// wrappedResource wraps a resource, adding common functionality.
-type wrappedResource struct {
-	inner    resource.ResourceWithConfigure
-	meta     *conns.AWSClient
-	typeName string
-}
-
-func newWrappedResource(inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
-	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
-}
-
-func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	w.inner.Metadata(ctx, request, response)
-}
-
-func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	w.inner.Schema(ctx, request, response)
-}
-
-func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
-
-	w.inner.Create(ctx, request, response)
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Create exit", w.typeName))
-}
-
-func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
-
-	w.inner.Read(ctx, request, response)
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
-}
-
-func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
-
-	w.inner.Update(ctx, request, response)
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Update exit", w.typeName))
-}
-
-func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	if w.meta != nil {
-		ctx = w.meta.InitContext(ctx)
-	}
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
-
-	w.inner.Delete(ctx, request, response)
-
-	tflog.Debug(ctx, fmt.Sprintf("%s.Delete exit", w.typeName))
-}
-
-func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		w.meta = v
-	}
-
-	w.inner.Configure(ctx, request, response)
-}
-
-func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
-		if w.meta != nil {
-			ctx = w.meta.InitContext(ctx)
-		}
-
-		v.ImportState(ctx, request, response)
-
-		return
-	}
-
-	response.Diagnostics.AddError(
-		"Resource Import Not Implemented",
-		"This resource does not support import. Please contact the provider developer for additional information.",
-	)
-}
-
-func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
-		if w.meta != nil {
-			ctx = w.meta.InitContext(ctx)
-		}
-
-		v.ModifyPlan(ctx, request, response)
-
-		return
-	}
-}
-
-func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
-		return v.ConfigValidators(ctx)
-	}
-
-	return nil
-}
-
-func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	if v, ok := w.inner.(resource.ResourceWithValidateConfig); ok {
-		if w.meta != nil {
-			ctx = w.meta.InitContext(ctx)
-		}
-
-		v.ValidateConfig(ctx, request, response)
 	}
 }

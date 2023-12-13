@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +21,7 @@ func FindCachePolicyByID(ctx context.Context, conn *cloudfront.CloudFront, id st
 	output, err := conn.GetCachePolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCachePolicy) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -35,31 +38,6 @@ func FindCachePolicyByID(ctx context.Context, conn *cloudfront.CloudFront, id st
 	return output, nil
 }
 
-func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetDistributionOutput, error) {
-	input := &cloudfront.GetDistributionInput{
-		Id: aws.String(id),
-	}
-
-	output, err := conn.GetDistributionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
 	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
 		Id: aws.String(id),
@@ -68,7 +46,7 @@ func FindFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.Cl
 	output, err := conn.GetFieldLevelEncryptionConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -93,7 +71,7 @@ func FindFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	output, err := conn.GetFieldLevelEncryptionProfileWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -119,7 +97,7 @@ func FindFunctionByNameAndStage(ctx context.Context, conn *cloudfront.CloudFront
 	output, err := conn.DescribeFunctionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -143,8 +121,8 @@ func FindMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloud
 
 	output, err := conn.GetMonitoringSubscriptionWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil, &resource.NotFoundError{
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution, cloudfront.ErrCodeNoSuchMonitoringSubscription) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -169,7 +147,7 @@ func FindOriginRequestPolicyByID(ctx context.Context, conn *cloudfront.CloudFron
 	output, err := conn.GetOriginRequestPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -194,7 +172,7 @@ func FindRealtimeLogConfigByARN(ctx context.Context, conn *cloudfront.CloudFront
 	output, err := conn.GetRealtimeLogConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -219,7 +197,7 @@ func FindRealtimeLogConfigByName(ctx context.Context, conn *cloudfront.CloudFron
 	output, err := conn.GetRealtimeLogConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -244,7 +222,7 @@ func FindResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.CloudFr
 	output, err := conn.GetResponseHeadersPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResponseHeadersPolicy) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

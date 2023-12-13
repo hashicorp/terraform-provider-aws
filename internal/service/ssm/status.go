@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -5,15 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	documentStatusUnknown = "Unknown"
-)
-
-func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
+func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAssociationById(ctx, conn, id)
 
@@ -35,24 +34,7 @@ func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.S
 	}
 }
 
-// statusDocument fetches the Document and its Status
-func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDocumentByName(ctx, conn, name)
-
-		if err != nil {
-			return nil, ssm.DocumentStatusFailed, err
-		}
-
-		if output == nil {
-			return output, documentStatusUnknown, nil
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-func statusServiceSetting(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
+func statusServiceSetting(ctx context.Context, conn *ssm.SSM, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindServiceSettingByID(ctx, conn, id)
 

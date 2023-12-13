@@ -1,16 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceQueuePolicy() *schema.Resource {
+// @SDKResource("aws_sqs_queue_policy")
+func resourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
-		AttributeName: sqs.QueueAttributeNamePolicy,
+		AttributeName: types.QueueAttributeNamePolicy,
 		SchemaKey:     "policy",
 		ToSet:         verify.PolicyToSet,
 	}

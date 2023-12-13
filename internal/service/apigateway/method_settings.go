@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_method_settings")
 func ResourceMethodSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMethodSettingsUpdate,
@@ -136,9 +140,9 @@ func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
 
 func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	stage, err := FindStageByName(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
+	stage, err := FindStageByTwoPartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())
@@ -168,7 +172,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	methodPath := d.Get("method_path").(string)
 	prefix := fmt.Sprintf("/%s/", methodPath)
@@ -270,7 +274,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.UpdateStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),

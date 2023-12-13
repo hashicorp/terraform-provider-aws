@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_cloudfront_key_group")
 func ResourceKeyGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyGroupCreate,
@@ -49,7 +53,7 @@ func ResourceKeyGroup() *schema.Resource {
 
 func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.CreateKeyGroupInput{
 		KeyGroupConfig: expandKeyGroupConfig(d),
@@ -72,7 +76,7 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	input := &cloudfront.GetKeyGroupInput{
 		Id: aws.String(d.Id()),
 	}
@@ -103,7 +107,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
@@ -121,7 +125,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.DeleteKeyGroupInput{
 		Id:      aws.String(d.Id()),

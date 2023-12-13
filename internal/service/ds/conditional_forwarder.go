@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,12 +14,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_directory_service_conditional_forwarder")
 func ResourceConditionalForwarder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConditionalForwarderCreate,
@@ -46,10 +48,11 @@ func ResourceConditionalForwarder() *schema.Resource {
 			},
 
 			"remote_domain_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([a-zA-Z0-9]+[\.-])+([a-zA-Z0-9])+[.]?$`), "invalid value, see the RemoteDomainName attribute documentation: https://docs.aws.amazon.com/directoryservice/latest/devguide/API_ConditionalForwarder.html"),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				// Documentation is incorrect, the API call fails if a trailing period is included
+				ValidateFunc: domainValidator,
 			},
 		},
 	}
@@ -57,7 +60,7 @@ func ResourceConditionalForwarder() *schema.Resource {
 
 func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -81,7 +84,7 @@ func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
@@ -119,7 +122,7 @@ func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceConditionalForwarderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
@@ -143,7 +146,7 @@ func resourceConditionalForwarderUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceConditionalForwarderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {

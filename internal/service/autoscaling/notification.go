@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_autoscaling_notification")
 func ResourceNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationCreate,
@@ -43,7 +47,7 @@ func ResourceNotification() *schema.Resource {
 
 func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 	nl := flex.ExpandStringSet(d.Get("notifications").(*schema.Set))
 
@@ -60,7 +64,7 @@ func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 
 	opts := &autoscaling.DescribeNotificationConfigurationsInput{
@@ -124,7 +128,7 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	// Notifications API call is a PUT, so we don't need to diff the list, just
 	// push whatever it is and AWS sorts it out
@@ -196,7 +200,7 @@ func removeNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autosc
 
 func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 

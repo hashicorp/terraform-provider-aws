@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -8,10 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_network_insights_path")
 func DataSourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInsightsPathRead,
@@ -22,6 +27,10 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Computed: true,
 			},
 			"destination": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"destination_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,6 +56,10 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"source_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"source_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -57,7 +70,9 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 }
 
 func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNetworkInsightsPathsInput{}
@@ -78,23 +93,25 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	nip, err := FindNetworkInsightsPath(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Network Insights Path", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Insights Path", err))
 	}
 
 	networkInsightsPathID := aws.StringValue(nip.NetworkInsightsPathId)
 	d.SetId(networkInsightsPathID)
 	d.Set("arn", nip.NetworkInsightsPathArn)
 	d.Set("destination", nip.Destination)
+	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set("network_insights_path_id", networkInsightsPathID)
 	d.Set("protocol", nip.Protocol)
 	d.Set("source", nip.Source)
+	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	if err := d.Set("tags", KeyValueTags(nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

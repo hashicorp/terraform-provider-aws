@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -7,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func statusPermissions(ctx context.Context, conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) resource.StateRefreshFunc {
+func statusPermissions(ctx context.Context, conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		var permissions []*lakeformation.PrincipalResourcePermissions
 
@@ -38,7 +41,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.LakeFormation, i
 		}
 
 		if err != nil {
-			return nil, statusFailed, fmt.Errorf("error listing permissions: %w", err)
+			return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource

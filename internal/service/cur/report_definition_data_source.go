@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cur
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cur_report_definition")
 func DataSourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReportDefinitionRead,
@@ -69,7 +73,7 @@ func DataSourceReportDefinition() *schema.Resource {
 
 func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURConn()
+	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
 	reportName := d.Get("report_name").(string)
 

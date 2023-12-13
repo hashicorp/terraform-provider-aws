@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -38,6 +41,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z32O12XQLNTSW2",
 	endpoints.EuWest2RegionID:      "ZHURV8PSTC4K8",
 	endpoints.EuWest3RegionID:      "Z3Q77PNBQS71R4",
+	endpoints.IlCentral1RegionID:   "Z09170902867EHPV2DABU",
 	endpoints.MeCentral1RegionID:   "Z08230872XQRWHG2XF6I",
 	endpoints.MeSouth1RegionID:     "ZS929ML54UICD",
 	endpoints.SaEast1RegionID:      "Z2P70J7HTTTPLU",
@@ -74,6 +78,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z2IFOLAFXWLO4F",
 	endpoints.EuWest2RegionID:      "ZD4D7Y8KGAS4G",
 	endpoints.EuWest3RegionID:      "Z1CMS0P5QUZ6D5",
+	endpoints.IlCentral1RegionID:   "Z0313266YDI6ZRHTGQY4",
 	endpoints.MeCentral1RegionID:   "Z00282643NTTLPANJJG2P",
 	endpoints.MeSouth1RegionID:     "Z3QSRYVP46NYYV",
 	endpoints.SaEast1RegionID:      "ZTK26PT1VY4CU",
@@ -85,6 +90,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z18D5FSROUN65G",
 }
 
+// @SDKDataSource("aws_lb_hosted_zone_id")
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,

@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,7 +77,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	return m
 }
 
-func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
+func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *types.EcsParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -101,7 +106,7 @@ func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 		a.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -129,7 +134,7 @@ func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 		a.ReferenceId = aws.String(v)
 	}
 
-	tags := tftags.New(tfMap["tags"].(map[string]interface{}))
+	tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
 
 	if len(tags) > 0 {
 		for k, v := range tags.IgnoreAWS().Map() {
@@ -151,7 +156,7 @@ func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 	return a
 }
 
-func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{} {
+func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -235,7 +240,7 @@ func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{}
 			tags[key] = tagMap["value"]
 		}
 
-		m["tags"] = tftags.New(tags).IgnoreAWS().Map()
+		m["tags"] = tftags.New(ctx, tags).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.TaskCount; v != nil {
@@ -598,7 +603,7 @@ func flattenSQSParameters(apiObject *types.SqsParameters) map[string]interface{}
 	return m
 }
 
-func expandTarget(tfMap map[string]interface{}) *types.Target {
+func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Target {
 	if tfMap == nil {
 		return nil
 	}
@@ -609,15 +614,15 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.Arn = aws.String(v)
 	}
 
-	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 {
-		a.EcsParameters = expandECSParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ecs_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.EcsParameters = expandECSParameters(ctx, v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["eventbridge_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.EventBridgeParameters = expandEventBridgeParameters(v[0].(map[string]interface{}))
 	}
 
@@ -625,7 +630,7 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.Input = aws.String(v)
 	}
 
-	if v, ok := tfMap["kinesis_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kinesis_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.KinesisParameters = expandKinesisParameters(v[0].(map[string]interface{}))
 	}
 
@@ -633,22 +638,22 @@ func expandTarget(tfMap map[string]interface{}) *types.Target {
 		a.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["retry_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["retry_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.RetryPolicy = expandRetryPolicy(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sagemaker_pipeline_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SageMakerPipelineParameters = expandSageMakerPipelineParameters(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sqs_parameters"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sqs_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SqsParameters = expandSQSParameters(v[0].(map[string]interface{}))
 	}
 
 	return a
 }
 
-func flattenTarget(apiObject *types.Target) map[string]interface{} {
+func flattenTarget(ctx context.Context, apiObject *types.Target) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -664,7 +669,7 @@ func flattenTarget(apiObject *types.Target) map[string]interface{} {
 	}
 
 	if v := apiObject.EcsParameters; v != nil {
-		m["ecs_parameters"] = []interface{}{flattenECSParameters(v)}
+		m["ecs_parameters"] = []interface{}{flattenECSParameters(ctx, v)}
 	}
 
 	if v := apiObject.EventBridgeParameters; v != nil {

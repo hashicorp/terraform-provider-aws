@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -12,11 +14,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,6 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_appstream_fleet", name="Fleet")
+// @Tags(identifierAttribute="arn")
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -154,7 +159,7 @@ func ResourceFleet() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(600, 360000),
+				ValidateFunc: validation.IntBetween(600, 432000),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -193,22 +198,22 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
+		Tags:            getTagsIn(ctx),
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -262,25 +267,25 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	var err error
 	var output *appstream.CreateFleetOutput
-	err = resource.RetryContext(ctx, fleetOperationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, fleetOperationTimeout, func() *retry.RetryError {
 		output, err = conn.CreateFleetWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
+			}
+
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeConcurrentModificationException) {
+				return retry.RetryableError(err)
 			}
 
 			// Retry for IAM eventual consistency on error:
 			if tfawserr.ErrMessageContains(err, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -290,7 +295,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err = conn.CreateFleetWithContext(ctx, input)
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream Fleet (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "creating Appstream Fleet (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.Fleet.Name))
@@ -300,40 +305,39 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "starting Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
 	}
 
-	return resourceFleetRead(ctx, d, meta)
+	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appstream Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.Fleets) == 0 {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), "empty response"))
+		return sdkdiag.AppendErrorf(diags, "reading Appstream Fleet (%s): %s", d.Id(), "empty response")
 	}
 
 	if len(resp.Fleets) > 1 {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Fleet (%s): %s", d.Id(), "multiple fleets found"))
+		return sdkdiag.AppendErrorf(diags, "reading Appstream Fleet (%s): %s", d.Id(), "multiple fleets found")
 	}
 
 	fleet := resp.Fleets[0]
@@ -342,7 +346,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if fleet.ComputeCapacityStatus != nil {
 		if err = d.Set("compute_capacity", []interface{}{flattenComputeCapacity(fleet.ComputeCapacityStatus)}); err != nil {
-			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "compute_capacity", err)
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "compute_capacity", err)
 		}
 	} else {
 		d.Set("compute_capacity", nil)
@@ -355,7 +359,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if fleet.DomainJoinInfo != nil {
 		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(fleet.DomainJoinInfo)}); err != nil {
-			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "domain_join_info", err)
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "domain_join_info", err)
 		}
 	} else {
 		d.Set("domain_join_info", nil)
@@ -375,40 +379,19 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if fleet.VpcConfig != nil {
 		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
-			return create.DiagSettingError(names.AppStream, "Fleet", d.Id(), "vpc_config", err)
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "vpc_config", err)
 		}
 	} else {
 		d.Set("vpc_config", nil)
 	}
 
-	tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
-		ResourceArn: fleet.Arn,
-	})
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
-	}
-
-	if tg.Tags == nil {
-		log.Printf("[DEBUG] AppStream Stack tags (%s) not found", d.Id())
-		return nil
-	}
-
-	tags := KeyValueTags(tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.UpdateFleetInput{
 		Name: aws.String(d.Id()),
 	}
@@ -424,10 +407,10 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Name: aws.String(d.Id()),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
 		}
 		if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
 		}
 	}
 
@@ -487,18 +470,9 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 	}
 
-	resp, err := conn.UpdateFleetWithContext(ctx, input)
+	_, err := conn.UpdateFleetWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Appstream Fleet (%s): %w", d.Id(), err))
-	}
-
-	if d.HasChange("tags") {
-		arn := aws.StringValue(resp.Fleet.Arn)
-
-		o, n := d.GetChange("tags")
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Appstream Fleet tags (%s): %w", d.Id(), err))
-		}
+		return sdkdiag.AppendErrorf(diags, "updating Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	// Start fleet workflow if stopped
@@ -507,19 +481,21 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Name: aws.String(d.Id()),
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "starting Appstream Fleet (%s): %s", d.Id(), err)
 		}
 
 		if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be running: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFleetRead(ctx, d, meta)
+	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	// Stop fleet workflow
 	log.Printf("[DEBUG] Stopping AppStream Fleet: (%s)", d.Id())
@@ -527,11 +503,11 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error stopping Appstream Fleet (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitFleetStateStopped(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Fleet (%s) to be stopped: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting AppStream Fleet: (%s)", d.Id())
@@ -540,14 +516,14 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Appstream Fleet (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Appstream Fleet (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceFleetCustDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {

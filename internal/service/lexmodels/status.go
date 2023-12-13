@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -16,7 +19,7 @@ const (
 	serviceStatusUnknown  = "UNKNOWN"
 )
 
-func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
+func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBotVersionByName(ctx, conn, name, version)
 
@@ -32,7 +35,7 @@ func statusBotVersion(ctx context.Context, conn *lexmodelbuildingservice.LexMode
 	}
 }
 
-func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
+func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSlotTypeVersionByName(ctx, conn, name, version)
 
@@ -48,7 +51,7 @@ func statusSlotType(ctx context.Context, conn *lexmodelbuildingservice.LexModelB
 	}
 }
 
-func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetIntentVersionsWithContext(ctx, &lexmodelbuildingservice.GetIntentVersionsInput{
 			Name: aws.String(id),
@@ -68,7 +71,7 @@ func statusIntent(ctx context.Context, conn *lexmodelbuildingservice.LexModelBui
 	}
 }
 
-func statusBotAlias(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
+func statusBotAlias(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),

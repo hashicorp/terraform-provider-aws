@@ -1,14 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"errors"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_attachment")
 func ResourceLoadBalancerAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerAttachmentCreate,
@@ -34,8 +40,8 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"instance_name": {
@@ -48,29 +54,25 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
 
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	lbName := d.Get("lb_name").(string)
 	req := lightsail.AttachInstancesToLoadBalancerInput{
-		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
-		InstanceNames:    aws.StringSlice([]string{d.Get("instance_name").(string)}),
+		LoadBalancerName: aws.String(lbName),
+		InstanceNames:    []string{d.Get("instance_name").(string)},
 	}
 
-	out, err := conn.AttachInstancesToLoadBalancerWithContext(ctx, &req)
+	out, err := conn.AttachInstancesToLoadBalancer(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeAttachInstancesToLoadBalancer), ResLoadBalancerAttachment, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("No operations found for Attach Instances to Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, lbName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Attach Instances to Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
@@ -81,36 +83,40 @@ func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(strings.Join(vars, ","))
 
-	return resourceLoadBalancerAttachmentRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerAttachmentById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerAttachment, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerAttachment, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerAttachment, d.Id(), err)
 	}
 
 	d.Set("instance_name", out)
 	d.Set("lb_name", expandLoadBalancerNameFromId(d.Id()))
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	if len(id_parts) != 2 {
-		return nil
+		return diags
 	}
 
 	lbName := id_parts[0]
@@ -118,28 +124,22 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 
 	in := lightsail.DetachInstancesFromLoadBalancerInput{
 		LoadBalancerName: aws.String(lbName),
-		InstanceNames:    aws.StringSlice([]string{iName}),
+		InstanceNames:    []string{iName},
 	}
 
-	out, err := conn.DetachInstancesFromLoadBalancerWithContext(ctx, &in)
+	out, err := conn.DetachInstancesFromLoadBalancer(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDetachInstancesFromLoadBalancer), ResLoadBalancerAttachment, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("No operations found for Detach Instances from Load Balancer request"))
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, lbName)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Instances to Detach from the Load Balancer request operation"))
-	}
-
-	return nil
+	return diags
 }
 
 func expandLoadBalancerNameFromId(id string) string {
@@ -147,4 +147,45 @@ func expandLoadBalancerNameFromId(id string) string {
 	lbName := id_parts[0]
 
 	return lbName
+}
+
+func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Client, id string) (*string, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer attachment id")
+	}
+
+	lbName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancer(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *string
+	entryExists := false
+
+	for _, n := range out.LoadBalancer.InstanceHealthSummary {
+		if iName == aws.ToString(n.InstanceName) {
+			entry = n.InstanceName
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
 }

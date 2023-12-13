@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
@@ -5,18 +8,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceNameByARN := "data.aws_lb_target_group.alb_tg_test_with_arn"
 	datasourceNameByName := "data.aws_lb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -31,6 +35,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByARN, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(datasourceNameByARN, "vpc_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameByARN, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrSet(datasourceNameByARN, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "slow_start", "0"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "tags.%", "1"),
@@ -51,6 +56,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByName, "port", "8080"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrSet(datasourceNameByName, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "vpc_id"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "slow_start", "0"),
@@ -72,11 +78,12 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -91,6 +98,7 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameArn, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceNameArn, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceNameArn, "tags.%", "1"),
@@ -113,12 +121,13 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
 	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -172,6 +181,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -183,7 +193,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 	dataSourceMatchFirstTagAndName := "data.aws_lb_target_group.tag_and_arn_match_first"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -195,7 +205,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "arn_suffix", resourceTg1, "arn_suffix"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "id", resourceTg1, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
-					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "load_balancing_cross_zone_enabled", resourceTg1, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.#", resourceTg1, "health_check.#"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.path", resourceTg1, "health_check.0.path"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.port", resourceTg1, "health_check.0.port"),
@@ -210,7 +220,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "arn_suffix", resourceTg2, "arn_suffix"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "id", resourceTg2, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "load_balancing_algorithm_type", resourceTg2, "load_balancing_algorithm_type"),
-					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "load_balancing_algorithm_type", resourceTg2, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "load_balancing_cross_zone_enabled", resourceTg2, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.#", resourceTg2, "health_check.#"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.path", resourceTg2, "health_check.0.path"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.port", resourceTg2, "health_check.0.port"),
@@ -225,7 +235,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "arn_suffix", resourceTg1, "arn_suffix"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "id", resourceTg1, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
-					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "load_balancing_cross_zone_enabled", resourceTg1, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.#", resourceTg1, "health_check.#"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.path", resourceTg1, "health_check.0.path"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.port", resourceTg1, "health_check.0.port"),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -15,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route53_zone")
 func DataSourceZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceZoneRead,
@@ -81,14 +85,14 @@ func DataSourceZone() *schema.Resource {
 
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, nameExists := d.GetOk("name")
 	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
 	vpcId, vpcIdExists := d.GetOk("vpc_id")
-	tags := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS()
+	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS()
 
 	if nameExists && idExists {
 		return sdkdiag.AppendErrorf(diags, "zone_id and name arguments can't be used together")
@@ -142,7 +146,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 				// we check if tags match
 				matchingTags := true
 				if len(tags) > 0 {
-					listTags, err := ListTags(ctx, conn, hostedZoneId, route53.TagResourceTypeHostedzone)
+					listTags, err := listTags(ctx, conn, hostedZoneId, route53.TagResourceTypeHostedzone)
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "finding Route 53 Hosted Zone: %s", err)
@@ -198,7 +202,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
 	}
 
-	tags, err = ListTags(ctx, conn, idHostedZone, route53.TagResourceTypeHostedzone)
+	tags, err = listTags(ctx, conn, idHostedZone, route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", idHostedZone, err)
@@ -239,7 +243,7 @@ func hostedZoneNameServers(ctx context.Context, conn *route53.Route53, id string
 	}
 
 	if output.HostedZone != nil && output.HostedZone.Config != nil && aws.BoolValue(output.HostedZone.Config.PrivateZone) {
-		nameServers, err := getNameServers(ctx, id, name, conn)
+		nameServers, err := findNameServers(ctx, conn, id, name)
 
 		if err != nil {
 			return nil, fmt.Errorf("listing Route 53 Hosted Zone (%s) NS records: %w", id, err)

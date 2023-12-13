@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lightsail_domain_entry: Add support for `AAAA` `type` value
+```

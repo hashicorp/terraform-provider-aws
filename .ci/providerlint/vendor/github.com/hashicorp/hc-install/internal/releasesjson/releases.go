@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package releasesjson
 
 import (
@@ -6,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -68,7 +72,11 @@ func (r *Releases) ListProductVersions(ctx context.Context, productName string) 
 		url.PathEscape(productName))
 	r.logger.Printf("requesting versions from %s", productIndexURL)
 
-	resp, err := client.Get(productIndexURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, productIndexURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request for %q: %w", productIndexURL, err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -107,13 +115,6 @@ func (r *Releases) ListProductVersions(ctx context.Context, productName string) 
 			continue
 		}
 
-		if ok, _ := versionIsSupported(v); !ok {
-			// Remove (currently unsupported) enterprise
-			// version and any other "custom" build
-			delete(p.Versions, rawVersion)
-			continue
-		}
-
 		p.Versions[rawVersion].Version = v
 	}
 
@@ -121,10 +122,6 @@ func (r *Releases) ListProductVersions(ctx context.Context, productName string) 
 }
 
 func (r *Releases) GetProductVersion(ctx context.Context, product string, version *version.Version) (*ProductVersion, error) {
-	if ok, err := versionIsSupported(version); !ok {
-		return nil, fmt.Errorf("%s: %w", product, err)
-	}
-
 	client := httpclient.NewHTTPClient()
 
 	indexURL := fmt.Sprintf("%s/%s/%s/index.json",
@@ -133,7 +130,11 @@ func (r *Releases) GetProductVersion(ctx context.Context, product string, versio
 		url.PathEscape(version.String()))
 	r.logger.Printf("requesting version from %s", indexURL)
 
-	resp, err := client.Get(indexURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, indexURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request for %q: %w", indexURL, err)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -165,13 +166,4 @@ func (r *Releases) GetProductVersion(ctx context.Context, product string, versio
 	}
 
 	return pv, nil
-}
-
-func versionIsSupported(v *version.Version) (bool, error) {
-	isSupported := v.Metadata() == ""
-	if !isSupported {
-		return false, fmt.Errorf("cannot obtain %s (enterprise versions are not supported)",
-			v.String())
-	}
-	return true, nil
 }

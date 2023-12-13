@@ -12,13 +12,13 @@ Provides an SES email identity resource
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `email` - (Required) The email address to assign to SES.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the email identity.
 
@@ -32,8 +32,17 @@ resource "aws_ses_email_identity" "example" {
 
 ## Import
 
-SES email identities can be imported using the email address.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES email identities using the email address. For example:
 
+```terraform
+import {
+  to = aws_ses_email_identity.example
+  id = "email@example.com"
+}
 ```
-$ terraform import aws_ses_email_identity.example email@example.com
+
+Using `terraform import`, import SES email identities using the email address. For example:
+
+```console
+% terraform import aws_ses_email_identity.example email@example.com
 ```

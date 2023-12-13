@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -44,6 +47,7 @@ var AccountIdPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:    "797873946194",
 }
 
+// @SDKDataSource("aws_elb_service_account")
 func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,

@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,8 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_glue_dev_endpoint", name="Dev Endpoint")
+// @Tags(identifierAttribute="arn")
 func ResourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevEndpointCreate,
@@ -40,7 +46,7 @@ func ResourceDevEndpoint() *schema.Resource {
 			"arguments": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -58,7 +64,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -121,8 +127,8 @@ func ResourceDevEndpoint() *schema.Resource {
 				ForceNew:     true,
 				RequiredWith: []string{"security_group_ids"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"private_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -168,15 +174,13 @@ func ResourceDevEndpoint() *schema.Resource {
 
 func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
+	name := d.Get("name").(string)
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
@@ -230,21 +234,21 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateDevEndpointWithContext(ctx, input)
 		if err != nil {
 			// Retry for IAM eventual consistency
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "should be given assume role permissions for Glue Service") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized to perform") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "S3 endpoint and NAT validation has failed for subnetId") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -269,9 +273,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	endpoint, err := FindDevEndpointByName(ctx, conn, d.Id())
 
@@ -377,23 +379,6 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting worker_type for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, endpointARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Dev Endpoint (%s): %s", endpointARN, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	if err := d.Set("yarn_endpoint_address", endpoint.YarnEndpointAddress); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting yarn_endpoint_address for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
@@ -407,7 +392,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateDevEndpointInput{
 		EndpointName: aws.String(d.Get("name").(string)),
@@ -421,7 +406,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		add, remove, _ := verify.DiffStringMaps(old, new)
+		add, remove, _ := flex.DiffStringMaps(old, new)
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {
@@ -480,14 +465,14 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if hasChanged {
 		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %s", input)
-		err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			_, err := conn.UpdateDevEndpointWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -501,19 +486,12 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceDevEndpointRead(ctx, d, meta)...)
 }
 
 func resourceDevEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
 	_, err := conn.DeleteDevEndpointWithContext(ctx, &glue.DeleteDevEndpointInput{

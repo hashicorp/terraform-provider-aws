@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -5,9 +8,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_lambda_function")
 func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionRead,
@@ -189,6 +194,10 @@ func DataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Computed: true,
@@ -212,7 +221,7 @@ func DataSourceFunction() *schema.Resource {
 
 func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	functionName := d.Get("function_name").(string)
@@ -231,7 +240,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// If no published version exists, AWS returns '$LATEST' for latestVersion
-		if v := aws.StringValue(latest.Version); v != FunctionVersionLatest {
+		if v := aws.ToString(latest.Version); v != FunctionVersionLatest {
 			input.Qualifier = aws.String(v)
 		}
 	}
@@ -243,9 +252,9 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	function := output.Configuration
-	functionARN := aws.StringValue(function.FunctionArn)
-	qualifierSuffix := fmt.Sprintf(":%s", aws.StringValue(input.Qualifier))
-	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
+	functionARN := aws.ToString(function.FunctionArn)
+	qualifierSuffix := fmt.Sprintf(":%s", aws.ToString(input.Qualifier))
+	versionSuffix := fmt.Sprintf(":%s", aws.ToString(function.Version))
 	qualifiedARN := functionARN
 	if !strings.HasSuffix(functionARN, qualifierSuffix) && !strings.HasSuffix(functionARN, versionSuffix) {
 		qualifiedARN = functionARN + versionSuffix
@@ -253,12 +262,12 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	unqualifiedARN := strings.TrimSuffix(functionARN, qualifierSuffix)
 
 	d.SetId(functionName)
-	d.Set("architectures", aws.StringValueSlice(function.Architectures))
+	d.Set("architectures", flattenArchitectures(function.Architectures))
 	d.Set("arn", unqualifiedARN)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
-				"target_arn": aws.StringValue(function.DeadLetterConfig.TargetArn),
+				"target_arn": aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
@@ -301,13 +310,13 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 	d.Set("timeout", function.Timeout)
-	tracingConfigMode := lambda.TracingModePassThrough
+	tracingConfigMode := types.TracingModePassThrough
 	if function.TracingConfig != nil {
-		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
+		tracingConfigMode = function.TracingConfig.Mode
 	}
 	if err := d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
-			"mode": tracingConfigMode,
+			"mode": string(tracingConfigMode),
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
@@ -317,7 +326,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -325,8 +334,8 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if partition := meta.(*conns.AWSClient).Partition; partition == endpoints.AwsPartitionID && SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
 		var codeSigningConfigArn string
 
-		if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
-			output, err := conn.GetFunctionCodeSigningConfigWithContext(ctx, &lambda.GetFunctionCodeSigningConfigInput{
+		if function.PackageType == types.PackageTypeZip {
+			output, err := conn.GetFunctionCodeSigningConfig(ctx, &lambda.GetFunctionCodeSigningConfigInput{
 				FunctionName: aws.String(d.Id()),
 			})
 
@@ -335,7 +344,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			if output != nil {
-				codeSigningConfigArn = aws.StringValue(output.CodeSigningConfigArn)
+				codeSigningConfigArn = aws.ToString(output.CodeSigningConfigArn)
 			}
 		}
 

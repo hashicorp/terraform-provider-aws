@@ -1,27 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package budgets
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_budgets_budget_action")
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -31,6 +36,12 @@ func ResourceBudgetAction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute), // unneeded, but a breaking change to remove
+			Update: schema.DefaultTimeout(5 * time.Minute), // unneeded, but a breaking change to remove
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -85,7 +96,7 @@ func ResourceBudgetAction() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
+					validation.StringMatch(regexache.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
 				),
 			},
 			"definition": {
@@ -197,7 +208,7 @@ func ResourceBudgetAction() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 2147483647),
-								validation.StringMatch(regexp.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
+								validation.StringMatch(regexache.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
 							)},
 						"subscription_type": {
 							Type:         schema.TypeString,
@@ -212,7 +223,8 @@ func ResourceBudgetAction() *schema.Resource {
 }
 
 func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID := d.Get("account_id").(string)
 	if accountID == "" {
@@ -235,7 +247,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 	}, budgets.ErrCodeAccessDeniedException)
 
 	if err != nil {
-		return diag.Errorf("creating Budget Action: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Budget Action: %s", err)
 	}
 
 	output := outputRaw.(*budgets.CreateBudgetActionOutput)
@@ -244,20 +256,17 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
-		return diag.Errorf("waiting for Budget Action (%s) create: %s", d.Id(), err)
-	}
-
-	return resourceBudgetActionRead(ctx, d, meta)
+	return append(diags, resourceBudgetActionRead(ctx, d, meta)...)
 }
 
 func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
@@ -265,17 +274,17 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Budget Action (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Budget Action (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
 	d.Set("action_id", actionID)
 	if err := d.Set("action_threshold", flattenBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
-		return diag.Errorf("setting action_threshold: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting action_threshold: %s", err)
 	}
 	d.Set("action_type", output.ActionType)
 	d.Set("approval_model", output.ApprovalModel)
@@ -288,25 +297,26 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", arn.String())
 	d.Set("budget_name", budgetName)
 	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
-		return diag.Errorf("setting definition: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
 	}
 	d.Set("execution_role_arn", output.ExecutionRoleArn)
 	d.Set("notification_type", output.NotificationType)
 	d.Set("status", output.Status)
 	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
-		return diag.Errorf("setting subscriber: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting subscriber: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &budgets.UpdateBudgetActionInput{
@@ -342,41 +352,40 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 	_, err = conn.UpdateBudgetActionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Budget Action (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
-		return diag.Errorf("waiting for Budget Action (%s) update: %s", d.Id(), err)
-	}
-
-	return resourceBudgetActionRead(ctx, d, meta)
+	return append(diags, resourceBudgetActionRead(ctx, d, meta)...)
 }
 
 func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
-	_, err = conn.DeleteBudgetActionWithContext(ctx, &budgets.DeleteBudgetActionInput{
-		AccountId:  aws.String(accountID),
-		ActionId:   aws.String(actionID),
-		BudgetName: aws.String(budgetName),
-	})
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+		return conn.DeleteBudgetActionWithContext(ctx, &budgets.DeleteBudgetActionInput{
+			AccountId:  aws.String(accountID),
+			ActionId:   aws.String(actionID),
+			BudgetName: aws.String(budgetName),
+		})
+	}, budgets.ErrCodeResourceLockedException)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Budget Action (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Budget Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const budgetActionResourceIDSeparator = ":"
@@ -412,7 +421,7 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accoun
 	output, err := conn.DescribeBudgetActionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -427,50 +436,6 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accoun
 	}
 
 	return output.Action, nil
-}
-
-func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-const (
-	actionAvailableTimeout = 2 * time.Minute
-)
-
-func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			budgets.ActionStatusExecutionInProgress,
-			budgets.ActionStatusStandby,
-		},
-		Target: []string{
-			budgets.ActionStatusExecutionSuccess,
-			budgets.ActionStatusExecutionFailure,
-			budgets.ActionStatusPending,
-		},
-		Refresh: statusAction(ctx, conn, accountID, actionID, budgetName),
-		Timeout: actionAvailableTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*budgets.Action); ok {
-		return v, err
-	}
-
-	return nil, err
 }
 
 func expandBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {

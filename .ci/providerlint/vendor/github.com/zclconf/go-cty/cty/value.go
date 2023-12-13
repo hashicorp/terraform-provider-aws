@@ -48,7 +48,8 @@ func (val Value) IsKnown() bool {
 	if val.IsMarked() {
 		return val.unmarkForce().IsKnown()
 	}
-	return val.v != unknown
+	_, unknown := val.v.(*unknownType)
+	return !unknown
 }
 
 // IsNull returns true if the value is null. Values of any type can be

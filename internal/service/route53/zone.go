@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -15,7 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +28,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,12 +38,15 @@ const (
 	zoneChangeSyncMaxPollInterval = 30
 )
 
+// @SDKResource("aws_route53_zone", name="Hosted Zone")
+// @Tags(identifierAttribute="id", resourceType="hostedzone")
 func ResourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
 		ReadWithoutTimeout:   resourceZoneRead,
 		UpdateWithoutTimeout: resourceZoneUpdate,
 		DeleteWithoutTimeout: resourceZoneDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -86,8 +94,8 @@ func ResourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -121,13 +129,10 @@ func ResourceZone() *schema.Resource {
 
 func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*conns.AWSClient).Region
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.CreateHostedZoneInput{
-		CallerReference: aws.String(resource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(d.Get("name").(string)),
 		HostedZoneConfig: &route53.HostedZoneConfig{
 			Comment: aws.String(d.Get("comment").(string)),
@@ -140,14 +145,12 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-
-	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), region)
+	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region)
 
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
 	}
 
-	log.Printf("[DEBUG] Creating Route53 hosted zone: %s", input)
 	output, err := conn.CreateHostedZoneWithContext(ctx, input)
 
 	if err != nil {
@@ -158,21 +161,21 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if output.ChangeInfo != nil {
 		if err := waitForChangeSynchronization(ctx, conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Hosted Zone (%s) creation: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Hosted Zone (%s) create: %s", d.Id(), err)
 		}
 	}
 
-	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, nil, tags); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
 	// Associate additional VPCs beyond the first
 	if len(vpcs) > 1 {
 		for _, vpc := range vpcs[1:] {
-			err := hostedZoneVPCAssociate(ctx, conn, d.Id(), vpc)
+			err := hostedZoneAssociateVPC(ctx, conn, d.Id(), vpc)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Route53 Hosted Zone (%s): associating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -182,9 +185,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	output, err := FindHostedZoneByID(ctx, conn, d.Id())
 
@@ -198,6 +199,12 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "route53",
+		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("comment", "")
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
@@ -218,77 +225,41 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 		if aws.BoolValue(output.HostedZone.Config.PrivateZone) {
 			var err error
-			nameServers, err = getNameServers(ctx, d.Id(), d.Get("name").(string), conn)
+			nameServers, err = findNameServers(ctx, conn, d.Id(), d.Get("name").(string))
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "getting Route53 Hosted Zone (%s) name servers: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s) name servers: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if err := d.Set("primary_name_server", nameServers[0]); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting primary_name_server: %s", err)
-	}
+	d.Set("primary_name_server", nameServers[0])
 
 	sort.Strings(nameServers)
-	if err := d.Set("name_servers", nameServers); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
-	}
+	d.Set("name_servers", nameServers)
 
 	if err := d.Set("vpc", flattenVPCs(output.VPCs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc: %s", err)
 	}
-
-	tags, err := ListTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Route53 Hosted Zone (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "route53",
-		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
 
 	return diags
 }
 
 func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("comment") {
 		input := route53.UpdateHostedZoneCommentInput{
-			Id:      aws.String(d.Id()),
 			Comment: aws.String(d.Get("comment").(string)),
+			Id:      aws.String(d.Id()),
 		}
 
 		_, err := conn.UpdateHostedZoneCommentWithContext(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Hosted Zone (%s) comment: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Route53 Zone (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -304,10 +275,10 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			vpc := expandVPC(vpcRaw.(map[string]interface{}), region)
-			err := hostedZoneVPCAssociate(ctx, conn, d.Id(), vpc)
+			err := hostedZoneAssociateVPC(ctx, conn, d.Id(), vpc)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Route53 Hosted Zone (%s): associating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
@@ -317,10 +288,10 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			vpc := expandVPC(vpcRaw.(map[string]interface{}), region)
-			err := hostedZoneVPCDisassociate(ctx, conn, d.Id(), vpc)
+			err := hostedZoneDisassociateVPC(ctx, conn, d.Id(), vpc)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Route53 Hosted Zone (%s): disassociating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -330,14 +301,14 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.Get("force_destroy").(bool) {
-		if err := deleteAllRecordsInHostedZoneId(ctx, d.Id(), d.Get("name").(string), conn); err != nil {
-			return sdkdiag.AppendErrorf(diags, "while force deleting Route53 Hosted Zone (%s), deleting records: %s", d.Id(), err)
+		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get("name").(string)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		if err := disableDNSSECForZone(ctx, conn, d.Id()); err != nil {
+		if err := disableDNSSECForHostedZone(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "while force deleting Route53 Hosted Zone (%s), disabling DNSSEC: %s", d.Id(), err)
 		}
 	}
@@ -346,7 +317,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Id: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", input)
+	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", d.Id())
 	_, err := conn.DeleteHostedZoneWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
@@ -360,9 +331,34 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func deleteAllRecordsInHostedZoneId(ctx context.Context, hostedZoneId, hostedZoneName string, conn *route53.Route53) error {
+func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (*route53.GetHostedZoneOutput, error) {
+	input := &route53.GetHostedZoneInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetHostedZoneWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.HostedZone == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.Route53, hostedZoneID, hostedZoneName string) error {
 	input := &route53.ListResourceRecordSetsInput{
-		HostedZoneId: aws.String(hostedZoneId),
+		HostedZoneId: aws.String(hostedZoneID),
 	}
 
 	var lastDeleteErr, lastErrorFromWaiter error
@@ -388,10 +384,10 @@ func deleteAllRecordsInHostedZoneId(ctx context.Context, hostedZoneId, hostedZon
 			return !lastPage
 		}
 
-		log.Printf("[DEBUG] Deleting %d records (page %d) from %s", len(changes), pageNum, hostedZoneId)
+		log.Printf("[DEBUG] Deleting %d records (page %d) from %s", len(changes), pageNum, hostedZoneID)
 
 		req := &route53.ChangeResourceRecordSetsInput{
-			HostedZoneId: aws.String(hostedZoneId),
+			HostedZoneId: aws.String(hostedZoneID),
 			ChangeBatch: &route53.ChangeBatch{
 				Comment: aws.String("Deleted by Terraform"),
 				Changes: changes,
@@ -414,6 +410,10 @@ func deleteAllRecordsInHostedZoneId(ctx context.Context, hostedZoneId, hostedZon
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Failed listing/deleting record sets: %s\nLast error from deletion: %s\nLast error from waiter: %s",
 			err, lastDeleteErr, lastErrorFromWaiter)
@@ -428,7 +428,7 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 	}
 
 	var output *route53.GetDNSSECOutput
-	err := tfresource.Retry(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, 3*time.Minute, func() *retry.RetryError {
 		var err error
 
 		output, err = conn.GetDNSSECWithContext(ctx, input)
@@ -436,10 +436,10 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
 				log.Printf("[DEBUG] Retrying to get DNS SEC for zone %s: %s", hostedZoneID, err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -449,7 +449,8 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 		output, err = conn.GetDNSSECWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") ||
+		tfawserr.ErrMessageContains(err, "AccessDenied", "The operation GetDNSSEC is not available for the current AWS account") {
 		return "NOT_SIGNING", nil
 	}
 
@@ -464,38 +465,38 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 	return aws.StringValue(output.Status.ServeSignature), nil
 }
 
-func disableDNSSECForZone(ctx context.Context, conn *route53.Route53, hostedZoneId string) error {
+func disableDNSSECForHostedZone(ctx context.Context, conn *route53.Route53, hostedZoneID string) error {
 	// hosted zones cannot be deleted if DNSSEC Key Signing Keys exist
-	log.Printf("[DEBUG] Disabling DNS SEC for zone %s", hostedZoneId)
+	log.Printf("[DEBUG] Disabling DNS SEC for zone %s", hostedZoneID)
 
-	status, err := dnsSECStatus(ctx, conn, hostedZoneId)
+	status, err := dnsSECStatus(ctx, conn, hostedZoneID)
 
 	if err != nil {
-		return fmt.Errorf("could not get DNS SEC status for hosted zone (%s): %w", hostedZoneId, err)
+		return fmt.Errorf("could not get DNS SEC status for hosted zone (%s): %w", hostedZoneID, err)
 	}
 
 	if status != "SIGNING" {
-		log.Printf("[DEBUG] Not necessary to disable DNS SEC for hosted zone (%s): %s (status)", hostedZoneId, status)
+		log.Printf("[DEBUG] Not necessary to disable DNS SEC for hosted zone (%s): %s (status)", hostedZoneID, status)
 		return nil
 	}
 
 	input := &route53.DisableHostedZoneDNSSECInput{
-		HostedZoneId: aws.String(hostedZoneId),
+		HostedZoneId: aws.String(hostedZoneID),
 	}
 
 	var output *route53.DisableHostedZoneDNSSECOutput
-	err = tfresource.Retry(ctx, 5*time.Minute, func() *resource.RetryError {
+	err = tfresource.Retry(ctx, 5*time.Minute, func() *retry.RetryError {
 		var err error
 
 		output, err = conn.DisableHostedZoneDNSSECWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, route53.ErrCodeKeySigningKeyInParentDSRecord) {
-				log.Printf("[DEBUG] Unable to disable DNS SEC for zone %s because key-signing key in parent DS record. Retrying... (%s)", hostedZoneId, err)
-				return resource.RetryableError(err)
+				log.Printf("[DEBUG] Unable to disable DNS SEC for zone %s because key-signing key in parent DS record. Retrying... (%s)", hostedZoneID, err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -518,20 +519,20 @@ func disableDNSSECForZone(ctx context.Context, conn *route53.Route53, hostedZone
 	}
 
 	if err != nil {
-		return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", hostedZoneId, err)
+		return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", hostedZoneID, err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
 		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
-			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", hostedZoneId, err)
+			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", hostedZoneID, err)
 		}
 	}
 
 	return nil
 }
 
-func resourceGoWait(ctx context.Context, r53 *route53.Route53, ref *route53.GetChangeInput) (result interface{}, state string, err error) {
-	status, err := r53.GetChangeWithContext(ctx, ref)
+func resourceGoWait(ctx context.Context, conn *route53.Route53, input *route53.GetChangeInput) (result interface{}, state string, err error) {
+	status, err := conn.GetChangeWithContext(ctx, input)
 	if err != nil {
 		return nil, "UNKNOWN", err
 	}
@@ -570,21 +571,25 @@ func TrimTrailingPeriod(v interface{}) string {
 	return strings.TrimSuffix(str, ".")
 }
 
-func getNameServers(ctx context.Context, zoneId string, zoneName string, r53 *route53.Route53) ([]string, error) {
-	resp, err := r53.ListResourceRecordSetsWithContext(ctx, &route53.ListResourceRecordSetsInput{
+func findNameServers(ctx context.Context, conn *route53.Route53, zoneId string, zoneName string) ([]string, error) {
+	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneId),
 		StartRecordName: aws.String(zoneName),
-		StartRecordType: aws.String("NS"),
-	})
+		StartRecordType: aws.String(route53.RRTypeNs),
+	}
+
+	output, err := conn.ListResourceRecordSetsWithContext(ctx, input)
+
 	if err != nil {
 		return nil, err
 	}
-	if len(resp.ResourceRecordSets) == 0 {
+
+	if len(output.ResourceRecordSets) == 0 {
 		return nil, nil
 	}
-	ns := make([]string, len(resp.ResourceRecordSets[0].ResourceRecords))
-	for i := range resp.ResourceRecordSets[0].ResourceRecords {
-		ns[i] = aws.StringValue(resp.ResourceRecordSets[0].ResourceRecords[i].Value)
+	ns := make([]string, len(output.ResourceRecordSets[0].ResourceRecords))
+	for i := range output.ResourceRecordSets[0].ResourceRecords {
+		ns[i] = aws.StringValue(output.ResourceRecordSets[0].ResourceRecords[i].Value)
 	}
 	sort.Strings(ns)
 	return ns, nil
@@ -636,13 +641,12 @@ func flattenVPCs(vpcs []*route53.VPC) []interface{} {
 	return l
 }
 
-func hostedZoneVPCAssociate(ctx context.Context, conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
+func hostedZoneAssociateVPC(ctx context.Context, conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
 	input := &route53.AssociateVPCWithHostedZoneInput{
 		HostedZoneId: aws.String(zoneID),
 		VPC:          vpc,
 	}
 
-	log.Printf("[DEBUG] Associating Route53 Hosted Zone with VPC: %s", input)
 	output, err := conn.AssociateVPCWithHostedZoneWithContext(ctx, input)
 
 	if err != nil {
@@ -656,13 +660,12 @@ func hostedZoneVPCAssociate(ctx context.Context, conn *route53.Route53, zoneID s
 	return nil
 }
 
-func hostedZoneVPCDisassociate(ctx context.Context, conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
+func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
 	input := &route53.DisassociateVPCFromHostedZoneInput{
 		HostedZoneId: aws.String(zoneID),
 		VPC:          vpc,
 	}
 
-	log.Printf("[DEBUG] Disassociating Route53 Hosted Zone with VPC: %s", input)
 	output, err := conn.DisassociateVPCFromHostedZoneWithContext(ctx, input)
 
 	if err != nil {
@@ -685,9 +688,7 @@ func hostedZoneVPCHash(v interface{}) int {
 }
 
 func waitForChangeSynchronization(ctx context.Context, conn *route53.Route53, changeID string) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
-	conf := resource.StateChangeConf{
+	conf := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(zoneChangeSyncMaxDelay-zoneChangeSyncMinDelay)+zoneChangeSyncMinDelay) * time.Second,

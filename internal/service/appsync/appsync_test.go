@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
@@ -30,10 +33,12 @@ func TestAccAppSync_serial(t *testing.T) {
 			"Type_none":                     testAccDataSource_Type_none,
 			"Type_rdbms":                    testAccDataSource_Type_relationalDatabase,
 			"Type_rdbms_options":            testAccDataSource_Type_relationalDatabaseWithOptions,
+			"Type_eventBridge":              testAccDataSource_Type_eventBridge,
 		},
 		"GraphQLAPI": {
 			"basic":                     testAccGraphQLAPI_basic,
 			"disappears":                testAccGraphQLAPI_disappears,
+			"tags":                      testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
@@ -54,14 +59,14 @@ func TestAccAppSync_serial(t *testing.T) {
 			"LambdaAuthorizerConfig_authorizerUri":      testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI,
 			"LambdaAuthorizerConfig_identityValidationExpression": testAccGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression,
 			"LambdaAuthorizerConfig_authorizerResultTtlInSeconds": testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds,
-			"tags":                                      testAccGraphQLAPI_tags,
-			"AdditionalAuthentication_apiKey":           testAccGraphQLAPI_AdditionalAuthentication_apiKey,
-			"AdditionalAuthentication_awsIAM":           testAccGraphQLAPI_AdditionalAuthentication_iam,
-			"AdditionalAuthentication_cognitoUserPools": testAccGraphQLAPI_AdditionalAuthentication_cognitoUserPools,
-			"AdditionalAuthentication_openIDConnect":    testAccGraphQLAPI_AdditionalAuthentication_openIDConnect,
-			"AdditionalAuthentication_awsLambda":        testAccGraphQLAPI_AdditionalAuthentication_lambda,
-			"AdditionalAuthentication_multiple":         testAccGraphQLAPI_AdditionalAuthentication_multiple,
-			"xrayEnabled":                               testAccGraphQLAPI_xrayEnabled,
+			"AdditionalAuthentication_apiKey":                     testAccGraphQLAPI_AdditionalAuthentication_apiKey,
+			"AdditionalAuthentication_awsIAM":                     testAccGraphQLAPI_AdditionalAuthentication_iam,
+			"AdditionalAuthentication_cognitoUserPools":           testAccGraphQLAPI_AdditionalAuthentication_cognitoUserPools,
+			"AdditionalAuthentication_openIDConnect":              testAccGraphQLAPI_AdditionalAuthentication_openIDConnect,
+			"AdditionalAuthentication_awsLambda":                  testAccGraphQLAPI_AdditionalAuthentication_lambda,
+			"AdditionalAuthentication_multiple":                   testAccGraphQLAPI_AdditionalAuthentication_multiple,
+			"xrayEnabled":                                         testAccGraphQLAPI_xrayEnabled,
+			"visibility":                                          testAccGraphQLAPI_visibility,
 		},
 		"Function": {
 			"basic":                   testAccFunction_basic,

@@ -1,21 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,9 +26,11 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
@@ -70,9 +75,11 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
+// @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
 func ResourceEnvironment() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -176,8 +183,8 @@ func ResourceEnvironment() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"platform_arn", "template_name"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"template_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -212,16 +219,14 @@ func ResourceEnvironment() *schema.Resource {
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
 		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
-		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v := d.Get("description"); v.(string) != "" {
@@ -302,16 +307,14 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	env, err := FindEnvironmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -392,14 +395,14 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 			m["resource"] = aws.StringValue(optionSetting.ResourceName)
 		}
 
-		if optionSetting.Value != nil {
+		if value := aws.StringValue(optionSetting.Value); value != "" {
 			switch aws.StringValue(optionSetting.OptionName) {
 			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(ctx, aws.StringValue(optionSetting.Value), meta)
+				m["value"] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), value)
 			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(aws.StringValue(optionSetting.Value))
+				m["value"] = sortValues(value)
 			default:
-				m["value"] = aws.StringValue(optionSetting.Value)
+				m["value"] = value
 			}
 		}
 
@@ -427,29 +430,12 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elastic Beanstalk Environment (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
@@ -462,6 +448,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		pollInterval = 0
 	}
+
+	opTime := time.Now()
 
 	if d.HasChangesExcept("tags", "tags_all", "wait_for_ready_timeout", "poll_interval") {
 		input := elasticbeanstalk.UpdateEnvironmentInput{
@@ -559,42 +547,21 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.VersionLabel = aws.String(d.Get("version_label").(string))
 		}
 
-		opTime := time.Now()
 		_, err := conn.UpdateEnvironmentWithContext(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
-		}
-
-		err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
+	}
 
-		opTime := time.Now()
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s) tags: %s", arn, err)
-		}
+	err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
 
-		if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
-		}
-
-		err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
@@ -602,7 +569,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
@@ -628,7 +595,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -664,7 +631,7 @@ func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.ElasticBean
 	environment := output.Environments[0]
 
 	if status := aws.StringValue(environment.Status); status == elasticbeanstalk.EnvironmentStatusTerminated {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -672,7 +639,7 @@ func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.ElasticBean
 
 	// Eventual consistency check.
 	if aws.StringValue(environment.EnvironmentId) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -712,8 +679,14 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Elast
 		return nil
 	}
 
-	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) bool {
-		return a.EventDate.Before(aws.TimeValue(b.EventDate))
+	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) int {
+		if a.EventDate.Before(aws.TimeValue(b.EventDate)) {
+			return -1
+		}
+		if a.EventDate.After(aws.TimeValue(b.EventDate)) {
+			return 1
+		}
+		return 0
 	})
 
 	var errors *multierror.Error
@@ -748,7 +721,7 @@ func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 	return output.ConfigurationSettings[0], nil
 }
 
-func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string) resource.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEnvironmentByID(ctx, conn, id)
 
@@ -765,7 +738,7 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanst
 }
 
 func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string, pollInterval, timeout time.Duration) (*elasticbeanstalk.EnvironmentDescription, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{elasticbeanstalk.EnvironmentStatusLaunching, elasticbeanstalk.EnvironmentStatusUpdating},
 		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
 		Refresh:      statusEnvironment(ctx, conn, id),
@@ -785,7 +758,7 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.ElasticBea
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string, pollInterval, timeout time.Duration) (*elasticbeanstalk.EnvironmentDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{elasticbeanstalk.EnvironmentStatusTerminating},
 		Target:       []string{},
 		Refresh:      statusEnvironment(ctx, conn, id),
@@ -862,49 +835,21 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 	return settings
 }
 
-func dropGeneratedSecurityGroup(ctx context.Context, settingValue string, meta interface{}) string {
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	groups := strings.Split(settingValue, ",")
-
-	// Check to see if groups are ec2-classic or vpc security groups
-	ec2Classic := true
-	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
-	for _, g := range groups {
-		if beanstalkSGRegexp.MatchString(g) {
-			ec2Classic = false
-			break
-		}
+func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.EC2, settingValue string) string {
+	input := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: aws.StringSlice(strings.Split(settingValue, ",")),
 	}
 
-	var resp *ec2.DescribeSecurityGroupsOutput
-	var err error
-
-	if ec2Classic {
-		resp, err = conn.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-			GroupNames: aws.StringSlice(groups),
-		})
-	} else {
-		resp, err = conn.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-			GroupIds: aws.StringSlice(groups),
-		})
-	}
+	securityGroup, err := tfec2.FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
-		log.Printf("[DEBUG] Elastic Beanstalk error describing SecurityGroups: %v", err)
 		return settingValue
 	}
 
-	log.Printf("[DEBUG] Elastic Beanstalk using ec2-classic security-groups: %t", ec2Classic)
 	var legitGroups []string
-	for _, group := range resp.SecurityGroups {
-		log.Printf("[DEBUG] Elastic Beanstalk SecurityGroup: %v", *group.GroupName)
-		if !strings.HasPrefix(*group.GroupName, "awseb") {
-			if ec2Classic {
-				legitGroups = append(legitGroups, *group.GroupName)
-			} else {
-				legitGroups = append(legitGroups, *group.GroupId)
-			}
+	for _, group := range securityGroup {
+		if !strings.HasPrefix(aws.StringValue(group.GroupName), "awseb") {
+			legitGroups = append(legitGroups, aws.StringValue(group.GroupId))
 		}
 	}
 

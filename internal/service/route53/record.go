@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -13,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +29,7 @@ const (
 	recordSetSyncMaxDelay = 30
 )
 
+// @SDKResource("aws_route53_record")
 func ResourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -39,7 +43,9 @@ func ResourceRecord() *schema.Resource {
 				parts := ParseRecordID(d.Id())
 				// We check that we have parsed the id into the correct number of segments.
 				// We need at least 3 segments!
-				if parts[0] == "" || parts[1] == "" || parts[2] == "" {
+				// However, parts[1] can be the empty string if it is the root domain of the zone,
+				// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
+				if parts[0] == "" || parts[2] == "" {
 					return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
 				}
 
@@ -275,7 +281,7 @@ func ResourceRecord() *schema.Resource {
 
 func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zoneID := CleanZoneID(d.Get("zone_id").(string))
 	zoneRecord, err := FindHostedZoneByID(ctx, conn, zoneID)
@@ -340,7 +346,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	record, fqdn, err := FindResourceRecordSetByFourPartKey(ctx, conn, CleanZoneID(d.Get("zone_id").(string)), d.Get("name").(string), d.Get("type").(string), d.Get("set_identifier").(string))
 
@@ -433,7 +439,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	// Route 53 supports CREATE, DELETE, and UPSERT actions. We use UPSERT, and
 	// AWS dynamically determines if a record should be created or updated.
@@ -624,7 +630,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zoneID := CleanZoneID(d.Get("zone_id").(string))
 	var name string
@@ -738,7 +744,7 @@ func FindResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Route
 	}
 
 	if output == nil {
-		return nil, "", &resource.NotFoundError{}
+		return nil, "", &retry.NotFoundError{}
 	}
 
 	return output, fqdn, nil
@@ -757,9 +763,7 @@ func ChangeResourceRecordSets(ctx context.Context, conn *route53.Route53, input 
 }
 
 func WaitForRecordSetToSync(ctx context.Context, conn *route53.Route53, requestId string) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
-	wait := resource.StateChangeConf{
+	wait := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(recordSetSyncMaxDelay-recordSetSyncMinDelay)+recordSetSyncMinDelay) * time.Second,
@@ -936,7 +940,7 @@ func ParseRecordID(id string) [4]string {
 		recZone = parts[0]
 	}
 	if len(parts) >= 3 {
-		var recTypeIndex int = -1
+		recTypeIndex := -1
 		for i, maybeRecType := range parts[1:] {
 			if validRecordType(maybeRecType) {
 				recTypeIndex = i + 1

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codeartifact_repository_permissions_policy")
 func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPermissionsPolicyPut,
@@ -71,7 +75,7 @@ func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 
 func resourceRepositoryPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Print("[DEBUG] Creating CodeArtifact Repository Permissions Policy")
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
@@ -106,12 +110,12 @@ func resourceRepositoryPermissionsPolicyPut(ctx context.Context, d *schema.Resou
 
 func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Reading CodeArtifact Repository Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
 	}
 
 	dm, err := conn.GetRepositoryPermissionsPolicyWithContext(ctx, &codeartifact.GetRepositoryPermissionsPolicyInput{
@@ -126,7 +130,7 @@ func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)
@@ -154,7 +158,7 @@ func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.Reso
 
 func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())

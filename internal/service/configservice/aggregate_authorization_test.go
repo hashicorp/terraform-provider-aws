@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice_test
 
 // func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
@@ -6,7 +9,7 @@ package configservice_test
 // 	dataSourceName := "data.aws_region.current"
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 // 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
@@ -16,7 +19,7 @@ package configservice_test
 // 				Check: resource.ComposeTestCheckFunc(
 // 					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
 // 					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "name"),
-// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, acctest.Region()))),
+// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, acctest.Region()))),
 // 				),
 // 			},
 // 			{
@@ -33,7 +36,7 @@ package configservice_test
 // 	resourceName := "aws_config_aggregate_authorization.example"
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 // 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
@@ -72,7 +75,7 @@ package configservice_test
 // }
 
 // func testAccCheckAggregateAuthorizationDestroy(s *terraform.State) error {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 // 	for _, rs := range s.RootModule().Resources {
 // 		if rs.Type != "aws_config_aggregate_authorization" {

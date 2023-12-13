@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -14,8 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_local_gateway_route_table_vpc_association", name="Local Gateway Route Table VPC Association")
+// @Tags(identifierAttribute="id")
 func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteTableVPCAssociationCreate,
@@ -38,8 +44,8 @@ func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -51,13 +57,11 @@ func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 
 func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),
-		TagSpecifications:        tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLocalGatewayRouteTableVpcAssociation),
+		TagSpecifications:        getTagSpecificationsIn(ctx, ec2.ResourceTypeLocalGatewayRouteTableVpcAssociation),
 		VpcId:                    aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -78,9 +82,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *
 
 func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	association, err := GetLocalGatewayRouteTableVPCAssociation(ctx, conn, d.Id())
 
@@ -103,16 +105,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *sc
 	d.Set("local_gateway_id", association.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", association.LocalGatewayRouteTableId)
 
-	tags := KeyValueTags(association.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, association.Tags)
 
 	d.Set("vpc_id", association.VpcId)
 
@@ -121,22 +114,15 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *sc
 
 func resourceLocalGatewayRouteTableVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Local Gateway Route Table VPC Association (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceLocalGatewayRouteTableVPCAssociationRead(ctx, d, meta)...)
 }
 
 func resourceLocalGatewayRouteTableVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DeleteLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableVpcAssociationId: aws.String(d.Id()),

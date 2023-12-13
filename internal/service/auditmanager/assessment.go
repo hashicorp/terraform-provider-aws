@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -21,12 +24,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,10 +36,8 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessment)
-}
-
+// @FrameworkResource(name="Assessment")
+// @Tags(identifierAttribute="arn")
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil
 }
@@ -94,8 +94,8 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 			"status": schema.StringAttribute{
 				Computed: true,
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"assessment_reports_destination": schema.ListNestedBlock{
@@ -156,7 +156,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceAssessmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -192,19 +192,11 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 		Name:                         aws.String(plan.Name.ValueString()),
 		Roles:                        expandAssessmentRoles(roles),
 		Scope:                        scopeInput,
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
-	}
-
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
-	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// Include retry handling to allow for IAM propagation
@@ -213,15 +205,15 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
 	var out *auditmanager.CreateAssessmentOutput
-	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateAssessment(ctx, &in)
 		if err != nil {
 			var nfe *awstypes.ResourceNotFoundException
 			if errors.As(err, &nfe) {
-				return sdkv2resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return sdkv2resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -242,12 +234,12 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Assessment)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Assessment)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceAssessment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -272,12 +264,12 @@ func (r *resourceAssessment) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan, state resourceAssessmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -340,27 +332,17 @@ func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequ
 			)
 			return
 		}
-		resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Assessment)...)
-		state.Roles = plan.Roles
+		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Assessment)...)
+		plan.Status = flex.StringValueToFramework(ctx, out.Assessment.Metadata.Status)
+	} else {
+		plan.Status = state.Status
 	}
 
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameAssessment, plan.ID.String(), nil),
-				err.Error(),
-			)
-			return
-		}
-		state.Tags = plan.Tags
-		state.TagsAll = plan.TagsAll
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -399,7 +381,7 @@ func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkv2resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -479,7 +461,7 @@ type assessmentScopeAWSServicesData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Assessment) diag.Diagnostics {
+func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, out *awstypes.Assessment) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil || out.Metadata == nil {
@@ -506,16 +488,7 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, meta *c
 	diags.Append(d...)
 	rd.Scope = scope
 
-	defaultTagsConfig := meta.DefaultTagsConfig
-	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
-		rd.Tags = tftags.Null
-	} else {
-		rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
-	}
-	rd.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

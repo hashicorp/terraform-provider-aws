@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -7,59 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) (*route53.HealthCheck, error) {
-	input := &route53.GetHealthCheckInput{
-		HealthCheckId: aws.String(id),
-	}
-
-	output, err := conn.GetHealthCheckWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.HealthCheck, nil
-}
-
-func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (*route53.GetHostedZoneOutput, error) {
-	input := &route53.GetHostedZoneInput{
-		Id: aws.String(id),
-	}
-
-	output, err := conn.GetHostedZoneWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.HostedZone == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
 
 func FindHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
 	input := &route53.GetDNSSECInput{
@@ -124,7 +77,7 @@ func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id s
 	output, err := conn.GetQueryLoggingConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig, route53.ErrCodeNoSuchHostedZone) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -176,7 +129,7 @@ func FindTrafficPolicyByID(ctx context.Context, conn *route53.Route53, id string
 	output, err := conn.GetTrafficPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicy) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -201,7 +154,7 @@ func FindTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Route53, i
 	output, err := conn.GetTrafficPolicyInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicyInstance) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

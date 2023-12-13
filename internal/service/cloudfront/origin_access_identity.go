@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -9,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_origin_access_identity")
 func ResourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOriginAccessIdentityCreate,
@@ -58,14 +62,14 @@ func ResourceOriginAccessIdentity() *schema.Resource {
 
 func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.CreateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 	}
 
 	resp, err := conn.CreateCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
@@ -73,7 +77,7 @@ func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(d.Id()),
 	}
@@ -86,7 +90,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -108,7 +112,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		Id:                                   aws.String(d.Id()),
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
@@ -116,7 +120,7 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 	}
 	_, err := conn.UpdateCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
@@ -124,14 +128,14 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
 	if _, err := conn.DeleteCloudFrontOriginAccessIdentityWithContext(ctx, params); err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	return diags
 }
@@ -142,7 +146,7 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 	}
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
-		originAccessIdentityConfig.CallerReference = aws.String(resource.UniqueId())
+		originAccessIdentityConfig.CallerReference = aws.String(id.UniqueId())
 	} else {
 		originAccessIdentityConfig.CallerReference = aws.String(v.(string))
 	}

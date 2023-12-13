@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -37,6 +40,25 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfig
 	}
 
 	return apiObject
+}
+
+func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap["kms_key_id"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {
@@ -237,9 +259,15 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 			"db_security_group_memberships":  schema.NewSet(schema.HashString, dbSecurityGroupMemberships),
 			"option_name":                    aws.StringValue(apiOption.OptionName),
 			"option_settings":                schema.NewSet(schema.HashResource(optionSettingsResource), optionSettings),
-			"port":                           aws.Int64Value(apiOption.Port),
-			"version":                        aws.StringValue(apiOption.OptionVersion),
 			"vpc_security_group_memberships": schema.NewSet(schema.HashString, vpcSecurityGroupMemberships),
+		}
+
+		if apiOption.OptionVersion != nil && configuredOption != nil && configuredOption.OptionVersion != nil {
+			r["version"] = aws.StringValue(apiOption.OptionVersion)
+		}
+
+		if apiOption.Port != nil && configuredOption != nil && configuredOption.Port != nil {
+			r["port"] = aws.Int64Value(apiOption.Port)
 		}
 
 		result = append(result, r)

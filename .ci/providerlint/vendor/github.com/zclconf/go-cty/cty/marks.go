@@ -190,6 +190,9 @@ func (val Value) HasSameMarks(other Value) bool {
 // An application that never calls this method does not need to worry about
 // handling marked values.
 func (val Value) Mark(mark interface{}) Value {
+	if _, ok := mark.(ValueMarks); ok {
+		panic("cannot call Value.Mark with a ValueMarks value (use WithMarks instead)")
+	}
 	var newMarker marker
 	newMarker.realV = val.v
 	if mr, ok := val.v.(marker); ok {

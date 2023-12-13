@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -31,7 +34,7 @@ func FindDirectoryByID(ctx context.Context, conn *directoryservice.DirectoryServ
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -52,7 +55,7 @@ func FindDirectoryByID(ctx context.Context, conn *directoryservice.DirectoryServ
 	directory := output[0]
 
 	if stage := aws.StringValue(directory.Stage); stage == directoryservice.DirectoryStageDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     stage,
 			LastRequest: input,
 		}
@@ -84,7 +87,7 @@ func FindDomainController(ctx context.Context, conn *directoryservice.DirectoryS
 	domainController := output[0]
 
 	if status := aws.StringValue(domainController.Status); status == directoryservice.DomainControllerStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -111,7 +114,7 @@ func FindDomainControllers(ctx context.Context, conn *directoryservice.Directory
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -160,7 +163,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -181,7 +184,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	region := output[0]
 
 	if status := aws.StringValue(region.Status); status == directoryservice.DirectoryStageDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -196,10 +199,24 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 		SharedDirectoryIds: aws.StringSlice([]string{sharedDirectoryID}),
 	}
 
-	output, err := conn.DescribeSharedDirectoriesWithContext(ctx, input)
+	var output []*directoryservice.SharedDirectory
+
+	err := conn.DescribeSharedDirectoriesPagesWithContext(ctx, input, func(page *directoryservice.DescribeSharedDirectoriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.SharedDirectories {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -209,18 +226,18 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 		return nil, err
 	}
 
-	if output == nil || len(output.SharedDirectories) == 0 || output.SharedDirectories[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.SharedDirectories); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	sharedDirectory := output.SharedDirectories[0]
+	sharedDirectory := output[0]
 
 	if status := aws.StringValue(sharedDirectory.ShareStatus); status == directoryservice.ShareStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}

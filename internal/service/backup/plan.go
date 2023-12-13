@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -5,14 +8,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,8 +25,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_backup_plan", name="Plan")
+// @Tags(identifierAttribute="arn")
 func ResourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,
@@ -50,7 +56,7 @@ func ResourcePlan() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 50),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 							),
 						},
 						"target_vault_name": {
@@ -58,7 +64,7 @@ func ResourcePlan() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(2, 50),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
 							),
 						},
 						"schedule": {
@@ -160,8 +166,8 @@ func ResourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -170,20 +176,17 @@ func ResourcePlan() *schema.Resource {
 
 func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
 			BackupPlanName:         aws.String(d.Get("name").(string)),
-			Rules:                  expandPlanRules(d.Get("rule").(*schema.Set)),
+			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
-		BackupPlanTags: Tags(tags.IgnoreAWS()),
+		BackupPlanTags: getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
 	resp, err := conn.CreateBackupPlanWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Plan: %s", err)
@@ -196,9 +199,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
@@ -216,7 +217,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	if err := d.Set("rule", flattenPlanRules(resp.BackupPlan.Rules)); err != nil {
+	if err := d.Set("rule", flattenPlanRules(ctx, resp.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -226,34 +227,19 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", d.Id(), err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	if d.HasChanges("rule", "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
 				BackupPlanName:         aws.String(d.Get("name").(string)),
-				Rules:                  expandPlanRules(d.Get("rule").(*schema.Set)),
+				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			},
 		}
@@ -265,30 +251,23 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Backup Plan (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
 func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.DeleteBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
-	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteBackupPlanWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
@@ -296,7 +275,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -312,7 +291,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func expandPlanRules(vRules *schema.Set) []*backup.RuleInput {
+func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInput {
 	rules := []*backup.RuleInput{}
 
 	for _, vRule := range vRules.List() {
@@ -342,7 +321,7 @@ func expandPlanRules(vRules *schema.Set) []*backup.RuleInput {
 		}
 
 		if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-			rule.RecoveryPointTags = Tags(tftags.New(vRecoveryPointTags).IgnoreAWS())
+			rule.RecoveryPointTags = Tags(tftags.New(ctx, vRecoveryPointTags).IgnoreAWS())
 		}
 
 		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
@@ -421,7 +400,7 @@ func expandPlanLifecycle(l []interface{}) *backup.Lifecycle {
 	return lifecycle
 }
 
-func flattenPlanRules(rules []*backup.Rule) *schema.Set {
+func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
 	vRules := []interface{}{}
 
 	for _, rule := range rules {
@@ -432,7 +411,7 @@ func flattenPlanRules(rules []*backup.Rule) *schema.Set {
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
-			"recovery_point_tags":      KeyValueTags(rule.RecoveryPointTags).IgnoreAWS().Map(),
+			"recovery_point_tags":      KeyValueTags(ctx, rule.RecoveryPointTags).IgnoreAWS().Map(),
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
@@ -526,7 +505,7 @@ func planHash(vRule interface{}) int {
 	}
 
 	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", tftags.New(vRecoveryPointTags).Hash()))
+		buf.WriteString(fmt.Sprintf("%d-", tftags.New(context.Background(), vRecoveryPointTags).Hash()))
 	}
 
 	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {

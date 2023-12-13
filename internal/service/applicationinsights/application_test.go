@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applicationinsights_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationinsights"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapplicationinsights "github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
@@ -23,7 +26,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 	resourceName := "aws_applicationinsights_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, applicationinsights.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -68,7 +71,7 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 	resourceName := "aws_applicationinsights_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, applicationinsights.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -101,7 +104,7 @@ func TestAccApplicationInsightsApplication_tags(t *testing.T) {
 	resourceName := "aws_applicationinsights_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, applicationinsights.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -147,7 +150,7 @@ func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 	resourceName := "aws_applicationinsights_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, applicationinsights.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
@@ -167,7 +170,7 @@ func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_applicationinsights_application" {
@@ -203,7 +206,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, app *applicati
 			return fmt.Errorf("No applicationinsights Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn(ctx)
 		resp, err := tfapplicationinsights.FindApplicationByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs
 
 import (
@@ -5,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,7 +18,7 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func statusPlaybackKeyPair(ctx context.Context, conn *ivs.IVS, id string) resource.StateRefreshFunc {
+func statusPlaybackKeyPair(ctx context.Context, conn *ivs.IVS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindPlaybackKeyPairByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -30,7 +33,7 @@ func statusPlaybackKeyPair(ctx context.Context, conn *ivs.IVS, id string) resour
 	}
 }
 
-func statusRecordingConfiguration(ctx context.Context, conn *ivs.IVS, id string) resource.StateRefreshFunc {
+func statusRecordingConfiguration(ctx context.Context, conn *ivs.IVS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindRecordingConfigurationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -45,7 +48,7 @@ func statusRecordingConfiguration(ctx context.Context, conn *ivs.IVS, id string)
 	}
 }
 
-func statusChannel(ctx context.Context, conn *ivs.IVS, arn string, updateDetails *ivs.UpdateChannelInput) resource.StateRefreshFunc {
+func statusChannel(ctx context.Context, conn *ivs.IVS, arn string, updateDetails *ivs.UpdateChannelInput) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindChannelByID(ctx, conn, arn)
 		if tfresource.NotFound(err) {

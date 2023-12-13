@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -21,6 +24,8 @@ const (
 	ResExtension = "Extension"
 )
 
+// @SDKResource("aws_appconfig_extension", name="Extension")
+// @Tags(identifierAttribute="arn")
 func ResourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,
@@ -107,8 +112,8 @@ func ResourceExtension() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -119,14 +124,14 @@ func ResourceExtension() *schema.Resource {
 }
 
 func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	in := appconfig.CreateExtensionInput{
 		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
 		Name:    aws.String(d.Get("name").(string)),
-		Tags:    Tags(tags.IgnoreAWS()),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -140,33 +145,33 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := conn.CreateExtensionWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
 	}
 
 	d.SetId(aws.StringValue(out.Id))
 
-	return resourceExtensionRead(ctx, d, meta)
+	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
 func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	out, err := FindExtensionById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.AppConfig, create.ErrActionReading, ResExtension, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -176,28 +181,13 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("version", out.VersionNumber)
 
-	tags, err := ListTags(ctx, conn, *out.Arn)
-
-	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Get("name").(string), errors.New("error listing tags for AppConfig Extension"))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResExtension, d.Id(), errors.New("Error setting tags"))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResExtension, d.Id(), errors.New("Error setting tags_all"))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionInput{
@@ -223,29 +213,31 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		out, err := conn.UpdateExtensionWithContext(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
 		}
 
 		if out == nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
 		}
 	}
 
-	return resourceExtensionRead(ctx, d, meta)
+	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
 func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	_, err := conn.DeleteExtensionWithContext(ctx, &appconfig.DeleteExtensionInput{
 		ExtensionIdentifier: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandExtensionActions(actionsListRaw interface{}) []*appconfig.Action {

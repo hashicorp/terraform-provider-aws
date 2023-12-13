@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -12,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ecr_pull_through_cache_rule")
 func ResourcePullThroughCacheRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePullThroughCacheRuleCreate,
@@ -31,10 +36,10 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 20),
+					validation.StringLenBetween(2, 30),
 					validation.StringMatch(
-						regexp.MustCompile(`^[a-z0-9]+(?:[._-][a-z0-9]+)*$`),
-						"must only include alphanumeric, underscore, period, or hyphen characters"),
+						regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`),
+						"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
 				),
 			},
 			"registry_id": {
@@ -51,7 +56,9 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 }
 
 func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.ecr-in-func-name
-	conn := meta.(*conns.AWSClient).ECRConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
 	input := &ecr.CreatePullThroughCacheRuleInput{
@@ -63,38 +70,42 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 	_, err := conn.CreatePullThroughCacheRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return sdkdiag.AppendErrorf(diags, "creating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(repositoryPrefix)
 
-	return resourcePullThroughCacheRuleRead(ctx, d, meta)
+	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
 }
 
 func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECRConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Pull Through Cache Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
 
-	return nil
+	return diags
 }
 
 func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECRConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Rule: (%s)", d.Id())
 	_, err := conn.DeletePullThroughCacheRuleWithContext(ctx, &ecr.DeletePullThroughCacheRuleInput{
@@ -103,12 +114,12 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if tfawserr.ErrCodeEquals(err, ecr.ErrCodePullThroughCacheRuleNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ECR Pull Through Cache Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

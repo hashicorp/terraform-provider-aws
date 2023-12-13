@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -18,7 +22,7 @@ func flattenAliasRoutingConfiguration(arc *lambda.AliasRoutingConfiguration) []i
 	return []interface{}{m}
 }
 
-func flattenLayers(layers []*lambda.Layer) []interface{} {
+func flattenLayers(layers []types.Layer) []interface{} {
 	arns := make([]*string, len(layers))
 	for i, layer := range layers {
 		arns[i] = layer.Arn
@@ -26,7 +30,7 @@ func flattenLayers(layers []*lambda.Layer) []interface{} {
 	return flex.FlattenStringList(arns)
 }
 
-func flattenVPCConfigResponse(s *lambda.VpcConfigResponse) []map[string]interface{} {
+func flattenVPCConfigResponse(s *types.VpcConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if s == nil {
@@ -41,8 +45,9 @@ func flattenVPCConfigResponse(s *lambda.VpcConfigResponse) []map[string]interfac
 		return nil
 	}
 
-	settings["subnet_ids"] = flex.FlattenStringSet(s.SubnetIds)
-	settings["security_group_ids"] = flex.FlattenStringSet(s.SecurityGroupIds)
+	settings["ipv6_allowed_for_dual_stack"] = aws.BoolValue(s.Ipv6AllowedForDualStack)
+	settings["subnet_ids"] = flex.FlattenStringValueSet(s.SubnetIds)
+	settings["security_group_ids"] = flex.FlattenStringValueSet(s.SecurityGroupIds)
 	if s.VpcId != nil {
 		settings["vpc_id"] = aws.StringValue(s.VpcId)
 	}

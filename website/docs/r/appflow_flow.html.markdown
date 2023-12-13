@@ -14,7 +14,7 @@ Provides an AppFlow flow resource.
 
 ```terraform
 resource "aws_s3_bucket" "example_source" {
-  bucket = "example_source"
+  bucket = "example-source"
 }
 
 data "aws_iam_policy_document" "example_source" {
@@ -33,8 +33,8 @@ data "aws_iam_policy_document" "example_source" {
     ]
 
     resources = [
-      "arn:aws:s3:::example_source",
-      "arn:aws:s3:::example_source/*",
+      "arn:aws:s3:::example-source",
+      "arn:aws:s3:::example-source/*",
     ]
   }
 }
@@ -51,31 +51,33 @@ resource "aws_s3_object" "example" {
 }
 
 resource "aws_s3_bucket" "example_destination" {
-  bucket = "example_destination"
+  bucket = "example-destination"
 }
 
 data "aws_iam_policy_document" "example_destination" {
-  sid    = "AllowAppFlowDestinationActions"
-  effect = "Allow"
+  statement {
+    sid    = "AllowAppFlowDestinationActions"
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["appflow.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload",
+      "s3:ListMultipartUploadParts",
+      "s3:ListBucketMultipartUploads",
+      "s3:GetBucketAcl",
+      "s3:PutObjectAcl",
+    ]
+
+    resources = [
+      "arn:aws:s3:::example-destination",
+      "arn:aws:s3:::example-destination/*",
+    ]
   }
-
-  actions = [
-    "s3:PutObject",
-    "s3:AbortMultipartUpload",
-    "s3:ListMultipartUploadParts",
-    "s3:ListBucketMultipartUploads",
-    "s3:GetBucketAcl",
-    "s3:PutObjectAcl",
-  ]
-
-  resources = [
-    "arn:aws:s3:::example_destination",
-    "arn:aws:s3:::example_destination/*",
-  ]
 }
 
 resource "aws_s3_bucket_policy" "example_destination" {
@@ -129,7 +131,7 @@ resource "aws_appflow_flow" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the flow.
 * `destination_flow_config` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
@@ -201,6 +203,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `aggregation_config` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
 * `file_type` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
+* `preserve_source_data_typing` - (Optional, Boolean) Whether the data types from the source system need to be preserved (Only valid for `Parquet` file type)
 
 ##### Salesforce Destination Properties
 
@@ -388,16 +391,25 @@ resource "aws_appflow_flow" "example" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Flow's ARN.
 
 ## Import
 
-AppFlow flows can be imported using the `arn`, e.g.:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_appflow_flow.example
+  id = "arn:aws:appflow:us-west-2:123456789012:flow/example-flow"
+}
 ```
-$ terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
+
+Using `terraform import`, import AppFlow flows using the `arn`. For example:
+
+```console
+% terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```

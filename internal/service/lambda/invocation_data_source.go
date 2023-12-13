@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lambda_invocation")
 func DataSourceInvocation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInvocationRead,
@@ -46,7 +50,7 @@ func DataSourceInvocation() *schema.Resource {
 
 func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)

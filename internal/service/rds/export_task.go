@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -18,18 +21,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceExportTask)
-}
-
+// @FrameworkResource
 func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExportTask{}
 	r.SetDefaultCreateTimeout(60 * time.Minute)
@@ -143,7 +143,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var plan resourceExportTaskData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -197,7 +197,7 @@ func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceExportTask) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var state resourceExportTaskData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -231,7 +231,7 @@ func (r *resourceExportTask) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSClient(ctx)
 
 	var state resourceExportTaskData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -280,7 +280,7 @@ func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awst
 		return nil, err
 	}
 	if out == nil || len(out.ExportTasks) == 0 {
-		return nil, &sdkv2resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: in,
 		}
 	}
@@ -291,7 +291,7 @@ func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awst
 	return &out.ExportTasks[0], nil
 }
 
-func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkv2resource.StateRefreshFunc {
+func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindExportTaskByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -307,7 +307,7 @@ func statusExportTask(ctx context.Context, conn *rds.Client, id string) sdkv2res
 }
 
 func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &sdkv2resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{StatusStarting, StatusInProgress},
 		Target:     []string{StatusComplete, StatusFailed},
 		Refresh:    statusExportTask(ctx, conn, id),
@@ -325,7 +325,7 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
-	stateConf := &sdkv2resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{StatusStarting, StatusInProgress, StatusCanceling},
 		Target:  []string{},
 		Refresh: statusExportTask(ctx, conn, id),
@@ -372,7 +372,7 @@ func (rd *resourceExportTaskData) refreshFromOutput(ctx context.Context, out *aw
 	rd.FailureCause = flex.StringToFramework(ctx, out.FailureCause)
 	rd.IAMRoleArn = flex.StringToFramework(ctx, out.IamRoleArn)
 	rd.KMSKeyID = flex.StringToFramework(ctx, out.KmsKeyId)
-	rd.PercentProgress = types.Int64Value(int64(out.PercentProgress))
+	rd.PercentProgress = types.Int64Value(int64(aws.ToInt32(out.PercentProgress)))
 	rd.S3BucketName = flex.StringToFramework(ctx, out.S3Bucket)
 	rd.S3Prefix = flex.StringToFramework(ctx, out.S3Prefix)
 	rd.SnapshotTime = timeToFramework(ctx, out.SnapshotTime)

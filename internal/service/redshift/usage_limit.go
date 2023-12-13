@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -17,8 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_redshift_usage_limit", name="Usage Limit")
+// @Tags(identifierAttribute="arn")
 func ResourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsageLimitCreate,
@@ -69,8 +75,8 @@ func ResourceUsageLimit() *schema.Resource {
 				Default:      redshift.UsageLimitPeriodMonthly,
 				ValidateFunc: validation.StringInSlice(redshift.UsageLimitPeriod_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -79,17 +85,15 @@ func ResourceUsageLimit() *schema.Resource {
 
 func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterId := d.Get("cluster_identifier").(string)
-
 	input := redshift.CreateUsageLimitInput{
 		Amount:            aws.Int64(int64(d.Get("amount").(int))),
 		ClusterIdentifier: aws.String(clusterId),
 		FeatureType:       aws.String(d.Get("feature_type").(string)),
 		LimitType:         aws.String(d.Get("limit_type").(string)),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("breach_action"); ok {
@@ -99,8 +103,6 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("period"); ok {
 		input.Period = aws.String(v.(string))
 	}
-
-	input.Tags = Tags(tags.IgnoreAWS())
 
 	out, err := conn.CreateUsageLimitWithContext(ctx, &input)
 
@@ -115,9 +117,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindUsageLimitByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -146,23 +146,14 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("breach_action", out.BreachAction)
 	d.Set("cluster_identifier", out.ClusterIdentifier)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
 
 func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyUsageLimitInput{
@@ -183,20 +174,12 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Usage Limit (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceUsageLimitRead(ctx, d, meta)...)
 }
 
 func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	deleteInput := redshift.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),

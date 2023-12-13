@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -10,17 +13,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_apigatewayv2_api_mapping")
 func ResourceAPIMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIMappingCreate,
 		ReadWithoutTimeout:   resourceAPIMappingRead,
 		UpdateWithoutTimeout: resourceAPIMappingUpdate,
 		DeleteWithoutTimeout: resourceAPIMappingDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAPIMappingImport,
 		},
@@ -50,72 +57,74 @@ func ResourceAPIMapping() *schema.Resource {
 
 func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	req := &apigatewayv2.CreateApiMappingInput{
+	input := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(d.Get("domain_name").(string)),
 		Stage:      aws.String(d.Get("stage").(string)),
 	}
+
 	if v, ok := d.GetOk("api_mapping_key"); ok {
-		req.ApiMappingKey = aws.String(v.(string))
+		input.ApiMappingKey = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 API mapping: %s", req)
-	resp, err := conn.CreateApiMappingWithContext(ctx, req)
+	output, err := conn.CreateApiMappingWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API Mapping: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ApiMappingId))
+	d.SetId(aws.StringValue(output.ApiMappingId))
 
 	return append(diags, resourceAPIMappingRead(ctx, d, meta)...)
 }
 
 func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	resp, err := conn.GetApiMappingWithContext(ctx, &apigatewayv2.GetApiMappingInput{
-		ApiMappingId: aws.String(d.Id()),
-		DomainName:   aws.String(d.Get("domain_name").(string)),
-	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	output, err := FindAPIMappingByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API Mapping (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_id", resp.ApiId)
-	d.Set("api_mapping_key", resp.ApiMappingKey)
-	d.Set("stage", resp.Stage)
+	d.Set("api_id", output.ApiId)
+	d.Set("api_mapping_key", output.ApiMappingKey)
+	d.Set("stage", output.Stage)
 
 	return diags
 }
 
 func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	req := &apigatewayv2.UpdateApiMappingInput{
+	input := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	}
+
 	if d.HasChange("api_mapping_key") {
-		req.ApiMappingKey = aws.String(d.Get("api_mapping_key").(string))
-	}
-	if d.HasChange("stage") {
-		req.Stage = aws.String(d.Get("stage").(string))
+		input.ApiMappingKey = aws.String(d.Get("api_mapping_key").(string))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 API mapping: %s", req)
-	_, err := conn.UpdateApiMappingWithContext(ctx, req)
+	if d.HasChange("stage") {
+		input.Stage = aws.String(d.Get("stage").(string))
+	}
+
+	_, err := conn.UpdateApiMappingWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API Mapping (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAPIMappingRead(ctx, d, meta)...)
@@ -123,18 +132,20 @@ func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 API mapping (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting API Gateway v2 API Mapping (%s)", d.Id())
 	_, err := conn.DeleteApiMappingWithContext(ctx, &apigatewayv2.DeleteApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
+
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API Mapping (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -150,4 +161,34 @@ func resourceAPIMappingImport(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("domain_name", parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindAPIMappingByTwoPartKey(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id, domainName string) (*apigatewayv2.GetApiMappingOutput, error) {
+	input := &apigatewayv2.GetApiMappingInput{
+		ApiMappingId: aws.String(id),
+		DomainName:   aws.String(domainName),
+	}
+
+	return findAPIMapping(ctx, conn, input)
+}
+
+func findAPIMapping(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiMappingInput) (*apigatewayv2.GetApiMappingOutput, error) {
+	output, err := conn.GetApiMappingWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

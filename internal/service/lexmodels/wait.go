@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -17,7 +20,7 @@ const (
 )
 
 func waitBotVersionCreated(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name, version string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) { //nolint:unparam
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{lexmodelbuildingservice.StatusBuilding},
 		Target: []string{
 			lexmodelbuildingservice.StatusNotBuilt,
@@ -42,7 +45,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelbuildingservice.Le
 }
 
 func waitBotDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{
 			lexmodelbuildingservice.StatusNotBuilt,
 			lexmodelbuildingservice.StatusReady,
@@ -67,7 +70,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexModelB
 }
 
 func waitBotAliasDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: statusBotAlias(ctx, conn, botAliasName, botName),
@@ -83,7 +86,7 @@ func waitBotAliasDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexM
 }
 
 func waitIntentDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: statusIntent(ctx, conn, intentId),
@@ -99,7 +102,7 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexMod
 }
 
 func waitSlotTypeDeleted(ctx context.Context, conn *lexmodelbuildingservice.LexModelBuildingService, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusCreated},
 		Target:  []string{},
 		Refresh: statusSlotType(ctx, conn, name, SlotTypeVersionLatest),

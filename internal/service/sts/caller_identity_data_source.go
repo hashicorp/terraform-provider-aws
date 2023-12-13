@@ -1,21 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sts
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
-}
-
-// newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
+// @FrameworkDataSource
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCallerIdentity{}
 	d.SetMigratedFromPluginSDK(true)
@@ -65,7 +64,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn()
+	conn := d.Meta().STSClient(ctx)
 
 	output, err := FindCallerIdentity(ctx, conn)
 
@@ -75,7 +74,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	accountID := aws.StringValue(output.Account)
+	accountID := aws.ToString(output.Account)
 	data.AccountID = types.StringValue(accountID)
 	data.ARN = flex.StringToFrameworkLegacy(ctx, output.Arn)
 	data.ID = types.StringValue(accountID)

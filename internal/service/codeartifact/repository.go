@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
@@ -20,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codeartifact_repository", name="Repository")
+// @Tags(identifierAttribute="arn")
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -94,8 +99,8 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -104,30 +109,27 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	log.Print("[DEBUG] Creating CodeArtifact Repository")
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 
-	params := &codeartifact.CreateRepositoryInput{
+	input := &codeartifact.CreateRepositoryInput{
 		Repository: aws.String(d.Get("repository").(string)),
 		Domain:     aws.String(d.Get("domain").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("domain_owner"); ok {
-		params.DomainOwner = aws.String(v.(string))
+		input.DomainOwner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("upstream"); ok {
-		params.Upstreams = expandUpstreams(v.([]interface{}))
+		input.Upstreams = expandUpstreams(v.([]interface{}))
 	}
 
-	res, err := conn.CreateRepositoryWithContext(ctx, params)
+	res, err := conn.CreateRepositoryWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Repository: %s", err)
 	}
@@ -153,9 +155,55 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
+func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
+
+	owner, domain, repo, err := DecodeRepositoryID(d.Id())
+	if err != nil {
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
+	}
+	sm, err := conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
+		Repository:  aws.String(repo),
+		Domain:      aws.String(domain),
+		DomainOwner: aws.String(owner),
+	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
+	}
+
+	arn := aws.StringValue(sm.Repository.Arn)
+	d.Set("repository", sm.Repository.Name)
+	d.Set("arn", arn)
+	d.Set("domain_owner", sm.Repository.DomainOwner)
+	d.Set("domain", sm.Repository.DomainName)
+	d.Set("administrator_account", sm.Repository.AdministratorAccount)
+	d.Set("description", sm.Repository.Description)
+
+	if sm.Repository.Upstreams != nil {
+		if err := d.Set("upstream", flattenUpstreams(sm.Repository.Upstreams)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "[WARN] Error setting upstream: %s", err)
+		}
+	}
+
+	if sm.Repository.ExternalConnections != nil {
+		if err := d.Set("external_connections", flattenExternalConnections(sm.Repository.ExternalConnections)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "[WARN] Error setting external_connections: %s", err)
+		}
+	}
+
+	return diags
+}
+
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Print("[DEBUG] Updating CodeArtifact Repository")
 
 	needsUpdate := false
@@ -217,86 +265,12 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeArtifact Repository (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
-}
-
-func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	log.Printf("[DEBUG] Reading CodeArtifact Repository: %s", d.Id())
-
-	owner, domain, repo, err := DecodeRepositoryID(d.Id())
-	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
-	}
-	sm, err := conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
-		Repository:  aws.String(repo),
-		Domain:      aws.String(domain),
-		DomainOwner: aws.String(owner),
-	})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
-	}
-
-	arn := aws.StringValue(sm.Repository.Arn)
-	d.Set("repository", sm.Repository.Name)
-	d.Set("arn", arn)
-	d.Set("domain_owner", sm.Repository.DomainOwner)
-	d.Set("domain", sm.Repository.DomainName)
-	d.Set("administrator_account", sm.Repository.AdministratorAccount)
-	d.Set("description", sm.Repository.Description)
-
-	if sm.Repository.Upstreams != nil {
-		if err := d.Set("upstream", flattenUpstreams(sm.Repository.Upstreams)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "[WARN] Error setting upstream: %s", err)
-		}
-	}
-
-	if sm.Repository.ExternalConnections != nil {
-		if err := d.Set("external_connections", flattenExternalConnections(sm.Repository.ExternalConnections)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "[WARN] Error setting external_connections: %s", err)
-		}
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CodeArtifact Repository (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	return diags
 }
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())

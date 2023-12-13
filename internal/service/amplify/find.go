@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindAppByID(ctx context.Context, conn *amplify.Amplify, id string) (*amplify.App, error) {
@@ -17,7 +20,7 @@ func FindAppByID(ctx context.Context, conn *amplify.Amplify, id string) (*amplif
 	output, err := conn.GetAppWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -28,7 +31,7 @@ func FindAppByID(ctx context.Context, conn *amplify.Amplify, id string) (*amplif
 	}
 
 	if output == nil || output.App == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -46,7 +49,7 @@ func FindBackendEnvironmentByAppIDAndEnvironmentName(ctx context.Context, conn *
 	output, err := conn.GetBackendEnvironmentWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -57,7 +60,7 @@ func FindBackendEnvironmentByAppIDAndEnvironmentName(ctx context.Context, conn *
 	}
 
 	if output == nil || output.BackendEnvironment == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -75,7 +78,7 @@ func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Amplify, 
 	output, err := conn.GetBranchWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -86,7 +89,7 @@ func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Amplify, 
 	}
 
 	if output == nil || output.Branch == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -104,7 +107,7 @@ func FindDomainAssociationByAppIDAndDomainName(ctx context.Context, conn *amplif
 	output, err := conn.GetDomainAssociationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -115,7 +118,7 @@ func FindDomainAssociationByAppIDAndDomainName(ctx context.Context, conn *amplif
 	}
 
 	if output == nil || output.DomainAssociation == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -132,7 +135,7 @@ func FindWebhookByID(ctx context.Context, conn *amplify.Amplify, id string) (*am
 	output, err := conn.GetWebhookWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -143,7 +146,7 @@ func FindWebhookByID(ctx context.Context, conn *amplify.Amplify, id string) (*am
 	}
 
 	if output == nil || output.Webhook == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}

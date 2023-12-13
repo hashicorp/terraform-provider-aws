@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -9,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_mq_broker_instance_type_offerings")
 func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerInstanceTypeOfferingsRead,
@@ -78,7 +83,9 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 }
 
 func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 
@@ -107,16 +114,16 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 	})
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker Instance Options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker Instance Options: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(output)); err != nil {
-		return diag.Errorf("setting broker_instance_options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting broker_instance_options: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenBrokerInstanceOptions(bios []*mq.BrokerInstanceOption) []interface{} {

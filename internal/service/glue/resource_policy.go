@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_glue_resource_policy")
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut(glue.ExistConditionNotExist),
@@ -50,7 +54,7 @@ func ResourceResourcePolicy() *schema.Resource {
 func resourceResourcePolicyPut(condition string) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		var diags diag.Diagnostics
-		conn := meta.(*conns.AWSClient).GlueConn()
+		conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -79,7 +83,7 @@ func resourceResourcePolicyPut(condition string) func(context.Context, *schema.R
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	resourcePolicy, err := conn.GetResourcePolicyWithContext(ctx, &glue.GetResourcePolicyInput{})
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
@@ -108,7 +112,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	_, err := conn.DeleteResourcePolicyWithContext(ctx, &glue.DeleteResourcePolicyInput{})
 	if err != nil {

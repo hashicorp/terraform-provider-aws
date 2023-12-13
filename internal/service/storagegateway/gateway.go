@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -6,27 +9,31 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_storagegateway_gateway", name="Gateway")
+// @Tags(identifierAttribute="arn")
 func ResourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
@@ -93,7 +100,7 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
 					validation.StringLenBetween(2, 255),
 				),
 			},
@@ -113,8 +120,8 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
-					validation.StringMatch(regexp.MustCompile(`^GMT$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^GMT$`), ""),
 				),
 			},
 			"gateway_type": {
@@ -185,7 +192,7 @@ func ResourceGateway() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexp.MustCompile(`^(([a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9\-]*[A-Za-z0-9])(:(\d+))?$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`), ""),
 									validation.StringLenBetween(6, 1024),
 								),
 							},
@@ -194,7 +201,7 @@ func ResourceGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},
@@ -208,7 +215,7 @@ func ResourceGateway() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},
@@ -222,7 +229,7 @@ func ResourceGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},
@@ -238,7 +245,7 @@ func ResourceGateway() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
 					validation.StringLenBetween(6, 512),
 				),
 			},
@@ -248,8 +255,8 @@ func ResourceGateway() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(storagegateway.SMBSecurityStrategy_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tape_drive_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -269,11 +276,9 @@ func ResourceGateway() *schema.Resource {
 
 func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*conns.AWSClient).Region
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
+	region := meta.(*conns.AWSClient).Region
 	activationKey := d.Get("activation_key").(string)
 
 	// Perform one time fetch of activation key from gateway IP address.
@@ -299,24 +304,24 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		var response *http.Response
-		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 			response, err = client.Do(request)
 
 			if err != nil {
-				if err, ok := err.(net.Error); ok {
-					errMessage := fmt.Errorf("error making HTTP request: %s", err)
+				if errs.IsA[net.Error](err) {
+					errMessage := fmt.Errorf("making HTTP request: %s", err)
 					log.Printf("[DEBUG] retryable %s", errMessage)
-					return resource.RetryableError(errMessage)
+					return retry.RetryableError(errMessage)
 				}
 
-				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %w", err))
+				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			for _, retryableStatusCode := range []int{504} {
 				if response.StatusCode == retryableStatusCode {
 					errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
 					log.Printf("[DEBUG] retryable %s", errMessage)
-					return resource.RetryableError(errMessage)
+					return retry.RetryableError(errMessage)
 				}
 			}
 
@@ -351,7 +356,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		GatewayName:     aws.String(d.Get("gateway_name").(string)),
 		GatewayTimezone: aws.String(d.Get("gateway_timezone").(string)),
 		GatewayType:     aws.String(d.Get("gateway_type").(string)),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("medium_changer_type"); ok {
@@ -482,9 +487,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	output, err := FindGatewayByARN(ctx, conn, d.Id())
 
@@ -498,16 +501,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Gateway (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	smbSettingsInput := &storagegateway.DescribeSMBSettingsInput{
 		GatewayARN: aws.String(d.Id()),
@@ -652,7 +646,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
@@ -789,20 +783,12 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceGatewayRead(ctx, d, meta)...)
 }
 
 func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", d.Id())
 	_, err := conn.DeleteGatewayWithContext(ctx, &storagegateway.DeleteGatewayInput{
@@ -882,7 +868,7 @@ func expandUpdateMaintenanceStartTimeInput(tfMap map[string]interface{}) *storag
 		apiObject.DayOfMonth = aws.Int64(v)
 	}
 
-	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).Value(); !null {
 		apiObject.DayOfWeek = aws.Int64(v)
 	}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -11,11 +14,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_prometheus_workspace", name="Workspace")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceCreate,
@@ -62,37 +69,35 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
 
-	input := &prometheusservice.CreateWorkspaceInput{}
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+
+	input := &prometheusservice.CreateWorkspaceInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("alias"); ok {
 		input.Alias = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	result, err := conn.CreateWorkspaceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Prometheus Workspace: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Prometheus Workspace: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.WorkspaceId))
 
 	if _, err := waitWorkspaceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Workspace (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -105,32 +110,32 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err := conn.CreateLoggingConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 		}
 
 		if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
 		}
 	}
 
-	return resourceWorkspaceRead(ctx, d, meta)
+	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	ws, err := FindWorkspaceByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Prometheus Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Prometheus Workspace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("alias", ws.Alias)
@@ -143,34 +148,20 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	if tfresource.NotFound(err) {
 		d.Set("logging_configuration", nil)
 	} else if err != nil {
-		return diag.Errorf("reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 	} else {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
-			return diag.Errorf("setting logging_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for Prometheus Workspace (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-	return nil
+	return diags
 }
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	if d.HasChange("alias") {
 		input := &prometheusservice.UpdateWorkspaceAliasInput{
@@ -181,11 +172,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err := conn.UpdateWorkspaceAliasWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Prometheus Workspace alias (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Prometheus Workspace alias (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitWorkspaceUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Prometheus Workspace (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -200,11 +191,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				}
 
 				if _, err := conn.CreateLoggingConfigurationWithContext(ctx, input); err != nil {
-					return diag.Errorf("creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 				}
 
 				if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
-					return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
 				}
 			} else {
 				input := &prometheusservice.UpdateLoggingConfigurationInput{
@@ -213,11 +204,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				}
 
 				if _, err := conn.UpdateLoggingConfigurationWithContext(ctx, input); err != nil {
-					return diag.Errorf("updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 				}
 
 				if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
-					return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
 				}
 			}
 		} else {
@@ -226,29 +217,22 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			})
 
 			if err != nil {
-				return diag.Errorf("deleting Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 			}
 
 			if _, err := waitLoggingConfigurationDeleted(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration delete: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) logging configuration delete: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating Prometheus Workspace (%s) tags: %s", arn, err)
-		}
-	}
-
-	return resourceWorkspaceRead(ctx, d, meta)
+	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	log.Printf("[INFO] Deleting Prometheus Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{
@@ -256,18 +240,18 @@ func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Prometheus Workspace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Prometheus Workspace (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitWorkspaceDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Workspace (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenLoggingConfigurationMetadata(apiObject *prometheusservice.LoggingConfigurationMetadata) map[string]interface{} {

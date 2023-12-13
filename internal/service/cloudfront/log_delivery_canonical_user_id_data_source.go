@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -17,6 +20,7 @@ const (
 	cnLogDeliveryCanonicalUserID = "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"
 )
 
+// @SDKDataSource("aws_cloudfront_log_delivery_canonical_user_id")
 func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,

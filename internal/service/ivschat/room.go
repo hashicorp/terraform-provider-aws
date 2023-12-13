@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
@@ -22,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivschat_room", name="Room")
+// @Tags(identifierAttribute="id")
 func ResourceRoom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoomCreate,
@@ -87,10 +92,10 @@ func ResourceRoom() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -102,20 +107,24 @@ const (
 )
 
 func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	var diags diag.Diagnostics
 
-	in := &ivschat.CreateRoomInput{}
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
+
+	in := &ivschat.CreateRoomInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("logging_configuration_identifiers"); ok {
 		in.LoggingConfigurationIdentifiers = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("maximum_message_length"); ok {
-		in.MaximumMessageLength = int32(v.(int))
+		in.MaximumMessageLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("maximum_message_rate_per_second"); ok {
-		in.MaximumMessageRatePerSecond = int32(v.(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("message_review_handler"); ok && len(v.([]interface{})) > 0 {
@@ -126,83 +135,63 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Name = aws.String(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	out, err := conn.CreateRoom(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
 	if _, err := waitRoomCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForCreation, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForCreation, ResNameRoom, d.Id(), err)
 	}
 
-	return resourceRoomRead(ctx, d, meta)
+	return append(diags, resourceRoomRead(ctx, d, meta)...)
 }
 
 func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findRoomByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVSChat Room (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
 
 	if err := d.Set("logging_configuration_identifiers", flex.FlattenStringValueList(out.LoggingConfigurationIdentifiers)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
 	}
 
 	d.Set("maximum_message_length", out.MaximumMessageLength)
 	d.Set("maximum_message_rate_per_second", out.MaximumMessageRatePerSecond)
 
 	if err := d.Set("message_review_handler", flattenMessageReviewHandler(out.MessageReviewHandler)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
 	}
 
 	d.Set("name", out.Name)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
 
@@ -216,12 +205,12 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("maximum_message_length") {
-		in.MaximumMessageLength = int32(d.Get("maximum_message_length").(int))
+		in.MaximumMessageLength = aws.Int32(int32(d.Get("maximum_message_length").(int)))
 		update = true
 	}
 
 	if d.HasChanges("maximum_message_rate_per_second") {
-		in.MaximumMessageRatePerSecond = int32(d.Get("maximum_message_rate_per_second").(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(d.Get("maximum_message_rate_per_second").(int)))
 		update = true
 	}
 
@@ -235,33 +224,27 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		update = true
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameRoom, d.Id(), err)
-		}
-	}
-
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating IVSChat Room (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateRoom(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionUpdating, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionUpdating, ResNameRoom, d.Id(), err)
 	}
 
 	if _, err := waitRoomUpdated(ctx, conn, aws.ToString(out.Arn), d.Timeout(schema.TimeoutUpdate), in); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForUpdate, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForUpdate, ResNameRoom, d.Id(), err)
 	}
 
-	return resourceRoomRead(ctx, d, meta)
+	return append(diags, resourceRoomRead(ctx, d, meta)...)
 }
 
 func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat Room %s", d.Id())
 
@@ -272,17 +255,17 @@ func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.IVSChat, create.ErrActionDeleting, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionDeleting, ResNameRoom, d.Id(), err)
 	}
 
 	if _, err := waitRoomDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForDeletion, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForDeletion, ResNameRoom, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []interface{} {

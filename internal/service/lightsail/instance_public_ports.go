@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
@@ -6,9 +9,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lightsail_instance_public_ports")
 func ResourceInstancePublicPorts() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstancePublicPortsCreate,
@@ -77,7 +81,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(lightsail.NetworkProtocol_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenNetworkProtocolValues(types.NetworkProtocol("").Values()), false),
 						},
 						"to_port": {
 							Type:         schema.TypeInt,
@@ -94,9 +98,9 @@ func ResourceInstancePublicPorts() *schema.Resource {
 
 func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	var portInfos []*lightsail.PortInfo
+	var portInfos []types.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
 		portInfos = expandPortInfos(v.(*schema.Set).List())
 	}
@@ -106,7 +110,7 @@ func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceDa
 		PortInfos:    portInfos,
 	}
 
-	_, err := conn.PutInstancePublicPortsWithContext(ctx, input)
+	_, err := conn.PutInstancePublicPorts(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to create public ports for instance %s: %s", d.Get("instance_name").(string), err)
@@ -114,7 +118,7 @@ func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceDa
 
 	var buffer bytes.Buffer
 	for _, portInfo := range portInfos {
-		buffer.WriteString(fmt.Sprintf("%s-%d-%d\n", aws.StringValue(portInfo.Protocol), aws.Int64Value(portInfo.FromPort), aws.Int64Value(portInfo.ToPort)))
+		buffer.WriteString(fmt.Sprintf("%s-%d-%d\n", string(portInfo.Protocol), int64(portInfo.FromPort), int64(portInfo.ToPort)))
 	}
 
 	d.SetId(fmt.Sprintf("%s-%d", d.Get("instance_name").(string), create.StringHashcode(buffer.String())))
@@ -124,15 +128,15 @@ func resourceInstancePublicPortsCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	input := &lightsail.GetInstancePortStatesInput{
 		InstanceName: aws.String(d.Get("instance_name").(string)),
 	}
 
-	output, err := conn.GetInstancePortStatesWithContext(ctx, input)
+	output, err := conn.GetInstancePortStates(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "NotFoundException") {
+	if !d.IsNewResource() && IsANotFoundError(err) {
 		log.Printf("[WARN] Lightsail instance public ports (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,19 +161,19 @@ func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData
 
 func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	var err *multierror.Error
 
-	var portInfos []*lightsail.PortInfo
+	var portInfos []types.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
 		portInfos = expandPortInfos(v.(*schema.Set).List())
 	}
 
 	for _, portInfo := range portInfos {
-		_, portError := conn.CloseInstancePublicPortsWithContext(ctx, &lightsail.CloseInstancePublicPortsInput{
+		_, portError := conn.CloseInstancePublicPorts(ctx, &lightsail.CloseInstancePublicPortsInput{
 			InstanceName: aws.String(d.Get("instance_name").(string)),
-			PortInfo:     portInfo,
+			PortInfo:     &portInfo,
 		})
 
 		if portError != nil {
@@ -184,38 +188,38 @@ func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
-	if tfMap == nil {
-		return nil
-	}
+func expandPortInfo(tfMap map[string]interface{}) types.PortInfo {
+	// if tfMap == nil {
+	// 	return nil
+	// }
 
-	apiObject := &lightsail.PortInfo{
-		FromPort: aws.Int64((int64)(tfMap["from_port"].(int))),
-		ToPort:   aws.Int64((int64)(tfMap["to_port"].(int))),
-		Protocol: aws.String(tfMap["protocol"].(string)),
+	apiObject := types.PortInfo{
+		FromPort: int32(tfMap["from_port"].(int)),
+		ToPort:   int32(tfMap["to_port"].(int)),
+		Protocol: types.NetworkProtocol(tfMap["protocol"].(string)),
 	}
 
 	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Cidrs = flex.ExpandStringSet(v)
+		apiObject.Cidrs = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
 	if v, ok := tfMap["cidr_list_aliases"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.CidrListAliases = flex.ExpandStringSet(v)
+		apiObject.CidrListAliases = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
 	if v, ok := tfMap["ipv6_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Ipv6Cidrs = flex.ExpandStringSet(v)
+		apiObject.Ipv6Cidrs = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
 	return apiObject
 }
 
-func expandPortInfos(tfList []interface{}) []*lightsail.PortInfo {
+func expandPortInfos(tfList []interface{}) []types.PortInfo {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*lightsail.PortInfo
+	var apiObjects []types.PortInfo
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -226,43 +230,39 @@ func expandPortInfos(tfList []interface{}) []*lightsail.PortInfo {
 
 		apiObject := expandPortInfo(tfMap)
 
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenInstancePortState(apiObject *lightsail.InstancePortState) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
+func flattenInstancePortState(apiObject types.InstancePortState) map[string]interface{} {
+	// if apiObject == (types.InstancePortState{}) {
+	// 	return nil
+	// }
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["from_port"] = aws.Int64Value(apiObject.FromPort)
-	tfMap["to_port"] = aws.Int64Value(apiObject.ToPort)
-	tfMap["protocol"] = aws.StringValue(apiObject.Protocol)
+	tfMap["from_port"] = int(apiObject.FromPort)
+	tfMap["to_port"] = int(apiObject.ToPort)
+	tfMap["protocol"] = string(apiObject.Protocol)
 
 	if v := apiObject.Cidrs; v != nil {
-		tfMap["cidrs"] = aws.StringValueSlice(v)
+		tfMap["cidrs"] = v
 	}
 
 	if v := apiObject.CidrListAliases; v != nil {
-		tfMap["cidr_list_aliases"] = aws.StringValueSlice(v)
+		tfMap["cidr_list_aliases"] = v
 	}
 
 	if v := apiObject.Ipv6Cidrs; v != nil {
-		tfMap["ipv6_cidrs"] = aws.StringValueSlice(v)
+		tfMap["ipv6_cidrs"] = v
 	}
 
 	return tfMap
 }
 
-func flattenInstancePortStates(apiObjects []*lightsail.InstancePortState) []interface{} {
+func flattenInstancePortStates(apiObjects []types.InstancePortState) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -270,12 +270,22 @@ func flattenInstancePortStates(apiObjects []*lightsail.InstancePortState) []inte
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
+		// if apiObject == nil {
+		// 	continue
+		// }
 
 		tfList = append(tfList, flattenInstancePortState(apiObject))
 	}
 
 	return tfList
+}
+
+func flattenNetworkProtocolValues(t []types.NetworkProtocol) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }

@@ -1,11 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -17,8 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_redshiftserverless_namespace", name="Namespace")
+// @Tags(identifierAttribute="arn")
 func ResourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamespaceCreate,
@@ -77,7 +86,7 @@ func ResourceNamespace() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"userlog", "connectionlog", "useractivitylog"}, false),
+					ValidateFunc: validation.StringInSlice(redshiftserverless.LogExport_Values(), false),
 				},
 			},
 			"namespace_id": {
@@ -89,8 +98,8 @@ func ResourceNamespace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -99,14 +108,12 @@ func ResourceNamespace() *schema.Resource {
 
 func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{
 		NamespaceName: aws.String(name),
-		Tags:          Tags(tags.IgnoreAWS()),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_password"); ok {
@@ -150,9 +157,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	output, err := FindNamespaceByName(ctx, conn, d.Id())
 
@@ -171,39 +176,18 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", arn)
 	d.Set("db_name", output.DbName)
 	d.Set("default_iam_role_arn", output.DefaultIamRoleArn)
-	d.Set("iam_roles", aws.StringValueSlice(output.IamRoles))
+	d.Set("iam_roles", flattenNamespaceIAMRoles(output.IamRoles))
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("log_exports", aws.StringValueSlice(output.LogExports))
 	d.Set("namespace_id", output.NamespaceId)
 	d.Set("namespace_name", output.NamespaceName)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Redshift Serverless Namespace (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
 
 func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateNamespaceInput{
@@ -242,20 +226,12 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Namespace (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
 func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
@@ -280,4 +256,43 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+var (
+	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
+)
+
+func flattenNamespaceIAMRoles(iamRoles []*string) []string {
+	var tfList []string
+
+	for _, iamRole := range iamRoles {
+		iamRole := aws.StringValue(iamRole)
+
+		if arn.IsARN(iamRole) {
+			tfList = append(tfList, iamRole)
+			continue
+		}
+
+		// e.g. "IamRole(applyStatus=in-sync, iamRoleArn=arn:aws:iam::123456789012:role/service-role/test)"
+		if m := reIAMRole.FindStringSubmatch(iamRole); len(m) > 0 {
+			var key string
+			s := m[1]
+			for s != "" {
+				key, s, _ = strings.Cut(s, ",")
+				key = strings.TrimSpace(key)
+				if key == "" {
+					continue
+				}
+				key, value, _ := strings.Cut(key, "=")
+				if key == "iamRoleArn" {
+					tfList = append(tfList, value)
+					break
+				}
+			}
+
+			continue
+		}
+	}
+
+	return tfList
 }

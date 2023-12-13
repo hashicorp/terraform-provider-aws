@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package common
 
 import (
@@ -99,7 +102,10 @@ func (d *fileDestination) WriteTemplate(templateName, templateBody string, templ
 }
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
-	tmpl, err := template.New(templateName).Parse(templateBody)
+	funcMap := template.FuncMap{
+		"Title": strings.Title,
+	}
+	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)
 
 	if err != nil {
 		return nil, fmt.Errorf("parsing function template: %w", err)
@@ -115,6 +121,14 @@ func parseTemplate(templateName, templateBody string, templateData any) ([]byte,
 	return buffer.Bytes(), nil
 }
 
+func (g *Generator) Infof(format string, a ...interface{}) {
+	g.ui.Info(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) Warnf(format string, a ...interface{}) {
+	g.ui.Warn(fmt.Sprintf(format, a...))
+}
+
 func (g *Generator) Errorf(format string, a ...interface{}) {
 	g.ui.Error(fmt.Sprintf(format, a...))
 }
@@ -122,12 +136,4 @@ func (g *Generator) Errorf(format string, a ...interface{}) {
 func (g *Generator) Fatalf(format string, a ...interface{}) {
 	g.Errorf(format, a...)
 	os.Exit(1)
-}
-
-func (g *Generator) Infof(format string, a ...interface{}) {
-	g.ui.Info(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) Warnf(format string, a ...interface{}) {
-	g.ui.Warn(fmt.Sprintf(format, a...))
 }

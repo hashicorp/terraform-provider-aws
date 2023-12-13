@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
-	"log"
 	"sort"
 	"time"
 
@@ -12,47 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
+// @Tags
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			//selection criteria
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"db_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"include_shared": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"include_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			//Computed values returned
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -61,9 +34,17 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"db_instance_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"db_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"db_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"encrypted": {
 				Type:     schema.TypeBool,
@@ -77,6 +58,16 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"include_public": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"include_shared": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -89,6 +80,11 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"option_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -97,15 +93,19 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"snapshot_create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"snapshot_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"source_db_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"source_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"snapshot_create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,6 +117,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -127,52 +128,78 @@ func DataSourceSnapshot() *schema.Resource {
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	instanceIdentifier, instanceIdentifierOk := d.GetOk("db_instance_identifier")
-	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_snapshot_identifier")
-
-	if !instanceIdentifierOk && !snapshotIdentifierOk {
-		return sdkdiag.AppendErrorf(diags, "One of db_snapshot_identifier or db_instance_identifier must be assigned")
-	}
-
-	params := &rds.DescribeDBSnapshotsInput{
+	input := &rds.DescribeDBSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
 		IncludeShared: aws.Bool(d.Get("include_shared").(bool)),
 	}
+
+	if v, ok := d.GetOk("db_instance_identifier"); ok {
+		input.DBInstanceIdentifier = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("db_snapshot_identifier"); ok {
+		input.DBSnapshotIdentifier = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("snapshot_type"); ok {
-		params.SnapshotType = aws.String(v.(string))
-	}
-	if instanceIdentifierOk {
-		params.DBInstanceIdentifier = aws.String(instanceIdentifier.(string))
-	}
-	if snapshotIdentifierOk {
-		params.DBSnapshotIdentifier = aws.String(snapshotIdentifier.(string))
+		input.SnapshotType = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeDBSnapshotsWithContext(ctx, params)
+	f := tfslices.PredicateTrue[*rds.DBSnapshot]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		f = func(v *rds.DBSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
+	}
+
+	snapshots, err := findDBSnapshots(ctx, conn, input, f)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS Snapshot: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
 	}
 
-	if len(resp.DBSnapshots) < 1 {
+	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBSnapshot
-	if len(resp.DBSnapshots) > 1 {
-		recent := d.Get("most_recent").(bool)
-		log.Printf("[DEBUG] aws_db_snapshot - multiple results found and `most_recent` is set to: %t", recent)
-		if recent {
-			snapshot = mostRecentDBSnapshot(resp.DBSnapshots)
+	if len(snapshots) > 1 {
+		if d.Get("most_recent").(bool) {
+			snapshot = mostRecentDBSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = resp.DBSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
-	dbSnapshotDescriptionAttributes(d, snapshot)
+	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
+	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set("availability_zone", snapshot.AvailabilityZone)
+	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
+	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
+	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
+	d.Set("encrypted", snapshot.Encrypted)
+	d.Set("engine", snapshot.Engine)
+	d.Set("engine_version", snapshot.EngineVersion)
+	d.Set("iops", snapshot.Iops)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set("license_model", snapshot.LicenseModel)
+	d.Set("option_group_name", snapshot.OptionGroupName)
+	d.Set("port", snapshot.Port)
+	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
+	d.Set("source_region", snapshot.SourceRegion)
+	if snapshot.SnapshotCreateTime != nil {
+		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
+	}
+	d.Set("snapshot_type", snapshot.SnapshotType)
+	d.Set("status", snapshot.Status)
+	d.Set("storage_type", snapshot.StorageType)
+	d.Set("vpc_id", snapshot.VpcId)
+
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }
@@ -197,30 +224,4 @@ func mostRecentDBSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
 	sortedSnapshots := snapshots
 	sort.Sort(rdsSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]
-}
-
-func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSnapshot) {
-	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
-	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
-	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
-	d.Set("snapshot_type", snapshot.SnapshotType)
-	d.Set("storage_type", snapshot.StorageType)
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zone", snapshot.AvailabilityZone)
-	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("iops", snapshot.Iops)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
-	d.Set("license_model", snapshot.LicenseModel)
-	d.Set("option_group_name", snapshot.OptionGroupName)
-	d.Set("port", snapshot.Port)
-	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
-	d.Set("source_region", snapshot.SourceRegion)
-	d.Set("status", snapshot.Status)
-	d.Set("vpc_id", snapshot.VpcId)
-	if snapshot.SnapshotCreateTime != nil {
-		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
-	}
 }

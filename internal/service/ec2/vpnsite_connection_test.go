@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -19,23 +22,24 @@ import (
 )
 
 type TunnelOptions struct {
-	psk                        string
-	tunnelCidr                 string
-	dpdTimeoutAction           string
-	dpdTimeoutSeconds          int
-	ikeVersions                string
-	phase1DhGroupNumbers       string
-	phase1EncryptionAlgorithms string
-	phase1IntegrityAlgorithms  string
-	phase1LifetimeSeconds      int
-	phase2DhGroupNumbers       string
-	phase2EncryptionAlgorithms string
-	phase2IntegrityAlgorithms  string
-	phase2LifetimeSeconds      int
-	rekeyFuzzPercentage        int
-	rekeyMarginTimeSeconds     int
-	replayWindowSize           int
-	startupAction              string
+	psk                          string
+	tunnelCidr                   string
+	dpdTimeoutAction             string
+	dpdTimeoutSeconds            int
+	enableTunnelLifecycleControl bool
+	ikeVersions                  string
+	phase1DhGroupNumbers         string
+	phase1EncryptionAlgorithms   string
+	phase1IntegrityAlgorithms    string
+	phase1LifetimeSeconds        int
+	phase2DhGroupNumbers         string
+	phase2EncryptionAlgorithms   string
+	phase2IntegrityAlgorithms    string
+	phase2LifetimeSeconds        int
+	rekeyFuzzPercentage          int
+	rekeyMarginTimeSeconds       int
+	replayWindowSize             int
+	startupAction                string
 }
 
 func TestXmlConfigToTunnelInfo(t *testing.T) {
@@ -158,7 +162,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -167,7 +171,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
@@ -238,9 +242,10 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -254,7 +259,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -263,7 +268,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
@@ -332,9 +337,10 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -348,7 +354,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -368,9 +374,10 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName, rBgpAsn),
@@ -398,7 +405,7 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -407,14 +414,15 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexache.MustCompile(`tgw-attach-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -428,7 +436,7 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -458,7 +466,7 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -488,7 +496,7 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -513,68 +521,70 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	badCidrRangeErr := regexp.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
+	badCidrRangeErr := regexache.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	tunnel1 := TunnelOptions{
-		psk:                        "12345678",
-		tunnelCidr:                 "169.254.8.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		psk:                          "12345678",
+		tunnelCidr:                   "169.254.8.0/30",
+		dpdTimeoutAction:             "clear",
+		dpdTimeoutSeconds:            30,
+		enableTunnelLifecycleControl: false,
+		ikeVersions:                  "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:         "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        28800,
+		phase2DhGroupNumbers:         "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:        3600,
+		rekeyFuzzPercentage:          100,
+		rekeyMarginTimeSeconds:       540,
+		replayWindowSize:             1024,
+		startupAction:                "add",
 	}
 
 	tunnel2 := TunnelOptions{
-		psk:                        "abcdefgh",
-		tunnelCidr:                 "169.254.9.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		psk:                          "abcdefgh",
+		tunnelCidr:                   "169.254.9.0/30",
+		dpdTimeoutAction:             "clear",
+		dpdTimeoutSeconds:            30,
+		enableTunnelLifecycleControl: false,
+		ikeVersions:                  "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:         "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        28800,
+		phase2DhGroupNumbers:         "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:        3600,
+		rekeyFuzzPercentage:          100,
+		rekeyMarginTimeSeconds:       540,
+		replayWindowSize:             1024,
+		startupAction:                "add",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "not-a-cidr"),
-				ExpectError: regexp.MustCompile(`invalid CIDR address: not-a-cidr`),
+				ExpectError: regexache.MustCompile(`invalid CIDR address: not-a-cidr`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.254.0/31"),
-				ExpectError: regexp.MustCompile(`expected "\w+" to contain a network Value with between 30 and 30 significant bits`),
+				ExpectError: regexache.MustCompile(`expected "\w+" to contain a network Value with between 30 and 30 significant bits`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "172.16.0.0/30"),
-				ExpectError: regexp.MustCompile(`must be within 169.254.0.0/16`),
+				ExpectError: regexache.MustCompile(`must be within 169.254.0.0/16`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.0.0/30"),
@@ -606,19 +616,19 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
+				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
+				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "01234567", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`cannot start with zero character`),
+				ExpectError: regexache.MustCompile(`cannot start with zero character`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`can only contain alphanumeric, period and underscore characters`),
+				ExpectError: regexache.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
@@ -651,43 +661,45 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	var vpn1, vpn2, vpn3, vpn4, vpn5 ec2.VpnConnection
 
 	tunnel1 := TunnelOptions{
-		psk:                        "12345678",
-		tunnelCidr:                 "169.254.8.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "2, 5, 22, 23, 24",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES128-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		psk:                          "12345678",
+		tunnelCidr:                   "169.254.8.0/30",
+		dpdTimeoutAction:             "clear",
+		dpdTimeoutSeconds:            30,
+		enableTunnelLifecycleControl: false,
+		ikeVersions:                  "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:         "14, 15, 16, 17, 18, 19, 20, 21",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:    "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        28800,
+		phase2DhGroupNumbers:         "2, 5, 22, 23, 24",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES128-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\"",
+		phase2LifetimeSeconds:        3600,
+		rekeyFuzzPercentage:          100,
+		rekeyMarginTimeSeconds:       540,
+		replayWindowSize:             1024,
+		startupAction:                "add",
 	}
 
 	tunnel2 := TunnelOptions{
-		psk:                        "abcdefgh",
-		tunnelCidr:                 "169.254.9.0/30",
-		dpdTimeoutAction:           "none",
-		dpdTimeoutSeconds:          45,
-		ikeVersions:                "\"ikev2\"",
-		phase1DhGroupNumbers:       "18, 19, 20, 21, 22, 23, 24",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\"",
-		phase1IntegrityAlgorithms:  "\"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      1800,
-		phase2DhGroupNumbers:       "15, 16, 17, 18, 19, 20, 21, 22",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      1200,
-		rekeyFuzzPercentage:        90,
-		rekeyMarginTimeSeconds:     360,
-		replayWindowSize:           512,
-		startupAction:              "start",
+		psk:                          "abcdefgh",
+		tunnelCidr:                   "169.254.9.0/30",
+		dpdTimeoutAction:             "none",
+		dpdTimeoutSeconds:            45,
+		enableTunnelLifecycleControl: true,
+		ikeVersions:                  "\"ikev2\"",
+		phase1DhGroupNumbers:         "18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\"",
+		phase1IntegrityAlgorithms:    "\"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        1800,
+		phase2DhGroupNumbers:         "15, 16, 17, 18, 19, 20, 21, 22",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:        1200,
+		rekeyFuzzPercentage:          90,
+		rekeyMarginTimeSeconds:       360,
+		replayWindowSize:             512,
+		startupAction:                "start",
 	}
 
 	// inside_cidr can't be updated in-place.
@@ -698,7 +710,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	tunnel2Updated.tunnelCidr = tunnel2.tunnelCidr
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -713,6 +725,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
@@ -762,6 +775,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -820,6 +834,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -870,6 +885,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -927,6 +943,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -977,6 +994,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
@@ -1034,6 +1052,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
@@ -1083,6 +1102,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -1142,6 +1162,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
@@ -1165,6 +1186,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
@@ -1198,7 +1220,7 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1211,9 +1233,10 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1227,7 +1250,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1240,9 +1263,10 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1256,7 +1280,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1269,9 +1293,10 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1285,7 +1310,7 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1298,9 +1323,10 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1314,7 +1340,7 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1326,9 +1352,10 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1342,7 +1369,7 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1356,9 +1383,10 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_tags2(rName, rBgpAsn, "key1", "value1updated", "key2", "value2"),
@@ -1389,7 +1417,7 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1403,9 +1431,10 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.112.0.0/16", "10.222.32.0/24"),
@@ -1427,7 +1456,7 @@ func TestAccSiteVPNConnection_specifyIPv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1452,7 +1481,7 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1478,7 +1507,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1491,9 +1520,10 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_customerGatewayIDUpdated(rName, rBgpAsn1, rBgpAsn2),
@@ -1515,7 +1545,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1528,9 +1558,10 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_vpnGatewayIDUpdated(rName, rBgpAsn),
@@ -1552,7 +1583,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1566,9 +1597,10 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDUpdated(rName, rBgpAsn),
@@ -1591,7 +1623,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1605,9 +1637,10 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
@@ -1630,7 +1663,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1644,9 +1677,10 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
@@ -1663,7 +1697,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 
 func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_connection" {
@@ -1698,7 +1732,7 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnect
 			return fmt.Errorf("No EC2 VPN Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPNConnectionByID(ctx, conn, rs.Primary.ID)
 
@@ -2425,41 +2459,43 @@ resource "aws_vpn_connection" "test" {
   local_ipv4_network_cidr  = %[3]q
   remote_ipv4_network_cidr = %[4]q
 
-  tunnel1_inside_cidr                  = %[5]q
-  tunnel1_preshared_key                = %[6]q
-  tunnel1_dpd_timeout_action           = %[7]q
-  tunnel1_dpd_timeout_seconds          = %[8]d
-  tunnel1_ike_versions                 = [%[9]s]
-  tunnel1_phase1_dh_group_numbers      = [%[10]s]
-  tunnel1_phase1_encryption_algorithms = [%[11]s]
-  tunnel1_phase1_integrity_algorithms  = [%[12]s]
-  tunnel1_phase1_lifetime_seconds      = %[13]d
-  tunnel1_phase2_dh_group_numbers      = [%[14]s]
-  tunnel1_phase2_encryption_algorithms = [%[15]s]
-  tunnel1_phase2_integrity_algorithms  = [%[16]s]
-  tunnel1_phase2_lifetime_seconds      = %[17]d
-  tunnel1_rekey_fuzz_percentage        = %[18]d
-  tunnel1_rekey_margin_time_seconds    = %[19]d
-  tunnel1_replay_window_size           = %[20]d
-  tunnel1_startup_action               = %[21]q
+  tunnel1_inside_cidr                     = %[5]q
+  tunnel1_preshared_key                   = %[6]q
+  tunnel1_dpd_timeout_action              = %[7]q
+  tunnel1_dpd_timeout_seconds             = %[8]d
+  tunnel1_enable_tunnel_lifecycle_control = %[9]t
+  tunnel1_ike_versions                    = [%[10]s]
+  tunnel1_phase1_dh_group_numbers         = [%[11]s]
+  tunnel1_phase1_encryption_algorithms    = [%[12]s]
+  tunnel1_phase1_integrity_algorithms     = [%[13]s]
+  tunnel1_phase1_lifetime_seconds         = %[14]d
+  tunnel1_phase2_dh_group_numbers         = [%[15]s]
+  tunnel1_phase2_encryption_algorithms    = [%[16]s]
+  tunnel1_phase2_integrity_algorithms     = [%[17]s]
+  tunnel1_phase2_lifetime_seconds         = %[18]d
+  tunnel1_rekey_fuzz_percentage           = %[19]d
+  tunnel1_rekey_margin_time_seconds       = %[20]d
+  tunnel1_replay_window_size              = %[21]d
+  tunnel1_startup_action                  = %[22]q
 
-  tunnel2_inside_cidr                  = %[22]q
-  tunnel2_preshared_key                = %[23]q
-  tunnel2_dpd_timeout_action           = %[24]q
-  tunnel2_dpd_timeout_seconds          = %[25]d
-  tunnel2_ike_versions                 = [%[26]s]
-  tunnel2_phase1_dh_group_numbers      = [%[27]s]
-  tunnel2_phase1_encryption_algorithms = [%[28]s]
-  tunnel2_phase1_integrity_algorithms  = [%[29]s]
-  tunnel2_phase1_lifetime_seconds      = %[30]d
-  tunnel2_phase2_dh_group_numbers      = [%[31]s]
-  tunnel2_phase2_encryption_algorithms = [%[32]s]
-  tunnel2_phase2_integrity_algorithms  = [%[33]s]
-  tunnel2_phase2_lifetime_seconds      = %[34]d
-  tunnel2_rekey_fuzz_percentage        = %[35]d
-  tunnel2_rekey_margin_time_seconds    = %[36]d
-  tunnel2_replay_window_size           = %[37]d
-  tunnel2_startup_action               = %[38]q
+  tunnel2_inside_cidr                     = %[23]q
+  tunnel2_preshared_key                   = %[24]q
+  tunnel2_dpd_timeout_action              = %[25]q
+  tunnel2_dpd_timeout_seconds             = %[26]d
+  tunnel2_enable_tunnel_lifecycle_control = %[27]t
+  tunnel2_ike_versions                    = [%[28]s]
+  tunnel2_phase1_dh_group_numbers         = [%[29]s]
+  tunnel2_phase1_encryption_algorithms    = [%[30]s]
+  tunnel2_phase1_integrity_algorithms     = [%[31]s]
+  tunnel2_phase1_lifetime_seconds         = %[32]d
+  tunnel2_phase2_dh_group_numbers         = [%[33]s]
+  tunnel2_phase2_encryption_algorithms    = [%[34]s]
+  tunnel2_phase2_integrity_algorithms     = [%[35]s]
+  tunnel2_phase2_lifetime_seconds         = %[36]d
+  tunnel2_rekey_fuzz_percentage           = %[37]d
+  tunnel2_rekey_margin_time_seconds       = %[38]d
+  tunnel2_replay_window_size              = %[39]d
+  tunnel2_startup_action                  = %[40]q
 
   tags = {
     Name = %[1]q
@@ -2474,6 +2510,7 @@ resource "aws_vpn_connection" "test" {
 		tunnel1.psk,
 		tunnel1.dpdTimeoutAction,
 		tunnel1.dpdTimeoutSeconds,
+		tunnel1.enableTunnelLifecycleControl,
 		tunnel1.ikeVersions,
 		tunnel1.phase1DhGroupNumbers,
 		tunnel1.phase1EncryptionAlgorithms,
@@ -2491,6 +2528,7 @@ resource "aws_vpn_connection" "test" {
 		tunnel2.psk,
 		tunnel2.dpdTimeoutAction,
 		tunnel2.dpdTimeoutSeconds,
+		tunnel2.enableTunnelLifecycleControl,
 		tunnel2.ikeVersions,
 		tunnel2.phase1DhGroupNumbers,
 		tunnel2.phase1EncryptionAlgorithms,

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_codecommit_trigger")
 func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTriggerCreate,
@@ -75,7 +79,7 @@ func ResourceTrigger() *schema.Resource {
 
 func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
 	triggers := expandTriggers(d.Get("trigger").(*schema.Set).List())
@@ -87,7 +91,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	resp, err := conn.PutRepositoryTriggersWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeCommit Trigger: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Trigger: %s", err)
 	}
 
 	log.Printf("[INFO] Code Commit Trigger Created %s input %s", resp, input)
@@ -100,7 +104,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetRepositoryTriggersInput{
 		RepositoryName: aws.String(d.Id()),
@@ -108,7 +112,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	resp, err := conn.GetRepositoryTriggersWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading CodeCommit Trigger: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Trigger: %s", err.Error())
 	}
 
 	log.Printf("[DEBUG] CodeCommit Trigger: %s", resp)
@@ -118,7 +122,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Trigger: %q", d.Id())
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
@@ -9,11 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourcePartition)
-}
-
-// newDataSourcePartition instantiates a new DataSource for the aws_partition data source.
+// @FrameworkDataSource
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourcePartition{}
 	d.SetMigratedFromPluginSDK(true)

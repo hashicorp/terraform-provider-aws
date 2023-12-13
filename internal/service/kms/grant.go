@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -14,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kms_grant")
 func ResourceGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGrantCreate,
@@ -86,10 +90,13 @@ func ResourceGrant() *schema.Resource {
 				Computed: true,
 			},
 			"grantee_principal": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 			"key_id": {
 				Type:     schema.TypeString,
@@ -118,10 +125,13 @@ func ResourceGrant() *schema.Resource {
 				ForceNew: true,
 			},
 			"retiring_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 		},
 	}
@@ -129,7 +139,7 @@ func ResourceGrant() *schema.Resource {
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.CreateGrantInput{
@@ -183,7 +193,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		timeout = 3 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -196,11 +206,11 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Grant (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading KMS Grant (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Grant (%s): %s", d.Id(), err)
 	}
 
 	if grant.Constraints != nil {
@@ -226,7 +236,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -295,7 +305,7 @@ func FindGrantByTwoPartKey(ctx context.Context, conn *kms.KMS, keyID, grantID st
 	})
 
 	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -315,26 +325,26 @@ func FindGrantByTwoPartKey(ctx context.Context, conn *kms.KMS, keyID, grantID st
 func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, grantID string, timeout time.Duration) (*kms.GrantListEntry, error) {
 	var output *kms.GrantListEntry
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		grant, err := FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
 
 		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
-			if !arn.IsARN(principal) {
-				return resource.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
+				return retry.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
 		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
-			if !arn.IsARN(principal) {
-				return resource.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
+				return retry.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
@@ -451,12 +461,12 @@ func flattenGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
-			m["encryption_context_equals"] = flex.PointersMapToStringList(constraint.EncryptionContextEquals)
+			m["encryption_context_equals"] = flex.FlattenStringMap(constraint.EncryptionContextEquals)
 		}
 	}
 	if constraint.EncryptionContextSubset != nil {
 		if len(constraint.EncryptionContextSubset) > 0 {
-			m["encryption_context_subset"] = flex.PointersMapToStringList(constraint.EncryptionContextSubset)
+			m["encryption_context_subset"] = flex.FlattenStringMap(constraint.EncryptionContextSubset)
 		}
 	}
 	constraints.Add(m)

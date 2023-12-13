@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_kms_custom_key_store")
 func DataSourceCustomKeyStore() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomKeyStoreRead,
@@ -54,7 +58,9 @@ const (
 )
 
 func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.DescribeCustomKeyStoresInput{}
 
@@ -71,7 +77,7 @@ func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, m
 	keyStore, err := FindCustomKeyStoreByID(ctx, conn, input)
 
 	if err != nil {
-		return create.DiagError(names.KMS, create.ErrActionReading, DSNameCustomKeyStore, ksID, err)
+		return create.AppendDiagError(diags, names.KMS, create.ErrActionReading, DSNameCustomKeyStore, ksID, err)
 	}
 
 	d.SetId(aws.StringValue(keyStore.CustomKeyStoreId))
@@ -82,5 +88,5 @@ func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("creation_date", keyStore.CreationDate.Format(time.RFC3339))
 	d.Set("trust_anchor_certificate", keyStore.TrustAnchorCertificate)
 
-	return nil
+	return diags
 }

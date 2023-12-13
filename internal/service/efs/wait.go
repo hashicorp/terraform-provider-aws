@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -19,7 +22,7 @@ const (
 
 // waitAccessPointCreated waits for an Operation to return Success
 func waitAccessPointCreated(ctx context.Context, conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateCreating},
 		Target:  []string{efs.LifeCycleStateAvailable},
 		Refresh: statusAccessPointLifeCycleState(ctx, conn, accessPointId),
@@ -37,7 +40,7 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.EFS, accessPointId st
 
 // waitAccessPointDeleted waits for an Access Point to return Deleted
 func waitAccessPointDeleted(ctx context.Context, conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
 		Target:  []string{},
 		Refresh: statusAccessPointLifeCycleState(ctx, conn, accessPointId),
@@ -54,7 +57,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.EFS, accessPointId st
 }
 
 func waitBackupPolicyDisabled(ctx context.Context, conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{efs.StatusDisabling},
 		Target:  []string{efs.StatusDisabled},
 		Refresh: statusBackupPolicy(ctx, conn, id),
@@ -71,7 +74,7 @@ func waitBackupPolicyDisabled(ctx context.Context, conn *efs.EFS, id string) (*e
 }
 
 func waitBackupPolicyEnabled(ctx context.Context, conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{efs.StatusEnabling},
 		Target:  []string{efs.StatusEnabled},
 		Refresh: statusBackupPolicy(ctx, conn, id),
@@ -88,7 +91,7 @@ func waitBackupPolicyEnabled(ctx context.Context, conn *efs.EFS, id string) (*ef
 }
 
 func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{efs.ReplicationStatusEnabling},
 		Target:  []string{efs.ReplicationStatusEnabled},
 		Refresh: statusReplicationConfiguration(ctx, conn, id),
@@ -105,7 +108,7 @@ func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.EFS, id 
 }
 
 func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{efs.ReplicationStatusDeleting},
 		Target:                    []string{},
 		Refresh:                   statusReplicationConfiguration(ctx, conn, id),

@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -9,21 +13,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_directory_service_directory", name="Directory")
+// @Tags(identifierAttribute="id")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
@@ -126,9 +136,10 @@ func ResourceDirectory() *schema.Resource {
 				Default:  false,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: domainValidator,
 			},
 			"password": {
 				Type:      schema.TypeString,
@@ -153,8 +164,8 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(directoryservice.DirectorySize_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -196,114 +207,56 @@ func ResourceDirectory() *schema.Resource {
 
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	name := d.Get("name").(string)
+	var creator directoryCreator
 	switch directoryType := d.Get("type").(string); directoryType {
 	case directoryservice.DirectoryTypeAdconnector:
-		input := &directoryservice.ConnectDirectoryInput{
-			Name:     aws.String(name),
-			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
-		}
-
-		if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ConnectSettings = expandDirectoryConnectSettings(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("size"); ok {
-			input.Size = aws.String(v.(string))
-		} else {
-			// Matching previous behavior of Default: "Large" for Size attribute.
-			input.Size = aws.String(directoryservice.DirectorySizeLarge)
-		}
-
-		if v, ok := d.GetOk("short_name"); ok {
-			input.ShortName = aws.String(v.(string))
-		}
-
-		output, err := conn.ConnectDirectoryWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
-		}
-
-		d.SetId(aws.StringValue(output.DirectoryId))
+		creator = adConnectorCreator{}
 
 	case directoryservice.DirectoryTypeMicrosoftAd:
-		input := &directoryservice.CreateMicrosoftADInput{
-			Name:     aws.String(name),
-			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("edition"); ok {
-			input.Edition = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("short_name"); ok {
-			input.ShortName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		output, err := conn.CreateMicrosoftADWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
-		}
-
-		d.SetId(aws.StringValue(output.DirectoryId))
+		creator = microsoftADCreator{}
 
 	case directoryservice.DirectoryTypeSimpleAd:
-		input := &directoryservice.CreateDirectoryInput{
-			Name:     aws.String(name),
-			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("size"); ok {
-			input.Size = aws.String(v.(string))
-		} else {
-			// Matching previous behavior of Default: "Large" for Size attribute.
-			input.Size = aws.String(directoryservice.DirectorySizeLarge)
-		}
-
-		if v, ok := d.GetOk("short_name"); ok {
-			input.ShortName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		output, err := conn.CreateDirectoryWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
-		}
-
-		d.SetId(aws.StringValue(output.DirectoryId))
+		creator = simpleADCreator{}
 	}
 
-	if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) create: %s", d.Id(), err)
+	// Sometimes creating a directory will return `Failed`, especially when multiple directories are being
+	// created concurrently. Retry creation in that case.
+	// When it fails, it will typically be within the first few minutes of creation, so there is no need
+	// to wait for deletion.
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		if err := creator.Create(ctx, conn, name, d); err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
+				if use.State == directoryservice.DirectoryStageFailed {
+					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
+						"directory_id": d.Id(),
+						"domain_name":  name,
+					})
+					_, deleteErr := conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
+						DirectoryId: aws.String(d.Id()),
+					})
+					if deleteErr != nil {
+						diags = append(diags, errs.NewWarningDiagnostic(
+							"Unable to Delete Failed Directory",
+							fmt.Sprintf("While creating the Directory Service Directory %q, an attempt failed. Deleting the failed Directory failed: %s", name, deleteErr),
+						))
+					}
+					return retry.RetryableError(err)
+				}
+			}
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	}, tfresource.WithPollInterval(1*time.Minute))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, fmt.Errorf("creating Directory Service %s Directory (%s): %w", creator.TypeName(), name, err))
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
@@ -329,9 +282,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -380,29 +331,12 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("vpc_settings", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -422,20 +356,12 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
 func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
@@ -457,6 +383,137 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+type directoryCreator interface {
+	TypeName() string
+	Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error
+}
+
+type adConnectorCreator struct{}
+
+func (c adConnectorCreator) TypeName() string {
+	return "AD Conntector"
+}
+
+func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
+	input := &directoryservice.ConnectDirectoryInput{
+		Name:     aws.String(name),
+		Password: aws.String(d.Get("password").(string)),
+		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConnectSettings = expandDirectoryConnectSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("size"); ok {
+		input.Size = aws.String(v.(string))
+	} else {
+		// Matching previous behavior of Default: "Large" for Size attribute.
+		input.Size = aws.String(directoryservice.DirectorySizeLarge)
+	}
+
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	output, err := conn.ConnectDirectoryWithContext(ctx, input)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.StringValue(output.DirectoryId))
+
+	return nil
+}
+
+type microsoftADCreator struct{}
+
+func (c microsoftADCreator) TypeName() string {
+	return "Microsoft AD"
+}
+
+func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
+	input := &directoryservice.CreateMicrosoftADInput{
+		Name:     aws.String(name),
+		Password: aws.String(d.Get("password").(string)),
+		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("edition"); ok {
+		input.Edition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.CreateMicrosoftADWithContext(ctx, input)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.StringValue(output.DirectoryId))
+
+	return nil
+}
+
+type simpleADCreator struct{}
+
+func (c simpleADCreator) TypeName() string {
+	return "Simple AD"
+}
+
+func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
+	input := &directoryservice.CreateDirectoryInput{
+		Name:     aws.String(name),
+		Password: aws.String(d.Get("password").(string)),
+		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("size"); ok {
+		input.Size = aws.String(v.(string))
+	} else {
+		// Matching previous behavior of Default: "Large" for Size attribute.
+		input.Size = aws.String(directoryservice.DirectorySizeLarge)
+	}
+
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.CreateDirectoryWithContext(ctx, input)
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.StringValue(output.DirectoryId))
+
+	return nil
 }
 
 func createAlias(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, alias string) error {
@@ -682,4 +739,56 @@ func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.Director
 	}
 
 	return tfMap
+}
+
+func waitDirectoryCreated(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
+		Target:  []string{directoryservice.DirectoryStageActive},
+		Refresh: statusDirectoryStage(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
+	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
+		Target:  []string{},
+		Refresh: statusDirectoryStage(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
+	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }

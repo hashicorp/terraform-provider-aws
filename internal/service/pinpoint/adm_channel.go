@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_pinpoint_adm_channel")
 func ResourceADMChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceADMChannelUpsert,
@@ -50,7 +54,7 @@ func ResourceADMChannel() *schema.Resource {
 
 func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	applicationId := d.Get("application_id").(string)
 
@@ -77,7 +81,7 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint ADM Channel for application %s", d.Id())
 
@@ -103,7 +107,7 @@ func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceADMChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Pinpoint Delete ADM Channel: %s", d.Id())
 	_, err := conn.DeleteAdmChannelWithContext(ctx, &pinpoint.DeleteAdmChannelInput{

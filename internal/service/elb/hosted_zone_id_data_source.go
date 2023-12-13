@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -35,6 +38,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z32O12XQLNTSW2",
 	endpoints.EuWest2RegionID:      "ZHURV8PSTC4K8",
 	endpoints.EuWest3RegionID:      "Z3Q77PNBQS71R4",
+	endpoints.IlCentral1RegionID:   "Z09170902867EHPV2DABU",
 	endpoints.MeCentral1RegionID:   "Z08230872XQRWHG2XF6I",
 	endpoints.MeSouth1RegionID:     "ZS929ML54UICD",
 	endpoints.SaEast1RegionID:      "Z2P70J7HTTTPLU",
@@ -46,6 +50,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z1H1FL5HABSF5",
 }
 
+// @SDKDataSource("aws_elb_hosted_zone_id")
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,

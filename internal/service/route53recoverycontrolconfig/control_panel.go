@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
@@ -8,12 +11,13 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53recoverycontrolconfig_control_panel")
 func ResourceControlPanel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlPanelCreate,
@@ -55,10 +59,10 @@ func ResourceControlPanel() *schema.Resource {
 
 func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.CreateControlPanelInput{
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		ClusterArn:       aws.String(d.Get("cluster_arn").(string)),
 		ControlPanelName: aws.String(d.Get("name").(string)),
 	}
@@ -85,7 +89,7 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.DescribeControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
@@ -120,7 +124,7 @@ func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.UpdateControlPanelInput{
 		ControlPanelName: aws.String(d.Get("name").(string)),
@@ -138,7 +142,7 @@ func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceControlPanelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Control Panel: %s", d.Id())
 	_, err := conn.DeleteControlPanelWithContext(ctx, &r53rcc.DeleteControlPanelInput{

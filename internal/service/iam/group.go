@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -38,7 +42,7 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
+					regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
 					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
@@ -65,7 +69,7 @@ func ResourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iam.CreateGroupInput{
@@ -94,7 +98,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group, err := FindGroupByName(ctx, conn, d.Id())
 
@@ -118,7 +122,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	o, n := d.GetChange("name")
 	input := &iam.UpdateGroupInput{
@@ -140,7 +144,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Group: %s", d.Id())
 	_, err := conn.DeleteGroupWithContext(ctx, &iam.DeleteGroupInput{
@@ -162,7 +166,7 @@ func FindGroupByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Grou
 	output, err := conn.GetGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -196,7 +200,7 @@ func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.IAM, groupName 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing IAM Group (%s) policy attachments for deletion: %w", groupName, err)
+		return fmt.Errorf("listing IAM Group (%s) policy attachments for deletion: %w", groupName, err)
 	}
 
 	for _, attachedPolicy := range attachedPolicies {
@@ -212,7 +216,7 @@ func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.IAM, groupName 
 		}
 
 		if err != nil {
-			return fmt.Errorf("error detaching IAM Group (%s) policy (%s): %w", groupName, aws.StringValue(attachedPolicy.PolicyArn), err)
+			return fmt.Errorf("detaching IAM Group (%s) policy (%s): %w", groupName, aws.StringValue(attachedPolicy.PolicyArn), err)
 		}
 	}
 
@@ -235,7 +239,7 @@ func DeleteGroupPolicies(ctx context.Context, conn *iam.IAM, groupName string) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing IAM Group (%s) inline policies for deletion: %w", groupName, err)
+		return fmt.Errorf("listing IAM Group (%s) inline policies for deletion: %w", groupName, err)
 	}
 
 	for _, policyName := range inlinePolicies {
@@ -251,7 +255,7 @@ func DeleteGroupPolicies(ctx context.Context, conn *iam.IAM, groupName string) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("error deleting IAM Group (%s) inline policy (%s): %w", groupName, aws.StringValue(policyName), err)
+			return fmt.Errorf("deleting IAM Group (%s) inline policy (%s): %w", groupName, aws.StringValue(policyName), err)
 		}
 	}
 

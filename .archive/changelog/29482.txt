@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_load_balancer_listener_policy: Add `triggers` attribute to force resource updates
+```
+
+```release-note:enhancement
+resource/aws_lb_ssl_negotiation_policy: Add `triggers` attribute to force resource updates
+```

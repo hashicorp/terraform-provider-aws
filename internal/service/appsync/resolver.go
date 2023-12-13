@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_resolver")
 func ResourceResolver() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResolverCreate,
@@ -177,7 +181,7 @@ func ResourceResolver() *schema.Resource {
 
 func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -241,7 +245,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 
@@ -284,11 +288,11 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting pipeline_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting pipeline_config: %s", err)
 	}
 
 	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting caching_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting caching_config: %s", err)
 	}
 
 	if err := d.Set("runtime", flattenRuntime(resolver.Runtime)); err != nil {
@@ -300,7 +304,7 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.UpdateResolverInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
@@ -365,7 +369,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 

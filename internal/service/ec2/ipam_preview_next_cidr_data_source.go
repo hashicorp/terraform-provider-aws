@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -7,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_vpc_ipam_preview_next_cidr")
 func DataSourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPreviewNextCIDRRead,
@@ -63,11 +67,11 @@ func DataSourceIPAMPreviewNextCIDR() *schema.Resource {
 
 func dataSourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken:     aws.String(resource.UniqueId()),
+		ClientToken:     aws.String(id.UniqueId()),
 		IpamPoolId:      aws.String(poolId),
 		PreviewNextCidr: aws.Bool(true),
 	}
@@ -83,7 +87,7 @@ func dataSourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.AllocateIpamPoolCidrWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error previewing next cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "previewing next cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
 	}
 
 	if output == nil || output.IpamPoolAllocation == nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codebuild_webhook")
 func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
@@ -96,7 +100,7 @@ func ResourceWebhook() *schema.Resource {
 
 func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
@@ -162,7 +166,7 @@ func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFi
 
 func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	resp, err := conn.BatchGetProjectsWithContext(ctx, &codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -177,11 +181,11 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	if d.IsNewResource() && len(resp.Projects) == 0 {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
 	}
 
 	if !d.IsNewResource() && len(resp.Projects) == 0 {
@@ -193,7 +197,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	project := resp.Projects[0]
 
 	if d.IsNewResource() && project.Webhook == nil {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
 	}
 
 	if !d.IsNewResource() && project.Webhook == nil {
@@ -215,12 +219,12 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
 
-	var buildType *string = nil
+	var buildType *string
 	if v, ok := d.GetOk("build_type"); ok {
 		buildType = aws.String(v.(string))
 	}
@@ -250,7 +254,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := conn.DeleteWebhookWithContext(ctx, &codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),

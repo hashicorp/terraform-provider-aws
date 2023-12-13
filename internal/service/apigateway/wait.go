@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -23,7 +26,7 @@ const (
 )
 
 func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    vpcLinkStatus(ctx, conn, vpcLinkId),
@@ -37,7 +40,7 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.APIGateway, vpcL
 }
 
 func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId string) error {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			apigateway.VpcLinkStatusPending,
 			apigateway.VpcLinkStatusAvailable,
@@ -55,7 +58,7 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.APIGateway, vpcLin
 }
 
 func waitStageCacheAvailable(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			apigateway.CacheClusterStatusCreateInProgress,
 			apigateway.CacheClusterStatusDeleteInProgress,
@@ -76,7 +79,7 @@ func waitStageCacheAvailable(ctx context.Context, conn *apigateway.APIGateway, r
 }
 
 func waitStageCacheUpdated(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			apigateway.CacheClusterStatusCreateInProgress,
 			apigateway.CacheClusterStatusFlushInProgress,

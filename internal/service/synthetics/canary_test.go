@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
@@ -23,7 +26,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -32,9 +35,9 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccCanaryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -44,8 +47,8 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -64,9 +67,9 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccCanaryConfig_zipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -76,8 +79,8 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/test/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -98,7 +101,7 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -139,16 +142,16 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.1"),
+				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.7"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.7"),
 				),
 			},
 			{
@@ -158,10 +161,10 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.2"),
+				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.9"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
 				),
 			},
 		},
@@ -175,7 +178,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -224,7 +227,7 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -266,7 +269,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -275,9 +278,9 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 				Config: testAccCanaryConfig_basicS3Code(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -288,8 +291,8 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 				),
@@ -311,7 +314,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -358,7 +361,7 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -401,7 +404,7 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -444,7 +447,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -493,7 +496,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -540,7 +543,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
@@ -560,7 +563,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 
 func testAccCheckCanaryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_canary" {
@@ -595,7 +598,7 @@ func testAccCheckCanaryExists(ctx context.Context, n string, canary *synthetics.
 			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		output, err := tfsynthetics.FindCanaryByName(ctx, conn, rs.Primary.ID)
 
@@ -629,7 +632,7 @@ func testAccCheckCanaryIsStartedAfter(first, second *synthetics.Canary) resource
 	}
 }
 
-func testAccCanaryBaseConfig(rName string) string {
+func testAccCanaryConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -638,11 +641,6 @@ resource "aws_s3_bucket" "test" {
   tags = {
     Name = %[1]q
   }
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -742,14 +740,14 @@ EOF
 }
 
 func testAccCanaryConfig_run1(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -766,14 +764,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_run2(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -791,14 +789,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_runTracing(rName string, tracing bool) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -816,14 +814,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_runEnvVariables1(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -842,14 +840,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_runEnvVariables2(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -869,7 +867,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
@@ -879,7 +877,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -890,14 +888,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_artifactEncryption(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.3"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   artifact_config {
@@ -916,7 +914,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_artifactEncryptionKMS(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -928,7 +926,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.3"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   artifact_config {
@@ -948,7 +946,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_runtimeVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -968,14 +966,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_zipUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/test/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -988,7 +986,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_start(rName string, state bool) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -996,7 +994,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1009,7 +1007,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_startZipUpdated(rName string, state bool) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1017,7 +1015,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1030,7 +1028,7 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_basicS3Code(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1039,7 +1037,7 @@ resource "aws_synthetics_canary" "test" {
   s3_bucket            = aws_s3_object.test.bucket
   s3_key               = aws_s3_object.test.key
   s3_version           = aws_s3_object.test.version_id
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1117,7 +1115,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 func testAccCanaryConfig_vpc1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCanaryBaseConfig(rName),
+		testAccCanaryConfig_base(rName),
 		testAccCanaryVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
@@ -1126,7 +1124,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1145,7 +1143,7 @@ resource "aws_synthetics_canary" "test" {
 
 func testAccCanaryConfig_vpc2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCanaryBaseConfig(rName),
+		testAccCanaryConfig_base(rName),
 		testAccCanaryVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
@@ -1154,7 +1152,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1173,7 +1171,7 @@ resource "aws_synthetics_canary" "test" {
 
 func testAccCanaryConfig_vpc3(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCanaryBaseConfig(rName),
+		testAccCanaryConfig_base(rName),
 		testAccCanaryVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
@@ -1182,7 +1180,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1200,14 +1198,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {
@@ -1222,14 +1220,14 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccCanaryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_base(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
+  runtime_version      = "syn-nodejs-puppeteer-3.9"
   delete_lambda        = true
 
   schedule {

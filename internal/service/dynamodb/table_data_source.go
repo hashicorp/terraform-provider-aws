@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -18,14 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_dynamodb_table")
 func DataSourceTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -52,32 +52,24 @@ func DataSourceTable() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
+			"billing_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"global_secondary_index": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"write_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"read_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"hash_key": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"projection_type": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -85,6 +77,22 @@ func DataSourceTable() *schema.Resource {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"projection_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"range_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"read_capacity": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"write_capacity": {
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 					},
 				},
@@ -102,18 +110,18 @@ func DataSourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"range_key": {
-							Type:     schema.TypeString,
+						"non_key_attributes": {
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"projection_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
+						"range_key": {
+							Type:     schema.TypeString,
 							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -124,40 +132,15 @@ func DataSourceTable() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
-			"range_key": {
+			names.AttrName: {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
-			"read_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"stream_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_view_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeSet,
+			"point_in_time_recovery": {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"attribute_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -165,7 +148,11 @@ func DataSourceTable() *schema.Resource {
 					},
 				},
 			},
-			"write_capacity": {
+			"range_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"read_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -203,15 +190,36 @@ func DataSourceTable() *schema.Resource {
 					},
 				},
 			},
-			"billing_mode": {
+			"stream_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
+			"stream_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"stream_label": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"stream_view_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"table_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			"ttl": {
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"attribute_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -219,8 +227,8 @@ func DataSourceTable() *schema.Resource {
 					},
 				},
 			},
-			"table_class": {
-				Type:     schema.TypeString,
+			"write_capacity": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 		},
@@ -229,7 +237,7 @@ func DataSourceTable() *schema.Resource {
 
 func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -252,6 +260,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrARN, table.TableArn)
 	d.Set(names.AttrName, table.TableName)
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
 
 	if table.BillingModeSummary != nil {
 		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
@@ -308,7 +317,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if table.TableClassSummary != nil {
 		d.Set("table_class", table.TableClassSummary.TableClass)
 	} else {
-		d.Set("table_class", nil)
+		d.Set("table_class", dynamodb.TableClassStandard)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
@@ -335,7 +344,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get(names.AttrARN).(string), err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_apigatewayv2_route")
 func ResourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -103,7 +107,7 @@ func ResourceRoute() *schema.Resource {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.CreateRouteInput{
 		ApiId:             aws.String(d.Get("api_id").(string)),
@@ -149,7 +153,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -174,7 +178,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	d.Set("operation_name", resp.OperationName)
-	if err := d.Set("request_models", flex.PointersMapToStringList(resp.RequestModels)); err != nil {
+	if err := d.Set("request_models", flex.FlattenStringMap(resp.RequestModels)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_models: %s", err)
 	}
 	if err := d.Set("request_parameter", flattenRouteRequestParameters(resp.RequestParameters)); err != nil {
@@ -189,7 +193,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	var requestParameters map[string]*apigatewayv2.ParameterConstraints
 
@@ -278,7 +282,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route (%s)", d.Id())
 	_, err := conn.DeleteRouteWithContext(ctx, &apigatewayv2.DeleteRouteInput{
@@ -306,7 +310,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	apiId := parts[0]
 	routeId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(apiId),

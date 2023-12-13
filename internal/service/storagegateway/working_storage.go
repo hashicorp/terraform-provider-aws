@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_working_storage")
 func ResourceWorkingStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkingStorageCreate,
@@ -43,7 +47,7 @@ func ResourceWorkingStorage() *schema.Resource {
 
 func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -66,7 +70,7 @@ func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	gatewayARN, diskID, err := DecodeWorkingStorageID(d.Id())
 	if err != nil {

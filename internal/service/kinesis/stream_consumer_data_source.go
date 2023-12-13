@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_kinesis_stream_consumer")
 func DataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamConsumerRead,
@@ -52,7 +56,7 @@ func DataSourceStreamConsumer() *schema.Resource {
 
 func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	streamArn := d.Get("stream_arn").(string)
 

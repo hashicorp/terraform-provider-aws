@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ses_domain_identity_verification")
 func ResourceDomainIdentityVerification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainIdentityVerificationCreate,
@@ -34,7 +38,7 @@ func ResourceDomainIdentityVerification() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -52,7 +56,7 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 
 	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting identity verification attributes: %s", err)
+		return nil, fmt.Errorf("getting identity verification attributes: %s", err)
 	}
 
 	return response.VerificationAttributes[domainName], nil
@@ -60,20 +64,20 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 
 func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 	domainName := d.Get("domain").(string)
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting identity verification attributes: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("getting identity verification attributes: %s", err))
 		}
 
 		if att == nil {
-			return resource.NonRetryableError(fmt.Errorf("SES Domain Identity %s not found in AWS", domainName))
+			return retry.NonRetryableError(fmt.Errorf("SES Domain Identity %s not found in AWS", domainName))
 		}
 
 		if aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
-			return resource.RetryableError(fmt.Errorf("Expected domain verification Success, but was in state %s", aws.StringValue(att.VerificationStatus)))
+			return retry.RetryableError(fmt.Errorf("Expected domain verification Success, but was in state %s", aws.StringValue(att.VerificationStatus)))
 		}
 
 		return nil
@@ -97,7 +101,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 
 func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
 	d.Set("domain", domainName)

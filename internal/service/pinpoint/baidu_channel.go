@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_pinpoint_baidu_channel")
 func ResourceBaiduChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBaiduChannelUpsert,
@@ -50,7 +54,7 @@ func ResourceBaiduChannel() *schema.Resource {
 
 func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	applicationId := d.Get("application_id").(string)
 
@@ -77,7 +81,7 @@ func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint Baidu Channel for application %s", d.Id())
 
@@ -103,7 +107,7 @@ func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBaiduChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint Baidu Channel for application %s", d.Id())
 	_, err := conn.DeleteBaiduChannelWithContext(ctx, &pinpoint.DeleteBaiduChannelInput{

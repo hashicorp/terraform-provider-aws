@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -5,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // statusMemberRelationship fetches the Member and its relationship status
-func statusMemberRelationship(ctx context.Context, conn *macie2.Macie2, adminAccountID string) resource.StateRefreshFunc {
+func statusMemberRelationship(ctx context.Context, conn *macie2.Macie2, adminAccountID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		adminAccount, err := findMemberNotAssociated(ctx, conn, adminAccountID)
 

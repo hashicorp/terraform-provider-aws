@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -24,7 +27,7 @@ const (
 
 // waitMLTransformDeleted waits for an MLTransform to return Deleted
 func waitMLTransformDeleted(ctx context.Context, conn *glue.Glue, transformId string) (*glue.GetMLTransformOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.TransformStatusTypeNotReady, glue.TransformStatusTypeReady, glue.TransformStatusTypeDeleting},
 		Target:  []string{},
 		Refresh: statusMLTransform(ctx, conn, transformId),
@@ -42,7 +45,7 @@ func waitMLTransformDeleted(ctx context.Context, conn *glue.Glue, transformId st
 
 // waitRegistryDeleted waits for a Registry to return Deleted
 func waitRegistryDeleted(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetRegistryOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.RegistryStatusDeleting},
 		Target:  []string{},
 		Refresh: statusRegistry(ctx, conn, registryID),
@@ -60,7 +63,7 @@ func waitRegistryDeleted(ctx context.Context, conn *glue.Glue, registryID string
 
 // waitSchemaAvailable waits for a Schema to return Available
 func waitSchemaAvailable(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.SchemaStatusPending},
 		Target:  []string{glue.SchemaStatusAvailable},
 		Refresh: statusSchema(ctx, conn, registryID),
@@ -78,7 +81,7 @@ func waitSchemaAvailable(ctx context.Context, conn *glue.Glue, registryID string
 
 // waitSchemaDeleted waits for a Schema to return Deleted
 func waitSchemaDeleted(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.SchemaStatusDeleting},
 		Target:  []string{},
 		Refresh: statusSchema(ctx, conn, registryID),
@@ -96,7 +99,7 @@ func waitSchemaDeleted(ctx context.Context, conn *glue.Glue, registryID string) 
 
 // waitSchemaVersionAvailable waits for a Schema to return Available
 func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Glue, registryID string) (*glue.GetSchemaVersionOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.SchemaVersionStatusPending},
 		Target:  []string{glue.SchemaVersionStatusAvailable},
 		Refresh: statusSchemaVersion(ctx, conn, registryID),
@@ -114,7 +117,7 @@ func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Glue, registryID
 
 // waitTriggerCreated waits for a Trigger to return Created
 func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			glue.TriggerStateActivating,
 			glue.TriggerStateCreating,
@@ -139,7 +142,7 @@ func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string
 
 // waitTriggerDeleted waits for a Trigger to return Deleted
 func waitTriggerDeleted(ctx context.Context, conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.TriggerStateDeleting},
 		Target:  []string{},
 		Refresh: statusTrigger(ctx, conn, triggerName),
@@ -156,7 +159,7 @@ func waitTriggerDeleted(ctx context.Context, conn *glue.Glue, triggerName string
 }
 
 func waitDevEndpointCreated(ctx context.Context, conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{devEndpointStatusProvisioning},
 		Target:  []string{devEndpointStatusReady},
 		Refresh: statusDevEndpoint(ctx, conn, name),
@@ -177,7 +180,7 @@ func waitDevEndpointCreated(ctx context.Context, conn *glue.Glue, name string) (
 }
 
 func waitDevEndpointDeleted(ctx context.Context, conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{devEndpointStatusTerminating},
 		Target:  []string{},
 		Refresh: statusDevEndpoint(ctx, conn, name),
@@ -198,7 +201,7 @@ func waitDevEndpointDeleted(ctx context.Context, conn *glue.Glue, name string) (
 }
 
 func waitPartitionIndexCreated(ctx context.Context, conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusCreating},
 		Target:  []string{glue.PartitionIndexStatusActive},
 		Refresh: statusPartitionIndex(ctx, conn, id),
@@ -215,7 +218,7 @@ func waitPartitionIndexCreated(ctx context.Context, conn *glue.Glue, id string, 
 }
 
 func waitPartitionIndexDeleted(ctx context.Context, conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusDeleting},
 		Target:  []string{},
 		Refresh: statusPartitionIndex(ctx, conn, id),

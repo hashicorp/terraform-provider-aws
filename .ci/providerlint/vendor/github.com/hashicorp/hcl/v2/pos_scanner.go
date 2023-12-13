@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package hcl
 
 import (
 	"bufio"
 	"bytes"
 
-	"github.com/apparentlymart/go-textseg/v13/textseg"
+	"github.com/apparentlymart/go-textseg/v15/textseg"
 )
 
 // RangeScanner is a helper that will scan over a buffer using a bufio.SplitFunc

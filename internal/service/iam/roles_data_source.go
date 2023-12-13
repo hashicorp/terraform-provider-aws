@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_iam_roles")
 func DataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRolesRead,
@@ -43,7 +47,7 @@ func DataSourceRoles() *schema.Resource {
 
 func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.ListRolesInput{}
 
@@ -63,7 +67,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 				continue
 			}
 
-			if v, ok := d.GetOk("name_regex"); ok && !regexp.MustCompile(v.(string)).MatchString(aws.StringValue(role.RoleName)) {
+			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.StringValue(role.RoleName)) {
 				continue
 			}
 

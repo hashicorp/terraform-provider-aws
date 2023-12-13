@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -18,14 +21,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_placement_group", name="Placement Group")
+// @Tags(identifierAttribute="placement_group_id")
 func ResourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlacementGroupCreate,
 		ReadWithoutTimeout:   resourcePlacementGroupRead,
 		UpdateWithoutTimeout: resourcePlacementGroupUpdate,
 		DeleteWithoutTimeout: resourcePlacementGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -54,6 +61,7 @@ func ResourcePlacementGroup() *schema.Resource {
 			},
 			"spread_level": {
 				Type:         schema.TypeString,
+				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.SpreadLevel_Values(), false),
@@ -64,8 +72,8 @@ func ResourcePlacementGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.PlacementStrategy_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -77,15 +85,13 @@ func ResourcePlacementGroup() *schema.Resource {
 
 func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          aws.String(d.Get("strategy").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePlacementGroup),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
@@ -96,7 +102,6 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SpreadLevel = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Placement Group: %s", input)
 	_, err := conn.CreatePlacementGroupWithContext(ctx, input)
 
 	if err != nil {
@@ -116,9 +121,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	pg, err := FindPlacementGroupByName(ctx, conn, d.Id())
 
@@ -132,23 +135,6 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", pg.GroupName)
-	d.Set("partition_count", pg.PartitionCount)
-	d.Set("placement_group_id", pg.GroupId)
-	d.Set("spread_level", pg.SpreadLevel)
-	d.Set("strategy", pg.Strategy)
-
-	tags := KeyValueTags(pg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -156,30 +142,29 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
+	d.Set("name", pg.GroupName)
+	d.Set("partition_count", pg.PartitionCount)
+	d.Set("placement_group_id", pg.GroupId)
+	d.Set("spread_level", pg.SpreadLevel)
+	d.Set("strategy", pg.Strategy)
+
+	setTagsOut(ctx, pg.Tags)
 
 	return diags
 }
 
 func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("placement_group_id").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Placement Group (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
 func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
 	_, err := conn.DeletePlacementGroupWithContext(ctx, &ec2.DeletePlacementGroupInput{

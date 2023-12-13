@@ -57,6 +57,8 @@ service/appconfig:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfig_'
 service/appconfigdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfigdata_'
+service/appfabric:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appfabric_'
 service/appflow:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appflow_'
 service/appintegrations:
@@ -87,6 +89,8 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bedrock:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -99,10 +103,16 @@ service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkidentity_'
+service/chimesdkmediapipelines:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmediapipelines_'
 service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmessaging_'
+service/chimesdkvoice:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkvoice_'
+service/cleanrooms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cleanrooms_'
 service/cloud9:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloud9_'
 service/cloudcontrol:
@@ -127,6 +137,8 @@ service/codeartifact:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeartifact_'
 service/codebuild:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codebuild_'
+service/codecatalyst:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
 service/codeguruprofiler:
@@ -157,6 +169,8 @@ service/configservice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_config_'
 service/connect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connect_'
+service/connectcases:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcases_'
 service/connectcontactlens:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcontactlens_'
 service/connectparticipant:
@@ -195,6 +209,8 @@ service/dms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dms_'
 service/docdb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdb_'
+service/docdbelastic:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdbelastic_'
 service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
@@ -206,7 +222,7 @@ service/dynamodbstreams:
 service/ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ebs_'
 service/ec2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
 service/ec2ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ebs_|volume_attach|snapshot_create)'
 service/ec2instanceconnect:
@@ -236,7 +252,7 @@ service/elastictranscoder:
 service/elb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)'
 service/elbv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s|_trust_store)'
 service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
@@ -299,6 +315,8 @@ service/inspector:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector_'
 service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
+service/internetmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:
@@ -365,12 +383,12 @@ service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
-service/lexmodelsv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexmodelsv2_'
 service/lexruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntime_'
 service/lexruntimev2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntimev2_'
+service/lexv2models:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/licensemanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_licensemanager_'
 service/lightsail:
@@ -409,6 +427,8 @@ service/medialive:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_medialive_'
 service/mediapackage:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_package_'
+service/mediapackagev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_packagev2_'
 service/mediapackagevod:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mediapackagevod_'
 service/mediastore:
@@ -447,6 +467,8 @@ service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/oam:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
@@ -457,6 +479,8 @@ service/opsworkscm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opsworkscm_'
 service/organizations:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_organizations_'
+service/osis:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_osis_'
 service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
@@ -532,7 +556,7 @@ service/route53resolver:
 service/rum:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rum_'
 service/s3:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
@@ -557,6 +581,8 @@ service/secretsmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityhub_'
+service/securitylake:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securitylake_'
 service/serverlessrepo:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
@@ -627,10 +653,16 @@ service/transitgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_transit_gateway'
 service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
+service/verifiedaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
+service/verifiedpermissions:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedpermissions_'
 service/voiceid:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_voiceid_'
 service/vpc:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b)'
+service/vpclattice:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_vpclattice_'
 service/vpnclient:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_client_vpn'
 service/vpnsite:

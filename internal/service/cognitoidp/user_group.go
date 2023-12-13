@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_user_group")
 func ResourceUserGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupCreate,
@@ -65,7 +69,7 @@ func ResourceUserGroup() *schema.Resource {
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -88,7 +92,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	resp, err := conn.CreateGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito User Group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *resp.Group.UserPoolId, *resp.Group.GroupName))
@@ -98,7 +102,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.GetGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -115,7 +119,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
 	}
 
 	d.Set("description", resp.Group.Description)
@@ -127,7 +131,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.UpdateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -150,7 +154,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	_, err := conn.UpdateGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error updating Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Cognito User Group: %s", err)
 	}
 
 	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
@@ -158,7 +162,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -169,7 +173,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	_, err := conn.DeleteGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Group: %s", err)
 	}
 
 	return diags

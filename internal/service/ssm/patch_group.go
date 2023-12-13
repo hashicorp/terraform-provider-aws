@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ssm_patch_group")
 func ResourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchGroupCreate,
@@ -47,7 +51,7 @@ func ResourcePatchGroup() *schema.Resource {
 
 func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
@@ -69,7 +73,7 @@ func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
@@ -105,24 +109,24 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing SSM Patch Group ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	params := &ssm.DeregisterPatchBaselineForPatchGroupInput{
+	log.Printf("[WARN] Deleting SSM Patch Group: %s", d.Id())
+	_, err = conn.DeregisterPatchBaselineForPatchGroupWithContext(ctx, &ssm.DeregisterPatchBaselineForPatchGroupInput{
 		BaselineId: aws.String(baselineId),
 		PatchGroup: aws.String(patchGroup),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+		return diags
 	}
 
-	_, err = conn.DeregisterPatchBaselineForPatchGroupWithContext(ctx, params)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deregistering SSM Patch Baseline (%s) for Patch Group (%s): %s", baselineId, patchGroup, err)
 	}
 

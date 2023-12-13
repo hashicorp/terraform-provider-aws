@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -16,7 +19,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -51,6 +54,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
@@ -81,7 +85,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -115,6 +119,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
@@ -160,6 +165,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "false"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "900000"),
@@ -185,7 +191,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -220,6 +226,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "false"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "0"),
@@ -249,7 +256,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -299,7 +306,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value"},
+				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value", "glue_catalog_generation"},
 			},
 		},
 	})
@@ -311,7 +318,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
@@ -387,6 +394,52 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "row_group_length", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time2"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_s3_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3EndpointConfig_simple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet"),
+				),
+			},
+			{
+				Config: testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName, "cdc/path", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path"),
+					resource.TestCheckResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet", "true"),
+				),
+			},
+			{
+				Config: testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName, "cdc/path2", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path2"),
+					resource.TestCheckResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet", "true"),
+				),
+			},
+			{
+				Config: testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName, "cdc/path3", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path3"),
+					resource.TestCheckResourceAttr(resourceName, "detach_target_on_lob_lookup_failure_parquet", "false"),
 				),
 			},
 		},
@@ -513,6 +566,7 @@ resource "aws_dms_s3_endpoint" "test" {
   timestamp_column_name                       = "tx_commit_time"
   use_csv_no_sup_value                        = false
   use_task_start_time_for_full_load_timestamp = true
+  glue_catalog_generation                     = true
 
   depends_on = [aws_iam_role_policy.test]
 }
@@ -591,6 +645,7 @@ resource "aws_dms_s3_endpoint" "test" {
   timestamp_column_name                       = "tx_commit_time2"
   use_csv_no_sup_value                        = true
   use_task_start_time_for_full_load_timestamp = false
+  glue_catalog_generation                     = false
 
   depends_on = [aws_iam_role_policy.test]
 }
@@ -761,4 +816,21 @@ resource "aws_dms_s3_endpoint" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
+}
+
+func testAccS3EndpointConfig_detachTargetOnLobLookupFailureParquet(rName string, cdcp string, dt bool) string {
+	return acctest.ConfigCompose(
+		testAccS3EndpointConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_dms_s3_endpoint" "test" {
+  endpoint_id                                 = %[1]q
+  endpoint_type                               = "target"
+  bucket_name                                 = "beckut_name"
+  cdc_path                                    = %[2]q
+  detach_target_on_lob_lookup_failure_parquet = %[3]t
+  service_access_role_arn                     = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, cdcp, dt))
 }

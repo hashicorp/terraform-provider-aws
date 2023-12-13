@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -17,7 +20,7 @@ const (
 )
 
 func WaitJobCompleted(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{backup.JobStateCreated, backup.JobStatePending, backup.JobStateRunning, backup.JobStateAborting},
 		Target:  []string{backup.JobStateCompleted},
 		Refresh: statusJobState(ctx, conn, id),
@@ -36,7 +39,7 @@ func WaitJobCompleted(ctx context.Context, conn *backup.Backup, id string, timeo
 }
 
 func waitFrameworkCreated(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
 		Refresh: statusFramework(ctx, conn, id),
@@ -53,7 +56,7 @@ func waitFrameworkCreated(ctx context.Context, conn *backup.Backup, id string, t
 }
 
 func waitFrameworkUpdated(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusUpdateInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
 		Refresh: statusFramework(ctx, conn, id),
@@ -70,7 +73,7 @@ func waitFrameworkUpdated(ctx context.Context, conn *backup.Backup, id string, t
 }
 
 func waitFrameworkDeleted(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusDeletionInProgress},
 		Target:  []string{backup.ErrCodeResourceNotFoundException},
 		Refresh: statusFramework(ctx, conn, id),
@@ -87,7 +90,7 @@ func waitFrameworkDeleted(ctx context.Context, conn *backup.Backup, id string, t
 }
 
 func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Backup, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{backup.RecoveryPointStatusDeleting},
 		Target:  []string{},
 		Refresh: statusRecoveryPoint(ctx, conn, backupVaultName, recoveryPointARN),

@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_iam_session_context")
 func DataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,
@@ -48,7 +52,7 @@ func DataSourceSessionContext() *schema.Resource {
 
 func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	arn := d.Get("arn").(string)
 
@@ -69,17 +73,17 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 
 	var role *iam.Role
 
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		role, err = FindRoleByName(ctx, conn, roleName)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -114,7 +118,7 @@ func RoleNameSessionFromARN(rawARN string) (string, string) {
 		return "", ""
 	}
 
-	reAssume := regexp.MustCompile(`^assumed-role/.{1,}/.{2,}`)
+	reAssume := regexache.MustCompile(`^assumed-role/.{1,}/.{2,}`)
 
 	if !reAssume.MatchString(parsedARN.Resource) || parsedARN.Service != "sts" {
 		return "", ""

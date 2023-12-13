@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/apparentlymart/go-textseg/v13/textseg"
+	"github.com/apparentlymart/go-textseg/v15/textseg"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
@@ -22,7 +22,8 @@ var UpperFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		in := args[0].AsString()
 		out := strings.ToUpper(in)
@@ -39,7 +40,8 @@ var LowerFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		in := args[0].AsString()
 		out := strings.ToLower(in)
@@ -56,7 +58,8 @@ var ReverseFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		in := []byte(args[0].AsString())
 		out := make([]byte, len(in))
@@ -81,24 +84,45 @@ var StrlenFunc = function.New(&function.Spec{
 		{
 			Name:             "str",
 			Type:             cty.String,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 		},
 	},
 	Type: function.StaticReturnType(cty.Number),
+	RefineResult: func(b *cty.RefinementBuilder) *cty.RefinementBuilder {
+		// String length is never null and never negative.
+		// (We might refine the lower bound even more inside Impl.)
+		return b.NotNull().NumberRangeLowerBound(cty.NumberIntVal(0), true)
+	},
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-		in := args[0].AsString()
-		l := 0
-
-		inB := []byte(in)
-		for i := 0; i < len(in); {
-			d, _, _ := textseg.ScanGraphemeClusters(inB[i:], true)
-			l++
-			i += d
+		if !args[0].IsKnown() {
+			ret := cty.UnknownVal(cty.Number)
+			// We may be able to still return a constrained result based on the
+			// refined range of the unknown value.
+			inRng := args[0].Range()
+			if inRng.TypeConstraint() == cty.String {
+				prefixLen := int64(graphemeClusterCount(inRng.StringPrefix()))
+				ret = ret.Refine().NumberRangeLowerBound(cty.NumberIntVal(prefixLen), true).NewValue()
+			}
+			return ret, nil
 		}
 
+		in := args[0].AsString()
+		l := graphemeClusterCount(in)
 		return cty.NumberIntVal(int64(l)), nil
 	},
 })
+
+func graphemeClusterCount(in string) int {
+	l := 0
+	inB := []byte(in)
+	for i := 0; i < len(in); {
+		d, _, _ := textseg.ScanGraphemeClusters(inB[i:], true)
+		l++
+		i += d
+	}
+	return l
+}
 
 var SubstrFunc = function.New(&function.Spec{
 	Description: "Extracts a substring from the given string.",
@@ -122,7 +146,8 @@ var SubstrFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		in := []byte(args[0].AsString())
 		var offset, length int
@@ -218,7 +243,8 @@ var JoinFunc = function.New(&function.Spec{
 		Description: "One or more lists of strings to join.",
 		Type:        cty.List(cty.String),
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		sep := args[0].AsString()
 		listVals := args[1:]
@@ -258,18 +284,29 @@ var SortFunc = function.New(&function.Spec{
 	Description: "Applies a lexicographic sort to the elements of the given list.",
 	Params: []function.Parameter{
 		{
-			Name: "list",
-			Type: cty.List(cty.String),
+			Name:         "list",
+			Type:         cty.List(cty.String),
+			AllowUnknown: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.List(cty.String)),
+	Type:         function.StaticReturnType(cty.List(cty.String)),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		listVal := args[0]
 
 		if !listVal.IsWhollyKnown() {
 			// If some of the element values aren't known yet then we
-			// can't yet predict the order of the result.
-			return cty.UnknownVal(retType), nil
+			// can't yet predict the order of the result, but we can be
+			// sure that the length won't change.
+			ret := cty.UnknownVal(retType)
+			if listVal.Type().IsListType() {
+				rng := listVal.Range()
+				ret = ret.Refine().
+					CollectionLengthLowerBound(rng.LengthLowerBound()).
+					CollectionLengthUpperBound(rng.LengthUpperBound()).
+					NewValue()
+			}
+			return ret, nil
 		}
 		if listVal.LengthInt() == 0 { // Easy path
 			return listVal, nil
@@ -307,7 +344,8 @@ var SplitFunc = function.New(&function.Spec{
 			Type:        cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.List(cty.String)),
+	Type:         function.StaticReturnType(cty.List(cty.String)),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		sep := args[0].AsString()
 		str := args[1].AsString()
@@ -333,7 +371,8 @@ var ChompFunc = function.New(&function.Spec{
 			Type: cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		newlines := regexp.MustCompile(`(?:\r\n?|\n)*\z`)
 		return cty.StringVal(newlines.ReplaceAllString(args[0].AsString(), "")), nil
@@ -356,7 +395,8 @@ var IndentFunc = function.New(&function.Spec{
 			Type:        cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		var spaces int
 		if err := gocty.FromCtyValue(args[0], &spaces); err != nil {
@@ -378,7 +418,8 @@ var TitleFunc = function.New(&function.Spec{
 			Type: cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return cty.StringVal(strings.Title(args[0].AsString())), nil
 	},
@@ -394,7 +435,8 @@ var TrimSpaceFunc = function.New(&function.Spec{
 			Type: cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return cty.StringVal(strings.TrimSpace(args[0].AsString())), nil
 	},
@@ -416,7 +458,8 @@ var TrimFunc = function.New(&function.Spec{
 			Type:        cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		str := args[0].AsString()
 		cutset := args[1].AsString()
@@ -443,7 +486,8 @@ var TrimPrefixFunc = function.New(&function.Spec{
 			Type:        cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		str := args[0].AsString()
 		prefix := args[1].AsString()
@@ -467,7 +511,8 @@ var TrimSuffixFunc = function.New(&function.Spec{
 			Type:        cty.String,
 		},
 	},
-	Type: function.StaticReturnType(cty.String),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		str := args[0].AsString()
 		cutset := args[1].AsString()

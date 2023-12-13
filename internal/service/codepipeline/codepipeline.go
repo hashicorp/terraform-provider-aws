@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
 import (
@@ -7,22 +10,24 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -31,6 +36,8 @@ const (
 	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
+// @SDKResource("aws_codepipeline", name="Pipeline")
+// @Tags(identifierAttribute="arn")
 func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
@@ -93,7 +100,7 @@ func ResourcePipeline() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
 			"role_arn": {
@@ -120,7 +127,7 @@ func ResourcePipeline() *schema.Resource {
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 50),
 											validation.MapKeyLenBetween(1, 1000),
 										),
@@ -137,7 +144,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 										),
 									},
 									"namespace": {
@@ -145,7 +152,7 @@ func ResourcePipeline() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
 										),
 									},
 									"output_artifacts": {
@@ -184,7 +191,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
 										),
 									},
 								},
@@ -195,14 +202,14 @@ func ResourcePipeline() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 							),
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -210,23 +217,20 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	pipeline, err := expandPipelineDeclaration(d)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	name := d.Get("name").(string)
 	input := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:     getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -234,29 +238,29 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}, codepipeline.ErrCodeInvalidStructureException, "not authorized")
 
 	if err != nil {
-		return diag.Errorf("creating CodePipeline (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodePipeline (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*codepipeline.CreatePipelineOutput).Pipeline.Name))
 
-	return resourcePipelineRead(ctx, d, meta)
+	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
 func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	output, err := FindPipelineByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodePipeline %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CodePipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodePipeline (%s): %s", d.Id(), err)
 	}
 
 	metadata := output.Metadata
@@ -264,16 +268,16 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if pipeline.ArtifactStore != nil {
 		if err := d.Set("artifact_store", []interface{}{flattenArtifactStore(pipeline.ArtifactStore)}); err != nil {
-			return diag.Errorf("setting artifact_store: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
 		}
 	} else if pipeline.ArtifactStores != nil {
 		if err := d.Set("artifact_store", flattenArtifactStores(pipeline.ArtifactStores)); err != nil {
-			return diag.Errorf("setting artifact_store: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
 		}
 	}
 
 	if err := d.Set("stage", flattenStageDeclarations(d, pipeline.Stages)); err != nil {
-		return diag.Errorf("setting stage: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
 
 	arn := aws.StringValue(metadata.PipelineArn)
@@ -281,34 +285,19 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for CodePipeline (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expandPipelineDeclaration(d)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		_, err = conn.UpdatePipelineWithContext(ctx, &codepipeline.UpdatePipelineInput{
@@ -316,24 +305,17 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		})
 
 		if err != nil {
-			return diag.Errorf("updating CodePipeline (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodePipeline (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating CodePipeline (%s) tags: %s", arn, err)
-		}
-	}
-
-	return resourcePipelineRead(ctx, d, meta)
+	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
 func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &codepipeline.DeletePipelineInput{
@@ -341,14 +323,14 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CodePipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodePipeline (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindPipelineByName(ctx context.Context, conn *codepipeline.CodePipeline, name string) (*codepipeline.GetPipelineOutput, error) {
@@ -359,7 +341,7 @@ func FindPipelineByName(ctx context.Context, conn *codepipeline.CodePipeline, na
 	output, err := conn.GetPipelineWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -376,10 +358,10 @@ func FindPipelineByName(ctx context.Context, conn *codepipeline.CodePipeline, na
 	return output, nil
 }
 
-func pipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnostics {
+func pipelineValidateActionProvider(i interface{}, path cty.Path) (diags diag.Diagnostics) {
 	v, ok := i.(string)
 	if !ok {
-		return diag.Errorf("expected type to be string")
+		return sdkdiag.AppendErrorf(diags, "expected type to be string")
 	}
 
 	if v == providerGitHub {
@@ -392,7 +374,7 @@ func pipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnosti
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func pipelineSuppressStageActionConfigurationDiff(k, old, new string, d *schema.ResourceData) bool {

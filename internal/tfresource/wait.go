@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
 	"context"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 type WaitOpts struct {
@@ -39,7 +42,7 @@ func WaitUntil(ctx context.Context, timeout time.Duration, f func() (bool, error
 		return "", targetStateFalse, nil
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{targetStateFalse},
 		Target:                    []string{targetStateTrue},
 		Refresh:                   refresh,

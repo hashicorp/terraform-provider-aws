@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -15,19 +18,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessmentDelegation)
-}
-
+// @FrameworkResource
 func newResourceAssessmentDelegation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessmentDelegation{}, nil
 }
@@ -102,7 +102,7 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceAssessmentDelegationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -129,15 +129,15 @@ func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
 	var out *auditmanager.BatchCreateDelegationByAssessmentOutput
-	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.BatchCreateDelegationByAssessment(ctx, &in)
 		if err != nil {
 			var nfe *awstypes.ResourceNotFoundException
 			if errors.As(err, &nfe) {
-				return sdkv2resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return sdkv2resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -185,7 +185,7 @@ func (r *resourceAssessmentDelegation) Create(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentDelegationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -215,7 +215,7 @@ func (r *resourceAssessmentDelegation) Update(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentDelegationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -266,7 +266,7 @@ func FindAssessmentDelegationByID(ctx context.Context, conn *auditmanager.Client
 		}
 	}
 
-	return nil, &sdkv2resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastRequest: in,
 	}
 }

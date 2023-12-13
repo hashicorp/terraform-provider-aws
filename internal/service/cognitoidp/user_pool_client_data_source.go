@@ -1,8 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -10,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_cognito_user_pool_client")
 func DataSourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolClientRead,
@@ -178,12 +184,12 @@ func DataSourceUserPoolClient() *schema.Resource {
 
 func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	clientId := d.Get("client_id").(string)
 	d.SetId(clientId)
 
-	userPoolClient, err := FindCognitoUserPoolClient(ctx, conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientId, err)
@@ -218,4 +224,59 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovider.AnalyticsConfigurationType) []interface{} {
+	if analyticsConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"user_data_shared": aws.BoolValue(analyticsConfig.UserDataShared),
+	}
+
+	if analyticsConfig.ExternalId != nil {
+		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
+	}
+
+	if analyticsConfig.RoleArn != nil {
+		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
+	}
+
+	if analyticsConfig.ApplicationId != nil {
+		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
+	}
+
+	if analyticsConfig.ApplicationArn != nil {
+		m["application_arn"] = aws.StringValue(analyticsConfig.ApplicationArn)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenUserPoolClientTokenValidityUnitsType(tokenValidityConfig *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
+	if tokenValidityConfig == nil {
+		return nil
+	}
+
+	//tokenValidityConfig is never nil and if everything is empty it causes diffs
+	if tokenValidityConfig.IdToken == nil && tokenValidityConfig.AccessToken == nil && tokenValidityConfig.RefreshToken == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if tokenValidityConfig.IdToken != nil {
+		m["id_token"] = aws.StringValue(tokenValidityConfig.IdToken)
+	}
+
+	if tokenValidityConfig.AccessToken != nil {
+		m["access_token"] = aws.StringValue(tokenValidityConfig.AccessToken)
+	}
+
+	if tokenValidityConfig.RefreshToken != nil {
+		m["refresh_token"] = aws.StringValue(tokenValidityConfig.RefreshToken)
+	}
+
+	return []interface{}{m}
 }

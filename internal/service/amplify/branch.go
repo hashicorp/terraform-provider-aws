@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -17,14 +20,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_amplify_branch", name="Branch")
+// @Tags(identifierAttribute="arn")
 func ResourceBranch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBranchCreate,
 		ReadWithoutTimeout:   resourceBranchRead,
 		UpdateWithoutTimeout: resourceBranchUpdate,
 		DeleteWithoutTimeout: resourceBranchDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -37,24 +44,20 @@ func ResourceBranch() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"associated_resources": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"backend_environment_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"basic_auth_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,88 +72,72 @@ func ResourceBranch() *schema.Resource {
 					return true
 				},
 			},
-
 			"branch_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
-
 			"custom_domains": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"destination_branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
 			},
-
 			"enable_auto_build": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"enable_basic_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_notification": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_performance_mode": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 			},
-
 			"enable_pull_request_preview": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"framework": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"pull_request_environment_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 20),
 			},
-
 			"source_branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"stage": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -164,7 +151,6 @@ func ResourceBranch() *schema.Resource {
 					return old == new
 				},
 			},
-
 			"ttl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -177,27 +163,24 @@ func ResourceBranch() *schema.Resource {
 					return old == new
 				},
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
 	id := BranchCreateResourceID(appID, branchName)
-
 	input := &amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("backend_environment_arn"); ok {
@@ -252,11 +235,6 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Ttl = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Amplify Branch: %s", input)
 	_, err := conn.CreateBranchWithContext(ctx, input)
 
 	if err != nil {
@@ -270,14 +248,11 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	branch, err := FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
@@ -314,28 +289,19 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	tags := KeyValueTags(branch.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, branch.Tags)
 
 	return diags
 }
 
 func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &amplify.UpdateBranchInput{
@@ -372,7 +338,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("enable_performance_mode") {
-			input.EnablePullRequestPreview = aws.Bool(d.Get("enable_performance_mode").(bool))
+			input.EnablePerformanceMode = aws.Bool(d.Get("enable_performance_mode").(bool))
 		}
 
 		if d.HasChange("enable_pull_request_preview") {
@@ -410,24 +376,16 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
 func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())

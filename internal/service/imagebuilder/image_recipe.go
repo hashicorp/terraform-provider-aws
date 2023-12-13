@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -10,15 +13,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_imagebuilder_image_recipe", name="Image Recipe")
+// @Tags(identifierAttribute="id")
 func ResourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
@@ -54,26 +61,18 @@ func ResourceImageRecipe() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"encrypted": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"iops": {
 										Type:         schema.TypeInt,
@@ -212,8 +211,8 @@ func ResourceImageRecipe() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_data_base64": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -252,12 +251,11 @@ func ResourceImageRecipe() *schema.Resource {
 
 func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateImageRecipeInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
@@ -284,10 +282,6 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
 			SystemsManagerAgent: expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{})),
 		}
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("user_data_base64"); ok {
@@ -321,9 +315,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
@@ -356,16 +348,8 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("owner", imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	tags := KeyValueTags(imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, imageRecipe.Tags)
 
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
 		d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)})
@@ -380,22 +364,15 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Image Recipe (%s): %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }
 
 func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
@@ -511,14 +488,12 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 
 	apiObject := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		vBool, _ := strconv.ParseBool(v) // ignore error as previously validatated
-		apiObject.DeleteOnTermination = aws.Bool(vBool)
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(string); ok && v != "" {
-		vBool, _ := strconv.ParseBool(v) // ignore error as previously validatated
-		apiObject.Encrypted = aws.Bool(vBool)
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
+		apiObject.Encrypted = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["iops"].(int); ok && v != 0 {

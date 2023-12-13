@@ -10,6 +10,8 @@ description: |-
 
 Creates a domain entry resource
 
+~> **NOTE on `id`:** In an effort to simplify imports, this resource `id` field has been updated to the standard resource id separator, a comma (`,`). For backward compatibility, the previous separator (underscore `_`) can still be used to read and import existing resources. When state is refreshed, the `id` will be updated to use the new standard separator. The previous separator will be deprecated in a future major release.
+
 ## Example Usage
 
 ```terraform
@@ -28,7 +30,7 @@ resource "aws_lightsail_domain_entry" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The name of the Lightsail domain in which to create the entry
 * `name` - (Required) Name of the entry record
@@ -36,16 +38,25 @@ The following arguments are supported:
 * `target` - (Required) Target of the domain entry
 * `is_alias` - (Optional) If the entry should be an alias Defaults to `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `name`\_`domain_name`\_`type`\_`target`
+* `id` - A combination of attributes to create a unique id: `name`,`domain_name`,`type`,`target`
 
 ## Import
 
-`aws_lightsail_domain_entry` can be imported by using the id attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_domain_entry` using the id attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_domain_entry.example
+  id = "www,mydomain.com,A,127.0.0.1"
+}
 ```
-$ terraform import aws_lightsail_domain_entry.example www_mydomain.com_A_127.0.0.1
+
+Using `terraform import`, import `aws_lightsail_domain_entry` using the id attribute. For example:
+
+```console
+% terraform import aws_lightsail_domain_entry.example www,mydomain.com,A,127.0.0.1
 ```

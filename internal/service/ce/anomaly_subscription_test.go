@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -28,7 +31,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
@@ -38,44 +41,12 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalysubscription/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`anomalysubscription/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address),
-					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccCEAnomalySubscription_thresholdExpression(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
-	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAnomalySubscriptionConfig_thresholdExpression(rName, address),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					// resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
 				),
 			},
 			{
@@ -96,7 +67,7 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
@@ -122,7 +93,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
@@ -160,7 +131,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
@@ -199,7 +170,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	address2 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
@@ -257,43 +228,6 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
-	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAnomalySubscriptionConfig_threshold(rName, 100, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAnomalySubscriptionConfig_threshold(rName, 200, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "threshold", "200"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription costexplorer.AnomalySubscription
@@ -303,7 +237,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
@@ -344,7 +278,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 
 func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomalySubscription *costexplorer.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -373,7 +307,7 @@ func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomal
 
 func testAccCheckAnomalySubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_subscription" {
@@ -423,27 +357,6 @@ JSON
 }
 
 func testAccAnomalySubscriptionConfig_basic(rName string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_ce_anomaly_subscription" "test" {
-  name      = %[1]q
-  threshold = 100
-  frequency = "DAILY"
-
-  monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
-  ]
-
-  subscriber {
-    type    = "EMAIL"
-    address = %[2]q
-  }
-}
-`, rName, address))
-}
-
-func testAccAnomalySubscriptionConfig_thresholdExpression(rName string, address string) string {
 	return acctest.ConfigCompose(
 		testAccAnomalySubscriptionConfigBase(rName),
 		fmt.Sprintf(`
@@ -499,16 +412,24 @@ resource "aws_ce_anomaly_monitor" "test2" {
 
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "WEEKLY"
 
   monitor_arn_list = [
     aws_ce_anomaly_monitor.test.arn,
     aws_ce_anomaly_monitor.test2.arn,
   ]
+
   subscriber {
     type    = "EMAIL"
     address = %[3]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 }
 `, rName, rName2, address))
@@ -520,7 +441,6 @@ func testAccAnomalySubscriptionConfig_frequency(rName string, rFrequency string,
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = %[2]q
 
   monitor_arn_list = [
@@ -530,6 +450,14 @@ resource "aws_ce_anomaly_subscription" "test" {
   subscriber {
     type    = "EMAIL"
     address = %[3]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 }
 `, rName, rFrequency, address))
@@ -541,7 +469,6 @@ func testAccAnomalySubscriptionConfig_subscriber2(rName string, address1 string,
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "WEEKLY"
 
   monitor_arn_list = [
@@ -552,9 +479,18 @@ resource "aws_ce_anomaly_subscription" "test" {
     type    = "EMAIL"
     address = %[2]q
   }
+
   subscriber {
     type    = "EMAIL"
     address = %[3]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 }
 `, rName, address1, address2))
@@ -637,7 +573,6 @@ resource "aws_sns_topic_policy" "test" {
 
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100000000
   frequency = "IMMEDIATE"
 
   monitor_arn_list = [
@@ -649,32 +584,19 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = aws_sns_topic.test.arn
   }
 
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
+  }
+
   depends_on = [
     aws_sns_topic_policy.test,
   ]
 }
 `, rName))
-}
-
-func testAccAnomalySubscriptionConfig_threshold(rName string, rThreshold int, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_ce_anomaly_subscription" "test" {
-  name      = %[1]q
-  threshold = %[2]d
-  frequency = "WEEKLY"
-
-  monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
-  ]
-
-  subscriber {
-    type    = "EMAIL"
-    address = %[3]q
-  }
-}
-`, rName, rThreshold, address))
 }
 
 func testAccAnomalySubscriptionConfig_tags1(rName string, tagKey1, tagValue1 string, address string) string {
@@ -683,7 +605,6 @@ func testAccAnomalySubscriptionConfig_tags1(rName string, tagKey1, tagValue1 str
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
@@ -693,6 +614,14 @@ resource "aws_ce_anomaly_subscription" "test" {
   subscriber {
     type    = "EMAIL"
     address = %[4]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 
   tags = {
@@ -708,7 +637,6 @@ func testAccAnomalySubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, 
 		fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
-  threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
@@ -718,6 +646,14 @@ resource "aws_ce_anomaly_subscription" "test" {
   subscriber {
     type    = "EMAIL"
     address = %[6]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 
   tags = {

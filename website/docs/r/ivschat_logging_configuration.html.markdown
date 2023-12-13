@@ -52,24 +52,21 @@ resource "aws_s3_bucket_acl" "example" {
   acl    = "private"
 }
 
-resource "aws_iam_role" "example" {
-  name = "firehose_example_role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+resource "aws_iam_role" "example" {
+  name               = "firehose_example_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_ivschat_logging_configuration" "example" {
@@ -115,9 +112,9 @@ The following arguments are optional:
 * `name` - (Optional) Logging Configuration name.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Logging Configuration.
 * `id` - ID of the Logging Configuration.
@@ -134,8 +131,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IVS (Interactive Video) Chat Logging Configuration can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
 
+```terraform
+import {
+  to = aws_ivschat_logging_configuration.example
+  id = "arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC"
+}
 ```
-$ terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
+
+Using `terraform import`, import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
+
+```console
+% terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```

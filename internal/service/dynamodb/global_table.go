@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -9,19 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dynamodb_global_table")
 func ResourceGlobalTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalTableCreate,
 		ReadWithoutTimeout:   resourceGlobalTableRead,
 		UpdateWithoutTimeout: resourceGlobalTableUpdate,
 		DeleteWithoutTimeout: resourceGlobalTableDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -33,13 +39,16 @@ func ResourceGlobalTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validGlobalTableName,
 			},
-
 			"replica": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -52,50 +61,30 @@ func ResourceGlobalTable() *schema.Resource {
 					},
 				},
 			},
-
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
 func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	globalTableName := d.Get(names.AttrName).(string)
-
+	name := d.Get(names.AttrName).(string)
 	input := &dynamodb.CreateGlobalTableInput{
-		GlobalTableName:  aws.String(globalTableName),
+		GlobalTableName:  aws.String(name),
 		ReplicationGroup: expandReplicas(d.Get("replica").(*schema.Set).List()),
 	}
 
 	_, err := conn.CreateGlobalTableWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Global Table (%s): %s", globalTableName, err)
+		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Global Table (%s): %s", name, err)
 	}
 
-	d.SetId(globalTableName)
+	d.SetId(name)
 
-	log.Println("[INFO] Waiting for DynamoDB Global Table to be created")
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.GlobalTableStatusCreating,
-			dynamodb.GlobalTableStatusDeleting,
-			dynamodb.GlobalTableStatusUpdating,
-		},
-		Target: []string{
-			dynamodb.GlobalTableStatusActive,
-		},
-		Refresh:    resourceGlobalTableStateRefreshFunc(ctx, d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-	}
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Global Table (%s): waiting for completion: %s", globalTableName, err)
+	if _, err := waitGlobalTableCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Global Table (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceGlobalTableRead(ctx, d, meta)...)
@@ -103,150 +92,187 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	globalTableDescription, err := resourceGlobalTableRetrieve(ctx, d, meta)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Global Table (%s): %s", d.Id(), err)
-	}
-	if globalTableDescription == nil {
-		log.Printf("[WARN] DynamoDB Global Table %q not found, removing from state", d.Id())
+	globalTableDescription, err := FindGlobalTableByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DynamoDB Global Table %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	if err := flattenGlobalTable(d, globalTableDescription); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Global Table (%s): %s", d.Id(), err)
 	}
+
+	d.Set(names.AttrARN, globalTableDescription.GlobalTableArn)
+	d.Set(names.AttrName, globalTableDescription.GlobalTableName)
+	if err := d.Set("replica", flattenReplicas(globalTableDescription.ReplicationGroup)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
+	}
+
 	return diags
 }
 
 func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	if d.HasChange("replica") {
-		o, n := d.GetChange("replica")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		replicaUpdateCreateReplicas := expandReplicaUpdateCreateReplicas(ns.Difference(os).List())
-		replicaUpdateDeleteReplicas := expandReplicaUpdateDeleteReplicas(os.Difference(ns).List())
-
-		replicaUpdates := make([]*dynamodb.ReplicaUpdate, 0, (len(replicaUpdateCreateReplicas) + len(replicaUpdateDeleteReplicas)))
-		replicaUpdates = append(replicaUpdates, replicaUpdateCreateReplicas...)
-		replicaUpdates = append(replicaUpdates, replicaUpdateDeleteReplicas...)
-
-		input := &dynamodb.UpdateGlobalTableInput{
-			GlobalTableName: aws.String(d.Id()),
-			ReplicaUpdates:  replicaUpdates,
-		}
-		log.Printf("[DEBUG] Updating DynamoDB Global Table: %#v", input)
-		if _, err := conn.UpdateGlobalTableWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Global Table (%s): %s", d.Id(), err)
-		}
-
-		log.Println("[INFO] Waiting for DynamoDB Global Table to be updated")
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{
-				dynamodb.GlobalTableStatusCreating,
-				dynamodb.GlobalTableStatusDeleting,
-				dynamodb.GlobalTableStatusUpdating,
-			},
-			Target: []string{
-				dynamodb.GlobalTableStatusActive,
-			},
-			Refresh:    resourceGlobalTableStateRefreshFunc(ctx, d, meta),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-		}
-		_, err := stateConf.WaitForStateContext(ctx)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Global Table (%s): waiting for completion: %s", d.Id(), err)
-		}
+	o, n := d.GetChange("replica")
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
 	}
 
-	return diags
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+	replicaUpdateCreateReplicas := expandReplicaUpdateCreateReplicas(ns.Difference(os).List())
+	replicaUpdateDeleteReplicas := expandReplicaUpdateDeleteReplicas(os.Difference(ns).List())
+
+	replicaUpdates := make([]*dynamodb.ReplicaUpdate, 0, (len(replicaUpdateCreateReplicas) + len(replicaUpdateDeleteReplicas)))
+	replicaUpdates = append(replicaUpdates, replicaUpdateCreateReplicas...)
+	replicaUpdates = append(replicaUpdates, replicaUpdateDeleteReplicas...)
+
+	input := &dynamodb.UpdateGlobalTableInput{
+		GlobalTableName: aws.String(d.Id()),
+		ReplicaUpdates:  replicaUpdates,
+	}
+
+	_, err := conn.UpdateGlobalTableWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating DynamoDB Global Table (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitGlobalTableUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Global Table (%s) update: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceGlobalTableRead(ctx, d, meta)...)
 }
 
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
 func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	input := &dynamodb.UpdateGlobalTableInput{
+	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %s", d.Id())
+	_, err := conn.UpdateGlobalTableWithContext(ctx, &dynamodb.UpdateGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
 		ReplicaUpdates:  expandReplicaUpdateDeleteReplicas(d.Get("replica").(*schema.Set).List()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException, dynamodb.ErrCodeReplicaNotFoundException) {
+		return diags
 	}
-	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %#v", input)
-	if _, err := conn.UpdateGlobalTableWithContext(ctx, input); err != nil {
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DynamoDB Global Table (%s): %s", d.Id(), err)
 	}
 
-	log.Println("[INFO] Waiting for DynamoDB Global Table to be destroyed")
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.GlobalTableStatusActive,
-			dynamodb.GlobalTableStatusCreating,
-			dynamodb.GlobalTableStatusDeleting,
-			dynamodb.GlobalTableStatusUpdating,
-		},
-		Target:     []string{},
-		Refresh:    resourceGlobalTableStateRefreshFunc(ctx, d, meta),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
+	if _, err := waitGlobalTableDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Global Table (%s) delete: %s", d.Id(), err)
 	}
-	_, err := stateConf.WaitForStateContext(ctx)
-	return sdkdiag.AppendErrorf(diags, "deleting DynamoDB Global Table (%s): waiting for completion: %s", d.Id(), err)
+
+	return diags
 }
 
-func resourceGlobalTableRetrieve(ctx context.Context, d *schema.ResourceData, meta interface{}) (*dynamodb.GlobalTableDescription, error) {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
-
+func FindGlobalTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) (*dynamodb.GlobalTableDescription, error) {
 	input := &dynamodb.DescribeGlobalTableInput{
-		GlobalTableName: aws.String(d.Id()),
+		GlobalTableName: aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Retrieving DynamoDB Global Table: %#v", input)
-
 	output, err := conn.DescribeGlobalTableWithContext(ctx, input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
-			return nil, nil
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
+
+	if err != nil {
 		return nil, err
+	}
+
+	if output == nil || output.GlobalTableDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.GlobalTableDescription, nil
 }
 
-func resourceGlobalTableStateRefreshFunc(ctx context.Context,
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+func statusGlobalTable(ctx context.Context, conn *dynamodb.DynamoDB, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		gtd, err := resourceGlobalTableRetrieve(ctx, d, meta)
+		output, err := FindGlobalTableByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if gtd == nil {
-			return nil, "", nil
-		}
-
-		return gtd, *gtd.GlobalTableStatus, nil
+		return output, aws.StringValue(output.GlobalTableStatus), nil
 	}
 }
 
-func flattenGlobalTable(d *schema.ResourceData, globalTableDescription *dynamodb.GlobalTableDescription) error {
-	d.Set(names.AttrARN, globalTableDescription.GlobalTableArn)
-	d.Set(names.AttrName, globalTableDescription.GlobalTableName)
+func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{dynamodb.GlobalTableStatusCreating},
+		Target:     []string{dynamodb.GlobalTableStatusActive},
+		Refresh:    statusGlobalTable(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
 
-	return d.Set("replica", flattenReplicas(globalTableDescription.ReplicationGroup))
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dynamodb.GlobalTableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{dynamodb.GlobalTableStatusActive, dynamodb.GlobalTableStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusGlobalTable(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dynamodb.GlobalTableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGlobalTableUpdated(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{dynamodb.GlobalTableStatusUpdating},
+		Target:     []string{dynamodb.GlobalTableStatusActive},
+		Refresh:    statusGlobalTable(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dynamodb.GlobalTableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandReplicaUpdateCreateReplicas(configuredReplicas []interface{}) []*dynamodb.ReplicaUpdate {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_rds_orderable_db_instance")
 func DataSourceOrderableInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableInstanceRead,
@@ -184,7 +188,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 
 func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -278,7 +282,6 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Orderable DB Instance Options: %s", err)
 	}

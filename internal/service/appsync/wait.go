@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -16,7 +19,7 @@ const (
 )
 
 func waitAPICacheAvailable(ctx context.Context, conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.ApiCacheStatusCreating, appsync.ApiCacheStatusModifying},
 		Target:  []string{appsync.ApiCacheStatusAvailable},
 		Refresh: StatusAPICache(ctx, conn, id),
@@ -29,7 +32,7 @@ func waitAPICacheAvailable(ctx context.Context, conn *appsync.AppSync, id string
 }
 
 func waitAPICacheDeleted(ctx context.Context, conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.ApiCacheStatusDeleting},
 		Target:  []string{},
 		Refresh: StatusAPICache(ctx, conn, id),
@@ -42,7 +45,7 @@ func waitAPICacheDeleted(ctx context.Context, conn *appsync.AppSync, id string) 
 }
 
 func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.AssociationStatusProcessing},
 		Target:  []string{appsync.AssociationStatusSuccess},
 		Refresh: statusDomainNameAPIAssociation(ctx, conn, id),
@@ -55,7 +58,7 @@ func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.AppSync, id
 }
 
 func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.AppSync, id string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appsync.AssociationStatusProcessing},
 		Target:  []string{},
 		Refresh: statusDomainNameAPIAssociation(ctx, conn, id),

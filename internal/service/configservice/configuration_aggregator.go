@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -20,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
+// @Tags(identifierAttribute="arn")
 func ResourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,
@@ -114,32 +119,30 @@ func ResourceConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
-	req := &configservice.PutConfigurationAggregatorInput{
+	input := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		req.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
+		input.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		req.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
+		input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	resp, err := conn.PutConfigurationAggregatorWithContext(ctx, req)
+	resp, err := conn.PutConfigurationAggregatorWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating aggregator: %s", err)
 	}
@@ -147,23 +150,12 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 	configAgg := resp.ConfigurationAggregator
 	d.SetId(aws.StringValue(configAgg.ConfigurationAggregatorName))
 
-	if !d.IsNewResource() && d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		arn := aws.StringValue(configAgg.ConfigurationAggregatorArn)
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Config Configuration Aggregator (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceConfigurationAggregatorRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
@@ -177,7 +169,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
@@ -187,7 +179,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	}
 
 	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
 	}
 
 	aggregator := res.ConfigurationAggregators[0]
@@ -203,29 +195,12 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting organization_aggregation_source: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Config Configuration Aggregator (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	req := &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),

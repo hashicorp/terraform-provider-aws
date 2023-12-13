@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscalingplans
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +21,7 @@ const (
 )
 
 func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{autoscalingplans.ScalingPlanStatusCodeCreationInProgress},
 		Target:  []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
 		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
@@ -40,7 +43,7 @@ func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.AutoScal
 }
 
 func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{autoscalingplans.ScalingPlanStatusCodeDeletionInProgress},
 		Target:  []string{},
 		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
@@ -62,7 +65,7 @@ func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.AutoScal
 }
 
 func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{autoscalingplans.ScalingPlanStatusCodeUpdateInProgress},
 		Target:  []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
 		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -17,17 +20,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceCIDRCollection)
-}
-
+// @FrameworkResource
 func newResourceCIDRCollection(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCIDRCollection{}
 
@@ -54,7 +55,7 @@ func (r *resourceCIDRCollection) Schema(ctx context.Context, req resource.Schema
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(64),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
 			"version": schema.Int64Attribute{
@@ -73,11 +74,11 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	name := data.Name.ValueString()
 	input := &route53.CreateCidrCollectionInput{
-		CallerReference: aws.String(sdkresource.UniqueId()),
+		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(name),
 	}
 
@@ -108,7 +109,7 @@ func (r *resourceCIDRCollection) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	output, err := findCIDRCollectionByID(ctx, conn, data.ID.ValueString())
 
@@ -145,7 +146,7 @@ func (r *resourceCIDRCollection) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]interface{}{
 		"id": data.ID.ValueString(),
@@ -202,7 +203,7 @@ func findCIDRCollectionByID(ctx context.Context, conn *route53.Route53, id strin
 	}
 
 	if output == nil {
-		return nil, &sdkresource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

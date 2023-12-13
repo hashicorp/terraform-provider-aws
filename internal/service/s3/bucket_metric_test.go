@@ -1,297 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
 	"context"
 	"fmt"
-	"log"
-	"reflect"
-	"regexp"
-	"sort"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestExpandMetricsFilter(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Config                  map[string]interface{}
-		ExpectedS3MetricsFilter *s3.MetricsFilter
-	}{
-		{
-			Config: map[string]interface{}{
-				"prefix": "prefix/",
-			},
-			ExpectedS3MetricsFilter: &s3.MetricsFilter{
-				Prefix: aws.String("prefix/"),
-			},
-		},
-		{
-			Config: map[string]interface{}{
-				"prefix": "prefix/",
-				"tags": map[string]interface{}{
-					"tag1key": "tag1value",
-				},
-			},
-			ExpectedS3MetricsFilter: &s3.MetricsFilter{
-				And: &s3.MetricsAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-					},
-				},
-			},
-		},
-		{
-			Config: map[string]interface{}{
-				"prefix": "prefix/",
-				"tags": map[string]interface{}{
-					"tag1key": "tag1value",
-					"tag2key": "tag2value",
-				},
-			},
-			ExpectedS3MetricsFilter: &s3.MetricsFilter{
-				And: &s3.MetricsAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-		},
-		{
-			Config: map[string]interface{}{
-				"tags": map[string]interface{}{
-					"tag1key": "tag1value",
-				},
-			},
-			ExpectedS3MetricsFilter: &s3.MetricsFilter{
-				Tag: &s3.Tag{
-					Key:   aws.String("tag1key"),
-					Value: aws.String("tag1value"),
-				},
-			},
-		},
-		{
-			Config: map[string]interface{}{
-				"tags": map[string]interface{}{
-					"tag1key": "tag1value",
-					"tag2key": "tag2value",
-				},
-			},
-			ExpectedS3MetricsFilter: &s3.MetricsFilter{
-				And: &s3.MetricsAndOperator{
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for i, tc := range testCases {
-		value := tfs3.ExpandMetricsFilter(tc.Config)
-
-		// Sort tags by key for consistency
-		if value.And != nil && value.And.Tags != nil {
-			sort.Slice(value.And.Tags, func(i, j int) bool {
-				return *value.And.Tags[i].Key < *value.And.Tags[j].Key
-			})
-		}
-
-		// Convert to strings to avoid dealing with pointers
-		valueS := fmt.Sprintf("%v", value)
-		expectedValueS := fmt.Sprintf("%v", tc.ExpectedS3MetricsFilter)
-
-		if valueS != expectedValueS {
-			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s", i, valueS, expectedValueS)
-		}
-	}
-}
-
-func TestFlattenMetricsFilter(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		S3MetricsFilter *s3.MetricsFilter
-		ExpectedConfig  map[string]interface{}
-	}{
-		{
-			S3MetricsFilter: &s3.MetricsFilter{
-				Prefix: aws.String("prefix/"),
-			},
-			ExpectedConfig: map[string]interface{}{
-				"prefix": "prefix/",
-			},
-		},
-		{
-			S3MetricsFilter: &s3.MetricsFilter{
-				And: &s3.MetricsAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-					},
-				},
-			},
-			ExpectedConfig: map[string]interface{}{
-				"prefix": "prefix/",
-				"tags": map[string]string{
-					"tag1key": "tag1value",
-				},
-			},
-		},
-		{
-			S3MetricsFilter: &s3.MetricsFilter{
-				And: &s3.MetricsAndOperator{
-					Prefix: aws.String("prefix/"),
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-			ExpectedConfig: map[string]interface{}{
-				"prefix": "prefix/",
-				"tags": map[string]string{
-					"tag1key": "tag1value",
-					"tag2key": "tag2value",
-				},
-			},
-		},
-		{
-			S3MetricsFilter: &s3.MetricsFilter{
-				Tag: &s3.Tag{
-					Key:   aws.String("tag1key"),
-					Value: aws.String("tag1value"),
-				},
-			},
-			ExpectedConfig: map[string]interface{}{
-				"tags": map[string]string{
-					"tag1key": "tag1value",
-				},
-			},
-		},
-		{
-			S3MetricsFilter: &s3.MetricsFilter{
-				And: &s3.MetricsAndOperator{
-					Tags: []*s3.Tag{
-						{
-							Key:   aws.String("tag1key"),
-							Value: aws.String("tag1value"),
-						},
-						{
-							Key:   aws.String("tag2key"),
-							Value: aws.String("tag2value"),
-						},
-					},
-				},
-			},
-			ExpectedConfig: map[string]interface{}{
-				"tags": map[string]string{
-					"tag1key": "tag1value",
-					"tag2key": "tag2value",
-				},
-			},
-		},
-	}
-
-	for i, tc := range testCases {
-		value := tfs3.FlattenMetricsFilter(tc.S3MetricsFilter)
-
-		if !reflect.DeepEqual(value, tc.ExpectedConfig) {
-			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s", i, value, tc.ExpectedConfig)
-		}
-	}
-}
-
-func TestBucketMetricParseID(t *testing.T) {
-	t.Parallel()
-
-	validIds := []string{
-		"foo:bar",
-		"my-bucket:entire-bucket",
-	}
-
-	for _, s := range validIds {
-		_, _, err := tfs3.BucketMetricParseID(s)
-		if err != nil {
-			t.Fatalf("%s should be a valid S3 bucket metrics configuration id: %s", s, err)
-		}
-	}
-
-	invalidIds := []string{
-		"",
-		"foo",
-		"foo:bar:",
-		"foo:bar:baz",
-		"foo::bar",
-		"foo.bar",
-	}
-
-	for _, s := range invalidIds {
-		_, _, err := tfs3.BucketMetricParseID(s)
-		if err == nil {
-			t.Fatalf("%s should not be a valid S3 bucket metrics configuration id", s)
-		}
-	}
-}
 
 func TestAccS3BucketMetric_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
-	rInt := sdkacctest.RandInt()
+	var conf types.MetricsConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_metric.test"
-
-	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetricConfig_noFilter(bucketName, metricName),
+				Config: testAccBucketMetricConfig_noFilter(rName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", metricName),
 				),
@@ -309,25 +55,23 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 // Disallow Empty filter block
 func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
-	rInt := sdkacctest.RandInt()
+	var conf types.MetricsConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_metric.test"
-
-	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetricConfig_emptyFilter(bucketName, metricName),
+				Config: testAccBucketMetricConfig_emptyFilter(rName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
 				),
-				ExpectError: regexp.MustCompile(`one of .* must be specified`),
+				ExpectError: regexache.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})
@@ -335,18 +79,17 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 
 func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
+	var conf types.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
-
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -379,10 +122,9 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 
 func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
+	var conf types.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
-
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -393,8 +135,8 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -431,10 +173,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 
 func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
+	var conf types.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
-
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -443,8 +184,8 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -479,10 +220,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 
 func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
+	var conf types.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
-
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 	tag1 := fmt.Sprintf("tag1-%d", rInt)
@@ -491,8 +231,8 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -529,18 +269,17 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 
 func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf s3.MetricsConfiguration
+	var conf types.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_metric.test"
-
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
 	tag1 := fmt.Sprintf("tag-%d", rInt)
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -573,9 +312,28 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	metricName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketMetricConfig_directoryBucket(rName, metricName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_metric" {
@@ -587,189 +345,169 @@ func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
-				input := &s3.GetBucketMetricsConfigurationInput{
-					Bucket: aws.String(bucket),
-					Id:     aws.String(name),
-				}
-				log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
-				output, err := conn.GetBucketMetricsConfigurationWithContext(ctx, input)
-				if err != nil {
-					if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-						return nil
-					}
-					return resource.NonRetryableError(err)
-				}
-				if output.MetricsConfiguration != nil {
-					return resource.RetryableError(fmt.Errorf("S3 bucket metrics configuration exists: %v", output))
-				}
+			_, err = tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
 
-				return nil
-			})
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("S3 Bucket Metric %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, res *s3.MetricsConfiguration) resource.TestCheckFunc {
+func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, v *types.MetricsConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 bucket metrics configuration ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 		bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketMetricsConfigurationInput{
-			Bucket: aws.String(bucket),
-			Id:     aws.String(name),
-		}
-		log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
-		output, err := conn.GetBucketMetricsConfigurationWithContext(ctx, input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		output, err := tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *output.MetricsConfiguration
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccBucketMetricsBucketConfig(name string) string {
+func testAccBucketMetricConfig_base(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
+  bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "public-read"
-}
-`, name)
+`, bucketName)
 }
 
 func testAccBucketMetricConfig_emptyFilter(bucketName, metricName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {}
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName)
+`, metricName))
 }
 
 func testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefix string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
-    prefix = "%s"
+    prefix = %[2]q
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix)
+`, metricName, prefix))
 }
 
 func testAccBucketMetricConfig_filterPrefixAndMultipleTags(bucketName, metricName, prefix, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
-    prefix = "%s"
+    prefix = %[2]q
 
     tags = {
-      "tag1" = "%s"
-      "tag2" = "%s"
+      "tag1" = %[3]q
+      "tag2" = %[4]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix, tag1, tag2)
+`, metricName, prefix, tag1, tag2))
 }
 
 func testAccBucketMetricConfig_filterPrefixAndSingleTag(bucketName, metricName, prefix, tag string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
-    prefix = "%s"
+    prefix = %[2]q
 
     tags = {
-      "tag1" = "%s"
+      "tag1" = %[3]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix, tag)
+`, metricName, prefix, tag))
 }
 
 func testAccBucketMetricConfig_filterMultipleTags(bucketName, metricName, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
     tags = {
-      "tag1" = "%s"
-      "tag2" = "%s"
+      "tag1" = %[2]q
+      "tag2" = %[3]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, tag1, tag2)
+`, metricName, tag1, tag2))
 }
 
 func testAccBucketMetricConfig_filterSingleTag(bucketName, metricName, tag string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
     tags = {
-      "tag1" = "%s"
+      "tag1" = %[2]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, tag)
+`, metricName, tag))
 }
 
 func testAccBucketMetricConfig_noFilter(bucketName, metricName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName)
+`, metricName))
+}
+
+func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+}
+`, metricName))
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -17,7 +20,7 @@ func FindAPICacheByID(ctx context.Context, conn *appsync.AppSync, id string) (*a
 	out, err := conn.GetApiCacheWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -41,7 +44,7 @@ func FindDomainNameByID(ctx context.Context, conn *appsync.AppSync, id string) (
 	out, err := conn.GetDomainNameWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -65,7 +68,7 @@ func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.AppSync
 	out, err := conn.GetApiAssociationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -82,16 +85,17 @@ func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.AppSync
 	return out.ApiAssociation, nil
 }
 
-func FindTypeByID(ctx context.Context, conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
+func FindTypeByThreePartKey(ctx context.Context, conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
 	input := &appsync.GetTypeInput{
 		ApiId:    aws.String(apiID),
 		Format:   aws.String(format),
 		TypeName: aws.String(name),
 	}
-	out, err := conn.GetTypeWithContext(ctx, input)
+
+	output, err := conn.GetTypeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -101,9 +105,9 @@ func FindTypeByID(ctx context.Context, conn *appsync.AppSync, apiID, format, nam
 		return nil, err
 	}
 
-	if out == nil {
+	if output == nil || output.Type == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Type, nil
+	return output.Type, nil
 }

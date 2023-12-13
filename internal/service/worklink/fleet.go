@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_worklink_fleet")
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -41,7 +45,7 @@ func ResourceFleet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,46}[a-z0-9])?$`), "must contain only alphanumeric characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](?:[0-9a-z\-]{0,46}[0-9a-z])?$`), "must contain only alphanumeric characters"),
 					validation.StringLenBetween(1, 48),
 				),
 			},
@@ -132,7 +136,7 @@ func ResourceFleet() *schema.Resource {
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.CreateFleetInput{
 		FleetName:                  aws.String(d.Get("name").(string)),
@@ -171,7 +175,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	resp, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
 		FleetArn: aws.String(d.Id()),
@@ -235,7 +239,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.UpdateFleetMetadataInput{
 		FleetArn:                   aws.String(d.Id()),
@@ -282,7 +286,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.DeleteFleetInput{
 		FleetArn: aws.String(d.Id()),
@@ -295,7 +299,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting WorkLink Fleet resource share (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
 		Refresh:    FleetStateRefresh(ctx, conn, d.Id()),
@@ -312,7 +316,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FleetStateRefresh(ctx context.Context, conn *worklink.WorkLink, arn string) resource.StateRefreshFunc {
+func FleetStateRefresh(ctx context.Context, conn *worklink.WorkLink, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeFleetMetadataOutput{}
 

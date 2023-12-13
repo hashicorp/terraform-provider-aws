@@ -42,7 +42,7 @@ resource "aws_route53_resolver_rule" "fwd" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `target_ip`.
 * `rule_type` - (Required) The rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
@@ -58,9 +58,9 @@ The `target_ip` object supports the following:
 * `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
 * `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the resolver rule.
 * `arn` - The ARN (Amazon Resource Name) for the resolver rule.
@@ -71,8 +71,17 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
-Route53 Resolver rules can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_rule.sys
+  id = "rslvr-rr-0123456789abcdef0"
+}
 ```
-$ terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
+
+Using `terraform import`, import Route53 Resolver rules using the `id`. For example:
+
+```console
+% terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
 ```

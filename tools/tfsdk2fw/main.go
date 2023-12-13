@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package main
 
 import (
@@ -17,9 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
 	"golang.org/x/exp/slices"
 )
-
-// TODO
-// * timeouts
 
 var (
 	dataSourceType = flag.String("data-source", "", "Data Source type")

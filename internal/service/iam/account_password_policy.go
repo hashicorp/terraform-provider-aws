@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -8,13 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_account_password_policy")
 func ResourceAccountPasswordPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPasswordPolicyUpdate,
@@ -82,7 +86,7 @@ func ResourceAccountPasswordPolicy() *schema.Resource {
 
 func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
 
@@ -129,7 +133,7 @@ func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.Resource
 
 func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policy, err := FindAccountPasswordPolicy(ctx, conn)
 
@@ -159,7 +163,7 @@ func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Account Password Policy: %s", d.Id())
 	_, err := conn.DeleteAccountPasswordPolicyWithContext(ctx, &iam.DeleteAccountPasswordPolicyInput{})
@@ -177,7 +181,7 @@ func FindAccountPasswordPolicy(ctx context.Context, conn *iam.IAM) (*iam.Passwor
 	output, err := conn.GetAccountPasswordPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

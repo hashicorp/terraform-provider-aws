@@ -7,6 +7,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 )
 
+func GetMetadata_Request(in *tfprotov6.GetMetadataRequest) (*tfplugin6.GetMetadata_Request, error) {
+	return &tfplugin6.GetMetadata_Request{}, nil
+}
+
+func GetMetadata_Response(in *tfprotov6.GetMetadataResponse) (*tfplugin6.GetMetadata_Response, error) {
+	if in == nil {
+		return nil, nil
+	}
+
+	resp := &tfplugin6.GetMetadata_Response{
+		DataSources:        make([]*tfplugin6.GetMetadata_DataSourceMetadata, 0, len(in.DataSources)),
+		Resources:          make([]*tfplugin6.GetMetadata_ResourceMetadata, 0, len(in.Resources)),
+		ServerCapabilities: ServerCapabilities(in.ServerCapabilities),
+	}
+
+	for _, datasource := range in.DataSources {
+		resp.DataSources = append(resp.DataSources, GetMetadata_DataSourceMetadata(&datasource))
+	}
+
+	for _, resource := range in.Resources {
+		resp.Resources = append(resp.Resources, GetMetadata_ResourceMetadata(&resource))
+	}
+
+	diags, err := Diagnostics(in.Diagnostics)
+
+	if err != nil {
+		return resp, err
+	}
+
+	resp.Diagnostics = diags
+
+	return resp, nil
+}
+
 func GetProviderSchema_Request(in *tfprotov6.GetProviderSchemaRequest) (*tfplugin6.GetProviderSchema_Request, error) {
 	return &tfplugin6.GetProviderSchema_Request{}, nil
 }
@@ -16,7 +50,7 @@ func GetProviderSchema_Response(in *tfprotov6.GetProviderSchemaResponse) (*tfplu
 		return nil, nil
 	}
 	resp := tfplugin6.GetProviderSchema_Response{
-		ServerCapabilities: GetProviderSchema_ServerCapabilities(in.ServerCapabilities),
+		ServerCapabilities: ServerCapabilities(in.ServerCapabilities),
 	}
 	if in.Provider != nil {
 		schema, err := Schema(in.Provider)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -10,9 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_prometheus_rule_group_namespace")
 func ResourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
@@ -44,7 +49,9 @@ func ResourceRuleGroupNamespace() *schema.Resource {
 }
 
 func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
 	name := d.Get("name").(string)
@@ -57,46 +64,50 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateRuleGroupsNamespaceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Prometheus Rule Group Namespace (%s) for Workspace (%s): %s", name, workspaceID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Prometheus Rule Group Namespace (%s) for Workspace (%s): %s", name, workspaceID, err)
 	}
 
 	d.SetId(aws.StringValue(output.Arn))
 
 	if _, err := waitRuleGroupNamespaceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Rule Group Namespace (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Rule Group Namespace (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceRuleGroupNamespaceRead(ctx, d, meta)
+	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
 }
 
 func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	rgn, err := FindRuleGroupNamespaceByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Prometheus Rule Group Namespace (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("data", string(rgn.Data))
 	d.Set("name", rgn.Name)
 	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set("workspace_id", workspaceID)
 
-	return nil
+	return diags
 }
 
 func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	input := &prometheusservice.PutRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
@@ -107,18 +118,20 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.PutRuleGroupsNamespaceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleGroupNamespaceUpdated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Rule Group Namespace (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Rule Group Namespace (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceRuleGroupNamespaceRead(ctx, d, meta)
+	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
 }
 
 func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Rule Group Namespace: (%s)", d.Id())
 	_, err := conn.DeleteRuleGroupsNamespaceWithContext(ctx, &prometheusservice.DeleteRuleGroupsNamespaceInput{
@@ -127,16 +140,16 @@ func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Prometheus Rule Group Namespace (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleGroupNamespaceDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Rule Group Namespace (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Rule Group Namespace (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

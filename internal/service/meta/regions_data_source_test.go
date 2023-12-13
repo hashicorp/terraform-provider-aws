@@ -1,26 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
 func TestAccMetaRegionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_regions.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -28,17 +32,18 @@ func TestAccMetaRegionsDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaRegionsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_regions.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionsDataSourceConfig_optInStatusFilter("opt-in-not-required"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -46,17 +51,18 @@ func TestAccMetaRegionsDataSource_filter(t *testing.T) {
 }
 
 func TestAccMetaRegionsDataSource_allRegions(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_regions.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionsDataSourceConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},
 		},
@@ -64,10 +70,11 @@ func TestAccMetaRegionsDataSource_allRegions(t *testing.T) {
 }
 
 func TestAccMetaRegionsDataSource_nonExistentRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_regions.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

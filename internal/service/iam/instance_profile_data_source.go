@@ -1,18 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_iam_instance_profile")
 func DataSourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceProfileRead,
@@ -52,30 +54,19 @@ func DataSourceInstanceProfile() *schema.Resource {
 
 func dataSourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
+	instanceProfile, err := FindInstanceProfileByName(ctx, conn, name)
 
-	req := &iam.GetInstanceProfileInput{
-		InstanceProfileName: aws.String(name),
-	}
-
-	log.Printf("[DEBUG] Reading IAM Instance Profile: %s", req)
-	resp, err := conn.GetInstanceProfileWithContext(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting instance profiles: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", name, err)
 	}
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "no IAM instance profile found")
-	}
-
-	instanceProfile := resp.InstanceProfile
 
 	d.SetId(aws.StringValue(instanceProfile.InstanceProfileId))
 	d.Set("arn", instanceProfile.Arn)
 	d.Set("create_date", fmt.Sprintf("%v", instanceProfile.CreateDate))
 	d.Set("path", instanceProfile.Path)
-
 	if len(instanceProfile.Roles) > 0 {
 		role := instanceProfile.Roles[0]
 		d.Set("role_arn", role.Arn)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_shield_protection_health_check_association")
 func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: ResourceProtectionHealthCheckAssociationCreate,
@@ -40,7 +44,7 @@ func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 
 func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	protectionId := d.Get("shield_protection_id").(string)
 	healthCheckArn := d.Get("health_check_arn").(string)
@@ -61,7 +65,7 @@ func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *sche
 
 func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	protectionId, healthCheckArn, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 
@@ -99,7 +103,7 @@ func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema
 
 func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	protectionId, healthCheckId, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 

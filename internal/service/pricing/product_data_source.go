@@ -1,13 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pricing
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pricing"
+	"github.com/aws/aws-sdk-go-v2/service/pricing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,14 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceProduct() *schema.Resource {
+// @SDKDataSource("aws_pricing_product")
+func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
+
 		Schema: map[string]*schema.Schema{
-			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"filters": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -44,53 +44,47 @@ func DataSourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"service_code": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PricingConn()
+	conn := meta.(*conns.AWSClient).PricingClient(ctx)
 
-	params := &pricing.GetProductsInput{
+	input := &pricing.GetProductsInput{
+		Filters:     []types.Filter{},
 		ServiceCode: aws.String(d.Get("service_code").(string)),
-		Filters:     []*pricing.Filter{},
 	}
 
 	filters := d.Get("filters")
 	for _, v := range filters.([]interface{}) {
 		m := v.(map[string]interface{})
-		params.Filters = append(params.Filters, &pricing.Filter{
+		input.Filters = append(input.Filters, types.Filter{
 			Field: aws.String(m["field"].(string)),
+			Type:  types.FilterTypeTermMatch,
 			Value: aws.String(m["value"].(string)),
-			Type:  aws.String(pricing.FilterTypeTermMatch),
 		})
 	}
 
-	log.Printf("[DEBUG] Reading pricing of products: %s", params)
-	resp, err := conn.GetProductsWithContext(ctx, params)
+	output, err := conn.GetProducts(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading pricing of products: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Pricing Products: %s", err)
 	}
 
-	numberOfElements := len(resp.PriceList)
-	if numberOfElements == 0 {
+	if numberOfElements := len(output.PriceList); numberOfElements == 0 {
 		return sdkdiag.AppendErrorf(diags, "Pricing product query did not return any elements")
 	} else if numberOfElements > 1 {
-		priceListBytes, err := json.Marshal(resp.PriceList)
-		priceListString := string(priceListBytes)
-		if err != nil {
-			priceListString = err.Error()
-		}
-		return sdkdiag.AppendErrorf(diags, "Pricing product query not precise enough. Returned more than one element: %s", priceListString)
+		return sdkdiag.AppendErrorf(diags, "Pricing product query not precise enough. Returned %d elements", numberOfElements)
 	}
 
-	pricingResult, err := json.Marshal(resp.PriceList[0])
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Invalid JSON value returned by AWS: %s", err)
-	}
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
+	d.Set("result", output.PriceList[0])
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(params.String())))
-	d.Set("result", string(pricingResult))
 	return diags
 }

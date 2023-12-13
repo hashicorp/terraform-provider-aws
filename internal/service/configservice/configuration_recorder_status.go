@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_configuration_recorder_status")
 func ResourceConfigurationRecorderStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderStatusPut,
@@ -45,7 +49,7 @@ func ResourceConfigurationRecorderStatus() *schema.Resource {
 
 func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 	d.SetId(name)
@@ -78,7 +82,7 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 
 func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Id()
 	statusInput := configservice.DescribeConfigurationRecorderStatusInput{
@@ -92,7 +96,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), err)
 	}
 
 	numberOfStatuses := len(statusOut.ConfigurationRecordersStatus)
@@ -103,7 +107,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	}
 
 	if d.IsNewResource() && numberOfStatuses < 1 {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), errors.New("not found after creation"))
 	}
 
 	if numberOfStatuses > 1 {
@@ -118,7 +122,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 
 func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Get("name").(string)),
 	}

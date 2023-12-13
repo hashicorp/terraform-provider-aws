@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types
 
 import (
@@ -11,85 +14,83 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-type cidrBlockType uint8
+type cidrBlockType struct {
+	basetypes.StringType
+}
 
-const (
-	CIDRBlockType cidrBlockType = iota
+var (
+	CIDRBlockType = cidrBlockType{}
 )
 
 var (
-	_ xattr.TypeWithValidate = CIDRBlockType
+	_ xattr.TypeWithValidate   = (*cidrBlockType)(nil)
+	_ basetypes.StringTypable  = (*cidrBlockType)(nil)
+	_ basetypes.StringValuable = (*CIDRBlock)(nil)
 )
 
-func (t cidrBlockType) TerraformType(_ context.Context) tftypes.Type {
-	return tftypes.String
-}
+func (t cidrBlockType) Equal(o attr.Type) bool {
+	other, ok := o.(cidrBlockType)
 
-func (t cidrBlockType) ValueFromString(_ context.Context, st types.String) (basetypes.StringValuable, diag.Diagnostics) {
-	if st.IsNull() {
-		return CIDRBlockNull(), nil
-	}
-	if st.IsUnknown() {
-		return CIDRBlockUnknown(), nil
+	if !ok {
+		return false
 	}
 
-	return CIDRBlockValue(st.ValueString()), nil
+	return t.StringType.Equal(other.StringType)
 }
 
-func (t cidrBlockType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.Value, error) {
+func (cidrBlockType) String() string {
+	return "CIDRBlockType"
+}
+
+func (t cidrBlockType) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if in.IsNull() {
-		return CIDRBlockNull(), nil
+		return CIDRBlockNull(), diags
 	}
-	if !in.IsKnown() {
-		return CIDRBlockUnknown(), nil
+	if in.IsUnknown() {
+		return CIDRBlockUnknown(), diags
 	}
 
-	var s string
-	err := in.As(&s)
+	valueString := in.ValueString()
+	if err := itypes.ValidateCIDRBlock(valueString); err != nil {
+		return CIDRBlockUnknown(), diags // Must not return validation errors
+	}
+
+	return CIDRBlockValue(valueString), diags
+}
+
+func (t cidrBlockType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err := verify.ValidateCIDRBlock(s); err != nil {
-		return nil, err
+	stringValue, ok := attrValue.(basetypes.StringValue)
+
+	if !ok {
+		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
-	return CIDRBlockValue(s), nil
+	stringValuable, diags := t.ValueFromString(ctx, stringValue)
+
+	if diags.HasError() {
+		return nil, fmt.Errorf("unexpected error converting StringValue to StringValuable: %v", diags)
+	}
+
+	return stringValuable, nil
 }
 
-func (t cidrBlockType) ValueType(context.Context) attr.Value {
+func (cidrBlockType) ValueType(context.Context) attr.Value {
 	return CIDRBlock{}
-}
-
-func (t cidrBlockType) Equal(o attr.Type) bool {
-	_, ok := o.(cidrBlockType)
-	return ok
-}
-
-func (t cidrBlockType) ApplyTerraform5AttributePathStep(step tftypes.AttributePathStep) (interface{}, error) {
-	return nil, fmt.Errorf("cannot apply AttributePathStep %T to %s", step, t.String())
-}
-
-func (t cidrBlockType) String() string {
-	return "types.CIDRBlockType"
 }
 
 func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	if !in.Type().Is(tftypes.String) {
-		diags.AddAttributeError(
-			path,
-			"CIDRBlock Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected String value, received %T with value: %v", in, in),
-		)
-		return diags
-	}
 
 	if !in.IsKnown() || in.IsNull() {
 		return diags
@@ -101,13 +102,12 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",
-			"An unexpected error was encountered trying to validate an attribute value. This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Cannot convert value to string: %s", err),
+			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
 		)
 		return diags
 	}
 
-	if err := verify.ValidateCIDRBlock(value); err != nil {
+	if err := itypes.ValidateCIDRBlock(value); err != nil {
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",
@@ -119,98 +119,32 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 	return diags
 }
 
-func (t cidrBlockType) Description() string {
-	return `A CIDR block.`
-}
-
 func CIDRBlockNull() CIDRBlock {
-	return CIDRBlock{
-		state: attr.ValueStateNull,
-	}
+	return CIDRBlock{StringValue: basetypes.NewStringNull()}
 }
 
 func CIDRBlockUnknown() CIDRBlock {
-	return CIDRBlock{
-		state: attr.ValueStateUnknown,
-	}
+	return CIDRBlock{StringValue: basetypes.NewStringUnknown()}
 }
 
 func CIDRBlockValue(value string) CIDRBlock {
-	return CIDRBlock{
-		state: attr.ValueStateKnown,
-		value: value,
-	}
+	return CIDRBlock{StringValue: basetypes.NewStringValue(value)}
 }
 
 type CIDRBlock struct {
-	state attr.ValueState
-	value string
+	basetypes.StringValue
 }
 
-func (c CIDRBlock) Type(_ context.Context) attr.Type {
-	return CIDRBlockType
-}
-
-func (c CIDRBlock) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
-	return types.StringValue(c.value), nil
-}
-
-func (c CIDRBlock) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	t := CIDRBlockType.TerraformType(ctx)
-
-	switch c.state {
-	case attr.ValueStateKnown:
-		if err := tftypes.ValidateValue(t, c.value); err != nil {
-			return tftypes.NewValue(t, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(t, c.value), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(t, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(t, tftypes.UnknownValue), nil
-	default:
-		return tftypes.NewValue(t, tftypes.UnknownValue), fmt.Errorf("unhandled CIDRBlock state in ToTerraformValue: %s", c.state)
-	}
-}
-
-func (c CIDRBlock) Equal(other attr.Value) bool {
-	o, ok := other.(CIDRBlock)
+func (v CIDRBlock) Equal(o attr.Value) bool {
+	other, ok := o.(CIDRBlock)
 
 	if !ok {
 		return false
 	}
 
-	if c.state != o.state {
-		return false
-	}
-
-	if c.state != attr.ValueStateKnown {
-		return true
-	}
-
-	return c.value == o.value
+	return v.StringValue.Equal(other.StringValue)
 }
 
-func (c CIDRBlock) IsNull() bool {
-	return c.state == attr.ValueStateNull
-}
-
-func (c CIDRBlock) IsUnknown() bool {
-	return c.state == attr.ValueStateUnknown
-}
-
-func (c CIDRBlock) String() string {
-	if c.IsNull() {
-		return attr.NullValueString
-	}
-	if c.IsUnknown() {
-		return attr.UnknownValueString
-	}
-
-	return c.value
-}
-
-func (c CIDRBlock) ValueCIDRBlock() string {
-	return c.value
+func (CIDRBlock) Type(context.Context) attr.Type {
+	return CIDRBlockType
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
@@ -29,8 +32,8 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -67,8 +70,8 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -116,8 +119,8 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccLanguageModelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
@@ -138,7 +141,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 
 func testAccCheckLanguageModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transcribe_language_model" {
@@ -171,7 +174,7 @@ func testAccCheckLanguageModelExists(ctx context.Context, name string, languageM
 			return fmt.Errorf("No Transcribe LanguageModel is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 		resp, err := tftranscribe.FindLanguageModelByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -185,7 +188,7 @@ func testAccCheckLanguageModelExists(ctx context.Context, name string, languageM
 }
 
 func testAccLanguageModelsPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 	input := &transcribe.ListLanguageModelsInput{}
 

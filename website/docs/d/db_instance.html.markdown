@@ -20,13 +20,16 @@ data "aws_db_instance" "database" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `db_instance_identifier` - (Required) Name of the RDS instance
+* `db_instance_identifier` - (Optional) Name of the RDS instance.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `address` - Hostname of the RDS instance. See also `endpoint` and `port`.
 * `allocated_storage` - Allocated storage size specified in gigabytes.
@@ -38,7 +41,6 @@ In addition to all arguments above, the following attributes are exported:
 * `db_instance_class` - Contains the name of the compute and memory capacity class of the DB instance.
 * `db_name` - Contains the name of the initial database of this instance that was provided at create time, if one was specified when the DB instance was created. This same name is returned for the life of the DB instance.
 * `db_parameter_groups` - Provides the list of DB parameter groups applied to this DB instance.
-* `db_security_groups` - Provides List of DB security groups associated to this DB instance.
 * `db_subnet_group` - Name of the subnet group associated with the DB instance.
 * `db_instance_port` - Port that the DB instance listens on.
 * `enabled_cloudwatch_logs_exports` - List of log types to export to cloudwatch.
@@ -50,12 +52,14 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - If StorageEncrypted is true, the KMS key identifier for the encrypted DB instance.
 * `license_model` - License model information for this DB instance.
 * `master_username` - Contains the master username for the DB instance.
+* `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
+* `max_allocated_storage` - The upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
 * `network_type` - Network type of the DB instance.
 * `option_group_memberships` - Provides the list of option group memberships for this DB instance.
-* `port` - Database port.
+* `port` - Database endpoint port, primarily used by an Aurora DB cluster. For a conventional RDS DB instance, the `db_instance_port` is typically the preferred choice.
 * `preferred_backup_window` - Specifies the daily time range during which automated backups are created.
 * `preferred_maintenance_window` -  Specifies the weekly time range during which system maintenance can occur in UTC.
 * `publicly_accessible` - Accessibility options for the DB instance.
@@ -67,3 +71,11 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_security_groups` - Provides a list of VPC security group elements that the DB instance belongs to.
 * `replicate_source_db` - Identifier of the source DB that this is a replica of.
 * `ca_cert_identifier` - Identifier of the CA certificate for the DB instance.
+
+### master_user_secret
+
+The `master_user_secret` configuration block supports the following attributes:
+
+* `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
+* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.

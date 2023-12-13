@@ -12,6 +12,8 @@ Provides an independent configuration resource for S3 bucket [replication config
 
 ~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `aws_s3_bucket_replication_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Using replication configuration
@@ -26,66 +28,64 @@ provider "aws" {
   region = "eu-central-1"
 }
 
-resource "aws_iam_role" "replication" {
-  name = "tf-iam-role-replication-12345"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "s3.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "replication" {
+  name               = "tf-iam-role-replication-12345"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "replication" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetReplicationConfiguration",
+      "s3:ListBucket",
+    ]
+
+    resources = [aws_s3_bucket.source.arn]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObjectVersionForReplication",
+      "s3:GetObjectVersionAcl",
+      "s3:GetObjectVersionTagging",
+    ]
+
+    resources = ["${aws_s3_bucket.source.arn}/*"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:ReplicateObject",
+      "s3:ReplicateDelete",
+      "s3:ReplicateTags",
+    ]
+
+    resources = ["${aws_s3_bucket.destination.arn}/*"]
+  }
 }
 
 resource "aws_iam_policy" "replication" {
-  name = "tf-iam-role-policy-replication-12345"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:GetReplicationConfiguration",
-        "s3:ListBucket"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.source.arn}"
-      ]
-    },
-    {
-      "Action": [
-        "s3:GetObjectVersionForReplication",
-        "s3:GetObjectVersionAcl",
-         "s3:GetObjectVersionTagging"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.source.arn}/*"
-      ]
-    },
-    {
-      "Action": [
-        "s3:ReplicateObject",
-        "s3:ReplicateDelete",
-        "s3:ReplicateTags"
-      ],
-      "Effect": "Allow",
-      "Resource": "${aws_s3_bucket.destination.arn}/*"
-    }
-  ]
-}
-POLICY
+  name   = "tf-iam-role-policy-replication-12345"
+  policy = data.aws_iam_policy_document.replication.json
 }
 
 resource "aws_iam_role_policy_attachment" "replication" {
@@ -230,7 +230,7 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) ARN of the IAM role for Amazon S3 to assume when replicating the objects.
@@ -423,16 +423,25 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 
 * `status` - (Required) Whether the existing objects should be replicated. Either `"Enabled"` or `"Disabled"`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - S3 source bucket name.
 
 ## Import
 
-S3 bucket replication configuration can be imported using the `bucket`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket replication configuration using the `bucket`. For example:
 
-```sh
-$ terraform import aws_s3_bucket_replication_configuration.replication bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_replication_configuration.replication
+  id = "bucket-name"
+}
+```
+
+Using `terraform import`, import S3 bucket replication configuration using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```

@@ -200,7 +200,7 @@ resource "aws_wafv2_web_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `authentication_type` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `name` - (Required) User-supplied name for the GraphqlApi.
@@ -212,10 +212,11 @@ The following arguments are supported:
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_enabled` - (Optional) Whether tracing with X-ray is enabled. Defaults to false.
+* `visibility` - (Optional) Sets the value of the GraphQL API to public (`GLOBAL`) or private (`PRIVATE`). If no value is provided, the visibility will be set to `GLOBAL` by default. This value cannot be changed once the API has been created.
 
 ### log_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `cloudwatch_logs_role_arn` - (Required) Amazon Resource Name of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
 * `field_log_level` - (Required) Field logging level. Valid values: `ALL`, `ERROR`, `NONE`.
@@ -223,7 +224,7 @@ The following arguments are supported:
 
 ### additional_authentication_provider
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `authentication_type` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
@@ -231,7 +232,7 @@ The following arguments are supported:
 
 ### openid_connect_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `issuer` - (Required) Issuer for the OpenID Connect configuration. The issuer returned by discovery MUST exactly match the value of iss in the ID Token.
 * `auth_ttl` - (Optional) Number of milliseconds a token is valid after being authenticated.
@@ -240,7 +241,7 @@ The following arguments are supported:
 
 ### user_pool_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `default_action` - (Required only if Cognito is used as the default auth provider) Action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `ALLOW` and `DENY`
 * `user_pool_id` - (Required) User pool ID.
@@ -249,15 +250,15 @@ The following arguments are supported:
 
 ### lambda_authorizer_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `authorizer_uri` - (Required) ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:InvokeFunction` from service principal `appsync.amazonaws.com`.
 * `authorizer_result_ttl_in_seconds` - (Optional) Number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
 * `identity_validation_expression` - (Optional) Regular expression for validation of tokens before the Lambda function is called.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API ID
 * `arn` - ARN
@@ -266,8 +267,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppSync GraphQL API can be imported using the GraphQL API ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppSync GraphQL API using the GraphQL API ID. For example:
 
+```terraform
+import {
+  to = aws_appsync_graphql_api.example
+  id = "0123456789"
+}
 ```
-$ terraform import aws_appsync_graphql_api.example 0123456789
+
+Using `terraform import`, import AppSync GraphQL API using the GraphQL API ID. For example:
+
+```console
+% terraform import aws_appsync_graphql_api.example 0123456789
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb_test
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -21,14 +24,13 @@ func TestAccDocDBOrderableDBInstanceDataSource_basic(t *testing.T) {
 	license := "na"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, license),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
@@ -48,10 +50,9 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r5.large"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, license, preferredOption),
@@ -67,7 +68,7 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("docdb"),
@@ -87,10 +88,10 @@ func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
 func testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
-  instance_class = %q
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  instance_class = %[1]q
+  engine         = %[2]q
+  engine_version = %[3]q
+  license_model  = %[4]q
 }
 `, class, engine, version, license)
 }
@@ -98,13 +99,13 @@ data "aws_docdb_orderable_db_instance" "test" {
 func testAccOrderableDBInstanceDataSourceConfig_preferred(engine, version, license, preferredOption string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  engine         = %[1]q
+  engine_version = %[2]q
+  license_model  = %[3]q
 
   preferred_instance_classes = [
     "db.xyz.xlarge",
-    %q,
+    %[4]q,
     "db.t3.small",
   ]
 }

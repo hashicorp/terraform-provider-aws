@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2
 
 import (
@@ -5,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -13,29 +17,36 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/mitchellh/mapstructure"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_inspector2_enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,
 		ReadWithoutTimeout:   resourceEnablerRead,
-		UpdateWithoutTimeout: resourceEnablerCreate,
+		UpdateWithoutTimeout: resourceEnablerUpdate,
 		DeleteWithoutTimeout: resourceEnablerDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
-			Update: schema.DefaultTimeout(15 * time.Minute),
-			Delete: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,7 +69,29 @@ func ResourceEnabler() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				accountIDs := getAccountIDs(d)
+				if l := len(accountIDs); l > 1 {
+					client := meta.(*conns.AWSClient)
+
+					if slices.Contains(accountIDs, client.AccountID) {
+						return fmt.Errorf(`"account_ids" can contain either the administrator account or one or more member accounts. Contains %v`, accountIDs)
+					}
+				}
+				return nil
+			},
+		),
 	}
+}
+
+type resourceGetter interface {
+	Get(key string) any
+}
+
+func getAccountIDs(d resourceGetter) []string {
+	return flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
 }
 
 const (
@@ -66,298 +99,474 @@ const (
 )
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
+
+	accountIDs := getAccountIDs(d)
+
+	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
 
 	in := &inspector2.EnableInput{
-		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
-		ClientToken:   aws.String(resource.UniqueId()),
+		AccountIds:    accountIDs,
+		ResourceTypes: typeEnable,
+		ClientToken:   aws.String(sdkid.UniqueId()),
 	}
 
-	id := EnablerID(in.AccountIds, flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set)))
+	id := enablerID(accountIDs, typeEnable)
 
-	out, err := conn.Enable(ctx, in)
+	var out *inspector2.EnableOutput
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		var err error
+		out, err = conn.Enable(ctx, in)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+		if out == nil {
+			return retry.RetryableError(tfresource.NewEmptyResultError(nil))
+		}
+
+		if len(out.FailedAccounts) == 0 {
+			return nil
+		}
+
+		var errs *multierror.Error
+		for _, acct := range out.FailedAccounts {
+			errs = multierror.Append(errs, newFailedAccountError(acct))
+		}
+		err = failedAccountsError(*errs)
+
+		if tfslices.All(out.FailedAccounts, func(acct types.FailedAccount) bool {
+			switch acct.ErrorCode {
+			case types.ErrorCodeAccessDenied, // Account membership not propagated
+				types.ErrorCodeSsmThrottled,
+				types.ErrorCodeEventbridgeThrottled,
+				types.ErrorCodeEnableInProgress,
+				types.ErrorCodeDisableInProgress,
+				types.ErrorCodeSuspendInProgress:
+				return true
+			}
+			return false
+		}) {
+			return retry.RetryableError(err)
+		}
+
+		return retry.NonRetryableError(err)
+	})
+	if tfresource.TimedOut(err) {
+		out, err = conn.Enable(ctx, in)
+	}
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
-	}
-
-	if out == nil {
-		return create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}
 
 	d.SetId(id)
 
-	if err := waitEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)
+	st, err := waitEnabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)
 	}
 
-	return resourceEnablerRead(ctx, d, meta)
+	var disableAccountIDs []string
+	for acctID, acctStatus := range st {
+		resourceStatuses := acctStatus.ResourceStatuses
+		for _, resourceType := range typeEnable {
+			delete(resourceStatuses, resourceType)
+		}
+		if len(resourceStatuses) > 0 {
+			disableAccountIDs = append(disableAccountIDs, acctID)
+			in := &inspector2.DisableInput{
+				AccountIds:    []string{acctID},
+				ResourceTypes: maps.Keys(resourceStatuses),
+			}
+
+			_, err := conn.Disable(ctx, in)
+			if err != nil {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
+			}
+		}
+	}
+
+	if len(disableAccountIDs) > 0 {
+		if _, err := waitEnabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
+		}
+	}
+
+	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	s, err := FindAccountStatuses(ctx, conn, d.Id())
+	accountIDs, _, err := parseEnablerID(d.Id())
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
-	// probably a NotFound is not possible but including for linting/completeness
+	s, err := AccountStatuses(ctx, conn, accountIDs)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Enabler (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
 	var enabledAccounts []string
-	for _, a := range s {
-		if a.Status == string(types.StatusEnabled) {
-			enabledAccounts = append(enabledAccounts, a.AccountID)
+	for k, a := range s {
+		if a.Status == types.StatusEnabled {
+			enabledAccounts = append(enabledAccounts, k)
+		}
+	}
+
+	accountStatuses := maps.Values(s)
+	accountStatus := accountStatuses[0]
+	var resourceTypes []types.ResourceScanType
+	for k, a := range accountStatus.ResourceStatuses {
+		if a == types.StatusEnabled {
+			resourceTypes = append(resourceTypes, k)
 		}
 	}
 
 	if err := d.Set("account_ids", flex.FlattenStringValueSet(enabledAccounts)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+	}
+	if err := d.Set("resource_types", flex.FlattenStringValueSet(enum.Slice(resourceTypes...))); err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
+
+	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
+	var typeDisable []types.ResourceScanType
+	if d.HasChange("resource_types") {
+		for _, v := range types.ResourceScanType("").Values() {
+			if !slices.Contains(typeEnable, v) {
+				typeDisable = append(typeDisable, v)
+			}
+		}
+	}
+
+	var acctEnable, acctRemove []string
+	acctEnable = flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
+	if d.HasChange("account_ids") {
+		o, n := d.GetChange("account_ids")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		acctRemove = flex.ExpandStringValueSet(os.Difference(ns))
+	}
+
+	id := enablerID(getAccountIDs(d), flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)))
+
+	d.SetId(id)
+
+	if len(acctEnable) > 0 {
+		if len(typeEnable) > 0 {
+			in := &inspector2.EnableInput{
+				AccountIds:    acctEnable,
+				ResourceTypes: typeEnable,
+				ClientToken:   aws.String(sdkid.UniqueId()),
+			}
+
+			out, err := conn.Enable(ctx, in)
+			if err != nil {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
+			}
+
+			if out == nil {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))
+			}
+
+			if len(out.FailedAccounts) > 0 {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, errors.New("failed accounts"))
+			}
+
+			if _, err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
+			}
+		}
+
+		if len(typeDisable) > 0 {
+			in := &inspector2.DisableInput{
+				AccountIds:    acctEnable,
+				ResourceTypes: typeDisable,
+			}
+
+			_, err := conn.Disable(ctx, in)
+			if err != nil {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
+			}
+
+			if _, err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)
+			}
+		}
+	}
+
+	if len(acctRemove) > 0 {
+		diags = append(diags, disableAccounts(ctx, conn, d, acctRemove)...)
+	}
+
+	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient)
+	conn := client.Inspector2Client(ctx)
 
+	accountIDs := getAccountIDs(d)
+	admin := slices.Contains(accountIDs, client.AccountID)
+	members := tfslices.Filter(accountIDs, func(s string) bool {
+		return s != client.AccountID
+	})
+	if len(members) > 0 {
+		// Catch legacy case mixing admin account and member accounts
+		if admin {
+			diags = append(diags, errs.NewWarningDiagnostic(
+				"Inconsistent Amazon Inspector State",
+				"The Organization Administrator Account cannot be deleted while there are associated member accounts. Disabling Inspector for the member accounts. ",
+			))
+		}
+
+		diags = append(diags, disableAccounts(ctx, conn, d, members)...)
+		if diags.HasError() {
+			return diags
+		}
+	} else if admin {
+		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID})...)
+	}
+
+	return diags
+}
+
+func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.ResourceData, accountIDs []string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	in := &inspector2.DisableInput{
-		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
+		AccountIds:    accountIDs,
+		ResourceTypes: types.ResourceScanType("").Values(),
 	}
 
-	_, err := conn.Disable(ctx, in)
+	out, err := conn.Disable(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
+	}
+	if out == nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
 	}
 
-	if err := waitDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)
+	for _, acct := range out.FailedAccounts {
+		if acct.ErrorCode != types.ErrorCodeAccessDenied {
+			err = multierror.Append(err, newFailedAccountError(acct))
+		}
+	}
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
 
-	return nil
+	if err := waitDisabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)
+	}
+
+	return diags
+}
+
+type failedAccountsError multierror.Error
+
+func (e failedAccountsError) Error() string {
+	m := multierror.Error(e)
+	return m.Error()
+}
+
+type failedAccountError struct {
+	accountID string
+	code      types.ErrorCode
+	message   string
+}
+
+func newFailedAccountError(a types.FailedAccount) error {
+	return &failedAccountError{
+		accountID: aws.ToString(a.AccountId),
+		code:      a.ErrorCode,
+		message:   aws.ToString(a.ErrorMessage),
+	}
+}
+
+func (e failedAccountError) Error() string {
+	return fmt.Sprintf("account %s: %s: %s", e.accountID, e.code, e.message)
 }
 
 const (
-	StatusDisabledEnabled = string(types.StatusDisabled + types.StatusEnabled)
-	StatusInProgress      = "IN_PROGRESS"
+	statusComplete   = "COMPLETE"
+	statusInProgress = "IN_PROGRESS"
 )
 
-func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   append(enum.Slice(types.StatusEnabling, types.StatusDisabled), StatusDisabledEnabled, StatusInProgress),
-		Target:                    enum.Slice(types.StatusEnabled),
-		Refresh:                   statusEnable(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-		Delay:                     10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
-}
-
-func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
-		Target:  enum.Slice(types.StatusDisabled),
-		Refresh: statusEnable(ctx, conn, id),
+func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) (map[string]AccountResourceStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusInProgress},
+		Target:  []string{statusComplete},
+		Refresh: statusEnablerAccountAndResourceTypes(ctx, conn, accountIDs),
 		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(map[string]AccountResourceStatus); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusInProgress},
+		Target:  []string{},
+		Refresh: statusEnablerAccount(ctx, conn, accountIDs),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
-
 	return err
 }
 
-func statusEnable(ctx context.Context, conn *inspector2.Client, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		st, err := FindAccountStatuses(ctx, conn, id)
+var (
+	// terminalStates = []types.Status{
+	// 	types.StatusEnabled,
+	// 	types.StatusDisabled,
+	// 	types.StatusSuspended,
+	// }
+	pendingStates = []types.Status{
+		types.StatusEnabling,
+		types.StatusDisabling,
+		types.StatusSuspending,
+	}
+)
 
-		if errs.Contains(err, string(types.ErrorCodeAlreadyEnabled)) {
-			return 42, string(types.StatusEnabled), nil
-		}
-
-		if errs.Contains(err, string(types.ErrorCodeEnableInProgress)) {
-			return nil, StatusInProgress, nil
-		}
-
-		if errs.Contains(err, string(types.ErrorCodeDisableInProgress)) {
-			return nil, StatusInProgress, nil
-		}
-
-		if errs.Contains(err, string(types.ErrorCodeInternalError)) {
-			// Can mean DISABLE was called right after ENABLE when status hasn't changed yet.
-			// Otherwise, it would return a types.ErrorCodeResourceScanNotDisabled
-			return nil, StatusInProgress, nil
-		}
-
+// statusEnablerAccountAndResourceTypes checks the status of Inspector for the account and resource types
+func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		st, err := AccountStatuses(ctx, conn, accountIDs)
 		if err != nil {
 			return nil, "", err
 		}
 
-		hasEnabled := false
-		hasDisabled := false
-
-		for _, s := range st {
-			if s.Status != string(types.StatusEnabled) && s.Status != string(types.StatusDisabled) {
-				return 42, s.Status, nil
-			}
-
-			if !hasEnabled && s.Status == string(types.StatusEnabled) {
-				hasEnabled = true
-			}
-
-			if !hasDisabled && s.Status == string(types.StatusDisabled) {
-				hasDisabled = true
-			}
+		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+			return nil, "", nil
 		}
 
-		// can only have status of enabled and/or disabled or would have returned in for
-
-		if hasDisabled && hasEnabled {
-			return 42, StatusDisabledEnabled, nil
+		if tfslices.Any(maps.Values(st), func(v AccountResourceStatus) bool {
+			if slices.Contains(pendingStates, v.Status) {
+				return true
+			}
+			if tfslices.Any(maps.Values(v.ResourceStatuses), func(v types.Status) bool {
+				return slices.Contains(pendingStates, v)
+			}) {
+				return true
+			}
+			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
+				return true
+			}
+			return false
+		}) {
+			return st, statusInProgress, nil
 		}
 
-		if hasDisabled {
-			return 42, string(types.StatusDisabled), nil
-		}
-
-		return 42, string(types.StatusEnabled), nil
+		return st, statusComplete, nil
 	}
 }
 
-type AccountStatus struct {
-	AccountID string
-	Status    string
+// statusEnablerAccount checks only the status of Inspector for the account as a whole.
+// It is only used for deletion, so the non-error states are in-progress or not-found
+func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		st, err := AccountStatuses(ctx, conn, accountIDs)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+			return nil, "", nil
+		}
+
+		return st, statusInProgress, nil
+	}
 }
 
-func FindAccountStatuses(ctx context.Context, conn *inspector2.Client, id string) ([]AccountStatus, error) {
-	accountIDs, resourceTypes, err := parseEnablerID(id)
+type AccountResourceStatus struct {
+	Status           types.Status
+	ResourceStatuses map[types.ResourceScanType]types.Status
+}
+
+func accountStatusEquals(s types.Status) func(AccountResourceStatus) bool {
+	return func(v AccountResourceStatus) bool {
+		return v.Status == s
+	}
+}
+
+func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []string) (map[string]AccountResourceStatus, error) {
+	in := &inspector2.BatchGetAccountStatusInput{
+		AccountIds: accountIDs,
+	}
+	out, err := conn.BatchGetAccountStatus(ctx, in)
 	if err != nil {
-		return nil, fmt.Errorf("parse error (%s): %s", id, err)
+		return nil, err
 	}
 
-	ec2 := false
-	ecr := false
-
-	for _, v := range resourceTypes {
-		if v == string(types.ResourceScanTypeEc2) {
-			ec2 = true
-			continue
-		}
-		if v == string(types.ResourceScanTypeEcr) {
-			ecr = true
-		}
-	}
-
-	// there's no describe/list but calling disable without a resource type returns an error
-	// and information about state
-	in := &inspector2.DisableInput{}
-
-	if len(accountIDs) > 0 {
-		in.AccountIds = accountIDs
-	}
-
-	out, err := conn.Disable(ctx, in)
-
-	if err != nil {
-		return nil, fmt.Errorf("calling Disable: %s", err)
-	}
-
-	if out == nil {
-		return nil, fmt.Errorf("empty response calling Disable")
-	}
-
-	var errs *multierror.Error
-	var s []AccountStatus
+	results := make(map[string]AccountResourceStatus, len(out.Accounts))
 	for _, a := range out.Accounts {
-		// in one situation, info is returned in Accounts (rather than FailedAccounts below): when
-		// everything is disabled
-		if a.ResourceStatus == nil {
+		if a.AccountId == nil || a.State == nil {
 			continue
 		}
-
-		s = append(s, AccountStatus{
-			AccountID: aws.ToString(a.AccountId),
-			Status:    compositeStatus(ec2, ecr, string(a.ResourceStatus.Ec2), string(a.ResourceStatus.Ecr)),
-		})
-	}
-
-	for _, a := range out.FailedAccounts {
-		if a.ErrorCode != types.ErrorCodeResourceScanNotDisabled {
-			// because calling disable without a resource type, information is returned in failed accounts
-			// with ErrorCode of types.ErrorCodeResourceScanNotDisabled
-			errs = multierror.Append(errs, fmt.Errorf("(%s) %s: %s (%s)", aws.ToString(a.AccountId), a.ErrorCode, aws.ToString(a.ErrorMessage), a.Status))
+		status := AccountResourceStatus{
+			Status:           a.State.Status,
+			ResourceStatuses: make(map[types.ResourceScanType]types.Status, len(enum.Values[types.ResourceScanType]())),
+		}
+		var m map[string]*types.State
+		e := mapstructure.Decode(a.ResourceState, &m)
+		if e != nil {
+			err = multierror.Append(err, e)
 			continue
 		}
-
-		if a.ResourceStatus == nil {
-			continue
+		for k, v := range m {
+			if k == "LambdaCode" {
+				k = "LAMBDA_CODE"
+			}
+			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
-
-		s = append(s, AccountStatus{
-			AccountID: aws.ToString(a.AccountId),
-			Status:    compositeStatus(ec2, ecr, string(a.ResourceStatus.Ec2), string(a.ResourceStatus.Ecr)),
-		})
+		results[aws.ToString(a.AccountId)] = status
 	}
 
-	return s, errs.ErrorOrNil()
+	if err != nil {
+		return results, err
+	}
+
+	if len(results) == 0 {
+		return results, &retry.NotFoundError{}
+	}
+
+	return results, err
 }
 
-// compositeStatus returns the status of ec2 and/or ecr scans depending on which are set by resource.
-// If you configure both, compositeStatus returns the most troubling status (e.g., *ing rather than *ed).
-func compositeStatus(ec2, ecr bool, ec2Status, ecrStatus string) string {
-	if ec2 && !ecr {
-		return ec2Status
-	}
-
-	if !ec2 && ecr {
-		return ecrStatus
-	}
-
-	// both are configured
-
-	if ec2Status == ecrStatus {
-		return ec2Status
-	}
-
-	// ING suffix beats anything (i.e., ENABLING, DISABLING, SUSPENDING)
-	if strings.HasSuffix(ec2Status, "ING") {
-		return ec2Status
-	}
-
-	if strings.HasSuffix(ecrStatus, "ING") {
-		return ecrStatus
-	}
-
-	// not the same & neither is *ING
-
-	if !strings.HasPrefix(ec2Status, "SUS") && !strings.HasPrefix(ecrStatus, "SUS") {
-		return StatusDisabledEnabled
-	}
-
-	return string(types.StatusSuspended)
-}
-
-func expandResourceScanTypes(s []string) []types.ResourceScanType {
-	vs := make([]types.ResourceScanType, 0, len(s))
-	for _, v := range s {
-		if v != "" {
-			vs = append(vs, types.ResourceScanType(v))
-		}
-	}
-	return vs
-}
-
-func EnablerID(accountIDs []string, types []string) string {
-	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(types, ":"))
+func enablerID(accountIDs []string, types []types.ResourceScanType) string {
+	sort.Strings(accountIDs)
+	t := enum.Slice(types...)
+	sort.Strings(t)
+	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(t, ":"))
 }
 
 func parseEnablerID(id string) ([]string, []string, error) {

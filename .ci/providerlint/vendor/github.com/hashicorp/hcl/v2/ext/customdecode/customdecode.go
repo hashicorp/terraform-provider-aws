@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package customdecode contains a HCL extension that allows, in certain
 // contexts, expression evaluation to be overridden by custom static analysis.
 //

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_response_headers_policy")
 func DataSourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
@@ -135,6 +139,26 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"id", "name"},
+			},
+			"remove_headers_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"items": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"header": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"security_headers_config": {
 				Type:     schema.TypeList,
@@ -273,7 +297,7 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 
 func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	var responseHeadersPolicyID string
 
@@ -334,6 +358,13 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	}
 	d.Set("etag", output.ETag)
 	d.Set("name", apiObject.Name)
+	if apiObject.RemoveHeadersConfig != nil {
+		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
+		}
+	} else {
+		d.Set("remove_headers_config", nil)
+	}
 	if apiObject.SecurityHeadersConfig != nil {
 		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)

@@ -1,19 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	nethttp "net/http"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,12 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_storage_lens_configuration", resourceStorageLensConfiguration)
-}
-
+// @SDKResource("aws_s3control_storage_lens_configuration", name="Storage Lens Configuration")
+// @Tags
 func resourceStorageLensConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStorageLensConfigurationCreate,
@@ -36,7 +37,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceStorageLensConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -384,8 +385,8 @@ func resourceStorageLensConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -393,9 +394,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 }
 
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -403,19 +402,15 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	}
 	configID := d.Get("config_id").(string)
 	id := StorageLensConfigurationCreateResourceID(accountID, configID)
-
 	input := &s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
+		Tags:      storageLensTags(keyValueTagsS3(ctx, getTagsInS3(ctx))),
 	}
 
 	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.StorageLensConfiguration = expandStorageLensConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		input.StorageLensConfiguration.Id = aws.String(configID)
-	}
-
-	if len(tags) > 0 {
-		input.Tags = StorageLensTags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.PutStorageLensConfiguration(ctx, input)
@@ -430,17 +425,14 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	output, err := FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
+	output, err := findStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Storage Lens Configuration (%s) not found, removing from state", d.Id())
@@ -465,25 +457,15 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("listing tags for S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOutS3(ctx, tagsS3(tags))
 
 	return nil
 }
 
 func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -518,10 +500,9 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlClient()
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -531,6 +512,10 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	})
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
+		return nil
+	}
 
 	if err != nil {
 		return diag.Errorf("deleting S3 Storage Lens Configuration (%s): %s", d.Id(), err)
@@ -558,7 +543,7 @@ func StorageLensConfigurationParseResourceID(id string) (string, string, error) 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]sconfig-id", id, storageLensConfigurationResourceIDSeparator)
 }
 
-func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, conn *s3control.Client, accountID, configID string) (*types.StorageLensConfiguration, error) {
+func findStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, conn *s3control.Client, accountID, configID string) (*types.StorageLensConfiguration, error) {
 	input := &s3control.GetStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
@@ -566,10 +551,8 @@ func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, con
 
 	output, err := conn.GetStorageLensConfiguration(ctx, input)
 
-	// No types.NoSuchConfiguration defined.
-	var re *http.ResponseError
-	if errors.As(err, &re) && re.Response.StatusCode == nethttp.StatusNotFound {
-		return nil, &resource.NotFoundError{
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -586,7 +569,7 @@ func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, con
 	return output.StorageLensConfiguration, nil
 }
 
-func StorageLensTags(tags tftags.KeyValueTags) []types.StorageLensTag {
+func storageLensTags(tags tftags.KeyValueTags) []types.StorageLensTag {
 	result := make([]types.StorageLensTag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -601,14 +584,14 @@ func StorageLensTags(tags tftags.KeyValueTags) []types.StorageLensTag {
 	return result
 }
 
-func KeyValueTagsFromStorageLensTags(tags []types.StorageLensTag) tftags.KeyValueTags {
+func keyValueTagsFromStorageLensTags(ctx context.Context, tags []types.StorageLensTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Client, accountID, configID string) (tftags.KeyValueTags, error) {
@@ -620,15 +603,15 @@ func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Clien
 	output, err := conn.GetStorageLensConfigurationTagging(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTagsFromStorageLensTags(output.Tags), nil
+	return keyValueTagsFromStorageLensTags(ctx, output.Tags), nil
 }
 
-func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID)
@@ -643,7 +626,7 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Cli
 		input := &s3control.PutStorageLensConfigurationTaggingInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
-			Tags:      StorageLensTags(newTags.Merge(ignoredTags)),
+			Tags:      storageLensTags(newTags.Merge(ignoredTags)),
 		}
 
 		_, err := conn.PutStorageLensConfigurationTagging(ctx, input)
@@ -863,11 +846,11 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCrite
 	}
 
 	if v, ok := tfMap["max_depth"].(int); ok && v != 0 {
-		apiObject.MaxDepth = int32(v)
+		apiObject.MaxDepth = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["min_storage_bytes_percentage"].(float64); ok && v != 0.0 {
-		apiObject.MinStorageBytesPercentage = v
+		apiObject.MinStorageBytesPercentage = aws.Float64(v)
 	}
 
 	return apiObject
@@ -1202,8 +1185,8 @@ func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]int
 		tfMap["delimiter"] = aws.ToString(v)
 	}
 
-	tfMap["max_depth"] = apiObject.MaxDepth
-	tfMap["min_storage_bytes_percentage"] = apiObject.MinStorageBytesPercentage
+	tfMap["max_depth"] = aws.ToInt32(apiObject.MaxDepth)
+	tfMap["min_storage_bytes_percentage"] = aws.ToFloat64(apiObject.MinStorageBytesPercentage)
 
 	return tfMap
 }

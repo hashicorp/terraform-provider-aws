@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -14,8 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_glue_catalog_table")
 func DataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCatalogTableRead,
@@ -43,7 +48,7 @@ func DataSourceCatalogTable() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
 			"owner": {
@@ -315,7 +320,9 @@ func DataSourceCatalogTable() *schema.Resource {
 }
 
 func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
@@ -340,11 +347,11 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.GetTableWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return diag.Errorf("No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
+			return sdkdiag.AppendErrorf(diags, "No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
 				dbName)
 		}
 
-		return diag.Errorf("Error reading Glue Catalog Table: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table: %s", err)
 	}
 
 	table := out.Table
@@ -365,11 +372,11 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return diag.Errorf("error setting storage_descriptor: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
 	}
 
 	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return diag.Errorf("error setting partition_keys: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
 	}
 
 	d.Set("view_original_text", table.ViewOriginalText)
@@ -377,12 +384,12 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("table_type", table.TableType)
 
 	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
-		return diag.Errorf("error setting parameters: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	if table.TargetTable != nil {
 		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
-			return diag.Errorf("error setting target_table: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
 		d.Set("target_table", nil)
@@ -395,14 +402,14 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
 	if err != nil {
-		return diag.Errorf("error getting Glue Partition Indexes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
 		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
-			return diag.Errorf("error setting partition_index: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }

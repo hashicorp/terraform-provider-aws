@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fsx_file_cache", name="File Cache")
+// @Tags(identifierAttribute="arn")
 func ResourceFileCache() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileCacheCreate,
@@ -114,7 +119,7 @@ func ResourceFileCache() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(7, 15),
-												validation.StringMatch(regexp.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+												validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
 											),
 										},
 									},
@@ -165,7 +170,7 @@ func ResourceFileCache() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexp.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
 				),
 			},
 			"kms_key_id": {
@@ -239,7 +244,7 @@ func ResourceFileCache() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(7, 7),
-								validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
+								validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
 							),
 						},
 					},
@@ -278,8 +283,8 @@ func ResourceFileCache() *schema.Resource {
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -294,16 +299,17 @@ const (
 )
 
 func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileCacheInput{
-		ClientRequestToken:   aws.String(resource.UniqueId()),
+		ClientRequestToken:   aws.String(id.UniqueId()),
 		FileCacheType:        aws.String(d.Get("file_cache_type").(string)),
 		FileCacheTypeVersion: aws.String(d.Get("file_cache_type_version").(string)),
 		StorageCapacity:      aws.Int64(int64(d.Get("storage_capacity").(int))),
 		SubnetIds:            flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		Tags:                 getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("copy_tags_to_data_repository_associations"); ok {
 		input.CopyTagsToDataRepositoryAssociations = aws.Bool(v.(bool))
@@ -320,40 +326,37 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
 
 	result, err := conn.CreateFileCacheWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionCreating, ResNameFileCache, "", err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionCreating, ResNameFileCache, "", err)
 	}
 
 	d.SetId(aws.StringValue(result.FileCache.FileCacheId))
 
 	if _, err := waitFileCacheCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionWaitingForCreation, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionWaitingForCreation, ResNameFileCache, d.Id(), err)
 	}
 
-	return resourceFileCacheRead(ctx, d, meta)
+	return append(diags, resourceFileCacheRead(ctx, d, meta)...)
 }
 
 func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filecache, err := findFileCacheByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx FileCache (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionReading, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionReading, ResNameFileCache, d.Id(), err)
 	}
 
 	d.Set("arn", filecache.ResourceARN)
@@ -367,58 +370,39 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds))
 	d.Set("vpc_id", filecache.VpcId)
 
-	if err := d.Set("data_repository_association_ids", filecache.DataRepositoryAssociationIds); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
-	}
+	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
+	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
 	if err := d.Set("lustre_configuration", flattenFileCacheLustreConfiguration(filecache.LustreConfiguration)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filecache.NetworkInterfaceIds)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
 	// Lookup and set Data Repository Associations
 
-	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
+	dataRepositoryAssociations, _ := findDataRepositoryAssociationsByIDs(ctx, conn, dataRepositoryAssociationIDs)
 
-	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(ctx, dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
-	//Cache tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(ctx, conn, *filecache.ResourceARN)
-
-	if tagserr != nil {
-		return create.DiagError(names.FSx, create.ErrActionReading, ResNameFileCache, d.Id(), err)
-	} else {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	}
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
-	}
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
-	}
-	return nil
+	return diags
 }
 
 func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn()
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all") {
 		input := &fsx.UpdateFileCacheInput{
-			ClientRequestToken:  aws.String(resource.UniqueId()),
+			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileCacheId:         aws.String(d.Id()),
 			LustreConfiguration: &fsx.UpdateFileCacheLustreConfiguration{},
 		}
@@ -431,38 +415,40 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		result, err := conn.UpdateFileCacheWithContext(ctx, input)
 		if err != nil {
-			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
+			return create.AppendDiagError(diags, names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
 		}
 		if _, err := waitFileCacheUpdated(ctx, conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
+			return create.AppendDiagError(diags, names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
 		}
 	}
-	return resourceFileCacheRead(ctx, d, meta)
+	return append(diags, resourceFileCacheRead(ctx, d, meta)...)
 }
 
 func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).FSxConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 	log.Printf("[INFO] Deleting FSx FileCache %s", d.Id())
 
 	_, err := conn.DeleteFileCacheWithContext(ctx, &fsx.DeleteFileCacheInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileCacheId:        aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionDeleting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionDeleting, ResNameFileCache, d.Id(), err)
 	}
 	if _, err := waitFileCacheDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionWaitingForDeletion, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionWaitingForDeletion, ResNameFileCache, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(dataRepositoryAssociations) == 0 {
 		return nil
 	}
@@ -470,7 +456,7 @@ func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRep
 	var flattenedDataRepositoryAssociations []interface{}
 
 	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
-		tags := KeyValueTags(dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
 			"association_id":                 dataRepositoryAssociation.AssociationId,
@@ -636,4 +622,12 @@ func expandFileCacheLustreMetadataConfiguration(l []interface{}) *fsx.FileCacheL
 		req.StorageCapacity = aws.Int64(int64(v))
 	}
 	return req
+}
+
+func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids []string) ([]*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: aws.StringSlice(ids),
+	}
+
+	return findDataRepositoryAssociations(ctx, conn, input)
 }

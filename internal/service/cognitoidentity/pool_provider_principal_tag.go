@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_identity_pool_provider_principal_tag")
 func ResourcePoolProviderPrincipalTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolProviderPrincipalTagCreate,
@@ -38,7 +42,7 @@ func ResourcePoolProviderPrincipalTag() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 55),
-					validation.StringMatch(regexp.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
+					validation.StringMatch(regexache.MustCompile(`^[\w-]+:[0-9a-f-]+$`), "see https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_SetPrincipalTagAttributeMap.html#API_SetPrincipalTagAttributeMap_ResponseSyntax"),
 				),
 			},
 			"identity_provider_name": {
@@ -61,7 +65,7 @@ func ResourcePoolProviderPrincipalTag() *schema.Resource {
 
 func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Print("[DEBUG] Creating Cognito Identity Provider Principal Tags")
 
 	providerName := d.Get("identity_provider_name").(string)
@@ -92,13 +96,13 @@ func resourcePoolProviderPrincipalTagCreate(ctx context.Context, d *schema.Resou
 
 func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	ret, err := conn.GetPrincipalTagAttributeMapWithContext(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
@@ -113,7 +117,7 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ret.IdentityPoolId)
@@ -129,7 +133,7 @@ func resourcePoolProviderPrincipalTagRead(ctx context.Context, d *schema.Resourc
 
 func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Provider Principal Tags")
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
@@ -157,7 +161,7 @@ func resourcePoolProviderPrincipalTagUpdate(ctx context.Context, d *schema.Resou
 
 func resourcePoolProviderPrincipalTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
@@ -184,7 +188,7 @@ func resourcePoolProviderPrincipalTagDelete(ctx context.Context, d *schema.Resou
 }
 
 func DecodePoolProviderPrincipalTagsID(id string) (string, string, error) {
-	r := regexp.MustCompile(`(?P<ProviderID>[\w-]+:[0-9a-f-]+):(?P<ProviderName>[[:graph:]]+)`)
+	r := regexache.MustCompile(`(?P<ProviderID>[\w-]+:[0-9a-f-]+):(?P<ProviderName>[[:graph:]]+)`)
 	idParts := r.FindStringSubmatch(id)
 	if len(idParts) <= 2 {
 		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)

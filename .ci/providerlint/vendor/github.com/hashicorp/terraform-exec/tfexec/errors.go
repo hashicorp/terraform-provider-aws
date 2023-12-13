@@ -1,6 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 // this file contains non-parsed exported errors
 
@@ -36,4 +42,26 @@ type ErrManualEnvVar struct {
 
 func (err *ErrManualEnvVar) Error() string {
 	return fmt.Sprintf("manual setting of env var %q detected", err.Name)
+}
+
+// cmdErr is a custom error type to be returned when a cmd exits with a context
+// error such as context.Canceled or context.DeadlineExceeded.
+// The type is specifically designed to respond true to errors.Is for these two
+// errors.
+// See https://github.com/golang/go/issues/21880 for why this is necessary.
+type cmdErr struct {
+	err    error
+	ctxErr error
+}
+
+func (e cmdErr) Is(target error) bool {
+	switch target {
+	case context.DeadlineExceeded, context.Canceled:
+		return e.ctxErr == context.DeadlineExceeded || e.ctxErr == context.Canceled
+	}
+	return false
+}
+
+func (e cmdErr) Error() string {
+	return e.err.Error()
 }

@@ -3,17 +3,7 @@
 // This function will optimise the handling over {{ .ListTagsFunc }}, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-{{- if not ( .ContextOnly ) }}
-func {{ .GetTagFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string)
-{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) -}}
-(*tftags.TagData, error) {
-{{- else -}}
-(*string, error) {
-{{- end }}
-	return {{ .GetTagFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key)
-}
-{{- end }}
-func {{ if .ContextOnly }}{{ .GetTagFunc }}{{ else }}{{ .GetTagFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string)
+func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key string)
 {{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) -}}
 (*tftags.TagData, error) {
 {{- else -}}
@@ -39,9 +29,9 @@ func {{ if .ContextOnly }}{{ .GetTagFunc }}{{ else }}{{ .GetTagFunc }}WithContex
 		return nil, err
 	}
 
-	listTags := KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	listTags := {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
-	listTags, err := {{ .ListTagsFunc }}{{ if not ( .ContextOnly ) }}WithContext{{ end }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	listTags, err := {{ .ListTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return nil, err

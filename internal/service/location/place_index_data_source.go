@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -14,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_location_place_index")
 func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlaceIndexRead,
@@ -62,7 +66,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 
 func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribePlaceIndexInput{}
 
@@ -93,7 +97,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("description", output.Description)
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
-	d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
 	return diags

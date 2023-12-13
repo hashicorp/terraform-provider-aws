@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package configservice
 
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_config_aggregate_authorization", &resource.Sweeper{
 		Name: "aws_config_aggregate_authorization",
 		F:    sweepAggregateAuthorizations,
@@ -43,15 +44,15 @@ func init() {
 
 func sweepAggregateAuthorizations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(ctx, conn)
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
 			return nil
 		}
@@ -81,15 +82,15 @@ func sweepAggregateAuthorizations(region string) error {
 
 func sweepConfigurationAggregators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	resp, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
 			return nil
 		}
@@ -120,16 +121,16 @@ func sweepConfigurationAggregators(region string) error {
 
 func sweepConfigurationRecorder(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecordersWithContext(ctx, req)
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
 			return nil
 		}
@@ -164,28 +165,28 @@ func sweepConfigurationRecorder(region string) error {
 
 func sweepDeliveryChannels(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeDeliveryChannelsInput{}
 	var resp *configservice.DescribeDeliveryChannelsOutput
-	err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
 		resp, err = conn.DescribeDeliveryChannelsWithContext(ctx, req)
 		if err != nil {
 			// ThrottlingException: Rate exceeded
 			if tfawserr.ErrMessageContains(err, "ThrottlingException", "Rate exceeded") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Delivery Channels sweep for %s: %s", region, err)
 			return nil
 		}

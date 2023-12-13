@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -12,9 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,8 +27,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_network_interface", name="Network Interface")
+// @Tags(identifierAttribute="id")
 func ResourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
@@ -195,8 +202,8 @@ func ResourceNetworkInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -327,15 +334,13 @@ func ResourceNetworkInterface() *schema.Resource {
 
 func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
 
 	input := &ec2.CreateNetworkInterfaceInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		SubnetId:    aws.String(d.Get("subnet_id").(string)),
 	}
 
@@ -411,8 +416,8 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
-	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
+	if !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
+		input.TagSpecifications = getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInterface)
 	}
 
 	output, err := conn.CreateNetworkInterfaceWithContext(ctx, input)
@@ -448,9 +453,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
+	if ipv4PrefixesSpecified || ipv6PrefixesSpecified {
+		if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -483,11 +488,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -554,23 +557,14 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	tags := KeyValueTags(eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }
 
 func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
@@ -740,8 +734,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv4_prefix_count")
 		ipv4Prefixes := d.Get("ipv4_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv4Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv4Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv4PrefixCount:    aws.Int64(int64(diff)),
@@ -974,8 +968,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv6_prefix_count")
 		ipv6Prefixes := d.Get("ipv6_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv6Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv6Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignIpv6AddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv6PrefixCount:    aws.Int64(int64(diff)),
@@ -1040,20 +1034,12 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
 func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
@@ -1487,75 +1473,7 @@ func flattenIPv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) 
 func deleteLingeringENIs(ctx context.Context, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
 	var g multierror.Group
 
-	err := multierror.Append(nil, deleteLingeringLambdaENIs(ctx, &g, conn, filterName, resourceId, timeout))
-
-	err = multierror.Append(err, deleteLingeringComprehendENIs(ctx, &g, conn, filterName, resourceId, timeout))
-
-	return multierror.Append(err, g.Wait()).ErrorOrNil()
-}
-
-func deleteLingeringLambdaENIs(ctx context.Context, g *multierror.Group, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
-	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
-	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
-		timeout = minimumTimeout
-	}
-
-	networkInterfaces, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			filterName:    resourceId,
-			"description": "AWS Lambda VPC ENI*",
-		}),
-	})
-
-	if err != nil {
-		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
-	}
-
-	for _, v := range networkInterfaces {
-		v := v
-		g.Go(func() error {
-			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
-
-			if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
-				networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
-
-				if tfresource.NotFound(err) {
-					return nil
-				}
-
-				if err != nil {
-					return fmt.Errorf("waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
-				}
-
-				v = networkInterface
-			}
-
-			if v.Attachment != nil {
-				err = DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
-
-				if err != nil {
-					return fmt.Errorf("detaching Lambda ENI (%s): %w", networkInterfaceID, err)
-				}
-			}
-
-			err = DeleteNetworkInterface(ctx, conn, networkInterfaceID)
-
-			if err != nil {
-				return fmt.Errorf("deleting Lambda ENI (%s): %w", networkInterfaceID, err)
-			}
-
-			return nil
-		})
-	}
-
-	return nil
-}
-
-func deleteLingeringComprehendENIs(ctx context.Context, g *multierror.Group, conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
-	// Deletion appears to take approximately 5 minutes
-	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
-		timeout = minimumTimeout
-	}
+	tflog.Trace(ctx, "Checking for lingering ENIs")
 
 	enis, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -1566,37 +1484,120 @@ func deleteLingeringComprehendENIs(ctx context.Context, g *multierror.Group, con
 		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
 	}
 
-	networkInterfaces := make([]*ec2.NetworkInterface, 0, len(enis))
-	for _, v := range enis {
-		if strings.HasSuffix(aws.StringValue(v.RequesterId), ":Comprehend") {
-			networkInterfaces = append(networkInterfaces, v)
+	for _, eni := range enis {
+		eni := eni
+
+		if found := deleteLingeringLambdaENI(ctx, &g, conn, eni, timeout); found {
+			continue
 		}
+
+		if found := deleteLingeringComprehendENI(ctx, &g, conn, eni, timeout); found {
+			continue
+		}
+
+		deleteLingeringDMSENI(ctx, &g, conn, eni, timeout)
 	}
 
-	for _, v := range networkInterfaces {
-		v := v
-		g.Go(func() error {
-			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+	return g.Wait().ErrorOrNil()
+}
 
-			if v.Attachment != nil {
-				err = DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
+func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec2.EC2, eni *ec2.NetworkInterface, timeout time.Duration) bool {
+	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
+	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
 
-				if err != nil {
-					return fmt.Errorf("detaching Comprehend ENI (%s): %w", networkInterfaceID, err)
-				}
+	if !strings.HasPrefix(aws.StringValue(eni.Description), "AWS Lambda VPC ENI") {
+		return false
+	}
+
+	g.Go(func() error {
+		networkInterfaceID := aws.StringValue(eni.NetworkInterfaceId)
+
+		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
+			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
+			if tfresource.NotFound(err) {
+				return nil
 			}
-
-			err := DeleteNetworkInterface(ctx, conn, networkInterfaceID)
-
 			if err != nil {
-				return fmt.Errorf("deleting Comprehend ENI (%s): %w", networkInterfaceID, err)
+				return fmt.Errorf("waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
 			}
 
-			return nil
-		})
+			eni = networkInterface
+		}
+
+		if eni.Attachment != nil {
+			if err := DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(eni.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching Lambda ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting Lambda ENI (%s): %w", networkInterfaceID, err)
+		}
+
+		return nil
+	})
+
+	return true
+}
+
+func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn *ec2.EC2, eni *ec2.NetworkInterface, timeout time.Duration) bool {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
 	}
 
-	return nil
+	if !strings.HasSuffix(aws.StringValue(eni.RequesterId), ":Comprehend") {
+		return false
+	}
+
+	g.Go(func() error {
+		networkInterfaceID := aws.StringValue(eni.NetworkInterfaceId)
+
+		if eni.Attachment != nil {
+			if err := DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(eni.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching Comprehend ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting Comprehend ENI (%s): %w", networkInterfaceID, err)
+		}
+
+		return nil
+	})
+
+	return true
+}
+
+func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.EC2, v *ec2.NetworkInterface, timeout time.Duration) bool {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	if aws.StringValue(v.Description) != "DMSNetworkInterface" {
+		return false
+	}
+
+	g.Go(func() error {
+		networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+
+		if v.Attachment != nil {
+			if err := DetachNetworkInterface(ctx, conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching DMS ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting DMS ENI (%s): %w", networkInterfaceID, err)
+		}
+
+		return nil
+	})
+
+	return true
 }
 
 // Flattens security group identifiers into a []string, where the elements returned are the GroupIDs

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -22,7 +25,7 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
@@ -57,7 +60,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
@@ -81,7 +84,7 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
@@ -114,7 +117,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
@@ -163,7 +166,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *iot.Authoriz
 			return fmt.Errorf("No IoT Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		output, err := tfiot.FindAuthorizerByName(ctx, conn, rs.Primary.ID)
 
@@ -179,7 +182,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *iot.Authoriz
 
 func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_authorizer" {
@@ -203,7 +206,7 @@ func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccAuthorizerBaseConfig(rName string) string {
+func testAccAuthorizerConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -237,7 +240,7 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccAuthorizerConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn
@@ -251,7 +254,7 @@ resource "aws_iot_authorizer" "test" {
 }
 
 func testAccAuthorizerConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn
@@ -269,7 +272,7 @@ resource "aws_iot_authorizer" "test" {
 }
 
 func testAccAuthorizerConfig_signingDisabled(rName string) string {
-	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn

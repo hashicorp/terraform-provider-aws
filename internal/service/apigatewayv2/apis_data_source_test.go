@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
@@ -5,19 +8,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -34,13 +38,14 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -57,6 +62,7 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	dataSource3Name := "data.aws_apigatewayv2_apis.test3"
@@ -64,7 +70,7 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

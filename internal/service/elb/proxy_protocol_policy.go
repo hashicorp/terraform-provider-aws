@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_proxy_protocol_policy")
 func ResourceProxyProtocolPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyProtocolPolicyCreate,
@@ -41,7 +45,7 @@ func ResourceProxyProtocolPolicy() *schema.Resource {
 
 func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	input := &elb.CreateLoadBalancerPolicyInput{
@@ -71,7 +75,7 @@ func resourceProxyProtocolPolicyCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceProxyProtocolPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbname := d.Get("load_balancer").(string)
 
 	// Retrieve the current ELB policies for updating the state
@@ -102,7 +106,7 @@ func resourceProxyProtocolPolicyRead(ctx context.Context, d *schema.ResourceData
 
 func resourceProxyProtocolPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
@@ -151,7 +155,7 @@ func resourceProxyProtocolPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceProxyProtocolPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state

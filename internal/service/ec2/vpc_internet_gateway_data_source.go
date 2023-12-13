@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_internet_gateway")
 func DataSourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInternetGatewayRead,
@@ -62,7 +66,7 @@ func DataSourceInternetGateway() *schema.Resource {
 
 func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
@@ -78,7 +82,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(tags.(map[string]interface{}))),
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
@@ -109,7 +113,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
 	d.Set("owner_id", ownerID)
 
-	if err := d.Set("tags", KeyValueTags(igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -10,11 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_dynamodb_table_item")
 func DataSourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableItemRead,
@@ -51,13 +56,15 @@ const (
 )
 
 func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get("table_name").(string)
 	key, err := ExpandTableItemAttributes(d.Get("key").(string))
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	id := buildTableItemDataSourceID(tableName, key)
@@ -78,11 +85,11 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := conn.GetItemWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
 	if out.Item == nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
 	d.SetId(id)
@@ -94,12 +101,12 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	itemAttrs, err := flattenTableItemAttributes(out.Item)
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
 	d.Set("item", itemAttrs)
 
-	return nil
+	return diags
 }
 
 func buildTableItemDataSourceID(tableName string, attrs map[string]*dynamodb.AttributeValue) string {

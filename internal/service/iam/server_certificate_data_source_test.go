@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
@@ -46,7 +49,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
@@ -61,7 +64,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "path"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
 					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "certificate_chain", ""),
-					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 		},
@@ -71,14 +74,14 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServerCertificateDataSourceConfig_certMatchNamePrefix,
-				ExpectError: regexp.MustCompile(`Search for AWS IAM server certificate returned no results`),
+				ExpectError: regexache.MustCompile(`Search for AWS IAM server certificate returned no results`),
 			},
 		},
 	})
@@ -94,7 +97,7 @@ func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_storagegateway_upload_buffer")
 func ResourceUploadBuffer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadBufferCreate,
@@ -52,7 +56,7 @@ func ResourceUploadBuffer() *schema.Resource {
 
 func resourceUploadBufferCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.AddUploadBufferInput{}
 
@@ -102,7 +106,7 @@ func resourceUploadBufferCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceUploadBufferRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	gatewayARN, diskID, err := DecodeUploadBufferID(d.Id())
 	if err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_lambda_code_signing_config")
 func DataSourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCodeSigningConfigRead,
@@ -68,7 +72,7 @@ func DataSourceCodeSigningConfig() *schema.Resource {
 
 func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	arn := d.Get("arn").(string)
 

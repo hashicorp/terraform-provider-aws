@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_transfer_server")
 func DataSourceServer() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -18,7 +22,6 @@ func DataSourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"certificate": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -27,32 +30,26 @@ func DataSourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"identity_provider_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"invocation_role": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"logging_role": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"protocols": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -60,17 +57,21 @@ func DataSourceServer() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-
 			"security_policy_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"server_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
+			"structured_log_destinations": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,7 +84,7 @@ func DataSourceServer() *schema.Resource {
 
 func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID := d.Get("server_id").(string)
 
@@ -108,6 +109,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
+	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {

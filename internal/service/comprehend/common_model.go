@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -56,7 +59,7 @@ func findNetworkInterfaces(ctx context.Context, conn *ec2.EC2, securityGroups []
 }
 
 func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.EC2, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*ec2.NetworkInterface, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{ec2.NetworkInterfaceStatusInUse},
 		Refresh:    statusNetworkInterfaces(ctx, conn, initialENIIds, securityGroups, subnets),
@@ -74,7 +77,7 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.EC2, initialENII
 	return nil, err
 }
 
-func statusNetworkInterfaces(ctx context.Context, conn *ec2.EC2, initialENIs map[string]bool, securityGroups []string, subnets []string) resource.StateRefreshFunc {
+func statusNetworkInterfaces(ctx context.Context, conn *ec2.EC2, initialENIs map[string]bool, securityGroups []string, subnets []string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findNetworkInterfaces(ctx, conn, securityGroups, subnets)
 		if err != nil {

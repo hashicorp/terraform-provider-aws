@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -13,8 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_networkfirewall_logging_configuration")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
@@ -72,7 +77,9 @@ func ResourceLoggingConfiguration() *schema.Resource {
 }
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	firewallArn := d.Get("firewall_arn").(string)
 
 	log.Printf("[DEBUG] Adding Logging Configuration to NetworkFirewall Firewall: %s", firewallArn)
@@ -81,16 +88,18 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	// cumulatively add the configured "log_destination_config" in "logging_configuration"
 	err := putLoggingConfiguration(ctx, conn, firewallArn, loggingConfigs)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(firewallArn)
 
-	return resourceLoggingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Reading Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
@@ -98,28 +107,30 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Logging Configuration for NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Logging Configuration for NetworkFirewall Firewall: %s: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Logging Configuration for NetworkFirewall Firewall: %s: %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading Logging Configuration for NetworkFirewall Firewall: %s: empty output", d.Id()))
+		return sdkdiag.AppendErrorf(diags, "reading Logging Configuration for NetworkFirewall Firewall: %s: empty output", d.Id())
 	}
 
 	d.Set("firewall_arn", output.FirewallArn)
 
 	if err := d.Set("logging_configuration", flattenLoggingConfiguration(output.LoggingConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting logging_configuration: %w", err))
+		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Updating Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
@@ -130,7 +141,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 		if loggingConfig != nil {
 			err := removeLoggingConfiguration(ctx, conn, d.Id(), loggingConfig)
 			if err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -140,34 +151,36 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 		// cumulatively add the configured "log_destination_config" in "logging_configuration"
 		err := putLoggingConfiguration(ctx, conn, d.Id(), loggingConfigs)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceLoggingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 	output, err := FindLoggingConfiguration(ctx, conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Logging Configuration for NetworkFirewall Firewall: %s: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Logging Configuration for NetworkFirewall Firewall: %s: %s", d.Id(), err)
 	}
 
 	if output != nil && output.LoggingConfiguration != nil {
 		err := removeLoggingConfiguration(ctx, conn, aws.StringValue(output.FirewallArn), output.LoggingConfiguration)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func putLoggingConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, l []*networkfirewall.LoggingConfiguration) error {
@@ -179,7 +192,7 @@ func putLoggingConfiguration(ctx context.Context, conn *networkfirewall.NetworkF
 		}
 		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
 		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error adding Logging Configuration to NetworkFirewall Firewall (%s): %w", arn, err))
+			errors = multierror.Append(errors, fmt.Errorf("adding Logging Configuration to NetworkFirewall Firewall (%s): %w", arn, err))
 		}
 	}
 	return errors.ErrorOrNil()
@@ -203,7 +216,7 @@ func removeLoggingConfiguration(ctx context.Context, conn *networkfirewall.Netwo
 		}
 		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
 		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error removing Logging Configuration LogDestinationConfig (%v) from NetworkFirewall Firewall: %s: %w", config, arn, err))
+			errors = multierror.Append(errors, fmt.Errorf("removing Logging Configuration LogDestinationConfig (%v) from NetworkFirewall Firewall: %s: %w", config, arn, err))
 		}
 	}
 

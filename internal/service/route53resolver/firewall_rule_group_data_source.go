@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_route53_resolver_firewall_rule_group")
 func DataSourceFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallRuleGroupRead,
@@ -63,7 +67,7 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 }
 
 func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	id := d.Get("firewall_rule_group_id").(string)
 	ruleGroup, err := FindFirewallRuleGroupByID(ctx, conn, id)

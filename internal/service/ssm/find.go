@@ -1,13 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +20,7 @@ func FindAssociationById(ctx context.Context, conn *ssm.SSM, id string) (*ssm.As
 
 	output, err := conn.DescribeAssociationWithContext(ctx, input)
 	if tfawserr.ErrCodeContains(err, ssm.ErrCodeAssociationDoesNotExist) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -33,30 +35,6 @@ func FindAssociationById(ctx context.Context, conn *ssm.SSM, id string) (*ssm.As
 	}
 
 	return output.AssociationDescription, nil
-}
-
-// FindDocumentByName returns the Document corresponding to the specified name.
-func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
-	input := &ssm.DescribeDocumentInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.DescribeDocumentWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Document == nil {
-		return nil, fmt.Errorf("error describing SSM Document (%s): empty result", name)
-	}
-
-	doc := output.Document
-
-	if aws.StringValue(doc.Status) == ssm.DocumentStatusFailed {
-		return nil, fmt.Errorf("Document is in a failed state: %s", aws.StringValue(doc.StatusInformation))
-	}
-
-	return output.Document, nil
 }
 
 // FindPatchGroup returns matching SSM Patch Group by Patch Group and BaselineId.
@@ -96,7 +74,7 @@ func FindServiceSettingByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm
 	output, err := conn.GetServiceSettingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeContains(err, ssm.ErrCodeServiceSettingNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

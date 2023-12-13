@@ -1,18 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -22,15 +22,12 @@ import (
 func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
-	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
-	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_activity_stream.test"
-	rdsClusterResourceName := "aws_rds_cluster.test"
-	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
@@ -38,15 +35,11 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
+				Config: testAccClusterActivityStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
-					testAccCheckClusterActivityStreamAttributes(&dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", rdsClusterResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "key_id"),
+					resource.TestCheckResourceAttr(resourceName, "engine_native_audit_fields_included", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
-					resource.TestCheckResourceAttr(resourceName, "mode", rds.ActivityStreamModeAsync),
 				),
 			},
 			{
@@ -62,13 +55,12 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
-	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
-	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
@@ -76,7 +68,7 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
+				Config: testAccClusterActivityStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterActivityStream(), resourceName),
@@ -87,55 +79,25 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterActivityStreamExists(ctx context.Context, resourceName string, dbCluster *rds.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterActivityStreamExistsProvider(ctx, resourceName, dbCluster, acctest.Provider)
-}
-
-func testAccCheckClusterActivityStreamExistsProvider(ctx context.Context, resourceName string, dbCluster *rds.DBCluster, provider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterActivityStreamExists(ctx context.Context, n string, v *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("DBCluster ID is not set")
+			return fmt.Errorf("RDS Cluster Activity Stream ID is not set")
 		}
 
-		conn := provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		response, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
-
+		output, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		*dbCluster = *response
-		return nil
-	}
-}
-
-func testAccCheckClusterActivityStreamAttributes(v *rds.DBCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(v.DBClusterArn) == "" {
-			return fmt.Errorf("empty RDS Cluster arn")
-		}
-
-		if aws.StringValue(v.ActivityStreamKmsKeyId) == "" {
-			return fmt.Errorf("empty RDS Cluster activity stream kms key id")
-		}
-
-		if aws.StringValue(v.ActivityStreamKinesisStreamName) == "" {
-			return fmt.Errorf("empty RDS Cluster activity stream kinesis stream name")
-		}
-
-		if aws.StringValue(v.ActivityStreamStatus) != rds.ActivityStreamStatusStarted {
-			return fmt.Errorf("incorrect activity stream status: expected: %s, got: %s", rds.ActivityStreamStatusStarted, aws.StringValue(v.ActivityStreamStatus))
-		}
-
-		if aws.StringValue(v.ActivityStreamMode) != rds.ActivityStreamModeSync && aws.StringValue(v.ActivityStreamMode) != rds.ActivityStreamModeAsync {
-			return fmt.Errorf("incorrect activity stream mode: expected: sync or async, got: %s", aws.StringValue(v.ActivityStreamMode))
-		}
+		*v = *output
 
 		return nil
 	}
@@ -143,49 +105,42 @@ func testAccCheckClusterActivityStreamAttributes(v *rds.DBCluster) resource.Test
 
 func testAccCheckClusterActivityStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckClusterActivityStreamDestroyWithProvider(ctx)(s, acctest.Provider)
-	}
-}
-
-func testAccCheckClusterActivityStreamDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
-	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_activity_stream" {
 				continue
 			}
 
-			var err error
+			_, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 
-			_, err = tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				// Return nil if the cluster is already destroyed
-				if tfresource.NotFound(err) {
-					return nil
-				}
 				return err
 			}
 
-			return err
+			return fmt.Errorf("RDS Cluster Activity Stream %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccClusterActivityStreamConfigBase(clusterName, instanceName string) string {
+func testAccClusterActivityStreamConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Testing for AWS RDS Cluster Activity Stream"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = "%[1]s"
+  cluster_identifier  = %[1]q
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
   skip_final_snapshot = true
   deletion_protection = false
   engine              = "aurora-postgresql"
@@ -193,16 +148,16 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "%[2]s"
+  identifier         = %[1]q
   cluster_identifier = aws_rds_cluster.test.id
   engine             = aws_rds_cluster.test.engine
   instance_class     = "db.r6g.large"
 }
-`, clusterName, instanceName))
+`, rName))
 }
 
-func testAccClusterActivityStreamConfig_basic(clusterName, instanceName string) string {
-	return acctest.ConfigCompose(testAccClusterActivityStreamConfigBase(clusterName, instanceName), `
+func testAccClusterActivityStreamConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterActivityStreamConfig_base(rName), `
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn = aws_rds_cluster.test.arn
   kms_key_id   = aws_kms_key.test.key_id

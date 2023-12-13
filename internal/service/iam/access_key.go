@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -19,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_access_key")
 func ResourceAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessKeyCreate,
@@ -31,7 +35,7 @@ func ResourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).IAMConn()
+				conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
 					AccessKeyId: aws.String(d.Id()),
@@ -40,11 +44,11 @@ func ResourceAccessKey() *schema.Resource {
 				output, err := conn.GetAccessKeyLastUsedWithContext(ctx, input)
 
 				if err != nil {
-					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
+					return nil, fmt.Errorf("fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
 				}
 
 				if output == nil || output.UserName == nil {
-					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: empty response", d.Id())
+					return nil, fmt.Errorf("fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: empty response", d.Id())
 				}
 
 				d.Set("user", output.UserName)
@@ -102,7 +106,7 @@ func ResourceAccessKey() *schema.Resource {
 
 func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
 
@@ -180,7 +184,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
 
@@ -223,7 +227,7 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetad
 
 func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("status") {
 		if err := resourceAccessKeyStatusUpdate(ctx, conn, d); err != nil {
@@ -236,7 +240,7 @@ func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	request := &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),

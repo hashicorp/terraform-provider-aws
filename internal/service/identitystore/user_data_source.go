@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore
 
 import (
 	"context"
 	"errors"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
@@ -13,10 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_identitystore_user")
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
@@ -63,10 +68,9 @@ func DataSourceUser() *schema.Resource {
 				},
 			},
 			"alternate_identifier": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"filter", "user_id"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_id": {
@@ -107,6 +111,7 @@ func DataSourceUser() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"filter", "user_id"},
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -173,7 +178,7 @@ func DataSourceUser() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]*$`), "must match [a-zA-Z0-9-]"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]*$`), "must match [0-9A-Za-z-]"),
 				),
 			},
 			"locale": {
@@ -253,15 +258,15 @@ func DataSourceUser() *schema.Resource {
 				Computed: true,
 			},
 			"user_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				AtLeastOneOf:  []string{"alternate_identifier", "filter", "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 47),
-					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
+					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
+				AtLeastOneOf:  []string{"alternate_identifier", "filter", "user_id"},
+				ConflictsWith: []string{"alternate_identifier"},
 			},
 			"user_name": {
 				Type:     schema.TypeString,
@@ -280,7 +285,9 @@ const (
 )
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
@@ -297,7 +304,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 			page, err := paginator.NextPage(ctx)
 
 			if err != nil {
-				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 			}
 
 			for _, user := range page.Users {
@@ -310,11 +317,11 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if len(results) == 0 {
-			return diag.Errorf("no Identity Store User found matching criteria\n%v; try different search", input.Filters)
+			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria\n%v; try different search", input.Filters)
 		}
 
 		if len(results) > 1 {
-			return diag.Errorf("multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
+			return sdkdiag.AppendErrorf(diags, "multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
 		}
 
 		user := results[0]
@@ -333,26 +340,26 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("user_type", user.UserType)
 
 		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
 		if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
 		if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
 		if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
 		if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
-		return nil
+		return diags
 	}
 
 	var userID string
@@ -368,9 +375,9 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		if err != nil {
 			var e *types.ResourceNotFoundException
 			if errors.As(err, &e) {
-				return diag.Errorf("no Identity Store User found matching criteria; try different search")
+				return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
 			} else {
-				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 			}
 		}
 
@@ -380,7 +387,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
 		if userID != "" && userID != v.(string) {
 			// We were given a filter, and it found a user different to this one.
-			return diag.Errorf("no Identity Store User found matching criteria; try different search")
+			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
 		}
 
 		userID = v.(string)
@@ -390,10 +397,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if err != nil {
 		if tfresource.NotFound(err) {
-			return diag.Errorf("no Identity Store User found matching criteria; try different search")
+			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
 		}
 
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 	}
 
 	d.SetId(aws.ToString(user.UserId))
@@ -411,24 +418,24 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("user_type", user.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

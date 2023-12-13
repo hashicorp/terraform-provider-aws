@@ -138,12 +138,40 @@ resource "aws_budgets_budget" "ri_utilization" {
 }
 ```
 
+Create a Cost Filter using Resource Tags
+
+```terraform
+resource "aws_budgets_budget" "cost" {
+  # ...
+  cost_filter {
+    name = "TagKeyValue"
+    values = [
+      "TagKey$TagValue",
+    ]
+  }
+}
+```
+
+Create a cost_filter using resource tags, obtaining the tag value from a terraform variable
+
+```terraform
+resource "aws_budgets_budget" "cost" {
+  # ...
+  cost_filter {
+    name = "TagKeyValue"
+    values = [
+      "TagKey${"$"}${var.TagValue}"
+    ]
+  }
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.
@@ -151,7 +179,6 @@ The following arguments are supported:
 * `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
 * `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
-* `cost_filters` - (Optional, **Deprecated**) Map of [CostFilters](#cost-filters) key/value pairs to apply to the budget.
 * `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
 * `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
@@ -161,9 +188,9 @@ The following arguments are supported:
 * `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `planned_limit` - (Optional) Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - id of resource.
 * `arn` - The ARN of the budget.
@@ -201,30 +228,24 @@ Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-mana
 
 ### Cost Filter
 
-Valid name for `cost_filter` parameter vary depending on the `budget_type` value.
+Based on your choice of budget type, you can choose one or more of the available budget filters.
 
-* `cost`
-    * `AZ`
-    * `LinkedAccount`
-    * `Operation`
-    * `PurchaseType`
-    * `Service`
-    * `TagKeyValue`
-* `usage`
-    * `AZ`
-    * `LinkedAccount`
-    * `Operation`
-    * `PurchaseType`
-    * `UsageType:<service name>`
-    * `TagKeyValue`
+* `PurchaseType`
+* `UsageTypeGroup`
+* `Service`
+* `Operation`
+* `UsageType`
+* `BillingEntity`
+* `CostCategory`
+* `LinkedAccount`
+* `TagKeyValue`
+* `LegalEntityName`
+* `InvoicingEntity`
+* `AZ`
+* `Region`
+* `InstanceType`
 
-Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
-
-### Cost Filters
-
-**Note**: Attribute `cost_filters` is deprecated. Use `cost_filter` instead.
-
-Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#cost-filter).
+Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create-filters.html) for further detail.
 
 ### Budget Notification
 
@@ -247,6 +268,17 @@ Valid keys for `planned_limit` parameter.
 
 ## Import
 
-Budgets can be imported using `AccountID:BudgetName`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `AccountID:BudgetName`. For example:
 
-`$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`
+```terraform
+import {
+  to = aws_budgets_budget.myBudget
+  id = "123456789012:myBudget"
+}
+```
+
+Using `terraform import`, import budgets using `AccountID:BudgetName`. For example:
+
+```console
+% terraform import aws_budgets_budget.myBudget 123456789012:myBudget
+```

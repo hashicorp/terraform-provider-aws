@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_receipt_rule_set")
 func ResourceReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReceiptRuleSetCreate,
@@ -42,7 +46,7 @@ func ResourceReceiptRuleSet() *schema.Resource {
 
 func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -62,7 +66,7 @@ func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	input := &ses.DescribeReceiptRuleSetInput{
 		RuleSetName: aws.String(d.Id()),
@@ -102,7 +106,7 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	log.Printf("[DEBUG] SES Delete Receipt Rule Set: %s", d.Id())
 	input := &ses.DeleteReceiptRuleSetInput{

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route_table_association: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_main_route_table_association: Add configurable timeouts
+```

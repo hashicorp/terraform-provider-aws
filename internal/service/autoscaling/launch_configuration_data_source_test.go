@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -5,18 +8,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_launch_configuration.test"
 	datasourceName := "data.aws_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -40,8 +44,6 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "spot_price", resourceName, "spot_price"),
 					// Resource and data source user_data have differing representations in state.
 					resource.TestCheckResourceAttrSet(datasourceName, "user_data"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_classic_link_id", resourceName, "vpc_classic_link_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_classic_link_security_groups.#", resourceName, "vpc_classic_link_security_groups.#"),
 				),
 			},
 		},
@@ -49,11 +51,12 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 }
 
 func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -68,12 +71,13 @@ func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T
 }
 
 func TestAccAutoScalingLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_launch_configuration.test"
 	datasourceName := "data.aws_launch_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -94,7 +98,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),

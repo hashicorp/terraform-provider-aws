@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ssm_maintenance_windows")
 func DataSourceMaintenanceWindows() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataMaintenanceWindowsRead,
@@ -45,7 +49,7 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 
 func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline
 
 import (
@@ -11,15 +14,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codepipeline_custom_action_type", name="Custom Action Type")
+// @Tags(identifierAttribute="arn")
 func ResourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
@@ -160,8 +167,8 @@ func ResourceCustomActionType() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -175,9 +182,9 @@ func ResourceCustomActionType() *schema.Resource {
 }
 
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category := d.Get("category").(string)
 	provider := d.Get("provider_name").(string)
@@ -186,6 +193,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	input := &codepipeline.CreateCustomActionTypeInput{
 		Category: aws.String(category),
 		Provider: aws.String(provider),
+		Tags:     getTagsIn(ctx),
 		Version:  aws.String(version),
 	}
 
@@ -205,30 +213,26 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 		input.Settings = expandActionTypeSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := conn.CreateCustomActionTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CodePipeline Custom Action Type (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodePipeline Custom Action Type (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceCustomActionTypeRead(ctx, d, meta)
+	return append(diags, resourceCustomActionTypeRead(ctx, d, meta)...)
 }
 
 func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	actionType, err := FindCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
@@ -236,11 +240,11 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Custom Action Type %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CodePipeline Custom Action Type (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodePipeline Custom Action Type (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -253,18 +257,18 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("arn", arn)
 	d.Set("category", actionType.Id.Category)
 	if err := d.Set("configuration_property", flattenActionConfigurationProperties(d, actionType.ActionConfigurationProperties)); err != nil {
-		return diag.Errorf("setting configuration_property: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration_property: %s", err)
 	}
 	if actionType.InputArtifactDetails != nil {
 		if err := d.Set("input_artifact_details", []interface{}{flattenArtifactDetails(actionType.InputArtifactDetails)}); err != nil {
-			return diag.Errorf("setting input_artifact_details: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting input_artifact_details: %s", err)
 		}
 	} else {
 		d.Set("input_artifact_details", nil)
 	}
 	if actionType.OutputArtifactDetails != nil {
 		if err := d.Set("output_artifact_details", []interface{}{flattenArtifactDetails(actionType.OutputArtifactDetails)}); err != nil {
-			return diag.Errorf("setting output_artifact_details: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting output_artifact_details: %s", err)
 		}
 	} else {
 		d.Set("output_artifact_details", nil)
@@ -275,55 +279,30 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 		// Service can return empty ({}) Settings.
 		(actionType.Settings.EntityUrlTemplate != nil || actionType.Settings.ExecutionUrlTemplate != nil || actionType.Settings.RevisionUrlTemplate != nil || actionType.Settings.ThirdPartyConfigurationUrl != nil) {
 		if err := d.Set("settings", []interface{}{flattenActionTypeSettings(actionType.Settings)}); err != nil {
-			return diag.Errorf("setting settings: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting settings: %s", err)
 		}
 	} else {
 		d.Set("settings", nil)
 	}
 	d.Set("version", actionType.Id.Version)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for CodePipeline Custom Action Type (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating CodePipeline Custom Action Type (%s) tags: %s", arn, err)
-		}
-	}
-
+	// Tags only.
 	return resourceCustomActionTypeRead(ctx, d, meta)
 }
 
 func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting CodePipeline Custom Action Type: %s", d.Id())
@@ -334,14 +313,14 @@ func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodeActionTypeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CodePipeline Custom Action Type (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodePipeline Custom Action Type (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const customActionTypeResourceIDSeparator = "/"
@@ -394,7 +373,7 @@ func FindCustomActionTypeByThreePartKey(ctx context.Context, conn *codepipeline.
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

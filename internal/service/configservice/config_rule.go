@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -5,24 +8,26 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_config_rule", name="Config Rule")
+// @Tags(identifierAttribute="arn")
 func ResourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRulePutConfig,
@@ -35,15 +40,6 @@ func ResourceConfigRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -52,6 +48,26 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"evaluation_mode": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(configservice.EvaluationMode_Values(), false),
+						},
+					},
+				},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"input_parameters": {
 				Type:         schema.TypeString,
@@ -62,6 +78,10 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
+			},
+			"rule_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"scope": {
 				Type:     schema.TypeList,
@@ -119,7 +139,7 @@ func ResourceConfigRule() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 64),
-											validation.StringMatch(regexp.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
+											validation.StringMatch(regexache.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
 										),
 									},
 									"policy_text": {
@@ -175,19 +195,21 @@ func ResourceConfigRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
+const (
+	ResNameConfigRule = "Config Rule"
+)
+
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 	ruleInput := configservice.ConfigRule{
@@ -199,27 +221,33 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("description"); ok {
 		ruleInput.Description = aws.String(v.(string))
 	}
+
+	if v, ok := d.Get("evaluation_mode").(*schema.Set); ok && v.Len() > 0 {
+		ruleInput.EvaluationModes = expandRulesEvaluationModes(v.List())
+	}
+
 	if v, ok := d.GetOk("input_parameters"); ok {
 		ruleInput.InputParameters = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
 		ruleInput.MaximumExecutionFrequency = aws.String(v.(string))
 	}
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       getTagsIn(ctx),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutConfigRuleWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeInsufficientPermissionsException) {
 				// IAM is eventually consistent
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("Failed to create AWSConfig rule: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("Failed to create AWSConfig rule: %w", err))
 		}
 
 		return nil
@@ -228,30 +256,17 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating AWSConfig rule: %s", err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)
 	}
 
 	d.SetId(name)
-
-	log.Printf("[DEBUG] AWSConfig config rule %q created", name)
-
-	if !d.IsNewResource() && d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Config Config Rule (%s) tags: %s", arn, err)
-		}
-	}
 
 	return append(diags, resourceConfigRuleRead(ctx, d, meta)...)
 }
 
 func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	rule, err := FindConfigRule(ctx, conn, d.Id())
 
@@ -259,6 +274,9 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] ConfigService Config Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+	if err != nil {
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)
 	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
@@ -269,35 +287,20 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("input_parameters", rule.InputParameters)
 	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
 
+	d.Set("evaluation_mode", flattenRuleEvaluationMode(rule.EvaluationModes))
+
 	if rule.Scope != nil {
 		d.Set("scope", flattenRuleScope(rule.Scope))
 	}
 
 	d.Set("source", flattenRuleSource(rule.Source))
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Config Config Rule (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -305,13 +308,13 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	input := &configservice.DeleteConfigRuleInput{
 		ConfigRuleName: aws.String(name),
 	}
-	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteConfigRuleWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -319,11 +322,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.DeleteConfigRuleWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting Config Rule failed: %s", err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Config Service Rule (%s) to deleted: %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)
 	}
 
 	return diags

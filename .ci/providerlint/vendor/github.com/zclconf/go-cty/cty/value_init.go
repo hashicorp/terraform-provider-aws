@@ -5,8 +5,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"golang.org/x/text/unicode/norm"
-
+	"github.com/zclconf/go-cty/cty/ctystrings"
 	"github.com/zclconf/go-cty/cty/set"
 )
 
@@ -107,7 +106,7 @@ func StringVal(v string) Value {
 // A return value from this function can be meaningfully compared byte-for-byte
 // with a Value.AsString result.
 func NormalizeString(s string) string {
-	return norm.NFC.String(s)
+	return ctystrings.Normalize(s)
 }
 
 // ObjectVal returns a Value of an object type whose structure is defined

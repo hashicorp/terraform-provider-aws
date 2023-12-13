@@ -1,23 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceRegions)
-}
-
-// newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
+// @FrameworkDataSource(name=Regions)
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
 	d.SetMigratedFromPluginSDK(true)
@@ -68,14 +67,14 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	conn := d.Meta().EC2Conn()
+	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeRegionsInput{
 		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),
-		Filters:    tfec2.BuildCustomFilters(ctx, data.Filters),
+		Filters:    tfec2.BuildCustomFiltersV2(ctx, data.Filters),
 	}
 
-	output, err := conn.DescribeRegionsWithContext(ctx, input)
+	output, err := conn.DescribeRegions(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Regions", err.Error())
@@ -85,7 +84,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 
 	var names []string
 	for _, v := range output.Regions {
-		names = append(names, aws.StringValue(v.RegionName))
+		names = append(names, aws.ToString(v.RegionName))
 	}
 
 	data.ID = types.StringValue(d.Meta().Partition)

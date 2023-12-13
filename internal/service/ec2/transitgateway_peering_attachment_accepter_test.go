@@ -1,15 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 )
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
@@ -23,12 +24,12 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +54,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
+func testAccTransitGatewayPeeringAttachmentAccepter_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
@@ -61,12 +62,12 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -115,12 +116,12 @@ func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -144,18 +145,6 @@ func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.
 			},
 		},
 	})
-}
-
-func testAccAlternateAccountAlternateRegionProviderConfig() string {
-	//lintignore:AT004
-	return fmt.Sprintf(`
-provider %[1]q {
-  access_key = %[2]q
-  profile    = %[3]q
-  region     = %[4]q
-  secret_key = %[5]q
-}
-`, acctest.ProviderNameAlternate, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func testAccTransitGatewayPeeringAttachmentAccepterConfig_base(rName string) string {
@@ -235,7 +224,7 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
 
 func testAccTransitGatewayPeeringAttachmentAccepterConfig_differentAccount(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAlternateAccountAlternateRegionProviderConfig(),
+		acctest.ConfigAlternateAccountAlternateRegionProvider(),
 		testAccTransitGatewayPeeringAttachmentAccepterConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {

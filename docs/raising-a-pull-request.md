@@ -15,12 +15,12 @@
 
 1. Make the changes you would like to include in the provider, add new tests as required, and make sure that all relevant existing tests are passing.
 
-1. Create a changelog entry following the process outlined [here](changelog-process.md)
-
 1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). Please ensure (if possible)   the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
    You are welcome to submit your pull request for commentary or review before
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests).
    Please include specific questions or items you'd like feedback on.
+
+1. Create a changelog entry following the process outlined [here](changelog-process.md)
 
 1. Once you believe your pull request is ready to be reviewed, ensure the
    pull request is not a draft pull request by [marking it ready for review](https://help.github.com/en/articles/changing-the-stage-of-a-pull-request)
@@ -45,33 +45,32 @@
 All Go code is automatically checked for compliance with various linters, such as `gofmt`. These tools can be installed using the `GNUMakefile` in this repository.
 
 ```console
-$ cd terraform-provider-aws
-$ make tools
+make tools
 ```
 
 Check your code with the linters:
 
 ```console
-$ make lint
+make lint
 ```
 
 We use [Semgrep](https://semgrep.dev/docs/) to check for other code standards.
 This can be run directly on the command line, i.e.,
 
 ```console
-$ semgrep
+semgrep
 ```
 
 or it can be run using Docker via the Makefile, i.e.,
 
 ```console
-$ make semgrep
+make semgrep
 ```
 
 `gofmt` will also fix many simple formatting issues for you. The Makefile includes a target for this:
 
 ```console
-$ make fmt
+make fmt
 ```
 
 The import statement in a Go file follows these rules (see [#15903](https://github.com/hashicorp/terraform-provider-aws/issues/15903)):
@@ -86,7 +85,7 @@ The import statement in a Go file follows these rules (see [#15903](https://gith
 Check your imports:
 
 ```console
-$ make importlint
+make importlint
 ```
 
 For greater detail, the following Go language resources provide common coding preferences that may be referenced during review, if not automatically handled by the project's linting tools.
@@ -103,8 +102,8 @@ This Contribution Guide also includes separate sections on topics such as [Error
 - __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
 - __Does Not Set Optional or Required for Non-Configurable Attributes__: Resource schema definitions for read-only attributes must not include `Optional: true` or `Required: true`.
-- __Avoids resource.Retry() without resource.RetryableError()__: Resource logic should only implement [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) if there is a retryable condition (e.g., `return resource.RetryableError(err)`).
-- __Avoids Reusing Resource Read Function in Data Source Read Function__: Data sources should fully implement their own resource `Read` functionality including duplicating `d.Set()` calls.
+- __Avoids retry.RetryContext() without retry.RetryableError()__: Resource logic should only implement [`retry.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry) if there is a retryable condition (e.g., `return retry.RetryableError(err)`).
+- __Avoids Reusing Resource Read Function in Data Source Read Function__: Data sources should fully implement their own resource `Read` functionality.
 - __Avoids Reading Schema Structure in Resource Code__: The resource `Schema` should not be read in resource `Create`/`Read`/`Update`/`Delete` functions to perform looping or otherwise complex attribute logic. Use [`d.Get()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Get) and [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) directly with individual attributes instead.
 - __Avoids ResourceData.GetOkExists()__: Resource logic should avoid using [`ResourceData.GetOkExists()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.GetOkExists) as its expected functionality is not guaranteed in all scenarios.
 - __Calls Read After Create and Update__: Except where API eventual consistency prohibits immediate reading of resources or updated attributes,  resource `Create` and `Update` functions should return the resource `Read` function.
@@ -118,11 +117,11 @@ This Contribution Guide also includes separate sections on topics such as [Error
 - __Uses AWS Go SDK Pointer Conversion Functions__: Many APIs return pointer types and these functions return the zero value for the type if the pointer is `nil`. This prevents potential panics from unchecked `*` pointer dereferences and can eliminate boilerplate `nil` checking in many cases. See also the [`aws` package in the AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/api/aws/).
 - __Uses AWS Go SDK Types__: Use available SDK structs instead of implementing custom types with indirection.
 - __Uses Existing Validation Functions__: Schema definitions including `ValidateFunc` for attribute validation should use available [Terraform `helper/validation` package](https://godoc.org/github.com/hashicorp/terraform/helper/validation) functions. `All()`/`Any()` can be used for combining multiple validation function behaviors.
-- __Uses tfresource.TimedOut() with resource.Retry()__: Resource logic implementing [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) should error check with [`tfresource.TimedOut(err error)`](https://godoc.org/github.com/hashicorp/terraform-provider-aws/internal/tfresource#TimedOut) and potentially unset the error before returning the error. For example:
+- __Uses tfresource.TimedOut() with retry.Retry()__: Resource logic implementing [`retry.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry) should error check with [`tfresource.TimedOut(err error)`](https://godoc.org/github.com/hashicorp/terraform-provider-aws/internal/tfresource#TimedOut) and potentially unset the error before returning the error. For example:
 
   ```go
   var output *kms.CreateKeyOutput
-  err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+  err := retry.Retry(1*time.Minute, func() *retry.RetryError {
     var err error
 
     output, err = conn.CreateKey(input)
@@ -141,7 +140,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
   }
   ```
 
-- __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
+- __Uses id.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`id.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:

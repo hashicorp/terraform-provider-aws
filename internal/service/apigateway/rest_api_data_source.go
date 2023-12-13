@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -13,8 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
+// @SDKDataSource("aws_api_gateway_rest_api")
 func DataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,
@@ -44,7 +50,7 @@ func DataSourceRestAPI() *schema.Resource {
 				Computed: true,
 			},
 			"minimum_compression_size": {
-				Type:     schema.TypeInt,
+				Type:     nullable.TypeNullableInt,
 				Computed: true,
 			},
 			"binary_media_types": {
@@ -81,7 +87,7 @@ func DataSourceRestAPI() *schema.Resource {
 
 func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &apigateway.GetRestApisInput{}
@@ -125,16 +131,16 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 
 	if match.MinimumCompressionSize == nil {
-		d.Set("minimum_compression_size", -1)
+		d.Set("minimum_compression_size", nil)
 	} else {
-		d.Set("minimum_compression_size", match.MinimumCompressionSize)
+		d.Set("minimum_compression_size", strconv.FormatInt(aws.Int64Value(match.MinimumCompressionSize), 10))
 	}
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

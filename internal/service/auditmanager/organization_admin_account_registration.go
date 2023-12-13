@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -12,15 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceOrganizationAdminAccountRegistration)
-}
-
+// @FrameworkResource
 func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceOrganizationAdminAccountRegistration{}, nil
 }
@@ -55,7 +55,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Contex
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceOrganizationAdminAccountRegistrationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -83,7 +83,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Create(ctx context.Contex
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceOrganizationAdminAccountRegistrationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -116,7 +116,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Update(ctx context.Contex
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceOrganizationAdminAccountRegistrationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

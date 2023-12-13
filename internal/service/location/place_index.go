@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -15,8 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_place_index", name="Map")
+// @Tags(identifierAttribute="index_arn")
 func ResourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlaceIndexCreate,
@@ -71,8 +77,8 @@ func ResourcePlaceIndex() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -80,11 +86,11 @@ func ResourcePlaceIndex() *schema.Resource {
 
 func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
-	input := &locationservice.CreatePlaceIndexInput{}
+	input := &locationservice.CreatePlaceIndexInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("data_source"); ok {
 		input.DataSource = aws.String(v.(string))
@@ -100,10 +106,6 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("index_name"); ok {
 		input.IndexName = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreatePlaceIndexWithContext(ctx, input)
@@ -123,9 +125,7 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribePlaceIndexInput{
 		IndexName: aws.String(d.Id()),
@@ -160,15 +160,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
@@ -177,7 +169,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChanges("data_source_configuration", "description") {
 		input := &locationservice.UpdatePlaceIndexInput{
@@ -201,20 +193,12 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("index_arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Location Service Place Index (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourcePlaceIndexRead(ctx, d, meta)...)
 }
 
 func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeletePlaceIndexInput{
 		IndexName: aws.String(d.Id()),

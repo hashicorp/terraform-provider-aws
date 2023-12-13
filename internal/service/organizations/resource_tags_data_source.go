@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -12,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_organizations_resource_tags")
 func DataSourceResourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceTagsRead,
@@ -28,7 +32,7 @@ func DataSourceResourceTags() *schema.Resource {
 
 func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	resource_id := d.Get("resource_id").(string)
 
@@ -52,7 +56,7 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(resource_id)
 
 	if tags != nil {
-		if err := d.Set("tags", KeyValueTags(tags).Map()); err != nil {
+		if err := d.Set("tags", KeyValueTags(ctx, tags).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else {

@@ -35,16 +35,16 @@ data "aws_ssm_patch_baseline" "default_custom" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `owner` - (Required) Owner of the baseline. Valid values: `All`, `AWS`, `Self` (the current account).
 * `name_prefix` - (Optional) Filter results by the baseline name prefix.
 * `default_baseline` - (Optional) Filters the results against the baselines default_baseline field.
 * `operating_system` - (Optional) Specified OS for the baseline. Valid values: `AMAZON_LINUX`, `AMAZON_LINUX_2`, `UBUNTU`, `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN` and `ROCKY_LINUX`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `approved_patches` - List of explicitly approved patches for the baseline.
 * `approved_patches_compliance_level` - The compliance level for approved patches.

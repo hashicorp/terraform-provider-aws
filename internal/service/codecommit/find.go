@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -7,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // FindApprovalRuleTemplateAssociation validates that an approval rule template has the named associated repository
@@ -34,7 +37,7 @@ func FindApprovalRuleTemplateAssociation(ctx context.Context, conn *codecommit.C
 	})
 
 	if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeApprovalRuleTemplateDoesNotExistException) {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -45,7 +48,7 @@ func FindApprovalRuleTemplateAssociation(ctx context.Context, conn *codecommit.C
 	}
 
 	if !found {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			Message:     fmt.Sprintf("No approval rule template (%q) associated with repository (%q)", approvalRuleTemplateName, repositoryName),
 			LastRequest: input,
 		}

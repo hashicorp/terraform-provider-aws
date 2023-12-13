@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Prevent erroneous diffs and attempts to remove AWS-added rule when applying to CF distribution using AWS Shield to automatically mitigate DDoS
+```

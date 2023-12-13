@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
@@ -14,17 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/exp/slices"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceIPRanges)
-}
-
-// newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.
+// @FrameworkDataSource
 func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceIPRanges{}
 	d.SetMigratedFromPluginSDK(true)

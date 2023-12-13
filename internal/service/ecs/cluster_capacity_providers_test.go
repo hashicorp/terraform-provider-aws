@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
@@ -6,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
@@ -20,7 +23,7 @@ func TestAccECSClusterCapacityProviders_basic(t *testing.T) {
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -56,7 +59,7 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -80,7 +83,7 @@ func TestAccECSClusterCapacityProviders_defaults(t *testing.T) {
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -115,7 +118,7 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -125,8 +128,8 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
 					func(s *terraform.State) error {
-						if aws.Int64Value(cluster.RegisteredContainerInstancesCount) != 2 {
-							return fmt.Errorf("expected the cluster to have 2 registered container instances")
+						if got, want := int(aws.Int64Value(cluster.RegisteredContainerInstancesCount)), 2; got != want {
+							return fmt.Errorf("RegisteredContainerInstancesCount = %v, want %v", got, want)
 						}
 
 						return nil
@@ -147,7 +150,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -215,7 +218,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 	resourceName := "aws_ecs_cluster_capacity_providers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -492,10 +495,18 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table_association" "test" {
@@ -504,6 +515,7 @@ resource "aws_route_table_association" "test" {
 }
 
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   egress {
@@ -569,11 +581,13 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
+  name       = %[1]q
   depends_on = [aws_iam_role_policy_attachment.test]
   role       = aws_iam_role.test.name
 }
 
 resource "aws_launch_template" "test" {
+  name                                 = %[1]q
   image_id                             = data.aws_ami.test.id
   instance_type                        = "t3.micro"
   instance_initiated_shutdown_behavior = "terminate"
@@ -597,6 +611,8 @@ resource "aws_autoscaling_group" "test" {
   name                = %[1]q
   vpc_zone_identifier = [aws_subnet.test.id]
 
+  wait_for_capacity_timeout = "5m"
+
   instance_refresh {
     strategy = "Rolling"
   }
@@ -609,6 +625,12 @@ resource "aws_autoscaling_group" "test" {
   tag {
     key                 = "AmazonECSManaged"
     value               = ""
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
     propagate_at_launch = true
   }
 }

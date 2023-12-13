@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -7,8 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ecs_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -66,18 +72,22 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string))
 
 	if err != nil {
-		return diag.Errorf("reading ECS Cluster (%s): %s", clusterName, err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", clusterName, err)
 	}
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
@@ -87,17 +97,22 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
 	d.Set("status", cluster.Status)
 
+	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
 	if cluster.ServiceConnectDefaults != nil {
 		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
-			return diag.Errorf("setting service_connect_defaults: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
 		}
 	} else {
 		d.Set("service_connect_defaults", nil)
 	}
 
 	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
-		return diag.Errorf("setting setting: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
-	return nil
+	return diags
 }

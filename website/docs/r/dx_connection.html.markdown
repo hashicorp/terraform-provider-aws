@@ -34,6 +34,7 @@ resource "aws_dx_connection" "example" {
 ```
 
 ### Configure encryption mode for MACsec-capable connections
+
 -> **NOTE:** You can only specify the `encryption_mode` argument once the connection is in an `Available` state.
 
 ```terraform
@@ -48,7 +49,7 @@ resource "aws_dx_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
 * `encryption_mode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `no_encrypt`, `should_encrypt`, and `must_encrypt`.
@@ -62,9 +63,9 @@ The following arguments are supported:
 * `skip_destroy` - (Optional) Set to true if you do not wish the connection to be deleted at destroy time, and instead just removed from the Terraform state.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the connection.
 * `aws_device` - The Direct Connect endpoint on which the physical connection terminates.
@@ -73,14 +74,24 @@ In addition to all arguments above, the following attributes are exported:
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
 * `macsec_capable` - Boolean value indicating whether the connection supports MAC Security (MACsec).
 * `owner_account_id` - The ID of the AWS account that owns the connection.
+* `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `port_encryption_status` - The MAC Security (MACsec) port link status of the connection.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vlan_id` - The VLAN ID.
 
 ## Import
 
-Direct Connect connections can be imported using the `connection id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect connections using the connection `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_connection.test_connection
+  id = "dxcon-ffre0ec3"
+}
 ```
-$ terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
+
+Using `terraform import`, import Direct Connect connections using the connection `id`. For example:
+
+```console
+% terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
 ```

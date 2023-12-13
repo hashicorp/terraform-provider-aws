@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_domain_mail_from")
 func ResourceDomainMailFrom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainMailFromSet,
@@ -43,7 +47,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 
 func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
 	domainName := d.Get("domain").(string)
@@ -67,7 +71,7 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
 
@@ -104,7 +108,7 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
 

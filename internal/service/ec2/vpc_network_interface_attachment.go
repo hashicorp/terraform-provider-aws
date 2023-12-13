@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_network_interface_attachment")
 func ResourceNetworkInterfaceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceAttachmentCreate,
@@ -50,7 +54,7 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 
 func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	attachmentID, err := attachNetworkInterface(ctx, conn,
 		d.Get("network_interface_id").(string),
@@ -72,7 +76,7 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 
 func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	network_interface, err := FindNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
 
@@ -97,7 +101,7 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 
 func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := DetachNetworkInterface(ctx, conn, d.Get("network_interface_id").(string), d.Id(), NetworkInterfaceDetachedTimeout); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

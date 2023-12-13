@@ -18,25 +18,23 @@ resource "aws_iam_instance_profile" "test_profile" {
   role = aws_iam_role.role.name
 }
 
-resource "aws_iam_role" "role" {
-  name = "test_role"
-  path = "/"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-               "Service": "ec2.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "role" {
+  name               = "test_role"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 ```
 
@@ -50,9 +48,9 @@ The following arguments are optional:
 * `role` - (Optional) Name of the role to add to the profile.
 * `tags` - (Optional) Map of resource tags for the IAM Instance Profile. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to the instance profile.
 * `create_date` - Creation timestamp of the instance profile.
@@ -64,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Instance Profiles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Instance Profiles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_instance_profile.test_profile
+  id = "app-instance-profile-1"
+}
 ```
-$ terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
+
+Using `terraform import`, import Instance Profiles using the `name`. For example:
+
+```console
+% terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
 ```

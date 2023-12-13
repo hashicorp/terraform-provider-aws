@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
@@ -24,8 +27,8 @@ func TestAccShieldProtectionGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -60,8 +63,8 @@ func TestAccShieldProtectionGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -87,8 +90,8 @@ func TestAccShieldProtectionGroup_aggregation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -130,8 +133,8 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -144,7 +147,7 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternArbitrary),
 					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexp.MustCompile(`eip-allocation/eipalloc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
 				),
 			},
 			{
@@ -164,8 +167,8 @@ func TestAccShieldProtectionGroup_protectionGroupID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -207,8 +210,8 @@ func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -252,8 +255,8 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
@@ -296,7 +299,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 
 func testAccCheckProtectionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_protection_group" {
@@ -333,7 +336,7 @@ func testAccCheckProtectionGroupExists(ctx context.Context, name string) resourc
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		input := &shield.DescribeProtectionGroupInput{
 			ProtectionGroupId: aws.String(rs.Primary.ID),

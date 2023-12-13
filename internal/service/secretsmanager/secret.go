@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,18 +15,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_secretsmanager_secret", name="Secret")
+// @Tags(identifierAttribute="id")
 func ResourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -120,34 +128,8 @@ func ResourceSecret() *schema.Resource {
 					},
 				},
 			},
-			"rotation_enabled": {
-				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
-				Type:       schema.TypeBool,
-				Computed:   true,
-			},
-			"rotation_lambda_arn": {
-				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
-				Type:       schema.TypeString,
-				Optional:   true,
-				Computed:   true,
-			},
-			"rotation_rules": {
-				Deprecated: "Use the aws_secretsmanager_secret_rotation resource instead",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Optional:   true,
-				MaxItems:   1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automatically_after_days": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -156,15 +138,14 @@ func ResourceSecret() *schema.Resource {
 
 func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
 		Description:                 aws.String(d.Get("description").(string)),
 		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
 		Name:                        aws.String(secretName),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -175,25 +156,21 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AddReplicaRegions = expandSecretReplicas(v.(*schema.Set).List())
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Secrets Manager Secret: %s", input)
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.RetryContext(ctx, PropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.CreateSecretWithContext(ctx, input)
 		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
 		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -217,14 +194,14 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err = resource.RetryContext(ctx, PropagationTimeout, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
 			_, err := conn.PutResourcePolicyWithContext(ctx, input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -236,47 +213,18 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
-		input := &secretsmanager.RotateSecretInput{
-			RotationLambdaARN: aws.String(v.(string)),
-			RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
-			SecretId:          aws.String(d.Id()),
-		}
-
-		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
-			_, err := conn.RotateSecretWithContext(ctx, input)
-			if err != nil {
-				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.RotateSecretWithContext(ctx, input)
-		}
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling Secrets Manager Secret %q rotation: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceSecretRead(ctx, d, meta)...)
 }
 
 func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -298,11 +246,33 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
 	}
 
-	if output, err := conn.GetResourcePolicyWithContext(ctx, &secretsmanager.GetResourcePolicyInput{
-		SecretId: aws.String(d.Id()),
-	}); err != nil {
+	var policy *secretsmanager.GetResourcePolicyOutput
+	err = tfresource.Retry(ctx, PropagationTimeout, func() *retry.RetryError {
+		var err error
+		policy, err = conn.GetResourcePolicyWithContext(ctx, &secretsmanager.GetResourcePolicyInput{
+			SecretId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if policy.ResourcePolicy != nil {
+			valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.StringValue(policy.ResourcePolicy))
+			if err != nil {
+				return retry.NonRetryableError(err)
+			}
+			if !valid {
+				log.Printf("[DEBUG] Retrying because of invalid principals")
+				return retry.RetryableError(errors.New("contains invalid principals"))
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
-	} else if v := output.ResourcePolicy; v != nil {
+	} else if v := policy.ResourcePolicy; v != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(v))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
@@ -313,35 +283,14 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("policy", "")
 	}
 
-	d.Set("rotation_enabled", output.RotationEnabled)
-
-	if aws.BoolValue(output.RotationEnabled) {
-		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
-		}
-	} else {
-		d.Set("rotation_lambda_arn", "")
-		d.Set("rotation_rules", []interface{}{})
-	}
-
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -414,59 +363,12 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
-		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
-			input := &secretsmanager.RotateSecretInput{
-				RotationLambdaARN: aws.String(v.(string)),
-				RotationRules:     expandRotationRules(d.Get("rotation_rules").([]interface{})),
-				SecretId:          aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
-			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
-				_, err := conn.RotateSecretWithContext(ctx, input)
-				if err != nil {
-					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err = conn.RotateSecretWithContext(ctx, input)
-			}
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret %q rotation: %s", d.Id(), err)
-			}
-		} else {
-			input := &secretsmanager.CancelRotateSecretInput{
-				SecretId: aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Cancelling Secrets Manager Secret rotation: %s", input)
-			_, err := conn.CancelRotateSecretWithContext(ctx, input)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "cancelling Secret Manager Secret %q rotation: %s", d.Id(), err)
-			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceSecretRead(ctx, d, meta)...)
 }
 
 func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		err := removeSecretReplicas(ctx, conn, d.Id(), v.(*schema.Set).List())
@@ -677,7 +579,7 @@ func findSecret(ctx context.Context, conn *secretsmanager.SecretsManager, input 
 	output, err := conn.DescribeSecretWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -706,7 +608,7 @@ func FindSecretByID(ctx context.Context, conn *secretsmanager.SecretsManager, id
 	}
 
 	if output.DeletedDate != nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil

@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
@@ -25,7 +28,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	updatedName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
@@ -61,7 +64,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
@@ -117,7 +120,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
@@ -139,14 +142,14 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
-				ExpectError: regexp.MustCompile(`Error validating ambiguous role resolution`),
+				ExpectError: regexache.MustCompile(`validating ambiguous role resolution`),
 			},
 		},
 	})
@@ -157,14 +160,14 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name),
-				ExpectError: regexp.MustCompile(`mapping_rule is required for Rules`),
+				ExpectError: regexache.MustCompile(`mapping_rule is required for Rules`),
 			},
 		},
 	})
@@ -175,14 +178,14 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolRolesAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name),
-				ExpectError: regexp.MustCompile(`mapping_rule must not be set for Token based role mapping`),
+				ExpectError: regexache.MustCompile(`mapping_rule must not be set for Token based role mapping`),
 			},
 		},
 	})
@@ -199,7 +202,7 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 		_, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -211,7 +214,7 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 
 func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool_roles_attachment" {
