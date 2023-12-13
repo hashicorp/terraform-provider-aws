@@ -36,6 +36,7 @@ val services = mapOf(
     "cloudcontrol" to ServiceSpec("Cloud Control API"),
     "cloudformation" to ServiceSpec("CloudFormation", vpcLock = true),
     "cloudfront" to ServiceSpec("CloudFront"),
+    "cloudfrontkeyvaluestore" to ServiceSpec("CloudFrontKeyValueStore"),
     "cloudhsmv2" to ServiceSpec("CloudHSM", vpcLock = true),
     "cloudsearch" to ServiceSpec("CloudSearch"),
     "cloudtrail" to ServiceSpec("CloudTrail"),

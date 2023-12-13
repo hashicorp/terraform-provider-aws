@@ -41,6 +41,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
@@ -254,6 +255,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cloudcontrol.ServicePackage(ctx),
 		cloudformation.ServicePackage(ctx),
 		cloudfront.ServicePackage(ctx),
+		cloudfrontkeyvaluestore.ServicePackage(ctx),
 		cloudhsmv2.ServicePackage(ctx),
 		cloudsearch.ServicePackage(ctx),
 		cloudtrail.ServicePackage(ctx),

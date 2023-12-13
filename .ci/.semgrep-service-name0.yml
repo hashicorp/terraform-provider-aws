@@ -2248,6 +2248,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudFront"
     severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-func-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in func name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-test-name
+    languages:
+      - go
+    message: Include "CloudFrontKeyValueStore" in test name
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCloudFrontKeyValueStore"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-const-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in const name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-var-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in var name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
   - id: cloudhsm-in-func-name
     languages:
       - go
@@ -3535,47 +3593,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccComprehend"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: comprehend-in-const-name
-    languages:
-      - go
-    message: Do not use "Comprehend" in const name inside comprehend package
-    paths:
-      include:
-        - internal/service/comprehend
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Comprehend"
-    severity: WARNING
-  - id: comprehend-in-var-name
-    languages:
-      - go
-    message: Do not use "Comprehend" in var name inside comprehend package
-    paths:
-      include:
-        - internal/service/comprehend
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Comprehend"
-    severity: WARNING
-  - id: computeoptimizer-in-func-name
-    languages:
-      - go
-    message: Do not use "ComputeOptimizer" in func name inside computeoptimizer package
-    paths:
-      include:
-        - internal/service/computeoptimizer
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ComputeOptimizer"
-            - pattern-not-regex: ^TestAcc.*
     severity: WARNING
