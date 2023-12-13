@@ -3876,21 +3876,22 @@ resource "aws_dms_endpoint" "test" {
   database_name               = "tftest"
   ssl_mode                    = "require"
   extra_connection_attributes = ""
+
   postgres_settings {
-	after_connect_script         = "SET search_path TO pg_catalog,public;"
-	capture_ddls                 = true
-	ddl_artifacts_schema         = true
-	execute_timeout              = 100
-	fail_tasks_on_lob_truncation = false
-	heartbeat_enable             = true
-	heartbeat_frequency          = 5
-	heartbeat_schema             = "test"
-	map_boolean_as_boolean       = true
-	map_jsonb_as_clob            = true
-	map_long_varchar_as          = "wstring"
-	max_file_size                = 1024
-	plugin_name                  = "pglogical"
-	slot_name                    = "test"
+    after_connect_script         = "SET search_path TO pg_catalog,public;"
+    capture_ddls                 = true
+    ddl_artifacts_schema         = true
+    execute_timeout              = 100
+    fail_tasks_on_lob_truncation = false
+    heartbeat_enable             = true
+    heartbeat_frequency          = 5
+    heartbeat_schema             = "test"
+    map_boolean_as_boolean       = true
+    map_jsonb_as_clob            = true
+    map_long_varchar_as          = "wstring"
+    max_file_size                = 1024
+    plugin_name                  = "pglogical"
+    slot_name                    = "test"
   }
 }
 `, rName)
