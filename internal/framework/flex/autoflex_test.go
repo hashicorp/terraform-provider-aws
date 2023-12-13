@@ -287,3 +287,13 @@ type TestFlexPluralityAWS01 struct {
 type TestFlexTF17 struct {
 	Field1 fwtypes.ARN `tfsdk:"field1"`
 }
+
+// List/Set/Map of string types.
+type TestFlexTF18 struct {
+	Field1 fwtypes.ListValueOf[types.String] `tfsdk:"field1"`
+	Field2 fwtypes.ListValueOf[types.String] `tfsdk:"field2"`
+	Field3 fwtypes.SetValueOf[types.String]  `tfsdk:"field3"`
+	Field4 fwtypes.SetValueOf[types.String]  `tfsdk:"field4"`
+	Field5 fwtypes.MapValueOf[types.String]  `tfsdk:"field5"`
+	Field6 fwtypes.MapValueOf[types.String]  `tfsdk:"field6"`
+}

@@ -332,7 +332,13 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			// []string -> types.List(OfString).
 			//
 			if vFrom.IsNil() {
-				vTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
+				to, d := tTo.ValueFromList(ctx, types.ListNull(types.StringType))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 			}
 
@@ -360,7 +366,13 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			// []string -> types.Set(OfString).
 			//
 			if vFrom.IsNil() {
-				vTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
+				to, d := tTo.ValueFromSet(ctx, types.SetNull(types.StringType))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 			}
 
@@ -393,7 +405,13 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				// []*string -> types.List(OfString).
 				//
 				if vFrom.IsNil() {
-					vTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
+					to, d := tTo.ValueFromList(ctx, types.ListNull(types.StringType))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
 
@@ -422,7 +440,13 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				// []string -> types.Set(OfString).
 				//
 				if vFrom.IsNil() {
-					vTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
+					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.StringType))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
 
@@ -500,7 +524,13 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				// map[string]string -> types.Map(OfString).
 				//
 				if vFrom.IsNil() {
-					vTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.StringType))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
 
@@ -542,7 +572,13 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					// map[string]*string -> types.Map(OfString).
 					//
 					if vFrom.IsNil() {
-						vTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
+						to, d := tTo.ValueFromMap(ctx, types.MapNull(types.StringType))
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						vTo.Set(reflect.ValueOf(to))
 						return diags
 					}
 
