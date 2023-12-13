@@ -122,132 +122,132 @@ func testAccKxVolumeConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccKxVolumeConfigBase(rName),
 		fmt.Sprintf(`
-		resource "aws_finspace_kx_volume" "test" {
-			name                 = %[1]q
-			environment_id       = aws_finspace_kx_environment.test.id
-			availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
-			az_mode              = "SINGLE"
-			type                 = "NAS_1"
-			nas1_configuration {
-				type= "SSD_250"
-				size= 1200
-			}
- 		}
-		`, rName))
+resource "aws_finspace_kx_volume" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode              = "SINGLE"
+  type                 = "NAS_1"
+  nas1_configuration {
+   type= "SSD_250"
+   size= 1200
+  }
+}
+`, rName))
 }
 
 func testAccKxVolumeConfigBase(rName string) string {
 	return fmt.Sprintf(`
-	data "aws_caller_identity" "current" {}
-	data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 	
-	output "account_id" {
-  		value = data.aws_caller_identity.current.account_id
-	}
+output "account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
 
-	resource "aws_kms_key" "test" {
-		deletion_window_in_days = 7
-  	}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
 
-	resource "aws_finspace_kx_environment" "test" {
-			name       = %[1]q
-			kms_key_id = aws_kms_key.test.arn
-	}
+resource "aws_finspace_kx_environment" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+}
 
-	data "aws_iam_policy_document" "key_policy" {
-		statement {
-			actions = [
-			"kms:Decrypt",
-			"kms:GenerateDataKey"
-			]
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+	actions = [
+	  "kms:Decrypt",
+	  "kms:GenerateDataKey"
+	]
 		
-			resources = [
-			aws_kms_key.test.arn,
-			]
+	resources = [
+	  aws_kms_key.test.arn,
+	]
 		
-			principals {
-			type        = "Service"
-			identifiers = ["finspace.amazonaws.com"]
-			}
-		
-			condition {
-			test     = "ArnLike"
-			variable = "aws:SourceArn"
-			values   = ["${aws_finspace_kx_environment.test.arn}/*"]
-			}
-		
-			condition {
-			test     = "StringEquals"
-			variable = "aws:SourceAccount"
-			values   = [data.aws_caller_identity.current.account_id]
-			}
-		}
-		
-		statement {
-			actions = [
-			"kms:*",
-			]
-		
-			resources = [
-			"*",
-			]
-		
-			principals {
-			type        = "AWS"
-			identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
-			}
-		}
+	principals {
+	  type        = "Service"
+	  identifiers = ["finspace.amazonaws.com"]
 	}
 		
-	resource "aws_kms_key_policy" "test" {
-		key_id = aws_kms_key.test.id
-			policy = data.aws_iam_policy_document.key_policy.json
+	condition {
+	  test     = "ArnLike"
+	  variable = "aws:SourceArn"
+	  values   = ["${aws_finspace_kx_environment.test.arn}/*"]
 	}
-
-	resource "aws_vpc" "test" {
-			cidr_block           = "172.31.0.0/16"
-			enable_dns_hostnames = true
+		
+	condition {
+	  test     = "StringEquals"
+	  variable = "aws:SourceAccount"
+	  values   = [data.aws_caller_identity.current.account_id]
 	}
+  }
 
-	resource "aws_subnet" "test" {
-			vpc_id               = aws_vpc.test.id
-			cidr_block           = "172.31.32.0/20"
-			availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  statement {
+	actions = [
+	  "kms:*",
+	]
+		
+    resources = [
+	  "*",
+	]
+		
+	principals {
+	  type        = "AWS"
+	  identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
 	}
+  }
+}
+		
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
 
-	resource "aws_security_group" "test" {
-			name   = %[1]q
-			vpc_id = aws_vpc.test.id
+resource "aws_vpc" "test" {
+  cidr_block           = "172.31.0.0/16"
+  enable_dns_hostnames = true
+}
 
-			ingress {
-			from_port   = 0
-				to_port     = 0
-			protocol    = "-1"
-			cidr_blocks = ["0.0.0.0/0"]
-			}
+resource "aws_subnet" "test" {
+  vpc_id               = aws_vpc.test.id
+  cidr_block           = "172.31.32.0/20"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
 
-			egress {
-			from_port   = 0
-			to_port     = 0
-			protocol    = "-1"
-			cidr_blocks = ["0.0.0.0/0"]
-			}
-	}
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
-	resource "aws_internet_gateway" "test" {
-		vpc_id = aws_vpc.test.id
-	}
+  ingress {
+    from_port   = 0
+	to_port     = 0
+	protocol    = "-1"
+	cidr_blocks = ["0.0.0.0/0"]
+  }
 
-	data "aws_route_tables" "rts" {
-			vpc_id = aws_vpc.test.id
-	}
+  egress {
+    from_port   = 0
+	to_port     = 0
+	protocol    = "-1"
+	cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
-	resource "aws_route" "r" {
-			route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
-			destination_cidr_block = "0.0.0.0/0"
-			gateway_id             = aws_internet_gateway.test.id
-	}
-	`, rName)
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+data "aws_route_tables" "rts" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route" "r" {
+  route_table_id         = tolist(data.aws_route_tables.rts.ids)[0]
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+}
+`, rName)
 }
 
 func testAccCheckKxVolumeExists(ctx context.Context, name string, KxVolume *finspace.GetKxVolumeOutput) resource.TestCheckFunc {

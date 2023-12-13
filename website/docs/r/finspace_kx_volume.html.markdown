@@ -45,7 +45,6 @@ The following arguments are optional:
 * `description` - (Optional) Description of the volume.
 * `tags` - (Optional) A list of key-value pairs to label the volume. You can add up to 50 tags to a volume
 
-
 ### nas1_configuration
 
 The nas1_configuration block supports the following arguments:
