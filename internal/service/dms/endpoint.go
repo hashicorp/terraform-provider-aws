@@ -68,43 +68,33 @@ func ResourceEndpoint() *schema.Resource {
 						"endpoint_uri": {
 							Type:     schema.TypeString,
 							Required: true,
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"error_retry_duration": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      300,
 							ValidateFunc: validation.IntAtLeast(0),
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
-							ForceNew: true,
 						},
 						"full_load_error_percentage": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      10,
 							ValidateFunc: validation.IntBetween(0, 100),
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
-							ForceNew: true,
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
-							ForceNew: true,
 						},
 						"use_new_mapping_type": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
+							Default:  false,
 						},
 					},
 				},
