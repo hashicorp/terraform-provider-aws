@@ -109,6 +109,7 @@ import (
 	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
+	cloudfrontkeyvaluestore_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfrontkeyvaluestore"
 	cloudhsmv2_sdkv1 "github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	cloudsearch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudsearch"
 	cloudtrail_sdkv1 "github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -375,6 +376,10 @@ func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv
 
 func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudFront {
 	return errs.Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront))
+}
+
+func (c *AWSClient) CloudFrontKeyValueStoreConn(ctx context.Context) *cloudfrontkeyvaluestore_sdkv1.CloudFrontKeyValueStore {
+	return errs.Must(conn[*cloudfrontkeyvaluestore_sdkv1.CloudFrontKeyValueStore](ctx, c, names.CloudFrontKeyValueStore))
 }
 
 func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {

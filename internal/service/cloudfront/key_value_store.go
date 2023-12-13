@@ -86,7 +86,7 @@ func resourceKeyValueStoreCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 	keyValueStoreOutput, _ := cloudfrontClient.CreateKeyValueStoreWithContext(ctx, input)
 	d.SetId(keyValueStoreName)
-	log.Printf("[INFO] Jeremy: %v", keyValueStoreOutput.ETag)
+	log.Printf("[INFO] Jeremy ETAG: %v", keyValueStoreOutput)
 
 	// Add Key(s) / Value(s).
 	cloudfrontKeyValueStoreClient := meta.(*conns.AWSClient).CloudFrontKeyValueStoreConn(ctx)

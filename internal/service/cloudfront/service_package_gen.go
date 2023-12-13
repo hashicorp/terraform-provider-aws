@@ -100,6 +100,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cloudfront_key_group",
 		},
 		{
+			Factory:  ResourceKeyValueStore,
+			TypeName: "aws_cloudfront_key_value_store",
+		},
+		{
 			Factory:  ResourceMonitoringSubscription,
 			TypeName: "aws_cloudfront_monitoring_subscription",
 		},
