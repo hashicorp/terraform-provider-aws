@@ -184,19 +184,16 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChanges("enabled", "event_categories", "sns_topic_arn", "source_type") {
-		request := &dms.ModifyEventSubscriptionInput{
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &dms.ModifyEventSubscriptionInput{
 			Enabled:          aws.Bool(d.Get("enabled").(bool)),
+			EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-			SubscriptionName: aws.String(d.Get("name").(string)),
 			SourceType:       aws.String(d.Get("source_type").(string)),
+			SubscriptionName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("event_categories"); ok {
-			request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
-		}
-
-		_, err := conn.ModifyEventSubscriptionWithContext(ctx, request)
+		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DMS Event Subscription (%s): %s", d.Id(), err)
