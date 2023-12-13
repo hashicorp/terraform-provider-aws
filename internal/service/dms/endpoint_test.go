@@ -573,6 +573,7 @@ func TestAccDMSEndpoint_OpenSearch_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalHostname(resourceName, "elasticsearch_settings.0.endpoint_uri", "es", "search-estest"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.use_new_mapping_type", "false"),
 				),
 			},
 			{
@@ -652,6 +653,35 @@ func TestAccDMSEndpoint_OpenSearch_errorRetryDuration(t *testing.T) {
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "120"),
 			// 	),
 			// },
+		},
+	})
+}
+
+func TestAccDMSEndpoint_OpenSearch_UseNewMappingType(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_openSearchUseNewMappingType(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.use_new_mapping_type", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
 		},
 	})
 }
@@ -3335,6 +3365,26 @@ resource "aws_dms_endpoint" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, errorRetryDuration))
+}
+
+func testAccEndpointConfig_openSearchUseNewMappingType(rName string, useNewMappingType bool) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_openSearchBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri            = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    use_new_mapping_type    = %[2]t
+    service_access_role_arn = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, useNewMappingType))
 }
 
 func testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {

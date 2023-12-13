@@ -68,35 +68,33 @@ func ResourceEndpoint() *schema.Resource {
 						"endpoint_uri": {
 							Type:     schema.TypeString,
 							Required: true,
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"error_retry_duration": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      300,
 							ValidateFunc: validation.IntAtLeast(0),
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
-							ForceNew: true,
 						},
 						"full_load_error_percentage": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      10,
 							ValidateFunc: validation.IntBetween(0, 100),
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
-							ForceNew: true,
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
-							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
+						},
+						"use_new_mapping_type": {
+							Type:     schema.TypeBool,
+							Optional: true,
 							ForceNew: true,
+							Default:  false,
 						},
 					},
 				},
@@ -857,6 +855,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
 			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
+			UseNewMappingType:       aws.Bool(d.Get("elasticsearch_settings.0.use_new_mapping_type").(bool)),
 		}
 	case engineNameKafka:
 		input.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
@@ -1147,12 +1146,14 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				"elasticsearch_settings.0.endpoint_uri",
 				"elasticsearch_settings.0.error_retry_duration",
 				"elasticsearch_settings.0.full_load_error_percentage",
-				"elasticsearch_settings.0.service_access_role_arn") {
+				"elasticsearch_settings.0.service_access_role_arn",
+				"elasticsearch_settings.0.use_new_mapping_type") {
 				input.ElasticsearchSettings = &dms.ElasticsearchSettings{
 					ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
 					EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
 					ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 					FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
+					UseNewMappingType:       aws.Bool(d.Get("elasticsearch_settings.0.use_new_mapping_type").(bool)),
 				}
 				input.EngineName = aws.String(engineName)
 			}
@@ -1783,6 +1784,7 @@ func flattenOpenSearchSettings(settings *dms.ElasticsearchSettings) []map[string
 		"error_retry_duration":       aws.Int64Value(settings.ErrorRetryDuration),
 		"full_load_error_percentage": aws.Int64Value(settings.FullLoadErrorPercentage),
 		"service_access_role_arn":    aws.StringValue(settings.ServiceAccessRoleArn),
+		"use_new_mapping_type":       aws.BoolValue(settings.UseNewMappingType),
 	}
 
 	return []map[string]interface{}{m}
