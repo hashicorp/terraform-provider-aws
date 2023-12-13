@@ -3910,12 +3910,13 @@ resource "aws_dms_endpoint" "test" {
   database_name               = "tftest"
   ssl_mode                    = "require"
   extra_connection_attributes = ""
+
   postgres_settings {
-	after_connect_script    = "SET search_path TO pg_catalog,public;"
-	babelfish_database_name = "babelfish"
-	database_mode           = "babelfish"
-	execute_timeout         = 100
-	max_file_size           = 1024
+    after_connect_script    = "SET search_path TO pg_catalog,public;"
+    babelfish_database_name = "babelfish"
+    database_mode           = "babelfish"
+    execute_timeout         = 100
+    max_file_size           = 1024
   }
 }
 `, rName)
