@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -50,6 +49,7 @@ const (
 
 type resourceIntent struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -58,6 +58,7 @@ func (r *resourceIntent) Metadata(_ context.Context, req resource.MetadataReques
 }
 
 func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	// building blocks for the schema
 	messageNBO := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
 			"custom_playload": schema.ListNestedBlock{
@@ -190,7 +191,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
-							Required: true,
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.DialogActionType](),
 						},
 						"slot_to_elicit": schema.StringAttribute{
 							Optional: true,
@@ -336,6 +338,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			"timeout_response": responseSpecificationLNB,
 		},
 	}
+
+	// start of schema proper
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"bot_id": schema.StringAttribute{
@@ -355,6 +359,9 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 			},
 			"id": framework.IDAttribute(),
+			"intent_id": schema.StringAttribute{
+				Computed: true,
+			},
 			"last_updated_date_time": schema.StringAttribute{
 				Computed:   true,
 				CustomType: fwtypes.TimestampType,
@@ -597,7 +604,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 										Required: true,
 									},
 									"message_selection_strategy": schema.StringAttribute{
-										Optional: true,
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.MessageSelectionStrategy](),
 									},
 									"prompt_attempts_specification": schema.MapAttribute{
 										Optional: true,
@@ -719,59 +727,76 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
+// todo:
+//  x invalid result object
+//  x get basic test working
+//  x import/ID
+//  - test all attributes
+//  x tags (no tags on intents)
+//  - slot_priority
+//  x timeouts
+//  - updates
+//  x disappears
+
 func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan ResourceIntentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data ResourceIntentData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &lexmodelsv2.CreateIntentInput{}
-
-	fmt.Printf("plan: %+v\n", plan)
-
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), &data, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	fmt.Printf("in: %+v\n", in)
-
 	out, err := conn.CreateIntent(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameIntent, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameIntent, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameIntent, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameIntent, data.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.IntentId)
+	data.IntentID = flex.StringToFramework(ctx, out.IntentId)
+	data.setID()
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitIntentNormal(ctx, conn, plan.ID.ValueString(), plan.BotID.ValueString(), plan.BotVersion.ValueString(), plan.LocaleID.ValueString(), createTimeout)
+	intent, err := waitIntentNormal(ctx, conn, data.IntentID.ValueString(), data.BotID.ValueString(), data.BotVersion.ValueString(), data.LocaleID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameIntent, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameIntent, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	//if len(plan.SlotPriority) > 0 {
+	// get some data from the intent
+	var dataAfter ResourceIntentData
+	resp.Diagnostics.Append(flex.Flatten(ctx, intent, &dataAfter)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// unknowns must be set to satisfy apply
+	data.CreationDateTime = dataAfter.CreationDateTime
+	data.LastUpdatedDateTime = dataAfter.LastUpdatedDateTime
+
+	//if len(data.SlotPriority) > 0 {
 	// update because SlotPriority can't be set on create
 	//}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -783,11 +808,18 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	out, err := findIntentByIDs(ctx, conn, state.ID.ValueString(), state.BotID.ValueString(), state.BotVersion.ValueString(), state.LocaleID.ValueString())
+	if err := state.InitFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	out, err := findIntentByIDs(ctx, conn, state.IntentID.ValueString(), state.BotID.ValueString(), state.BotVersion.ValueString(), state.LocaleID.ValueString())
+
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameIntent, state.ID.String(), err),
@@ -796,7 +828,7 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -817,7 +849,7 @@ func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest,
 	in := &lexmodelsv2.UpdateIntentInput{
 		BotId:      plan.BotID.ValueStringPointer(),
 		BotVersion: plan.BotVersion.ValueStringPointer(),
-		IntentId:   plan.ID.ValueStringPointer(),
+		IntentId:   plan.IntentID.ValueStringPointer(),
 		IntentName: plan.Name.ValueStringPointer(),
 		LocaleId:   plan.LocaleID.ValueStringPointer(),
 	}
@@ -843,10 +875,10 @@ func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.IntentId)
+	plan.IntentID = flex.StringToFramework(ctx, out.IntentId)
+	plan.setID()
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err = waitIntentNormal(ctx, conn, plan.ID.ValueString(), plan.BotID.ValueString(), plan.BotVersion.ValueString(), plan.LocaleID.ValueString(), updateTimeout)
+	_, err = waitIntentNormal(ctx, conn, plan.IntentID.ValueString(), plan.BotID.ValueString(), plan.BotVersion.ValueString(), plan.LocaleID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameIntent, plan.ID.String(), err),
@@ -868,15 +900,24 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &lexmodelsv2.DeleteIntentInput{
-		IntentId: aws.String(state.ID.ValueString()),
+		IntentId:   aws.String(state.IntentID.ValueString()),
+		BotId:      aws.String(state.BotID.ValueString()),
+		BotVersion: aws.String(state.BotVersion.ValueString()),
+		LocaleId:   aws.String(state.LocaleID.ValueString()),
 	}
 
 	_, err := conn.DeleteIntent(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException // lexv2models does not seem to use this approach like other services
 		if errors.As(err, &nfe) {
 			return
 		}
+
+		var pfe *awstypes.PreconditionFailedException // PreconditionFailedException: Failed to retrieve resource since it does not exist
+		if errors.As(err, &pfe) {
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameIntent, state.ID.String(), err),
 			err.Error(),
@@ -884,8 +925,7 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitIntentDeleted(ctx, conn, state.ID.ValueString(), state.BotID.ValueString(), state.BotVersion.ValueString(), state.LocaleID.ValueString(), deleteTimeout)
+	_, err = waitIntentDeleted(ctx, conn, state.IntentID.ValueString(), state.BotID.ValueString(), state.BotVersion.ValueString(), state.LocaleID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameIntent, state.ID.String(), err),
@@ -895,51 +935,39 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourceIntent) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, ":")
+func (model *ResourceIntentData) InitFromID() error {
+	parts := strings.Split(model.ID.ValueString(), ":")
 	if len(parts) != 4 {
-		response.Diagnostics.AddError("Invalid Resource Import Key", fmt.Sprintf(`Unexpected format for import key (%s), use: "ID:BotID:BotVersion:LocaleID"`, request.ID))
-		return
+		return fmt.Errorf("Unexpected format for import key (%s), use: IntentID:BotID:BotVersion:LocaleID", model.ID)
 	}
+	model.IntentID = types.StringValue(parts[0])
+	model.BotID = types.StringValue(parts[1])
+	model.BotVersion = types.StringValue(parts[2])
+	model.LocaleID = types.StringValue(parts[3])
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("bot_id"), parts[1])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("bot_version"), parts[2])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("locale_id"), parts[3])...)
+	return nil
 }
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
+func (model *ResourceIntentData) setID() {
+	model.ID = types.StringValue(strings.Join([]string{
+		model.IntentID.ValueString(),
+		model.BotID.ValueString(),
+		model.BotVersion.ValueString(),
+		model.LocaleID.ValueString(),
+	}, ":"))
+}
+
 const (
 	statusNormal = "Normal"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, id, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
+func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusIntent(ctx, conn, id, botID, botVersion, localeID),
+		Refresh:                   statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
 		Timeout:                   timeout,
+		MinTimeout:                5 * time.Second,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -952,14 +980,13 @@ func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, id, botID, 
 	return nil, err
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, id, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
+func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusNormal},
-		Target:  []string{},
-		Refresh: statusIntent(ctx, conn, id, botID, botVersion, localeID),
-		Timeout: timeout,
+		Pending:    []string{statusNormal},
+		Target:     []string{},
+		Refresh:    statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
+		Timeout:    timeout,
+		MinTimeout: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -970,16 +997,9 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, id, botID,
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, id, botID, botVersion, localeID string) retry.StateRefreshFunc {
+func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findIntentByIDs(ctx, conn, id, botID, botVersion, localeID)
+		out, err := findIntentByIDs(ctx, conn, intentID, botID, botVersion, localeID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -992,11 +1012,11 @@ func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, id, botID, botV
 	}
 }
 
-func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, id, botID, botVersion, localeID string) (*lexmodelsv2.DescribeIntentOutput, error) {
+func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) (*lexmodelsv2.DescribeIntentOutput, error) {
 	in := &lexmodelsv2.DescribeIntentInput{
 		BotId:      aws.String(botID),
 		BotVersion: aws.String(botVersion),
-		IntentId:   aws.String(id),
+		IntentId:   aws.String(intentID),
 		LocaleId:   aws.String(localeID),
 	}
 
@@ -1030,6 +1050,7 @@ type ResourceIntentData struct {
 	DialogCodeHook         fwtypes.ListNestedObjectValueOf[DialogCodeHookSettings]      `tfsdk:"dialog_code_hook"`
 	FulfillmentCodeHook    fwtypes.ListNestedObjectValueOf[FulfillmentCodeHookSettings] `tfsdk:"fulfillment_code_hook"`
 	ID                     types.String                                                 `tfsdk:"id"`
+	IntentID               types.String                                                 `tfsdk:"intent_id"`
 	InitialResponseSetting fwtypes.ListNestedObjectValueOf[InitialResponseSetting]      `tfsdk:"initial_response_setting"`
 	InputContext           fwtypes.ListNestedObjectValueOf[InputContext]                `tfsdk:"input_context"`
 	KendraConfiguration    fwtypes.ListNestedObjectValueOf[KendraConfiguration]         `tfsdk:"kendra_configuration"`

@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
@@ -942,14 +941,47 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 }
 
-// Acceptance test access AWS and cost money to run.
+// Acceptance tests access AWS and cost money to run.
+
 func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -969,58 +1001,6 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lexmodelsv2", regexache.MustCompile(`intent:+.`)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			},
-		},
-	})
-}
-
-/*
-func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var intent lexmodelsv2.DescribeIntentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lexv2models_intent.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
-			testAccPreCheck(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIntentConfig_basic(rName, testAccIntentVersionNewer),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntentExists(ctx, resourceName, &intent),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceIntent = newResourceIntent
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceIntent, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -1028,8 +1008,6 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 		},
 	})
 }
-
-*/
 
 func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1041,7 +1019,10 @@ func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := conn.DescribeIntent(ctx, &lexmodelsv2.DescribeIntentInput{
-				IntentId: aws.String(rs.Primary.ID),
+				IntentId:   aws.String(rs.Primary.Attributes["intent_id"]),
+				BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
+				BotVersion: aws.String(rs.Primary.Attributes["bot_version"]),
+				LocaleId:   aws.String(rs.Primary.Attributes["locale_id"]),
 			})
 			if errs.IsA[*lextypes.ResourceNotFoundException](err) {
 				return nil
@@ -1070,7 +1051,10 @@ func testAccCheckIntentExists(ctx context.Context, name string, intent *lexmodel
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
 		resp, err := conn.DescribeIntent(ctx, &lexmodelsv2.DescribeIntentInput{
-			IntentId: aws.String(rs.Primary.ID),
+			IntentId:   aws.String(rs.Primary.Attributes["intent_id"]),
+			BotId:      aws.String(rs.Primary.Attributes["bot_id"]),
+			BotVersion: aws.String(rs.Primary.Attributes["bot_version"]),
+			LocaleId:   aws.String(rs.Primary.Attributes["locale_id"]),
 		})
 
 		if err != nil {
@@ -1082,18 +1066,6 @@ func testAccCheckIntentExists(ctx context.Context, name string, intent *lexmodel
 		return nil
 	}
 }
-
-/*
-func testAccCheckIntentNotRecreated(before, after *lexmodelsv2.DescribeIntentOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.IntentId), aws.ToString(after.IntentId); before != after {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingNotRecreated, tflexv2models.ResNameIntent, aws.ToString(before.IntentId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-*/
 
 func testAccIntentConfig_base(rName string, ttl int, dp bool) string {
 	return fmt.Sprintf(`
@@ -1155,9 +1127,37 @@ func testAccIntentConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_lexv2models_intent" "test" {
   bot_id      = aws_lexv2models_bot.test.id
-  bot_version = aws_lexv2models_bot_version.test.bot_version
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
   name        = %[1]q
-  locale_id   = "en_US"
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+}
+`, rName))
+}
+
+func testAccIntentConfig_update(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  confirmation_setting {
+    active = true
+    
+    prompt_specification {
+      allow_interrupt = true
+      max_retries     = 1
+
+      next_step {
+        dialog_action {
+          type = "Close"
+        }
+      }
+    }
+  }
 }
 `, rName))
 }
