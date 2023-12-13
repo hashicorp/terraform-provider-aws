@@ -117,18 +117,8 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(name)
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"creating", "modifying"},
-		Target:     []string{"active"},
-		Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      10 * time.Second,
-	}
-
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) creation: %s", d.Id(), err)
+	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
@@ -187,18 +177,8 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Event Subscription (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &retry.StateChangeConf{
-			Pending:    []string{"modifying"},
-			Target:     []string{"active"},
-			Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      10 * time.Second,
-		}
-
-		_, err = stateConf.WaitForStateContext(ctx)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) modification: %s", d.Id(), err)
+		if _, err := waitEventSubscriptionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -222,18 +202,8 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      10 * time.Second,
-	}
-
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) deletion: %s", d.Id(), err)
+	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -288,13 +258,11 @@ func findEventSubscriptions(ctx context.Context, conn *dms.DatabaseMigrationServ
 	return output, nil
 }
 
-func resourceEventSubscriptionStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, name string) retry.StateRefreshFunc {
+func statusEventSubscription(ctx context.Context, conn *dms.DatabaseMigrationService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
-			SubscriptionName: aws.String(name),
-		})
+		output, err := FindEventSubscriptionByName(ctx, conn, name)
 
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -302,10 +270,63 @@ func resourceEventSubscriptionStateRefreshFunc(ctx context.Context, conn *dms.Da
 			return nil, "", err
 		}
 
-		if v == nil || len(v.EventSubscriptionsList) == 0 || v.EventSubscriptionsList[0] == nil {
-			return nil, "", nil
-		}
-
-		return v, aws.StringValue(v.EventSubscriptionsList[0].Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
+}
+
+func waitEventSubscriptionCreated(ctx context.Context, conn *dms.DatabaseMigrationService, name string, timeout time.Duration) (*dms.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusCreating, eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionUpdated(ctx context.Context, conn *dms.DatabaseMigrationService, name string, timeout time.Duration) (*dms.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, name string, timeout time.Duration) (*dms.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
