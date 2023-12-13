@@ -48,6 +48,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceApplicationAssignmentConfiguration,
 			Name:    "Application Assignment Configuration",
 		},
+		{
+			Factory: newResourceTrustedTokenIssuer,
+			Name:    "Trusted Token Issuer",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
