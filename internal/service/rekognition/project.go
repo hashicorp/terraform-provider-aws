@@ -169,6 +169,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	state.ARN = flex.StringToFramework(ctx, out.ProjectArn)
 	state.AutoUpdate = flex.StringToFramework(ctx, (*string)(&out.AutoUpdate))
 	state.Feature = flex.StringToFramework(ctx, (*string)(&out.Feature))
+	state.Name = state.Id
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
