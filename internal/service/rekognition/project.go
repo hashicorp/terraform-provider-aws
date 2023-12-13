@@ -49,10 +49,6 @@ func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataReque
 	resp.TypeName = "aws_rekognition_project"
 }
 
-func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
 func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -90,6 +86,10 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 			}),
 		},
 	}
+}
+
+func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
