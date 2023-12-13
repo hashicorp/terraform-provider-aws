@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/go-cmp/cmp"
@@ -1855,7 +1856,12 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"])
+			var optFns []func(*s3.Options)
+			if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+			}
+
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"], optFns...)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1884,13 +1890,18 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
 		input := &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
 			IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 		}
 
-		output, err := conn.GetObject(ctx, input)
+		output, err := conn.GetObject(ctx, input, optFns...)
 
 		if err != nil {
 			return err
@@ -1927,10 +1938,17 @@ func testAccCheckObjectACL(ctx context.Context, n string, want []string) resourc
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		output, err := conn.GetObjectAcl(ctx, &s3.GetObjectAclInput{
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		input := &s3.GetObjectAclInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Key:    aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
-		})
+		}
+
+		output, err := conn.GetObjectAcl(ctx, input, optFns...)
 
 		if err != nil {
 			return err
@@ -1959,7 +1977,12 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resourc
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "")
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "", optFns...)
 
 		if err != nil {
 			return err
@@ -1989,7 +2012,12 @@ func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestChe
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "")
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "", optFns...)
 
 		if err != nil {
 			return err
@@ -2028,7 +2056,12 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), oldTags, newTags)
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), oldTags, newTags, optFns...)
 	}
 }
 
@@ -2041,7 +2074,12 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]))
+		var optFns []func(*s3.Options)
+		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), optFns...)
 		if err != nil {
 			return err
 		}

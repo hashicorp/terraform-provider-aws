@@ -17,6 +17,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -252,13 +253,18 @@ func resourceObjectCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
-	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string))
+	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
@@ -296,11 +302,11 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
 
-	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
+	if err := resourceObjectSetKMS(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
+	if tags, err := ObjectListTags(ctx, conn, bucket, key, optFns...); err == nil {
 		setTagsOut(ctx, Tags(tags))
 	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -316,10 +322,15 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
@@ -330,7 +341,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Key:    aws.String(key),
 		}
 
-		_, err := conn.PutObjectAcl(ctx, input)
+		_, err := conn.PutObjectAcl(ctx, input, optFns...)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting S3 Object (%s) ACL: %s", d.Id(), err)
@@ -346,7 +357,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			},
 		}
 
-		_, err := conn.PutObjectLegalHold(ctx, input)
+		_, err := conn.PutObjectLegalHold(ctx, input, optFns...)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting S3 Object (%s) legal hold: %s", d.Id(), err)
@@ -373,7 +384,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		_, err := conn.PutObjectRetention(ctx, input)
+		_, err := conn.PutObjectRetention(ctx, input, optFns...)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting S3 Object (%s) retention: %s", d.Id(), err)
@@ -383,7 +394,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
+		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n, optFns...); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
@@ -394,18 +405,23 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
 	} else {
-		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
+		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}
 
 	if err != nil {
@@ -437,14 +453,20 @@ func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
-	uploader := manager.NewUploader(conn)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
+	uploader := manager.NewUploader(conn, manager.WithUploaderRequestOptions(optFns...))
 
+	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
 	if ignoreProviderDefaultTags(ctx, d) {
 		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
 	} else {
@@ -580,19 +602,19 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
-func resourceObjectSetKMS(ctx context.Context, d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
-	// Only set non-default KMS key ID (one that doesn't match default)
-	if sseKMSKeyId != nil {
-		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSConn(ctx)
-		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
+func resourceObjectSetKMS(ctx context.Context, meta interface{}, d *schema.ResourceData, sseKMSKeyID string) error {
+	// Only set non-default KMS key ID (one that doesn't match default).
+	if sseKMSKeyID != "" {
+		// Read S3 KMS default master key.
+		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), DefaultKMSKeyAlias)
+
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
+			return fmt.Errorf("reading default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
 		}
 
-		if kmsKeyID := aws.ToString(sseKMSKeyId); kmsKeyID != aws.ToString(keyMetadata.Arn) {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", kmsKeyID)
-			d.Set("kms_key_id", sseKMSKeyId)
+		if sseKMSKeyID != aws.ToString(keyMetadata.Arn) {
+			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS key: %s", sseKMSKeyID)
+			d.Set("kms_key_id", sseKMSKeyID)
 		}
 	}
 
@@ -651,7 +673,7 @@ func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 	return false
 }
 
-func findObjectByBucketAndKey(ctx context.Context, conn *s3.Client, bucket, key, etag, checksumAlgorithm string) (*s3.HeadObjectOutput, error) {
+func findObjectByBucketAndKey(ctx context.Context, conn *s3.Client, bucket, key, etag, checksumAlgorithm string, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -663,7 +685,7 @@ func findObjectByBucketAndKey(ctx context.Context, conn *s3.Client, bucket, key,
 		input.IfMatch = aws.String(etag)
 	}
 
-	return findObject(ctx, conn, input)
+	return findObject(ctx, conn, input, optFns...)
 }
 
 func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput, optFns ...func(*s3.Options)) (*s3.HeadObjectOutput, error) {
