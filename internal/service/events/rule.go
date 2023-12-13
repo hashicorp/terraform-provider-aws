@@ -95,6 +95,10 @@ func ResourceRule() *schema.Resource {
 					"state",
 				},
 			},
+			"force": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -278,7 +282,8 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	input := &eventbridge.DeleteRuleInput{
-		Name: aws.String(ruleName),
+		Name:  aws.String(ruleName),
+		Force: d.Get("force").(*bool),
 	}
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
