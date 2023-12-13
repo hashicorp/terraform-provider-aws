@@ -26,7 +26,6 @@ import (
 )
 
 // @FrameworkResource(name="Project")
-// @Tags(identifierAttribute="arn")
 func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProject{}
 
@@ -129,12 +128,12 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	state := plan
-	state.Id = plan.Name
 	state.ARN = flex.StringValueToFramework(ctx, *out.ProjectArn)
+	state.Id = state.ARN
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
 	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, state.Id.ValueString(), createTimeout)
+	_, err = waitProjectCreated(ctx, conn, state.Name.ValueString(), in.Feature, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameProject, state.Id.String(), err),
@@ -145,22 +144,78 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	resp.Diagnostics.AddError("", "")
+	conn := r.Meta().RekognitionClient(ctx)
+
+	var state resourceProjectData
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := FindProjectByName(ctx, conn, state.Name.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameProject, state.Id.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state.ARN = flex.StringToFramework(ctx, out.ProjectArn)
+	state.AutoUpdate = flex.StringToFramework(ctx, (*string)(&out.AutoUpdate))
+	state.Feature = flex.StringToFramework(ctx, (*string)(&out.Feature))
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan resourceProjectData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().RekognitionClient(ctx)
 
+	var state resourceProjectData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := &rekognition.DeleteProjectInput{
+		ProjectArn: state.ARN.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteProject(ctx, in)
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameProject, state.Id.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 
-func waitProjectCreated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*awstypes.ProjectDescription, error) {
+func waitProjectCreated(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature, timeout time.Duration) (*awstypes.ProjectDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProjectStatusCreating),
 		Target:                    enum.Slice(awstypes.ProjectStatusCreated),
-		Refresh:                   statusProject(ctx, conn, id),
+		Refresh:                   statusProject(ctx, conn, name, feature),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -174,10 +229,13 @@ func waitProjectCreated(ctx context.Context, conn *rekognition.Client, id string
 	return nil, err
 }
 
-func FindProjectByName(ctx context.Context, conn *rekognition.Client, id string) (*awstypes.ProjectDescription, error) {
+func FindProjectByName(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) (*awstypes.ProjectDescription, error) {
 	in := &rekognition.DescribeProjectsInput{
 		ProjectNames: []string{
-			id,
+			name,
+		},
+		Features: []awstypes.CustomizationFeature{
+			feature,
 		},
 	}
 
@@ -201,9 +259,9 @@ func FindProjectByName(ctx context.Context, conn *rekognition.Client, id string)
 	return &out.ProjectDescriptions[0], nil
 }
 
-func statusProject(ctx context.Context, conn *rekognition.Client, id string) retry.StateRefreshFunc {
+func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindProjectByName(ctx, conn, id)
+		out, err := FindProjectByName(ctx, conn, name, feature)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -222,7 +280,5 @@ type resourceProjectData struct {
 	Feature    types.String   `tfsdk:"feature"`
 	Id         types.String   `tfsdk:"id"`
 	Name       types.String   `tfsdk:"name"`
-	Tags       types.Map      `tfsdk:"tags"`
-	TagsAll    types.Map      `tfsdk:"tags_all"`
 	Timeouts   timeouts.Value `tfsdk:"timeouts"`
 }

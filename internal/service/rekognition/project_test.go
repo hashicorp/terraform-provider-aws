@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/rekognition"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,20 +23,21 @@ import (
 )
 
 func TestAccRekognitionProject_basic(t *testing.T) {
-	// _ := acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
+	feature := "CONTENT_MODERATION"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			// acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.Rekognition)
-			// testAccProjectPreCheck(ctx, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			testAccProjectPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rProjectId),
@@ -42,9 +45,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "feature", "CUSTOM_LABELS"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
 			{
@@ -57,7 +58,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProjectDestroy(ctx context.Context, feature string, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
 
@@ -66,7 +67,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfrekognition.FindCollectionByID(ctx, conn, rs.Primary.ID)
+			_, err := tfrekognition.FindProjectByName(ctx, conn, name, awstypes.CustomizationFeature(feature))
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -75,37 +76,37 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameCollection, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameProject, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-// func testAccProjectPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
+func testAccProjectPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
 
-// 	input := &rekognition.ListCollectionsInput{}
-// 	_, err := conn.ListCollections(ctx, input)
+	input := &rekognition.DescribeProjectsInput{}
+	_, err := conn.DescribeProjects(ctx, input)
 
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
 
 func testAccProjectConfig_basic(rProjectId string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
   name        = "%s"
 	auto_update = "ENABLED"
-	feature     = "CUSTOM_LABELS"
-
-  tags = {
-		test = 1
-  }
+	feature     = "CONTENT_MODERATION"
+	timeouts {
+		create = "60m"
+		delete = "60m"
+	}
 }
 `, rProjectId)
 }
