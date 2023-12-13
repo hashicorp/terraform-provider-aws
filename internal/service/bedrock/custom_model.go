@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -17,10 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -47,15 +50,18 @@ func (r *resourceCustomModel) Metadata(_ context.Context, request resource.Metad
 func (r *resourceCustomModel) Schema(ctx context.Context, request resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"base_model_id": schema.StringAttribute{
+			"base_model_identifier": schema.StringAttribute{
 				Required: true,
 				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:(([0-9]{12}:custom-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}/[a-z0-9]{12})|(:foundation-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2})))|([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2})|(([0-9a-zA-Z][_-]?)+)$`), "minimum length of 1. Maximum length of 2048."),
 			},
-			"client_request_token": schema.StringAttribute{
+			"customization_type": schema.StringAttribute{
 				Optional: true,
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "minimum length of 1. Maximum length of 256."),
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.CustomizationType](),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"custom_model_kms_key_id": schema.StringAttribute{
 				Optional: true,
@@ -73,6 +79,7 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 				// ForceNew: true,
 				// Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"id": framework.IDAttribute(),
 			"job_name": schema.StringAttribute{
 				Required: true,
 				// ForceNew: true,
