@@ -82,10 +82,10 @@ This resource supports the following arguments:
 `connectionPoolConfig` blocks support the following:
 
 * `connectionBorrowTimeout` - (Optional) The number of seconds for a proxy to wait for a connection to become available in the connection pool. Only applies when the proxy has opened its maximum number of connections and all connections are busy with client sessions.
-* `initQuery` - (Optional) One or more SQL statements for the proxy to run when opening each new database connection. Typically used with `set` statements to make sure that each connection has identical settings such as time zone and character set. This setting is empty by default. For multiple statements, use semicolons as the separator. You can also include multiple variables in a single `set` statement, such as `SET x=1, y=2`.
+* `initQuery` - (Optional) One or more SQL statements for the proxy to run when opening each new database connection. Typically used with `SET` statements to make sure that each connection has identical settings such as time zone and character set. This setting is empty by default. For multiple statements, use semicolons as the separator. You can also include multiple variables in a single `SET` statement, such as `SET x=1, y=2`.
 * `maxConnectionsPercent` - (Optional) The maximum size of the connection pool for each target in a target group. For Aurora MySQL, it is expressed as a percentage of the max_connections setting for the RDS DB instance or Aurora DB cluster used by the target group.
 * `maxIdleConnectionsPercent` - (Optional) Controls how actively the proxy closes idle database connections in the connection pool. A high value enables the proxy to leave a high percentage of idle connections open. A low value causes the proxy to close idle client connections and return the underlying database connections to the connection pool. For Aurora MySQL, it is expressed as a percentage of the max_connections setting for the RDS DB instance or Aurora DB cluster used by the target group.
-* `sessionPinningFilters` - (Optional) Each item in the list represents a class of SQL operations that normally cause all later statements in a session using a proxy to be pinned to the same underlying database connection. Including an item in the list exempts that class of SQL operations from the pinning behavior. Currently, the only allowed value is `excludeVariableSets`.
+* `sessionPinningFilters` - (Optional) Each item in the list represents a class of SQL operations that normally cause all later statements in a session using a proxy to be pinned to the same underlying database connection. Including an item in the list exempts that class of SQL operations from the pinning behavior. Currently, the only allowed value is `EXCLUDE_VARIABLE_SETS`.
 
 ## Attribute Reference
 
@@ -99,8 +99,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `30M`)
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
 
 ## Import
 
@@ -124,4 +124,4 @@ Using `terraform import`, import DB proxy default target groups using the `dbPro
 % terraform import aws_db_proxy_default_target_group.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-586609f3d8c714e67602a68a74614deb7a87a2757faa28cdcb1f6179fbffb6a9 -->
+<!-- cache-key: cdktf-0.19.0 input-586609f3d8c714e67602a68a74614deb7a87a2757faa28cdcb1f6179fbffb6a9 -->

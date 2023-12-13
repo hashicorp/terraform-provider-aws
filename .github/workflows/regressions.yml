@@ -17,7 +17,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
-          EVENT_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+          EVENT_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL }}
           payload: |

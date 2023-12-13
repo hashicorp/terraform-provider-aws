@@ -220,6 +220,30 @@ func TestAccS3ObjectsDataSource_fetchOwner(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectsDataSource_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectsDataSourceConfig_directoryBucket(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccObjectsDataSourceConfig_base(rName string, n int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -356,4 +380,46 @@ data "aws_s3_objects" "test" {
   depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
 }
 `)
+}
+
+func testAccObjectsDataSourceConfig_directoryBucket(rName string, n int) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_object" "test1" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix1/sub1/${count.index}"
+  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object" "test2" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix1/sub2/${count.index}"
+  content = "0123456789"
+}
+
+resource "aws_s3_object" "test3" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix2/${count.index}"
+  content = "abcdefghijklmnopqrstuvwxyz"
+}
+
+data "aws_s3_objects" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`, n))
 }

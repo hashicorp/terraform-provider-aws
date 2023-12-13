@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connect_peer"
 description: |-
-  Terraform resource for managing an AWS NetworkManager Connect Peer.
+  Terraform resource for managing an AWS Network Manager Connect Peer.
 ---
 
 # Resource: aws_networkmanager_connect_peer
 
-Terraform resource for managing an AWS NetworkManager Connect Peer.
+Terraform resource for managing an AWS Network Manager Connect Peer.
 
 ## Example Usage
 
@@ -84,18 +84,47 @@ resource "aws_networkmanager_connect_peer" "example" {
 }
 ```
 
+### Usage with a Tunnel-less Connect attachment
+
+```terraform
+resource "aws_networkmanager_vpc_attachment" "example" {
+  subnet_arns     = aws_subnet.example[*].arn
+  core_network_id = awscc_networkmanager_core_network.example.id
+  vpc_arn         = aws_vpc.example.arn
+}
+
+resource "aws_networkmanager_connect_attachment" "example" {
+  core_network_id         = awscc_networkmanager_core_network.example.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.example.id
+  edge_location           = aws_networkmanager_vpc_attachment.example.edge_location
+  options {
+    protocol = "NO_ENCAP"
+  }
+}
+
+resource "aws_networkmanager_connect_peer" "example" {
+  connect_attachment_id = aws_networkmanager_connect_attachment.example.id
+  peer_address          = "127.0.0.1"
+  bgp_options {
+    peer_asn = 65000
+  }
+  subnet_arn = aws_subnet.test2.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 - `connect_attachment_id` - (Required) The ID of the connection attachment.
-- `inside_cidr_blocks` - (Required) The inside IP addresses used for BGP peering.
 - `peer_address` - (Required) The Connect peer address.
 
 The following arguments are optional:
 
 - `bgp_options` (Optional) The Connect peer BGP options.
 - `core_network_address` (Optional) A Connect peer core network address.
+- `inside_cidr_blocks` - (Optional) The inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `GRE`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
+- `subnet_arn` - (Optional) The subnet ARN for the Connect peer. Required when the Connect attachment protocol is `NO_ENCAP`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
 - `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

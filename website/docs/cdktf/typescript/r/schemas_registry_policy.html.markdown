@@ -78,9 +78,9 @@ This resource exports no additional attributes.
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -104,4 +104,4 @@ Using `terraform import`, import EventBridge Schema Registry Policy using the `r
 % terraform import aws_schemas_registry_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9012f6db2847612db1042a8a2bfd8eded85a88882cdbccfc86d64bfed094f01b -->
+<!-- cache-key: cdktf-0.19.0 input-9012f6db2847612db1042a8a2bfd8eded85a88882cdbccfc86d64bfed094f01b -->

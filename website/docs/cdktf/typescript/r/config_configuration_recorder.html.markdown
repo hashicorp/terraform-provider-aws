@@ -105,11 +105,11 @@ This resource supports the following arguments:
 
 ### recording_group Configuration Block
 
-* `allSupported` - (Optional) Specifies whether AWS Config records configuration changes for every supported type of regional resource (which includes any new type that will become supported in the future). Conflicts with `resourceTypes`. Defaults to `true`.
-* `exclusionByResourceTypes` - (Optional) An object that specifies how AWS Config excludes resource types from being recorded by the configuration recorder.To use this option, you must set the useOnly field of RecordingStrategy to `exclusionByResourceTypes` Requires `all_supported = false`. Conflicts with `resourceTypes`.
-* `includeGlobalResourceTypes` - (Optional) Specifies whether AWS Config includes all supported types of _global resources_ with the resources that it records. Requires `all_supported = true`. Conflicts with `resourceTypes`.
+* `allSupported` - (Optional) Specifies whether AWS Config records configuration changes for every supported type of regional resource (which includes any new type that will become supported in the future). Conflicts with `resource_types`. Defaults to `true`.
+* `exclusionByResourceTypes` - (Optional) An object that specifies how AWS Config excludes resource types from being recorded by the configuration recorder.To use this option, you must set the useOnly field of RecordingStrategy to `EXCLUSION_BY_RESOURCE_TYPES` Requires `all_supported = false`. Conflicts with `resource_types`.
+* `includeGlobalResourceTypes` - (Optional) Specifies whether AWS Config includes all supported types of _global resources_ with the resources that it records. Requires `all_supported = true`. Conflicts with `resource_types`.
 * `recordingStrategy` - (Optional) Recording Strategy. Detailed below.
-* `resourceTypes` - (Optional) A list that specifies the types of AWS resources for which AWS Config records configuration changes (for example, `aws::ec2::instance` or `aws::cloudTrail::trail`). See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types. In order to use this attribute, `allSupported` must be set to false.
+* `resourceTypes` - (Optional) A list that specifies the types of AWS resources for which AWS Config records configuration changes (for example, `AWS::EC2::Instance` or `AWS::CloudTrail::Trail`). See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types. In order to use this attribute, `all_supported` must be set to false.
 
 #### exclusion_by_resource_types Configuration Block
 
@@ -147,4 +147,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_config_configuration_recorder.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f7d9392378b34f2ee90f6663aee76cb66b2d7d72f4eb2ced771d862822d5a3df -->
+<!-- cache-key: cdktf-0.19.0 input-f7d9392378b34f2ee90f6663aee76cb66b2d7d72f4eb2ced771d862822d5a3df -->

@@ -48,10 +48,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `keyName` - (Optional) The name for the key pair. If neither `keyName` nor `keyNamePrefix` is provided, Terraform will create a unique key name using the prefix `terraform`.
-* `keyNamePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `keyName`. If neither `keyName` nor `keyNamePrefix` is provided, Terraform will create a unique key name using the prefix `terraform`.
+* `keyName` - (Optional) The name for the key pair. If neither `key_name` nor `key_name_prefix` is provided, Terraform will create a unique key name using the prefix `terraform-`.
+* `keyNamePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `key_name`. If neither `key_name` nor `key_name_prefix` is provided, Terraform will create a unique key name using the prefix `terraform-`.
 * `publicKey` - (Required) The public key material.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `keyPairId` - The key pair ID.
 * `keyType` - The type of key pair.
 * `fingerprint` - The MD5 public key fingerprint as specified in section 4 of RFC 4716.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -89,4 +89,4 @@ Using `terraform import`, import Key Pairs using the `keyName`. For example:
 
 ~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.
 
-<!-- cache-key: cdktf-0.18.0 input-bc4b2bf30b41e8b680f59b0e745bd630e891fca6baac140b343a76369eb3e8aa -->
+<!-- cache-key: cdktf-0.19.0 input-bc4b2bf30b41e8b680f59b0e745bd630e891fca6baac140b343a76369eb3e8aa -->

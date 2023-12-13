@@ -70,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sourceCodeUrl` - URL pointing to the source code of the application version.
 * `templateUrl` - URL pointing to the Cloud Formation template for the application version.
 
-<!-- cache-key: cdktf-0.18.0 input-4067d08c02e21d01320463b039dbb33009c80dd466c694f17352beb6a7e00e63 -->
+<!-- cache-key: cdktf-0.19.0 input-4067d08c02e21d01320463b039dbb33009c80dd466c694f17352beb6a7e00e63 -->

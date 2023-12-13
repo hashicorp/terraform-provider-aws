@@ -49,9 +49,9 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - (Required) The name of the SIP rule.
-* `targetApplications` - (Required) List of SIP media applications with priority and AWS Region. Only one SIP application per AWS Region can be used. See [`targetApplications`](#target_applications).
-* `triggerType` - (Required) The type of trigger assigned to the SIP rule in `triggerValue`. Valid values are `requestUriHostname` or `toPhoneNumber`.
-* `triggerValue` - (Required) If `triggerType` is `requestUriHostname`, the value can be the outbound host name of an Amazon Chime Voice Connector. If `triggerType` is `toPhoneNumber`, the value can be a customer-owned phone number in the E164 format. The Sip Media Application specified in the Sip Rule is triggered if the request URI in an incoming SIP request matches the `requestUriHostname`, or if the "To" header in the incoming SIP request matches the `toPhoneNumber` value.
+* `targetApplications` - (Required) List of SIP media applications with priority and AWS Region. Only one SIP application per AWS Region can be used. See [`target_applications`](#target_applications).
+* `triggerType` - (Required) The type of trigger assigned to the SIP rule in `trigger_value`. Valid values are `RequestUriHostname` or `ToPhoneNumber`.
+* `triggerValue` - (Required) If `trigger_type` is `RequestUriHostname`, the value can be the outbound host name of an Amazon Chime Voice Connector. If `trigger_type` is `ToPhoneNumber`, the value can be a customer-owned phone number in the E164 format. The Sip Media Application specified in the Sip Rule is triggered if the request URI in an incoming SIP request matches the `RequestUriHostname`, or if the "To" header in the incoming SIP request matches the `ToPhoneNumber` value.
 
 The following arguments are optional:
 
@@ -93,4 +93,4 @@ Using `terraform import`, import a ChimeSDKVoice SIP Rule using the `id`. For ex
 % terraform import aws_chimesdkvoice_sip_rule.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3475b0a57a4be526a5e2626982a1ad5155fe2cd8afc53724a14c23471b5a6ff8 -->
+<!-- cache-key: cdktf-0.19.0 input-3475b0a57a4be526a5e2626982a1ad5155fe2cd8afc53724a14c23471b5a6ff8 -->

@@ -93,4 +93,4 @@ Using `terraform import`, import CodeBuild Source Credential using the CodeBuild
 % terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1d3035420b7bbe8f89436bdbdcd040691cc3649bd4b17947a90be506a262d9cb -->
+<!-- cache-key: cdktf-0.19.0 input-1d3035420b7bbe8f89436bdbdcd040691cc3649bd4b17947a90be506a262d9cb -->

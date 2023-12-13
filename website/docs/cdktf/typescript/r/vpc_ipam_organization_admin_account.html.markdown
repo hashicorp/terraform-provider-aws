@@ -82,4 +82,4 @@ Using `terraform import`, import IPAMs using the delegate account `id`. For exam
 % terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-756ca0efb94e8ad92deb19a5ce28731120d9b49f07ca56b39bba452b2ffecbdd -->
+<!-- cache-key: cdktf-0.19.0 input-756ca0efb94e8ad92deb19a5ce28731120d9b49f07ca56b39bba452b2ffecbdd -->

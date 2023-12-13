@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -60,6 +61,8 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 }
 
 func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source := d.Get("source").(string)
@@ -77,21 +80,23 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 	_, err := conn.EnableAwsNetworkPerformanceMetricSubscription(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("enabling EC2 AWS Network Performance Metric Subscription (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "enabling EC2 AWS Network Performance Metric Subscription (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceNetworkPerformanceMetricSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceNetworkPerformanceMetricSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	subscription, err := FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
@@ -99,11 +104,11 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 AWS Network Performance Metric Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
 	}
 
 	d.Set("destination", subscription.Destination)
@@ -112,16 +117,18 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 	d.Set("source", subscription.Source)
 	d.Set("statistic", subscription.Statistic)
 
-	return nil
+	return diags
 }
 
 func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 AWS Network Performance Metric Subscriptione: %s", d.Id())
@@ -133,10 +140,10 @@ func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *
 	})
 
 	if err != nil {
-		return diag.Errorf("disabling EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const networkPerformanceMetricSubscriptionRuleIDSeparator = "/"

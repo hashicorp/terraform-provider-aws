@@ -210,6 +210,15 @@ import {
 }
 ```
 
+If the record name is the empty string, it can be omitted:
+
+```terraform
+import {
+  to = aws_route53_record.myrecord
+  id = "Z4KAPRWWNC7JR__NS"
+}
+```
+
 **Using `terraform import` to import** Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
 
 Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):

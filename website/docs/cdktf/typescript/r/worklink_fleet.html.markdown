@@ -94,7 +94,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) A region-unique name for the AMI.
-* `auditStreamArn` - (Optional) The ARN of the Amazon Kinesis data stream that receives the audit events. Kinesis data stream name must begin with `"amazonWorkLink-"`.
+* `auditStreamArn` - (Optional) The ARN of the Amazon Kinesis data stream that receives the audit events. Kinesis data stream name must begin with `"AmazonWorkLink-"`.
 * `deviceCaCertificate` - (Optional) The certificate chain, including intermediate certificates and the root certificate authority certificate used to issue device certificates.
 * `identityProvider` - (Optional) Provide this to allow manage the identity provider configuration for the fleet. Fields documented below.
 * `displayName` - (Optional) The name of the fleet.
@@ -148,4 +148,4 @@ Using `terraform import`, import WorkLink using the ARN. For example:
 % terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e7ee1bb443346fba441c55fe6024eae415cbde38eca738fd5b316c9affc96fc9 -->
+<!-- cache-key: cdktf-0.19.0 input-e7ee1bb443346fba441c55fe6024eae415cbde38eca738fd5b316c9affc96fc9 -->

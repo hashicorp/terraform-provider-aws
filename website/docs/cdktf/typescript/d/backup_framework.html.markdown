@@ -47,10 +47,10 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the backup framework.
 * `control` - One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
 * `creationTime` - Date and time that a framework is created, in Unix format and Coordinated Universal Time (UTC).
-* `deploymentStatus` - Deployment status of a framework. The statuses are: `createInProgress` | `updateInProgress` | `deleteInProgress` | `completed`| `failed`.
+* `deploymentStatus` - Deployment status of a framework. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`| `FAILED`.
 * `description` - Description of the framework.
 * `id` - ID of the framework.
-* `status` - Framework consists of one or more controls. Each control governs a resource, such as backup plans, backup selections, backup vaults, or recovery points. You can also turn AWS Config recording on or off for each resource. The statuses are: `active`, `partiallyActive`, `inactive`, `unavailable`. For more information refer to the [AWS documentation for Framework Status](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DescribeFramework.html#Backup-DescribeFramework-response-FrameworkStatus)
+* `status` - Framework consists of one or more controls. Each control governs a resource, such as backup plans, backup selections, backup vaults, or recovery points. You can also turn AWS Config recording on or off for each resource. The statuses are: `ACTIVE`, `PARTIALLY_ACTIVE`, `INACTIVE`, `UNAVAILABLE`. For more information refer to the [AWS documentation for Framework Status](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DescribeFramework.html#Backup-DescribeFramework-response-FrameworkStatus)
 * `tags` - Metadata that helps organize the frameworks you create.
 
 ### Control Attributes
@@ -76,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `complianceResourceTypes` - Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - Tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.
 
-<!-- cache-key: cdktf-0.18.0 input-070382f6ead1d1cc0b69de2f856a82f41ed348235bed7c03c3b9216ebaf43096 -->
+<!-- cache-key: cdktf-0.19.0 input-070382f6ead1d1cc0b69de2f856a82f41ed348235bed7c03c3b9216ebaf43096 -->

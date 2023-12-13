@@ -379,7 +379,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil || out == nil || out.Endpoint == nil {
-		return create.DiagError(names.DMS, create.ErrActionCreating, ResNameS3Endpoint, d.Get("endpoint_id").(string), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionCreating, ResNameS3Endpoint, d.Get("endpoint_id").(string), err)
 	}
 
 	d.SetId(d.Get("endpoint_id").(string))
@@ -406,11 +406,11 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	if endpoint.S3Settings == nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), errors.New("no settings returned"))
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), errors.New("no settings returned"))
 	}
 
 	d.Set("endpoint_arn", endpoint.EndpointArn)
@@ -475,7 +475,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	p, err := structure.NormalizeJsonString(aws.StringValue(s3settings.ExternalTableDefinition))
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionSetting, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	d.Set("external_table_definition", p)
@@ -538,7 +538,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if err != nil {
-			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
+			return create.AppendDiagError(diags, names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
 		}
 	}
 
@@ -559,11 +559,11 @@ func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	return diags
@@ -576,8 +576,8 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.AddColumnName = aws.Bool(v)
 	}
 
-	if v, ok := d.Get("add_trailing_padding_character").(bool); ok && target { // target
-		s3s.AddTrailingPaddingCharacter = aws.Bool(v)
+	if v, ok := d.GetOk("add_trailing_padding_character"); ok && target { // target
+		s3s.AddTrailingPaddingCharacter = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("bucket_folder"); ok {

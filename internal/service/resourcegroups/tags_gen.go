@@ -18,12 +18,12 @@ import (
 // listTags lists resourcegroups service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *resourcegroups.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *resourcegroups.Client, identifier string, optFns ...func(*resourcegroups.Options)) (tftags.KeyValueTags, error) {
 	input := &resourcegroups.GetTagsInput{
 		Arn: aws.String(identifier),
 	}
 
-	output, err := conn.GetTags(ctx, input)
+	output, err := conn.GetTags(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -82,7 +82,7 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 // updateTags updates resourcegroups service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *resourcegroups.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *resourcegroups.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*resourcegroups.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -96,7 +96,7 @@ func updateTags(ctx context.Context, conn *resourcegroups.Client, identifier str
 			Keys: removedTags.Keys(),
 		}
 
-		_, err := conn.Untag(ctx, input)
+		_, err := conn.Untag(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -111,7 +111,7 @@ func updateTags(ctx context.Context, conn *resourcegroups.Client, identifier str
 			Tags: Tags(updatedTags),
 		}
 
-		_, err := conn.Tag(ctx, input)
+		_, err := conn.Tag(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

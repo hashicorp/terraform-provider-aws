@@ -40,15 +40,6 @@ func ResourceConfigRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -57,6 +48,26 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"evaluation_mode": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(configservice.EvaluationMode_Values(), false),
+						},
+					},
+				},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"input_parameters": {
 				Type:         schema.TypeString,
@@ -67,6 +78,10 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
+			},
+			"rule_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"scope": {
 				Type:     schema.TypeList,
@@ -206,9 +221,15 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("description"); ok {
 		ruleInput.Description = aws.String(v.(string))
 	}
+
+	if v, ok := d.Get("evaluation_mode").(*schema.Set); ok && v.Len() > 0 {
+		ruleInput.EvaluationModes = expandRulesEvaluationModes(v.List())
+	}
+
 	if v, ok := d.GetOk("input_parameters"); ok {
 		ruleInput.InputParameters = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
 		ruleInput.MaximumExecutionFrequency = aws.String(v.(string))
 	}
@@ -235,7 +256,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)
 	}
 
 	d.SetId(name)
@@ -255,7 +276,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)
 	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
@@ -265,6 +286,8 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("description", rule.Description)
 	d.Set("input_parameters", rule.InputParameters)
 	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
+
+	d.Set("evaluation_mode", flattenRuleEvaluationMode(rule.EvaluationModes))
 
 	if rule.Scope != nil {
 		d.Set("scope", flattenRuleScope(rule.Scope))
@@ -299,11 +322,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.DeleteConfigRuleWithContext(ctx, input)
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id()); err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)
 	}
 
 	return diags

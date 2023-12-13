@@ -81,10 +81,10 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional) The name of the DB event subscription. Conflicts with `name`.
 * `snsTopic` - (Required) The SNS topic to send events to.
 * `sourceIds` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a source_type must also be specified.
-* `sourceType` - (Optional) The type of source that will be generating the events. Valid options are `dbInstance`, `dbSecurityGroup`, `dbParameterGroup`, `dbSnapshot`, `dbCluster`, `dbClusterSnapshot`, or `dbProxy`. If not set, all sources will be subscribed to.
+* `sourceType` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-security-group`, `db-parameter-group`, `db-snapshot`, `db-cluster`, `db-cluster-snapshot`, or `db-proxy`. If not set, all sources will be subscribed to.
 * `eventCategories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html or run `aws rds describe-event-categories`.
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -93,15 +93,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the RDS event notification subscription
 * `arn` - The Amazon Resource Name of the RDS event notification subscription
 * `customerAwsId` - The AWS customer account associated with the RDS event notification subscription
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `40M`)
-- `delete` - (Default `40M`)
-- `update` - (Default `40M`)
+- `create` - (Default `40m`)
+- `delete` - (Default `40m`)
+- `update` - (Default `40m`)
 
 ## Import
 
@@ -125,4 +125,4 @@ Using `terraform import`, import DB Event Subscriptions using the `name`. For ex
 % terraform import aws_db_event_subscription.default rds-event-sub
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cb5fc34abd6de28afa1d0edc0e2b55d536c749f2cbd0845b420b9fb388541aff -->
+<!-- cache-key: cdktf-0.19.0 input-cb5fc34abd6de28afa1d0edc0e2b55d536c749f2cbd0845b420b9fb388541aff -->

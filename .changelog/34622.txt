@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_customerprofiles_domain
+```
+
+```release-note:new-resource
+aws_customerprofiles_profile
+```

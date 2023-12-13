@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sessionDuration` - Length of time that the application user sessions are valid in the ISO-8601 standard.
 * `tags` - Key-value map of resource tags.
 
-<!-- cache-key: cdktf-0.18.0 input-72117fb8aa2c4b577764d0abcde2981eecfaa21858cd3f396c6b7b422f3c859d -->
+<!-- cache-key: cdktf-0.19.0 input-72117fb8aa2c4b577764d0abcde2981eecfaa21858cd3f396c6b7b422f3c859d -->

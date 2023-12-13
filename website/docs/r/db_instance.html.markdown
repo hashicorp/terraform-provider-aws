@@ -31,7 +31,7 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 
 ## RDS Instance Class Types
 
-Amazon RDS supports three types of instance classes: Standard, Memory Optimized, and Burstable Performance.
+Amazon RDS supports instance classes for the following use cases: General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads.
 For more information please read the AWS RDS documentation about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
 
 ## Low-Downtime Updates
@@ -166,6 +166,55 @@ resource "aws_db_instance" "example" {
 }
 ```
 
+### RDS Db2 Usage
+
+```terraform
+# Lookup the default version for the engine. Db2 Standard Edition is `db2-se`, Db2 Advanced Edition is `db2-ae`.
+data "aws_rds_engine_version" "default" {
+  engine = "db2-se" #Standard Edition
+}
+
+# Lookup the available instance classes for the engine in the region being operated in
+data "aws_rds_orderable_db_instance" "example" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  license_model              = "bring-your-own-license"
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.t3.small", "db.r6i.large", "db.m6i.large"]
+}
+
+# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default paramater group as a source, and set license information.
+resource "aws_db_parameter_group" "example" {
+  name   = "db-db2-params"
+  family = data.aws_rds_engine_version.default.parameter_group_family
+
+  parameter {
+    apply_method = "immediate"
+    name         = "rds.ibm_customer_id"
+    value        = 0000000000
+  }
+  parameter {
+    apply_method = "immediate"
+    name         = "rds.ibm_site_id"
+    value        = 0000000000
+  }
+}
+
+# Create the RDS Db2 instance, use the data sources defined to set attributes
+resource "aws_db_instance" "example" {
+  allocated_storage       = 100
+  backup_retention_period = 7
+  db_name                 = "test"
+  engine                  = data.aws_rds_orderable_db_instance.example.engine
+  engine_version          = data.aws_rds_orderable_db_instance.example.engine_version
+  identifier              = "db2-instance-demo"
+  instance_class          = data.aws_rds_orderable_db_instance.example.instance_class
+  parameter_group_name    = aws_db_parameter_group.example.name
+  password                = "avoid-plaintext-passwords"
+  username                = "test"
+}
+```
+
 ### Storage Autoscaling
 
 To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
@@ -251,7 +300,7 @@ Defaults to true.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
-  See [blue_green_update](#blue_green_update) below
+  See [`blue_green_update`](#blue_green_update) below.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
@@ -288,8 +337,12 @@ Cannot be specified for gp3 storage if the `allocated_storage` value is below a 
 See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage) for details.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
-SE1) License model information for this DB instance.
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle SE1) License model information for this DB instance. Valid values for this field are as follows:
+    * RDS for MariaDB: `general-public-license`
+    * RDS for Microsoft SQL Server: `license-included`
+    * RDS for MySQL: `general-public-license`
+    * RDS for Oracle: `bring-your-own-license | license-included`
+    * RDS for PostgreSQL: `postgresql-license`
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
@@ -312,8 +365,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
-* `parameter_group_name` - (Optional) Name of the DB parameter group to
-associate.
+* `parameter_group_name` - (Optional) Name of the DB parameter group to associate.
 * `password` - (Required unless `manage_master_user_password` is set to true or unless a `snapshot_identifier` or `replicate_source_db`
 is provided or `manage_master_user_password` is set.) Password for the master DB user. Note that this may show up in
 logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
@@ -407,7 +459,7 @@ resource "aws_db_instance" "db" {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database.
 
-## blue_green_update
+### `blue_green_update`
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.

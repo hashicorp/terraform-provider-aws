@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -45,7 +46,7 @@ func ResourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	identifier := d.Get("resource_arn").(string)
@@ -53,20 +54,20 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	value := d.Get("value").(string)
 
 	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
-		return diag.Errorf("creating %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
+		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	d.SetId(tftags.SetResourceID(identifier, key))
 
-	return resourceTagRead(ctx, d, meta)
+	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	value, err := GetTag(ctx, conn, identifier, key)
@@ -74,46 +75,46 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", dynamodb.ServiceID, identifier, key)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
+		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	d.Set("resource_arn", identifier)
 	d.Set("key", key)
 	d.Set("value", value)
 
-	return nil
+	return diags
 }
 
-func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
-		return diag.Errorf("updating %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
+		return sdkdiag.AppendErrorf(diags, "updating %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
 	}
 
-	return resourceTagRead(ctx, d, meta)
+	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := updateTags(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
-		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
+		return sdkdiag.AppendErrorf(diags, "deleting %s resource (%s) tag (%s): %s", dynamodb.ServiceID, identifier, key, err)
 	}
 
-	return nil
+	return diags
 }

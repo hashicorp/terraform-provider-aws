@@ -57,8 +57,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import `awsKinesisanalyticsv2Application` using `appli
 % terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd3010fed4591275bcebfac88611f10eb5c9c79e722ef1789997282c4a9937ac -->
+<!-- cache-key: cdktf-0.19.0 input-bd3010fed4591275bcebfac88611f10eb5c9c79e722ef1789997282c4a9937ac -->

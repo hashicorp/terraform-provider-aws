@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the WAF IP set.
 
-<!-- cache-key: cdktf-0.18.0 input-94305640b0471bb774be2d17cd0306bf77a551e4516c629668c09de87293f751 -->
+<!-- cache-key: cdktf-0.19.0 input-94305640b0471bb774be2d17cd0306bf77a551e4516c629668c09de87293f751 -->
