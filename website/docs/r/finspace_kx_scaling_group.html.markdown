@@ -18,7 +18,8 @@ Terraform resource for managing an AWS FinSpace Kx Scaling Group.
 resource "aws_finspace_kx_scaling_group" "test" {
 	name                 = "my-tf-kx-scalinggroup"
 	environment_id       = aws_finspace_kx_environment.example.id
-	availability_zone_id = "use1-az2"		host_type            = "kx.sg.4xlarge"
+	availability_zone_id = "use1-az2"		
+  host_type            = "kx.sg.4xlarge"
 }
 ```
 
@@ -43,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `clusters` - The list of Managed kdb clusters that are currently active in the given scaling group.
 * `created_timestamp` - The timestamp at which the scaling group was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `last_modified_timestamp` - Last timestamp at which the scaling group was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
-*`status` - The status of scaling group.
+* `status` - The status of scaling group.
     * CREATING – The scaling group creation is in progress.
     * CREATE_FAILED – The scaling group creation has failed.
     * ACTIVE – The scaling group is active.
