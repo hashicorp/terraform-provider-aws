@@ -1716,9 +1716,6 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrati
 		switch aws.StringValue(task.Status) {
 		case replicationTaskStatusRunning:
 			err := stopReplicationTask(ctx, rtID, conn)
-			if tfawserr.ErrCodeEquals(err, dms.ErrCodeInvalidResourceStateFault) {
-				continue
-			}
 
 			if err != nil {
 				return stoppedTasks, err
