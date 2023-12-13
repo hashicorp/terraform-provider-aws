@@ -120,9 +120,9 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 
     s3_export_configuration {
       disk_image_format = "RAW"
-      role_name = "role-name"
-      s3_bucket = aws_s3_bucket.test.id
-      s3_prefix = "prefix/"
+      role_name         = "role-name"
+      s3_bucket         = aws_s3_bucket.test.id
+      s3_prefix         = "prefix/"
     }
 
     region = data.aws_region.current.name

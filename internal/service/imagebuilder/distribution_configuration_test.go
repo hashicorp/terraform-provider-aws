@@ -1859,8 +1859,8 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   distribution {
     s3_export_configuration {
       disk_image_format = %[2]q
-      role_name = "role-name"
-      s3_bucket = aws_s3_bucket.test.id
+      role_name         = "role-name"
+      s3_bucket         = aws_s3_bucket.test.id
     }
 
     region = data.aws_region.current.name
@@ -1883,8 +1883,8 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   distribution {
     s3_export_configuration {
       disk_image_format = "RAW"
-      role_name = %[2]q
-      s3_bucket = aws_s3_bucket.test.id
+      role_name         = %[2]q
+      s3_bucket         = aws_s3_bucket.test.id
     }
 
     region = data.aws_region.current.name
@@ -1907,8 +1907,8 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   distribution {
     s3_export_configuration {
       disk_image_format = "RAW"
-      role_name = "role-name"
-      s3_bucket = aws_s3_bucket.test.id
+      role_name         = "role-name"
+      s3_bucket         = aws_s3_bucket.test.id
     }
 
     region = data.aws_region.current.name
@@ -1931,9 +1931,9 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   distribution {
     s3_export_configuration {
       disk_image_format = "RAW"
-      role_name = "role-name"
-      s3_bucket = aws_s3_bucket.test.id
-      s3_prefix = %[2]q
+      role_name         = "role-name"
+      s3_bucket         = aws_s3_bucket.test.id
+      s3_prefix         = %[2]q
     }
 
     region = data.aws_region.current.name
