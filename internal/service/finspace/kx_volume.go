@@ -177,7 +177,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	rID, err := flex.FlattenResourceId(idParts, kxVolumeIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxVolume, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxVolume, d.Get("name").(string), err)
 	}
 	d.SetId(rID)
 
@@ -203,21 +203,21 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := conn.CreateKxVolume(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.VolumeName == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	if _, err := waitKxVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxVolume, d.Id(), err)
 	}
 
 	// The CreateKxVolume API currently fails to tag the Volume when the
 	// Tags field is set. Until the API is fixed, tag after creation instead.
 	if err := createTags(ctx, conn, aws.ToString(out.VolumeArn), getTagsIn(ctx)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Id(), err)
 	}
 
 	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
@@ -236,7 +236,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxVolume, d.Id(), err)
 	}
 
 	d.Set("arn", out.VolumeArn)
@@ -252,16 +252,16 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("availability_zones", aws.StringSlice(out.AvailabilityZoneIds))
 
 	if err := d.Set("nas1_configuration", flattenNas1Configuration(out.Nas1Configuration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
 	}
 
 	if err := d.Set("attached_clusters", flattenAttachedClusters(out.AttachedClusters)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
 	}
 
 	parts, err := flex.ExpandResourceId(d.Id(), kxVolumeIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
 	}
 	d.Set("environment_id", parts[0])
 
@@ -296,10 +296,10 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Updating FinSpace KxVolume (%s): %#v", d.Id(), in)
 
 	if _, err := conn.UpdateKxVolume(ctx, in); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxVolume, d.Id(), err)
 	}
 	if _, err := waitKxVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxVolume, d.Id(), err)
 	}
 
 	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
@@ -321,12 +321,12 @@ func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta in
 			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxVolume, d.Id(), err)
 	}
 
 	_, err = waitKxVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil && !tfresource.NotFound(err) {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxVolume, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxVolume, d.Id(), err)
 	}
 
 	return diags
