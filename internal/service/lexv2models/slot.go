@@ -184,7 +184,6 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 	if !plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) ||
 		!plan.SlotTypeID.Equal(state.SlotTypeID) {
-
 		in := &lexmodelsv2.UpdateSlotInput{
 			SlotId:   aws.String(plan.ID.ValueString()),
 			SlotName: aws.String(plan.Name.ValueString()),

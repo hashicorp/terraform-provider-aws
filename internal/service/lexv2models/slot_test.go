@@ -102,7 +102,7 @@ func testAccCheckSlotDestroy(ctx context.Context) resource.TestCheckFunc {
 				return nil
 			}
 			if err != nil {
-				return nil
+				return err
 			}
 
 			return create.Error(names.LexV2Models, create.ErrActionCheckingDestroyed, tflexv2models.ResNameSlot, rs.Primary.ID, errors.New("not destroyed"))
