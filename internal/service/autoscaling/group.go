@@ -250,6 +250,12 @@ func ResourceGroup() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 									},
+									"max_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntBetween(100, 200),
+									},
 									"min_healthy_percentage": {
 										Type:         schema.TypeInt,
 										Optional:     true,
