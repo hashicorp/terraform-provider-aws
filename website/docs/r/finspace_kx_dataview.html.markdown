@@ -24,7 +24,7 @@ resource "aws_finspace_kx_dataview" "example" {
   az_mode              = "SINGLE"
   auto_update          = true
 
-  segment_configurations  {
+  segment_configurations {
     volume_name = aws_finspace_kx_volume.example.name
     db_paths    = ["/*"]
   }
@@ -36,9 +36,9 @@ resource "aws_finspace_kx_dataview" "example" {
 The following arguments are required:
 
 * `az_mode` - (Required) The number of availability zones you want to assign per cluster. This can be one of the following:
-  * `SINGLE` - Assigns one availability zone per cluster.
-  * `MULTI` - Assigns all the availability zones per cluster.
-* `database_name` - (Required) The name of the database where you want to create a dataview. 
+ * `SINGLE` - Assigns one availability zone per cluster.
+ * `MULTI` - Assigns all the availability zones per cluster.
+* `database_name` - (Required) The name of the database where you want to create a dataview.
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `name` - (Required) A unique identifier for the dataview.
 
@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) identifier of the KX dataview.
 * `created_timestamp` - Timestamp at which the dataview was created in FinSpace. Value determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `id` - A comma-delimited string joining environment ID, database name and dataview name.
-* `last_modified_timestamp` -	 The last time that the dataview was updated in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000. 
+* `last_modified_timestamp` - The last time that the dataview was updated in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
