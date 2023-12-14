@@ -614,6 +614,45 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 	})
 }
 
+func TestAccFSxLustreFileSystem_deploymentTypePersistent1_perunitstoragethroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_persistent1DeploymentType(rName, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
+					// per_unit_storage_throughput=50 is only available with deployment_type=PERSISTENT_1, so we test both here.
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccLustreFileSystemConfig_persistent1DeploymentType(rName, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "100"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
@@ -644,6 +683,45 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perunitstoragethroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_persistent2DeploymentType(rName, 125),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
+					// per_unit_storage_throughput=125 is only available with deployment_type=PERSISTENT_2, so we test both here.
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent2),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccLustreFileSystemConfig_persistent2DeploymentType(rName, 250),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "250"),
+				),
 			},
 		},
 	})
