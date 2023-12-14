@@ -375,7 +375,7 @@ func statusKxDataview(ctx context.Context, conn *finspace.Client, id string) ret
 	}
 }
 
-func expandDbPath(tfList []interface{}) []string {
+func expandDBPath(tfList []interface{}) []string {
 	if tfList == nil {
 		return nil
 	}
@@ -397,7 +397,7 @@ func expandSegmentConfigurations(tfList []interface{}) []types.KxDataviewSegment
 		m := v.(map[string]interface{})
 		s = append(s, types.KxDataviewSegmentConfiguration{
 			VolumeName: aws.String(m["volume_name"].(string)),
-			DbPaths:    expandDbPath(m["db_paths"].([]interface{})),
+			DbPaths:    expandDBPath(m["db_paths"].([]interface{})),
 		})
 	}
 
