@@ -148,7 +148,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	rId, err := flex.FlattenResourceId(idParts, kxDataviewIdPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDataview, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDataview, d.Get("name").(string), err)
 	}
 	d.SetId(rId)
 
@@ -156,7 +156,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DatabaseName:  aws.String(d.Get("database_name").(string)),
 		DataviewName:  aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		AutoUpdate:    *aws.Bool(d.Get("auto_update").(bool)),
+		AutoUpdate:    d.Get("auto_update").(bool),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 		Tags:          getTagsIn(ctx),
@@ -180,13 +180,13 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateKxDataview(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), err)
 	}
 	if out == nil || out.DataviewName == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), errors.New("empty output"))
 	}
 	if _, err := waitKxDataviewCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxDataview, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxDataview, d.Get("name").(string), err)
 	}
 
 	return append(diags, resourceKxDataviewRead(ctx, d, meta)...)
@@ -204,7 +204,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)
 	}
 	d.Set("name", out.DataviewName)
 	d.Set("description", out.Description)
@@ -218,7 +218,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("environment_id", out.EnvironmentId)
 	d.Set("az_mode", out.AzMode)
 	if err := d.Set("segment_configurations", flattenSegmentConfigurations(out.SegmentConfigurations)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)
 	}
 
 	return diags
@@ -243,11 +243,11 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if _, err := conn.UpdateKxDataview(ctx, in); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxDataview, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxDataview, d.Get("name").(string), err)
 	}
 
 	if _, err := waitKxDataviewUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForUpdate, ResNameKxDataview, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForUpdate, ResNameKxDataview, d.Get("name").(string), err)
 	}
 
 	return append(diags, resourceKxDataviewRead(ctx, d, meta)...)
@@ -269,11 +269,11 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 		if errors.As(err, &nfe) {
 			return diags
 		}
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxDataview, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxDataview, d.Get("name").(string), err)
 	}
 
 	if _, err := waitKxDataviewDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil && !tfresource.NotFound(err) {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxDataview, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxDataview, d.Id(), err)
 	}
 	return diags
 }
