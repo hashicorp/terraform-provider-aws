@@ -67,11 +67,11 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 			},
 			"customization_type": schema.StringAttribute{
 				Optional: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.CustomizationType](),
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.CustomizationType](),
 				},
 			},
 			"custom_model_kms_key_id": schema.StringAttribute{
