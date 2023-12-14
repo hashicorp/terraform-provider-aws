@@ -72,6 +72,7 @@ func ResourceJobDefinition() *schema.Resource {
 			"node_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"eks_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
