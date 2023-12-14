@@ -26,7 +26,7 @@ resource "aws_detective_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) AWS account ID for the account.
 * `email_address` - (Required) Email address for the account.
@@ -34,9 +34,9 @@ The following arguments are supported:
 * `message` - (Optional) A custom message to include in the invitation. Amazon Detective adds this message to the standard content that it sends for an invitation.
 * `disable_email_notification` - (Optional) If set to true, then the root user of the invited account will _not_ receive an email notification. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. By default, this is set to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the Detective.
 * `status` - Current membership status of the member account.
@@ -47,9 +47,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_detective_member` can be imported using the ARN of the graph followed by the account ID of the member account, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_detective_member` using the ARN of the graph followed by the account ID of the member account. For example:
 
-
+```terraform
+import {
+  to = aws_detective_member.example
+  id = "arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012"
+}
 ```
-$ terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012
+
+Using `terraform import`, import `aws_detective_member` using the ARN of the graph followed by the account ID of the member account. For example:
+
+```console
+% terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012
 ```

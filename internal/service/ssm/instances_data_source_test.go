@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -7,13 +10,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ssm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccSSMInstancesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssm_instances.test"
 	resourceName := "aws_instance.test"
@@ -27,15 +31,15 @@ func TestAccSSMInstancesDataSource_filter(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstancesDataSourceConfig_filter_instance(rName),
+				Config: testAccInstancesDataSourceConfig_filterInstance(rName),
 			},
 			{
-				Config: testAccCheckInstancesDataSourceConfig_filter_dataSource(rName),
+				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					registrationSleep(),
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
@@ -46,7 +50,7 @@ func TestAccSSMInstancesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccCheckInstancesDataSourceConfig_filter_instance(rName string) string {
+func testAccInstancesDataSourceConfig_filterInstance(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.AvailableEC2InstanceTypeForRegion("t2.micro", "t3.micro"),
@@ -159,9 +163,9 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccCheckInstancesDataSourceConfig_filter_dataSource(rName string) string {
+func testAccInstancesDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCheckInstancesDataSourceConfig_filter_instance(rName),
+		testAccInstancesDataSourceConfig_filterInstance(rName),
 		`
 data "aws_ssm_instances" "test" {
   filter {

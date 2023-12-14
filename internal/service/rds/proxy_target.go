@@ -1,57 +1,61 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_db_proxy_target")
 func ResourceProxyTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProxyTargetCreate,
-		Read:   resourceProxyTargetRead,
-		Delete: resourceProxyTargetDelete,
+		CreateWithoutTimeout: resourceProxyTargetCreate,
+		ReadWithoutTimeout:   resourceProxyTargetRead,
+		DeleteWithoutTimeout: resourceProxyTargetDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"db_cluster_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+				ExactlyOneOf: []string{
+					"db_instance_identifier",
+					"db_cluster_identifier",
+				},
+			},
+			"db_instance_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+				ExactlyOneOf: []string{
+					"db_instance_identifier",
+					"db_cluster_identifier",
+				},
+			},
 			"db_proxy_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"target_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
-				},
-				ValidateFunc: validIdentifier,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
-				},
 				ValidateFunc: validIdentifier,
 			},
 			"endpoint": {
@@ -70,6 +74,12 @@ func ResourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"target_group_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+			},
 			"tracked_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,36 +92,39 @@ func ResourceProxyTarget() *schema.Resource {
 	}
 }
 
-func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	targetGroupName := d.Get("target_group_name").(string)
-
-	params := rds.RegisterDBProxyTargetsInput{
+	input := &rds.RegisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(dbProxyName),
 		TargetGroupName: aws.String(targetGroupName),
 	}
 
-	if v, ok := d.GetOk("db_instance_identifier"); ok {
-		params.DBInstanceIdentifiers = []*string{aws.String(v.(string))}
-	}
-
 	if v, ok := d.GetOk("db_cluster_identifier"); ok {
-		params.DBClusterIdentifiers = []*string{aws.String(v.(string))}
+		input.DBClusterIdentifiers = aws.StringSlice([]string{v.(string)})
 	}
 
-	resp, err := conn.RegisterDBProxyTargets(&params)
+	if v, ok := d.GetOk("db_instance_identifier"); ok {
+		input.DBInstanceIdentifiers = aws.StringSlice([]string{v.(string)})
+	}
 
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
+		func() (interface{}, error) {
+			return conn.RegisterDBProxyTargetsWithContext(ctx, input)
+		},
+		rds.ErrCodeInvalidDBInstanceStateFault, "CREATING")
 	if err != nil {
-		return fmt.Errorf("error registering RDS DB Proxy (%s/%s) Target: %w", dbProxyName, targetGroupName, err)
+		return sdkdiag.AppendErrorf(diags, "registering RDS DB Proxy (%s/%s) Target: %s", dbProxyName, targetGroupName, err)
 	}
 
-	dbProxyTarget := resp.DBProxyTargets[0]
+	dbProxyTarget := outputRaw.(*rds.RegisterDBProxyTargetsOutput).DBProxyTargets[0]
 
 	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, aws.StringValue(dbProxyTarget.Type), aws.StringValue(dbProxyTarget.RdsResourceId)}, "/"))
 
-	return resourceProxyTargetRead(d, meta)
+	return append(diags, resourceProxyTargetRead(ctx, d, meta)...)
 }
 
 func ProxyTargetParseID(id string) (string, string, string, string, error) {
@@ -122,36 +135,37 @@ func ProxyTargetParseID(id string) (string, string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
 
-func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxyName, targetGroupName, targetType, rdsResourceId, err := ProxyTargetParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RDS Proxy Target (%s): %s", d.Id(), err)
 	}
 
-	dbProxyTarget, err := FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+	dbProxyTarget, err := FindDBProxyTarget(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Proxy Target (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Target (%s): %s", d.Id(), err)
 	}
 
 	if dbProxyTarget == nil {
 		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("db_proxy_name", dbProxyName)
@@ -169,11 +183,12 @@ func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("db_cluster_identifier", dbProxyTarget.RdsResourceId)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceProxyTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := rds.DeregisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
@@ -189,23 +204,23 @@ func resourceProxyTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deregister DB Proxy target: %#v", params)
-	_, err := conn.DeregisterDBProxyTargets(&params)
+	_, err := conn.DeregisterDBProxyTargetsWithContext(ctx, &params)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deregistering DB Proxy target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deregistering DB Proxy target: %s", err)
 	}
 
-	return nil
+	return diags
 }

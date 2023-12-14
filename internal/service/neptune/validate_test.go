@@ -1,12 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -37,6 +42,8 @@ func TestValidEventSubscriptionName(t *testing.T) {
 }
 
 func TestValidEventSubscriptionNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -67,6 +74,8 @@ func TestValidEventSubscriptionNamePrefix(t *testing.T) {
 }
 
 func TestValidParamGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -111,6 +120,8 @@ func TestValidParamGroupName(t *testing.T) {
 }
 
 func TestValidParamGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -151,6 +162,8 @@ func TestValidParamGroupNamePrefix(t *testing.T) {
 }
 
 func TestValidSubnetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -183,6 +196,8 @@ func TestValidSubnetGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

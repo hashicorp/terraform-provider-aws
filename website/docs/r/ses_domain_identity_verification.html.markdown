@@ -40,20 +40,19 @@ resource "aws_ses_domain_identity_verification" "example_verification" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The domain name of the SES domain identity to verify.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The domain name of the domain identity.
 * `arn` - The ARN of the domain identity.
 
 ## Timeouts
 
-`acm_ses_domain_identity_verification` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45m`) How long to wait for a domain identity to be verified.
+- `create` - (Default `45m`)

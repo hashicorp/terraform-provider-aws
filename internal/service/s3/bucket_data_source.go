@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -5,27 +8,29 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_s3_bucket")
 func DataSourceBucket() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBucketRead,
+		ReadWithoutTimeout: dataSourceBucketRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"bucket": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"bucket_domain_name": {
 				Type:     schema.TypeString,
@@ -43,99 +48,76 @@ func DataSourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"website_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"website_domain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"website_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceBucketRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
-
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(bucket),
-	}
-
-	log.Printf("[DEBUG] Reading S3 bucket: %s", input)
-	_, err := conn.HeadBucket(input)
+	err := findBucket(ctx, conn, bucket)
 
 	if err != nil {
-		return fmt.Errorf("Failed getting S3 bucket (%s): %w", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", bucket, err)
+	}
+
+	region, err := manager.GetBucketRegion(ctx, conn, bucket,
+		func(o *s3.Options) {
+			// By default, GetBucketRegion forces virtual host addressing, which
+			// is not compatible with many non-AWS implementations. Instead, pass
+			// the provider s3_force_path_style configuration, which defaults to
+			// false, but allows override.
+			o.UsePathStyle = awsClient.S3UsePathStyle()
+		},
+		func(o *s3.Options) {
+			// By default, GetBucketRegion uses anonymous credentials when doing
+			// a HEAD request to get the bucket region. This breaks in aws-cn regions
+			// when the account doesn't have an ICP license to host public content.
+			// Use the current credentials when getting the bucket region.
+			o.Credentials = awsClient.CredentialsProvider()
+		})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Region: %s", bucket, err)
 	}
 
 	d.SetId(bucket)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: awsClient.Partition,
 		Service:   "s3",
 		Resource:  bucket,
 	}.String()
 	d.Set("arn", arn)
-	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
-
-	err = bucketLocation(meta.(*conns.AWSClient), d, bucket)
-	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket location: %w", err)
-	}
-
-	regionalDomainName, err := BucketRegionalDomainName(bucket, d.Get("region").(string))
-	if err != nil {
-		return err
-	}
-	d.Set("bucket_regional_domain_name", regionalDomainName)
-
-	return nil
-}
-
-func bucketLocation(client *conns.AWSClient, d *schema.ResourceData, bucket string) error {
-	region, err := s3manager.GetBucketRegionWithClient(context.Background(), client.S3Conn, bucket, func(r *request.Request) {
-		// By default, GetBucketRegion forces virtual host addressing, which
-		// is not compatible with many non-AWS implementations. Instead, pass
-		// the provider s3_force_path_style configuration, which defaults to
-		// false, but allows override.
-		r.Config.S3ForcePathStyle = client.S3Conn.Config.S3ForcePathStyle
-
-		// By default, GetBucketRegion uses anonymous credentials when doing
-		// a HEAD request to get the bucket region. This breaks in aws-cn regions
-		// when the account doesn't have an ICP license to host public content.
-		// Use the current credentials when getting the bucket region.
-		r.Config.Credentials = client.S3Conn.Config.Credentials
-	})
-	if err != nil {
-		return err
-	}
-	if err := d.Set("region", region); err != nil {
-		return err
-	}
-
-	hostedZoneID, err := HostedZoneIDForRegion(region)
-	if err != nil {
-		log.Printf("[WARN] %s", err)
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
+	if regionalDomainName, err := BucketRegionalDomainName(bucket, region); err == nil {
+		d.Set("bucket_regional_domain_name", regionalDomainName)
 	} else {
+		log.Printf("[WARN] BucketRegionalDomainName: %s", err)
+	}
+	if hostedZoneID, err := HostedZoneIDForRegion(region); err == nil {
 		d.Set("hosted_zone_id", hostedZoneID)
+	} else {
+		log.Printf("[WARN] HostedZoneIDForRegion: %s", err)
+	}
+	d.Set("region", region)
+	if _, err := findBucketWebsite(ctx, conn, bucket, ""); err == nil {
+		website := WebsiteEndpoint(awsClient, bucket, region)
+		d.Set("website_domain", website.Domain)
+		d.Set("website_endpoint", website.Endpoint)
+	} else if !tfresource.NotFound(err) {
+		log.Printf("[WARN] Reading S3 Bucket (%s) Website: %s", bucket, err)
 	}
 
-	_, websiteErr := client.S3Conn.GetBucketWebsite(
-		&s3.GetBucketWebsiteInput{
-			Bucket: aws.String(bucket),
-		},
-	)
-
-	if websiteErr == nil {
-		websiteEndpoint := WebsiteEndpoint(client, bucket, region)
-		if err := d.Set("website_endpoint", websiteEndpoint.Endpoint); err != nil {
-			return err
-		}
-		if err := d.Set("website_domain", websiteEndpoint.Domain); err != nil {
-			return err
-		}
-	}
-	return nil
+	return diags
 }

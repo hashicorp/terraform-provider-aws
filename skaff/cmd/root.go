@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cmd
 
 import (
@@ -7,7 +10,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "skaff [resource]",
+	Use:   "skaff [resource|datasource]",
 	Short: "Create scaffolding for the Terraform AWS Provider",
 }
 

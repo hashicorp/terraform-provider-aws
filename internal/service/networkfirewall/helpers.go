@@ -1,13 +1,67 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+func encryptionConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"key_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(networkfirewall.EncryptionType_Values(), false),
+				},
+			},
+		},
+	}
+}
+
+func expandEncryptionConfiguration(tfList []interface{}) *networkfirewall.EncryptionConfiguration {
+	ec := &networkfirewall.EncryptionConfiguration{Type: aws.String(networkfirewall.EncryptionTypeAwsOwnedKmsKey)}
+	if len(tfList) == 1 && tfList[0] != nil {
+		tfMap := tfList[0].(map[string]interface{})
+		if v, ok := tfMap["key_id"].(string); ok {
+			ec.KeyId = aws.String(v)
+		}
+		if v, ok := tfMap["type"].(string); ok {
+			ec.Type = aws.String(v)
+		}
+	}
+
+	return ec
+}
+
+func flattenEncryptionConfiguration(apiObject *networkfirewall.EncryptionConfiguration) []interface{} {
+	if apiObject == nil || apiObject.Type == nil {
+		return nil
+	}
+	if aws.StringValue(apiObject.Type) == networkfirewall.EncryptionTypeAwsOwnedKmsKey {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"key_id": aws.StringValue(apiObject.KeyId),
+		"type":   aws.StringValue(apiObject.Type),
+	}
+
+	return []interface{}{m}
+}
 
 func customActionSchema() *schema.Schema {
 	return &schema.Schema{
@@ -49,14 +103,14 @@ func customActionSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), "must contain only alphanumeric characters"),
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 				},
 			},
 		},
 	}
 }
 
-func expandNetworkFirewallCustomActions(l []interface{}) []*networkfirewall.CustomAction {
+func expandCustomActions(l []interface{}) []*networkfirewall.CustomAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -69,7 +123,7 @@ func expandNetworkFirewallCustomActions(l []interface{}) []*networkfirewall.Cust
 			continue
 		}
 		if v, ok := tfMap["action_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			customAction.ActionDefinition = expandNetworkFirewallActionDefinition(v)
+			customAction.ActionDefinition = expandActionDefinition(v)
 		}
 		if v, ok := tfMap["action_name"].(string); ok && v != "" {
 			customAction.ActionName = aws.String(v)
@@ -80,7 +134,7 @@ func expandNetworkFirewallCustomActions(l []interface{}) []*networkfirewall.Cust
 	return customActions
 }
 
-func expandNetworkFirewallActionDefinition(l []interface{}) *networkfirewall.ActionDefinition {
+func expandActionDefinition(l []interface{}) *networkfirewall.ActionDefinition {
 	if l == nil || l[0] == nil {
 		return nil
 	}
@@ -92,13 +146,13 @@ func expandNetworkFirewallActionDefinition(l []interface{}) *networkfirewall.Act
 	customAction := &networkfirewall.ActionDefinition{}
 
 	if v, ok := tfMap["publish_metric_action"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		customAction.PublishMetricAction = expandNetworkFirewallCustomActionPublishMetricAction(v)
+		customAction.PublishMetricAction = expandCustomActionPublishMetricAction(v)
 	}
 
 	return customAction
 }
 
-func expandNetworkFirewallCustomActionPublishMetricAction(l []interface{}) *networkfirewall.PublishMetricAction {
+func expandCustomActionPublishMetricAction(l []interface{}) *networkfirewall.PublishMetricAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -125,7 +179,7 @@ func expandNetworkFirewallCustomActionPublishMetricAction(l []interface{}) *netw
 	return action
 }
 
-func flattenNetworkFirewallCustomActions(c []*networkfirewall.CustomAction) []interface{} {
+func flattenCustomActions(c []*networkfirewall.CustomAction) []interface{} {
 	if c == nil {
 		return []interface{}{}
 	}
@@ -133,7 +187,7 @@ func flattenNetworkFirewallCustomActions(c []*networkfirewall.CustomAction) []in
 	customActions := make([]interface{}, 0, len(c))
 	for _, elem := range c {
 		m := map[string]interface{}{
-			"action_definition": flattenNetworkFirewallActionDefinition(elem.ActionDefinition),
+			"action_definition": flattenActionDefinition(elem.ActionDefinition),
 			"action_name":       aws.StringValue(elem.ActionName),
 		}
 		customActions = append(customActions, m)
@@ -142,29 +196,29 @@ func flattenNetworkFirewallCustomActions(c []*networkfirewall.CustomAction) []in
 	return customActions
 }
 
-func flattenNetworkFirewallActionDefinition(v *networkfirewall.ActionDefinition) []interface{} {
+func flattenActionDefinition(v *networkfirewall.ActionDefinition) []interface{} {
 	if v == nil {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"publish_metric_action": flattenNetworkFirewallPublishMetricAction(v.PublishMetricAction),
+		"publish_metric_action": flattenPublishMetricAction(v.PublishMetricAction),
 	}
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallPublishMetricAction(m *networkfirewall.PublishMetricAction) []interface{} {
+func flattenPublishMetricAction(m *networkfirewall.PublishMetricAction) []interface{} {
 	if m == nil {
 		return []interface{}{}
 	}
 
 	metrics := map[string]interface{}{
-		"dimension": flattenNetworkFirewallDimensions(m.Dimensions),
+		"dimension": flattenDimensions(m.Dimensions),
 	}
 
 	return []interface{}{metrics}
 }
 
-func flattenNetworkFirewallDimensions(d []*networkfirewall.Dimension) []interface{} {
+func flattenDimensions(d []*networkfirewall.Dimension) []interface{} {
 	dimensions := make([]interface{}, 0, len(d))
 	for _, v := range d {
 		dimension := map[string]interface{}{
@@ -187,4 +241,47 @@ func forceNewIfNotRuleOrderDefault(key string, d *schema.ResourceDiff) error {
 		}
 	}
 	return nil
+}
+
+func customActionSchemaDataSource() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action_definition": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"publish_metric_action": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimension": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"value": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"action_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
 }

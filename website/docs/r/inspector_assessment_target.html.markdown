@@ -1,14 +1,14 @@
 ---
-subcategory: "Inspector"
+subcategory: "Inspector Classic"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_target"
 description: |-
-  Provides a Inspector assessment target.
+  Provides an Inspector Classic Assessment Target.
 ---
 
 # Resource: aws_inspector_assessment_target
 
-Provides a Inspector assessment target
+Provides an Inspector Classic Assessment Target
 
 ## Example Usage
 
@@ -28,21 +28,30 @@ resource "aws_inspector_assessment_target" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the assessment target.
 * `resource_group_arn` (Optional) Inspector Resource Group Amazon Resource Name (ARN) stating tags for instance matching. If not specified, all EC2 instances in the current AWS account and region are included in the assessment target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The target assessment ARN.
 
 ## Import
 
-Inspector Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
 
-```sh
-$ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
+```terraform
+import {
+  to = aws_inspector_assessment_target.example
+  id = "arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx"
+}
+```
+
+Using `terraform import`, import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
 ```

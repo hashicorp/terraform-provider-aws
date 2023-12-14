@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_auditmanager_organization_admin_account_registration
+```

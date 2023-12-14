@@ -1,19 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ses_email_identity")
 func DataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEmailIdentityRead,
+		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -30,8 +37,9 @@ func DataSourceEmailIdentity() *schema.Resource {
 	}
 }
 
-func dataSourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
@@ -45,14 +53,14 @@ func dataSourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error
 		},
 	}
 
-	response, err := conn.GetIdentityVerificationAttributes(readOpts)
+	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, readOpts)
 	if err != nil {
-		return fmt.Errorf("[WARN] Error fetching identity verification attributes for %s: %s", email, err)
+		return sdkdiag.AppendErrorf(diags, "[WARN] Error fetching identity verification attributes for %s: %s", email, err)
 	}
 
 	_, ok := response.VerificationAttributes[email]
 	if !ok {
-		return fmt.Errorf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
 	}
 
 	arn := arn.ARN{
@@ -63,5 +71,5 @@ func dataSourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error
 		Service:   "ses",
 	}.String()
 	d.Set("arn", arn)
-	return nil
+	return diags
 }

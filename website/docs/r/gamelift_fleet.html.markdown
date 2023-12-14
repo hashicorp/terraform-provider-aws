@@ -30,7 +30,7 @@ resource "aws_gamelift_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
@@ -45,7 +45,7 @@ The following arguments are supported:
 * `resource_creation_limit_policy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtime_configuration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
 * `script_id` - (Optional) ID of the GameLift Script to be deployed on the fleet.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -77,28 +77,37 @@ The following arguments are supported:
 * `launch_path` - (Required) Location of the server executable in a game build. All game builds are installed on instances at the root : for Windows instances `C:\game`, and for Linux instances `/local/game`.
 * `parameters` - (Optional) Optional list of parameters to pass to the server executable on launch.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fleet ID.
 * `arn` - Fleet ARN.
 * `build_arn` - Build ARN.
 * `operating_system` - Operating system of the fleet's computing resources.
 * `script_arn` - Script ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_gamelift_fleet` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `70m`) How long to wait for a fleet to be created.
-* `delete` - (Default `20m`) How long to wait for a fleet to be deleted.
+* `create` - (Default `70m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
-GameLift Fleets can be imported using the ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Fleets using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_fleet.example
+  id = "<fleet-id>"
+}
 ```
-$ terraform import aws_gamelift_fleet.example <fleet-id>
+
+Using `terraform import`, import GameLift Fleets using the ID. For example:
+
+```console
+% terraform import aws_gamelift_fleet.example <fleet-id>
 ```

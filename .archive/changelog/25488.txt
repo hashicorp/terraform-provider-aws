@@ -1,0 +1,7 @@
+```release-note:bug
+ resource/aws_ce_cost_category: Allow duplicate values in `split_charge_rule.parameter.values` argument
+ ```
+
+```release-note:bug
+ resource/aws_ce_cost_category: Fix error passing `split_charge_rule.parameter` to the AWS API
+ ```

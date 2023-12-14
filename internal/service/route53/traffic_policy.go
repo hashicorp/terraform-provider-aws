@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_traffic_policy")
 func ResourceTrafficPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficPolicyCreate,
@@ -76,7 +80,7 @@ func ResourceTrafficPolicy() *schema.Resource {
 }
 
 func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53.CreateTrafficPolicyInput{
@@ -89,12 +93,12 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Creating Route53 Traffic Policy: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return conn.CreateTrafficPolicyWithContext(ctx, input)
 	}, route53.ErrCodeNoSuchTrafficPolicy)
 
 	if err != nil {
-		return diag.Errorf("error creating Route53 Traffic Policy (%s): %s", name, err)
+		return diag.Errorf("creating Route53 Traffic Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*route53.CreateTrafficPolicyOutput).TrafficPolicy.Id))
@@ -103,7 +107,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	trafficPolicy, err := FindTrafficPolicyByID(ctx, conn, d.Id())
 
@@ -114,7 +118,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Route53 Traffic Policy (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Route53 Traffic Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("comment", trafficPolicy.Comment)
@@ -127,7 +131,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.UpdateTrafficPolicyCommentInput{
 		Id:      aws.String(d.Id()),
@@ -142,21 +146,21 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 	_, err := conn.UpdateTrafficPolicyCommentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Route53 Traffic Policy (%s) comment: %s", d.Id(), err)
+		return diag.Errorf("updating Route53 Traffic Policy (%s) comment: %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyRead(ctx, d, meta)
 }
 
 func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.ListTrafficPolicyVersionsInput{
 		Id: aws.String(d.Id()),
 	}
 	var output []*route53.TrafficPolicy
 
-	err := listTrafficPolicyVersionsPagesWithContext(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
+	err := listTrafficPolicyVersionsPages(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -167,7 +171,7 @@ func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing Route 53 Traffic Policy (%s) versions: %s", d.Id(), err)
+		return diag.Errorf("listing Route 53 Traffic Policy (%s) versions: %s", d.Id(), err)
 	}
 
 	for _, v := range output {
@@ -184,7 +188,7 @@ func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if err != nil {
-			return diag.Errorf("error deleting Route 53 Traffic Policy (%s) version (%d): %s", d.Id(), version, err)
+			return diag.Errorf("deleting Route 53 Traffic Policy (%s) version (%d): %s", d.Id(), version, err)
 		}
 	}
 

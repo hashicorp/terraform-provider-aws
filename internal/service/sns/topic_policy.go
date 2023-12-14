@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -13,15 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceTopicPolicy() *schema.Resource {
+// @SDKResource("aws_sns_topic_policy")
+func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicPolicyUpsert,
-		Read:   resourceTopicPolicyRead,
-		Update: resourceTopicPolicyUpsert,
-		Delete: resourceTopicPolicyDelete,
+		CreateWithoutTimeout: resourceTopicPolicyUpsert,
+		ReadWithoutTimeout:   resourceTopicPolicyRead,
+		UpdateWithoutTimeout: resourceTopicPolicyUpsert,
+		DeleteWithoutTimeout: resourceTopicPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,10 +42,11 @@ func ResourceTopicPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -49,39 +56,37 @@ func ResourceTopicPolicy() *schema.Resource {
 	}
 }
 
-func resourceTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
 	arn := d.Get("arn").(string)
-
-	err = putTopicPolicy(conn, arn, policy)
+	err = putTopicPolicy(ctx, conn, arn, policy)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(arn)
 	}
 
-	return resourceTopicPolicyRead(d, meta)
+	return resourceTopicPolicyRead(ctx, d, meta)
 }
 
-func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	attributes, err := FindTopicAttributesByARN(conn, d.Id())
+	attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, d.Id())
 
 	var policy string
 
 	if err == nil {
-		policy = attributes[TopicAttributeNamePolicy]
+		policy = attributes[topicAttributeNamePolicy]
 
 		if policy == "" {
 			err = tfresource.NewEmptyResultError(d.Id())
@@ -95,38 +100,32 @@ func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SNS Topic Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
+
+	d.Set("arn", attributes[topicAttributeNameTopicARN])
+	d.Set("owner", attributes[topicAttributeNameOwner])
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
-
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	d.Set("arn", attributes[TopicAttributeNameTopicArn])
-	d.Set("owner", attributes[TopicAttributeNameOwner])
 	d.Set("policy", policyToSet)
 
 	return nil
 }
 
-func resourceTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
+func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	err := putTopicPolicy(conn, d.Id(), defaultSNSTopicPolicy(d.Id(), d.Get("owner").(string)))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return diag.FromErr(putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string))))
 }
 
-func defaultSNSTopicPolicy(topicArn, accountId string) string {
+func defaultTopicPolicy(topicARN, accountID string) string {
 	return fmt.Sprintf(`{
   "Version": "2008-10-17",
   "Id": "__default_policy_ID",
@@ -157,9 +156,9 @@ func defaultSNSTopicPolicy(topicArn, accountId string) string {
     }
   ]
 }
-`, topicArn, accountId)
+`, topicARN, accountID)
 }
 
-func putTopicPolicy(conn *sns.SNS, arn string, policy string) error {
-	return putTopicAttribute(conn, arn, TopicAttributeNamePolicy, policy)
+func putTopicPolicy(ctx context.Context, conn *sns.Client, arn string, policy string) error {
+	return putTopicAttribute(ctx, conn, arn, topicAttributeNamePolicy, policy)
 }

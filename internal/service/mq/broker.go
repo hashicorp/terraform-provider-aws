@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -7,34 +10,49 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
 )
 
+// @SDKResource("aws_mq_broker", name="Broker")
+// @Tags(identifierAttribute="arn")
 func ResourceBroker() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBrokerCreate,
-		Read:   resourceBrokerRead,
-		Update: resourceBrokerUpdate,
-		Delete: resourceBrokerDelete,
+		CreateWithoutTimeout: resourceBrokerCreate,
+		ReadWithoutTimeout:   resourceBrokerRead,
+		UpdateWithoutTimeout: resourceBrokerUpdate,
+		DeleteWithoutTimeout: resourceBrokerDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,8 +105,8 @@ func ResourceBroker() *schema.Resource {
 			"deployment_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      mq.DeploymentModeSingleInstance,
 				ForceNew:     true,
+				Default:      mq.DeploymentModeSingleInstance,
 				ValidateFunc: validation.StringInSlice(mq.DeploymentMode_Values(), true),
 			},
 			"encryption_options": {
@@ -207,36 +225,30 @@ func ResourceBroker() *schema.Resource {
 				},
 			},
 			"logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"general": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
 						"audit": {
 							Type:             nullable.TypeNullableBool,
 							Optional:         true,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
 						},
+						"general": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
 			"maintenance_window_start_time": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day_of_week": {
@@ -258,14 +270,14 @@ func ResourceBroker() *schema.Resource {
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				Default:  false,
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				MaxItems: 5,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"storage_type": {
 				Type:         schema.TypeString,
@@ -280,8 +292,8 @@ func ResourceBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -305,18 +317,23 @@ func ResourceBroker() *schema.Resource {
 						},
 						"groups": {
 							Type:     schema.TypeSet,
+							Optional: true,
 							MaxItems: 20,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
-							Optional: true,
 						},
 						"password": {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
 							ValidateFunc: ValidBrokerPassword,
+						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"username": {
 							Type:         schema.TypeString,
@@ -345,22 +362,22 @@ func ResourceBroker() *schema.Resource {
 	}
 }
 
-func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
-	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))
-	input := mq.CreateBrokerRequest{
+	input := &mq.CreateBrokerRequest{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(requestId),
+		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              aws.String(engineType),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
 
@@ -376,11 +393,11 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]interface{}))
 	}
+	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]interface{}))
+	}
 	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Logs = expandLogs(engineType, v.([]interface{}))
-	}
-	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
@@ -394,47 +411,38 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
 
-	log.Printf("[INFO] Creating MQ Broker: %s", input)
-	out, err := conn.CreateBroker(&input)
+	out, err := conn.CreateBrokerWithContext(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating MQ Broker (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	if _, err := WaitBrokerCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
+	if _, err := waitBrokerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBrokerRead(d, meta)
+	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
-func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
-		BrokerId: aws.String(d.Id()),
-	})
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
-		log.Printf("[WARN] MQ broker (%s) not found, removing from state", d.Id())
+	output, err := FindBrokerByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
+		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading MQ broker (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("empty response while reading MQ broker (%s)", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.BrokerArn)
@@ -452,11 +460,11 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
 	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
-		return fmt.Errorf("error setting configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
-		return fmt.Errorf("error setting encryption_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
 	}
 
 	var password string
@@ -465,67 +473,62 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
-		return fmt.Errorf("error setting ldap_server_metadata: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
 	}
 
 	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
-		return fmt.Errorf("error setting logs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
 	}
 
 	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
-		return fmt.Errorf("error setting maintenance_window_start_time: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
-	rawUsers, err := expandUsersForBroker(conn, d.Id(), output.Users)
+	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
 	if err != nil {
-		return fmt.Errorf("error retrieving user info for MQ broker (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
 	}
 
 	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return fmt.Errorf("error setting user: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
+func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	requiresReboot := false
 
 	if d.HasChange("security_groups") {
-		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+		_, err := conn.UpdateBrokerWithContext(ctx, &mq.UpdateBrokerRequest{
 			BrokerId:       aws.String(d.Id()),
 			SecurityGroups: flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		})
+
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) security groups: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) security groups: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("configuration", "logs", "engine_version") {
-		engineType := d.Get("engine_type").(string)
-		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+		_, err := conn.UpdateBrokerWithContext(ctx, &mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandConfigurationId(d.Get("configuration").([]interface{})),
-			Logs:          expandLogs(engineType, d.Get("logs").([]interface{})),
 			EngineVersion: aws.String(d.Get("engine_version").(string)),
+			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
 		})
+
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) configuration: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) configuration: %s", d.Id(), err)
 		}
+
 		requiresReboot = true
 	}
 
@@ -535,10 +538,10 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		// d.HasChange("user") always reports a change when running resourceBrokerUpdate
 		// updateBrokerUsers needs to be called to know if changes to user are actually made
 		var usersUpdated bool
-		usersUpdated, err = updateBrokerUsers(conn, d.Id(),
-			o.(*schema.Set).List(), n.(*schema.Set).List())
+		usersUpdated, err = updateBrokerUsers(ctx, conn, d.Id(), o.(*schema.Set).List(), n.(*schema.Set).List())
+
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) user: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) users: %s", d.Id(), err)
 		}
 
 		if usersUpdated {
@@ -547,84 +550,178 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("host_instance_type") {
-		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+		_, err := conn.UpdateBrokerWithContext(ctx, &mq.UpdateBrokerRequest{
 			BrokerId:         aws.String(d.Id()),
 			HostInstanceType: aws.String(d.Get("host_instance_type").(string)),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) host instance type: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) host instance type: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
-		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+		_, err := conn.UpdateBrokerWithContext(ctx, &mq.UpdateBrokerRequest{
 			BrokerId:                aws.String(d.Id()),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
 	}
 
 	if d.HasChange("maintenance_window_start_time") {
-		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+		_, err := conn.UpdateBrokerWithContext(ctx, &mq.UpdateBrokerRequest{
 			BrokerId:                   aws.String(d.Id()),
 			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]interface{})),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) maintenance window start time: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
 	}
 
 	if d.Get("apply_immediately").(bool) && requiresReboot {
-		_, err := conn.RebootBroker(&mq.RebootBrokerInput{
+		_, err := conn.RebootBrokerWithContext(ctx, &mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})
+
 		if err != nil {
-			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "rebooting MQ Broker (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitBrokerRebooted(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) tags: %w", d.Get("arn").(string), err)
+		if _, err := waitBrokerRebooted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
+func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
-	_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
+	_, err := conn.DeleteBrokerWithContext(ctx, &mq.DeleteBrokerInput{
 		BrokerId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting MQ Broker (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitBrokerDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
+	if _, err := waitBrokerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+	input := &mq.DescribeBrokerInput{
+		BrokerId: aws.String(id),
+	}
+
+	output, err := conn.DescribeBrokerWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindBrokerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.BrokerState), nil
+	}
+}
+
+func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+	stateConf := retry.StateChangeConf{
+		Pending: []string{mq.BrokerStateCreationInProgress, mq.BrokerStateRebootInProgress},
+		Target:  []string{mq.BrokerStateRunning},
+		Timeout: timeout,
+		Refresh: statusBrokerState(ctx, conn, id),
+	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+	stateConf := retry.StateChangeConf{
+		Pending: []string{
+			mq.BrokerStateCreationFailed,
+			mq.BrokerStateDeletionInProgress,
+			mq.BrokerStateRebootInProgress,
+			mq.BrokerStateRunning,
+		},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusBrokerState(ctx, conn, id),
+	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBrokerRebooted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+	stateConf := retry.StateChangeConf{
+		Pending: []string{mq.BrokerStateRebootInProgress},
+		Target:  []string{mq.BrokerStateRunning},
+		Timeout: timeout,
+		Refresh: statusBrokerState(ctx, conn, id),
+	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func resourceUserHash(v interface{}) int {
@@ -647,7 +744,7 @@ func resourceUserHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func updateBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {
+func updateBrokerUsers(ctx context.Context, conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {
 	// If there are any user creates/deletes/updates, updatedUsers will be set to true
 	updatedUsers := false
 
@@ -657,21 +754,21 @@ func updateBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}
 	}
 
 	for _, c := range createL {
-		_, err := conn.CreateUser(c)
+		_, err := conn.CreateUserWithContext(ctx, c)
 		updatedUsers = true
 		if err != nil {
 			return updatedUsers, err
 		}
 	}
 	for _, d := range deleteL {
-		_, err := conn.DeleteUser(d)
+		_, err := conn.DeleteUserWithContext(ctx, d)
 		updatedUsers = true
 		if err != nil {
 			return updatedUsers, err
 		}
 	}
 	for _, u := range updateL {
-		_, err := conn.UpdateUser(u)
+		_, err := conn.UpdateUserWithContext(ctx, u)
 		updatedUsers = true
 		if err != nil {
 			return updatedUsers, err
@@ -683,7 +780,6 @@ func updateBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}
 
 func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 	cr []*mq.CreateUserRequest, di []*mq.DeleteUserInput, ur []*mq.UpdateUserRequest, e error) {
-
 	existingUsers := make(map[string]interface{})
 	for _, ou := range oldUsers {
 		u := ou.(map[string]interface{})
@@ -720,16 +816,16 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		}
 
 		if eu, ok := existingUsers[username]; ok {
-
 			existingUserMap := eu.(map[string]interface{})
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {
 				ur = append(ur, &mq.UpdateUserRequest{
-					BrokerId:      aws.String(bId),
-					ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-					Groups:        flex.ExpandStringList(ng),
-					Password:      aws.String(newUserMap["password"].(string)),
-					Username:      aws.String(username),
+					BrokerId:        aws.String(bId),
+					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+					Groups:          flex.ExpandStringList(ng),
+					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+					Password:        aws.String(newUserMap["password"].(string)),
+					Username:        aws.String(username),
 				})
 			}
 
@@ -737,10 +833,11 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 			delete(existingUsers, username)
 		} else {
 			cur := &mq.CreateUserRequest{
-				BrokerId:      aws.String(bId),
-				ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-				Password:      aws.String(newUserMap["password"].(string)),
-				Username:      aws.String(username),
+				BrokerId:        aws.String(bId),
+				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+				Password:        aws.String(newUserMap["password"].(string)),
+				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+				Username:        aws.String(username),
 			}
 			if len(ng) > 0 {
 				cur.Groups = flex.ExpandStringList(ng)
@@ -826,6 +923,9 @@ func expandUsers(cfg []interface{}) []*mq.User {
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
+		if v, ok := u["replication_user"]; ok {
+			user.ReplicationUser = aws.Bool(v.(bool))
+		}
 		if v, ok := u["groups"]; ok {
 			user.Groups = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -834,7 +934,7 @@ func expandUsers(cfg []interface{}) []*mq.User {
 	return users
 }
 
-func expandUsersForBroker(conn *mq.MQ, brokerId string, input []*mq.UserSummary) ([]*mq.User, error) {
+func expandUsersForBroker(ctx context.Context, conn *mq.MQ, brokerId string, input []*mq.UserSummary) ([]*mq.User, error) {
 	var rawUsers []*mq.User
 
 	for _, u := range input {
@@ -842,7 +942,7 @@ func expandUsersForBroker(conn *mq.MQ, brokerId string, input []*mq.UserSummary)
 			continue
 		}
 
-		uOut, err := conn.DescribeUser(&mq.DescribeUserInput{
+		uOut, err := conn.DescribeUserWithContext(ctx, &mq.DescribeUserInput{
 			BrokerId: aws.String(brokerId),
 			Username: u.Username,
 		})
@@ -852,9 +952,10 @@ func expandUsersForBroker(conn *mq.MQ, brokerId string, input []*mq.UserSummary)
 		}
 
 		user := &mq.User{
-			ConsoleAccess: uOut.ConsoleAccess,
-			Groups:        uOut.Groups,
-			Username:      uOut.Username,
+			ConsoleAccess:   uOut.ConsoleAccess,
+			Groups:          uOut.Groups,
+			ReplicationUser: uOut.ReplicationUser,
+			Username:        uOut.Username,
 		}
 
 		rawUsers = append(rawUsers, user)
@@ -886,6 +987,9 @@ func flattenUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.BoolValue(u.ConsoleAccess)
+		}
+		if u.ReplicationUser != nil {
+			m["replication_user"] = aws.BoolValue(u.ReplicationUser)
 		}
 		if len(u.Groups) > 0 {
 			m["groups"] = flex.FlattenStringSet(u.Groups)
@@ -1063,7 +1167,7 @@ func flattenLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password 
 	return []interface{}{tfMap}
 }
 
-func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
+func expandLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1111,5 +1215,5 @@ func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInpu
 
 var ValidateBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
-	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 )

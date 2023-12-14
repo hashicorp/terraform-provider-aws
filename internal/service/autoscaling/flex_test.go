@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -8,28 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
-func TestFlattenEnabledMetrics(t *testing.T) {
-	expanded := []*autoscaling.EnabledMetric{
-		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupTotalInstances")},
-		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
-	}
-
-	result := flattenASGEnabledMetrics(expanded)
-
-	if len(result) != 2 {
-		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
-	}
-
-	if result[0] != "GroupTotalInstances" {
-		t.Fatalf("expected id to be GroupTotalInstances, but was %s", result[0])
-	}
-
-	if result[1] != "GroupMaxSize" {
-		t.Fatalf("expected id to be GroupMaxSize, but was %s", result[1])
-	}
-}
-
 func TestExpandStepAdjustments(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"metric_interval_lower_bound": "1.0",
@@ -57,6 +41,8 @@ func TestExpandStepAdjustments(t *testing.T) {
 }
 
 func TestFlattenStepAdjustments(t *testing.T) {
+	t.Parallel()
+
 	expanded := []*autoscaling.StepAdjustment{
 		{
 			MetricIntervalLowerBound: aws.Float64(1.0),

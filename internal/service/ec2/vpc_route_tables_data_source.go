@@ -1,21 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route_tables")
 func DataSourceRouteTables() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRouteTablesRead,
+		ReadWithoutTimeout: dataSourceRouteTablesRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -30,8 +41,9 @@ func DataSourceRouteTables() *schema.Resource {
 	}
 }
 
-func dataSourceRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeRouteTablesInput{}
 
@@ -44,10 +56,10 @@ func dataSourceRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -55,10 +67,10 @@ func dataSourceRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	output, err := FindRouteTables(conn, input)
+	output, err := FindRouteTables(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Route Tables: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Route Tables: %s", err)
 	}
 
 	var routeTableIDs []string
@@ -70,5 +82,5 @@ func dataSourceRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", routeTableIDs)
 
-	return nil
+	return diags
 }

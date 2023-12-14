@@ -1,17 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -19,19 +23,21 @@ import (
 )
 
 func TestAccRoute53HealthCheck_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigBasic("2", true),
+				Config: testAccHealthCheckConfig_basic("2", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("healthcheck/.+")),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("healthcheck/.+")),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", "true"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "2"),
@@ -45,9 +51,9 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigBasic("5", false),
+				Config: testAccHealthCheckConfig_basic("5", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
 				),
@@ -57,18 +63,20 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigTags1("key1", "value1"),
+				Config: testAccHealthCheckConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -79,18 +87,18 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccHealthCheckConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigTags1("key2", "value2"),
+				Config: testAccHealthCheckConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -100,18 +108,20 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckSearchStringConfig("OK", false),
+				Config: testAccHealthCheckConfig_searchString("OK", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
 					resource.TestCheckResourceAttr(resourceName, "search_string", "OK"),
 				),
@@ -122,9 +132,9 @@ func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckSearchStringConfig("FAILED", true),
+				Config: testAccHealthCheckConfig_searchString("FAILED", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
 					resource.TestCheckResourceAttr(resourceName, "search_string", "FAILED"),
 				),
@@ -134,18 +144,20 @@ func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfig_withChildHealthChecks,
+				Config: testAccHealthCheckConfig_childs,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 				),
 			},
 			{
@@ -158,18 +170,20 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // GovCloud has 2 regions, test requires 3
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // GovCloud has 2 regions, test requires 3
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfig_withHealthCheckRegions(endpoints.UsWest2RegionID, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID),
+				Config: testAccHealthCheckConfig_regions(endpoints.UsWest2RegionID, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "3"),
 				),
 			},
@@ -183,18 +197,20 @@ func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_ip(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckIpConfig("1.2.3.4"),
+				Config: testAccHealthCheckConfig_ip("1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.4"),
 				),
 			},
@@ -204,9 +220,9 @@ func TestAccRoute53HealthCheck_ip(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckIpConfig("1.2.3.5"),
+				Config: testAccHealthCheckConfig_ip("1.2.3.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.5"),
 				),
 			},
@@ -215,18 +231,20 @@ func TestAccRoute53HealthCheck_ip(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckIpConfig("1234:5678:9abc:6811:0:0:0:4"),
+				Config: testAccHealthCheckConfig_ip("1234:5678:9abc:6811:0:0:0:4"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "1234:5678:9abc:6811:0:0:0:4"),
 				),
 			},
@@ -236,7 +254,7 @@ func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccRoute53HealthCheckIpConfig("1234:5678:9abc:6811:0:0:0:4"),
+				Config:   testAccHealthCheckConfig_ip("1234:5678:9abc:6811:0:0:0:4"),
 				PlanOnly: true,
 			},
 		},
@@ -244,18 +262,20 @@ func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckCloudWatchAlarm,
+				Config: testAccHealthCheckConfig_cloudWatchAlarm,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm_name", "cloudwatch-healthcheck-alarm"),
 				),
 			},
@@ -269,18 +289,20 @@ func TestAccRoute53HealthCheck_cloudWatchAlarmCheck(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigWithoutSNI,
+				Config: testAccHealthCheckConfig_noSNI,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
 				),
 			},
@@ -290,16 +312,16 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckSNIConfig(false),
+				Config: testAccHealthCheckConfig_sni(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "false"),
 				),
 			},
 			{
-				Config: testAccRoute53HealthCheckSNIConfig(true),
+				Config: testAccHealthCheckConfig_sni(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
 				),
 			},
@@ -308,19 +330,20 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigDisabled(true),
+				Config: testAccHealthCheckConfig_disabled(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
 				),
 			},
@@ -330,16 +353,16 @@ func TestAccRoute53HealthCheck_disabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigDisabled(false),
+				Config: testAccHealthCheckConfig_disabled(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 				),
 			},
 			{
-				Config: testAccRoute53HealthCheckConfigDisabled(true),
+				Config: testAccHealthCheckConfig_disabled(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
 				),
 			},
@@ -348,19 +371,21 @@ func TestAccRoute53HealthCheck_disabled(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_withRoutingControlARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigRoutingControlArn(rName),
+				Config: testAccHealthCheckConfig_routingControlARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "type", "RECOVERY_CONTROL"),
 				),
 			},
@@ -374,19 +399,21 @@ func TestAccRoute53HealthCheck_withRoutingControlARN(t *testing.T) {
 }
 
 func TestAccRoute53HealthCheck_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthCheckConfigBasic("2", true),
+				Config: testAccHealthCheckConfig_basic("2", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53HealthCheckExists(resourceName, &check),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceHealthCheck(), resourceName),
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceHealthCheck(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -394,31 +421,33 @@ func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53HealthCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+func testAccCheckHealthCheckDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_health_check" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_health_check" {
+				continue
+			}
+
+			_, err := tfroute53.FindHealthCheckByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Route53 Health Check %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfroute53.FindHealthCheckByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Route53 Health Check %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) resource.TestCheckFunc {
+func testAccCheckHealthCheckExists(ctx context.Context, n string, v *route53.HealthCheck) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -429,9 +458,9 @@ func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) reso
 			return fmt.Errorf("No Route53 Health Check ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
-		output, err := tfroute53.FindHealthCheckByID(conn, rs.Primary.ID)
+		output, err := tfroute53.FindHealthCheckByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -443,7 +472,7 @@ func testAccCheckRoute53HealthCheckExists(n string, v *route53.HealthCheck) reso
 	}
 }
 
-func testAccRoute53HealthCheckConfigBasic(thershold string, invert bool) string {
+func testAccHealthCheckConfig_basic(thershold string, invert bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
@@ -458,7 +487,7 @@ resource "aws_route53_health_check" "test" {
 `, thershold, invert)
 }
 
-func testAccRoute53HealthCheckConfigTags1(tag1Key, tag1Value string) string {
+func testAccHealthCheckConfig_tags1(tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
@@ -477,7 +506,7 @@ resource "aws_route53_health_check" "test" {
 `, tag1Key, tag1Value)
 }
 
-func testAccRoute53HealthCheckConfigTags2(tag1Key, tag1Value, tagKey2, tagValue2 string) string {
+func testAccHealthCheckConfig_tags2(tag1Key, tag1Value, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
@@ -497,7 +526,7 @@ resource "aws_route53_health_check" "test" {
 `, tag1Key, tag1Value, tagKey2, tagValue2)
 }
 
-func testAccRoute53HealthCheckIpConfig(ip string) string {
+func testAccHealthCheckConfig_ip(ip string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   ip_address        = %[1]q
@@ -514,7 +543,7 @@ resource "aws_route53_health_check" "test" {
 `, ip)
 }
 
-const testAccRoute53HealthCheckConfig_withChildHealthChecks = `
+const testAccHealthCheckConfig_childs = `
 resource "aws_route53_health_check" "child1" {
   fqdn              = "child1.example.com"
   port              = 80
@@ -535,7 +564,7 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-func testAccRoute53HealthCheckConfig_withHealthCheckRegions(regions ...string) string {
+func testAccHealthCheckConfig_regions(regions ...string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   ip_address        = "1.2.3.4"
@@ -554,7 +583,7 @@ resource "aws_route53_health_check" "test" {
 `, strings.Join(regions, "\", \""))
 }
 
-const testAccRoute53HealthCheckCloudWatchAlarm = `
+const testAccHealthCheckConfig_cloudWatchAlarm = `
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name          = "cloudwatch-healthcheck-alarm"
   comparison_operator = "GreaterThanOrEqualToThreshold"
@@ -577,7 +606,7 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-func testAccRoute53HealthCheckSearchStringConfig(search string, invert bool) string {
+func testAccHealthCheckConfig_searchString(search string, invert bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
@@ -597,7 +626,7 @@ resource "aws_route53_health_check" "test" {
 `, search, invert)
 }
 
-const testAccRoute53HealthCheckConfigWithoutSNI = `
+const testAccHealthCheckConfig_noSNI = `
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
   port               = 443
@@ -614,7 +643,7 @@ resource "aws_route53_health_check" "test" {
 }
 `
 
-func testAccRoute53HealthCheckSNIConfig(enable bool) string {
+func testAccHealthCheckConfig_sni(enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   fqdn               = "dev.example.com"
@@ -634,7 +663,7 @@ resource "aws_route53_health_check" "test" {
 `, enable)
 }
 
-func testAccRoute53HealthCheckConfigDisabled(disabled bool) string {
+func testAccHealthCheckConfig_disabled(disabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
   disabled          = %[1]t
@@ -648,7 +677,7 @@ resource "aws_route53_health_check" "test" {
 `, disabled)
 }
 
-func testAccRoute53HealthCheckConfigRoutingControlArn(rName string) string {
+func testAccHealthCheckConfig_routingControlARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q

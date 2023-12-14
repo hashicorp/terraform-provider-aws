@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -8,22 +12,27 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_user_group")
 func ResourceUserGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserGroupCreate,
-		Read:   resourceUserGroupRead,
-		Update: resourceUserGroupUpdate,
-		Delete: resourceUserGroupDelete,
+		CreateWithoutTimeout: resourceUserGroupCreate,
+		ReadWithoutTimeout:   resourceUserGroupRead,
+		UpdateWithoutTimeout: resourceUserGroupUpdate,
+		DeleteWithoutTimeout: resourceUserGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceUserGroupImport,
+			StateContext: resourceUserGroupImport,
 		},
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateGroup.html
@@ -58,8 +67,9 @@ func ResourceUserGroup() *schema.Resource {
 	}
 }
 
-func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -80,18 +90,19 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Print("[DEBUG] Creating Cognito User Group")
 
-	resp, err := conn.CreateGroup(params)
+	resp, err := conn.CreateGroupWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito User Group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", *resp.Group.UserPoolId, *resp.Group.GroupName))
 
-	return resourceUserGroupRead(d, meta)
+	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.GetGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -100,25 +111,27 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Print("[DEBUG] Reading Cognito User Group")
 
-	resp, err := conn.GetGroup(params)
+	resp, err := conn.GetGroupWithContext(ctx, params)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string))
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
-			log.Printf("[WARN] Cognito User Group %s is already gone", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading Cognito User Group: %s", err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
 	}
 
 	d.Set("description", resp.Group.Description)
 	d.Set("precedence", resp.Group.Precedence)
 	d.Set("role_arn", resp.Group.RoleArn)
 
-	return nil
+	return diags
 }
 
-func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.UpdateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -139,16 +152,17 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Print("[DEBUG] Updating Cognito User Group")
 
-	_, err := conn.UpdateGroup(params)
+	_, err := conn.UpdateGroupWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Cognito User Group: %s", err)
 	}
 
-	return resourceUserGroupRead(d, meta)
+	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	params := &cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -157,15 +171,15 @@ func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Print("[DEBUG] Deleting Cognito User Group")
 
-	_, err := conn.DeleteGroup(params)
+	_, err := conn.DeleteGroupWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Cognito User Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Group: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserGroupImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserGroupImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
 		return nil, errors.New("Error importing Cognito User Group. Must specify user_pool_id/group_name")

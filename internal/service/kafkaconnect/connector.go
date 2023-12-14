@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -12,11 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_mskconnect_connector")
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
@@ -382,16 +387,18 @@ func ResourceConnector() *schema.Resource {
 }
 
 func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateConnectorInput{
 		Capacity:                         expandCapacity(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
 		ConnectorConfiguration:           flex.ExpandStringMap(d.Get("connector_configuration").(map[string]interface{})),
 		ConnectorName:                    aws.String(name),
-		KafkaCluster:                     expandKafkaCluster(d.Get("kafka_cluster").([]interface{})[0].(map[string]interface{})),
-		KafkaClusterClientAuthentication: expandKafkaClusterClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})[0].(map[string]interface{})),
-		KafkaClusterEncryptionInTransit:  expandKafkaClusterEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]interface{})[0].(map[string]interface{})),
+		KafkaCluster:                     expandCluster(d.Get("kafka_cluster").([]interface{})[0].(map[string]interface{})),
+		KafkaClusterClientAuthentication: expandClusterClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})[0].(map[string]interface{})),
+		KafkaClusterEncryptionInTransit:  expandClusterEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]interface{})[0].(map[string]interface{})),
 		KafkaConnectVersion:              aws.String(d.Get("kafkaconnect_version").(string)),
 		Plugins:                          expandPlugins(d.Get("plugin").(*schema.Set).List()),
 		ServiceExecutionRoleArn:          aws.String(d.Get("service_execution_role_arn").(string)),
@@ -413,7 +420,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := conn.CreateConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MSK Connect Connector (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Connect Connector (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectorArn))
@@ -421,31 +428,33 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err = waitConnectorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Connector (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConnectorRead(ctx, d, meta)
+	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	connector, err := FindConnectorByARN(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MSK Connect Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", connector.ConnectorArn)
 	if connector.Capacity != nil {
 		if err := d.Set("capacity", []interface{}{flattenCapacityDescription(connector.Capacity)}); err != nil {
-			return diag.Errorf("error setting capacity: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting capacity: %s", err)
 		}
 	} else {
 		d.Set("capacity", nil)
@@ -453,22 +462,22 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("connector_configuration", aws.StringValueMap(connector.ConnectorConfiguration))
 	d.Set("description", connector.ConnectorDescription)
 	if connector.KafkaCluster != nil {
-		if err := d.Set("kafka_cluster", []interface{}{flattenKafkaClusterDescription(connector.KafkaCluster)}); err != nil {
-			return diag.Errorf("error setting kafka_cluster: %s", err)
+		if err := d.Set("kafka_cluster", []interface{}{flattenClusterDescription(connector.KafkaCluster)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster", nil)
 	}
 	if connector.KafkaClusterClientAuthentication != nil {
-		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenKafkaClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
-			return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
+		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster_client_authentication: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster_client_authentication", nil)
 	}
 	if connector.KafkaClusterEncryptionInTransit != nil {
-		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenKafkaClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
-			return diag.Errorf("error setting kafka_cluster_encryption_in_transit: %s", err)
+		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster_encryption_in_transit: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster_encryption_in_transit", nil)
@@ -476,30 +485,32 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("kafkaconnect_version", connector.KafkaConnectVersion)
 	if connector.LogDelivery != nil {
 		if err := d.Set("log_delivery", []interface{}{flattenLogDeliveryDescription(connector.LogDelivery)}); err != nil {
-			return diag.Errorf("error setting log_delivery: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting log_delivery: %s", err)
 		}
 	} else {
 		d.Set("log_delivery", nil)
 	}
 	d.Set("name", connector.ConnectorName)
 	if err := d.Set("plugin", flattenPluginDescriptions(connector.Plugins)); err != nil {
-		return diag.Errorf("error setting plugin: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting plugin: %s", err)
 	}
 	d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
 	d.Set("version", connector.CurrentVersion)
 	if connector.WorkerConfiguration != nil {
 		if err := d.Set("worker_configuration", []interface{}{flattenWorkerConfigurationDescription(connector.WorkerConfiguration)}); err != nil {
-			return diag.Errorf("error setting worker_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting worker_configuration: %s", err)
 		}
 	} else {
 		d.Set("worker_configuration", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	input := &kafkaconnect.UpdateConnectorInput{
 		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
@@ -511,20 +522,22 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.UpdateConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating MSK Connect Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceConnectorRead(ctx, d, meta)
+	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Connect Connector: %s", d.Id())
 	_, err := conn.DeleteConnectorWithContext(ctx, &kafkaconnect.DeleteConnectorInput{
@@ -532,20 +545,20 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MSK Connect Connector (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitConnectorDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Connector (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandCapacity(tfMap map[string]interface{}) *kafkaconnect.Capacity {
@@ -736,7 +749,7 @@ func expandProvisionedCapacityUpdate(tfMap map[string]interface{}) *kafkaconnect
 	return apiObject
 }
 
-func expandKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.KafkaCluster {
+func expandCluster(tfMap map[string]interface{}) *kafkaconnect.KafkaCluster {
 	if tfMap == nil {
 		return nil
 	}
@@ -744,13 +757,13 @@ func expandKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.KafkaCluster
 	apiObject := &kafkaconnect.KafkaCluster{}
 
 	if v, ok := tfMap["apache_kafka_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ApacheKafkaCluster = expandApacheKafkaCluster(v[0].(map[string]interface{}))
+		apiObject.ApacheKafkaCluster = expandApacheCluster(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandApacheKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.ApacheKafkaCluster {
+func expandApacheCluster(tfMap map[string]interface{}) *kafkaconnect.ApacheKafkaCluster {
 	if tfMap == nil {
 		return nil
 	}
@@ -762,13 +775,13 @@ func expandApacheKafkaCluster(tfMap map[string]interface{}) *kafkaconnect.Apache
 	}
 
 	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Vpc = expandVpc(v[0].(map[string]interface{}))
+		apiObject.Vpc = expandVPC(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandVpc(tfMap map[string]interface{}) *kafkaconnect.Vpc {
+func expandVPC(tfMap map[string]interface{}) *kafkaconnect.Vpc {
 	if tfMap == nil {
 		return nil
 	}
@@ -786,7 +799,7 @@ func expandVpc(tfMap map[string]interface{}) *kafkaconnect.Vpc {
 	return apiObject
 }
 
-func expandKafkaClusterClientAuthentication(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterClientAuthentication {
+func expandClusterClientAuthentication(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterClientAuthentication {
 	if tfMap == nil {
 		return nil
 	}
@@ -800,7 +813,7 @@ func expandKafkaClusterClientAuthentication(tfMap map[string]interface{}) *kafka
 	return apiObject
 }
 
-func expandKafkaClusterEncryptionInTransit(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterEncryptionInTransit {
+func expandClusterEncryptionInTransit(tfMap map[string]interface{}) *kafkaconnect.KafkaClusterEncryptionInTransit {
 	if tfMap == nil {
 		return nil
 	}
@@ -1078,7 +1091,7 @@ func flattenProvisionedCapacityDescription(apiObject *kafkaconnect.ProvisionedCa
 	return tfMap
 }
 
-func flattenKafkaClusterDescription(apiObject *kafkaconnect.KafkaClusterDescription) map[string]interface{} {
+func flattenClusterDescription(apiObject *kafkaconnect.KafkaClusterDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1086,13 +1099,13 @@ func flattenKafkaClusterDescription(apiObject *kafkaconnect.KafkaClusterDescript
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ApacheKafkaCluster; v != nil {
-		tfMap["apache_kafka_cluster"] = []interface{}{flattenApacheKafkaClusterDescription(v)}
+		tfMap["apache_kafka_cluster"] = []interface{}{flattenApacheClusterDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenApacheKafkaClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterDescription) map[string]interface{} {
+func flattenApacheClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1104,13 +1117,13 @@ func flattenApacheKafkaClusterDescription(apiObject *kafkaconnect.ApacheKafkaClu
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenVpcDescription(v)}
+		tfMap["vpc"] = []interface{}{flattenVPCDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenVpcDescription(apiObject *kafkaconnect.VpcDescription) map[string]interface{} {
+func flattenVPCDescription(apiObject *kafkaconnect.VpcDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1128,7 +1141,7 @@ func flattenVpcDescription(apiObject *kafkaconnect.VpcDescription) map[string]in
 	return tfMap
 }
 
-func flattenKafkaClusterClientAuthenticationDescription(apiObject *kafkaconnect.KafkaClusterClientAuthenticationDescription) map[string]interface{} {
+func flattenClusterClientAuthenticationDescription(apiObject *kafkaconnect.KafkaClusterClientAuthenticationDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1142,7 +1155,7 @@ func flattenKafkaClusterClientAuthenticationDescription(apiObject *kafkaconnect.
 	return tfMap
 }
 
-func flattenKafkaClusterEncryptionInTransitDescription(apiObject *kafkaconnect.KafkaClusterEncryptionInTransitDescription) map[string]interface{} {
+func flattenClusterEncryptionInTransitDescription(apiObject *kafkaconnect.KafkaClusterEncryptionInTransitDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

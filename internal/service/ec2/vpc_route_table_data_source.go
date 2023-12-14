@@ -1,21 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route_table")
 func DataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRouteTableRead,
+		ReadWithoutTimeout: dataSourceRouteTableRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
@@ -170,8 +182,9 @@ func DataSourceRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
@@ -183,7 +196,7 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	filter, filterOk := d.GetOk("filter")
 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
-		return fmt.Errorf("one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
+		return sdkdiag.AppendErrorf(diags, "one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
 	}
 	req.Filters = BuildAttributeFilterList(
 		map[string]string{
@@ -194,22 +207,21 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 	req.Filters = append(req.Filters, BuildTagFilterList(
-		Tags(tftags.New(tags.(map[string]interface{}))),
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 
-	log.Printf("[DEBUG] Reading Route Table: %s", req)
-	resp, err := conn.DescribeRouteTables(req)
+	resp, err := conn.DescribeRouteTablesWithContext(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Route Table: %s", err)
 	}
 	if resp == nil || len(resp.RouteTables) == 0 {
-		return fmt.Errorf("query returned no results. Please change your search criteria and try again")
+		return sdkdiag.AppendErrorf(diags, "query returned no results. Please change your search criteria and try again")
 	}
 	if len(resp.RouteTables) > 1 {
-		return fmt.Errorf("multiple Route Tables matched; use additional constraints to reduce matches to a single Route Table")
+		return sdkdiag.AppendErrorf(diags, "multiple Route Tables matched; use additional constraints to reduce matches to a single Route Table")
 	}
 
 	rt := resp.RouteTables[0]
@@ -231,26 +243,26 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set("tags", KeyValueTags(rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"})).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	if err := d.Set("routes", dataSourceRoutesRead(conn, rt.Routes)); err != nil {
-		return err
+	if err := d.Set("routes", dataSourceRoutesRead(ctx, conn, rt.Routes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Route Table: %s", err)
 	}
 
 	if err := d.Set("associations", dataSourceAssociationsRead(rt.Associations)); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Route Table: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]interface{} {
+func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]interface{} {
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
-		if aws.StringValue(r.GatewayId) == "local" {
+		if gatewayID := aws.StringValue(r.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 
@@ -266,7 +278,7 @@ func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]in
 
 		// Skip cross-account ENIs for AWS services.
 		if networkInterfaceID := aws.StringValue(r.NetworkInterfaceId); networkInterfaceID != "" {
-			networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
+			networkInterface, err := FindNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
 			if err == nil && networkInterface.Attachment != nil {
 				if ownerID, instanceOwnerID := aws.StringValue(networkInterface.OwnerId), aws.StringValue(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
@@ -279,47 +291,47 @@ func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]in
 		m := make(map[string]interface{})
 
 		if r.DestinationCidrBlock != nil {
-			m["cidr_block"] = *r.DestinationCidrBlock
+			m["cidr_block"] = aws.StringValue(r.DestinationCidrBlock)
 		}
 		if r.DestinationIpv6CidrBlock != nil {
-			m["ipv6_cidr_block"] = *r.DestinationIpv6CidrBlock
+			m["ipv6_cidr_block"] = aws.StringValue(r.DestinationIpv6CidrBlock)
 		}
 		if r.DestinationPrefixListId != nil {
-			m["destination_prefix_list_id"] = *r.DestinationPrefixListId
+			m["destination_prefix_list_id"] = aws.StringValue(r.DestinationPrefixListId)
 		}
 		if r.CarrierGatewayId != nil {
-			m["carrier_gateway_id"] = *r.CarrierGatewayId
+			m["carrier_gateway_id"] = aws.StringValue(r.CarrierGatewayId)
 		}
 		if r.CoreNetworkArn != nil {
-			m["core_network_arn"] = *r.CoreNetworkArn
+			m["core_network_arn"] = aws.StringValue(r.CoreNetworkArn)
 		}
 		if r.EgressOnlyInternetGatewayId != nil {
-			m["egress_only_gateway_id"] = *r.EgressOnlyInternetGatewayId
+			m["egress_only_gateway_id"] = aws.StringValue(r.EgressOnlyInternetGatewayId)
 		}
 		if r.GatewayId != nil {
 			if strings.HasPrefix(*r.GatewayId, "vpce-") {
-				m["vpc_endpoint_id"] = *r.GatewayId
+				m["vpc_endpoint_id"] = aws.StringValue(r.GatewayId)
 			} else {
-				m["gateway_id"] = *r.GatewayId
+				m["gateway_id"] = aws.StringValue(r.GatewayId)
 			}
 		}
 		if r.NatGatewayId != nil {
-			m["nat_gateway_id"] = *r.NatGatewayId
+			m["nat_gateway_id"] = aws.StringValue(r.NatGatewayId)
 		}
 		if r.LocalGatewayId != nil {
-			m["local_gateway_id"] = *r.LocalGatewayId
+			m["local_gateway_id"] = aws.StringValue(r.LocalGatewayId)
 		}
 		if r.InstanceId != nil {
-			m["instance_id"] = *r.InstanceId
+			m["instance_id"] = aws.StringValue(r.InstanceId)
 		}
 		if r.TransitGatewayId != nil {
-			m["transit_gateway_id"] = *r.TransitGatewayId
+			m["transit_gateway_id"] = aws.StringValue(r.TransitGatewayId)
 		}
 		if r.VpcPeeringConnectionId != nil {
-			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId
+			m["vpc_peering_connection_id"] = aws.StringValue(r.VpcPeeringConnectionId)
 		}
 		if r.NetworkInterfaceId != nil {
-			m["network_interface_id"] = *r.NetworkInterfaceId
+			m["network_interface_id"] = aws.StringValue(r.NetworkInterfaceId)
 		}
 
 		routes = append(routes, m)
@@ -331,18 +343,17 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 	associations := make([]map[string]interface{}, 0, len(ec2Assocations))
 	// Loop through the routes and add them to the set
 	for _, a := range ec2Assocations {
-
 		m := make(map[string]interface{})
-		m["route_table_id"] = *a.RouteTableId
-		m["route_table_association_id"] = *a.RouteTableAssociationId
+		m["route_table_id"] = aws.StringValue(a.RouteTableId)
+		m["route_table_association_id"] = aws.StringValue(a.RouteTableAssociationId)
 		// GH[11134]
 		if a.SubnetId != nil {
-			m["subnet_id"] = *a.SubnetId
+			m["subnet_id"] = aws.StringValue(a.SubnetId)
 		}
 		if a.GatewayId != nil {
-			m["gateway_id"] = *a.GatewayId
+			m["gateway_id"] = aws.StringValue(a.GatewayId)
 		}
-		m["main"] = *a.Main
+		m["main"] = aws.BoolValue(a.Main)
 		associations = append(associations, m)
 	}
 	return associations

@@ -48,25 +48,34 @@ resource "aws_api_gateway_method_response" "response_200" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `rest_api_id` - (Required) The ID of the associated REST API
-* `resource_id` - (Required) The API resource ID
-* `http_method` - (Required) The HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
-* `status_code` - (Required) The HTTP status code
-* `response_models` - (Optional) A map of the API models used for the response's content type
-* `response_parameters` - (Optional) A map of response parameters that can be sent to the caller.
+* `rest_api_id` - (Required) ID of the associated REST API
+* `resource_id` - (Required) API resource ID
+* `http_method` - (Required) HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
+* `status_code` - (Required) HTTP status code
+* `response_models` - (Optional) Map of the API models used for the response's content type
+* `response_parameters` - (Optional) Map of response parameters that can be sent to the caller.
    For example: `response_parameters = { "method.response.header.X-Some-Header" = true }`
    would define that the header `X-Some-Header` can be provided on the response.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_method_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_method_response` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_method_response.example
+  id = "12345abcde/67890fghij/GET/200"
+}
 ```
-$ terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
+
+Using `terraform import`, import `aws_api_gateway_method_response` using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`. For example:
+
+```console
+% terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
 ```

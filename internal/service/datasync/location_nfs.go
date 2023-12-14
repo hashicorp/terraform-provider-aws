@@ -1,34 +1,63 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_datasync_location_nfs", name="Location NFS")
+// @Tags(identifierAttribute="id")
 func ResourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationNFSCreate,
-		Read:   resourceLocationNFSRead,
-		Update: resourceLocationNFSUpdate,
-		Delete: resourceLocationNFSDelete,
+		CreateWithoutTimeout: resourceLocationNFSCreate,
+		ReadWithoutTimeout:   resourceLocationNFSRead,
+		UpdateWithoutTimeout: resourceLocationNFSUpdate,
+		DeleteWithoutTimeout: resourceLocationNFSDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"mount_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"version": {
+							Type:         schema.TypeString,
+							Default:      datasync.NfsVersionAutomatic,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
+						},
+					},
+				},
 			},
 			"on_prem_config": {
 				Type:     schema.TypeList,
@@ -44,23 +73,6 @@ func ResourceLocationNFS() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidARN,
 							},
-						},
-					},
-				},
-			},
-			"mount_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"version": {
-							Type:         schema.TypeString,
-							Default:      datasync.NfsVersionAutomatic,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
 						},
 					},
 				},
@@ -86,8 +98,8 @@ func ResourceLocationNFS() *schema.Resource {
 					return false
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,147 +110,138 @@ func ResourceLocationNFS() *schema.Resource {
 	}
 }
 
-func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateLocationNfsInput{
-		OnPremConfig:   expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
+		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           Tags(tags.IgnoreAWS()),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
-		input.MountOptions = expandDataSyncNfsMountOptions(v.([]interface{}))
+		input.MountOptions = expandNFSMountOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location NFS: %s", input)
-	output, err := conn.CreateLocationNfs(input)
+	output, err := conn.CreateLocationNfsWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location NFS: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location NFS: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationNFSRead(d, meta)
+	return append(diags, resourceLocationNFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DescribeLocationNfsInput{
-		LocationArn: aws.String(d.Id()),
-	}
+	output, err := FindLocationNFSByARN(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading DataSync Location NFS: %s", input)
-	output, err := conn.DescribeLocationNfs(input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		log.Printf("[WARN] DataSync Location NFS %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DataSync Location NFS (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location NFS (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.StringValue(output.LocationUri)
+	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", output.LocationArn)
-
-	if err := d.Set("on_prem_config", flattenDataSyncOnPremConfig(output.OnPremConfig)); err != nil {
-		return fmt.Errorf("error setting on_prem_config: %w", err)
+	if err := d.Set("mount_options", flattenNFSMountOptions(output.MountOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
-
-	if err := d.Set("mount_options", flattenDataSyncNfsMountOptions(output.MountOptions)); err != nil {
-		return fmt.Errorf("error setting mount_options: %w", err)
+	if err := d.Set("on_prem_config", flattenOnPremConfig(output.OnPremConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting on_prem_config: %s", err)
 	}
-
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set("uri", uri)
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location NFS (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
-			OnPremConfig: expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
+			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		}
 
 		if v, ok := d.GetOk("mount_options"); ok {
-			input.MountOptions = expandDataSyncNfsMountOptions(v.([]interface{}))
+			input.MountOptions = expandNFSMountOptions(v.([]interface{}))
 		}
 
-		_, err := conn.UpdateLocationNfs(input)
+		_, err := conn.UpdateLocationNfsWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Location NFS (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Location NFS (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location NFS (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceLocationNFSRead(d, meta)
+	return append(diags, resourceLocationNFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationNFSDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
+	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", d.Id())
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", input)
-	_, err := conn.DeleteLocation(input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		return nil
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location NFS (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location NFS (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandDataSyncNfsMountOptions(l []interface{}) *datasync.NfsMountOptions {
+func FindLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
+	input := &datasync.DescribeLocationNfsInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationNfsWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandNFSMountOptions(l []interface{}) *datasync.NfsMountOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -252,7 +255,7 @@ func expandDataSyncNfsMountOptions(l []interface{}) *datasync.NfsMountOptions {
 	return nfsMountOptions
 }
 
-func flattenDataSyncNfsMountOptions(mountOptions *datasync.NfsMountOptions) []interface{} {
+func flattenNFSMountOptions(mountOptions *datasync.NfsMountOptions) []interface{} {
 	if mountOptions == nil {
 		return []interface{}{}
 	}
@@ -262,4 +265,30 @@ func flattenDataSyncNfsMountOptions(mountOptions *datasync.NfsMountOptions) []in
 	}
 
 	return []interface{}{m}
+}
+
+func flattenOnPremConfig(onPremConfig *datasync.OnPremConfig) []interface{} {
+	if onPremConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"agent_arns": flex.FlattenStringSet(onPremConfig.AgentArns),
+	}
+
+	return []interface{}{m}
+}
+
+func expandOnPremConfig(l []interface{}) *datasync.OnPremConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	onPremConfig := &datasync.OnPremConfig{
+		AgentArns: flex.ExpandStringSet(m["agent_arns"].(*schema.Set)),
+	}
+
+	return onPremConfig
 }

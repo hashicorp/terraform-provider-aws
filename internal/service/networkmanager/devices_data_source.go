@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -8,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_devices")
 func DataSourceDevices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDevicesRead,
@@ -35,9 +40,11 @@ func DataSourceDevices() *schema.Resource {
 }
 
 func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -50,14 +57,14 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := FindDevices(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Devices: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Devices: %s", err)
 	}
 
 	var deviceIDs []string
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(v.Tags).ContainsAll(tagsToMatch) {
+			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}
@@ -68,5 +75,5 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", deviceIDs)
 
-	return nil
+	return diags
 }

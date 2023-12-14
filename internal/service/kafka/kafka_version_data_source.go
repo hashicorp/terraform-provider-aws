@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_msk_kafka_version")
 func DataSourceVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVersionRead,
+		ReadWithoutTimeout: dataSourceVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"preferred_versions": {
@@ -34,7 +40,7 @@ func DataSourceVersion() *schema.Resource {
 	}
 }
 
-func findKafkaVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion) *kafka.KafkaVersion {
+func findVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion) *kafka.KafkaVersion {
 	var found *kafka.KafkaVersion
 
 	for _, v := range preferredVersions {
@@ -60,12 +66,13 @@ func findKafkaVersion(preferredVersions []interface{}, versions []*kafka.KafkaVe
 	return found
 }
 
-func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	var kafkaVersions []*kafka.KafkaVersion
 
-	err := conn.ListKafkaVersionsPages(&kafka.ListKafkaVersionsInput{}, func(page *kafka.ListKafkaVersionsOutput, lastPage bool) bool {
+	err := conn.ListKafkaVersionsPagesWithContext(ctx, &kafka.ListKafkaVersionsInput{}, func(page *kafka.ListKafkaVersionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -76,23 +83,23 @@ func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Kafka versions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Kafka versions: %s", err)
 	}
 
 	if len(kafkaVersions) == 0 {
-		return fmt.Errorf("no Kafka versions found")
+		return sdkdiag.AppendErrorf(diags, "no Kafka versions found")
 	}
 
 	var found *kafka.KafkaVersion
 
 	if v, ok := d.GetOk("preferred_versions"); ok {
-		found = findKafkaVersion(v.([]interface{}), kafkaVersions)
+		found = findVersion(v.([]interface{}), kafkaVersions)
 	} else if v, ok := d.GetOk("version"); ok {
-		found = findKafkaVersion([]interface{}{v}, kafkaVersions)
+		found = findVersion([]interface{}{v}, kafkaVersions)
 	}
 
 	if found == nil {
-		return fmt.Errorf("no Kafka versions match the criteria")
+		return sdkdiag.AppendErrorf(diags, "no Kafka versions match the criteria")
 	}
 
 	d.SetId(aws.StringValue(found.Version))
@@ -100,5 +107,5 @@ func dataSourceVersionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", found.Status)
 	d.Set("version", found.Version)
 
-	return nil
+	return diags
 }

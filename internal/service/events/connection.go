@@ -1,19 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudwatch_event_connection")
 func ResourceConnection() *schema.Resource {
 	connectionHttpParameters := &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -87,12 +94,12 @@ func ResourceConnection() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: resourceConnectionCreate,
-		Read:   resourceConnectionRead,
-		Update: resourceConnectionUpdate,
-		Delete: resourceConnectionDelete,
+		CreateWithoutTimeout: resourceConnectionCreate,
+		ReadWithoutTimeout:   resourceConnectionRead,
+		UpdateWithoutTimeout: resourceConnectionUpdate,
+		DeleteWithoutTimeout: resourceConnectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -102,7 +109,7 @@ func ResourceConnection() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z0-9]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
 				),
 			},
 			"description": {
@@ -256,8 +263,9 @@ func ResourceConnection() *schema.Resource {
 	}
 }
 
-func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &eventbridge.CreateConnectionInput{
@@ -270,38 +278,37 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EventBridge connection: %s", input)
-
-	_, err := conn.CreateConnection(input)
+	_, err := conn.CreateConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EventBridge connection (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge connection (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	_, err = waitConnectionCreated(conn, d.Id())
+	_, err = waitConnectionCreated(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EventBridge connection (%s) to create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge connection (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceConnectionRead(d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
-	output, err := FindConnectionByName(conn, d.Id())
+	output, err := FindConnectionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge connection (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.ConnectionArn)
@@ -313,15 +320,16 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	if output.AuthParameters != nil {
 		authParameters := flattenConnectionAuthParameters(output.AuthParameters, d)
 		if err := d.Set("auth_parameters", authParameters); err != nil {
-			return fmt.Errorf("error setting auth_parameters error: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting auth_parameters error: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.UpdateConnectionInput{
 		Name: aws.String(d.Id()),
@@ -339,45 +347,45 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Updating EventBridge connection: %s", input)
-	_, err := conn.UpdateConnection(input)
+	_, err := conn.UpdateConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating EventBridge connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge connection (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitConnectionUpdated(conn, d.Id())
+	_, err = waitConnectionUpdated(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EventBridge connection (%s) to update: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge connection (%s) to update: %s", d.Id(), err)
 	}
 
-	return resourceConnectionRead(d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge connection (%s)", d.Id())
-	_, err := conn.DeleteConnection(&eventbridge.DeleteConnectionInput{
+	_, err := conn.DeleteConnectionWithContext(ctx, &eventbridge.DeleteConnectionInput{
 		Name: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EventBridge connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge connection (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitConnectionDeleted(conn, d.Id())
+	_, err = waitConnectionDeleted(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EventBridge connection (%s) to delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge connection (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandCreateConnectionAuthRequestParameters(config []interface{}) *eventbridge.CreateConnectionAuthRequestParameters {

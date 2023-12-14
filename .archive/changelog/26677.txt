@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appstream_image_builder: Fix IAM eventual consistency error for optional role
+```
+
+```release-note:bug
+resource/aws_appstream_image_builder: Fix refresh error when `domain_join_info` and `vpc_config` are not empty
+```

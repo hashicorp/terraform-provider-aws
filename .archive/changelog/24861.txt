@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_connect_instance: Configurable Create and Delete timeouts
+```

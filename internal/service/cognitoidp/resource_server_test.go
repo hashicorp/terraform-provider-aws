@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -8,15 +12,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
 func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var resourceServer cognitoidentityprovider.ResourceServerType
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
@@ -25,15 +30,15 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceServerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceServerConfig_basic(identifier, name1, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceServerExists(resourceName, &resourceServer),
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
@@ -43,7 +48,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 			{
 				Config: testAccResourceServerConfig_basic(identifier, name2, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceServerExists(resourceName, &resourceServer),
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
@@ -60,6 +65,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 }
 
 func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
+	ctx := acctest.Context(t)
 	var resourceServer cognitoidentityprovider.ResourceServerType
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
@@ -67,23 +73,23 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceServerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceServerConfig_scope(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceServerExists(resourceName, &resourceServer),
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "2"),
 				),
 			},
 			{
-				Config: testAccResourceServerConfig_scope_update(identifier, name, poolName),
+				Config: testAccResourceServerConfig_scopeUpdate(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceServerExists(resourceName, &resourceServer),
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "1"),
 				),
@@ -97,7 +103,7 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 			{
 				Config: testAccResourceServerConfig_basic(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceServerExists(resourceName, &resourceServer),
+					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
 				),
@@ -106,7 +112,7 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceServerExists(n string, resourceServer *cognitoidentityprovider.ResourceServerType) resource.TestCheckFunc {
+func testAccCheckResourceServerExists(ctx context.Context, n string, resourceServer *cognitoidentityprovider.ResourceServerType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -117,14 +123,14 @@ func testAccCheckResourceServerExists(n string, resourceServer *cognitoidentityp
 			return errors.New("No Cognito Resource Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := conn.DescribeResourceServer(&cognitoidentityprovider.DescribeResourceServerInput{
+		output, err := conn.DescribeResourceServerWithContext(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
 			Identifier: aws.String(identifier),
 			UserPoolId: aws.String(userPoolID),
 		})
@@ -143,33 +149,35 @@ func testAccCheckResourceServerExists(n string, resourceServer *cognitoidentityp
 	}
 }
 
-func testAccCheckResourceServerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+func testAccCheckResourceServerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_resource_server" {
-			continue
-		}
-
-		userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = conn.DescribeResourceServer(&cognitoidentityprovider.DescribeResourceServerInput{
-			Identifier: aws.String(identifier),
-			UserPoolId: aws.String(userPoolID),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cognito_resource_server" {
+				continue
 			}
-			return err
-		}
-	}
 
-	return nil
+			userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = conn.DescribeResourceServerWithContext(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
+				Identifier: aws.String(identifier),
+				UserPoolId: aws.String(userPoolID),
+			})
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccResourceServerConfig_basic(identifier string, name string, poolName string) string {
@@ -211,7 +219,7 @@ resource "aws_cognito_user_pool" "main" {
 `, identifier, name, poolName)
 }
 
-func testAccResourceServerConfig_scope_update(identifier string, name string, poolName string) string {
+func testAccResourceServerConfig_scopeUpdate(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"

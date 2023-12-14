@@ -1,27 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_securityhub_insight")
 func ResourceInsight() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInsightCreate,
 		ReadWithoutTimeout:   resourceInsightRead,
 		UpdateWithoutTimeout: resourceInsightUpdate,
 		DeleteWithoutTimeout: resourceInsightDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -31,7 +38,6 @@ func ResourceInsight() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"filters": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -129,12 +135,10 @@ func ResourceInsight() *schema.Resource {
 					},
 				},
 			},
-
 			"group_by_attribute": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -144,61 +148,47 @@ func ResourceInsight() *schema.Resource {
 }
 
 func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &securityhub.CreateInsightInput{
 		GroupByAttribute: aws.String(d.Get("group_by_attribute").(string)),
 		Name:             aws.String(name),
 	}
 
-	if v, ok := d.GetOk("filters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Filters = expandSecurityHubSecurityFindingFilters(v.([]interface{}))
+	if v, ok := d.GetOk("filters"); ok {
+		input.Filters = expandSecurityFindingFilters(v.([]interface{}))
 	}
 
-	output, err := conn.CreateInsightWithContext(ctx, input)
+	output, err := conn.CreateInsight(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Security Hub Insight (%s): %w", name, err))
+		return diag.Errorf("creating Security Hub Insight (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Security Hub Insight (%s): empty output", name))
-	}
-
-	d.SetId(aws.StringValue(output.InsightArn))
+	d.SetId(aws.ToString(output.InsightArn))
 
 	return resourceInsightRead(ctx, d, meta)
 }
 
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	insight, err := FindInsight(ctx, conn, d.Id())
+	insight, err := FindInsightByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Security Hub Insight (%s): %w", d.Id(), err))
-	}
-
-	if insight == nil {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading Security Hub Insight (%s): empty output", d.Id()))
-		}
-		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return diag.Errorf("reading Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", insight.InsightArn)
-	if err := d.Set("filters", flattenSecurityHubSecurityFindingFilters(insight.Filters)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting filters: %w", err))
+	if err := d.Set("filters", flattenSecurityFindingFilters(insight.Filters)); err != nil {
+		return diag.Errorf("setting filters: %s", err)
 	}
 	d.Set("group_by_attribute", insight.GroupByAttribute)
 	d.Set("name", insight.Name)
@@ -207,14 +197,14 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	input := &securityhub.UpdateInsightInput{
 		InsightArn: aws.String(d.Id()),
 	}
 
 	if d.HasChange("filters") {
-		input.Filters = expandSecurityHubSecurityFindingFilters(d.Get("filters").([]interface{}))
+		input.Filters = expandSecurityFindingFilters(d.Get("filters").([]interface{}))
 	}
 
 	if d.HasChange("group_by_attribute") {
@@ -225,32 +215,57 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Name = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateInsightWithContext(ctx, input)
+	_, err := conn.UpdateInsight(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Security Hub Insight (%s): %w", d.Id(), err))
+		return diag.Errorf("updating Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	return resourceInsightRead(ctx, d, meta)
 }
 
 func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.DeleteInsightInput{
+	log.Printf("[DEBUG] Deleting Security Hub Insight: %s", d.Id())
+	_, err := conn.DeleteInsight(ctx, &securityhub.DeleteInsightInput{
 		InsightArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return nil
 	}
 
-	_, err := conn.DeleteInsightWithContext(ctx, input)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error deleting Security Hub Insight (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindInsightByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
+	input := &securityhub.GetInsightsInput{
+		InsightArns: []string{arn},
+	}
+
+	output, err := conn.GetInsights(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Insights)
 }
 
 func dateFilterSchema() *schema.Schema {
@@ -267,9 +282,9 @@ func dateFilterSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"unit": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(securityhub.DateRangeUnit_Values(), true),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.DateRangeUnit](),
 							},
 							"value": {
 								Type:     schema.TypeInt,
@@ -332,9 +347,9 @@ func mapFilterSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"comparison": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(securityhub.MapFilterComparison_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.MapFilterComparison](),
 				},
 				"key": {
 					Type:     schema.TypeString,
@@ -384,9 +399,9 @@ func stringFilterSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"comparison": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(securityhub.StringFilterComparison_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.StringFilterComparison](),
 				},
 				"value": {
 					Type:     schema.TypeString,
@@ -400,12 +415,12 @@ func stringFilterSchema() *schema.Schema {
 func workflowStatusSchema() *schema.Schema {
 	s := stringFilterSchema()
 
-	s.Elem.(*schema.Resource).Schema["value"].ValidateFunc = validation.StringInSlice(securityhub.WorkflowStatus_Values(), false)
+	s.Elem.(*schema.Resource).Schema["value"].ValidateDiagFunc = enum.Validate[types.WorkflowStatus]()
 
 	return s
 }
 
-func expandSecurityHubDateFilterDateRange(l []interface{}) *securityhub.DateRange {
+func expandDateFilterDateRange(l []interface{}) *types.DateRange {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -415,25 +430,25 @@ func expandSecurityHubDateFilterDateRange(l []interface{}) *securityhub.DateRang
 		return nil
 	}
 
-	dr := &securityhub.DateRange{}
+	dr := &types.DateRange{}
 
 	if v, ok := tfMap["unit"].(string); ok && v != "" {
-		dr.Unit = aws.String(v)
+		dr.Unit = types.DateRangeUnit(v)
 	}
 
 	if v, ok := tfMap["value"].(int); ok {
-		dr.Value = aws.Int64(int64(v))
+		dr.Value = aws.Int32(int32(v))
 	}
 
 	return dr
 }
 
-func expandSecurityHubDateFilters(l []interface{}) []*securityhub.DateFilter {
+func expandDateFilters(l []interface{}) []types.DateFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	var dateFilters []*securityhub.DateFilter
+	var dateFilters []types.DateFilter
 
 	for _, item := range l {
 		tfMap, ok := item.(map[string]interface{})
@@ -441,10 +456,10 @@ func expandSecurityHubDateFilters(l []interface{}) []*securityhub.DateFilter {
 			continue
 		}
 
-		df := &securityhub.DateFilter{}
+		df := types.DateFilter{}
 
 		if v, ok := tfMap["date_range"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			df.DateRange = expandSecurityHubDateFilterDateRange(v)
+			df.DateRange = expandDateFilterDateRange(v)
 		}
 
 		if v, ok := tfMap["end"].(string); ok && v != "" {
@@ -461,7 +476,7 @@ func expandSecurityHubDateFilters(l []interface{}) []*securityhub.DateFilter {
 	return dateFilters
 }
 
-func expandSecurityHubSecurityFindingFilters(l []interface{}) *securityhub.AwsSecurityFindingFilters {
+func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilters {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -471,369 +486,369 @@ func expandSecurityHubSecurityFindingFilters(l []interface{}) *securityhub.AwsSe
 		return nil
 	}
 
-	filters := &securityhub.AwsSecurityFindingFilters{}
+	filters := &types.AwsSecurityFindingFilters{}
 
 	if v, ok := tfMap["aws_account_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.AwsAccountId = expandSecurityHubStringFilters(v.List())
+		filters.AwsAccountId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["company_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.CompanyName = expandSecurityHubStringFilters(v.List())
+		filters.CompanyName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["compliance_status"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ComplianceStatus = expandSecurityHubStringFilters(v.List())
+		filters.ComplianceStatus = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["confidence"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Confidence = expandSecurityHubNumberFilters(v.List())
+		filters.Confidence = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["created_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.CreatedAt = expandSecurityHubDateFilters(v.List())
+		filters.CreatedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["criticality"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Criticality = expandSecurityHubNumberFilters(v.List())
+		filters.Criticality = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["description"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Description = expandSecurityHubStringFilters(v.List())
+		filters.Description = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_confidence"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsConfidence = expandSecurityHubNumberFilters(v.List())
+		filters.FindingProviderFieldsConfidence = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_criticality"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsCriticality = expandSecurityHubNumberFilters(v.List())
+		filters.FindingProviderFieldsCriticality = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_related_findings_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsRelatedFindingsId = expandSecurityHubStringFilters(v.List())
+		filters.FindingProviderFieldsRelatedFindingsId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_related_findings_product_arn"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsRelatedFindingsProductArn = expandSecurityHubStringFilters(v.List())
+		filters.FindingProviderFieldsRelatedFindingsProductArn = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_severity_label"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsSeverityLabel = expandSecurityHubStringFilters(v.List())
+		filters.FindingProviderFieldsSeverityLabel = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_severity_original"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsSeverityOriginal = expandSecurityHubStringFilters(v.List())
+		filters.FindingProviderFieldsSeverityOriginal = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["finding_provider_fields_types"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FindingProviderFieldsTypes = expandSecurityHubStringFilters(v.List())
+		filters.FindingProviderFieldsTypes = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["first_observed_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.FirstObservedAt = expandSecurityHubDateFilters(v.List())
+		filters.FirstObservedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["generator_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.GeneratorId = expandSecurityHubStringFilters(v.List())
+		filters.GeneratorId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Id = expandSecurityHubStringFilters(v.List())
+		filters.Id = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["keyword"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Keyword = expandSecurityHubKeywordFilters(v.List())
+		filters.Keyword = expandKeywordFilters(v.List())
 	}
 
 	if v, ok := tfMap["last_observed_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.LastObservedAt = expandSecurityHubDateFilters(v.List())
+		filters.LastObservedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["malware_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.MalwareName = expandSecurityHubStringFilters(v.List())
+		filters.MalwareName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["malware_path"].(*schema.Set); ok && v.Len() > 0 {
-		filters.MalwarePath = expandSecurityHubStringFilters(v.List())
+		filters.MalwarePath = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["malware_state"].(*schema.Set); ok && v.Len() > 0 {
-		filters.MalwareState = expandSecurityHubStringFilters(v.List())
+		filters.MalwareState = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["malware_type"].(*schema.Set); ok && v.Len() > 0 {
-		filters.MalwareType = expandSecurityHubStringFilters(v.List())
+		filters.MalwareType = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_destination_domain"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkDestinationDomain = expandSecurityHubStringFilters(v.List())
+		filters.NetworkDestinationDomain = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_destination_ipv4"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkDestinationIpV4 = expandSecurityHubIpFilters(v.List())
+		filters.NetworkDestinationIpV4 = expandIPFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_destination_ipv6"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkDestinationIpV6 = expandSecurityHubIpFilters(v.List())
+		filters.NetworkDestinationIpV6 = expandIPFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_destination_port"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkDestinationPort = expandSecurityHubNumberFilters(v.List())
+		filters.NetworkDestinationPort = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_direction"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkDirection = expandSecurityHubStringFilters(v.List())
+		filters.NetworkDirection = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_protocol"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkProtocol = expandSecurityHubStringFilters(v.List())
+		filters.NetworkProtocol = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_source_domain"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkSourceDomain = expandSecurityHubStringFilters(v.List())
+		filters.NetworkSourceDomain = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_source_ipv4"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkSourceIpV4 = expandSecurityHubIpFilters(v.List())
+		filters.NetworkSourceIpV4 = expandIPFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_source_ipv6"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkSourceIpV6 = expandSecurityHubIpFilters(v.List())
+		filters.NetworkSourceIpV6 = expandIPFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_source_mac"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkSourceMac = expandSecurityHubStringFilters(v.List())
+		filters.NetworkSourceMac = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["network_source_port"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NetworkSourcePort = expandSecurityHubNumberFilters(v.List())
+		filters.NetworkSourcePort = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["note_text"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NoteText = expandSecurityHubStringFilters(v.List())
+		filters.NoteText = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["note_updated_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NoteUpdatedAt = expandSecurityHubDateFilters(v.List())
+		filters.NoteUpdatedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["note_updated_by"].(*schema.Set); ok && v.Len() > 0 {
-		filters.NoteUpdatedBy = expandSecurityHubStringFilters(v.List())
+		filters.NoteUpdatedBy = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["process_launched_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProcessLaunchedAt = expandSecurityHubDateFilters(v.List())
+		filters.ProcessLaunchedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["process_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProcessName = expandSecurityHubStringFilters(v.List())
+		filters.ProcessName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["process_parent_pid"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProcessParentPid = expandSecurityHubNumberFilters(v.List())
+		filters.ProcessParentPid = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["process_path"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProcessPath = expandSecurityHubStringFilters(v.List())
+		filters.ProcessPath = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["process_pid"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProcessPid = expandSecurityHubNumberFilters(v.List())
+		filters.ProcessPid = expandNumberFilters(v.List())
 	}
 
 	if v, ok := tfMap["process_terminated_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProcessTerminatedAt = expandSecurityHubDateFilters(v.List())
+		filters.ProcessTerminatedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["product_arn"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProductArn = expandSecurityHubStringFilters(v.List())
+		filters.ProductArn = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["product_fields"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProductFields = expandSecurityHubMapFilters(v.List())
+		filters.ProductFields = expandMapFilters(v.List())
 	}
 
 	if v, ok := tfMap["product_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ProductName = expandSecurityHubStringFilters(v.List())
+		filters.ProductName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["recommendation_text"].(*schema.Set); ok && v.Len() > 0 {
-		filters.RecommendationText = expandSecurityHubStringFilters(v.List())
+		filters.RecommendationText = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["record_state"].(*schema.Set); ok && v.Len() > 0 {
-		filters.RecordState = expandSecurityHubStringFilters(v.List())
+		filters.RecordState = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["related_findings_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.RelatedFindingsId = expandSecurityHubStringFilters(v.List())
+		filters.RelatedFindingsId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["related_findings_product_arn"].(*schema.Set); ok && v.Len() > 0 {
-		filters.RelatedFindingsProductArn = expandSecurityHubStringFilters(v.List())
+		filters.RelatedFindingsProductArn = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_iam_instance_profile_arn"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceIamInstanceProfileArn = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsEc2InstanceIamInstanceProfileArn = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_image_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceImageId = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsEc2InstanceImageId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_ipv4_addresses"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceIpV4Addresses = expandSecurityHubIpFilters(v.List())
+		filters.ResourceAwsEc2InstanceIpV4Addresses = expandIPFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_ipv6_addresses"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceIpV6Addresses = expandSecurityHubIpFilters(v.List())
+		filters.ResourceAwsEc2InstanceIpV6Addresses = expandIPFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_key_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceKeyName = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsEc2InstanceKeyName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_launched_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceLaunchedAt = expandSecurityHubDateFilters(v.List())
+		filters.ResourceAwsEc2InstanceLaunchedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_subnet_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceSubnetId = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsEc2InstanceSubnetId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_type"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceType = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsEc2InstanceType = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_ec2_instance_vpc_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsEc2InstanceVpcId = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsEc2InstanceVpcId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_iam_access_key_created_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsIamAccessKeyCreatedAt = expandSecurityHubDateFilters(v.List())
+		filters.ResourceAwsIamAccessKeyCreatedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_iam_access_key_status"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsIamAccessKeyStatus = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsIamAccessKeyStatus = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_iam_access_key_user_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsIamAccessKeyUserName = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsIamAccessKeyUserName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_s3_bucket_owner_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsS3BucketOwnerId = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsS3BucketOwnerId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_aws_s3_bucket_owner_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceAwsS3BucketOwnerName = expandSecurityHubStringFilters(v.List())
+		filters.ResourceAwsS3BucketOwnerName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_container_image_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceContainerImageId = expandSecurityHubStringFilters(v.List())
+		filters.ResourceContainerImageId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_container_image_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceContainerImageName = expandSecurityHubStringFilters(v.List())
+		filters.ResourceContainerImageName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_container_launched_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceContainerLaunchedAt = expandSecurityHubDateFilters(v.List())
+		filters.ResourceContainerLaunchedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_container_name"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceContainerName = expandSecurityHubStringFilters(v.List())
+		filters.ResourceContainerName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_details_other"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceDetailsOther = expandSecurityHubMapFilters(v.List())
+		filters.ResourceDetailsOther = expandMapFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_id"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceId = expandSecurityHubStringFilters(v.List())
+		filters.ResourceId = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_partition"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourcePartition = expandSecurityHubStringFilters(v.List())
+		filters.ResourcePartition = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_region"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceRegion = expandSecurityHubStringFilters(v.List())
+		filters.ResourceRegion = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_tags"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceTags = expandSecurityHubMapFilters(v.List())
+		filters.ResourceTags = expandMapFilters(v.List())
 	}
 
 	if v, ok := tfMap["resource_type"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ResourceType = expandSecurityHubStringFilters(v.List())
+		filters.ResourceType = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["severity_label"].(*schema.Set); ok && v.Len() > 0 {
-		filters.SeverityLabel = expandSecurityHubStringFilters(v.List())
+		filters.SeverityLabel = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["source_url"].(*schema.Set); ok && v.Len() > 0 {
-		filters.SourceUrl = expandSecurityHubStringFilters(v.List())
+		filters.SourceUrl = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["threat_intel_indicator_category"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ThreatIntelIndicatorCategory = expandSecurityHubStringFilters(v.List())
+		filters.ThreatIntelIndicatorCategory = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["threat_intel_indicator_last_observed_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ThreatIntelIndicatorLastObservedAt = expandSecurityHubDateFilters(v.List())
+		filters.ThreatIntelIndicatorLastObservedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["threat_intel_indicator_source"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ThreatIntelIndicatorSource = expandSecurityHubStringFilters(v.List())
+		filters.ThreatIntelIndicatorSource = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["threat_intel_indicator_source_url"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ThreatIntelIndicatorSourceUrl = expandSecurityHubStringFilters(v.List())
+		filters.ThreatIntelIndicatorSourceUrl = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["threat_intel_indicator_type"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ThreatIntelIndicatorType = expandSecurityHubStringFilters(v.List())
+		filters.ThreatIntelIndicatorType = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["threat_intel_indicator_value"].(*schema.Set); ok && v.Len() > 0 {
-		filters.ThreatIntelIndicatorValue = expandSecurityHubStringFilters(v.List())
+		filters.ThreatIntelIndicatorValue = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["title"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Title = expandSecurityHubStringFilters(v.List())
+		filters.Title = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["type"].(*schema.Set); ok && v.Len() > 0 {
-		filters.Type = expandSecurityHubStringFilters(v.List())
+		filters.Type = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["updated_at"].(*schema.Set); ok && v.Len() > 0 {
-		filters.UpdatedAt = expandSecurityHubDateFilters(v.List())
+		filters.UpdatedAt = expandDateFilters(v.List())
 	}
 
 	if v, ok := tfMap["user_defined_values"].(*schema.Set); ok && v.Len() > 0 {
-		filters.UserDefinedFields = expandSecurityHubMapFilters(v.List())
+		filters.UserDefinedFields = expandMapFilters(v.List())
 	}
 
 	if v, ok := tfMap["verification_state"].(*schema.Set); ok && v.Len() > 0 {
-		filters.VerificationState = expandSecurityHubStringFilters(v.List())
+		filters.VerificationState = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["workflow_status"].(*schema.Set); ok && v.Len() > 0 {
-		filters.WorkflowStatus = expandSecurityHubStringFilters(v.List())
+		filters.WorkflowStatus = expandStringFilters(v.List())
 	}
 
 	return filters
 }
 
-func expandSecurityHubIpFilters(l []interface{}) []*securityhub.IpFilter {
+func expandIPFilters(l []interface{}) []types.IpFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	var ipFilters []*securityhub.IpFilter
+	var ipFilters []types.IpFilter
 
 	for _, item := range l {
 		tfMap, ok := item.(map[string]interface{})
@@ -841,7 +856,7 @@ func expandSecurityHubIpFilters(l []interface{}) []*securityhub.IpFilter {
 			continue
 		}
 
-		ipFilter := &securityhub.IpFilter{}
+		ipFilter := types.IpFilter{}
 
 		if v, ok := tfMap["cidr"].(string); ok && v != "" {
 			ipFilter.Cidr = aws.String(v)
@@ -853,12 +868,12 @@ func expandSecurityHubIpFilters(l []interface{}) []*securityhub.IpFilter {
 	return ipFilters
 }
 
-func expandSecurityHubKeywordFilters(l []interface{}) []*securityhub.KeywordFilter {
+func expandKeywordFilters(l []interface{}) []types.KeywordFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	var keywordFilters []*securityhub.KeywordFilter
+	var keywordFilters []types.KeywordFilter
 
 	for _, item := range l {
 		tfMap, ok := item.(map[string]interface{})
@@ -866,7 +881,7 @@ func expandSecurityHubKeywordFilters(l []interface{}) []*securityhub.KeywordFilt
 			continue
 		}
 
-		kf := &securityhub.KeywordFilter{}
+		kf := types.KeywordFilter{}
 
 		if v, ok := tfMap["value"].(string); ok && v != "" {
 			kf.Value = aws.String(v)
@@ -878,12 +893,12 @@ func expandSecurityHubKeywordFilters(l []interface{}) []*securityhub.KeywordFilt
 	return keywordFilters
 }
 
-func expandSecurityHubMapFilters(l []interface{}) []*securityhub.MapFilter {
+func expandMapFilters(l []interface{}) []types.MapFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	var mapFilters []*securityhub.MapFilter
+	var mapFilters []types.MapFilter
 
 	for _, item := range l {
 		tfMap, ok := item.(map[string]interface{})
@@ -891,10 +906,10 @@ func expandSecurityHubMapFilters(l []interface{}) []*securityhub.MapFilter {
 			continue
 		}
 
-		mf := &securityhub.MapFilter{}
+		mf := types.MapFilter{}
 
 		if v, ok := tfMap["comparison"].(string); ok && v != "" {
-			mf.Comparison = aws.String(v)
+			mf.Comparison = types.MapFilterComparison(v)
 		}
 
 		if v, ok := tfMap["key"].(string); ok && v != "" {
@@ -911,12 +926,12 @@ func expandSecurityHubMapFilters(l []interface{}) []*securityhub.MapFilter {
 	return mapFilters
 }
 
-func expandSecurityHubNumberFilters(l []interface{}) []*securityhub.NumberFilter {
+func expandNumberFilters(l []interface{}) []types.NumberFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	var numFilters []*securityhub.NumberFilter
+	var numFilters []types.NumberFilter
 
 	for _, item := range l {
 		tfMap, ok := item.(map[string]interface{})
@@ -924,7 +939,7 @@ func expandSecurityHubNumberFilters(l []interface{}) []*securityhub.NumberFilter
 			continue
 		}
 
-		nf := &securityhub.NumberFilter{}
+		nf := types.NumberFilter{}
 
 		if v, ok := tfMap["eq"].(string); ok && v != "" {
 			val, err := strconv.ParseFloat(v, 64)
@@ -953,12 +968,12 @@ func expandSecurityHubNumberFilters(l []interface{}) []*securityhub.NumberFilter
 	return numFilters
 }
 
-func expandSecurityHubStringFilters(l []interface{}) []*securityhub.StringFilter {
+func expandStringFilters(l []interface{}) []types.StringFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	var stringFilters []*securityhub.StringFilter
+	var stringFilters []types.StringFilter
 
 	for _, item := range l {
 		tfMap, ok := item.(map[string]interface{})
@@ -966,10 +981,10 @@ func expandSecurityHubStringFilters(l []interface{}) []*securityhub.StringFilter
 			continue
 		}
 
-		sf := &securityhub.StringFilter{}
+		sf := types.StringFilter{}
 
 		if v, ok := tfMap["comparison"].(string); ok && v != "" {
-			sf.Comparison = aws.String(v)
+			sf.Comparison = types.StringFilterComparison(v)
 		}
 
 		if v, ok := tfMap["value"].(string); ok && v != "" {
@@ -982,20 +997,20 @@ func expandSecurityHubStringFilters(l []interface{}) []*securityhub.StringFilter
 	return stringFilters
 }
 
-func flattenSecurityHubDateFilterDateRange(dateRange *securityhub.DateRange) []interface{} {
+func flattenDateFilterDateRange(dateRange *types.DateRange) []interface{} {
 	if dateRange == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"unit":  aws.StringValue(dateRange.Unit),
-		"value": aws.Int64Value(dateRange.Value),
+		"unit":  string(dateRange.Unit),
+		"value": aws.ToInt32((dateRange.Value)),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenSecurityHubDateFilters(filters []*securityhub.DateFilter) []interface{} {
+func flattenDateFilters(filters []types.DateFilter) []interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -1003,14 +1018,10 @@ func flattenSecurityHubDateFilters(filters []*securityhub.DateFilter) []interfac
 	var dateFilters []interface{}
 
 	for _, filter := range filters {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"date_range": flattenSecurityHubDateFilterDateRange(filter.DateRange),
-			"end":        aws.StringValue(filter.End),
-			"start":      aws.StringValue(filter.Start),
+			"date_range": flattenDateFilterDateRange(filter.DateRange),
+			"end":        aws.ToString(filter.End),
+			"start":      aws.ToString(filter.Start),
 		}
 
 		dateFilters = append(dateFilters, m)
@@ -1019,7 +1030,7 @@ func flattenSecurityHubDateFilters(filters []*securityhub.DateFilter) []interfac
 	return dateFilters
 }
 
-func flattenSecurityHubIpFilters(filters []*securityhub.IpFilter) []interface{} {
+func flattenIPFilters(filters []types.IpFilter) []interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -1027,12 +1038,8 @@ func flattenSecurityHubIpFilters(filters []*securityhub.IpFilter) []interface{} 
 	var ipFilters []interface{}
 
 	for _, filter := range filters {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"cidr": aws.StringValue(filter.Cidr),
+			"cidr": aws.ToString(filter.Cidr),
 		}
 
 		ipFilters = append(ipFilters, m)
@@ -1041,7 +1048,7 @@ func flattenSecurityHubIpFilters(filters []*securityhub.IpFilter) []interface{} 
 	return ipFilters
 }
 
-func flattenSecurityHubKeywordFilters(filters []*securityhub.KeywordFilter) []interface{} {
+func flattenKeywordFilters(filters []types.KeywordFilter) []interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -1049,12 +1056,8 @@ func flattenSecurityHubKeywordFilters(filters []*securityhub.KeywordFilter) []in
 	var keywordFilters []interface{}
 
 	for _, filter := range filters {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"value": aws.StringValue(filter.Value),
+			"value": aws.ToString(filter.Value),
 		}
 
 		keywordFilters = append(keywordFilters, m)
@@ -1063,7 +1066,7 @@ func flattenSecurityHubKeywordFilters(filters []*securityhub.KeywordFilter) []in
 	return keywordFilters
 }
 
-func flattenSecurityHubMapFilters(filters []*securityhub.MapFilter) []interface{} {
+func flattenMapFilters(filters []types.MapFilter) []interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -1071,14 +1074,10 @@ func flattenSecurityHubMapFilters(filters []*securityhub.MapFilter) []interface{
 	var mapFilters []interface{}
 
 	for _, filter := range filters {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"comparison": aws.StringValue(filter.Comparison),
-			"key":        aws.StringValue(filter.Key),
-			"value":      aws.StringValue(filter.Value),
+			"comparison": string(filter.Comparison),
+			"key":        aws.ToString(filter.Key),
+			"value":      aws.ToString(filter.Value),
 		}
 
 		mapFilters = append(mapFilters, m)
@@ -1087,7 +1086,7 @@ func flattenSecurityHubMapFilters(filters []*securityhub.MapFilter) []interface{
 	return mapFilters
 }
 
-func flattenSecurityHubNumberFilters(filters []*securityhub.NumberFilter) []interface{} {
+func flattenNumberFilters(filters []types.NumberFilter) []interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -1095,22 +1094,18 @@ func flattenSecurityHubNumberFilters(filters []*securityhub.NumberFilter) []inte
 	var numFilters []interface{}
 
 	for _, filter := range filters {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{}
 
 		if filter.Eq != nil {
-			m["eq"] = strconv.FormatFloat(aws.Float64Value(filter.Eq), 'f', -1, 64)
+			m["eq"] = strconv.FormatFloat(aws.ToFloat64(filter.Eq), 'f', -1, 64)
 		}
 
 		if filter.Gte != nil {
-			m["gte"] = strconv.FormatFloat(aws.Float64Value(filter.Gte), 'f', -1, 64)
+			m["gte"] = strconv.FormatFloat(aws.ToFloat64(filter.Gte), 'f', -1, 64)
 		}
 
 		if filter.Lte != nil {
-			m["lte"] = strconv.FormatFloat(aws.Float64Value(filter.Lte), 'f', -1, 64)
+			m["lte"] = strconv.FormatFloat(aws.ToFloat64(filter.Lte), 'f', -1, 64)
 		}
 
 		numFilters = append(numFilters, m)
@@ -1119,106 +1114,106 @@ func flattenSecurityHubNumberFilters(filters []*securityhub.NumberFilter) []inte
 	return numFilters
 }
 
-func flattenSecurityHubSecurityFindingFilters(filters *securityhub.AwsSecurityFindingFilters) []interface{} {
+func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []interface{} {
 	if filters == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"aws_account_id":                      flattenSecurityHubStringFilters(filters.AwsAccountId),
-		"company_name":                        flattenSecurityHubStringFilters(filters.CompanyName),
-		"compliance_status":                   flattenSecurityHubStringFilters(filters.ComplianceStatus),
-		"confidence":                          flattenSecurityHubNumberFilters(filters.Confidence),
-		"created_at":                          flattenSecurityHubDateFilters(filters.CreatedAt),
-		"criticality":                         flattenSecurityHubNumberFilters(filters.Criticality),
-		"description":                         flattenSecurityHubStringFilters(filters.Description),
-		"finding_provider_fields_confidence":  flattenSecurityHubNumberFilters(filters.FindingProviderFieldsConfidence),
-		"finding_provider_fields_criticality": flattenSecurityHubNumberFilters(filters.FindingProviderFieldsCriticality),
-		"finding_provider_fields_related_findings_id":          flattenSecurityHubStringFilters(filters.FindingProviderFieldsRelatedFindingsId),
-		"finding_provider_fields_related_findings_product_arn": flattenSecurityHubStringFilters(filters.FindingProviderFieldsRelatedFindingsProductArn),
-		"finding_provider_fields_severity_label":               flattenSecurityHubStringFilters(filters.FindingProviderFieldsSeverityLabel),
-		"finding_provider_fields_severity_original":            flattenSecurityHubStringFilters(filters.FindingProviderFieldsSeverityOriginal),
-		"finding_provider_fields_types":                        flattenSecurityHubStringFilters(filters.FindingProviderFieldsTypes),
-		"first_observed_at":                                    flattenSecurityHubDateFilters(filters.FirstObservedAt),
-		"generator_id":                                         flattenSecurityHubStringFilters(filters.GeneratorId),
-		"id":                                                   flattenSecurityHubStringFilters(filters.Id),
-		"keyword":                                              flattenSecurityHubKeywordFilters(filters.Keyword),
-		"last_observed_at":                                     flattenSecurityHubDateFilters(filters.LastObservedAt),
-		"malware_name":                                         flattenSecurityHubStringFilters(filters.MalwareName),
-		"malware_path":                                         flattenSecurityHubStringFilters(filters.MalwarePath),
-		"malware_state":                                        flattenSecurityHubStringFilters(filters.MalwareState),
-		"malware_type":                                         flattenSecurityHubStringFilters(filters.MalwareType),
-		"network_destination_domain":                           flattenSecurityHubStringFilters(filters.NetworkDestinationDomain),
-		"network_destination_ipv4":                             flattenSecurityHubIpFilters(filters.NetworkDestinationIpV4),
-		"network_destination_ipv6":                             flattenSecurityHubIpFilters(filters.NetworkDestinationIpV6),
-		"network_destination_port":                             flattenSecurityHubNumberFilters(filters.NetworkDestinationPort),
-		"network_direction":                                    flattenSecurityHubStringFilters(filters.NetworkDirection),
-		"network_protocol":                                     flattenSecurityHubStringFilters(filters.NetworkProtocol),
-		"network_source_domain":                                flattenSecurityHubStringFilters(filters.NetworkSourceDomain),
-		"network_source_ipv4":                                  flattenSecurityHubIpFilters(filters.NetworkSourceIpV4),
-		"network_source_ipv6":                                  flattenSecurityHubIpFilters(filters.NetworkSourceIpV6),
-		"network_source_mac":                                   flattenSecurityHubStringFilters(filters.NetworkSourceMac),
-		"network_source_port":                                  flattenSecurityHubNumberFilters(filters.NetworkSourcePort),
-		"note_text":                                            flattenSecurityHubStringFilters(filters.NoteText),
-		"note_updated_at":                                      flattenSecurityHubDateFilters(filters.NoteUpdatedAt),
-		"note_updated_by":                                      flattenSecurityHubStringFilters(filters.NoteUpdatedBy),
-		"process_launched_at":                                  flattenSecurityHubDateFilters(filters.ProcessLaunchedAt),
-		"process_name":                                         flattenSecurityHubStringFilters(filters.ProcessName),
-		"process_parent_pid":                                   flattenSecurityHubNumberFilters(filters.ProcessParentPid),
-		"process_path":                                         flattenSecurityHubStringFilters(filters.ProcessPath),
-		"process_pid":                                          flattenSecurityHubNumberFilters(filters.ProcessPid),
-		"process_terminated_at":                                flattenSecurityHubDateFilters(filters.ProcessTerminatedAt),
-		"product_arn":                                          flattenSecurityHubStringFilters(filters.ProductArn),
-		"product_fields":                                       flattenSecurityHubMapFilters(filters.ProductFields),
-		"product_name":                                         flattenSecurityHubStringFilters(filters.ProductName),
-		"recommendation_text":                                  flattenSecurityHubStringFilters(filters.RecommendationText),
-		"record_state":                                         flattenSecurityHubStringFilters(filters.RecordState),
-		"related_findings_id":                                  flattenSecurityHubStringFilters(filters.RelatedFindingsId),
-		"related_findings_product_arn":                         flattenSecurityHubStringFilters(filters.RelatedFindingsProductArn),
-		"resource_aws_ec2_instance_iam_instance_profile_arn": flattenSecurityHubStringFilters(filters.ResourceAwsEc2InstanceIamInstanceProfileArn),
-		"resource_aws_ec2_instance_image_id":                 flattenSecurityHubStringFilters(filters.ResourceAwsEc2InstanceImageId),
-		"resource_aws_ec2_instance_ipv4_addresses":           flattenSecurityHubIpFilters(filters.ResourceAwsEc2InstanceIpV4Addresses),
-		"resource_aws_ec2_instance_ipv6_addresses":           flattenSecurityHubIpFilters(filters.ResourceAwsEc2InstanceIpV6Addresses),
-		"resource_aws_ec2_instance_key_name":                 flattenSecurityHubStringFilters(filters.ResourceAwsEc2InstanceKeyName),
-		"resource_aws_ec2_instance_launched_at":              flattenSecurityHubDateFilters(filters.ResourceAwsEc2InstanceLaunchedAt),
-		"resource_aws_ec2_instance_subnet_id":                flattenSecurityHubStringFilters(filters.ResourceAwsEc2InstanceSubnetId),
-		"resource_aws_ec2_instance_type":                     flattenSecurityHubStringFilters(filters.ResourceAwsEc2InstanceType),
-		"resource_aws_ec2_instance_vpc_id":                   flattenSecurityHubStringFilters(filters.ResourceAwsEc2InstanceVpcId),
-		"resource_aws_iam_access_key_created_at":             flattenSecurityHubDateFilters(filters.ResourceAwsIamAccessKeyCreatedAt),
-		"resource_aws_iam_access_key_status":                 flattenSecurityHubStringFilters(filters.ResourceAwsIamAccessKeyStatus),
-		"resource_aws_iam_access_key_user_name":              flattenSecurityHubStringFilters(filters.ResourceAwsIamAccessKeyUserName),
-		"resource_aws_s3_bucket_owner_id":                    flattenSecurityHubStringFilters(filters.ResourceAwsS3BucketOwnerId),
-		"resource_aws_s3_bucket_owner_name":                  flattenSecurityHubStringFilters(filters.ResourceAwsS3BucketOwnerName),
-		"resource_container_image_id":                        flattenSecurityHubStringFilters(filters.ResourceContainerImageId),
-		"resource_container_image_name":                      flattenSecurityHubStringFilters(filters.ResourceContainerImageName),
-		"resource_container_launched_at":                     flattenSecurityHubDateFilters(filters.ResourceContainerLaunchedAt),
-		"resource_container_name":                            flattenSecurityHubStringFilters(filters.ResourceContainerName),
-		"resource_details_other":                             flattenSecurityHubMapFilters(filters.ResourceDetailsOther),
-		"resource_id":                                        flattenSecurityHubStringFilters(filters.ResourceId),
-		"resource_partition":                                 flattenSecurityHubStringFilters(filters.ResourcePartition),
-		"resource_region":                                    flattenSecurityHubStringFilters(filters.ResourceRegion),
-		"resource_tags":                                      flattenSecurityHubMapFilters(filters.ResourceTags),
-		"resource_type":                                      flattenSecurityHubStringFilters(filters.ResourceType),
-		"severity_label":                                     flattenSecurityHubStringFilters(filters.SeverityLabel),
-		"source_url":                                         flattenSecurityHubStringFilters(filters.ThreatIntelIndicatorSourceUrl),
-		"threat_intel_indicator_category":                    flattenSecurityHubStringFilters(filters.ThreatIntelIndicatorCategory),
-		"threat_intel_indicator_last_observed_at":            flattenSecurityHubDateFilters(filters.ThreatIntelIndicatorLastObservedAt),
-		"threat_intel_indicator_source":                      flattenSecurityHubStringFilters(filters.ThreatIntelIndicatorSource),
-		"threat_intel_indicator_source_url":                  flattenSecurityHubStringFilters(filters.ThreatIntelIndicatorSourceUrl),
-		"threat_intel_indicator_type":                        flattenSecurityHubStringFilters(filters.ThreatIntelIndicatorType),
-		"threat_intel_indicator_value":                       flattenSecurityHubStringFilters(filters.ThreatIntelIndicatorValue),
-		"title":                                              flattenSecurityHubStringFilters(filters.Title),
-		"type":                                               flattenSecurityHubStringFilters(filters.Type),
-		"updated_at":                                         flattenSecurityHubDateFilters(filters.UpdatedAt),
-		"user_defined_values":                                flattenSecurityHubMapFilters(filters.UserDefinedFields),
-		"verification_state":                                 flattenSecurityHubStringFilters(filters.VerificationState),
-		"workflow_status":                                    flattenSecurityHubStringFilters(filters.WorkflowStatus),
+		"aws_account_id":                      flattenStringFilters(filters.AwsAccountId),
+		"company_name":                        flattenStringFilters(filters.CompanyName),
+		"compliance_status":                   flattenStringFilters(filters.ComplianceStatus),
+		"confidence":                          flattenNumberFilters(filters.Confidence),
+		"created_at":                          flattenDateFilters(filters.CreatedAt),
+		"criticality":                         flattenNumberFilters(filters.Criticality),
+		"description":                         flattenStringFilters(filters.Description),
+		"finding_provider_fields_confidence":  flattenNumberFilters(filters.FindingProviderFieldsConfidence),
+		"finding_provider_fields_criticality": flattenNumberFilters(filters.FindingProviderFieldsCriticality),
+		"finding_provider_fields_related_findings_id":          flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsId),
+		"finding_provider_fields_related_findings_product_arn": flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsProductArn),
+		"finding_provider_fields_severity_label":               flattenStringFilters(filters.FindingProviderFieldsSeverityLabel),
+		"finding_provider_fields_severity_original":            flattenStringFilters(filters.FindingProviderFieldsSeverityOriginal),
+		"finding_provider_fields_types":                        flattenStringFilters(filters.FindingProviderFieldsTypes),
+		"first_observed_at":                                    flattenDateFilters(filters.FirstObservedAt),
+		"generator_id":                                         flattenStringFilters(filters.GeneratorId),
+		"id":                                                   flattenStringFilters(filters.Id),
+		"keyword":                                              flattenKeywordFilters(filters.Keyword),
+		"last_observed_at":                                     flattenDateFilters(filters.LastObservedAt),
+		"malware_name":                                         flattenStringFilters(filters.MalwareName),
+		"malware_path":                                         flattenStringFilters(filters.MalwarePath),
+		"malware_state":                                        flattenStringFilters(filters.MalwareState),
+		"malware_type":                                         flattenStringFilters(filters.MalwareType),
+		"network_destination_domain":                           flattenStringFilters(filters.NetworkDestinationDomain),
+		"network_destination_ipv4":                             flattenIPFilters(filters.NetworkDestinationIpV4),
+		"network_destination_ipv6":                             flattenIPFilters(filters.NetworkDestinationIpV6),
+		"network_destination_port":                             flattenNumberFilters(filters.NetworkDestinationPort),
+		"network_direction":                                    flattenStringFilters(filters.NetworkDirection),
+		"network_protocol":                                     flattenStringFilters(filters.NetworkProtocol),
+		"network_source_domain":                                flattenStringFilters(filters.NetworkSourceDomain),
+		"network_source_ipv4":                                  flattenIPFilters(filters.NetworkSourceIpV4),
+		"network_source_ipv6":                                  flattenIPFilters(filters.NetworkSourceIpV6),
+		"network_source_mac":                                   flattenStringFilters(filters.NetworkSourceMac),
+		"network_source_port":                                  flattenNumberFilters(filters.NetworkSourcePort),
+		"note_text":                                            flattenStringFilters(filters.NoteText),
+		"note_updated_at":                                      flattenDateFilters(filters.NoteUpdatedAt),
+		"note_updated_by":                                      flattenStringFilters(filters.NoteUpdatedBy),
+		"process_launched_at":                                  flattenDateFilters(filters.ProcessLaunchedAt),
+		"process_name":                                         flattenStringFilters(filters.ProcessName),
+		"process_parent_pid":                                   flattenNumberFilters(filters.ProcessParentPid),
+		"process_path":                                         flattenStringFilters(filters.ProcessPath),
+		"process_pid":                                          flattenNumberFilters(filters.ProcessPid),
+		"process_terminated_at":                                flattenDateFilters(filters.ProcessTerminatedAt),
+		"product_arn":                                          flattenStringFilters(filters.ProductArn),
+		"product_fields":                                       flattenMapFilters(filters.ProductFields),
+		"product_name":                                         flattenStringFilters(filters.ProductName),
+		"recommendation_text":                                  flattenStringFilters(filters.RecommendationText),
+		"record_state":                                         flattenStringFilters(filters.RecordState),
+		"related_findings_id":                                  flattenStringFilters(filters.RelatedFindingsId),
+		"related_findings_product_arn":                         flattenStringFilters(filters.RelatedFindingsProductArn),
+		"resource_aws_ec2_instance_iam_instance_profile_arn": flattenStringFilters(filters.ResourceAwsEc2InstanceIamInstanceProfileArn),
+		"resource_aws_ec2_instance_image_id":                 flattenStringFilters(filters.ResourceAwsEc2InstanceImageId),
+		"resource_aws_ec2_instance_ipv4_addresses":           flattenIPFilters(filters.ResourceAwsEc2InstanceIpV4Addresses),
+		"resource_aws_ec2_instance_ipv6_addresses":           flattenIPFilters(filters.ResourceAwsEc2InstanceIpV6Addresses),
+		"resource_aws_ec2_instance_key_name":                 flattenStringFilters(filters.ResourceAwsEc2InstanceKeyName),
+		"resource_aws_ec2_instance_launched_at":              flattenDateFilters(filters.ResourceAwsEc2InstanceLaunchedAt),
+		"resource_aws_ec2_instance_subnet_id":                flattenStringFilters(filters.ResourceAwsEc2InstanceSubnetId),
+		"resource_aws_ec2_instance_type":                     flattenStringFilters(filters.ResourceAwsEc2InstanceType),
+		"resource_aws_ec2_instance_vpc_id":                   flattenStringFilters(filters.ResourceAwsEc2InstanceVpcId),
+		"resource_aws_iam_access_key_created_at":             flattenDateFilters(filters.ResourceAwsIamAccessKeyCreatedAt),
+		"resource_aws_iam_access_key_status":                 flattenStringFilters(filters.ResourceAwsIamAccessKeyStatus),
+		"resource_aws_iam_access_key_user_name":              flattenStringFilters(filters.ResourceAwsIamAccessKeyUserName),
+		"resource_aws_s3_bucket_owner_id":                    flattenStringFilters(filters.ResourceAwsS3BucketOwnerId),
+		"resource_aws_s3_bucket_owner_name":                  flattenStringFilters(filters.ResourceAwsS3BucketOwnerName),
+		"resource_container_image_id":                        flattenStringFilters(filters.ResourceContainerImageId),
+		"resource_container_image_name":                      flattenStringFilters(filters.ResourceContainerImageName),
+		"resource_container_launched_at":                     flattenDateFilters(filters.ResourceContainerLaunchedAt),
+		"resource_container_name":                            flattenStringFilters(filters.ResourceContainerName),
+		"resource_details_other":                             flattenMapFilters(filters.ResourceDetailsOther),
+		"resource_id":                                        flattenStringFilters(filters.ResourceId),
+		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
+		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
+		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
+		"resource_type":                                      flattenStringFilters(filters.ResourceType),
+		"severity_label":                                     flattenStringFilters(filters.SeverityLabel),
+		"source_url":                                         flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),
+		"threat_intel_indicator_category":                    flattenStringFilters(filters.ThreatIntelIndicatorCategory),
+		"threat_intel_indicator_last_observed_at":            flattenDateFilters(filters.ThreatIntelIndicatorLastObservedAt),
+		"threat_intel_indicator_source":                      flattenStringFilters(filters.ThreatIntelIndicatorSource),
+		"threat_intel_indicator_source_url":                  flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),
+		"threat_intel_indicator_type":                        flattenStringFilters(filters.ThreatIntelIndicatorType),
+		"threat_intel_indicator_value":                       flattenStringFilters(filters.ThreatIntelIndicatorValue),
+		"title":                                              flattenStringFilters(filters.Title),
+		"type":                                               flattenStringFilters(filters.Type),
+		"updated_at":                                         flattenDateFilters(filters.UpdatedAt),
+		"user_defined_values":                                flattenMapFilters(filters.UserDefinedFields),
+		"verification_state":                                 flattenStringFilters(filters.VerificationState),
+		"workflow_status":                                    flattenStringFilters(filters.WorkflowStatus),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenSecurityHubStringFilters(filters []*securityhub.StringFilter) []interface{} {
+func flattenStringFilters(filters []types.StringFilter) []interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -1226,13 +1221,9 @@ func flattenSecurityHubStringFilters(filters []*securityhub.StringFilter) []inte
 	var stringFilters []interface{}
 
 	for _, filter := range filters {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"comparison": aws.StringValue(filter.Comparison),
-			"value":      aws.StringValue(filter.Value),
+			"comparison": string(filter.Comparison),
+			"value":      aws.ToString(filter.Value),
 		}
 
 		stringFilters = append(stringFilters, m)

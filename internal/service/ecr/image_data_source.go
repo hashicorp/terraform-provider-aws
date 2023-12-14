@@ -1,38 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"golang.org/x/exp/slices"
 )
 
+// @SDKDataSource("aws_ecr_image")
 func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRead,
+		ReadWithoutTimeout: dataSourceImageRead,
 		Schema: map[string]*schema.Schema{
-			"registry_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"repository_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"image_digest": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"image_tag": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				AtLeastOneOf:  []string{"image_digest", "image_tag", "most_recent"},
+				ConflictsWith: []string{"most_recent"},
 			},
 			"image_pushed_at": {
 				Type:     schema.TypeInt,
@@ -41,6 +37,12 @@ func DataSourceImage() *schema.Resource {
 			"image_size_in_bytes": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"image_tag": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				AtLeastOneOf:  []string{"image_digest", "image_tag", "most_recent"},
+				ConflictsWith: []string{"most_recent"},
 			},
 			"image_tags": {
 				Type:     schema.TypeList,
@@ -51,90 +53,142 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"most_recent": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				AtLeastOneOf:  []string{"image_digest", "image_tag", "most_recent"},
+				ConflictsWith: []string{"image_digest", "image_tag"},
+			},
+			"registry_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
+			"repository_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
-func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
-	params := &ecr.DescribeImagesInput{
+	input := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
 	}
 
-	regId, ok := d.GetOk("registry_id")
-	if ok {
-		params.RegistryId = aws.String(regId.(string))
+	if v, ok := d.GetOk("image_digest"); ok {
+		input.ImageIds = []*ecr.ImageIdentifier{
+			{
+				ImageDigest: aws.String(v.(string)),
+			},
+		}
 	}
 
-	imgId := ecr.ImageIdentifier{}
-	digest, ok := d.GetOk("image_digest")
-	if ok {
-		imgId.ImageDigest = aws.String(digest.(string))
-	}
-	tag, ok := d.GetOk("image_tag")
-	if ok {
-		imgId.ImageTag = aws.String(tag.(string))
-	}
-
-	if imgId.ImageDigest == nil && imgId.ImageTag == nil {
-		return fmt.Errorf("At least one of either image_digest or image_tag must be defined")
+	if v, ok := d.GetOk("image_tag"); ok {
+		if len(input.ImageIds) == 0 {
+			input.ImageIds = []*ecr.ImageIdentifier{
+				{
+					ImageTag: aws.String(v.(string)),
+				},
+			}
+		} else {
+			input.ImageIds[0].ImageTag = aws.String(v.(string))
+		}
 	}
 
-	params.ImageIds = []*ecr.ImageIdentifier{&imgId}
+	if v, ok := d.GetOk("registry_id"); ok {
+		input.RegistryId = aws.String(v.(string))
+	}
 
-	var imageDetails []*ecr.ImageDetail
-	log.Printf("[DEBUG] Reading ECR Images: %s", params)
-	err := conn.DescribeImagesPages(params, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
-		imageDetails = append(imageDetails, page.ImageDetails...)
-		return true
-	})
+	imageDetails, err := FindImageDetails(ctx, conn, input)
+
 	if err != nil {
-		return fmt.Errorf("Error describing ECR images: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
 	}
 
 	if len(imageDetails) == 0 {
-		return fmt.Errorf("No matching image found")
-	}
-	if len(imageDetails) > 1 {
-		return fmt.Errorf("More than one image found for tag/digest combination")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	image := imageDetails[0]
+	if len(imageDetails) > 1 {
+		if !d.Get("most_recent").(bool) {
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.")
+		}
+
+		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) int {
+			if aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt)) {
+				return -1
+			}
+			if aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt)) {
+				return 1
+			}
+			return 0
+		})
+	}
+
+	imageDetail := imageDetails[0]
 
 	params2 := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: []*string{image.RepositoryName},
-		RegistryId:      image.RegistryId,
+		RepositoryNames: []*string{imageDetail.RepositoryName},
+		RegistryId:      imageDetail.RegistryId,
 	}
 
 	var repositoryDetails []*ecr.Repository
-	log.Printf("[DEBUG] Reading ECR Repositories: %s", params2)
 	err2 := conn.DescribeRepositoriesPages(params2, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
 		repositoryDetails = append(repositoryDetails, page.Repositories...)
 		return true
 	})
-	if err2 != nil {
-		return fmt.Errorf("Error describing ECR repositories: %w", err)
-	}
 
-	if len(repositoryDetails) == 0 {
-		return fmt.Errorf("No repository found")
-	}
-	if len(repositoryDetails) > 1 {
-		return fmt.Errorf("More than one repository found for image")
+	if err2 != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECR repositories: %s", err)
 	}
 
 	repository := repositoryDetails[0]
 
-	d.SetId(aws.StringValue(image.ImageDigest))
-	d.Set("registry_id", image.RegistryId)
-	d.Set("image_digest", image.ImageDigest)
-	d.Set("image_pushed_at", image.ImagePushedAt.Unix())
-	d.Set("image_size_in_bytes", image.ImageSizeInBytes)
-	d.Set("image_uri", aws.String(aws.StringValue(repository.RepositoryUri)+"@"+aws.StringValue(image.ImageDigest)))
-	if err := d.Set("image_tags", aws.StringValueSlice(image.ImageTags)); err != nil {
-		return fmt.Errorf("failed to set image_tags: %w", err)
+	d.SetId(aws.StringValue(imageDetail.ImageDigest))
+	d.Set("image_digest", imageDetail.ImageDigest)
+	d.Set("image_pushed_at", imageDetail.ImagePushedAt.Unix())
+	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
+	d.Set("image_tags", aws.StringValueSlice(imageDetail.ImageTags))
+	d.Set("image_uri", aws.String(aws.StringValue(repository.RepositoryUri)+"@"+aws.StringValue(imageDetail.ImageDigest)))
+	d.Set("registry_id", imageDetail.RegistryId)
+	d.Set("repository_name", imageDetail.RepositoryName)
+
+	return diags
+}
+
+func FindImageDetails(ctx context.Context, conn *ecr.ECR, input *ecr.DescribeImagesInput) ([]*ecr.ImageDetail, error) {
+	var output []*ecr.ImageDetail
+
+	err := conn.DescribeImagesPagesWithContext(ctx, input, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ImageDetails {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return nil
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

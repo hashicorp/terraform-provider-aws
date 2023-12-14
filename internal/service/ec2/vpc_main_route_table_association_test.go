@@ -1,71 +1,78 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2MainRouteTableAssociation_basic(t *testing.T) {
+func TestAccVPCMainRouteTableAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_main_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMainRouteTableAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMainRouteTableAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMainRouteTableAssociationConfig(rName),
+				Config: testAccVPCMainRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMainRouteTableAssociationExists(resourceName, &rta),
+					testAccCheckMainRouteTableAssociationExists(ctx, resourceName, &rta),
 				),
 			},
 			{
-				Config: testAccMainRouteTableAssociationConfigUpdated(rName),
+				Config: testAccVPCMainRouteTableAssociationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMainRouteTableAssociationExists(resourceName, &rta),
+					testAccCheckMainRouteTableAssociationExists(ctx, resourceName, &rta),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckMainRouteTableAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckMainRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_main_route_table_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_main_route_table_association" {
+				continue
+			}
+
+			_, err := tfec2.FindMainRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Main route table association %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfec2.FindMainRouteTableAssociationByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Main route table association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckMainRouteTableAssociationExists(n string, v *ec2.RouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckMainRouteTableAssociationExists(ctx context.Context, n string, v *ec2.RouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -76,9 +83,9 @@ func testAccCheckMainRouteTableAssociationExists(n string, v *ec2.RouteTableAsso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		association, err := tfec2.FindMainRouteTableAssociationByID(conn, rs.Primary.ID)
+		association, err := tfec2.FindMainRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -119,7 +126,7 @@ resource "aws_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccMainRouteTableAssociationConfig(rName string) string {
+func testAccVPCMainRouteTableAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccMainRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
@@ -141,7 +148,7 @@ resource "aws_main_route_table_association" "test" {
 `, rName))
 }
 
-func testAccMainRouteTableAssociationConfigUpdated(rName string) string {
+func testAccVPCMainRouteTableAssociationConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccMainRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 # Need to keep the old route table around when we update the
 # main_route_table_association, otherwise Terraform will try to destroy the

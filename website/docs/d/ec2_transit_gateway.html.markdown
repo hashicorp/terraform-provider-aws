@@ -33,22 +33,22 @@ data "aws_ec2_transit_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway.
 
 ### filter Argument Reference
 
-* `name` - (Required) The name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
+* `name` - (Required) Name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `amazon_side_asn` - Private Autonomous System Number (ASN) for the Amazon side of a BGP session
-* `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
+* `arn` - EC2 Transit Gateway ARN
 * `association_default_route_table_id` - Identifier of the default association route table
 * `auto_accept_shared_attachments` - Whether resource attachment requests are automatically accepted
 * `default_route_table_association` - Whether resource attachments are automatically associated with the default association route table
@@ -62,3 +62,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway
 * `transit_gateway_cidr_blocks` - The list of associated CIDR blocks
 * `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

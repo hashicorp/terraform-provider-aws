@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -10,20 +14,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codeartifact_domain", name="Domain")
+// @Tags(identifierAttribute="arn")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainCreate,
-		Read:   resourceDomainRead,
-		Delete: resourceDomainDelete,
-		Update: resourceDomainUpdate,
+		CreateWithoutTimeout: resourceDomainCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
+		DeleteWithoutTimeout: resourceDomainDelete,
+		UpdateWithoutTimeout: resourceDomainUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -52,69 +63,68 @@ func ResourceDomain() *schema.Resource {
 				Computed: true,
 			},
 			"asset_size_bytes": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"repository_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	log.Print("[DEBUG] Creating CodeArtifact Domain")
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 
-	params := &codeartifact.CreateDomainInput{
+	input := &codeartifact.CreateDomainInput{
 		Domain: aws.String(d.Get("domain").(string)),
-		Tags:   Tags(tags.IgnoreAWS()),
+		Tags:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("encryption_key"); ok {
-		params.EncryptionKey = aws.String(v.(string))
+		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	domain, err := conn.CreateDomain(params)
+	v, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 2*time.Minute, func() (any, error) {
+		return conn.CreateDomainWithContext(ctx, input)
+	}, "ValidationException", "KMS key not found")
 	if err != nil {
-		return fmt.Errorf("error creating CodeArtifact Domain: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Domain: %s", err)
 	}
+	domain := v.(*codeartifact.CreateDomainOutput)
 
 	d.SetId(aws.StringValue(domain.Domain.Arn))
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	log.Printf("[DEBUG] Reading CodeArtifact Domain: %s", d.Id())
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return err
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
-	sm, err := conn.DescribeDomain(&codeartifact.DescribeDomainInput{
+	sm, err := conn.DescribeDomainWithContext(ctx, &codeartifact.DescribeDomainInput{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(domainOwner),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] CodeArtifact Domain %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeArtifact Domain (%s): %w", d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Domain.Arn)
@@ -122,50 +132,29 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("encryption_key", sm.Domain.EncryptionKey)
 	d.Set("owner", sm.Domain.Owner)
-	d.Set("asset_size_bytes", sm.Domain.AssetSizeBytes)
+	d.Set("asset_size_bytes", strconv.FormatInt(aws.Int64Value(sm.Domain.AssetSizeBytes), 10))
 	d.Set("repository_count", sm.Domain.RepositoryCount)
 	d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339))
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for CodeArtifact Domain (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating CodeArtifact Domain (%s) tags: %w", d.Id(), err)
-		}
-	}
+	// Tags only.
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Domain (%s): %s", d.Id(), err)
 	}
 
 	input := &codeartifact.DeleteDomainInput{
@@ -173,17 +162,17 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(domainOwner),
 	}
 
-	_, err = conn.DeleteDomain(input)
+	_, err = conn.DeleteDomainWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Domain (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeDomainID(id string) (string, string, error) {

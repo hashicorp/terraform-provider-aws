@@ -1,26 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_eks_cluster_auth.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSEksClusterAuthConfig_basic,
+				Config: testAccClusterAuthDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
@@ -57,7 +61,7 @@ func testAccCheckClusterAuthToken(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAWSEksClusterAuthConfig_basic = `
+const testAccClusterAuthDataSourceConfig_basic = `
 data "aws_eks_cluster_auth" "test" {
   name = "foobar"
 }

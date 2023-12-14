@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,38 +13,39 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func TestAccQuickSightGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName1),
+				Config: testAccGroupConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName1)),
 				),
 			},
 			{
-				Config: testAccGroupConfig(rName2),
+				Config: testAccGroupConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("group/default/%s", rName2)),
 				),
@@ -55,27 +60,28 @@ func TestAccQuickSightGroup_basic(t *testing.T) {
 }
 
 func TestAccQuickSightGroup_withDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithDescriptionConfig(rName, "Description 1"),
+				Config: testAccGroupConfig_description(rName, "Description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Description 1"),
 				),
 			},
 			{
-				Config: testAccGroupWithDescriptionConfig(rName, "Description 2"),
+				Config: testAccGroupConfig_description(rName, "Description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Description 2"),
 				),
 			},
@@ -89,21 +95,22 @@ func TestAccQuickSightGroup_withDescription(t *testing.T) {
 }
 
 func TestAccQuickSightGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckQuickSightGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightGroupExists(resourceName, &group),
-					testAccCheckQuickSightGroupDisappears(&group),
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					testAccCheckGroupDisappears(ctx, &group),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +118,7 @@ func TestAccQuickSightGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, resourceName string, group *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -123,7 +130,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeGroupInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -131,7 +138,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 			GroupName:    aws.String(groupName),
 		}
 
-		output, err := conn.DescribeGroup(input)
+		output, err := conn.DescribeGroupWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -147,40 +154,42 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 	}
 }
 
-func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_quicksight_group" {
-			continue
+func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_quicksight_group" {
+				continue
+			}
+
+			awsAccountID, namespace, groupName, err := tfquicksight.GroupParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = conn.DescribeGroupWithContext(ctx, &quicksight.DescribeGroupInput{
+				AwsAccountId: aws.String(awsAccountID),
+				Namespace:    aws.String(namespace),
+				GroupName:    aws.String(groupName),
+			})
+			if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("QuickSight Group '%s' was not deleted properly", rs.Primary.ID)
 		}
 
-		awsAccountID, namespace, groupName, err := tfquicksight.GroupParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = conn.DescribeGroup(&quicksight.DescribeGroupInput{
-			AwsAccountId: aws.String(awsAccountID),
-			Namespace:    aws.String(namespace),
-			GroupName:    aws.String(groupName),
-		})
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("QuickSight Group '%s' was not deleted properly", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestCheckFunc {
+func testAccCheckGroupDisappears(ctx context.Context, v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {
@@ -195,7 +204,7 @@ func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestChe
 			GroupName:    v.GroupName,
 		}
 
-		if _, err := conn.DeleteGroup(input); err != nil {
+		if _, err := conn.DeleteGroupWithContext(ctx, input); err != nil {
 			return err
 		}
 
@@ -203,7 +212,7 @@ func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestChe
 	}
 }
 
-func testAccGroupConfig(rName string) string {
+func testAccGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_group" "default" {
   group_name = %[1]q
@@ -211,7 +220,7 @@ resource "aws_quicksight_group" "default" {
 `, rName)
 }
 
-func testAccGroupWithDescriptionConfig(rName, description string) string {
+func testAccGroupConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

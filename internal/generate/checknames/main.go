@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -14,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,11 +58,11 @@ func main() {
 		}
 
 		if l[names.ColHumanFriendly] == "" {
-			log.Fatal("in names_data.csv, HumanFriendly cannot be blank")
+			log.Fatalf("in names_data.csv line %d, HumanFriendly cannot be blank", i+1)
 		}
 
 		// TODO: Check for duplicates in HumanFriendly, ProviderPackageActual,
-		// ProviderPackageCorrect, ProviderNameUpper, GoV1ClientName,
+		// ProviderPackageCorrect, ProviderNameUpper, GoV1ClientTypeName,
 		// ResourcePrefixActual, ResourcePrefixCorrect, FilePrefix, DocPrefix
 
 		if l[names.ColAWSCLIV2Command] != "" && strings.Replace(l[names.ColAWSCLIV2Command], "-", "", -1) != l[names.ColAWSCLIV2CommandNoDashes] {
@@ -107,15 +111,15 @@ func main() {
 			}
 		}
 
-		if l[names.ColSDKVersion] != "1" && l[names.ColSDKVersion] != "2" && l[names.ColExclude] == "" {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion must have a value if Exclude is blank", l[names.ColHumanFriendly])
+		if l[names.ColClientSDKV1] == "" && l[names.ColClientSDKV2] == "" && l[names.ColExclude] == "" {
+			log.Fatalf("in names_data.csv, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "1" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientName] == "") {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientName can be blank", l[names.ColHumanFriendly])
+		if l[names.ColClientSDKV1] != "" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
+			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "2" && l[names.ColGoV2Package] == "" {
+		if l[names.ColClientSDKV2] != "" && l[names.ColGoV2Package] == "" {
 			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", l[names.ColHumanFriendly])
 		}
 
@@ -157,7 +161,7 @@ func main() {
 		checkAllLowercase(l[names.ColHumanFriendly], "DocPrefix", l[names.ColDocPrefix])
 
 		checkNotAllLowercase(l[names.ColHumanFriendly], "ProviderNameUpper", l[names.ColProviderNameUpper])
-		checkNotAllLowercase(l[names.ColHumanFriendly], "GoV1ClientName", l[names.ColGoV1ClientName])
+		checkNotAllLowercase(l[names.ColHumanFriendly], "GoV1ClientTypeName", l[names.ColGoV1ClientTypeName])
 		checkNotAllLowercase(l[names.ColHumanFriendly], "HumanFriendly", l[names.ColHumanFriendly])
 
 		if l[names.ColExclude] == "" && l[names.ColAllowedSubcategory] != "" {
@@ -188,15 +192,23 @@ func main() {
 	}
 	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 36))
 
+	var fileErrs bool
+
 	// DocPrefix needs to be reworked for compatibility with tfproviderdocs, in the meantime skip
 	err = checkDocDir("../../../website/docs/r/", docPrefixes)
 	if err != nil {
-		log.Fatalf("while checking resource doc dir: %s", err)
+		fileErrs = true
+		log.Printf("while checking resource doc dir: %s", err)
 	}
 
 	err = checkDocDir("../../../website/docs/d/", docPrefixes)
 	if err != nil {
-		log.Fatalf("while checking data source doc dir: %s", err)
+		fileErrs = true
+		log.Printf("while checking data source doc dir: %s", err)
+	}
+
+	if fileErrs {
+		os.Exit(1)
 	}
 
 	fmt.Printf("  Checked %d documentation files to ensure filename prefix, resource name, label regex, and subcategory match, 0 errors.\n", allDocs)
@@ -220,6 +232,7 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}
 
+	var errs error
 	for _, fh := range fs {
 		if fh.IsDir() {
 			continue
@@ -231,58 +244,65 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 
 		allDocs++
 
-		f, err := os.Open(filepath.Join(dir, fh.Name()))
-		if err != nil {
-			return fmt.Errorf("opening file (%s): %s", fh.Name(), err)
-		}
-		defer f.Close()
-
-		scanner := bufio.NewScanner(f)
-		var line int
-		var rregex string
-		for scanner.Scan() {
-			switch line {
-			case 0:
-				if scanner.Text() != "---" {
-					return fmt.Errorf("file (%s) doesn't start like doc file", fh.Name())
-				}
-			case 1:
-				hf, rr, err := findHumanFriendly(fh.Name(), prefixes)
-				if err != nil {
-					return fmt.Errorf("checking file (%s): %w", fh.Name(), err)
-				}
-
-				rregex = rr
-
-				sc := scanner.Text()
-				sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
-				if hf != sc {
-					return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", fh.Name(), sc, hf)
-				}
-			case 2:
-				continue
-			case 3:
-				rn := scanner.Text()
-				rn = strings.TrimSuffix(strings.TrimPrefix(rn, `page_title: "AWS: `), `"`)
-
-				re, err := regexp.Compile(fmt.Sprintf(`^%s`, rregex))
-				if err != nil {
-					return fmt.Errorf("unable to compile resource regular expression pattern (%s): %s", rregex, err)
-				}
-
-				if !re.MatchString(rn) {
-					return fmt.Errorf("resource regular expression (%s) does not match resource name (%s)", rregex, rn)
-				}
-			default:
-				break
-			}
-			line++
-		}
-		if err := scanner.Err(); err != nil {
-			return fmt.Errorf("reading file (%s): %s", fh.Name(), err)
+		if err := checkDocFile(dir, fh.Name(), prefixes); err != nil {
+			errs = multierror.Append(errs, err)
 		}
 	}
 
+	return errs
+}
+
+func checkDocFile(dir, name string, prefixes []DocPrefix) error {
+	f, err := os.Open(filepath.Join(dir, name))
+	if err != nil {
+		return fmt.Errorf("opening file (%s): %s", name, err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	var line int
+	var rregex string
+	for scanner.Scan() {
+		switch line {
+		case 0:
+			if scanner.Text() != "---" {
+				return fmt.Errorf("file (%s) doesn't start like doc file", name)
+			}
+		case 1:
+			hf, rr, err := findHumanFriendly(name, prefixes)
+			if err != nil {
+				return fmt.Errorf("checking file (%s): %w", name, err)
+			}
+
+			rregex = rr
+
+			sc := scanner.Text()
+			sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
+			if hf != sc {
+				return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", name, sc, hf)
+			}
+		case 2:
+			continue
+		case 3:
+			rn := scanner.Text()
+			rn = strings.TrimSuffix(strings.TrimPrefix(rn, `page_title: "AWS: `), `"`)
+
+			re, err := regexp.Compile(fmt.Sprintf(`^%s`, rregex))
+			if err != nil {
+				return fmt.Errorf("unable to compile resource regular expression pattern (%s): %s", rregex, err)
+			}
+
+			if !re.MatchString(rn) {
+				return fmt.Errorf("resource regular expression (%s) does not match resource name (%s)", rregex, rn)
+			}
+		default:
+			break
+		}
+		line++
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("reading file (%s): %s", name, err)
+	}
 	return nil
 }
 

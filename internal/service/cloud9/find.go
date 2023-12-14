@@ -1,15 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findEnvironment(conn *cloud9.Cloud9, input *cloud9.DescribeEnvironmentsInput) (*cloud9.Environment, error) {
-	output, err := findEnvironments(conn, input)
+func findEnvironment(ctx context.Context, conn *cloud9.Cloud9, input *cloud9.DescribeEnvironmentsInput) (*cloud9.Environment, error) {
+	output, err := findEnvironments(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -26,11 +31,11 @@ func findEnvironment(conn *cloud9.Cloud9, input *cloud9.DescribeEnvironmentsInpu
 	return output[0], nil
 }
 
-func findEnvironments(conn *cloud9.Cloud9, input *cloud9.DescribeEnvironmentsInput) ([]*cloud9.Environment, error) {
-	output, err := conn.DescribeEnvironments(input)
+func findEnvironments(ctx context.Context, conn *cloud9.Cloud9, input *cloud9.DescribeEnvironmentsInput) ([]*cloud9.Environment, error) {
+	output, err := conn.DescribeEnvironmentsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloud9.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -47,12 +52,12 @@ func findEnvironments(conn *cloud9.Cloud9, input *cloud9.DescribeEnvironmentsInp
 	return output.Environments, nil
 }
 
-func FindEnvironmentByID(conn *cloud9.Cloud9, id string) (*cloud9.Environment, error) {
+func FindEnvironmentByID(ctx context.Context, conn *cloud9.Cloud9, id string) (*cloud9.Environment, error) {
 	input := &cloud9.DescribeEnvironmentsInput{
 		EnvironmentIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := findEnvironment(conn, input)
+	output, err := findEnvironment(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -60,7 +65,7 @@ func FindEnvironmentByID(conn *cloud9.Cloud9, id string) (*cloud9.Environment, e
 
 	// Eventual consistency check.
 	if aws.StringValue(output.Id) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -68,15 +73,15 @@ func FindEnvironmentByID(conn *cloud9.Cloud9, id string) (*cloud9.Environment, e
 	return output, nil
 }
 
-func FindEnvironmentMembershipByID(conn *cloud9.Cloud9, envId, userArn string) (*cloud9.EnvironmentMember, error) {
+func FindEnvironmentMembershipByID(ctx context.Context, conn *cloud9.Cloud9, envId, userArn string) (*cloud9.EnvironmentMember, error) {
 	input := &cloud9.DescribeEnvironmentMembershipsInput{
 		EnvironmentId: aws.String(envId),
 		UserArn:       aws.String(userArn),
 	}
-	out, err := conn.DescribeEnvironmentMemberships(input)
+	out, err := conn.DescribeEnvironmentMembershipsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloud9.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

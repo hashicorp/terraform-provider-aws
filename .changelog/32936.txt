@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudfront_continuous_deployment_policy
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `continuous_deployment_policy_id` and `staging` arguments to support continuous deployments
+```

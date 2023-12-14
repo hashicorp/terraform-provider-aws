@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
@@ -13,16 +16,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkfirewall_resource_policy")
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourcePolicyPut,
-		ReadContext:   resourceResourcePolicyRead,
-		UpdateContext: resourceResourcePolicyPut,
-		DeleteContext: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -50,13 +55,15 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Get("resource_arn").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := &networkfirewall.PutResourcePolicyInput{
@@ -68,16 +75,18 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return sdkdiag.AppendErrorf(diags, "putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	d.SetId(resourceArn)
 
-	return resourceResourcePolicyRead(ctx, d, meta)
+	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Id()
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
@@ -86,14 +95,14 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Resource Policy (for resource: %s) not found, removing from state", resourceArn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	if policy == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn))
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
 	d.Set("resource_arn", resourceArn)
@@ -101,43 +110,36 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
 
 	if err != nil {
-		return diag.Errorf("setting policy %s: %s", aws.StringValue(policy), err)
+		return sdkdiag.AppendErrorf(diags, "setting policy %s: %s", aws.StringValue(policy), err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	return nil
+	return diags
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	var diags diag.Diagnostics
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy for resource: %s", d.Id())
-
-	input := &networkfirewall.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(d.Id()),
-	}
-
-	_, err := tfresource.RetryWhenContext(ctx, resourcePolicyDeleteTimeout,
-		func() (interface{}, error) {
-			return conn.DeleteResourcePolicyWithContext(ctx, input)
-		},
-		func(err error) (bool, error) {
-			// RAM managed permissions eventual consistency
-			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidResourcePolicyException, "The supplied policy does not match RAM managed permissions") {
-				return true, err
-			}
-			return false, err
-		},
+	const (
+		timeout = 2 * time.Minute
 	)
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
+
+	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteResourcePolicyWithContext(ctx, &networkfirewall.DeleteResourcePolicyInput{
+			ResourceArn: aws.String(d.Id()),
+		})
+	}, networkfirewall.ErrCodeInvalidResourcePolicyException, "The supplied policy does not match RAM managed permissions")
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Resource Policy (for resource: %s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

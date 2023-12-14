@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 const (
-	rootStatementSchemaLevel       = 3
-	webACLRootStatementSchemaLevel = 3
+	ruleGroupRootStatementSchemaLevel = 3
+	webACLRootStatementSchemaLevel    = 3
 )

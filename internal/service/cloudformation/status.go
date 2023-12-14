@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -5,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusChangeSet(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
+func StatusChangeSet(ctx context.Context, conn *cloudformation.CloudFormation, stackID, changeSetName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindChangeSetByStackIDAndChangeSetName(conn, stackID, changeSetName)
+		output, err := FindChangeSetByStackIDAndChangeSetName(ctx, conn, stackID, changeSetName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +28,9 @@ func StatusChangeSet(conn *cloudformation.CloudFormation, stackID, changeSetName
 	}
 }
 
-func StatusStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) resource.StateRefreshFunc {
+func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStackSetOperationByStackSetNameAndOperationID(conn, stackSetName, operationID, callAs)
+		output, err := FindStackSetOperationByStackSetNameAndOperationID(ctx, conn, stackSetName, operationID, callAs)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,29 +44,7 @@ func StatusStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, 
 	}
 }
 
-const (
-	stackStatusError    = "Error"
-	stackStatusNotFound = "NotFound"
-)
-
-func StatusStack(conn *cloudformation.CloudFormation, stackName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
-			StackName: aws.String(stackName),
-		})
-		if err != nil {
-			return nil, stackStatusError, err
-		}
-
-		if resp.Stacks == nil || len(resp.Stacks) == 0 {
-			return nil, stackStatusNotFound, nil
-		}
-
-		return resp.Stacks[0], aws.StringValue(resp.Stacks[0].StackStatus), err
-	}
-}
-
-func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) resource.StateRefreshFunc {
+func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTypeRegistrationByToken(ctx, conn, registrationToken)
 

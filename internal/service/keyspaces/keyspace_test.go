@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package keyspaces_test
 
 import (
@@ -6,39 +9,35 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/keyspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkeyspaces "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPreCheck(t *testing.T) {
-	// Checking for service fails in all partitions!
-	// acctest.PreCheckPartitionHasService(keyspaces.EndpointsID, t)
-
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("Keyspaces is not supported in %s partition", got)
-	}
+	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 }
 
 func TestAccKeyspacesKeyspace_basic(t *testing.T) {
-	rName := "tf_test_" + sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfig(rName),
+				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
+					testAccCheckKeyspaceExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -54,20 +53,21 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 }
 
 func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
-	rName := "tf_test_" + sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfig(rName),
+				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkeyspaces.ResourceKeyspace(), resourceName),
+					testAccCheckKeyspaceExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkeyspaces.ResourceKeyspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,19 +76,20 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 }
 
 func TestAccKeyspacesKeyspace_tags(t *testing.T) {
-	rName := "tf_test_" + sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfigTags1(rName, "key1", "value1"),
+				Config: testAccKeyspaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
+					testAccCheckKeyspaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -99,18 +100,18 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKeyspaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyspaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
+					testAccCheckKeyspaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccKeyspaceConfigTags1(rName, "key2", "value2"),
+				Config: testAccKeyspaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
+					testAccCheckKeyspaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -119,31 +120,33 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
+func testAccCheckKeyspaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_keyspaces_keyspace" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_keyspaces_keyspace" {
+				continue
+			}
+
+			_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes["name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Keyspaces Keyspace %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfkeyspaces.FindKeyspaceByName(context.Background(), conn, rs.Primary.Attributes["name"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Keyspaces Keyspace %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckKeyspaceExists(n string) resource.TestCheckFunc {
+func testAccCheckKeyspaceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,19 +157,15 @@ func testAccCheckKeyspaceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Keyspaces Keyspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
-		_, err := tfkeyspaces.FindKeyspaceByName(context.Background(), conn, rs.Primary.Attributes["name"])
+		_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccKeyspaceConfig(rName string) string {
+func testAccKeyspaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
@@ -174,7 +173,7 @@ resource "aws_keyspaces_keyspace" "test" {
 `, rName)
 }
 
-func testAccKeyspaceConfigTags1(rName, tag1Key, tag1Value string) string {
+func testAccKeyspaceConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
@@ -186,7 +185,7 @@ resource "aws_keyspaces_keyspace" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccKeyspaceConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccKeyspaceConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q

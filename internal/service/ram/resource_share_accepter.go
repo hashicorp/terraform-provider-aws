@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,21 +12,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ram_resource_share_accepter")
 func ResourceResourceShareAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourceShareAccepterCreate,
-		Read:   resourceResourceShareAccepterRead,
-		Delete: resourceResourceShareAccepterDelete,
+		CreateWithoutTimeout: resourceResourceShareAccepterCreate,
+		ReadWithoutTimeout:   resourceResourceShareAccepterRead,
+		DeleteWithoutTimeout: resourceResourceShareAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -32,43 +39,14 @@ func ResourceResourceShareAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"invitation_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"share_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"receiver_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"sender_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"share_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"resources": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -76,63 +54,85 @@ func ResourceResourceShareAccepter() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"share_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sender_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"share_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"share_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	shareARN := d.Get("share_arn").(string)
 
-	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(conn, shareARN, ram.ResourceShareInvitationStatusPending)
+	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating RAM Resource Share Accepter: %s", err)
 	}
 
 	if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
-		return fmt.Errorf(
-			"No RAM Resource Share (%s) invitation found\n\n"+
-				"NOTE: If both AWS accounts are in the same AWS Organization and RAM Sharing with AWS Organizations is enabled, this resource is not necessary",
+		return sdkdiag.AppendErrorf(diags, "No RAM Resource Share (%s) invitation found\n\n"+
+			"NOTE: If both AWS accounts are in the same AWS Organization and RAM Sharing with AWS Organizations is enabled, this resource is not necessary",
 			shareARN)
 	}
 
 	input := &ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(resource.UniqueId()),
+		ClientToken:                aws.String(id.UniqueId()),
 		ResourceShareInvitationArn: invitation.ResourceShareInvitationArn,
 	}
 
 	log.Printf("[DEBUG] Accept RAM resource share invitation request: %s", input)
-	output, err := conn.AcceptResourceShareInvitation(input)
+	output, err := conn.AcceptResourceShareInvitationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error accepting RAM resource share invitation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "accepting RAM resource share invitation: %s", err)
 	}
 
 	d.SetId(shareARN)
 
-	_, err = WaitResourceShareInvitationAccepted(
-		conn,
+	_, err = WaitResourceShareInvitationAccepted(ctx, conn,
 		aws.StringValue(output.ResourceShareInvitation.ResourceShareInvitationArn),
 		d.Timeout(schema.TimeoutCreate),
 	)
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for RAM resource share (%s) state: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM resource share (%s) state: %s", d.Id(), err)
 	}
 
-	return resourceResourceShareAccepterRead(d, meta)
+	return append(diags, resourceResourceShareAccepterRead(ctx, d, meta)...)
 }
 
-func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	accountID := meta.(*conns.AWSClient).AccountID
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
+	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceShareInvitationArnNotFoundException) {
-		return fmt.Errorf("error retrieving invitation for resource share %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "retrieving invitation for resource share %s: %s", d.Id(), err)
 	}
 
 	if invitation != nil {
@@ -142,89 +142,119 @@ func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{})
 		d.Set("receiver_account_id", accountID)
 	}
 
-	resourceShare, err := FindResourceShareOwnerOtherAccountsByARN(conn, d.Id())
+	resourceShare, err := findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException) || tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException)) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] No RAM resource share with ARN (%s) found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving resource share: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s): %s", d.Id(), err)
 	}
 
-	if resourceShare == nil {
-		return fmt.Errorf("error getting resource share (%s): empty result", d.Id())
-	}
-
-	d.Set("status", resourceShare.Status)
 	d.Set("sender_account_id", resourceShare.OwningAccountId)
 	d.Set("share_arn", resourceShare.ResourceShareArn)
 	d.Set("share_id", resourceResourceShareGetIDFromARN(d.Id()))
 	d.Set("share_name", resourceShare.Name)
+	d.Set("status", resourceShare.Status)
 
-	listInput := &ram.ListResourcesInput{
+	inputL := &ram.ListResourcesInput{
 		MaxResults:        aws.Int64(500),
 		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
 		ResourceShareArns: aws.StringSlice([]string{d.Id()}),
 	}
-
-	var resourceARNs []*string
-	err = conn.ListResourcesPages(listInput, func(page *ram.ListResourcesOutput, lastPage bool) bool {
-		for _, resource := range page.Resources {
-			resourceARNs = append(resourceARNs, resource.Arn)
-		}
-
-		return !lastPage
-	})
+	resources, err := findResources(ctx, conn, inputL)
 
 	if err != nil {
-		return fmt.Errorf("Error reading RAM resource share resources %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", d.Id(), err)
 	}
 
-	if err := d.Set("resources", flex.FlattenStringList(resourceARNs)); err != nil {
-		return fmt.Errorf("unable to set resources: %s", err)
-	}
+	resourceARNs := tfslices.ApplyToAll(resources, func(r *ram.Resource) string {
+		return aws.StringValue(r.Arn)
+	})
+	d.Set("resources", resourceARNs)
 
-	return nil
+	return diags
 }
 
-func resourceResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	receiverAccountID := d.Get("receiver_account_id").(string)
 
 	if receiverAccountID == "" {
-		return fmt.Errorf("The receiver account ID is required to leave a resource share")
+		return sdkdiag.AppendErrorf(diags, "The receiver account ID is required to leave a resource share")
 	}
 
 	input := &ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		ResourceShareArn: aws.String(d.Id()),
 		Principals:       []*string{aws.String(receiverAccountID)},
 	}
 	log.Printf("[DEBUG] Leave RAM resource share request: %s", input)
 
-	_, err := conn.DisassociateResourceShare(input)
+	_, err := conn.DisassociateResourceShareWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ram.ErrCodeOperationNotPermittedException) {
 		log.Printf("[WARN] Resource share could not be disassociated, but continuing: %s", err)
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeOperationNotPermittedException) {
-		return fmt.Errorf("Error leaving RAM resource share: %s", err)
+		return sdkdiag.AppendErrorf(diags, "leaving RAM resource share: %s", err)
 	}
 
-	_, err = WaitResourceShareOwnedBySelfDisassociated(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = WaitResourceShareOwnedBySelfDisassociated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for RAM resource share (%s) state: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM resource share (%s) state: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceResourceShareGetIDFromARN(arn string) string {
 	return strings.Replace(arn[strings.LastIndex(arn, ":")+1:], "resource-share/", "rs-", -1)
+}
+
+func findResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
+	input := &ram.GetResourceSharesInput{
+		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
+		ResourceShareArns: aws.StringSlice([]string{arn}),
+	}
+	output, err := findResourceShare(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Deleted resource share OK.
+
+	return output, nil
+}
+
+func findResources(ctx context.Context, conn *ram.RAM, input *ram.ListResourcesInput) ([]*ram.Resource, error) {
+	var output []*ram.Resource
+
+	err := conn.ListResourcesPagesWithContext(ctx, input, func(page *ram.ListResourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Resources {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

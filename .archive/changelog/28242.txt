@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Add `encryption_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_firewall_policy: Add `encryption_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_rule_group: Add `encryption_configuration` attribute
+```

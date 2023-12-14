@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package kafka
 
@@ -9,13 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_msk_cluster", &resource.Sweeper{
 		Name: "aws_msk_cluster",
 		F:    sweepClusters,
@@ -34,23 +33,31 @@ func init() {
 }
 
 func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConn
-	input := &kafka.ListClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	input := &kafka.ListClustersV2Input{}
+	conn := client.KafkaConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+	err = conn.ListClustersV2PagesWithContext(ctx, input, func(page *kafka.ListClustersV2Output, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, cluster := range page.ClusterInfoList {
+		for _, v := range page.ClusterInfoList {
+			arn := aws.StringValue(v.ClusterArn)
+
+			if state := aws.StringValue(v.State); state == kafka.ClusterStateDeleting {
+				log.Printf("[INFO] Skipping MSK Cluster %s: State=%s", arn, state)
+				continue
+			}
+
 			r := ResourceCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(cluster.ClusterArn))
+			d.SetId(arn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -58,7 +65,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -67,7 +74,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
@@ -77,51 +84,51 @@ func sweepClusters(region string) error {
 }
 
 func sweepConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KafkaConn
-	var sweeperErrs *multierror.Error
-
+	conn := client.KafkaConn(ctx)
 	input := &kafka.ListConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListConfigurationsPages(input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
+	err = conn.ListConfigurationsPagesWithContext(ctx, input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, configuration := range page.Configurations {
-			if configuration == nil {
+		for _, v := range page.Configurations {
+			arn := aws.StringValue(v.Arn)
+
+			if state := aws.StringValue(v.State); state == kafka.ConfigurationStateDeleting {
+				log.Printf("[INFO] Skipping MSK Configuration %s: State=%s", arn, state)
 				continue
 			}
-
-			arn := aws.StringValue(configuration.Arn)
-			log.Printf("[INFO] Deleting MSK Configuration: %s", arn)
 
 			r := ResourceConfiguration()
 			d := r.Data(nil)
 			d.SetId(arn)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MSK Configurations sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MSK Configuration sweep for %s: %s", region, err)
+		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("error listing MSK Configurations (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving MSK Configurations: %w", err))
+		return fmt.Errorf("error sweeping MSK Configurations (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }

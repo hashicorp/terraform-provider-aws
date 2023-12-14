@@ -1,40 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
-					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -49,7 +54,7 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -58,11 +63,11 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterParameterGroupAddParametersConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig_addParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
-					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -85,16 +90,16 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccClusterParameterGroupConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
-					testAccCheckClusterParameterNotUserDefined(resourceName, "collation_connection"),
-					testAccCheckClusterParameterNotUserDefined(resourceName, "collation_server"),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
+					testAccCheckClusterParameterNotUserDefined(ctx, resourceName, "collation_connection"),
+					testAccCheckClusterParameterNotUserDefined(ctx, resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
@@ -108,6 +113,77 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterParameterGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBClusterParameterGroup
+	resourceName := "aws_rds_cluster_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterParameterGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterParameterGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterParameterGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBClusterParameterGroup
+	resourceName := "aws_rds_cluster_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterParameterGroupConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterParameterGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterParameterGroupConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -115,23 +191,24 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 }
 
 func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupWithApplyMethodConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig_applyMethod(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
-					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -156,75 +233,78 @@ func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
 }
 
 func TestAccRDSClusterParameterGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupConfig_namePrefix,
+				Config: testAccClusterParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", regexp.MustCompile("^tf-test-")),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccRDSClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupConfig_namePrefix_Parameter,
+				Config: testAccClusterParameterGroupConfig_namePrefixParameter("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					resource.TestMatchResourceAttr(
-						resourceName, "name", regexp.MustCompile("^tf-test-")),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -237,19 +317,22 @@ func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 }
 
 func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterParameterGroupConfig_generatedName_Parameter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -261,51 +344,26 @@ func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterParameterGroup_disappears(t *testing.T) {
-	var v rds.DBClusterParameterGroup
-	resourceName := "aws_rds_cluster_parameter_group.test"
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterParameterGroupConfig(parameterGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccClusterParameterGroupDisappears(&v),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccRDSClusterParameterGroup_only(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupOnlyConfig(parameterGroupName),
+				Config: testAccClusterParameterGroupConfig_only(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", parameterGroupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Managed by Terraform"),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 				),
 			},
 			{
@@ -318,22 +376,23 @@ func TestAccRDSClusterParameterGroup_only(t *testing.T) {
 }
 
 func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
-	groupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupUpdateParametersInitialConfig(groupName),
+				Config: testAccClusterParameterGroupConfig_updateParametersInitial(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, groupName),
-					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
@@ -355,10 +414,10 @@ func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterParameterGroupUpdateParametersUpdatedConfig(groupName),
+				Config: testAccClusterParameterGroupConfig_updateParametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					testAccCheckClusterParameterGroupAttributes(&v, groupName),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "ascii",
@@ -378,20 +437,21 @@ func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 }
 
 func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterParameterGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupUpperCaseConfig(rName),
+				Config: testAccClusterParameterGroupConfig_upperCase(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(resourceName, &v),
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
@@ -407,47 +467,78 @@ func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterParameterGroupUpperCaseConfig(rName),
+				Config: testAccClusterParameterGroupConfig_upperCase(rName),
 			},
 		},
 	})
 }
 
-func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBClusterParameterGroup
+	resourceName := "aws_rds_cluster_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_cluster_parameter_group" {
-			continue
-		}
-
-		// Try to find the Group
-		resp, err := conn.DescribeDBClusterParameterGroups(
-			&rds.DescribeDBClusterParameterGroupsInput{
-				DBClusterParameterGroupName: aws.String(rs.Primary.ID),
-			})
-
-		if err == nil {
-			if len(resp.DBClusterParameterGroups) != 0 &&
-				*resp.DBClusterParameterGroups[0].DBClusterParameterGroupName == rs.Primary.ID {
-				return errors.New("DB Cluster Parameter Group still exists")
-			}
-		}
-
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "DBParameterGroupNotFound" {
-			return err
-		}
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterParameterGroupConfig_dynamicDiffs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora-postgresql12"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "track_activity_query_size", // system source
+						"value": "4096",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "shared_preload_libraries", // system source
+						"value": "pg_stat_statements",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "track_io_timing", // system source
+						"value": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "track_activities", // user source
+						"value": "1",
+					}),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckClusterParameterNotUserDefined(n, paramName string) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster_parameter_group" {
+				continue
+			}
+
+			_, err := tfrds.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS DB Cluster Parameter Group %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckClusterParameterNotUserDefined(ctx context.Context, n, paramName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -458,14 +549,14 @@ func testAccCheckClusterParameterNotUserDefined(n, paramName string) resource.Te
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
 		}
 
 		userDefined := false
-		out, err := conn.DescribeDBClusterParameters(&opts)
+		out, err := conn.DescribeDBClusterParametersWithContext(ctx, &opts)
 		for _, param := range out.Parameters {
 			if *param.ParameterName == paramName && aws.StringValue(param.ParameterValue) != "" {
 				// Some of these resets leave the parameter name present but with a nil value
@@ -494,35 +585,7 @@ func testAccCheckClusterParameterGroupAttributes(v *rds.DBClusterParameterGroup,
 	}
 }
 
-func testAccClusterParameterGroupDisappears(v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-		opts := &rds.DeleteDBClusterParameterGroupInput{
-			DBClusterParameterGroupName: v.DBClusterParameterGroupName,
-		}
-		if _, err := conn.DeleteDBClusterParameterGroup(opts); err != nil {
-			return err
-		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
-			opts := &rds.DescribeDBClusterParameterGroupsInput{
-				DBClusterParameterGroupName: v.DBClusterParameterGroupName,
-			}
-			_, err := conn.DescribeDBClusterParameterGroups(opts)
-			if err != nil {
-				dbparamgrouperr, ok := err.(awserr.Error)
-				if ok && dbparamgrouperr.Code() == "DBParameterGroupNotFound" {
-					return nil
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving DB Cluster Parameter Groups: %s", err))
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for cluster parameter group to be deleted: %v", v.DBClusterParameterGroupName))
-		})
-	}
-}
-
-func testAccCheckClusterParameterGroupExists(n string, v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
+func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *rds.DBClusterParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -530,36 +593,26 @@ func testAccCheckClusterParameterGroupExists(n string, v *rds.DBClusterParameter
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No DB Cluster Parameter Group ID is set")
+			return errors.New("No RDS DB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		opts := rds.DescribeDBClusterParameterGroupsInput{
-			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeDBClusterParameterGroups(&opts)
-
+		output, err := tfrds.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(resp.DBClusterParameterGroups) != 1 ||
-			*resp.DBClusterParameterGroups[0].DBClusterParameterGroupName != rs.Primary.ID {
-			return errors.New("DB Cluster Parameter Group not found")
-		}
-
-		*v = *resp.DBClusterParameterGroups[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccClusterParameterGroupConfig(name string) string {
+func testAccClusterParameterGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "aurora5.6"
   description = "Test cluster parameter group for terraform"
 
@@ -577,18 +630,14 @@ resource "aws_rds_cluster_parameter_group" "test" {
     name  = "character_set_results"
     value = "utf8"
   }
-
-  tags = {
-    foo = "bar"
-  }
 }
-`, name)
+`, rName)
 }
 
-func testAccClusterParameterGroupWithApplyMethodConfig(name string) string {
+func testAccClusterParameterGroupConfig_applyMethod(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "aurora5.6"
   description = "Test cluster parameter group for terraform"
 
@@ -602,18 +651,14 @@ resource "aws_rds_cluster_parameter_group" "test" {
     value        = "utf8"
     apply_method = "pending-reboot"
   }
-
-  tags = {
-    foo = "bar"
-  }
 }
-`, name)
+`, rName)
 }
 
-func testAccClusterParameterGroupAddParametersConfig(name string) string {
+func testAccClusterParameterGroupConfig_addParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "aurora5.6"
   description = "Test cluster parameter group for terraform"
 
@@ -641,28 +686,23 @@ resource "aws_rds_cluster_parameter_group" "test" {
     name  = "collation_connection"
     value = "utf8_unicode_ci"
   }
-
-  tags = {
-    foo = "bar"
-    baz = "foo"
-  }
 }
-`, name)
+`, rName)
 }
 
-func testAccClusterParameterGroupOnlyConfig(name string) string {
+func testAccClusterParameterGroupConfig_only(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "aurora5.6"
 }
-`, name)
+`, rName)
 }
 
-func testAccClusterParameterGroupUpdateParametersInitialConfig(name string) string {
+func testAccClusterParameterGroupConfig_updateParametersInitial(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -680,13 +720,13 @@ resource "aws_rds_cluster_parameter_group" "test" {
     value = "utf8"
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccClusterParameterGroupUpdateParametersUpdatedConfig(name string) string {
+func testAccClusterParameterGroupConfig_updateParametersUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -704,13 +744,13 @@ resource "aws_rds_cluster_parameter_group" "test" {
     value = "ascii"
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccClusterParameterGroupUpperCaseConfig(rName string) string {
+func testAccClusterParameterGroupConfig_upperCase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -721,24 +761,29 @@ resource "aws_rds_cluster_parameter_group" "test" {
 `, rName)
 }
 
-const testAccClusterParameterGroupConfig_namePrefix = `
+func testAccClusterParameterGroupConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name_prefix = "tf-test-"
+  name_prefix = %[1]q
   family      = "aurora5.6"
 }
-`
+`, namePrefix)
+}
 
-const testAccClusterParameterGroupConfig_namePrefix_Parameter = `
+func testAccClusterParameterGroupConfig_namePrefixParameter(namePrefix string) string {
+	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
-  name_prefix = "tf-test-"
+  name_prefix = %[1]q
   family      = "aurora5.6"
 
   parameter {
     name  = "character_set_server"
     value = "utf8"
   }
+
 }
-`
+`, namePrefix)
+}
 
 const testAccClusterParameterGroupConfig_generatedName = `
 resource "aws_rds_cluster_parameter_group" "test" {
@@ -756,3 +801,81 @@ resource "aws_rds_cluster_parameter_group" "test" {
   }
 }
 `
+
+func testAccClusterParameterGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster_parameter_group" "test" {
+  name   = %[1]q
+  family = "aurora5.6"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccClusterParameterGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster_parameter_group" "test" {
+  name   = %[1]q
+  family = "aurora5.6"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccClusterParameterGroupConfig_dynamicDiffs(rName string) string {
+	return fmt.Sprintf(`
+locals {
+  cluster_parameters = {
+    "shared_preload_libraries" = { # system source
+      value        = "pg_stat_statements"
+      apply_method = "pending-reboot"
+    },
+    "track_activity_query_size" = { # system source
+      value        = "4096"
+      apply_method = "pending-reboot"
+    },
+    "pg_stat_statements.track" = {
+      value        = "ALL"
+      apply_method = "pending-reboot"
+    },
+    "pg_stat_statements.max" = {
+      value        = "10000"
+      apply_method = "pending-reboot"
+    },
+    "track_activities" = {
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+    "track_counts" = {
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+    "track_io_timing" = { # system source
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+  }
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  name   = %[1]q
+  family = "aurora-postgresql12"
+
+  dynamic "parameter" {
+    for_each = local.cluster_parameters
+    content {
+      name         = parameter.key
+      value        = parameter.value["value"]
+      apply_method = parameter.value["apply_method"]
+    }
+  }
+}
+`, rName)
+}

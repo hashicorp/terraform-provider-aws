@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,17 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_email_identity")
 func ResourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEmailIdentityCreate,
-		Read:   resourceEmailIdentityRead,
-		Delete: resourceEmailIdentityDelete,
+		CreateWithoutTimeout: resourceEmailIdentityCreate,
+		ReadWithoutTimeout:   resourceEmailIdentityRead,
+		DeleteWithoutTimeout: resourceEmailIdentityDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,8 +45,9 @@ func ResourceEmailIdentity() *schema.Resource {
 	}
 }
 
-func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
@@ -48,18 +56,19 @@ func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error
 		EmailAddress: aws.String(email),
 	}
 
-	_, err := conn.VerifyEmailIdentity(createOpts)
+	_, err := conn.VerifyEmailIdentityWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error requesting SES email identity verification: %s", err)
+		return sdkdiag.AppendErrorf(diags, "requesting SES email identity verification: %s", err)
 	}
 
 	d.SetId(email)
 
-	return resourceEmailIdentityRead(d, meta)
+	return append(diags, resourceEmailIdentityRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Id()
 	d.Set("email", email)
@@ -70,17 +79,16 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	}
 
-	response, err := conn.GetIdentityVerificationAttributes(readOpts)
+	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, readOpts)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SES Identity Verification Attributes (%s): %s", d.Id(), err)
 	}
 
 	_, ok := response.VerificationAttributes[email]
 	if !ok {
-		log.Printf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
+		log.Printf("[WARN] SES Identity Verification Attributes (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := arn.ARN{
@@ -91,11 +99,12 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 		Service:   "ses",
 	}.String()
 	d.Set("arn", arn)
-	return nil
+	return diags
 }
 
-func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Get("email").(string)
 
@@ -103,10 +112,10 @@ func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error
 		Identity: aws.String(email),
 	}
 
-	_, err := conn.DeleteIdentity(deleteOpts)
+	_, err := conn.DeleteIdentityWithContext(ctx, deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting SES email identity: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SES email identity: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ec2_traffic_mirror_target: Add `gateway_load_balancer_endpoint_id` argument
+```

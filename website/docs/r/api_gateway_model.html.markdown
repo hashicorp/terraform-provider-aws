@@ -24,34 +24,41 @@ resource "aws_api_gateway_model" "MyDemoModel" {
   description  = "a JSON schema"
   content_type = "application/json"
 
-  schema = <<EOF
-{
-  "type": "object"
-}
-EOF
+  schema = jsonencode({
+    type = "object"
+  })
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `rest_api_id` - (Required) The ID of the associated REST API
-* `name` - (Required) The name of the model
-* `description` - (Optional) The description of the model
-* `content_type` - (Required) The content type of the model
-* `schema` - (Required) The schema of the model in a JSON form
+* `rest_api_id` - (Required) ID of the associated REST API
+* `name` - (Required) Name of the model
+* `description` - (Optional) Description of the model
+* `content_type` - (Required) Content type of the model
+* `schema` - (Required) Schema of the model in a JSON form
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the model
+* `id` - ID of the model
 
 ## Import
 
-`aws_api_gateway_model` can be imported using `REST-API-ID/NAME`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_model` using `REST-API-ID/NAME`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_model.example
+  id = "12345abcde/example"
+}
 ```
-$ terraform import aws_api_gateway_model.example 12345abcde/example
+
+Using `terraform import`, import `aws_api_gateway_model` using `REST-API-ID/NAME`. For example:
+
+```console
+% terraform import aws_api_gateway_model.example 12345abcde/example
 ```

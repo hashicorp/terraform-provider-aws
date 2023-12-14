@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53domains
 
 import (
@@ -6,24 +9,28 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_route53domains_registered_domain", name="Registered Domain")
+// @Tags(identifierAttribute="id")
 func ResourceRegisteredDomain() *schema.Resource {
 	contactSchema := &schema.Schema{
 		Type:     schema.TypeList,
@@ -51,16 +58,16 @@ func ResourceRegisteredDomain() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"contact_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(contactTypeValues(types.ContactType("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ContactType](),
 				},
 				"country_code": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(countryCodeValues(types.CountryCode("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.CountryCode](),
 				},
 				"email": {
 					Type:         schema.TypeString,
@@ -184,7 +191,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9_\-.]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.-]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
 							),
 						},
 					},
@@ -213,9 +220,9 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":         tftags.TagsSchema(),
-			"tags_all":     tftags.TagsSchemaComputed(),
-			"tech_contact": contactSchema,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tech_contact":    contactSchema,
 			"tech_privacy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -240,14 +247,14 @@ func ResourceRegisteredDomain() *schema.Resource {
 	}
 }
 
-func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
-		return diag.Errorf("error reading Route 53 Domains Domain (%s): %s", domainName, err)
+		return diag.Errorf("reading Route 53 Domains Domain (%s): %s", domainName, err)
 	}
 
 	d.SetId(aws.ToString(domainDetail.DomainName))
@@ -306,20 +313,19 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
-			return diag.Errorf("error updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+			return diag.Errorf("updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -327,9 +333,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainDetail, err := findDomainDetailByName(ctx, conn, d.Id())
 
@@ -340,14 +344,14 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Route 53 Domains Domain (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
 	if domainDetail.AdminContact != nil {
 		if err := d.Set("admin_contact", []interface{}{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
-			return diag.Errorf("error setting admin_contact: %s", err)
+			return diag.Errorf("setting admin_contact: %s", err)
 		}
 	} else {
 		d.Set("admin_contact", nil)
@@ -366,11 +370,11 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("expiration_date", nil)
 	}
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
-		return diag.Errorf("error setting name_servers: %s", err)
+		return diag.Errorf("setting name_servers: %s", err)
 	}
 	if domainDetail.RegistrantContact != nil {
 		if err := d.Set("registrant_contact", []interface{}{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
-			return diag.Errorf("error setting registrant_contact: %s", err)
+			return diag.Errorf("setting registrant_contact: %s", err)
 		}
 	} else {
 		d.Set("registrant_contact", nil)
@@ -383,7 +387,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("status_list", statusList)
 	if domainDetail.TechContact != nil {
 		if err := d.Set("tech_contact", []interface{}{flattenContactDetail(domainDetail.TechContact)}); err != nil {
-			return diag.Errorf("error setting tech_contact: %s", err)
+			return diag.Errorf("setting tech_contact: %s", err)
 		}
 	} else {
 		d.Set("tech_contact", nil)
@@ -397,28 +401,11 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("whois_server", domainDetail.WhoIsServer)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
 		var adminContact, registrantContact, techContact *types.ContactDetail
@@ -472,14 +459,6 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceRegisteredDomainRead(ctx, d, meta)
 }
 
@@ -515,7 +494,7 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 		_, err := conn.EnableDomainAutoRenew(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error enabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
+			return fmt.Errorf("enabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
 		}
 	} else {
 		input := &route53domains.DisableDomainAutoRenewInput{
@@ -526,7 +505,7 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 		_, err := conn.DisableDomainAutoRenew(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
+			return fmt.Errorf("disabling Route 53 Domains Domain (%s) auto-renew: %w", domainName, err)
 		}
 	}
 
@@ -545,11 +524,11 @@ func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domai
 	output, err := conn.UpdateDomainContact(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route 53 Domains Domain (%s) contacts: %w", domainName, err)
+		return fmt.Errorf("updating Route 53 Domains Domain (%s) contacts: %w", domainName, err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) contacts update: %w", domainName, err)
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) contacts update: %w", domainName, err)
 	}
 
 	return nil
@@ -567,11 +546,11 @@ func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client
 	output, err := conn.UpdateDomainContactPrivacy(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling Route 53 Domains Domain (%s) contact privacy: %w", domainName, err)
+		return fmt.Errorf("enabling Route 53 Domains Domain (%s) contact privacy: %w", domainName, err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) contact privacy update: %w", domainName, err)
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) contact privacy update: %w", domainName, err)
 	}
 
 	return nil
@@ -587,11 +566,11 @@ func modifyDomainNameservers(ctx context.Context, conn *route53domains.Client, d
 	output, err := conn.UpdateDomainNameservers(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route 53 Domains Domain (%s) name servers: %w", domainName, err)
+		return fmt.Errorf("updating Route 53 Domains Domain (%s) name servers: %w", domainName, err)
 	}
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) name servers update: %w", domainName, err)
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) name servers update: %w", domainName, err)
 	}
 
 	return nil
@@ -607,11 +586,11 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 		output, err := conn.EnableDomainTransferLock(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error enabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
+			return fmt.Errorf("enabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
 		}
 
 		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) transfer lock enable: %w", domainName, err)
+			return fmt.Errorf("waiting for Route 53 Domains Domain (%s) transfer lock enable: %w", domainName, err)
 		}
 	} else {
 		input := &route53domains.DisableDomainTransferLockInput{
@@ -622,11 +601,11 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 		output, err := conn.DisableDomainTransferLock(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error disabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
+			return fmt.Errorf("disabling Route 53 Domains Domain (%s) transfer lock: %w", domainName, err)
 		}
 
 		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Domains Domain (%s) transfer lock disable: %w", domainName, err)
+			return fmt.Errorf("waiting for Route 53 Domains Domain (%s) transfer lock disable: %w", domainName, err)
 		}
 	}
 
@@ -644,7 +623,7 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -671,7 +650,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -691,7 +670,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) resource.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findOperationDetailByID(ctx, conn, id)
 
@@ -708,9 +687,9 @@ func statusOperation(ctx context.Context, conn *route53domains.Client, id string
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: operationStatusValues(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  operationStatusValues(types.OperationStatusSuccessful),
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
+		Target:  enum.Slice(types.OperationStatusSuccessful),
 		Timeout: timeout,
 		Refresh: statusOperation(ctx, conn, id),
 	}
@@ -964,35 +943,4 @@ func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
 	}
 
 	return tfList
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func contactTypeValues(input ...types.ContactType) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func countryCodeValues(input ...types.CountryCode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func operationStatusValues(input ...types.OperationStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }

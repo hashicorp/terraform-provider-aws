@@ -101,49 +101,90 @@ resource "aws_appsync_resolver" "Mutation_pipelineTest" {
 }
 ```
 
+## Example Usage JS
+
+```terraform
+resource "aws_appsync_resolver" "example" {
+  type   = "Query"
+  api_id = aws_appsync_graphql_api.test.id
+  field  = "pipelineTest"
+  kind   = "PIPELINE"
+  code   = file("some-code-dir")
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+
+  pipeline_config {
+    functions = [
+      aws_appsync_function.test.function_id,
+    ]
+  }
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `api_id` - (Required) The API ID for the GraphQL API.
-* `type` - (Required) The type name from the schema defined in the GraphQL API.
-* `field` - (Required) The field name from the schema defined in the GraphQL API.
-* `request_template` - (Optional) The request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
-* `response_template` - (Optional) The response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
-* `data_source` - (Optional) The DataSource name.
-* `max_batch_size` - (Optional) The maximum batching size for a resolver. Valid values are between `0` and `2000`.
-* `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
+* `api_id` - (Required) API ID for the GraphQL API.
+* `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
+* `type` - (Required) Type name from the schema defined in the GraphQL API.
+* `field` - (Required) Field name from the schema defined in the GraphQL API.
+* `request_template` - (Optional) Request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
+* `response_template` - (Optional) Response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
+* `data_source` - (Optional) Data source name.
+* `max_batch_size` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
+* `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
-* `pipeline_config` - (Optional) The PipelineConfig.
-    * `functions` - (Required) The list of Function ID.
-* `caching_config` - (Optional) The CachingConfig.
-    * `caching_keys` - (Optional) The list of caching key.
-    * `ttl` - (Optional) The TTL in seconds.
+* `pipeline_config` - (Optional) The caching configuration for the resolver. See [Pipeline Config](#pipeline-config).
+* `caching_config` - (Optional) The Caching Config. See [Caching Config](#caching-config).
+* `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime).
+
+### Caching Config
+
+* `caching_keys` - (Optional) The caching keys for a resolver that has caching activated. Valid values are entries from the $context.arguments, $context.source, and $context.identity maps.
+* `ttl` - (Optional) The TTL in seconds for a resolver that has caching activated. Valid values are between `1` and `3600` seconds.
+
+### Pipeline Config
+
+* `functions` - (Optional) A list of Function objects.
 
 ### Sync Config
 
-The following arguments are supported:
-
-* `conflict_detection` - (Optional) The Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
-* `conflict_handler` - (Optional) The Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
-* `lambda_conflict_handler_config` - (Optional) The Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+* `conflict_detection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
+* `conflict_handler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
+* `lambda_conflict_handler_config` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
 
 #### Lambda Conflict Handler Config
 
-The following arguments are supported:
+* `lambda_conflict_handler_arn` - (Optional) ARN for the Lambda function to use as the Conflict Handler.
 
-* `lambda_conflict_handler_arn` - (Optional) The Amazon Resource Name (ARN) for the Lambda function to use as the Conflict Handler.
+### Runtime
 
-## Attributes Reference
+* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
 
-* `arn` - The ARN
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN
 
 ## Import
 
-`aws_appsync_resolver` can be imported with their `api_id`, a hyphen, `type`, a hypen and `field` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
 
+```terraform
+import {
+  to = aws_appsync_resolver.example
+  id = "abcdef123456-exampleType-exampleField"
+}
 ```
-$ terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
+
+Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+
+```console
+% terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```

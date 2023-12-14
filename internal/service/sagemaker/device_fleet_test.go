@@ -1,14 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
@@ -16,20 +20,21 @@ import (
 )
 
 func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetBasicConfig(rName),
+				Config: testAccDeviceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("device-fleet/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
@@ -50,20 +55,21 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetDescription(rName, rName),
+				Config: testAccDeviceFleetConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
@@ -73,9 +79,9 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFleetDescription(rName, "test"),
+				Config: testAccDeviceFleetConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
@@ -84,20 +90,21 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetTags1Config(rName, "key1", "value1"),
+				Config: testAccDeviceFleetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -108,18 +115,18 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFleetTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceFleetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceFleetTags1Config(rName, "key2", "value2"),
+				Config: testAccDeviceFleetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -129,21 +136,22 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 }
 
 func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFleetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetBasicConfig(rName),
+				Config: testAccDeviceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
+					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,32 +159,34 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_device_fleet" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_device_fleet" {
+				continue
+			}
+
+			deviceFleet, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if aws.StringValue(deviceFleet.DeviceFleetName) == rs.Primary.ID {
+				return fmt.Errorf("sagemaker Device Fleet %q still exists", rs.Primary.ID)
+			}
 		}
 
-		deviceFleet, err := tfsagemaker.FindDeviceFleetByName(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if aws.StringValue(deviceFleet.DeviceFleetName) == rs.Primary.ID {
-			return fmt.Errorf("sagemaker Device Fleet %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDeviceFleetExists(n string, device_fleet *sagemaker.DescribeDeviceFleetOutput) resource.TestCheckFunc {
+func testAccCheckDeviceFleetExists(ctx context.Context, n string, device_fleet *sagemaker.DescribeDeviceFleetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,8 +197,8 @@ func testAccCheckDeviceFleetExists(n string, device_fleet *sagemaker.DescribeDev
 			return fmt.Errorf("No sagmaker Device Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := tfsagemaker.FindDeviceFleetByName(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		resp, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -204,11 +214,6 @@ func testAccDeviceFleetBaseConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 data "aws_partition" "current" {}
@@ -267,7 +272,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccDeviceFleetBasicConfig(rName string) string {
+func testAccDeviceFleetConfig_basic(rName string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
@@ -280,7 +285,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName)
 }
 
-func testAccDeviceFleetDescription(rName, desc string) string {
+func testAccDeviceFleetConfig_description(rName, desc string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
@@ -294,7 +299,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName, desc)
 }
 
-func testAccDeviceFleetTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDeviceFleetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
@@ -311,7 +316,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFleetTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeviceFleetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
 // access to data found in the names_data.csv file, which provides additional
@@ -10,7 +13,6 @@
 // It is very important that information in the names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
-
 package names
 
 import (
@@ -19,25 +21,113 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
-// This "should" be defined by the AWS Go SDK v2, but currently isn't.
+// These "should" be defined by the AWS Go SDK v2, but currently aren't.
 const (
-	Route53DomainsEndpointID = "route53domains"
+	AccessAnalyzerEndpointID             = "access-analyzer"
+	AccountEndpointID                    = "account"
+	ACMEndpointID                        = "acm"
+	AppFlowEndpointID                    = "appflow"
+	AppRunnerEndpointID                  = "apprunner"
+	AthenaEndpointID                     = "athena"
+	AuditManagerEndpointID               = "auditmanager"
+	BedrockEndpointID                    = "bedrock"
+	ChimeSDKVoiceEndpointID              = "voice-chime"
+	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
+	CleanRoomsEndpointID                 = "cleanrooms"
+	CloudWatchLogsEndpointID             = "logs"
+	CodeDeployEndpointID                 = "codedeploy"
+	CodeGuruProfilerEndpointID           = "codeguru-profiler"
+	CodeStarConnectionsEndpointID        = "codestar-connections"
+	CodeStarNotificationsEndpointID      = "codestar-notifications"
+	ComprehendEndpointID                 = "comprehend"
+	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DocDBElasticEndpointID               = "docdb-elastic"
+	ControlTowerEndpointID               = "controltower"
+	DSEndpointID                         = "ds"
+	ECREndpointID                        = "api.ecr"
+	EKSEndpointID                        = "eks"
+	EMREndpointID                        = "elasticmapreduce"
+	EMRServerlessEndpointID              = "emrserverless"
+	EvidentlyEndpointID                  = "evidently"
+	GlacierEndpointID                    = "glacier"
+	IdentityStoreEndpointID              = "identitystore"
+	Inspector2EndpointID                 = "inspector2"
+	InternetMonitorEndpointID            = "internetmonitor"
+	IVSChatEndpointID                    = "ivschat"
+	KendraEndpointID                     = "kendra"
+	KeyspacesEndpointID                  = "keyspaces"
+	LambdaEndpointID                     = "lambda"
+	LexV2ModelsEndpointID                = "models-v2-lex"
+	MediaLiveEndpointID                  = "medialive"
+	ObservabilityAccessManagerEndpointID = "oam"
+	OpenSearchServerlessEndpointID       = "aoss"
+	PipesEndpointID                      = "pipes"
+	PollyEndpointID                      = "polly"
+	PricingEndpointID                    = "pricing"
+	QLDBEndpointID                       = "qldb"
+	RedshiftDataEndpointID               = "redshift-data"
+	ResourceExplorer2EndpointID          = "resource-explorer-2"
+	ResourceGroupsEndpointID             = "resource-groups"
+	ResourceGroupsTaggingAPIEndpointID   = "tagging"
+	RolesAnywhereEndpointID              = "rolesanywhere"
+	Route53DomainsEndpointID             = "route53domains"
+	SchedulerEndpointID                  = "scheduler"
+	SecurityLakeEndpointID               = "securitylake"
+	ServiceQuotasEndpointID              = "servicequotas"
+	S3EndpointID                         = "s3"
+	S3ControlEndpointID                  = "s3-control"
+	SecurityHubEndpointID                = "securityhub"
+	SESV2EndpointID                      = "sesv2"
+	SNSEndpointID                        = "sns"
+	SQSEndpointID                        = "sqs"
+	SSMEndpointID                        = "ssm"
+	SSMContactsEndpointID                = "ssm-contacts"
+	SSMIncidentsEndpointID               = "ssm-incidents"
+	SSOAdminEndpointID                   = "sso"
+	STSEndpointID                        = "sts"
+	SWFEndpointID                        = "swf"
+	TimestreamWriteEndpointID            = "ingest.timestream"
+	TranscribeEndpointID                 = "transcribe"
+	VPCLatticeEndpointID                 = "vpc-lattice"
+	XRayEndpointID                       = "xray"
+)
+
+// These should move to aws-sdk-go-base.
+// See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
+const (
+	ChinaPartitionID      = "aws-cn"     // AWS China partition.
+	StandardPartitionID   = "aws"        // AWS Standard partition.
+	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
+)
+
+const (
+	GlobalRegionID = "aws-global" // AWS Standard global region.
+
+	USEast1RegionID = "us-east-1" // US East (N. Virginia).
+	USWest1RegionID = "us-west-1" // US West (N. California).
+	USWest2RegionID = "us-west-2" // US West (Oregon).
+
+	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
+	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
 // described in detail in README.md.
 type ServiceDatum struct {
-	Aliases           []string
-	Brand             string
-	DeprecatedEnvVar  string
-	EnvVar            string
-	GoV1ClientName    string
-	GoV1Package       string
-	GoV2Package       string
-	HumanFriendly     string
-	ProviderNameUpper string
+	Aliases            []string
+	Brand              string
+	DeprecatedEnvVar   string
+	EndpointOnly       bool
+	EnvVar             string
+	GoV1ClientTypeName string
+	GoV1Package        string
+	GoV2Package        string
+	HumanFriendly      string
+	ProviderNameUpper  string
 }
 
 // serviceData key is the AWS provider service package
@@ -75,6 +165,10 @@ func readCSVIntoServiceData() error {
 			continue
 		}
 
+		if l[ColNotImplemented] != "" && l[ColEndpointOnly] == "" {
+			continue
+		}
+
 		if l[ColProviderPackageActual] == "" && l[ColProviderPackageCorrect] == "" {
 			continue
 		}
@@ -86,14 +180,15 @@ func readCSVIntoServiceData() error {
 		}
 
 		serviceData[p] = &ServiceDatum{
-			Brand:             l[ColBrand],
-			DeprecatedEnvVar:  l[ColDeprecatedEnvVar],
-			EnvVar:            l[ColEnvVar],
-			GoV1ClientName:    l[ColGoV1ClientName],
-			GoV1Package:       l[ColGoV1Package],
-			GoV2Package:       l[ColGoV2Package],
-			HumanFriendly:     l[ColHumanFriendly],
-			ProviderNameUpper: l[ColProviderNameUpper],
+			Brand:              l[ColBrand],
+			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
+			EndpointOnly:       l[ColEndpointOnly] != "",
+			EnvVar:             l[ColEnvVar],
+			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
+			GoV1Package:        l[ColGoV1Package],
+			GoV2Package:        l[ColGoV2Package],
+			HumanFriendly:      l[ColHumanFriendly],
+			ProviderNameUpper:  l[ColProviderNameUpper],
 		}
 
 		a := []string{p}
@@ -142,6 +237,50 @@ func Aliases() []string {
 	return keys
 }
 
+type Endpoint struct {
+	ProviderPackage string
+	Aliases         []string
+}
+
+func Endpoints() []Endpoint {
+	endpoints := make([]Endpoint, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		ep := Endpoint{
+			ProviderPackage: k,
+		}
+		if len(v.Aliases) > 1 {
+			idx := slices.Index(v.Aliases, k)
+			if idx != -1 {
+				aliases := slices.Delete(v.Aliases, idx, idx+1)
+				ep.Aliases = aliases
+			}
+		}
+		endpoints = append(endpoints, ep)
+	}
+
+	return endpoints
+}
+
+type ServiceNameUpper struct {
+	ProviderPackage   string
+	ProviderNameUpper string
+}
+
+func ServiceNamesUpper() []ServiceNameUpper {
+	serviceNames := make([]ServiceNameUpper, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		sn := ServiceNameUpper{
+			ProviderPackage:   k,
+			ProviderNameUpper: v.ProviderNameUpper,
+		}
+		serviceNames = append(serviceNames, sn)
+	}
+
+	return serviceNames
+}
+
 func ProviderNameUpper(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
 		return v.ProviderNameUpper, nil
@@ -182,18 +321,60 @@ func FullHumanFriendly(service string) (string, error) {
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
+func HumanFriendly(service string) (string, error) {
+	if v, ok := serviceData[service]; ok {
+		return v.HumanFriendly, nil
+	}
+
+	if s, err := ProviderPackageForAlias(service); err == nil {
+		return HumanFriendly(s)
+	}
+
+	return "", fmt.Errorf("no service data found for %s", service)
+}
+
+func AWSGoPackage(providerPackage string, version int) (string, error) {
+	switch version {
+	case 1:
+		return AWSGoV1Package(providerPackage)
+	case 2:
+		return AWSGoV2Package(providerPackage)
+	default:
+		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
+	}
+}
+
 func AWSGoV1Package(providerPackage string) (string, error) {
 	if v, ok := serviceData[providerPackage]; ok {
 		return v.GoV1Package, nil
 	}
 
-	return "", fmt.Errorf("getting AWS Go SDK v1 package, %s not found", providerPackage)
+	return "", fmt.Errorf("getting AWS SDK Go v1 package, %s not found", providerPackage)
 }
 
-func AWSGoV1ClientName(providerPackage string) (string, error) {
+func AWSGoV2Package(providerPackage string) (string, error) {
 	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1ClientName, nil
+		return v.GoV2Package, nil
 	}
 
-	return "", fmt.Errorf("getting AWS Go SDK v1 client name, %s not found", providerPackage)
+	return "", fmt.Errorf("getting AWS SDK Go v2 package, %s not found", providerPackage)
+}
+
+func AWSGoClientTypeName(providerPackage string, version int) (string, error) {
+	switch version {
+	case 1:
+		return AWSGoV1ClientTypeName(providerPackage)
+	case 2:
+		return "Client", nil
+	default:
+		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
+	}
+}
+
+func AWSGoV1ClientTypeName(providerPackage string) (string, error) {
+	if v, ok := serviceData[providerPackage]; ok {
+		return v.GoV1ClientTypeName, nil
+	}
+
+	return "", fmt.Errorf("getting AWS SDK Go v1 client type name, %s not found", providerPackage)
 }

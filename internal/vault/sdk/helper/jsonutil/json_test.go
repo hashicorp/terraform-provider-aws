@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package jsonutil
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestJSONUtil_DecodeJSONFromReader(t *testing.T) {
+	t.Parallel()
+
 	input := `{"test":"data","validation":"process"}`
 
 	var actual map[string]interface{}

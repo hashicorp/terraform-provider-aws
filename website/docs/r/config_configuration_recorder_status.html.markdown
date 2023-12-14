@@ -23,7 +23,7 @@ resource "aws_config_configuration_recorder_status" "foo" {
 
 resource "aws_iam_role_policy_attachment" "a" {
   role       = aws_iam_role.r.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
 resource "aws_s3_bucket" "b" {
@@ -40,65 +40,66 @@ resource "aws_config_configuration_recorder" "foo" {
   role_arn = aws_iam_role.r.arn
 }
 
-resource "aws_iam_role" "r" {
-  name = "example-awsconfig"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "r" {
+  name               = "example-awsconfig"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "p" {
+  statement {
+    effect  = "Allow"
+    actions = ["s3:*"]
+    resources = [
+      aws_s3_bucket.b.arn,
+      "${aws_s3_bucket.b.arn}/*"
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "p" {
-  name = "awsconfig-example"
-  role = aws_iam_role.r.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.b.arn}",
-        "${aws_s3_bucket.b.arn}/*"
-      ]
-    }
-  ]
-}
-POLICY
+  name   = "awsconfig-example"
+  role   = aws_iam_role.r.id
+  policy = data.aws_iam_policy_document.p.json
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the recorder
 * `is_enabled` - (Required) Whether the configuration recorder should be enabled or disabled.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Configuration Recorder Status can be imported using the name of the Configuration Recorder, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Recorder Status using the name of the Configuration Recorder. For example:
 
+```terraform
+import {
+  to = aws_config_configuration_recorder_status.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_configuration_recorder_status.foo example
+
+Using `terraform import`, import Configuration Recorder Status using the name of the Configuration Recorder. For example:
+
+```console
+% terraform import aws_config_configuration_recorder_status.foo example
 ```

@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +12,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_request_validator")
 func ResourceRequestValidator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRequestValidatorCreate,
-		Read:   resourceRequestValidatorRead,
-		Update: resourceRequestValidatorUpdate,
-		Delete: resourceRequestValidatorDelete,
+		CreateWithoutTimeout: resourceRequestValidatorCreate,
+		ReadWithoutTimeout:   resourceRequestValidatorRead,
+		UpdateWithoutTimeout: resourceRequestValidatorUpdate,
+		DeleteWithoutTimeout: resourceRequestValidatorDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/REQUEST-VALIDATOR-ID", d.Id())
@@ -33,23 +43,20 @@ func ResourceRequestValidator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"validate_request_body": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"validate_request_parameters": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -59,54 +66,55 @@ func ResourceRequestValidator() *schema.Resource {
 	}
 }
 
-func resourceRequestValidatorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceRequestValidatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	input := apigateway.CreateRequestValidatorInput{
-		Name:                      aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &apigateway.CreateRequestValidatorInput{
+		Name:                      aws.String(name),
 		RestApiId:                 aws.String(d.Get("rest_api_id").(string)),
 		ValidateRequestBody:       aws.Bool(d.Get("validate_request_body").(bool)),
 		ValidateRequestParameters: aws.Bool(d.Get("validate_request_parameters").(bool)),
 	}
 
-	out, err := conn.CreateRequestValidator(&input)
+	output, err := conn.CreateRequestValidatorWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Request Validator: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Request Validator (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.StringValue(output.Id))
 
-	return nil
+	return diags
 }
 
-func resourceRequestValidatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	input := apigateway.GetRequestValidatorInput{
-		RequestValidatorId: aws.String(d.Id()),
-		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
+	output, err := FindRequestValidatorByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway Request Validator (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	out, err := conn.GetRequestValidator(&input)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			log.Printf("[WARN] API Gateway Request Validator (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading API Gateway Request Validator (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
-	d.Set("validate_request_body", out.ValidateRequestBody)
-	d.Set("validate_request_parameters", out.ValidateRequestParameters)
+	d.Set("name", output.Name)
+	d.Set("validate_request_body", output.ValidateRequestBody)
+	d.Set("validate_request_parameters", output.ValidateRequestParameters)
 
-	return nil
+	return diags
 }
 
-func resourceRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	log.Printf("[DEBUG] Updating Request Validator %s", d.Id())
+func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -134,37 +142,64 @@ func resourceRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) er
 		})
 	}
 
-	input := apigateway.UpdateRequestValidatorInput{
+	input := &apigateway.UpdateRequestValidatorInput{
 		RequestValidatorId: aws.String(d.Id()),
 		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
 		PatchOperations:    operations,
 	}
 
-	_, err := conn.UpdateRequestValidator(&input)
+	_, err := conn.UpdateRequestValidatorWithContext(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Updated Request Validator %s", d.Id())
-
-	return resourceRequestValidatorRead(d, meta)
+	return append(diags, resourceRequestValidatorRead(ctx, d, meta)...)
 }
 
-func resourceRequestValidatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	log.Printf("[DEBUG] Deleting Request Validator %s", d.Id())
+func resourceRequestValidatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	_, err := conn.DeleteRequestValidator(&apigateway.DeleteRequestValidatorInput{
+	log.Printf("[DEBUG] Deleting API Gateway Request Validator: %s", d.Id())
+	_, err := conn.DeleteRequestValidatorWithContext(ctx, &apigateway.DeleteRequestValidatorInput{
 		RequestValidatorId: aws.String(d.Id()),
 		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
 	})
+
 	if err != nil {
 		// XXX: Figure out a way to delete the method that depends on the request validator first
 		// otherwise the validator will be dangling until the API is deleted
 		if !strings.Contains(err.Error(), apigateway.ErrCodeConflictException) {
-			return fmt.Errorf("Deleting Request Validator failed: %s", err)
+			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Request Validator (%s): %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
+}
+
+func FindRequestValidatorByTwoPartKey(ctx context.Context, conn *apigateway.APIGateway, requestValidatorID, apiID string) (*apigateway.UpdateRequestValidatorOutput, error) {
+	input := &apigateway.GetRequestValidatorInput{
+		RequestValidatorId: aws.String(requestValidatorID),
+		RestApiId:          aws.String(apiID),
+	}
+
+	output, err := conn.GetRequestValidatorWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

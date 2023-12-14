@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline
 
 import (
@@ -11,19 +14,21 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_datapipeline_pipeline_definition")
 func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePipelineDefinitionPut,
-		ReadContext:   resourcePipelineDefinitionRead,
-		UpdateContext: resourcePipelineDefinitionPut,
-		DeleteContext: schema.NoopContext,
+		CreateWithoutTimeout: resourcePipelineDefinitionPut,
+		ReadWithoutTimeout:   resourcePipelineDefinitionRead,
+		UpdateWithoutTimeout: resourcePipelineDefinitionPut,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -129,37 +134,39 @@ func ResourcePipelineDefinition() *schema.Resource {
 }
 
 func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.PutPipelineDefinitionInput{
 		PipelineId:      aws.String(pipelineID),
-		PipelineObjects: expandDataPipelinePipelineDefinitionObjects(d.Get("pipeline_object").(*schema.Set).List()),
+		PipelineObjects: expandPipelineDefinitionObjects(d.Get("pipeline_object").(*schema.Set).List()),
 	}
 
 	if v, ok := d.GetOk("parameter_object"); ok {
-		input.ParameterObjects = expandDataPipelinePipelineDefinitionParameterObjects(v.(*schema.Set).List())
+		input.ParameterObjects = expandPipelineDefinitionParameterObjects(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("parameter_value"); ok {
-		input.ParameterValues = expandDataPipelinePipelineDefinitionParameterValues(v.(*schema.Set).List())
+		input.ParameterValues = expandPipelineDefinitionParameterValues(v.(*schema.Set).List())
 	}
 
 	var err error
 	var output *datapipeline.PutPipelineDefinitionOutput
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		output, err = conn.PutPipelineDefinitionWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodeInternalServiceError) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
 			if strings.Contains(errors.Error(), "role") {
-				return resource.RetryableError(fmt.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
+				return retry.RetryableError(fmt.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
 
@@ -171,11 +178,11 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if aws.BoolValue(output.Errored) {
-		return diag.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
+		return sdkdiag.AppendErrorf(diags, "validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
 	}
 
 	// Activate pipeline if enabled
@@ -185,16 +192,18 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 
 	_, err = conn.ActivatePipelineWithContext(ctx, input2)
 	if err != nil {
-		return diag.Errorf("error activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	d.SetId(pipelineID)
 
-	return resourcePipelineDefinitionRead(ctx, d, meta)
+	return append(diags, resourcePipelineDefinitionRead(ctx, d, meta)...)
 }
 
 func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
 	}
@@ -205,41 +214,41 @@ func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData,
 		tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 		log.Printf("[WARN] DataPipeline Pipeline Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
 	}
 
-	if err = d.Set("parameter_object", flattenDataPipelinePipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+	if err = d.Set("parameter_object", flattenPipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
-	if err = d.Set("parameter_value", flattenDataPipelinePipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+	if err = d.Set("parameter_value", flattenPipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
-	if err = d.Set("pipeline_object", flattenDataPipelinePipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+	if err = d.Set("pipeline_object", flattenPipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	d.Set("pipeline_id", d.Id())
 
-	return nil
+	return diags
 }
 
-func expandDataPipelinePipelineDefinitionParameterObject(tfMap map[string]interface{}) *datapipeline.ParameterObject {
+func expandPipelineDefinitionParameterObject(tfMap map[string]interface{}) *datapipeline.ParameterObject {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &datapipeline.ParameterObject{
-		Attributes: expandDataPipelinePipelineDefinitionParameterAttributes(tfMap["attribute"].(*schema.Set).List()),
+		Attributes: expandPipelineDefinitionParameterAttributes(tfMap["attribute"].(*schema.Set).List()),
 		Id:         aws.String(tfMap["id"].(string)),
 	}
 
 	return apiObject
 }
 
-func expandDataPipelinePipelineDefinitionParameterAttribute(tfMap map[string]interface{}) *datapipeline.ParameterAttribute {
+func expandPipelineDefinitionParameterAttribute(tfMap map[string]interface{}) *datapipeline.ParameterAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -252,7 +261,7 @@ func expandDataPipelinePipelineDefinitionParameterAttribute(tfMap map[string]int
 	return apiObject
 }
 
-func expandDataPipelinePipelineDefinitionParameterAttributes(tfList []interface{}) []*datapipeline.ParameterAttribute {
+func expandPipelineDefinitionParameterAttributes(tfList []interface{}) []*datapipeline.ParameterAttribute {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -266,7 +275,7 @@ func expandDataPipelinePipelineDefinitionParameterAttributes(tfList []interface{
 			continue
 		}
 
-		apiObject := expandDataPipelinePipelineDefinitionParameterAttribute(tfMap)
+		apiObject := expandPipelineDefinitionParameterAttribute(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -274,7 +283,7 @@ func expandDataPipelinePipelineDefinitionParameterAttributes(tfList []interface{
 	return apiObjects
 }
 
-func expandDataPipelinePipelineDefinitionParameterObjects(tfList []interface{}) []*datapipeline.ParameterObject {
+func expandPipelineDefinitionParameterObjects(tfList []interface{}) []*datapipeline.ParameterObject {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -288,7 +297,7 @@ func expandDataPipelinePipelineDefinitionParameterObjects(tfList []interface{}) 
 			continue
 		}
 
-		apiObject := expandDataPipelinePipelineDefinitionParameterObject(tfMap)
+		apiObject := expandPipelineDefinitionParameterObject(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -296,19 +305,19 @@ func expandDataPipelinePipelineDefinitionParameterObjects(tfList []interface{}) 
 	return apiObjects
 }
 
-func flattenDataPipelinePipelineDefinitionParameterObject(apiObject *datapipeline.ParameterObject) map[string]interface{} {
+func flattenPipelineDefinitionParameterObject(apiObject *datapipeline.ParameterObject) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["attribute"] = flattenDataPipelinePipelineDefinitionParameterAttributes(apiObject.Attributes)
+	tfMap["attribute"] = flattenPipelineDefinitionParameterAttributes(apiObject.Attributes)
 	tfMap["id"] = aws.StringValue(apiObject.Id)
 
 	return tfMap
 }
 
-func flattenDataPipelinePipelineDefinitionParameterAttribute(apiObject *datapipeline.ParameterAttribute) map[string]interface{} {
+func flattenPipelineDefinitionParameterAttribute(apiObject *datapipeline.ParameterAttribute) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -320,7 +329,7 @@ func flattenDataPipelinePipelineDefinitionParameterAttribute(apiObject *datapipe
 	return tfMap
 }
 
-func flattenDataPipelinePipelineDefinitionParameterAttributes(apiObjects []*datapipeline.ParameterAttribute) []map[string]interface{} {
+func flattenPipelineDefinitionParameterAttributes(apiObjects []*datapipeline.ParameterAttribute) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -332,13 +341,13 @@ func flattenDataPipelinePipelineDefinitionParameterAttributes(apiObjects []*data
 			continue
 		}
 
-		tfList = append(tfList, flattenDataPipelinePipelineDefinitionParameterAttribute(apiObject))
+		tfList = append(tfList, flattenPipelineDefinitionParameterAttribute(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenDataPipelinePipelineDefinitionParameterObjects(apiObjects []*datapipeline.ParameterObject) []map[string]interface{} {
+func flattenPipelineDefinitionParameterObjects(apiObjects []*datapipeline.ParameterObject) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -350,13 +359,13 @@ func flattenDataPipelinePipelineDefinitionParameterObjects(apiObjects []*datapip
 			continue
 		}
 
-		tfList = append(tfList, flattenDataPipelinePipelineDefinitionParameterObject(apiObject))
+		tfList = append(tfList, flattenPipelineDefinitionParameterObject(apiObject))
 	}
 
 	return tfList
 }
 
-func expandDataPipelinePipelineDefinitionParameterValue(tfMap map[string]interface{}) *datapipeline.ParameterValue {
+func expandPipelineDefinitionParameterValue(tfMap map[string]interface{}) *datapipeline.ParameterValue {
 	if tfMap == nil {
 		return nil
 	}
@@ -369,7 +378,7 @@ func expandDataPipelinePipelineDefinitionParameterValue(tfMap map[string]interfa
 	return apiObject
 }
 
-func expandDataPipelinePipelineDefinitionParameterValues(tfList []interface{}) []*datapipeline.ParameterValue {
+func expandPipelineDefinitionParameterValues(tfList []interface{}) []*datapipeline.ParameterValue {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -383,7 +392,7 @@ func expandDataPipelinePipelineDefinitionParameterValues(tfList []interface{}) [
 			continue
 		}
 
-		apiObject := expandDataPipelinePipelineDefinitionParameterValue(tfMap)
+		apiObject := expandPipelineDefinitionParameterValue(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -391,7 +400,7 @@ func expandDataPipelinePipelineDefinitionParameterValues(tfList []interface{}) [
 	return apiObjects
 }
 
-func flattenDataPipelinePipelineDefinitionParameterValue(apiObject *datapipeline.ParameterValue) map[string]interface{} {
+func flattenPipelineDefinitionParameterValue(apiObject *datapipeline.ParameterValue) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -403,7 +412,7 @@ func flattenDataPipelinePipelineDefinitionParameterValue(apiObject *datapipeline
 	return tfMap
 }
 
-func flattenDataPipelinePipelineDefinitionParameterValues(apiObjects []*datapipeline.ParameterValue) []map[string]interface{} {
+func flattenPipelineDefinitionParameterValues(apiObjects []*datapipeline.ParameterValue) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -415,19 +424,19 @@ func flattenDataPipelinePipelineDefinitionParameterValues(apiObjects []*datapipe
 			continue
 		}
 
-		tfList = append(tfList, flattenDataPipelinePipelineDefinitionParameterValue(apiObject))
+		tfList = append(tfList, flattenPipelineDefinitionParameterValue(apiObject))
 	}
 
 	return tfList
 }
 
-func expandDataPipelinePipelineDefinitionObject(tfMap map[string]interface{}) *datapipeline.PipelineObject {
+func expandPipelineDefinitionObject(tfMap map[string]interface{}) *datapipeline.PipelineObject {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &datapipeline.PipelineObject{
-		Fields: expandDataPipelinePipelineDefinitionPipelineFields(tfMap["field"].(*schema.Set).List()),
+		Fields: expandPipelineDefinitionPipelineFields(tfMap["field"].(*schema.Set).List()),
 		Id:     aws.String(tfMap["id"].(string)),
 		Name:   aws.String(tfMap["name"].(string)),
 	}
@@ -435,7 +444,7 @@ func expandDataPipelinePipelineDefinitionObject(tfMap map[string]interface{}) *d
 	return apiObject
 }
 
-func expandDataPipelinePipelineDefinitionPipelineField(tfMap map[string]interface{}) *datapipeline.Field {
+func expandPipelineDefinitionPipelineField(tfMap map[string]interface{}) *datapipeline.Field {
 	if tfMap == nil {
 		return nil
 	}
@@ -454,7 +463,7 @@ func expandDataPipelinePipelineDefinitionPipelineField(tfMap map[string]interfac
 	return apiObject
 }
 
-func expandDataPipelinePipelineDefinitionPipelineFields(tfList []interface{}) []*datapipeline.Field {
+func expandPipelineDefinitionPipelineFields(tfList []interface{}) []*datapipeline.Field {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -468,7 +477,7 @@ func expandDataPipelinePipelineDefinitionPipelineFields(tfList []interface{}) []
 			continue
 		}
 
-		apiObject := expandDataPipelinePipelineDefinitionPipelineField(tfMap)
+		apiObject := expandPipelineDefinitionPipelineField(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -476,7 +485,7 @@ func expandDataPipelinePipelineDefinitionPipelineFields(tfList []interface{}) []
 	return apiObjects
 }
 
-func expandDataPipelinePipelineDefinitionObjects(tfList []interface{}) []*datapipeline.PipelineObject {
+func expandPipelineDefinitionObjects(tfList []interface{}) []*datapipeline.PipelineObject {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -490,7 +499,7 @@ func expandDataPipelinePipelineDefinitionObjects(tfList []interface{}) []*datapi
 			continue
 		}
 
-		apiObject := expandDataPipelinePipelineDefinitionObject(tfMap)
+		apiObject := expandPipelineDefinitionObject(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -498,20 +507,20 @@ func expandDataPipelinePipelineDefinitionObjects(tfList []interface{}) []*datapi
 	return apiObjects
 }
 
-func flattenDataPipelinePipelineDefinitionObject(apiObject *datapipeline.PipelineObject) map[string]interface{} {
+func flattenPipelineDefinitionObject(apiObject *datapipeline.PipelineObject) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["field"] = flattenDataPipelinePipelineDefinitionParameterFields(apiObject.Fields)
+	tfMap["field"] = flattenPipelineDefinitionParameterFields(apiObject.Fields)
 	tfMap["id"] = aws.StringValue(apiObject.Id)
 	tfMap["name"] = aws.StringValue(apiObject.Name)
 
 	return tfMap
 }
 
-func flattenDataPipelinePipelineDefinitionParameterField(apiObject *datapipeline.Field) map[string]interface{} {
+func flattenPipelineDefinitionParameterField(apiObject *datapipeline.Field) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -524,7 +533,7 @@ func flattenDataPipelinePipelineDefinitionParameterField(apiObject *datapipeline
 	return tfMap
 }
 
-func flattenDataPipelinePipelineDefinitionParameterFields(apiObjects []*datapipeline.Field) []map[string]interface{} {
+func flattenPipelineDefinitionParameterFields(apiObjects []*datapipeline.Field) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -536,13 +545,13 @@ func flattenDataPipelinePipelineDefinitionParameterFields(apiObjects []*datapipe
 			continue
 		}
 
-		tfList = append(tfList, flattenDataPipelinePipelineDefinitionParameterField(apiObject))
+		tfList = append(tfList, flattenPipelineDefinitionParameterField(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenDataPipelinePipelineDefinitionObjects(apiObjects []*datapipeline.PipelineObject) []map[string]interface{} {
+func flattenPipelineDefinitionObjects(apiObjects []*datapipeline.PipelineObject) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -554,7 +563,7 @@ func flattenDataPipelinePipelineDefinitionObjects(apiObjects []*datapipeline.Pip
 			continue
 		}
 
-		tfList = append(tfList, flattenDataPipelinePipelineDefinitionObject(apiObject))
+		tfList = append(tfList, flattenPipelineDefinitionObject(apiObject))
 	}
 
 	return tfList

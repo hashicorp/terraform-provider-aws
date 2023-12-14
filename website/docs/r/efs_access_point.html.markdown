@@ -20,12 +20,12 @@ resource "aws_efs_access_point" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) ID of the file system for which the access point is intended.
 * `posix_user` - (Optional) Operating system user and group applied to all file system requests made using the access point. [Detailed](#posix_user) below.
 * `root_directory`- (Optional) Directory on the Amazon EFS file system that the access point provides access to. [Detailed](#root_directory) below.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### posix_user
 
@@ -48,19 +48,28 @@ If the `path` specified does not exist, EFS creates the root directory using the
 * `owner_uid` - (Required) POSIX user ID to apply to the `root_directory`.
 * `permissions` - (Required) POSIX permissions to apply to the RootDirectory, in the format of an octal number representing the file's mode bits.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the access point.
 * `file_system_arn` - ARN of the file system.
 * `id` - ID of the access point.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-The EFS access points can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS access points using the `id`. For example:
 
+```terraform
+import {
+  to = aws_efs_access_point.test
+  id = "fsap-52a643fb"
+}
 ```
-$ terraform import aws_efs_access_point.test fsap-52a643fb
+
+Using `terraform import`, import the EFS access points using the `id`. For example:
+
+```console
+% terraform import aws_efs_access_point.test fsap-52a643fb
 ```

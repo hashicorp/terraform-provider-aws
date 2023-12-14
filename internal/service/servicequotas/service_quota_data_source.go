@@ -1,18 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicequotas
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_servicequotas_service_quota")
 func DataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServiceQuotaRead,
+		ReadWithoutTimeout: dataSourceServiceQuotaRead,
 
 		Schema: map[string]*schema.Schema{
 			"adjustable": {
@@ -51,6 +57,50 @@ func DataSourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"usage_metric": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metric_dimensions": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"class": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"resource": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"service": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metric_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_namespace": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_statistic_recommendation": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"value": {
 				Type:     schema.TypeFloat,
 				Computed: true,
@@ -59,33 +109,63 @@ func DataSourceServiceQuota() *schema.Resource {
 	}
 }
 
-func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
+	if usageMetric == nil {
+		return []interface{}{}
+	}
+
+	var usageMetrics []interface{}
+	var metricDimensions []interface{}
+
+	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != "" {
+		metricDimensions = append(metricDimensions, map[string]interface{}{
+			"service":  usageMetric.MetricDimensions["Service"],
+			"class":    usageMetric.MetricDimensions["Class"],
+			"type":     usageMetric.MetricDimensions["Type"],
+			"resource": usageMetric.MetricDimensions["Resource"],
+		})
+	} else {
+		metricDimensions = append(metricDimensions, map[string]interface{}{})
+	}
+
+	usageMetrics = append(usageMetrics, map[string]interface{}{
+		"metric_name":                     usageMetric.MetricName,
+		"metric_namespace":                usageMetric.MetricNamespace,
+		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
+		"metric_dimensions":               metricDimensions,
+	})
+
+	return usageMetrics
+}
+
+func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)
 	serviceCode := d.Get("service_code").(string)
 
 	var err error
-	var defaultQuota *servicequotas.ServiceQuota
+	var defaultQuota *types.ServiceQuota
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
 	if quotaName != "" {
-		defaultQuota, err = findServiceQuotaDefaultByName(conn, serviceCode, quotaName)
+		defaultQuota, err = findServiceQuotaDefaultByName(ctx, conn, serviceCode, quotaName)
 		if err != nil {
-			return fmt.Errorf("error getting Default Service Quota for (%s/%s): %w", serviceCode, quotaName, err)
+			return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaName, err)
 		}
 
-		quotaCode = aws.StringValue(defaultQuota.QuotaCode)
+		quotaCode = aws.ToString(defaultQuota.QuotaCode)
 	} else {
-		defaultQuota, err = findServiceQuotaDefaultByID(conn, serviceCode, quotaCode)
+		defaultQuota, err = findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
 		if err != nil {
-			return fmt.Errorf("error getting Default Service Quota for (%s/%s): %w", serviceCode, quotaCode, err)
+			return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 		}
 	}
 
-	d.SetId(aws.StringValue(defaultQuota.QuotaArn))
+	d.SetId(aws.ToString(defaultQuota.QuotaArn))
 	d.Set("adjustable", defaultQuota.Adjustable)
 	d.Set("arn", defaultQuota.QuotaArn)
 	d.Set("default_value", defaultQuota.Value)
@@ -96,16 +176,20 @@ func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("service_name", defaultQuota.ServiceName)
 	d.Set("value", defaultQuota.Value)
 
-	serviceQuota, err := findServiceQuotaByID(conn, serviceCode, quotaCode)
+	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting usage_metric for (%s/%s): %s", serviceCode, quotaCode, err)
+	}
+
+	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
 	if tfresource.NotFound(err) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error getting Service Quota for (%s/%s): %w", serviceCode, quotaCode, err)
+		return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
 
 	d.Set("arn", serviceQuota.QuotaArn)
 	d.Set("value", serviceQuota.Value)
 
-	return nil
+	return diags
 }

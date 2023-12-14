@@ -1,20 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_glue_script")
 func DataSourceScript() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceScriptRead,
+		ReadWithoutTimeout: dataSourceScriptRead,
 		Schema: map[string]*schema.Schema{
 			"dag_edge": {
 				Type:     schema.TypeList,
@@ -98,15 +103,16 @@ func DataSourceScript() *schema.Resource {
 	}
 }
 
-func dataSourceScriptRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	dagEdge := d.Get("dag_edge").([]interface{})
 	dagNode := d.Get("dag_node").([]interface{})
 
 	input := &glue.CreateScriptInput{
-		DagEdges: expandGlueCodeGenEdges(dagEdge),
-		DagNodes: expandGlueCodeGenNodes(dagNode),
+		DagEdges: expandCodeGenEdges(dagEdge),
+		DagNodes: expandCodeGenNodes(dagNode),
 	}
 
 	if v, ok := d.GetOk("language"); ok {
@@ -114,23 +120,23 @@ func dataSourceScriptRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Script: %s", input)
-	output, err := conn.CreateScript(input)
+	output, err := conn.CreateScriptWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue script: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue script: %s", err)
 	}
 
 	if output == nil {
-		return errors.New("script not created")
+		return sdkdiag.AppendErrorf(diags, "script not created")
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("python_script", output.PythonScript)
 	d.Set("scala_code", output.ScalaCode)
 
-	return nil
+	return diags
 }
 
-func expandGlueCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
+func expandCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	args := []*glue.CodeGenNodeArg{}
 
 	for _, mRaw := range l {
@@ -146,7 +152,7 @@ func expandGlueCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	return args
 }
 
-func expandGlueCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
+func expandCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 	edges := []*glue.CodeGenEdge{}
 
 	for _, mRaw := range l {
@@ -164,13 +170,13 @@ func expandGlueCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 	return edges
 }
 
-func expandGlueCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
+func expandCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
 	nodes := []*glue.CodeGenNode{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 		node := &glue.CodeGenNode{
-			Args:     expandGlueCodeGenNodeArgs(m["args"].([]interface{})),
+			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
 			Id:       aws.String(m["id"].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}

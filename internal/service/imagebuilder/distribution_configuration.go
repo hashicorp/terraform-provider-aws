@@ -1,30 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDistributionConfigurationCreate,
-		Read:   resourceDistributionConfigurationRead,
-		Update: resourceDistributionConfigurationUpdate,
-		Delete: resourceDistributionConfigurationDelete,
+		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
+		ReadWithoutTimeout:   resourceDistributionConfigurationRead,
+		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
+		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -113,7 +121,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 127),
-											validation.StringMatch(regexp.MustCompile(`^[-_A-Za-z0-9{][-_A-Za-z0-9\s:{}]+[-_A-Za-z0-9}]$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\s:{}-]+[0-9A-Za-z_}-]$`), "must contain only alphanumeric characters, underscores, and hyphens"),
 										),
 									},
 									"target_account_ids": {
@@ -168,6 +176,68 @@ func ResourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"fast_launch_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 1000,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"launch_template": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"launch_template_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidLaunchTemplateID,
+												},
+												"launch_template_name": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidLaunchTemplateName,
+												},
+												"launch_template_version": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"max_parallel_launches": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      0,
+										ValidateFunc: validation.IntBetween(1, 10000),
+									},
+									"snapshot_configuration": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_resource_count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 10000),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"launch_template_configuration": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -214,21 +284,21 @@ func ResourceDistributionConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -243,48 +313,43 @@ func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interf
 		input.Name = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.CreateDistributionConfiguration(input)
+	output, err := conn.CreateDistributionConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Image Builder Distribution Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Distribution Configuration: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Image Builder Distribution Configuration: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Distribution Configuration: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.DistributionConfigurationArn))
 
-	return resourceDistributionConfigurationRead(d, meta)
+	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetDistributionConfiguration(input)
+	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Image Builder Distribution Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): empty response", d.Id())
 	}
 
 	distributionConfiguration := output.DistributionConfiguration
@@ -295,22 +360,15 @@ func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interfac
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	tags := KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
+	setTagsOut(ctx, distributionConfiguration.Tags)
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges("description", "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
@@ -326,42 +384,35 @@ func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interf
 		}
 
 		log.Printf("[DEBUG] UpdateDistributionConfiguration: %#v", input)
-		_, err := conn.UpdateDistributionConfiguration(input)
+		_, err := conn.UpdateDistributionConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Image Builder Distribution Configuration (%s): %w", d.Id(), err)
-		}
-	}
-
-	return resourceDistributionConfigurationRead(d, meta)
+	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDistributionConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDistributionConfiguration(input)
+	_, err := conn.DeleteDistributionConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Image Builder Distribution Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Image Builder Distribution Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
@@ -461,6 +512,10 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 		apiObject.ContainerDistributionConfiguration = expandContainerDistributionConfiguration(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["fast_launch_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.FastLaunchConfigurations = expandFastLaunchConfigurations(v.List())
+	}
+
 	if v, ok := tfMap["launch_template_configuration"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.LaunchTemplateConfigurations = expandLaunchTemplateConfigurations(v.List())
 	}
@@ -548,6 +603,98 @@ func expandTargetContainerRepository(tfMap map[string]interface{}) *imagebuilder
 
 	if v, ok := tfMap["service"].(string); ok && v != "" {
 		apiObject.Service = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandFastLaunchConfigurations(tfList []interface{}) []*imagebuilder.FastLaunchConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*imagebuilder.FastLaunchConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFastLaunchConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.FastLaunchConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.FastLaunchConfiguration{}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
+	}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.LaunchTemplate = expandFastLaunchLaunchTemplateSpecification(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["max_parallel_launches"].(int); ok && v != 0 {
+		apiObject.MaxParallelLaunches = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["snapshot_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SnapshotConfiguration = expandFastLaunchSnapshotConfiguration(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *imagebuilder.FastLaunchLaunchTemplateSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.FastLaunchLaunchTemplateSpecification{}
+
+	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v)
+	}
+
+	if v, ok := tfMap["launch_template_name"].(string); ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v)
+	}
+
+	if v, ok := tfMap["launch_template_version"].(string); ok && v != "" {
+		apiObject.LaunchTemplateVersion = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *imagebuilder.FastLaunchSnapshotConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.FastLaunchSnapshotConfiguration{}
+
+	if v, ok := tfMap["target_resource_count"].(int); ok && v != 0 {
+		apiObject.TargetResourceCount = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -664,6 +811,10 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 		tfMap["container_distribution_configuration"] = []interface{}{flattenContainerDistributionConfiguration(v)}
 	}
 
+	if v := apiObject.FastLaunchConfigurations; v != nil {
+		tfMap["fast_launch_configuration"] = flattenFastLaunchConfigurations(v)
+	}
+
 	if v := apiObject.LaunchTemplateConfigurations; v != nil {
 		tfMap["launch_template_configuration"] = flattenLaunchTemplateConfigurations(v)
 	}
@@ -758,6 +909,90 @@ func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateCo
 
 	if v := apiObject.AccountId; v != nil {
 		tfMap["account_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenFastLaunchConfigurations(apiObjects []*imagebuilder.FastLaunchConfiguration) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenFastLaunchConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.LaunchTemplate; v != nil {
+		tfMap["launch_template"] = []interface{}{flattenFastLaunchLaunchTemplateSpecification(v)}
+	}
+
+	if v := apiObject.MaxParallelLaunches; v != nil {
+		tfMap["max_parallel_launches"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SnapshotConfiguration; v != nil {
+		tfMap["snapshot_configuration"] = []interface{}{flattenFastLaunchSnapshotConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenFastLaunchLaunchTemplateSpecification(apiObject *imagebuilder.FastLaunchLaunchTemplateSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["launch_template_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateName; v != nil {
+		tfMap["launch_template_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateVersion; v != nil {
+		tfMap["launch_template_version"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenFastLaunchSnapshotConfiguration(apiObject *imagebuilder.FastLaunchSnapshotConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TargetResourceCount; v != nil {
+		tfMap["target_resource_count"] = aws.Int64Value(v)
 	}
 
 	return tfMap

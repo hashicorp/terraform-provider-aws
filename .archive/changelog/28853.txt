@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_kms_external_key: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_kms_key: Improve refresh to avoid unnecessary diffs in `policy`
+```

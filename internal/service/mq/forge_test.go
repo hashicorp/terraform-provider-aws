@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestCanonicalXML(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Name        string
 		Config      string
@@ -15,17 +20,17 @@ func TestCanonicalXML(t *testing.T) {
 	}{
 		{
 			Name:     "Config sample from MSDN",
-			Config:   testExampleXML_from_msdn,
-			Expected: testExampleXML_from_msdn,
+			Config:   testAccForgeConfig_testExampleXMLFromMsdn,
+			Expected: testAccForgeConfig_testExampleXMLFromMsdn,
 		},
 		{
 			Name:     "Config sample from MSDN, modified",
-			Config:   testExampleXML_from_msdn,
+			Config:   testAccForgeConfig_testExampleXMLFromMsdn,
 			Expected: testExampleXML_from_msdn_modified,
 		},
 		{
 			Name:        "Config sample from MSDN, flaw",
-			Config:      testExampleXML_from_msdn,
+			Config:      testAccForgeConfig_testExampleXMLFromMsdn,
 			Expected:    testExampleXML_from_msdn_flawed,
 			ExpectError: true,
 		},
@@ -59,7 +64,10 @@ func TestCanonicalXML(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
 			config, err := tfmq.CanonicalXML(tc.Config)
 			if err != nil {
 				t.Fatalf("Error getting canonical xml for given config: %s", err)
@@ -78,7 +86,7 @@ func TestCanonicalXML(t *testing.T) {
 	}
 }
 
-const testExampleXML_from_msdn = `
+const testAccForgeConfig_testExampleXMLFromMsdn = `
 <?xml version="1.0"?>
 <purchaseOrder xmlns="http://tempuri.org/po.xsd" orderDate="1999-10-20">
     <shipTo country="US">

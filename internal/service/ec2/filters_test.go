@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -10,7 +13,9 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestBuildEC2AttributeFilterList(t *testing.T) {
+func TestBuildAttributeFilterList(t *testing.T) {
+	t.Parallel()
+
 	type TestCase struct {
 		Attrs    map[string]string
 		Expected []*ec2.Filter
@@ -58,7 +63,9 @@ func TestBuildEC2AttributeFilterList(t *testing.T) {
 	}
 }
 
-func TestBuildEC2TagFilterList(t *testing.T) {
+func TestBuildTagFilterList(t *testing.T) {
+	t.Parallel()
+
 	type TestCase struct {
 		Tags     []*ec2.Tag
 		Expected []*ec2.Filter
@@ -100,7 +107,8 @@ func TestBuildEC2TagFilterList(t *testing.T) {
 	}
 }
 
-func TestBuildEC2CustomFilterList(t *testing.T) {
+func TestBuildCustomFilterList(t *testing.T) {
+	t.Parallel()
 
 	// We need to get a set with the appropriate hash function,
 	// so we'll use the schema to help us produce what would

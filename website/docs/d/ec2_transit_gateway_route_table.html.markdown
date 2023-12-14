@@ -38,7 +38,7 @@ data "aws_ec2_transit_gateway_route_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Route Table.
@@ -50,11 +50,17 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - EC2 Transit Gateway Route Table Amazon Resource Name (ARN).
+* `arn` - EC2 Transit Gateway Route Table ARN.
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway
 * `default_propagation_route_table` - Boolean whether this is the default propagation route table for the EC2 Transit Gateway
 * `id` - EC2 Transit Gateway Route Table identifier
 * `transit_gateway_id` - EC2 Transit Gateway identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway Route Table
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

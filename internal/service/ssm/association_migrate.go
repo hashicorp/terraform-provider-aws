@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -12,14 +15,13 @@ func AssociationMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS SSM Association State v0; migrating to v1")
-		return migrateSsmAssociationStateV0toV1(is)
+		return migrateAssociationStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateSsmAssociationStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
-
+func migrateAssociationStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 
@@ -34,5 +36,4 @@ func migrateSsmAssociationStateV0toV1(is *terraform.InstanceState) (*terraform.I
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, is.Attributes["association_id"])
 
 	return is, nil
-
 }

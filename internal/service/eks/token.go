@@ -11,6 +11,7 @@ With the following modifications:
  - Fix staticcheck reports
  - Ignore errorlint reports
  - Refactor deprecated io/ioutil in Go 1.16
+ - Adds context parameter
 */
 
 /*
@@ -32,6 +33,7 @@ limitations under the License.
 package eks
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -157,7 +159,7 @@ type getCallerIdentityWrapper struct {
 // Generator provides new tokens for the AWS IAM Authenticator.
 type Generator interface {
 	// GetWithSTS returns a token valid for clusterID using the given STS client.
-	GetWithSTS(clusterID string, stsAPI *sts.STS) (Token, error)
+	GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts.STS) (Token, error)
 }
 
 type generator struct {
@@ -174,9 +176,10 @@ func NewGenerator(forwardSessionName bool, cache bool) (Generator, error) {
 }
 
 // GetWithSTS returns a token valid for clusterID using the given STS client.
-func (g generator) GetWithSTS(clusterID string, stsAPI *sts.STS) (Token, error) {
+func (g generator) GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts.STS) (Token, error) {
 	// generate an sts:GetCallerIdentity request and add our custom cluster ID header
 	request, _ := stsAPI.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
+	request.SetContext(ctx)
 	request.HTTPRequest.Header.Add(clusterIDHeader, clusterID)
 
 	// Sign the request.  The expires parameter (sets the x-amz-expires header) is

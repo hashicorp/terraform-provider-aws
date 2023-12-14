@@ -22,16 +22,13 @@ github_actions:
   - '.github/*.yml'
   - '.github/workflows/*.yml'
 linter:
+  - '.ci/**/*'
   - '.github/workflows/acctest-terraform-lint.yml'
-  - '.github/workflows/terraform_provider.yml'
+  - '.github/workflows/providerlint.yml'
+  - '.github/workflows/semgrep-ci.yml'
+  - '.github/workflows/provider.yml'
   - '.github/workflows/website.yml'
-  - '.golangci.yml'
-  - '.markdownlinkcheck.json'
-  - '.markdownlint.yml'
-  - '.semgrep.yml'
-  - '.tflint.hcl'
-  - 'providerlint/**/*'
-  - 'staticcheck.conf'
+  - '.github/workflows/workflow-lint.yml'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'
@@ -112,6 +109,9 @@ service/appconfig:
 service/appconfigdata:
   - 'internal/service/appconfigdata/**/*'
   - 'website/**/appconfigdata_*'
+service/appfabric:
+  - 'internal/service/appfabric/**/*'
+  - 'website/**/appfabric_*'
 service/appflow:
   - 'internal/service/appflow/**/*'
   - 'website/**/appflow_*'
@@ -158,6 +158,9 @@ service/backupgateway:
 service/batch:
   - 'internal/service/batch/**/*'
   - 'website/**/batch_*'
+service/bedrock:
+  - 'internal/service/bedrock/**/*'
+  - 'website/**/bedrock_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
@@ -176,12 +179,21 @@ service/chime:
 service/chimesdkidentity:
   - 'internal/service/chimesdkidentity/**/*'
   - 'website/**/chimesdkidentity_*'
+service/chimesdkmediapipelines:
+  - 'internal/service/chimesdkmediapipelines/**/*'
+  - 'website/**/chimesdkmediapipelines_*'
 service/chimesdkmeetings:
   - 'internal/service/chimesdkmeetings/**/*'
   - 'website/**/chimesdkmeetings_*'
 service/chimesdkmessaging:
   - 'internal/service/chimesdkmessaging/**/*'
   - 'website/**/chimesdkmessaging_*'
+service/chimesdkvoice:
+  - 'internal/service/chimesdkvoice/**/*'
+  - 'website/**/chimesdkvoice_*'
+service/cleanrooms:
+  - 'internal/service/cleanrooms/**/*'
+  - 'website/**/cleanrooms_*'
 service/cloud9:
   - 'internal/service/cloud9/**/*'
   - 'website/**/cloud9_*'
@@ -220,6 +232,9 @@ service/codeartifact:
 service/codebuild:
   - 'internal/service/codebuild/**/*'
   - 'website/**/codebuild_*'
+service/codecatalyst:
+  - 'internal/service/codecatalyst/**/*'
+  - 'website/**/codecatalyst_*'
 service/codecommit:
   - 'internal/service/codecommit/**/*'
   - 'website/**/codecommit_*'
@@ -247,8 +262,10 @@ service/cognitoidentity:
 service/cognitoidp:
   - 'internal/service/cognitoidp/**/*'
   - 'website/**/cognito_identity_provider*'
+  - 'website/**/cognito_managed_user*'
   - 'website/**/cognito_resource_*'
   - 'website/**/cognito_user*'
+  - 'website/**/cognito_risk*'
 service/cognitosync:
   - 'internal/service/cognitosync/**/*'
   - 'website/**/cognitosync_*'
@@ -267,12 +284,18 @@ service/configservice:
 service/connect:
   - 'internal/service/connect/**/*'
   - 'website/**/connect_*'
+service/connectcases:
+  - 'internal/service/connectcases/**/*'
+  - 'website/**/connectcases_*'
 service/connectcontactlens:
   - 'internal/service/connectcontactlens/**/*'
   - 'website/**/connectcontactlens_*'
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -321,6 +344,9 @@ service/dms:
 service/docdb:
   - 'internal/service/docdb/**/*'
   - 'website/**/docdb_*'
+service/docdbelastic:
+  - 'internal/service/docdbelastic/**/*'
+  - 'website/**/docdbelastic_*'
 service/drs:
   - 'internal/service/drs/**/*'
   - 'website/**/drs_*'
@@ -344,7 +370,9 @@ service/ec2:
   - 'website/**/ec2_capacity_*'
   - 'website/**/ec2_fleet*'
   - 'website/**/ec2_host*'
+  - 'website/**/ec2_image_*'
   - 'website/**/ec2_instance_*'
+  - 'website/**/ec2_public_ipv4_pool*'
   - 'website/**/ec2_serial_*'
   - 'website/**/ec2_spot_*'
   - 'website/**/ec2_tag*'
@@ -406,15 +434,20 @@ service/elb:
   - 'website/**/proxy_protocol_policy*'
 service/elbv2:
   - 'internal/service/elbv2/**/*'
-  - 'website/**/lb\.*'
+  - 'website/**/lbs?\.*'
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
+  - 'website/**/lb_hosted*'
+  - 'website/**/lb_trust_store*'
 service/emr:
   - 'internal/service/emr/**/*'
   - 'website/**/emr_*'
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
+service/emrserverless:
+  - 'internal/service/emrserverless/**/*'
+  - 'website/**/emrserverless_*'
 service/events:
   - 'internal/service/events/**/*'
   - 'website/**/cloudwatch_event_*'
@@ -499,6 +532,9 @@ service/inspector:
 service/inspector2:
   - 'internal/service/inspector2/**/*'
   - 'website/**/inspector2_*'
+service/internetmonitor:
+  - 'internal/service/internetmonitor/**/*'
+  - 'website/**/internetmonitor_*'
 service/iot:
   - 'internal/service/iot/**/*'
   - 'website/**/iot_*'
@@ -550,6 +586,9 @@ service/ipam:
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
+service/ivschat:
+  - 'internal/service/ivschat/**/*'
+  - 'website/**/ivschat_*'
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
@@ -595,15 +634,15 @@ service/lambda:
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
-service/lexmodelsv2:
-  - 'internal/service/lexmodelsv2/**/*'
-  - 'website/**/lexmodelsv2_*'
 service/lexruntime:
   - 'internal/service/lexruntime/**/*'
   - 'website/**/lexruntime_*'
 service/lexruntimev2:
   - 'internal/service/lexruntimev2/**/*'
   - 'website/**/lexruntimev2_*'
+service/lexv2models:
+  - 'internal/service/lexv2models/**/*'
+  - 'website/**/lexv2models_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
   - 'website/**/licensemanager_*'
@@ -652,16 +691,19 @@ service/marketplacemetering:
   - 'website/**/marketplacemetering_*'
 service/mediaconnect:
   - 'internal/service/mediaconnect/**/*'
-  - 'website/**/media_connect_*'
+  - 'website/**/mediaconnect_*'
 service/mediaconvert:
   - 'internal/service/mediaconvert/**/*'
   - 'website/**/media_convert_*'
 service/medialive:
   - 'internal/service/medialive/**/*'
-  - 'website/**/media_live_*'
+  - 'website/**/medialive_*'
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
+service/mediapackagev2:
+  - 'internal/service/mediapackagev2/**/*'
+  - 'website/**/media_packagev2_*'
 service/mediapackagevod:
   - 'internal/service/mediapackagevod/**/*'
   - 'website/**/mediapackagevod_*'
@@ -725,9 +767,15 @@ service/networkmanager:
 service/nimble:
   - 'internal/service/nimble/**/*'
   - 'website/**/nimble_*'
+service/oam:
+  - 'internal/service/oam/**/*'
+  - 'website/**/oam_*'
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
+service/opensearchserverless:
+  - 'internal/service/opensearchserverless/**/*'
+  - 'website/**/opensearchserverless_*'
 service/opsworks:
   - 'internal/service/opsworks/**/*'
   - 'website/**/opsworks_*'
@@ -737,6 +785,9 @@ service/opsworkscm:
 service/organizations:
   - 'internal/service/organizations/**/*'
   - 'website/**/organizations_*'
+service/osis:
+  - 'internal/service/osis/**/*'
+  - 'website/**/osis_*'
 service/outposts:
   - 'internal/service/outposts/**/*'
   - 'website/**/outposts_*'
@@ -764,6 +815,9 @@ service/pinpointemail:
 service/pinpointsmsvoice:
   - 'internal/service/pinpointsmsvoice/**/*'
   - 'website/**/pinpointsmsvoice_*'
+service/pipes:
+  - 'internal/service/pipes/**/*'
+  - 'website/**/pipes_*'
 service/polly:
   - 'internal/service/polly/**/*'
   - 'website/**/polly_*'
@@ -801,12 +855,18 @@ service/redshift:
 service/redshiftdata:
   - 'internal/service/redshiftdata/**/*'
   - 'website/**/redshiftdata_*'
+service/redshiftserverless:
+  - 'internal/service/redshiftserverless/**/*'
+  - 'website/**/redshiftserverless_*'
 service/rekognition:
   - 'internal/service/rekognition/**/*'
   - 'website/**/rekognition_*'
 service/resiliencehub:
   - 'internal/service/resiliencehub/**/*'
   - 'website/**/resiliencehub_*'
+service/resourceexplorer2:
+  - 'internal/service/resourceexplorer2/**/*'
+  - 'website/**/resourceexplorer2_*'
 service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
@@ -816,8 +876,12 @@ service/resourcegroupstaggingapi:
 service/robomaker:
   - 'internal/service/robomaker/**/*'
   - 'website/**/robomaker_*'
+service/rolesanywhere:
+  - 'internal/service/rolesanywhere/**/*'
+  - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
+  - 'website/**/route53_cidr_*'
   - 'website/**/route53_delegation_*'
   - 'website/**/route53_health_*'
   - 'website/**/route53_hosted_*'
@@ -848,6 +912,7 @@ service/rum:
 service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
+  - 'website/**/s3_directory_bucket*'
   - 'website/**/s3_object*'
   - 'website/**/canonical_user_id*'
 service/s3control:
@@ -876,6 +941,9 @@ service/sagemakerruntime:
 service/savingsplans:
   - 'internal/service/savingsplans/**/*'
   - 'website/**/savingsplans_*'
+service/scheduler:
+  - 'internal/service/scheduler/**/*'
+  - 'website/**/scheduler_*'
 service/schemas:
   - 'internal/service/schemas/**/*'
   - 'website/**/schemas_*'
@@ -885,6 +953,9 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
+service/securitylake:
+  - 'internal/service/securitylake/**/*'
+  - 'website/**/securitylake_*'
 service/serverlessrepo:
   - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
@@ -990,6 +1061,12 @@ service/transitgateway:
 service/translate:
   - 'internal/service/translate/**/*'
   - 'website/**/translate_*'
+service/verifiedaccess:
+  - 'internal/service/ec2/**/verifiedaccess_*'
+  - 'website/**/verifiedaccess_*'
+service/verifiedpermissions:
+  - 'internal/service/verifiedpermissions/**/*'
+  - 'website/**/verifiedpermissions_*'
 service/voiceid:
   - 'internal/service/voiceid/**/*'
   - 'website/**/voiceid_*'
@@ -1018,9 +1095,14 @@ service/vpc:
   - 'website/**/vpc_dhcp_*'
   - 'website/**/vpc_endpoint*'
   - 'website/**/vpc_ipv*'
+  - 'website/**/vpc_network_performance*'
   - 'website/**/vpc_peering_*'
+  - 'website/**/vpc_security_group_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'
+service/vpclattice:
+  - 'internal/service/vpclattice/**/*'
+  - 'website/**/vpclattice_*'
 service/vpnclient:
   - 'internal/service/ec2/**/vpnclient_*'
   - 'website/**/ec2_client_vpn_*'

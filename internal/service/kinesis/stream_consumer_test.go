@@ -1,14 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
@@ -16,21 +20,22 @@ import (
 )
 
 func TestAccKinesisStreamConsumer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStreamConsumerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamConsumerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
+					testAccStreamConsumerExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "stream_arn", streamName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
@@ -46,20 +51,21 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 }
 
 func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_stream_consumer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkinesis.ResourceStreamConsumer(), resourceName),
+					testAccStreamConsumerExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesis.ResourceStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,24 +74,25 @@ func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
 }
 
 func TestAccKinesisStreamConsumer_maxConcurrentConsumers(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_stream_consumer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStreamConsumerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamConsumerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				// Test creation of max number (5 according to AWS API docs) of concurrent consumers for a single stream
 				Config: testAccStreamConsumerConfig_multiple(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.0", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.1", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.2", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.3", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.4", resourceName)),
 				),
 			},
 		},
@@ -93,62 +100,65 @@ func TestAccKinesisStreamConsumer_maxConcurrentConsumers(t *testing.T) {
 }
 
 func TestAccKinesisStreamConsumer_exceedMaxConcurrentConsumers(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_kinesis_stream_consumer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStreamConsumerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamConsumerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				// Test creation of more than the max number (5 according to AWS API docs) of concurrent consumers for a single stream
 				Config: testAccStreamConsumerConfig_multiple(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.5", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.6", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.7", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.8", resourceName)),
-					testAccStreamConsumerExists(fmt.Sprintf("%s.9", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.0", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.1", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.2", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.3", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.4", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.5", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.6", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.7", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.8", resourceName)),
+					testAccStreamConsumerExists(ctx, fmt.Sprintf("%s.9", resourceName)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckStreamConsumerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+func testAccCheckStreamConsumerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kinesis_stream_consumer" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_kinesis_stream_consumer" {
+				continue
+			}
+
+			_, err := tfkinesis.FindStreamConsumerByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Kinesis Stream Consumer %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfkinesis.FindStreamConsumerByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Kinesis Stream Consumer %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccStreamConsumerExists(n string) resource.TestCheckFunc {
+func testAccStreamConsumerExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,13 +169,9 @@ func testAccStreamConsumerExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Kinesis Stream Consumer ID is set")
 		}
 
-		_, err := tfkinesis.FindStreamConsumerByARN(conn, rs.Primary.ID)
+		_, err := tfkinesis.FindStreamConsumerByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,43 +8,45 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLsDataSourceConfig_basic(rName),
+				Config: testAccVPCNetworkACLsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 1),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLsDataSourceConfig_Filter(rName),
+				Config: testAccVPCNetworkACLsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
@@ -50,18 +55,19 @@ func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLsDataSourceConfig_Tags(rName),
+				Config: testAccVPCNetworkACLsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
@@ -70,18 +76,19 @@ func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_vpcID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLsDataSourceConfig_VPCID(rName),
+				Config: testAccVPCNetworkACLsDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// The VPC will have a default network ACL
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
@@ -91,18 +98,19 @@ func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_empty(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkACLsDataSourceConfig_Empty(rName),
+				Config: testAccVPCNetworkACLsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
 				),
@@ -133,7 +141,7 @@ resource "aws_network_acl" "test" {
 `, rName)
 }
 
-func testAccNetworkACLsDataSourceConfig_basic(rName string) string {
+func testAccVPCNetworkACLsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
   depends_on = [aws_network_acl.test[0], aws_network_acl.test[1]]
@@ -141,7 +149,7 @@ data "aws_network_acls" "test" {
 `)
 }
 
-func testAccNetworkACLsDataSourceConfig_Filter(rName string) string {
+func testAccVPCNetworkACLsDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
   filter {
@@ -154,7 +162,7 @@ data "aws_network_acls" "test" {
 `)
 }
 
-func testAccNetworkACLsDataSourceConfig_Tags(rName string) string {
+func testAccVPCNetworkACLsDataSourceConfig_tags(rName string) string {
 	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
   tags = {
@@ -166,7 +174,7 @@ data "aws_network_acls" "test" {
 `)
 }
 
-func testAccNetworkACLsDataSourceConfig_VPCID(rName string) string {
+func testAccVPCNetworkACLsDataSourceConfig_id(rName string) string {
 	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
   vpc_id = aws_network_acl.test[0].vpc_id
@@ -176,7 +184,7 @@ data "aws_network_acls" "test" {
 `)
 }
 
-func testAccNetworkACLsDataSourceConfig_Empty(rName string) string {
+func testAccVPCNetworkACLsDataSourceConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 data "aws_network_acls" "test" {
   tags = {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -6,11 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDynamoDBKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) (*dynamodb.KinesisDataStreamDestination, error) {
+func FindKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) (*dynamodb.KinesisDataStreamDestination, error) {
 	input := &dynamodb.DescribeKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),
 	}
@@ -41,50 +44,53 @@ func FindDynamoDBKinesisDataStreamDestination(ctx context.Context, conn *dynamod
 	return result, nil
 }
 
-func FindDynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func FindTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(name),
 	}
 
-	output, err := conn.DescribeTable(input)
+	output, err := conn.DescribeTableWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Table, nil
 }
 
-func FindDynamoDBGSIByTableNameIndexName(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
-	table, err := FindDynamoDBTableByName(conn, tableName)
+func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+	table, err := FindTableByName(ctx, conn, tableName)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if table == nil {
-		return nil, nil
-	}
-
-	for _, gsi := range table.GlobalSecondaryIndexes {
-		if aws.StringValue(gsi.IndexName) == indexName {
-			return gsi, nil
+	for _, v := range table.GlobalSecondaryIndexes {
+		if aws.StringValue(v.IndexName) == indexName {
+			return v, nil
 		}
 	}
 
-	return nil, nil
+	return nil, &retry.NotFoundError{}
 }
 
-func FindDynamoDBPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
+func findPITRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) (*dynamodb.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeContinuousBackups(input)
+	output, err := conn.DescribeContinuousBackupsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -101,12 +107,12 @@ func FindDynamoDBPITRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName s
 	return output.ContinuousBackupsDescription.PointInTimeRecoveryDescription, nil
 }
 
-func FindDynamoDBTTLRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
+func findTTLRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TimeToLiveDescription, error) {
 	input := &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeTimeToLive(input)
+	output, err := conn.DescribeTimeToLiveWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -135,7 +141,7 @@ func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, table
 	output, err := conn.DescribeContributorInsightsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -146,7 +152,7 @@ func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, table
 	}
 
 	if status := aws.StringValue(output.ContributorInsightsStatus); status == dynamodb.ContributorInsightsStatusDisabled {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}

@@ -22,17 +22,25 @@ data "aws_iam_role" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly IAM role name to match.
+* `name` - (Required) Friendly IAM role name to match.
 
-## Attributes Reference
+## Attribute Reference
 
-* `id` - The friendly IAM role name to match.
-* `arn` - The Amazon Resource Name (ARN) specifying the role.
-* `assume_role_policy` - The policy document associated with the role.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - Friendly IAM role name to match.
+* `arn` - ARN of the role.
+* `assume_role_policy` - Policy document associated with the role.
 * `create_date` - Creation date of the role in RFC 3339 format.
 * `description` - Description for the role.
 * `max_session_duration` - Maximum session duration.
-* `path` - The path to the role.
+* `path` - Path to the role.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the role.
-* `unique_id` - The stable and unique string identifying the role.
-* `tags` - The tags attached to the role.
+* `role_last_used` - Contains information about the last time that an IAM role was used. See [`role_last_used`](#role_last_used) for details.
+* `unique_id` - Stable and unique string identifying the role.
+* `tags` - Tags attached to the role.
+
+### role_last_used
+
+* `region` - The name of the AWS Region in which the role was last used.
+* `last_used_date` - The date and time, in RFC 3339 format, that the role was last used.

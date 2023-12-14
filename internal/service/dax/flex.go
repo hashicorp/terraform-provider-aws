@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax
 
 import (
@@ -31,7 +34,7 @@ func expandParameterGroupParameterNameValue(config []interface{}) []*dax.Paramet
 	return results
 }
 
-func flattenDAXEncryptAtRestOptions(options *dax.SSEDescription) []map[string]interface{} {
+func flattenEncryptAtRestOptions(options *dax.SSEDescription) []map[string]interface{} {
 	m := map[string]interface{}{
 		"enabled": false,
 	}
@@ -45,7 +48,7 @@ func flattenDAXEncryptAtRestOptions(options *dax.SSEDescription) []map[string]in
 	return []map[string]interface{}{m}
 }
 
-func flattenDAXParameterGroupParameters(params []*dax.Parameter) []map[string]interface{} {
+func flattenParameterGroupParameters(params []*dax.Parameter) []map[string]interface{} {
 	if len(params) == 0 {
 		return nil
 	}
@@ -60,7 +63,7 @@ func flattenDAXParameterGroupParameters(params []*dax.Parameter) []map[string]in
 	return results
 }
 
-func flattenDAXSecurityGroupIDs(securityGroups []*dax.SecurityGroupMembership) []string {
+func flattenSecurityGroupIDs(securityGroups []*dax.SecurityGroupMembership) []string {
 	result := make([]string, 0, len(securityGroups))
 	for _, sg := range securityGroups {
 		if sg.SecurityGroupIdentifier != nil {

@@ -1,34 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/appsync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAppSyncApiCache_basic(t *testing.T) {
+func testAccAPICache_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApiCacheDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncApiCacheBasicConfig(rName),
+				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApiCacheExists(resourceName, &apiCache),
+					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "api_caching_behavior", "FULL_REQUEST_CACHING"),
@@ -43,22 +48,23 @@ func testAccAppSyncApiCache_basic(t *testing.T) {
 	})
 }
 
-func testAccAppSyncApiCache_disappears(t *testing.T) {
+func testAccAPICache_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApiCacheDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncApiCacheBasicConfig(rName),
+				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApiCacheExists(resourceName, &apiCache),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
+					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,37 +72,37 @@ func testAccAppSyncApiCache_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckApiCacheDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appsync_api_cache" {
-			continue
-		}
-
-		_, err := tfappsync.FindApiCacheByID(conn, rs.Primary.ID)
-		if err == nil {
-			if tfresource.NotFound(err) {
-				return nil
+func testAccCheckAPICacheDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appsync_api_cache" {
+				continue
 			}
-			return err
+
+			_, err := tfappsync.FindAPICacheByID(ctx, conn, rs.Primary.ID)
+			if err == nil {
+				if tfresource.NotFound(err) {
+					return nil
+				}
+				return err
+			}
+
+			return nil
 		}
-
 		return nil
-
 	}
-	return nil
 }
 
-func testAccCheckApiCacheExists(resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
+func testAccCheckAPICacheExists(ctx context.Context, resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Api Cache Not found in state: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-		cache, err := tfappsync.FindApiCacheByID(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		cache, err := tfappsync.FindAPICacheByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -107,7 +113,7 @@ func testAccCheckApiCacheExists(resourceName string, apiCache *appsync.ApiCache)
 	}
 }
 
-func testAccAppsyncApiCacheBasicConfig(rName string) string {
+func testAccAPICacheConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"

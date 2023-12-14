@@ -1,28 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_datasource")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDataSourceCreate,
-		Read:   resourceDataSourceRead,
-		Update: resourceDataSourceUpdate,
-		Delete: resourceDataSourceDelete,
+		CreateWithoutTimeout: resourceDataSourceCreate,
+		ReadWithoutTimeout:   resourceDataSourceRead,
+		UpdateWithoutTimeout: resourceDataSourceUpdate,
+		DeleteWithoutTimeout: resourceDataSourceDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,18 +40,9 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`), "must match [_A-Za-z][_0-9A-Za-z]*"),
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appsync.DataSourceType_Values(), true),
-				StateFunc: func(v interface{}) string {
-					return strings.ToUpper(v.(string))
-				},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -53,23 +54,6 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"table_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"use_caller_credentials": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"versioned": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
 						"delta_sync_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -91,9 +75,26 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"use_caller_credentials": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"versioned": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
-				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config", "opensearchservice_config"},
 			},
 			"elasticsearch_config": {
 				Type:     schema.TypeList,
@@ -101,18 +102,33 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
+					},
+				},
+				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "opensearchservice_config"},
+			},
+			"event_bridge_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"event_bus_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
 			},
 			"http_config": {
 				Type:     schema.TypeList,
@@ -120,10 +136,6 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"authorization_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -156,9 +168,13 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "lambda_config", "relational_database_config"},
 			},
 			"lambda_config": {
 				Type:     schema.TypeList,
@@ -173,7 +189,31 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "relational_database_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "relational_database_config"},
+			},
+			"opensearchservice_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
 			},
 			"relational_database_config": {
 				Type:     schema.TypeList,
@@ -181,22 +221,12 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      appsync.RelationalDatabaseSourceTypeRdsHttpEndpoint,
-							ValidateFunc: validation.StringInSlice(appsync.RelationalDatabaseSourceType_Values(), true),
-						},
 						"http_endpoint_config": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"db_cluster_identifier": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"aws_secret_store_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -205,6 +235,10 @@ func ResourceDataSource() *schema.Resource {
 									"database_name": {
 										Type:     schema.TypeString,
 										Optional: true,
+									},
+									"db_cluster_identifier": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"region": {
 										Type:     schema.TypeString,
@@ -218,30 +252,42 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
+						"source_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      appsync.RelationalDatabaseSourceTypeRdsHttpEndpoint,
+							ValidateFunc: validation.StringInSlice(appsync.RelationalDatabaseSourceType_Values(), true),
+						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 			},
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(appsync.DataSourceType_Values(), true),
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
 			},
 		},
 	}
 }
 
-func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
+	name := d.Get("name").(string)
 	input := &appsync.CreateDataSourceInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
-		Name:  aws.String(d.Get("name").(string)),
+		Name:  aws.String(name),
 		Type:  aws.String(d.Get("type").(string)),
 	}
 
@@ -250,104 +296,110 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("dynamodb_config"); ok {
-		input.DynamodbConfig = expandAppsyncDynamodbDataSourceConfig(v.([]interface{}), region)
+		input.DynamodbConfig = expandDynamoDBDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("elasticsearch_config"); ok {
-		input.ElasticsearchConfig = expandAppsyncElasticsearchDataSourceConfig(v.([]interface{}), region)
+		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
+	}
+
+	if v, ok := d.GetOk("event_bridge_config"); ok {
+		input.EventBridgeConfig = expandEventBridgeDataSourceConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
-		input.HttpConfig = expandAppsyncHTTPDataSourceConfig(v.([]interface{}))
+		input.HttpConfig = expandHTTPDataSourceConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("lambda_config"); ok {
-		input.LambdaConfig = expandAppsyncLambdaDataSourceConfig(v.([]interface{}))
+		input.LambdaConfig = expandLambdaDataSourceConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("opensearchservice_config"); ok {
+		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]interface{}), region)
+	}
+
+	if v, ok := d.GetOk("relational_database_config"); ok {
+		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("service_role_arn"); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("relational_database_config"); ok {
-		input.RelationalDatabaseConfig = expandAppsyncRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
-	}
+	_, err := conn.CreateDataSourceWithContext(ctx, input)
 
-	_, err := conn.CreateDataSource(input)
 	if err != nil {
-		return fmt.Errorf("error creating Appsync Datasource: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync Data Source (%s): %s", name, err)
 	}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("name").(string))
 
-	return resourceDataSourceRead(d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &appsync.GetDataSourceInput{
-		ApiId: aws.String(apiID),
-		Name:  aws.String(name),
+	dataSource, err := FindDataSourceByTwoPartKey(ctx, conn, apiID, name)
+
+	if tfresource.NotFound(err) && !d.IsNewResource() {
+		log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	resp, err := conn.GetDataSource(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
-			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
-
-	dataSource := resp.DataSource
 
 	d.Set("api_id", apiID)
 	d.Set("arn", dataSource.DataSourceArn)
 	d.Set("description", dataSource.Description)
-
-	if err := d.Set("dynamodb_config", flattenAppsyncDynamodbDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
-		return fmt.Errorf("error setting dynamodb_config: %w", err)
+	if err := d.Set("dynamodb_config", flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dynamodb_config: %s", err)
 	}
-
-	if err := d.Set("elasticsearch_config", flattenAppsyncElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
-		return fmt.Errorf("error setting elasticsearch_config: %w", err)
+	if err := d.Set("elasticsearch_config", flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting elasticsearch_config: %s", err)
 	}
-
-	if err := d.Set("http_config", flattenAppsyncHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
-		return fmt.Errorf("error setting http_config: %w", err)
+	if err := d.Set("event_bridge_config", flattenEventBridgeDataSourceConfig(dataSource.EventBridgeConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting event_bridge_config: %s", err)
 	}
-
-	if err := d.Set("lambda_config", flattenAppsyncLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
-		return fmt.Errorf("error setting lambda_config: %w", err)
+	if err := d.Set("http_config", flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting http_config: %s", err)
 	}
-
-	if err := d.Set("relational_database_config", flattenAppsyncRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
-		return fmt.Errorf("error setting relational_database_config: %w", err)
+	if err := d.Set("lambda_config", flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lambda_config: %s", err)
 	}
-
 	d.Set("name", dataSource.Name)
+	if err := d.Set("opensearchservice_config", flattenOpenSearchServiceDataSourceConfig(dataSource.OpenSearchServiceConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting opensearchservice_config: %s", err)
+	}
+	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
+	}
 	d.Set("service_role_arn", dataSource.ServiceRoleArn)
 	d.Set("type", dataSource.Type)
 
-	return nil
+	return diags
 }
 
-func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &appsync.UpdateDataSourceInput{
@@ -361,43 +413,50 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("dynamodb_config"); ok {
-		input.DynamodbConfig = expandAppsyncDynamodbDataSourceConfig(v.([]interface{}), region)
+		input.DynamodbConfig = expandDynamoDBDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("elasticsearch_config"); ok {
-		input.ElasticsearchConfig = expandAppsyncElasticsearchDataSourceConfig(v.([]interface{}), region)
+		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
-		input.HttpConfig = expandAppsyncHTTPDataSourceConfig(v.([]interface{}))
+		input.HttpConfig = expandHTTPDataSourceConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("lambda_config"); ok {
-		input.LambdaConfig = expandAppsyncLambdaDataSourceConfig(v.([]interface{}))
+		input.LambdaConfig = expandLambdaDataSourceConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("opensearchservice_config"); ok {
+		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]interface{}), region)
+	}
+
+	if v, ok := d.GetOk("relational_database_config"); ok {
+		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("service_role_arn"); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("relational_database_config"); ok {
-		input.RelationalDatabaseConfig = expandAppsyncRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
+	_, err = conn.UpdateDataSourceWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.UpdateDataSource(input)
-	if err != nil {
-		return err
-	}
-	return resourceDataSourceRead(d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &appsync.DeleteDataSourceInput{
@@ -405,15 +464,43 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 		Name:  aws.String(name),
 	}
 
-	_, err = conn.DeleteDataSource(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
-		}
-		return err
+	_, err = conn.DeleteDataSourceWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync Data Source (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func FindDataSourceByTwoPartKey(ctx context.Context, conn *appsync.AppSync, apiID, name string) (*appsync.DataSource, error) {
+	input := &appsync.GetDataSourceInput{
+		ApiId: aws.String(apiID),
+		Name:  aws.String(name),
+	}
+
+	output, err := conn.GetDataSourceWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DataSource == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DataSource, nil
 }
 
 func DecodeID(id string) (string, string, error) {
@@ -424,7 +511,7 @@ func DecodeID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func expandAppsyncDynamodbDataSourceConfig(l []interface{}, currentRegion string) *appsync.DynamodbDataSourceConfig {
+func expandDynamoDBDataSourceConfig(l []interface{}, currentRegion string) *appsync.DynamodbDataSourceConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -449,13 +536,13 @@ func expandAppsyncDynamodbDataSourceConfig(l []interface{}, currentRegion string
 	}
 
 	if v, ok := configured["delta_sync_config"].([]interface{}); ok && len(v) > 0 {
-		result.DeltaSyncConfig = expandAppsyncDynamodbDataSourceDeltaSyncConfig(v)
+		result.DeltaSyncConfig = expandDynamoDBDataSourceDeltaSyncConfig(v)
 	}
 
 	return result
 }
 
-func expandAppsyncDynamodbDataSourceDeltaSyncConfig(l []interface{}) *appsync.DeltaSyncConfig {
+func expandDynamoDBDataSourceDeltaSyncConfig(l []interface{}) *appsync.DeltaSyncConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -479,7 +566,7 @@ func expandAppsyncDynamodbDataSourceDeltaSyncConfig(l []interface{}) *appsync.De
 	return result
 }
 
-func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceConfig) []map[string]interface{} {
+func flattenDynamoDBDataSourceConfig(config *appsync.DynamodbDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -498,13 +585,13 @@ func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceCo
 	}
 
 	if config.DeltaSyncConfig != nil {
-		result["delta_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
+		result["delta_sync_config"] = flattenDynamoDBDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config *appsync.DeltaSyncConfig) []map[string]interface{} {
+func flattenDynamoDBDataSourceDeltaSyncConfig(config *appsync.DeltaSyncConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -526,7 +613,7 @@ func flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config *appsync.DeltaSyncCo
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncElasticsearchDataSourceConfig(l []interface{}, currentRegion string) *appsync.ElasticsearchDataSourceConfig {
+func expandElasticsearchDataSourceConfig(l []interface{}, currentRegion string) *appsync.ElasticsearchDataSourceConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -545,7 +632,26 @@ func expandAppsyncElasticsearchDataSourceConfig(l []interface{}, currentRegion s
 	return result
 }
 
-func flattenAppsyncElasticsearchDataSourceConfig(config *appsync.ElasticsearchDataSourceConfig) []map[string]interface{} {
+func expandOpenSearchServiceDataSourceConfig(l []interface{}, currentRegion string) *appsync.OpenSearchServiceDataSourceConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.OpenSearchServiceDataSourceConfig{
+		AwsRegion: aws.String(currentRegion),
+		Endpoint:  aws.String(configured["endpoint"].(string)),
+	}
+
+	if v, ok := configured["region"]; ok && v.(string) != "" {
+		result.AwsRegion = aws.String(v.(string))
+	}
+
+	return result
+}
+
+func flattenElasticsearchDataSourceConfig(config *appsync.ElasticsearchDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -558,7 +664,20 @@ func flattenAppsyncElasticsearchDataSourceConfig(config *appsync.ElasticsearchDa
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceConfig {
+func flattenOpenSearchServiceDataSourceConfig(config *appsync.OpenSearchServiceDataSourceConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"endpoint": aws.StringValue(config.Endpoint),
+		"region":   aws.StringValue(config.AwsRegion),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func expandHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -570,13 +689,13 @@ func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceC
 	}
 
 	if v, ok := configured["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		result.AuthorizationConfig = expandAppsyncHTTPDataSourceAuthorizationConfig(v)
+		result.AuthorizationConfig = expandHTTPDataSourceAuthorizationConfig(v)
 	}
 
 	return result
 }
 
-func flattenAppsyncHTTPDataSourceConfig(config *appsync.HttpDataSourceConfig) []map[string]interface{} {
+func flattenHTTPDataSourceConfig(config *appsync.HttpDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -586,13 +705,13 @@ func flattenAppsyncHTTPDataSourceConfig(config *appsync.HttpDataSourceConfig) []
 	}
 
 	if config.AuthorizationConfig != nil {
-		result["authorization_config"] = flattenAppsyncHTTPDataSourceAuthorizationConfig(config.AuthorizationConfig)
+		result["authorization_config"] = flattenHTTPDataSourceAuthorizationConfig(config.AuthorizationConfig)
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncHTTPDataSourceAuthorizationConfig(l []interface{}) *appsync.AuthorizationConfig {
+func expandHTTPDataSourceAuthorizationConfig(l []interface{}) *appsync.AuthorizationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -604,13 +723,13 @@ func expandAppsyncHTTPDataSourceAuthorizationConfig(l []interface{}) *appsync.Au
 	}
 
 	if v, ok := configured["aws_iam_config"].([]interface{}); ok && len(v) > 0 {
-		result.AwsIamConfig = expandAppsyncHTTPDataSourceAwsIamConfig(v)
+		result.AwsIamConfig = expandHTTPDataSourceIAMConfig(v)
 	}
 
 	return result
 }
 
-func flattenAppsyncHTTPDataSourceAuthorizationConfig(config *appsync.AuthorizationConfig) []map[string]interface{} {
+func flattenHTTPDataSourceAuthorizationConfig(config *appsync.AuthorizationConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -620,13 +739,13 @@ func flattenAppsyncHTTPDataSourceAuthorizationConfig(config *appsync.Authorizati
 	}
 
 	if config.AwsIamConfig != nil {
-		result["aws_iam_config"] = flattenAppsyncHTTPDataSourceAwsIamConfig(config.AwsIamConfig)
+		result["aws_iam_config"] = flattenHTTPDataSourceIAMConfig(config.AwsIamConfig)
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncHTTPDataSourceAwsIamConfig(l []interface{}) *appsync.AwsIamConfig {
+func expandHTTPDataSourceIAMConfig(l []interface{}) *appsync.AwsIamConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -646,7 +765,7 @@ func expandAppsyncHTTPDataSourceAwsIamConfig(l []interface{}) *appsync.AwsIamCon
 	return result
 }
 
-func flattenAppsyncHTTPDataSourceAwsIamConfig(config *appsync.AwsIamConfig) []map[string]interface{} {
+func flattenHTTPDataSourceIAMConfig(config *appsync.AwsIamConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -659,7 +778,7 @@ func flattenAppsyncHTTPDataSourceAwsIamConfig(config *appsync.AwsIamConfig) []ma
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncLambdaDataSourceConfig(l []interface{}) *appsync.LambdaDataSourceConfig {
+func expandLambdaDataSourceConfig(l []interface{}) *appsync.LambdaDataSourceConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -673,7 +792,7 @@ func expandAppsyncLambdaDataSourceConfig(l []interface{}) *appsync.LambdaDataSou
 	return result
 }
 
-func flattenAppsyncLambdaDataSourceConfig(config *appsync.LambdaDataSourceConfig) []map[string]interface{} {
+func flattenLambdaDataSourceConfig(config *appsync.LambdaDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -685,7 +804,7 @@ func flattenAppsyncLambdaDataSourceConfig(config *appsync.LambdaDataSourceConfig
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncRelationalDatabaseDataSourceConfig(l []interface{}, currentRegion string) *appsync.RelationalDatabaseDataSourceConfig {
+func expandRelationalDatabaseDataSourceConfig(l []interface{}, currentRegion string) *appsync.RelationalDatabaseDataSourceConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -694,26 +813,52 @@ func expandAppsyncRelationalDatabaseDataSourceConfig(l []interface{}, currentReg
 
 	result := &appsync.RelationalDatabaseDataSourceConfig{
 		RelationalDatabaseSourceType: aws.String(configured["source_type"].(string)),
-		RdsHttpEndpointConfig:        expandAppsyncRdsHttpEndpointConfig(configured["http_endpoint_config"].([]interface{}), currentRegion),
+		RdsHttpEndpointConfig:        testAccDataSourceConfig_expandRDSHTTPEndpoint(configured["http_endpoint_config"].([]interface{}), currentRegion),
 	}
 
 	return result
 }
 
-func flattenAppsyncRelationalDatabaseDataSourceConfig(config *appsync.RelationalDatabaseDataSourceConfig) []map[string]interface{} {
+func flattenRelationalDatabaseDataSourceConfig(config *appsync.RelationalDatabaseDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 
 	result := map[string]interface{}{
 		"source_type":          aws.StringValue(config.RelationalDatabaseSourceType),
-		"http_endpoint_config": flattenAppsyncRdsHTTPEndpointConfig(config.RdsHttpEndpointConfig),
+		"http_endpoint_config": flattenRDSHTTPEndpointConfig(config.RdsHttpEndpointConfig),
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandAppsyncRdsHttpEndpointConfig(l []interface{}, currentRegion string) *appsync.RdsHttpEndpointConfig {
+func expandEventBridgeDataSourceConfig(l []interface{}) *appsync.EventBridgeDataSourceConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.EventBridgeDataSourceConfig{
+		EventBusArn: aws.String(configured["event_bus_arn"].(string)),
+	}
+
+	return result
+}
+
+func flattenEventBridgeDataSourceConfig(config *appsync.EventBridgeDataSourceConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"event_bus_arn": aws.StringValue(config.EventBusArn),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func testAccDataSourceConfig_expandRDSHTTPEndpoint(l []interface{}, currentRegion string) *appsync.RdsHttpEndpointConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -747,7 +892,7 @@ func expandAppsyncRdsHttpEndpointConfig(l []interface{}, currentRegion string) *
 	return result
 }
 
-func flattenAppsyncRdsHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[string]interface{} {
+func flattenRDSHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
