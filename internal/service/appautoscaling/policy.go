@@ -513,6 +513,14 @@ func ValidPolicyImportInput(id string) ([]string, error) {
 		resourceId = strings.Join(idParts[1:dimensionIx], "/")
 		scalableDimension = idParts[dimensionIx]
 		policyName = strings.Join(idParts[dimensionIx+1:], "/")
+	case "kafka":
+		serviceNamespace = idParts[0]
+		// MSK resource ID contains three sections, separated by '/', so scalableDimension is at index 4
+		dimensionIx := 4
+
+		resourceId = strings.Join(idParts[1:dimensionIx], "/")
+		scalableDimension = idParts[dimensionIx]
+		policyName = strings.Join(idParts[dimensionIx+1:], "/")
 	default:
 		serviceNamespace = idParts[0]
 		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
