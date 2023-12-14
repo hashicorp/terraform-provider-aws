@@ -15,6 +15,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 // SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
@@ -207,4 +208,19 @@ func LegacyPolicyToSet(exist, new string) (string, error) {
 	}
 
 	return policyToSet, nil
+}
+
+// SuppressEquivalentJSONRemovingReadOnlyFieldsDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are equivalent once read-only fields have been removed.
+// Read-only fields are those that can't be specified in configuration (returned only from AWS API).
+func SuppressEquivalentJSONRemovingReadOnlyFieldsDiffs(roFields ...string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
+			return old == new
+		}
+
+		old, new = tfjson.RemoveReadOnlyFields(old, roFields...), tfjson.RemoveReadOnlyFields(new, roFields...)
+
+		return JSONStringsEqual(old, new)
+	}
 }
