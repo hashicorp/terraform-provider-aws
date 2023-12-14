@@ -346,7 +346,7 @@ func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, 
 	return nil, err
 }
 
-func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) { //nolint:unparam
+func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxVolumeStatusCreating, types.KxVolumeStatusUpdating),
 		Target:                    enum.Slice(types.KxVolumeStatusActive),
