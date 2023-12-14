@@ -210,16 +210,15 @@ func LegacyPolicyToSet(exist, new string) (string, error) {
 	return policyToSet, nil
 }
 
-// SuppressEquivalentJSONRemovingReadOnlyFieldsDiffs returns a difference suppression function that compares
-// two JSON strings and returns `true` if they are equivalent once read-only fields have been removed.
-// Read-only fields are those that can't be specified in configuration (returned only from AWS API).
-func SuppressEquivalentJSONRemovingReadOnlyFieldsDiffs(roFields ...string) schema.SchemaDiffSuppressFunc {
+// SuppressEquivalentJSONRemovingFieldsDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are equivalent once the specified fields have been removed.
+func SuppressEquivalentJSONRemovingFieldsDiffs(fields ...string) schema.SchemaDiffSuppressFunc {
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
 			return old == new
 		}
 
-		old, new = tfjson.RemoveReadOnlyFields(old, roFields...), tfjson.RemoveReadOnlyFields(new, roFields...)
+		old, new = tfjson.RemoveFields(old, fields...), tfjson.RemoveFields(new, fields...)
 
 		return JSONStringsEqual(old, new)
 	}

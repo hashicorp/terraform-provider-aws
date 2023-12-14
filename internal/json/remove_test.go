@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestRemoveReadOnlyFields(t *testing.T) {
+func TestRemoveFields(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -37,7 +37,7 @@ func TestRemoveReadOnlyFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := RemoveReadOnlyFields(testCase.input, `"plugins"`), testCase.want; got != want {
+			if got, want := RemoveFields(testCase.input, `"plugins"`), testCase.want; got != want {
 				t.Errorf("RemoveReadOnlyFields(%q) = %q, want %q", testCase.input, got, want)
 			}
 		})

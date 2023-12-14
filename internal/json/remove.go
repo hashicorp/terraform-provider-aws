@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/json/ujson"
 )
 
-// RemoveReadOnlyFields removes read-only (can't be specified in configuration) fields from a valid JSON string.
-func RemoveReadOnlyFields(in string, roFields ...string) string {
+// RemoveFields removes the specified fields from a valid JSON string.
+func RemoveFields(in string, fields ...string) string {
 	out := make([]byte, 0, len(in))
 
 	err := ujson.Walk([]byte(in), func(_ int, key, value []byte) bool {
 		if len(key) != 0 {
-			for _, roField := range roFields {
-				if bytes.Equal(key, []byte(roField)) {
+			for _, field := range fields {
+				if bytes.Equal(key, []byte(field)) {
 					// Remove the key and value from the output.
 					return false
 				}
