@@ -608,7 +608,7 @@ func TestAccFinSpaceKxCluster_ScalingGroup(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_InScalingGroupWithKxVolume(t *testing.T) {
+func TestAccFinSpaceKxCluster_RDBInScalingGroupWithKxVolume(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -640,7 +640,7 @@ func TestAccFinSpaceKxCluster_InScalingGroupWithKxVolume(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_InScalingGroupWithKxVolume(t *testing.T) {
+func TestAccFinSpaceKxCluster_TPInScalingGroupWithKxVolume(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -876,36 +876,36 @@ resource "aws_route" "r" {
 
 func testAccKxClusterConfigScalingGroupBase(rName string) string {
 	return fmt.Sprintf(`
-  resource "aws_finspace_kx_scaling_group" "test" {
-    name                 = %[1]q
-    environment_id       = aws_finspace_kx_environment.test.id
-    availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-    host_type            = "kx.sg.4xlarge"
-  }
+resource "aws_finspace_kx_scaling_group" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  host_type            = "kx.sg.4xlarge"
+}
   `, rName)
 }
 
 func testAccKxClusterConfigKxVolumeBase(rName string) string {
 	return fmt.Sprintf(`
-		resource "aws_finspace_kx_volume" "test" {
-			name                 = %[1]q
-			environment_id       = aws_finspace_kx_environment.test.id
-			availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
-			az_mode              = "SINGLE"
-			type                 = "NAS_1"
-			nas1_configuration {
-				type= "SSD_1000"
-				size= 1200
-			}
- 		}
+resource "aws_finspace_kx_volume" "test" {
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+  nas1_configuration {
+    type = "SSD_1000"
+    size = 1200
+  }
+}
 	`, rName)
 }
 
 func testAccKxClusterConfigKxDataviewBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_finspace_kx_database" "test" {
-   name                 = %[1]q
-   environment_id       = aws_finspace_kx_environment.test.id
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
 }
 
 resource "aws_finspace_kx_dataview" "test" {
@@ -964,10 +964,10 @@ resource "aws_finspace_kx_cluster" "test" {
   }
   scaling_group_configuration {
     scaling_group_name = aws_finspace_kx_scaling_group.test.name
-    memory_limit = 200
+    memory_limit       = 200
     memory_reservation = 100
-    node_count = 1
-    cpu = 0.5
+    node_count         = 1
+    cpu                = 0.5
   }
 }
 `, rName))
@@ -980,9 +980,9 @@ func testAccKxRDBClusterConfigInScalingGroup_withKxVolume(rName string) string {
 		testAccKxClusterConfigScalingGroupBase(rName),
 		fmt.Sprintf(`
 resource "aws_finspace_kx_database" "test" {
-    name           = %[1]q
-    environment_id = aws_finspace_kx_environment.test.id
-    }
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+}
 
 resource "aws_finspace_kx_cluster" "test" {
   name                 = %[1]q
@@ -999,10 +999,10 @@ resource "aws_finspace_kx_cluster" "test" {
   }
   scaling_group_configuration {
     scaling_group_name = aws_finspace_kx_scaling_group.test.name
-    memory_limit = 200
+    memory_limit       = 200
     memory_reservation = 100
-    node_count = 1
-    cpu = 0.5
+    node_count         = 1
+    cpu                = 0.5
   }
   database {
     database_name = aws_finspace_kx_database.test.name
@@ -1035,10 +1035,10 @@ resource "aws_finspace_kx_cluster" "test" {
   }
   scaling_group_configuration {
     scaling_group_name = aws_finspace_kx_scaling_group.test.name
-    memory_limit = 200
+    memory_limit       = 200
     memory_reservation = 100
-    node_count = 1
-    cpu = 0.5
+    node_count         = 1
+    cpu                = 0.5
   }
   tickerplant_log_configuration {
     tickerplant_log_volumes = [aws_finspace_kx_volume.test.name]
@@ -1069,15 +1069,15 @@ resource "aws_finspace_kx_cluster" "test" {
 
   scaling_group_configuration {
     scaling_group_name = aws_finspace_kx_scaling_group.test.name
-    memory_limit = 200
+    memory_limit       = 200
     memory_reservation = 100
-    node_count = 1
-    cpu = 0.5
+    node_count         = 1
+    cpu                = 0.5
   }
 
   database {
     database_name = aws_finspace_kx_database.test.name
-	dataview_name = aws_finspace_kx_dataview.test.name
+    dataview_name = aws_finspace_kx_dataview.test.name
   }
 
   lifecycle {
