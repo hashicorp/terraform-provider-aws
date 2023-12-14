@@ -16,7 +16,6 @@ Provides an Amazon Managed Service for Prometheus fully managed collector
 
 Read more in the [Amazon Managed Service for Prometheus user guide](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector.html).
 
-
 ## Example Usage
 
 ### Basic Usage
@@ -24,8 +23,17 @@ Read more in the [Amazon Managed Service for Prometheus user guide](https://docs
 ```terraform
 resource "aws_prometheus_scraper" "example" {
 
+  source {
+    eks {
+      cluster_arn       = data.aws_eks_cluster.example.arn
+      subnet_ids            = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+
   destination {
-    aws_prometheus_workspace_arn = aws_prometheus_workspace.example.arn
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
   }
 
 	scrape_configuration = <<EOT
@@ -84,11 +92,6 @@ scrape_configs:
       regex: (.+?)(\\:\\d+)?
       replacement: $1:10249
 EOT
-
-  source {
-    eks_cluster_arn       = data.aws_eks_cluster.example.arn
-    subnet_ids            = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
-  }
 }
 ```
 
@@ -113,14 +116,18 @@ resource "aws_prometheus_workspace" "example" {
 resource "aws_prometheus_scraper" "example" {
 
   source {
-    eks_cluster_arn       = data.aws_eks_cluster.example.arn
-    subnet_ids            = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    eks {
+      cluster_arn       = data.aws_eks_cluster.example.arn
+      subnet_ids            = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
   }
 
   scrape_configuration = "..."
 
   destination {
-    aws_prometheus_workspace_arn = aws_prometheus_workspace.example.arn
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
   }
 }
 ```
@@ -131,29 +138,35 @@ Your source Amazon EKS cluster must be configured to allow the scraper to access
 metrics. Follow the [user guide](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-eks-setup)
 to setup the appropriate Kubernetes permissions.
 
-
 ## Argument Reference
 
 The following arguments are required:
 
-* `destination` - (Required) Configuration block for the Amazon Managed Service for Prometheus workspace to send metrics to.
+* `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination`](#destination).
 * `scrape_configuration` - (Required) The configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
-* `source` - (Required) Configuration block to specify the Amazon EKS cluster the scraper will collect metrics from.
+* `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source`](#source).
 
 The following arguments are optional:
 
-* `alias` - (Optional) a name to associate with the scraper. This is for your use, and does not need to be unique.
+* `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
 
+### `destination`
 
-### destination Arguments
+* `amp` - (Required) Configuration block for an Amazon Managed Prometheus workspace destination. See [`amp`](#amp).
 
-* `aws_prometheus_workspace_arn` - The Amazon Resource Name (ARN) of the prometheus workspace
+### `amp`
 
-### source Arguments
+* `workspace_arn` - (Required) The Amazon Resource Name (ARN) of the prometheus workspace.
 
-* `eks_cluster_arn` - The Amazon Resource Name (ARN) of the source EKS cluster
-* `subnet_ids` - List of subnet IDs. Must be in at least two different availability zones.
-* `security_group_ids` - List of the security group IDs for the Amazon EKS cluster VPC configuration.
+### `source`
+
+* `eks` - (Required) Configuration block for an EKS cluster source. See [`eks`](#eks).
+
+#### `eks`
+
+* `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the source EKS cluster.
+* `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
+* `security_group_ids` - (Optional) List of the security group IDs for the Amazon EKS cluster VPC configuration.
 
 ## Attribute Reference
 
@@ -167,7 +180,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
-* `delete` - (Default `15m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

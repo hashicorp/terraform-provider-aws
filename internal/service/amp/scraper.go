@@ -5,278 +5,546 @@ package amp
 
 import (
 	"context"
-	"log"
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
-	"github.com/aws/aws-sdk-go-v2/service/amp/types"
-	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_prometheus_scraper", name="Scraper")
+// @FrameworkResource(name="Scraper")
 // @Tags(identifierAttribute="arn")
-func ResourceScraper() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceScraperCreate,
-		ReadWithoutTimeout:   resourceScraperRead,
-		DeleteWithoutTimeout: resourceScraperDelete,
+func newResourceScraper(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceScraper{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(15 * time.Minute),
-		},
-
-		Schema: map[string]*schema.Schema{
-			"alias": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"destination": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aws_prometheus_workspace_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"scrape_configuration": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"source": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"eks_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"security_group_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
-	}
+	return r, nil
 }
 
 const (
 	ResNameScraper = "Scraper"
 )
 
-func resourceScraperCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+type resourceScraper struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
 
-	conn := meta.(*conns.AWSClient).AMPClient(ctx)
+func (r *resourceScraper) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_prometheus_scraper"
+}
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return diag.Errorf("generating uuid for ClientToken for Prometheus Scraper %s", err)
+func (r *resourceScraper) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"alias": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"arn": framework.ARNAttributeComputedOnly(),
+			"id":  framework.IDAttribute(),
+			"scrape_configuration": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrTags: schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"destination": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"amp": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"workspace_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"source": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"eks": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"cluster_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"security_group_ids": schema.SetAttribute{
+										ElementType: types.StringType,
+										Optional:    true,
+										Computed:    true,
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+											setplanmodifier.UseStateForUnknown(),
+										},
+									},
+									"subnet_ids": schema.SetAttribute{
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
+										},
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
-	scrapeConfig := d.Get("scrape_configuration").(string)
+	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+		Create: true,
+		Delete: true,
+	})
+
+	response.Schema = s
+}
+
+func (r *resourceScraper) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().AMPClient(ctx)
+
+	var plan resourceScraperModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	in := &amp.CreateScraperInput{
-		Source:      expandSource(d.Get("source").([]interface{})),
-		Destination: expandDestination(d.Get("destination").([]interface{})),
-		ScrapeConfiguration: &types.ScrapeConfigurationMemberConfigurationBlob{
-			Value: []byte(scrapeConfig),
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Source:      expandSource(ctx, plan.Source, resp.Diagnostics),
+		Destination: expandDestination(ctx, plan.Destination, resp.Diagnostics),
+		ScrapeConfiguration: &awstypes.ScrapeConfigurationMemberConfigurationBlob{
+			Value: []byte(plan.ScrapeConfiguration.ValueString()),
 		},
-		ClientToken: aws.String(uuid),
-		Tags:        getTagsInV2(ctx),
+		Tags: getTagsInV2(ctx),
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
-		in.Alias = aws.String(v.(string))
+	if !plan.Alias.IsNull() {
+		in.Alias = aws.String(plan.Alias.ValueString())
 	}
 
 	out, err := conn.CreateScraper(ctx, in)
 	if err != nil {
-		return diag.Errorf("creating Amazon Managed Prometheus Scraper: %s", err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AMP, create.ErrActionCreating, ResNameScraper, "", err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.ScraperId == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AMP, create.ErrActionCreating, ResNameScraper, "", nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+	plan.ARN = flex.StringToFramework(ctx, out.Arn)
+	plan.ID = flex.StringToFramework(ctx, out.ScraperId)
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitScraperCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AMP, create.ErrActionWaitingForCreation, ResNameScraper, "", err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(out.ScraperId))
-
-	if _, err := waitScraperCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Managed Prometheus Scraper (%s) create: %s", d.Id(), err)
-	}
-
-	return resourceScraperRead(ctx, d, meta)
+	readOut, _ := findScraperByID(ctx, conn, *out.ScraperId)
+	plan.refreshFromOutput(ctx, readOut, resp.Diagnostics)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceScraperRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPClient(ctx)
+func (r *resourceScraper) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resourceScraperModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	scraper, err := FindScraperByID(ctx, conn, d.Id())
+	conn := r.Meta().AMPClient(ctx)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Amazon Managed Prometheus Scraper Definition (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	out, err := findScraperByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AMP, create.ErrActionSetting, ResNameScraper, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	state.refreshFromOutput(ctx, out, resp.Diagnostics)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceScraper) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceScraperModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+}
+
+func (r *resourceScraper) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().AMPClient(ctx)
+
+	var state resourceScraperModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := &amp.DeleteScraperInput{
+		ScraperId:   aws.String(state.ID.ValueString()),
+		ClientToken: aws.String(sdkid.UniqueId()),
+	}
+
+	_, err := conn.DeleteScraper(ctx, in)
+
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AMP, create.ErrActionDeleting, ResNameScraper, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitScraperDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AMP, create.ErrActionWaitingForDeletion, ResNameScraper, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceScraper) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (state *resourceScraper) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	state.SetTagsAll(ctx, request, response)
+}
+
+func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.ScraperDescription, error) {
+	input := &amp.DescribeScraperInput{
+		ScraperId: aws.String(id),
+	}
+
+	output, err := conn.DescribeScraper(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Amazon Managed Prometheus Scraper Definition (%s): %s", d.Id(), err)
+		return nil, err
 	}
 
-	d.SetId(aws.ToString(scraper.ScraperId))
-	d.Set("alias", aws.ToString(scraper.Alias))
-	d.Set("arn", aws.ToString(scraper.Arn))
-	d.Set("destination", flattenDestination(scraper.Destination))
-	if v, ok := scraper.ScrapeConfiguration.(*types.ScrapeConfigurationMemberConfigurationBlob); ok {
-		d.Set("scrape_configuration", string(v.Value))
+	if output == nil || output.Scraper == nil || output.Scraper.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
-	d.Set("source", flattenSource(scraper.Source))
-	setTagsOutV2(ctx, scraper.Tags)
 
-	return nil
+	return output.Scraper, nil
 }
 
-func resourceScraperDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPClient(ctx)
+func flattenDestination(ctx context.Context, apiObject awstypes.Destination, diags diag.Diagnostics) types.List {
+	elemType := types.ObjectType{AttrTypes: destinationModelAttrTypes}
 
-	log.Printf("[INFO] Deleting AMP Scraper %s", d.Id())
-
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return diag.Errorf("generating uuid for ClientToken for Prometheus Scraper (%s) %s", d.Id(), err)
+	if apiObject == nil {
+		return types.ListNull(elemType)
 	}
 
-	input := &amp.DeleteScraperInput{
-		ScraperId:   aws.String(d.Id()),
-		ClientToken: aws.String(uuid),
+	ampDestination, ok := apiObject.(*awstypes.DestinationMemberAmpConfiguration)
+	if !ok {
+		return types.ListNull(elemType)
 	}
 
-	_, err = conn.DeleteScraper(ctx, input)
+	attrs := map[string]attr.Value{
+		"amp": flattenDestinationAMPConfig(ctx, ampDestination.Value, diags),
+	}
+	objVal, d := types.ObjectValue(destinationModelAttrTypes, attrs)
+	diags.Append(d...)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal
+}
+
+func flattenDestinationAMPConfig(ctx context.Context, apiObject awstypes.AmpConfiguration, diags diag.Diagnostics) types.List {
+	elemType := types.ObjectType{AttrTypes: ampDestinationModelAttrTypes}
+
+	attrs := map[string]attr.Value{
+		"workspace_arn": fwtypes.ARNValue(*apiObject.WorkspaceArn),
+	}
+	objVal, d := types.ObjectValue(ampDestinationModelAttrTypes, attrs)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal
+}
+
+func flattenSource(ctx context.Context, apiObject awstypes.Source, diags diag.Diagnostics) types.List {
+	elemType := types.ObjectType{AttrTypes: sourceModelAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType)
+	}
+
+	eksSource, ok := apiObject.(*awstypes.SourceMemberEksConfiguration)
+	if !ok {
+		return types.ListNull(elemType)
+	}
+
+	attrs := map[string]attr.Value{
+		"eks": flattenSourceEKSConfig(ctx, eksSource.Value, diags),
+	}
+	objVal, d := types.ObjectValue(sourceModelAttrTypes, attrs)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal
+}
+
+func flattenSourceEKSConfig(ctx context.Context, apiObject awstypes.EksConfiguration, diags diag.Diagnostics) types.List {
+	elemType := types.ObjectType{AttrTypes: eksSourceModelAttrTypes}
+
+	attrs := map[string]attr.Value{
+		"cluster_arn":        fwtypes.ARNValue(*apiObject.ClusterArn),
+		"subnet_ids":         flex.FlattenFrameworkStringValueSet(ctx, apiObject.SubnetIds),
+		"security_group_ids": flex.FlattenFrameworkStringValueSet(ctx, apiObject.SecurityGroupIds),
+	}
+	objVal, d := types.ObjectValue(eksSourceModelAttrTypes, attrs)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal
+}
+
+func expandDestination(ctx context.Context, dst types.List, diags diag.Diagnostics) awstypes.Destination {
+
+	var tfList []destinationModel
+	diags.Append(dst.ElementsAs(ctx, &tfList, false)...)
+
+	if len(tfList) == 0 {
+		return nil
+	}
+	tfObj := tfList[0]
+
+	var ampDestination []ampDestinationModel
+	diags.Append(tfObj.AMP.ElementsAs(ctx, &ampDestination, false)...)
+	if diags.HasError() {
 		return nil
 	}
 
-	if err != nil {
-		return diag.Errorf("deleting Amazon Managed Prometheus Scraper (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitScraperDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Amazon Managed Prometheus Scraper (%s) delete: %s", d.Id(), err)
-	}
-
-	return nil
+	return &awstypes.DestinationMemberAmpConfiguration{Value: expandAMPDestination(ampDestination)}
 }
 
-func flattenSource(source types.Source) []interface{} {
-	if source == nil {
+func expandAMPDestination(tfList []ampDestinationModel) awstypes.AmpConfiguration {
+	if len(tfList) == 0 {
+		return awstypes.AmpConfiguration{}
+	}
+
+	tfObj := tfList[0]
+	ampConfig := awstypes.AmpConfiguration{
+		WorkspaceArn: tfObj.AWSPrometheusWorkspaceARN.ValueStringPointer(),
+	}
+
+	return ampConfig
+}
+func expandSource(ctx context.Context, src types.List, diags diag.Diagnostics) awstypes.Source {
+
+	var tfList []sourceModel
+	diags.Append(src.ElementsAs(ctx, &tfList, false)...)
+
+	if len(tfList) == 0 {
+		return nil
+	}
+	tfObj := tfList[0]
+
+	var eksSource []eksSourceModel
+	diags.Append(tfObj.EKS.ElementsAs(ctx, &eksSource, false)...)
+	if diags.HasError() {
 		return nil
 	}
 
-	var tfList []interface{}
-
-	if v, ok := source.(*types.SourceMemberEksConfiguration); ok {
-		tfMap := map[string]interface{}{
-			"eks_cluster_arn": aws.ToString(v.Value.ClusterArn),
-			"subnet_ids":      v.Value.SubnetIds,
-		}
-		if sg_ids := v.Value.SecurityGroupIds; sg_ids != nil {
-			tfMap["security_group_ids"] = sg_ids
-		}
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
+	return &awstypes.SourceMemberEksConfiguration{Value: expandEKSSource(ctx, eksSource)}
 }
 
-func expandSource(l []interface{}) types.Source {
+func expandEKSSource(ctx context.Context, tfList []eksSourceModel) awstypes.EksConfiguration {
 
-	m := l[0].(map[string]interface{})
-
-	eksConfig := types.EksConfiguration{
-		ClusterArn: aws.String(m["eks_cluster_arn"].(string)),
-		SubnetIds:  flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
+	if len(tfList) == 0 {
+		return awstypes.EksConfiguration{}
 	}
 
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		eksConfig.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	tfObj := tfList[0]
+	eksSource := awstypes.EksConfiguration{
+		ClusterArn: tfObj.EKSClusterARN.ValueStringPointer(),
+		SubnetIds:  flex.ExpandFrameworkStringValueSet(ctx, tfObj.SubnetIds),
 	}
 
-	return &types.SourceMemberEksConfiguration{Value: eksConfig}
+	if !tfObj.SecurityGroupIds.IsNull() {
+		eksSource.SecurityGroupIds = flex.ExpandFrameworkStringValueSet(ctx, tfObj.SecurityGroupIds)
+	}
+
+	return eksSource
 }
 
-func flattenDestination(dest types.Destination) []interface{} {
-
-	if dest == nil {
-		return nil
-	}
-	var tfList []interface{}
-
-	if v, ok := dest.(*types.DestinationMemberAmpConfiguration); ok {
-		tfMap := map[string]interface{}{
-			"aws_prometheus_workspace_arn": aws.ToString(v.Value.WorkspaceArn),
-		}
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
+type resourceScraperModel struct {
+	Alias               types.String   `tfsdk:"alias"`
+	ARN                 types.String   `tfsdk:"arn"`
+	Destination         types.List     `tfsdk:"destination"`
+	ID                  types.String   `tfsdk:"id"`
+	ScrapeConfiguration types.String   `tfsdk:"scrape_configuration"`
+	Source              types.List     `tfsdk:"source"`
+	Tags                types.Map      `tfsdk:"tags"`
+	TagsAll             types.Map      `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 
-func expandDestination(l []interface{}) types.Destination {
+type destinationModel struct {
+	AMP types.List `tfsdk:"amp"`
+}
 
-	m := l[0].(map[string]interface{})
+type ampDestinationModel struct {
+	AWSPrometheusWorkspaceARN fwtypes.ARN `tfsdk:"workspace_arn"`
+}
 
-	ampConfig := types.AmpConfiguration{
-		WorkspaceArn: aws.String(m["aws_prometheus_workspace_arn"].(string)),
+type sourceModel struct {
+	EKS types.List `tfsdk:"eks"`
+}
+
+type eksSourceModel struct {
+	EKSClusterARN    fwtypes.ARN `tfsdk:"cluster_arn"`
+	SubnetIds        types.Set   `tfsdk:"subnet_ids"`
+	SecurityGroupIds types.Set   `tfsdk:"security_group_ids"`
+}
+
+var destinationModelAttrTypes = map[string]attr.Type{
+	"amp": types.ListType{ElemType: types.ObjectType{AttrTypes: ampDestinationModelAttrTypes}},
+}
+var ampDestinationModelAttrTypes = map[string]attr.Type{
+	"workspace_arn": fwtypes.ARNType,
+}
+
+var sourceModelAttrTypes = map[string]attr.Type{
+	"eks": types.ListType{ElemType: types.ObjectType{AttrTypes: eksSourceModelAttrTypes}},
+}
+var eksSourceModelAttrTypes = map[string]attr.Type{
+	"cluster_arn":        fwtypes.ARNType,
+	"subnet_ids":         types.SetType{ElemType: types.StringType},
+	"security_group_ids": types.SetType{ElemType: types.StringType},
+}
+
+func (state *resourceScraperModel) refreshFromOutput(ctx context.Context, out *awstypes.ScraperDescription, diags diag.Diagnostics) {
+
+	state.ARN = flex.StringToFramework(ctx, out.Arn)
+	state.ID = flex.StringToFramework(ctx, out.ScraperId)
+	state.Alias = flex.StringToFramework(ctx, out.Alias)
+	if scrapeCfg, ok := out.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
+		state.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(scrapeCfg.Value))
 	}
 
-	return &types.DestinationMemberAmpConfiguration{Value: ampConfig}
+	setTagsOutV2(ctx, out.Tags)
+	state.Destination = flattenDestination(ctx, out.Destination, diags)
+	state.Source = flattenSource(ctx, out.Source, diags)
 }

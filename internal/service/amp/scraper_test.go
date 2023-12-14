@@ -15,10 +15,68 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+
+	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 )
+
+var scrapeConfigBlob = `
+global:
+  scrape_interval: 30s
+scrape_configs:
+  # pod metrics
+  - job_name: pod_exporter
+    kubernetes_sd_configs:
+      - role: pod
+  # container metrics
+  - job_name: cadvisor
+    scheme: https
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - replacement: kubernetes.default.svc:443
+        target_label: __address__
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+  # apiserver metrics
+  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    job_name: kubernetes-apiservers
+    kubernetes_sd_configs:
+    - role: endpoints
+    relabel_configs:
+    - action: keep
+      regex: default;kubernetes;https
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_service_name
+      - __meta_kubernetes_endpoint_port_name
+    scheme: https
+  # kube proxy metrics
+  - job_name: kube-proxy
+    honor_labels: true
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - action: keep
+      source_labels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_pod_name
+      separator: '/'
+      regex: 'kube-system/kube-proxy.+'
+    - source_labels:
+      - __address__
+      action: replace
+      target_label: __address__
+      regex: (.+?)(\\:\\d+)?
+      replacement: $1:10249
+`
 
 func TestAccAMPScraper_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -42,11 +100,13 @@ func TestAccAMPScraper_basic(t *testing.T) {
 				Config: testAccScraperConfig_required(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "alias"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -80,7 +140,7 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 				Config: testAccScraperConfig_required(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,6 +204,41 @@ func TestAccAMPScraper_alias(t *testing.T) {
 				Config: testAccScraperConfig_alias(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_security_groups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var v types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	eksClusterVersion := "1.28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_security_groups(rName, eksClusterVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -224,247 +319,100 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 }
 
 func testAccScraperConfig_required(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), `
+	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-
 	source {
-	  eks_cluster_arn = aws_eks_cluster.test.arn
-	  subnet_ids = aws_subnet.test[*].id
+		eks {
+			cluster_arn = aws_eks_cluster.test.arn
+			subnet_ids = aws_subnet.test[*].id
+		}
 	}
-
-	scrape_configuration = <<EOT
-global:
-  scrape_interval: 30s
-scrape_configs:
-  # pod metrics
-  - job_name: pod_exporter
-    kubernetes_sd_configs:
-      - role: pod
-  # container metrics
-  - job_name: cadvisor
-    scheme: https
-    authorization:
-      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    kubernetes_sd_configs:
-      - role: node
-    relabel_configs:
-      - action: labelmap
-        regex: __meta_kubernetes_node_label_(.+)
-      - replacement: kubernetes.default.svc:443
-        target_label: __address__
-      - source_labels: [__meta_kubernetes_node_name]
-        regex: (.+)
-        target_label: __metrics_path__
-        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
-  # apiserver metrics
-  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    job_name: kubernetes-apiservers
-    kubernetes_sd_configs:
-    - role: endpoints
-    relabel_configs:
-    - action: keep
-      regex: default;kubernetes;https
-      source_labels:
-      - __meta_kubernetes_namespace
-      - __meta_kubernetes_service_name
-      - __meta_kubernetes_endpoint_port_name
-    scheme: https
-  # kube proxy metrics
-  - job_name: kube-proxy
-    honor_labels: true
-    kubernetes_sd_configs:
-    - role: pod
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_namespace
-      - __meta_kubernetes_pod_name
-      separator: '/'
-      regex: 'kube-system/kube-proxy.+'
-    - source_labels:
-      - __address__
-      action: replace
-      target_label: __address__
-      regex: (.+?)(\\:\\d+)?
-      replacement: $1:10249
-EOT
-
+	scrape_configuration = %[1]q
 	destination {
-	  aws_prometheus_workspace_arn = aws_prometheus_workspace.test.arn
+		amp {
+			workspace_arn = aws_prometheus_workspace.test.arn
+		}
 	}
-
 }
-`)
+`, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_tags1(rName, eksClusterVersion, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
 	source {
-	  eks_cluster_arn = aws_eks_cluster.test.arn
-	  subnet_ids = aws_subnet.test[*].id
+		eks {
+			cluster_arn = aws_eks_cluster.test.arn
+			subnet_ids = aws_subnet.test[*].id
+		}
 	}
-
 	destination {
-	  aws_prometheus_workspace_arn = aws_prometheus_workspace.test.arn
+		amp {
+			workspace_arn = aws_prometheus_workspace.test.arn
+		}
 	}
-
-	scrape_configuration = <<EOT
-global:
-  scrape_interval: 30s
-scrape_configs:
-  # pod metrics
-  - job_name: pod_exporter
-    kubernetes_sd_configs:
-      - role: pod
-  # container metrics
-  - job_name: cadvisor
-    scheme: https
-    authorization:
-      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    kubernetes_sd_configs:
-      - role: node
-    relabel_configs:
-      - action: labelmap
-        regex: __meta_kubernetes_node_label_(.+)
-      - replacement: kubernetes.default.svc:443
-        target_label: __address__
-      - source_labels: [__meta_kubernetes_node_name]
-        regex: (.+)
-        target_label: __metrics_path__
-        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
-  # apiserver metrics
-  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    job_name: kubernetes-apiservers
-    kubernetes_sd_configs:
-    - role: endpoints
-    relabel_configs:
-    - action: keep
-      regex: default;kubernetes;https
-      source_labels:
-      - __meta_kubernetes_namespace
-      - __meta_kubernetes_service_name
-      - __meta_kubernetes_endpoint_port_name
-    scheme: https
-  # kube proxy metrics
-  - job_name: kube-proxy
-    honor_labels: true
-    kubernetes_sd_configs:
-    - role: pod
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_namespace
-      - __meta_kubernetes_pod_name
-      separator: '/'
-      regex: 'kube-system/kube-proxy.+'
-    - source_labels:
-      - __address__
-      action: replace
-      target_label: __address__
-      regex: (.+?)(\\:\\d+)?
-      replacement: $1:10249
-EOT
-
+	scrape_configuration = %[3]q
 	tags = {
 		%[1]q = %[2]q
 	}
 }
-`, tagKey1, tagValue1))
+`, tagKey1, tagValue1, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_alias(rName, eksClusterVersion string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-
 	alias = %[1]q
-
 	source {
-	  eks_cluster_arn = aws_eks_cluster.test.arn
-	  subnet_ids = aws_subnet.test[*].id
+		eks {
+			cluster_arn = aws_eks_cluster.test.arn
+			subnet_ids = aws_subnet.test[*].id
+		}
 	}
-
-	scrape_configuration = <<EOT
-global:
-  scrape_interval: 30s
-scrape_configs:
-  # pod metrics
-  - job_name: pod_exporter
-    kubernetes_sd_configs:
-      - role: pod
-  # container metrics
-  - job_name: cadvisor
-    scheme: https
-    authorization:
-      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    kubernetes_sd_configs:
-      - role: node
-    relabel_configs:
-      - action: labelmap
-        regex: __meta_kubernetes_node_label_(.+)
-      - replacement: kubernetes.default.svc:443
-        target_label: __address__
-      - source_labels: [__meta_kubernetes_node_name]
-        regex: (.+)
-        target_label: __metrics_path__
-        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
-  # apiserver metrics
-  - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    job_name: kubernetes-apiservers
-    kubernetes_sd_configs:
-    - role: endpoints
-    relabel_configs:
-    - action: keep
-      regex: default;kubernetes;https
-      source_labels:
-      - __meta_kubernetes_namespace
-      - __meta_kubernetes_service_name
-      - __meta_kubernetes_endpoint_port_name
-    scheme: https
-  # kube proxy metrics
-  - job_name: kube-proxy
-    honor_labels: true
-    kubernetes_sd_configs:
-    - role: pod
-    relabel_configs:
-    - action: keep
-      source_labels:
-      - __meta_kubernetes_namespace
-      - __meta_kubernetes_pod_name
-      separator: '/'
-      regex: 'kube-system/kube-proxy.+'
-    - source_labels:
-      - __address__
-      action: replace
-      target_label: __address__
-      regex: (.+?)(\\:\\d+)?
-      replacement: $1:10249
-EOT
-
+	scrape_configuration = %[2]q
 	destination {
-	  aws_prometheus_workspace_arn = aws_prometheus_workspace.test.arn
+		amp {
+			workspace_arn = aws_prometheus_workspace.test.arn
+		}
 	}
-
 }
-`, rName))
+`, rName, scrapeConfigBlob))
+}
+
+func testAccScraperConfig_security_groups(rName, eksClusterVersion string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+	alias = %[1]q
+	source {
+		eks {
+			cluster_arn = aws_eks_cluster.test.arn
+			subnet_ids = aws_subnet.test[*].id
+			security_group_ids = [aws_eks_cluster.test.vpc_config[0].cluster_security_group_id]
+		}
+	}
+	scrape_configuration = %[2]q
+	destination {
+		amp {
+			workspace_arn = aws_prometheus_workspace.test.arn
+		}
+	}
+}
+
+`, rName, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_basic(eksClusterName, eksClusterVersion string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
-
 data "aws_availability_zones" "available" {
 	state = "available"
 }
-
 resource "aws_prometheus_workspace" "test" {
 	alias = %[1]q
-
 	tags = {
 		AMPAgentlessScraper = ""
 	}
 }
-
 resource "aws_eks_cluster" "test" {
 	name     = %[1]q
 	role_arn = aws_iam_role.test.arn
@@ -473,7 +421,6 @@ resource "aws_eks_cluster" "test" {
 	}
 	depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
-
 resource "aws_iam_role" "test" {
   name = %[1]q
   assume_role_policy = <<POLICY
@@ -490,12 +437,10 @@ resource "aws_iam_role" "test" {
 }
 POLICY
 }
-
 resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.test.name
 }
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -504,7 +449,6 @@ resource "aws_vpc" "test" {
 	"kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
-
 resource "aws_subnet" "test" {
   count = 2
   availability_zone = data.aws_availability_zones.available.names[count.index]
