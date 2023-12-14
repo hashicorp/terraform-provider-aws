@@ -148,44 +148,11 @@ func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceKxScalingGroupRead(ctx, d, meta)...)
 }
 
-func waitKxScalingGroupCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxScalingGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.KxScalingGroupStatusCreating),
-		Target:                    enum.Slice(types.KxScalingGroupStatusActive),
-		Refresh:                   statusKxScalingGroup(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*finspace.GetKxScalingGroupOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusKxScalingGroup(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findKxScalingGroupById(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
-}
-
 func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	out, err := findKxScalingGroupById(ctx, conn, d.Id())
+	out, err := FindKxScalingGroupById(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxScalingGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -246,7 +213,7 @@ func resourceKxScalingGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func findKxScalingGroupById(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxScalingGroupOutput, error) {
+func FindKxScalingGroupById(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxScalingGroupOutput, error) {
 	parts, err := flex.ExpandResourceId(id, kxScalingGroupIDPartCount, false)
 	if err != nil {
 		return nil, err
@@ -275,6 +242,24 @@ func findKxScalingGroupById(ctx context.Context, conn *finspace.Client, id strin
 	return out, nil
 }
 
+func waitKxScalingGroupCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxScalingGroupOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.KxScalingGroupStatusCreating),
+		Target:                    enum.Slice(types.KxScalingGroupStatusActive),
+		Refresh:                   statusKxScalingGroup(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*finspace.GetKxScalingGroupOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
 func waitKxScalingGroupDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxScalingGroupOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxScalingGroupStatusDeleting),
@@ -289,4 +274,19 @@ func waitKxScalingGroupDeleted(ctx context.Context, conn *finspace.Client, id st
 	}
 
 	return nil, err
+}
+
+func statusKxScalingGroup(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindKxScalingGroupById(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.Status), nil
+	}
 }
