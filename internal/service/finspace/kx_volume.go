@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -47,83 +46,7 @@ func ResourceKxVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-
-			"availability_zones": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Required: true,
-				ForceNew: true,
-			},
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
-			},
-			"environment_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxVolumeType](),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"nas1_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1200, 33600),
-						},
-						"type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.KxNAS1Type](),
-						},
-					},
-				},
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -153,8 +76,83 @@ func ResourceKxVolume() *schema.Resource {
 				},
 				Computed: true,
 			},
+			"availability_zones": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Required: true,
+				ForceNew: true,
+			},
+			"az_mode": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
+			},
+			"created_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
+			},
+			"environment_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 32),
+			},
+			"last_modified_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nas1_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(1200, 33600),
+						},
+						"type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.KxNAS1Type](),
+						},
+					},
+				},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 63),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.KxVolumeType](),
+			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -167,7 +165,7 @@ const (
 
 func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentId := d.Get("environment_id").(string)
 	volumeName := d.Get("name").(string)
@@ -199,8 +197,6 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
 	}
 
-	// TODO: add flatten/expand functions for remaining parameters
-
 	out, err := conn.CreateKxVolume(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), err)
@@ -225,7 +221,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxVolumeByID(ctx, conn, d.Id())
 
@@ -270,7 +266,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	updateVolume := false
 
@@ -307,7 +303,7 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace Kx Volume: %s", d.Id())
 	_, err := conn.DeleteKxVolume(ctx, &finspace.DeleteKxVolumeInput{
