@@ -91,6 +91,10 @@ func httpXFFHeaderProcessingMode_Values() []string {
 	}
 }
 
+const (
+	healthCheckPortTrafficPort = "traffic-port"
+)
+
 func healthCheckProtocolEnumValues() []string {
 	return []string{
 		elbv2.ProtocolEnumHttp,

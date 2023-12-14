@@ -114,7 +114,7 @@ func ResourceTargetGroup() *schema.Resource {
 						"port": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          "traffic-port",
+							Default:          healthCheckPortTrafficPort,
 							ValidateFunc:     validTargetGroupHealthCheckPort,
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
@@ -877,36 +877,17 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	const (
-		targetGroupDeleteTimeout = 2 * time.Minute
-	)
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	input := &elbv2.DeleteTargetGroupInput{
-		TargetGroupArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := retry.RetryContext(ctx, targetGroupDeleteTimeout, func() *retry.RetryError {
-		_, err := conn.DeleteTargetGroupWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTargetGroupWithContext(ctx, input)
-	}
+	log.Printf("[DEBUG] Deleting ELBv2 Target Group: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.DeleteTargetGroupWithContext(ctx, &elbv2.DeleteTargetGroupInput{
+			TargetGroupArn: aws.String(d.Id()),
+		})
+	}, elbv2.ErrCodeResourceInUseException, "is currently in use by a listener or a rule")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Target Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Target Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1028,7 +1009,7 @@ func validateSlowStart(v interface{}, k string) (ws []string, errors []error) {
 func validTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if value == "traffic-port" {
+	if value == healthCheckPortTrafficPort {
 		return
 	}
 
