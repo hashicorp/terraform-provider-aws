@@ -646,48 +646,46 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	if d.HasChange("health_check") {
-		var params *elbv2.ModifyTargetGroupInput
-		healthChecks := d.Get("health_check").([]interface{})
-		if len(healthChecks) == 1 {
-			healthCheck := healthChecks[0].(map[string]interface{})
+		if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			params = &elbv2.ModifyTargetGroupInput{
+			input := &elbv2.ModifyTargetGroupInput{
+				HealthCheckEnabled:         aws.Bool(tfMap["enabled"].(bool)),
+				HealthCheckIntervalSeconds: aws.Int64(int64(tfMap["interval"].(int))),
+				HealthyThresholdCount:      aws.Int64(int64(tfMap["healthy_threshold"].(int))),
 				TargetGroupArn:             aws.String(d.Id()),
-				HealthCheckEnabled:         aws.Bool(healthCheck["enabled"].(bool)),
-				HealthCheckIntervalSeconds: aws.Int64(int64(healthCheck["interval"].(int))),
-				HealthyThresholdCount:      aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
-				UnhealthyThresholdCount:    aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
+				UnhealthyThresholdCount:    aws.Int64(int64(tfMap["unhealthy_threshold"].(int))),
 			}
 
-			t := healthCheck["timeout"].(int)
-			if t != 0 {
-				params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
+			if v, ok := tfMap["timeout"].(int); ok && v != 0 {
+				input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 			}
 
-			healthCheckProtocol := healthCheck["protocol"].(string)
-			protocolVersion := d.Get("protocol_version").(string)
-			if healthCheckProtocol != elbv2.ProtocolEnumTcp && !d.IsNewResource() {
-				if protocolVersion == "GRPC" {
-					params.Matcher = &elbv2.Matcher{
-						GrpcCode: aws.String(healthCheck["matcher"].(string)),
-					}
-				} else {
-					params.Matcher = &elbv2.Matcher{
-						HttpCode: aws.String(healthCheck["matcher"].(string)),
+			protocol := tfMap["protocol"].(string)
+			if protocol != elbv2.ProtocolEnumTcp {
+				if v, ok := tfMap["matcher"].(string); ok {
+					if protocolVersion := d.Get("protocol_version").(string); protocolVersion == protocolVersionGRPC {
+						input.Matcher = &elbv2.Matcher{
+							GrpcCode: aws.String(v),
+						}
+					} else {
+						input.Matcher = &elbv2.Matcher{
+							HttpCode: aws.String(v),
+						}
 					}
 				}
-				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
+				input.HealthCheckPath = aws.String(tfMap["path"].(string))
 			}
-			if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-				params.HealthCheckPort = aws.String(healthCheck["port"].(string))
-				params.HealthCheckProtocol = aws.String(healthCheckProtocol)
-			}
-		}
 
-		if params != nil {
-			_, err := conn.ModifyTargetGroupWithContext(ctx, params)
+			if targetType := d.Get("target_type").(string); targetType != elbv2.TargetTypeEnumLambda {
+				input.HealthCheckPort = aws.String(tfMap["port"].(string))
+				input.HealthCheckProtocol = aws.String(protocol)
+			}
+
+			_, err := conn.ModifyTargetGroupWithContext(ctx, input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying Target Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Target Group (%s): %s", d.Id(), err)
 			}
 		}
 	}
