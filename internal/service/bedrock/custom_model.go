@@ -87,6 +87,9 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 			},
 			"custom_model_name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
+				},
 				// ForceNew:     true,
 				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9a-zA-Z][_-]?)+$`), "minimum length of 1. Maximum length of 63."),
 			},
