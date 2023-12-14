@@ -567,6 +567,77 @@ func TestAccBatchJobDefinition_NodePropertiesupdateForcesNewResource(t *testing.
 	})
 }
 
+func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
+func TestAccBatchJobDefinition_EKSProperties_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+				),
+			},
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_advancedUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", "Always"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.0.name", "tmp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchJobDefinition_createTypeContainerWithBothProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1203,6 +1274,109 @@ resource "aws_batch_job_definition" "test" {
   })
 }
 	`, rName)
+}
+
+func testAccJobDefinitionConfig_EKSProperties_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      host_network = true
+      containers {
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+    }
+  }
+}`, rName)
+}
+
+func testAccJobDefinitionConfig_EKSProperties_advancedUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      host_network = true
+      containers {
+        args              = ["60"]
+        image             = "public.ecr.aws/amazonlinux/amazonlinux:2"
+        image_pull_policy = "Always"
+        name              = "sleep"
+        command = [
+          "sleep",
+        ]
+        resources {
+          requests = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+        security_context {
+          privileged                 = true
+          read_only_root_file_system = true
+          run_as_group               = 1000
+          run_as_user                = 1000
+          run_as_non_root            = true
+        }
+        volume_mounts {
+          mount_path = "/tmp"
+          read_only  = true
+          name       = "tmp"
+        }
+        env {
+          name  = "Test"
+          value = "Environment Variable"
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+      volumes {
+        name = "tmp"
+        empty_dir {
+          medium     = "Memory"
+          size_limit = "128Mi"
+        }
+      }
+      service_account_name = "test-service-account"
+      dns_policy           = "ClusterFirst"
+    }
+  }
+  parameters = {
+    param1 = "val1"
+    param2 = "val2"
+  }
+
+  timeout {
+    attempt_duration_seconds = 60
+  }
+}`, rName)
 }
 
 func testAccJobDefinitionConfig_createTypeContainerWithBothProperties(rName string) string {
