@@ -36,8 +36,8 @@ resource "aws_finspace_kx_dataview" "example" {
 The following arguments are required:
 
 * `az_mode` - (Required) The number of availability zones you want to assign per cluster. This can be one of the following:
- * `SINGLE` - Assigns one availability zone per cluster.
- * `MULTI` - Assigns all the availability zones per cluster.
+    * `SINGLE` - Assigns one availability zone per cluster.
+    * `MULTI` - Assigns all the availability zones per cluster.
 * `database_name` - (Required) The name of the database where you want to create a dataview.
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `name` - (Required) A unique identifier for the dataview.
