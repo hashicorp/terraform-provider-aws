@@ -5,14 +5,7 @@ page_title: "AWS: aws_lexv2models_slot"
 description: |-
   Terraform resource for managing an AWS Lex V2 Models Slot.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_lexv2models_slot
 
 Terraform resource for managing an AWS Lex V2 Models Slot.
@@ -23,6 +16,11 @@ Terraform resource for managing an AWS Lex V2 Models Slot.
 
 ```terraform
 resource "aws_lexv2models_slot" "example" {
+  bot_id      = aws_lexv2models_bot.example.id
+  bot_version = aws_lexv2models_bot_version.example.bot_version
+  intent_id   = aws_lexv2models_intent.example.id
+  locale_id   = aws_lexv2models_locale.example.locale_id
+  name        = "example"
 }
 ```
 
@@ -30,30 +28,39 @@ resource "aws_lexv2models_slot" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `bot_id` - (Required)
+* `bot_version` - (Required)
+* `intent_id` - (Required)
+* `locale_id` - (Required)
+* `name` - (Required)
+* `value_elicitation_setting` - (Required)
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `description` - (Optional)
+* `multiple_values_setting` - (Optional)
+* `obfuscation_setting` - (Optional)
+* `slot_type_id` - (Optional)
+* `sub_slot_setting` - (Optional)
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Slot. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - 
+* `slot_id` - 
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Slot using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Slot using the `id`. For example:
 
 ```terraform
 import {
@@ -62,7 +69,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Lex V2 Models Slot using the `example_id_arg`. For example:
+Using `terraform import`, import Lex V2 Models Slot using the `id`. For example:
 
 ```console
 % terraform import aws_lexv2models_slot.example slot-id-12345678
