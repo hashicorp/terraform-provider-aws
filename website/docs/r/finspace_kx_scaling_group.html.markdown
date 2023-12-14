@@ -15,10 +15,10 @@ Terraform resource for managing an AWS FinSpace Kx Scaling Group.
 ### Basic Usage
 
 ```terraform
-resource "aws_finspace_kx_scaling_group" "test" {
-	name                 = "my-tf-kx-scalinggroup"
-	environment_id       = aws_finspace_kx_environment.example.id
-	availability_zone_id = "use1-az2"		
+resource "aws_finspace_kx_scaling_group" "example" {
+  name                 = "my-tf-kx-scalinggroup"
+  environment_id       = aws_finspace_kx_environment.example.id
+  availability_zone_id = "use1-az2"
   host_type            = "kx.sg.4xlarge"
 }
 ```
@@ -45,14 +45,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_timestamp` - The timestamp at which the scaling group was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `last_modified_timestamp` - Last timestamp at which the scaling group was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `status` - The status of scaling group.
-    * CREATING – The scaling group creation is in progress.
-    * CREATE_FAILED – The scaling group creation has failed.
-    * ACTIVE – The scaling group is active.
-    * UPDATING – The scaling group is in the process of being updated.
-    * UPDATE_FAILED – The update action failed.
-    * DELETING – The scaling group is in the process of being deleted.
-    * DELETE_FAILED – The system failed to delete the scaling group.
-    * DELETED – The scaling group is successfully deleted.
+    * `CREATING` – The scaling group creation is in progress.
+    * `CREATE_FAILED` – The scaling group creation has failed.
+    * `ACTIVE` – The scaling group is active.
+    * `UPDATING` – The scaling group is in the process of being updated.
+    * `UPDATE_FAILED` – The update action failed.
+    * `DELETING` – The scaling group is in the process of being deleted.
+    * `DELETE_FAILED` – The system failed to delete the scaling group.
+    * `DELETED` – The scaling group is successfully deleted.
 * `status_reason` - The error message when a failed state occurs.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
