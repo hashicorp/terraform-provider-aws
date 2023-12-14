@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.1
+	github.com/aws/aws-sdk-go v1.49.2
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10
@@ -41,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/eks v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/emr v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.5
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.5
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/osis v1.6.5
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.9.5
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/polly v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.19.5
