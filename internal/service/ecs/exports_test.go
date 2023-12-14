@@ -6,6 +6,8 @@ package ecs
 // Exports for use in tests only.
 var (
 	ResourceCapacityProvider = resourceCapacityProvider
+	ResourceCluster          = resourceCluster
 
 	FindCapacityProviderByARN = findCapacityProviderByARN
+	FindClusterByNameOrARN    = findClusterByNameOrARN
 )
