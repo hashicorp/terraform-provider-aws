@@ -23,7 +23,7 @@ resource "aws_finspace_kx_dataview" "example" {
   description          = "Terraform managed Kx Dataview"
   az_mode              = "SINGLE"
   auto_update          = true
-  
+
   segment_configurations  {
     volume_name = aws_finspace_kx_volume.example.name
     db_paths    = ["/*"]
@@ -36,24 +36,25 @@ resource "aws_finspace_kx_dataview" "example" {
 The following arguments are required:
 
 * `az_mode` - (Required) The number of availability zones you want to assign per cluster. This can be one of the following:
-  * SINGLE - Assigns one availability zone per cluster.
-  * MULTI - Assigns all the availability zones per cluster.
+  * `SINGLE` - Assigns one availability zone per cluster.
+  * `MULTI` - Assigns all the availability zones per cluster.
 * `database_name` - (Required) The name of the database where you want to create a dataview. 
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `name` - (Required) A unique identifier for the dataview.
 
 The following arguments are optional:
+
 * `auto_update` - (Optional) The option to specify whether you want to apply all the future additions and corrections automatically to the dataview, when you ingest new changesets. The default value is false.
 * `availability_zone_id` - (Optional) The identifier of the availability zones. If attaching a volume, the volume must be in the same availability zone as the dataview that you are attaching to.
 * `changeset_id` - (Optional) A unique identifier of the changeset of the database that you want to use to ingest data.
 * `description` - (Optional) A description for the dataview.
-* `segment_configurations` - (Optional) The configuration that contains the database path of the data that you want to place on each selected volume. Each segment must have a unique database path for each volume. If you do not explicitly specify any database path for a volume, they are accessible from the cluster through the default S3/object store segment. See [segment_configurations](#segment_configurations).
+* `segment_configurations` - (Optional) The configuration that contains the database path of the data that you want to place on each selected volume. Each segment must have a unique database path for each volume. If you do not explicitly specify any database path for a volume, they are accessible from the cluster through the default S3/object store segment. See [segment_configurations](#segment_configurations-argument-reference) below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### segment_configurations
+### `segment_configurations` Argument Reference
+
 * `db_paths` - (Required) The database path of the data that you want to place on each selected volume. Each segment must have a unique database path for each volume.
 * `volume_name` - (Required) The name of the volume that you want to attach to a dataview. This volume must be in the same availability zone as the dataview that you are attaching to.
-
 
 ## Attribute Reference
 
