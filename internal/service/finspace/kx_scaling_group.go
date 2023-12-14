@@ -120,7 +120,7 @@ func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	rID, err := flex.FlattenResourceId(idParts, kxScalingGroupIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxScalingGroup, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxScalingGroup, d.Get("name").(string), err)
 	}
 	d.SetId(rID)
 
@@ -134,15 +134,15 @@ func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := conn.CreateKxScalingGroup(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxScalingGroup, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	if _, err := waitKxScalingGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxScalingGroup, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxScalingGroup, d.Id(), err)
 	}
 
 	return append(diags, resourceKxScalingGroupRead(ctx, d, meta)...)
@@ -160,7 +160,7 @@ func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxScalingGroup, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxScalingGroup, d.Id(), err)
 	}
 	d.Set("arn", out.ScalingGroupArn)
 	d.Set("status", out.Status)
@@ -174,7 +174,7 @@ func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	parts, err := flex.ExpandResourceId(d.Id(), kxUserIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxScalingGroup, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxScalingGroup, d.Id(), err)
 	}
 	d.Set("environment_id", parts[0])
 
@@ -202,12 +202,12 @@ func resourceKxScalingGroupDelete(ctx context.Context, d *schema.ResourceData, m
 			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxScalingGroup, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxScalingGroup, d.Id(), err)
 	}
 
 	_, err = waitKxScalingGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil && !tfresource.NotFound(err) {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxScalingGroup, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxScalingGroup, d.Id(), err)
 	}
 
 	return diags
