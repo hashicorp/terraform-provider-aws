@@ -45,9 +45,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceKxDataview,
+			TypeName: "aws_finspace_kx_dataview",
+			Name:     "Kx Dataview",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceKxEnvironment,
 			TypeName: "aws_finspace_kx_environment",
 			Name:     "Kx Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceKxScalingGroup,
+			TypeName: "aws_finspace_kx_scaling_group",
+			Name:     "Kx Scaling Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
@@ -61,9 +77,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceKxDataview,
-			TypeName: "aws_finspace_kx_dataview",
-			Name:     "Kx Dataview",
+			Factory:  ResourceKxVolume,
+			TypeName: "aws_finspace_kx_volume",
+			Name:     "Kx Volume",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
