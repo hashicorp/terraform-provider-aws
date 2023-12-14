@@ -103,10 +103,16 @@ func healthCheckProtocolEnumValues() []string {
 	}
 }
 
+const (
+	protocolVersionGRPC  = "GRPC"
+	protocolVersionHTTP1 = "HTTP1"
+	protocolVersionHTTP2 = "HTTP2"
+)
+
 func protocolVersionEnumValues() []string {
 	return []string{
-		"GRPC",
-		"HTTP1",
-		"HTTP2",
+		protocolVersionGRPC,
+		protocolVersionHTTP1,
+		protocolVersionHTTP2,
 	}
 }

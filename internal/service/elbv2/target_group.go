@@ -383,60 +383,57 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
-	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+	if targetType := d.Get("target_type").(string); targetType != elbv2.TargetTypeEnumLambda {
 		input.Port = aws.Int64(int64(d.Get("port").(int)))
-		input.Protocol = aws.String(d.Get("protocol").(string))
-		switch d.Get("protocol").(string) {
+		protocol := d.Get("protocol").(string)
+		input.Protocol = aws.String(protocol)
+		switch protocol {
 		case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
 			input.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
 		input.VpcId = aws.String(d.Get("vpc_id").(string))
 
-		if d.Get("target_type").(string) == elbv2.TargetTypeEnumIp {
-			if _, ok := d.GetOk("ip_address_type"); ok {
-				input.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+		if targetType == elbv2.TargetTypeEnumIp {
+			if v, ok := d.GetOk("ip_address_type"); ok {
+				input.IpAddressType = aws.String(v.(string))
 			}
 		}
 	}
 
-	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
-		healthCheck := healthChecks[0].(map[string]interface{})
+	if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
 
-		input.HealthCheckEnabled = aws.Bool(healthCheck["enabled"].(bool))
+		input.HealthCheckEnabled = aws.Bool(tfMap["enabled"].(bool))
+		input.HealthCheckIntervalSeconds = aws.Int64(int64(tfMap["interval"].(int)))
+		input.HealthyThresholdCount = aws.Int64(int64(tfMap["healthy_threshold"].(int)))
+		input.UnhealthyThresholdCount = aws.Int64(int64(tfMap["unhealthy_threshold"].(int)))
 
-		input.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
-
-		input.HealthyThresholdCount = aws.Int64(int64(healthCheck["healthy_threshold"].(int)))
-		input.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
-		t := healthCheck["timeout"].(int)
-		if t != 0 {
-			input.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
+		if v, ok := tfMap["timeout"].(int); ok && v != 0 {
+			input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 		}
-		healthCheckProtocol := healthCheck["protocol"].(string)
 
-		if healthCheckProtocol != elbv2.ProtocolEnumTcp {
-			p := healthCheck["path"].(string)
-			if p != "" {
-				input.HealthCheckPath = aws.String(p)
+		protocol := tfMap["protocol"].(string)
+		if protocol != elbv2.ProtocolEnumTcp {
+			if v, ok := tfMap["path"].(string); ok && v != "" {
+				input.HealthCheckPath = aws.String(v)
 			}
 
-			m := healthCheck["matcher"].(string)
-			protocolVersion := d.Get("protocol_version").(string)
-			if m != "" {
-				if protocolVersion == "GRPC" {
+			if v, ok := tfMap["matcher"].(string); ok && v != "" {
+				if protocolVersion := d.Get("protocol_version").(string); protocolVersion == protocolVersionGRPC {
 					input.Matcher = &elbv2.Matcher{
-						GrpcCode: aws.String(m),
+						GrpcCode: aws.String(v),
 					}
 				} else {
 					input.Matcher = &elbv2.Matcher{
-						HttpCode: aws.String(m),
+						HttpCode: aws.String(v),
 					}
 				}
 			}
 		}
-		if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-			input.HealthCheckPort = aws.String(healthCheck["port"].(string))
-			input.HealthCheckProtocol = aws.String(healthCheckProtocol)
+
+		if targetType := d.Get("target_type").(string); targetType != elbv2.TargetTypeEnumLambda {
+			input.HealthCheckPort = aws.String(tfMap["port"].(string))
+			input.HealthCheckProtocol = aws.String(protocol)
 		}
 	}
 
@@ -459,10 +456,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Target Group (%s): %s", name, err)
-	}
-
-	if len(output.TargetGroups) == 0 {
-		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: no groups returned in response")
 	}
 
 	d.SetId(aws.StringValue(output.TargetGroups[0].TargetGroupArn))
