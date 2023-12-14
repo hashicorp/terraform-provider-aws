@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 * `name` - (Required) The name of the Selenium testing project.
 * `description` - (Optional) Human-readable description of the project.
 * `vpcConfig` - (Required) The VPC security groups and subnets that are attached to a project. See [VPC Config](#vpc-config) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### VPC Config
 
@@ -61,7 +61,7 @@ class MyConvertedCode extends TerraformStack {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this Test Grid Project.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import DeviceFarm Test Grid Projects using their ARN. 
 % terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2f5eb3ada6471cdbf41632a80ae508f4c526e15908f83a9d3ac70cb7c05f37b2 -->
+<!-- cache-key: cdktf-0.19.0 input-2f5eb3ada6471cdbf41632a80ae508f4c526e15908f83a9d3ac70cb7c05f37b2 -->

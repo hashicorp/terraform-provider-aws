@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - The name of the provisioning artifact.
 * `type` - The type of provisioning artifact.
 
-<!-- cache-key: cdktf-0.18.0 input-70d3d0ef3ce0371f0258d9d9db5e9876444b44930ec3530badd4b8fe021fee18 -->
+<!-- cache-key: cdktf-0.19.0 input-70d3d0ef3ce0371f0258d9d9db5e9876444b44930ec3530badd4b8fe021fee18 -->

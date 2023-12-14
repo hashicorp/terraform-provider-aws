@@ -61,13 +61,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `method` - (Optional) Method used when sharing a directory. Valid values are `organizations` and `handshake`. Default is `handshake`.
+* `method` - (Optional) Method used when sharing a directory. Valid values are `ORGANIZATIONS` and `HANDSHAKE`. Default is `HANDSHAKE`.
 * `notes` - (Optional, Sensitive) Message sent by the directory owner to the directory consumer to help the directory consumer administrator determine whether to approve or reject the share invitation.
 
 ### `target`
 
 * `id` - (Required) Identifier of the directory consumer account.
-* `type` - (Optional) Type of identifier to be used in the `id` field. Valid value is `account`. Default is `account`.
+* `type` - (Optional) Type of identifier to be used in the `id` field. Valid value is `ACCOUNT`. Default is `ACCOUNT`.
 
 ## Attribute Reference
 
@@ -104,4 +104,4 @@ Using `terraform import`, import Directory Service Shared Directories using the 
 % terraform import aws_directory_service_shared_directory.example d-1234567890/d-9267633ece
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-703c00eb7c77b3d6d3290dced0c2f1e34dd8c3a57ded6619cfae213d85fabb65 -->
+<!-- cache-key: cdktf-0.19.0 input-703c00eb7c77b3d6d3290dced0c2f1e34dd8c3a57ded6619cfae213d85fabb65 -->

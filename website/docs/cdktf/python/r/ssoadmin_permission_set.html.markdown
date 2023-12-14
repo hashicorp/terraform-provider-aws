@@ -87,4 +87,4 @@ Using `terraform import`, import SSO Permission Sets using the `arn` and `instan
 % terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2c1f2076ed612356260a73ee4a57bd14c4cf5a5dd7d59da0d248e8cda59c8f43 -->
+<!-- cache-key: cdktf-0.19.0 input-2c1f2076ed612356260a73ee4a57bd14c4cf5a5dd7d59da0d248e8cda59c8f43 -->

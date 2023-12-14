@@ -381,4 +381,4 @@ Using `terraform import`, import MSK clusters using the cluster `arn`. For examp
 % terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d74467505dc35d807d612607ba3f66d806ec402f358078d3397150e5e6466657 -->
+<!-- cache-key: cdktf-0.19.0 input-d74467505dc35d807d612607ba3f66d806ec402f358078d3397150e5e6466657 -->

@@ -26,6 +26,7 @@ nav:
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
+      - Migrating from SDKv2 to Framework: migrate-from-sdk-to-framework.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - Data Handling and Conversion: data-handling-and-conversion.md

@@ -154,4 +154,4 @@ Using `terraform import`, import `aws_kendra_faq` using the unique identifiers o
 % terraform import aws_kendra_faq.example faq-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-57f89e70ce17623b02f00b073b804b218ccbbb5d903a356e14ccc19a733fa5e6 -->
+<!-- cache-key: cdktf-0.19.0 input-57f89e70ce17623b02f00b073b804b218ccbbb5d903a356e14ccc19a733fa5e6 -->

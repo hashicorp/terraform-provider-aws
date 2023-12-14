@@ -52,8 +52,8 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the workgroup.
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
 * `description` - (Optional) Description of the workgroup.
-* `state` - (Optional) State of the workgroup. Valid values are `disabled` or `enabled`. Defaults to `enabled`.
-* `tags` - (Optional) Key-value map of resource tags for the workgroup. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `state` - (Optional) State of the workgroup. Valid values are `DISABLED` or `ENABLED`. Defaults to `ENABLED`.
+* `tags` - (Optional) Key-value map of resource tags for the workgroup. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `forceDestroy` - (Optional) Option to delete the workgroup and its contents even if the workgroup contains any named queries.
 
 ### Configuration
@@ -68,7 +68,7 @@ This resource supports the following arguments:
 
 #### Engine Version
 
-* `selectedEngineVersion` - (Optional) Requested engine version. Defaults to `auto`.
+* `selectedEngineVersion` - (Optional) Requested engine version. Defaults to `AUTO`.
 
 #### Result Configuration
 
@@ -79,12 +79,12 @@ This resource supports the following arguments:
 
 ##### ACL Configuration
 
-* `s3AclOption` - (Required) Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `bucketOwnerFullControl`.
+* `s3AclOption` - (Required) Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `BUCKET_OWNER_FULL_CONTROL`.
 
 ##### Encryption Configuration
 
-* `encryptionOption` - (Required) Whether Amazon S3 server-side encryption with Amazon S3-managed keys (`sseS3`), server-side encryption with KMS-managed keys (`sseKms`), or client-side encryption with KMS-managed keys (`cseKms`) is used. If a query runs in a workgroup and the workgroup overrides client-side settings, then the workgroup's setting for encryption is used. It specifies whether query results must be encrypted, for all queries that run in this workgroup.
-* `kmsKeyArn` - (Optional) For `sseKms` and `cseKms`, this is the KMS key ARN.
+* `encryptionOption` - (Required) Whether Amazon S3 server-side encryption with Amazon S3-managed keys (`SSE_S3`), server-side encryption with KMS-managed keys (`SSE_KMS`), or client-side encryption with KMS-managed keys (`CSE_KMS`) is used. If a query runs in a workgroup and the workgroup overrides client-side settings, then the workgroup's setting for encryption is used. It specifies whether query results must be encrypted, for all queries that run in this workgroup.
+* `kmsKeyArn` - (Optional) For `SSE_KMS` and `CSE_KMS`, this is the KMS key ARN.
 
 ## Attribute Reference
 
@@ -92,10 +92,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the workgroup
 * `configuration` - Configuration block with various settings for the workgroup
-    * `engineVersion` - Configuration block for the Athena Engine Versioning
-        * `effectiveEngineVersion` -  The engine version on which the query runs. If `selectedEngineVersion` is set to `auto`, the effective engine version is chosen by Athena.
+    * `engine_version` - Configuration block for the Athena Engine Versioning
+        * `effective_engine_version` -  The engine version on which the query runs. If `selected_engine_version` is set to `AUTO`, the effective engine version is chosen by Athena.
 * `id` - Workgroup name
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -119,4 +119,4 @@ Using `terraform import`, import Athena Workgroups using their name. For example
 % terraform import aws_athena_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c130731e53530304eb8b07566132f6c077365dfdbf8f6396690cec4300991bd4 -->
+<!-- cache-key: cdktf-0.19.0 input-c130731e53530304eb8b07566132f6c077365dfdbf8f6396690cec4300991bd4 -->

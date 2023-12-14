@@ -129,7 +129,7 @@ The following arguments are optional:
 * `maintenance` - (Optional) Maintenance settings for this channel. See [Maintenance](#maintenance) for more details.
 * `roleArn` - (Optional) Concise argument description.
 * `startChannel` - (Optional) Whether to start/stop channel. Default: `false`
-* `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Settings for the VPC outputs. See [VPC](#vpc) for more details.
 
 ### CDI Input Specification
@@ -401,7 +401,7 @@ The following arguments are optional:
 ### Nielsen Watermark Settings
 
 * `nielsenCbetSettings` - (Optional) Used to insert watermarks of type Nielsen CBET. See [Nielsen CBET Settings](#nielsen-cbet-settings) for more details.
-* `nielsenDistributionType` - (Optional) Distribution types to assign to the watermarks. Options are `programContent` and `finalDistributor`.
+* `nielsenDistributionType` - (Optional) Distribution types to assign to the watermarks. Options are `PROGRAM_CONTENT` and `FINAL_DISTRIBUTOR`.
 * `nielsenNaesIiNwSettings` - (Optional) Used to insert watermarks of type Nielsen NAES, II (N2) and Nielsen NAES VI (NW). See [Nielsen NAES II NW Settings](#nielsen-naes-ii-nw-settings) for more details.
 
 ### Nielsen CBET Settings
@@ -481,8 +481,8 @@ The following arguments are optional:
 * `gopBReference` - (Optional) GOP-B reference.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
 * `gopNumBFrames` - (Optional) Number of B-frames between reference frames.
-* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gopSizeUnits`.
-* `gopSizeUnits` - (Optional) Indicates if the `gopSize` is specified in frames or seconds.
+* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gopSizeUnits` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
 * `level` - (Optional) H264 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
@@ -524,8 +524,8 @@ The following arguments are optional:
 * `framerateDenominator` - (Required) Framerate denominator.
 * `framerateNumerator` - (Required) Framerate numerator.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
-* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gopSizeUnits`.
-* `gopSizeUnits` - (Optional) Indicates if the `gopSize` is specified in frames or seconds.
+* `gopSize` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gopSizeUnits` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
 * `level` - (Optional) H265 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
@@ -794,9 +794,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `15M`)
-* `update` - (Default `15M`)
-* `delete` - (Default `15M`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 
@@ -820,4 +820,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3f7e093a01633975d88f239894e4bccf4a8cd3abaf84dcdf67f0af047ec3f42 -->
+<!-- cache-key: cdktf-0.19.0 input-d3f7e093a01633975d88f239894e4bccf4a8cd3abaf84dcdf67f0af047ec3f42 -->

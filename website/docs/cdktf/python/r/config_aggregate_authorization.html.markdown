@@ -66,4 +66,4 @@ Using `terraform import`, import Config aggregate authorizations using `account_
 % terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4204f5d9e939a49ac26b9c31dd13e4a4acdca6966654b750d69b34875f0ffb29 -->
+<!-- cache-key: cdktf-0.19.0 input-4204f5d9e939a49ac26b9c31dd13e4a4acdca6966654b750d69b34875f0ffb29 -->

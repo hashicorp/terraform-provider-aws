@@ -6,6 +6,7 @@ package errs
 import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 // to make an educated guess about whether the problem stems from a feature not being
 // available in a non-standard partitions (e.g. ISO) that is normally available.
 // A return value of `true` means that there is an error AND it suggests a feature is not supported in ISO.
-// Be careful with a return value of `false“, which means either there is NO error
+// Be careful with a return value of `false`, which means either there is NO error
 // or there is an error but not one that suggests an unsupported feature in ISO.
 func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 	if partition == endpoints.AwsPartitionID {
@@ -41,65 +42,73 @@ func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
 		return false
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeAccessDenied) {
+	if errCodeContains(err, errCodeAccessDenied) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeAuthorizationError) {
+	if errCodeContains(err, errCodeAuthorizationError) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeInternalException) {
+	if errCodeContains(err, errCodeInternalException) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeInternalServiceError) {
+	if errCodeContains(err, errCodeInternalServiceError) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeInvalidAction) {
+	if errCodeContains(err, errCodeInvalidAction) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeInvalidParameterException) {
+	if errCodeContains(err, errCodeInvalidParameterException) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeInvalidParameterValue) {
+	if errCodeContains(err, errCodeInvalidParameterValue) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeInvalidRequest) {
+	if errCodeContains(err, errCodeInvalidRequest) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeOperationDisabledException) {
+	if errCodeContains(err, errCodeOperationDisabledException) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeOperationNotPermitted) {
+	if errCodeContains(err, errCodeOperationNotPermitted) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeUnknownOperationException) {
+	if errCodeContains(err, errCodeUnknownOperationException) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeUnsupportedFeatureException) {
+	if errCodeContains(err, errCodeUnsupportedFeatureException) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeUnsupportedOperation) {
+	if errCodeContains(err, errCodeUnsupportedOperation) {
 		return true
 	}
 
-	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not support tagging") {
+	if errMessageContains(err, errCodeValidationError, "not support tagging") {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, errCodeValidationException) {
+	if errCodeContains(err, errCodeValidationException) {
 		return true
 	}
 
 	return false
+}
+
+func errCodeContains(err error, code string) bool {
+	return tfawserr.ErrCodeContains(err, code) || tfawserr_sdkv2.ErrCodeContains(err, code)
+}
+
+func errMessageContains(err error, code, message string) bool {
+	return tfawserr.ErrMessageContains(err, code, message) || tfawserr_sdkv2.ErrMessageContains(err, code, message)
 }

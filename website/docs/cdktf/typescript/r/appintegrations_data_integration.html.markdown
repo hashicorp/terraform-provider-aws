@@ -53,13 +53,13 @@ This resource supports the following arguments:
 * `kmsKey` - (Required) Specifies the KMS key Amazon Resource Name (ARN) for the Data Integration.
 * `name` - (Required) Specifies the name of the Data Integration.
 * `scheduleConfig` - (Required) A block that defines the name of the data and how often it should be pulled from the source. The Schedule Config block is documented below.
-* `sourceUri` - (Required) Specifies the URI of the data source. Create an [AppFlow Connector Profile](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appflow_connector_profile) and reference the name of the profile in the URL. An example of this value for Salesforce is `salesforce://appFlow/example` where `example` is the name of the AppFlow Connector Profile.
-* `tags` - (Optional) Tags to apply to the Data Integration. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `sourceUri` - (Required) Specifies the URI of the data source. Create an [AppFlow Connector Profile](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appflow_connector_profile) and reference the name of the profile in the URL. An example of this value for Salesforce is `Salesforce://AppFlow/example` where `example` is the name of the AppFlow Connector Profile.
+* `tags` - (Optional) Tags to apply to the Data Integration. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `scheduleConfig` block supports the following arguments:
 
 * `firstExecutionFrom` - (Required) The start date for objects to import in the first flow run as an Unix/epoch timestamp in milliseconds or in ISO-8601 format. This needs to be a time in the past, meaning that the data created or updated before this given date will not be downloaded.
-* `object` - (Required) The name of the object to pull from the data source. Examples of objects in Salesforce include `case`, `account`, or `lead`.
+* `object` - (Required) The name of the object to pull from the data source. Examples of objects in Salesforce include `Case`, `Account`, or `Lead`.
 * `scheduleExpression` - (Required) How often the data should be pulled from data source. Examples include `rate(1 hour)`, `rate(3 hours)`, `rate(1 day)`.
 
 ## Attribute Reference
@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the Data Integration.
 * `id` - The identifier of the Data Integration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import Amazon AppIntegrations Data Integrations using 
 % terraform import aws_appintegrations_data_integration.example 12345678-1234-1234-1234-123456789123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c453729b63eb0dcd3c4b7bbf7e0c63bfc3f55c4cc0725680004f1efcf202b819 -->
+<!-- cache-key: cdktf-0.19.0 input-c453729b63eb0dcd3c4b7bbf7e0c63bfc3f55c4cc0725680004f1efcf202b819 -->

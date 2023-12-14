@@ -89,4 +89,4 @@ Using `terraform import`, import IVS (Interactive Video) Recording Configuration
 % terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-df7c61620a9731f6911320162a0d1f3273caabbf2762a59eb62c9ab821ea994d -->
+<!-- cache-key: cdktf-0.19.0 input-df7c61620a9731f6911320162a0d1f3273caabbf2762a59eb62c9ab821ea994d -->

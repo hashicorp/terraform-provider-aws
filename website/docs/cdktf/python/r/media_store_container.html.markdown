@@ -65,4 +65,4 @@ Using `terraform import`, import MediaStore Container using the MediaStore Conta
 % terraform import aws_media_store_container.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-534cdde6fc1c98559d9e005ae9cd5a252af07161d62318424cfe7000b0a2d854 -->
+<!-- cache-key: cdktf-0.19.0 input-534cdde6fc1c98559d9e005ae9cd5a252af07161d62318424cfe7000b0a2d854 -->

@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes separated by a `,` to create a unique id: `bucketName`,`resourceName`
+* `id` - A combination of attributes separated by a `,` to create a unique id: `bucket_name`,`resource_name`
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import `awsLightsailBucketResourceAccess` using the `i
 % terraform import aws_lightsail_bucket_resource_access.test example-bucket,example-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e66e2caf6e37ed190e4f20bfc333ee8f9ffb8ca628a14ba9a473ab2aa2e22e18 -->
+<!-- cache-key: cdktf-0.19.0 input-e66e2caf6e37ed190e4f20bfc333ee8f9ffb8ca628a14ba9a473ab2aa2e22e18 -->

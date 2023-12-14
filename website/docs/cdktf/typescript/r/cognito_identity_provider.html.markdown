@@ -88,4 +88,4 @@ Using `terraform import`, import `awsCognitoIdentityProvider` resources using th
 % terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6efb87c639b5fd6ebfce1d4da9543ffcb04eb147b8e55d66726d206815799eac -->
+<!-- cache-key: cdktf-0.19.0 input-6efb87c639b5fd6ebfce1d4da9543ffcb04eb147b8e55d66726d206815799eac -->

@@ -42,14 +42,14 @@ class MyConvertedCode extends TerraformStack {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `type` - Directory type (`simpleAd`, `adConnector` or `microsoftAd`).
-* `edition` - (for `microsoftAd`) Microsoft AD edition (`standard` or `enterprise`).
+* `type` - Directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD`).
+* `edition` - (for `MicrosoftAD`) Microsoft AD edition (`Standard` or `Enterprise`).
 * `name` - Fully qualified name for the directory/connector.
 * `password` - Password for the directory administrator or connector user.
-* `size` - (for `simpleAd` and `adConnector`) Size of the directory/connector (`small` or `large`).
-* `alias` - Alias for the directory/connector, such as `d991708B282AwsappsCom`.
+* `size` - (for `SimpleAD` and `ADConnector`) Size of the directory/connector (`Small` or `Large`).
+* `alias` - Alias for the directory/connector, such as `d-991708b282.awsapps.com`.
 * `description` - Textual description for the directory/connector.
-* `shortName` - Short name of the directory/connector, such as `corp`.
+* `shortName` - Short name of the directory/connector, such as `CORP`.
 * `enableSso` - Directory/connector single-sign on status.
 * `accessUrl` - Access URL for the directory/connector, such as http://alias.awsapps.com.
 * `dnsIpAddresses` - List of IP addresses of the DNS servers for the directory/connector.
@@ -79,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `radiusTimeout` - Amount of time, in seconds, to wait for the RADIUS server to respond.
 * `useSameUsername` - Not currently used.
 
-<!-- cache-key: cdktf-0.18.0 input-a0542c4af1900563814b75f11b6b9079e80d58db377a8603ef5e97154a0bd43f -->
+<!-- cache-key: cdktf-0.19.0 input-a0542c4af1900563814b75f11b6b9079e80d58db377a8603ef5e97154a0bd43f -->

@@ -79,4 +79,4 @@ Using `terraform import`, import `aws_servicecatalog_principal_portfolio_associa
 % terraform import aws_servicecatalog_principal_portfolio_association.example en,arn:aws:iam::123456789012:user/Eleanor,port-68656c6c6f,IAM
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e6d6f9fdac81517f3102dae36363cdc0c25088bd03ba2f1ace568fed9c2cef49 -->
+<!-- cache-key: cdktf-0.19.0 input-e6d6f9fdac81517f3102dae36363cdc0c25088bd03ba2f1ace568fed9c2cef49 -->

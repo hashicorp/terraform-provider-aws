@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `apiId` - (Required) GraphQL API ID.
-* `format` - (Required) The type format: `sdl` or `json`.
+* `format` - (Required) The type format: `SDL` or `JSON`.
 * `definition` - (Required) The type definition.
 
 ## Attribute Reference
@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the type.
 * `description` - The type description.
-* `id` - The ID is constructed from `apiId:format:name`.
+* `id` - The ID is constructed from `api-id:format:name`.
 * `name` - The type name.
 
 ## Import
@@ -83,4 +83,4 @@ Using `terraform import`, import Appsync Types using the `id`. For example:
 % terraform import aws_appsync_type.example api-id:format:name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-583d1e739ac827e753ccd0e8ee386fa69ac34d8c7a9c5385c707c9de6772d943 -->
+<!-- cache-key: cdktf-0.19.0 input-583d1e739ac827e753ccd0e8ee386fa69ac34d8c7a9c5385c707c9de6772d943 -->

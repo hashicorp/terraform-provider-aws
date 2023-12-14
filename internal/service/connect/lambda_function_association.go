@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -43,6 +44,8 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 }
 
 func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get("instance_id").(string)
@@ -55,21 +58,23 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 
 	_, err := conn.AssociateLambdaFunctionWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("creating Connect Lambda Function Association (%s,%s): %s", instanceId, functionArn, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Lambda Function Association (%s,%s): %s", instanceId, functionArn, err)
 	}
 
 	d.SetId(LambdaFunctionAssociationCreateResourceID(instanceId, functionArn))
 
-	return resourceLambdaFunctionAssociationRead(ctx, d, meta)
+	return append(diags, resourceLambdaFunctionAssociationRead(ctx, d, meta)...)
 }
 
 func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID, functionArn)
@@ -77,25 +82,27 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("finding Connect Lambda Function Association by Function ARN (%s): %s", functionArn, err)
+		return sdkdiag.AppendErrorf(diags, "finding Connect Lambda Function Association by Function ARN (%s): %s", functionArn, err)
 	}
 
 	d.Set("function_arn", lfaArn)
 	d.Set("instance_id", instanceID)
 
-	return nil
+	return diags
 }
 
 func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &connect.DisassociateLambdaFunctionInput{
@@ -106,12 +113,12 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 	_, err = conn.DisassociateLambdaFunctionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Connect Lambda Function Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Lambda Function Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -68,4 +68,4 @@ Using `terraform import`, import `aws_storagegateway_tape_pool` using the volume
 % terraform import aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-dba7df3eb905d7a9811189b7532fba2b7eb6c8127d9f909ad0446160863c1c13 -->
+<!-- cache-key: cdktf-0.19.0 input-dba7df3eb905d7a9811189b7532fba2b7eb6c8127d9f909ad0446160863c1c13 -->

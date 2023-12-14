@@ -266,7 +266,6 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 0,
-					MaxItems: 50,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"virtual_service": {

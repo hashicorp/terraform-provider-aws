@@ -59,7 +59,7 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Display name of the theme.
 * `permissions` - A set of resource permissions on the theme. See [permissions](#permissions).
 * `status` - The theme creation status.
-* `tags` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `versionDescription` - A description of the current theme version being created/updated.
 * `versionNumber` - The version number of the theme version.
 
@@ -134,4 +134,4 @@ This data source exports the following attributes in addition to the arguments a
 * `warning` - Color (hexadecimal) that applies to warning and informational messages.
 * `warningForeground` - Color (hexadecimal) that applies to any text or other elements that appear over the warning color.
 
-<!-- cache-key: cdktf-0.18.0 input-2daca04fcd76a4ea2ca17ad1ba924c5d29610a6687a891e20570267c4f9bd850 -->
+<!-- cache-key: cdktf-0.19.0 input-2daca04fcd76a4ea2ca17ad1ba924c5d29610a6687a891e20570267c4f9bd850 -->

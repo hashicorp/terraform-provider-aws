@@ -181,11 +181,11 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	if d.IsNewResource() && len(resp.Projects) == 0 {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
 	}
 
 	if !d.IsNewResource() && len(resp.Projects) == 0 {
@@ -197,7 +197,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	project := resp.Projects[0]
 
 	if d.IsNewResource() && project.Webhook == nil {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
 	}
 
 	if !d.IsNewResource() && project.Webhook == nil {

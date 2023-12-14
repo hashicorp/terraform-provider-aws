@@ -144,4 +144,4 @@ Using `terraform import`, import Configuration Aggregators using the name. For e
 % terraform import aws_config_configuration_aggregator.example foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd7368dc645892d0916218e47f2c57cc5932d586ba0ba2eedc64e2d5eb4009f8 -->
+<!-- cache-key: cdktf-0.19.0 input-bd7368dc645892d0916218e47f2c57cc5932d586ba0ba2eedc64e2d5eb4009f8 -->

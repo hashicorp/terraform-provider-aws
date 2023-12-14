@@ -107,7 +107,7 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	ip, err := findPoolByName(ctx, conn, name)
 	if err != nil {
-		return append(diags, create.DiagError(names.CognitoIdentity, create.ErrActionReading, DSNamePool, name, err)...)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, DSNamePool, name, err)
 	}
 
 	d.SetId(aws.StringValue(ip.IdentityPoolId))

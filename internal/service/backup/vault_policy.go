@@ -72,7 +72,12 @@ func resourceVaultPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 		Policy:          aws.String(policy),
 	}
 
-	_, err = conn.PutBackupVaultAccessPolicyWithContext(ctx, input)
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
+		func() (interface{}, error) {
+			return conn.PutBackupVaultAccessPolicyWithContext(ctx, input)
+		},
+		errCodeInvalidParameterValueException, "Provided principal is not valid",
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Policy (%s): %s", name, err)

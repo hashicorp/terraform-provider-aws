@@ -42,12 +42,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `amount` - (Required) The limit amount. If time-based, this amount is in minutes. If data-based, this amount is in terabytes (TB). The value must be a positive number.
-* `breachAction` - (Optional) The action that Amazon Redshift takes when the limit is reached. The default is `log`. Valid values are `log`, `emitMetric`, and `disable`.
+* `breachAction` - (Optional) The action that Amazon Redshift takes when the limit is reached. The default is `log`. Valid values are `log`, `emit-metric`, and `disable`.
 * `clusterIdentifier` - (Required) The identifier of the cluster that you want to limit usage.
-* `featureType` - (Required) The Amazon Redshift feature that you want to limit. Valid values are `spectrum`, `concurrencyScaling`, and `crossRegionDatasharing`.
-* `limitType` - (Required) The type of limit. Depending on the feature type, this can be based on a time duration or data size. If FeatureType is `spectrum`, then LimitType must be `dataScanned`. If FeatureType is `concurrencyScaling`, then LimitType must be `time`. If FeatureType is `crossRegionDatasharing`, then LimitType must be `dataScanned`. Valid values are `dataScanned`, and `time`.
+* `featureType` - (Required) The Amazon Redshift feature that you want to limit. Valid values are `spectrum`, `concurrency-scaling`, and `cross-region-datasharing`.
+* `limitType` - (Required) The type of limit. Depending on the feature type, this can be based on a time duration or data size. If FeatureType is `spectrum`, then LimitType must be `data-scanned`. If FeatureType is `concurrency-scaling`, then LimitType must be `time`. If FeatureType is `cross-region-datasharing`, then LimitType must be `data-scanned`. Valid values are `data-scanned`, and `time`.
 * `period` - (Optional) The time period that the amount applies to. A weekly period begins on Sunday. The default is `monthly`. Valid values are `daily`, `weekly`, and `monthly`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Usage Limit.
 * `id` - The Redshift Usage Limit ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -79,4 +79,4 @@ Using `terraform import`, import Redshift usage limits using the `id`. For examp
 % terraform import aws_redshift_usage_limit.example example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-66b262f3ea166c96e47be520f77ad628bb0cc4e80252fff83651756e7d728428 -->
+<!-- cache-key: cdktf-0.19.0 input-66b262f3ea166c96e47be520f77ad628bb0cc4e80252fff83651756e7d728428 -->

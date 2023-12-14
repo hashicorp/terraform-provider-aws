@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -80,6 +81,8 @@ func ResourceListener() *schema.Resource {
 }
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -94,20 +97,22 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	resp, err := conn.CreateListenerWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Global Accelerator Listener: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Listener: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending.
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return resourceListenerRead(ctx, d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	listener, err := FindListenerByARN(ctx, conn, d.Id())
@@ -115,30 +120,32 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Global Accelerator Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
 	d.Set("client_affinity", listener.ClientAffinity)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
-		return diag.Errorf("setting port_range: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}
 	d.Set("protocol", listener.Protocol)
 
-	return nil
+	return diags
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -152,18 +159,20 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.UpdateListenerWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Global Accelerator Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
 	// Updating a listener triggers the accelerator to change status to InPending.
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return resourceListenerRead(ctx, d, meta)
+	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -173,19 +182,19 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Global Accelerator Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
 	// Deleting a listener triggers the accelerator to change status to InPending.
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {

@@ -5,9 +5,11 @@ package framework
 
 import (
 	"context"
+	"math/rand"
 	"strings"
 	"time"
 
+	awsretry "github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"golang.org/x/exp/maps"
 )
 
 type attribute struct {
@@ -75,11 +78,27 @@ func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 
 	tflog.Info(ctx, "Sweeping resource")
 
+	jitter := time.Duration(rand.Int63n(int64(1*time.Second))) - 1*time.Second/2
+	defaultOpts := []tfresource.OptionsFunc{
+		tfresource.WithMinPollInterval(2*time.Second + jitter),
+	}
+	// Put defaults first so subsequent optFns will override them
+	optFns = append(defaultOpts, optFns...)
+
 	err = tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		err := deleteResource(ctx, state, resource)
 
 		if err != nil {
-			if strings.Contains(err.Error(), "Throttling") {
+			var throttled bool
+			for _, code := range maps.Keys(awsretry.DefaultThrottleErrorCodes) {
+				// The resource delete operation returns a diag.Diagnostics, so we have to do a
+				// string comparison instead of checking the error code of an actual error
+				if strings.Contains(err.Error(), code) {
+					throttled = true
+					break
+				}
+			}
+			if throttled {
 				tflog.Info(ctx, "Retrying throttling error", map[string]any{
 					"err": err.Error(),
 				})

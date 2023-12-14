@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -108,6 +109,8 @@ func DataSourceQuickConnect() *schema.Resource {
 }
 
 func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -124,11 +127,11 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 		quickConnectSummary, err := dataSourceGetQuickConnectSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("finding Connect Quick Connect Summary by name (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Quick Connect Summary by name (%s): %s", name, err)
 		}
 
 		if quickConnectSummary == nil {
-			return diag.Errorf("finding Connect Quick Connect Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Quick Connect Summary by name (%s): not found", name)
 		}
 
 		input.QuickConnectId = quickConnectSummary.Id
@@ -137,11 +140,11 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 	resp, err := conn.DescribeQuickConnectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect Quick Connect: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Quick Connect: %s", err)
 	}
 
 	if resp == nil || resp.QuickConnect == nil {
-		return diag.Errorf("getting Connect Quick Connect: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect Quick Connect: empty response")
 	}
 
 	quickConnect := resp.QuickConnect
@@ -152,16 +155,16 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("quick_connect_id", quickConnect.QuickConnectId)
 
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(quickConnect.QuickConnectConfig)); err != nil {
-		return diag.Errorf("setting quick_connect_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting quick_connect_config: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(quickConnect.QuickConnectId)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetQuickConnectSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QuickConnectSummary, error) {

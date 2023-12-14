@@ -59,10 +59,10 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `resourceArn` - (Required) ARN of the resource to protect (Cloudfront Distributions and ALBs only at this time).
-* `action` - (Required) One of `count` or `block`
+* `action` - (Required) One of `COUNT` or `BLOCK`
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-f7a331080867c085f8aaa43e07461e7380ab4d874abfb04d35ff548376c8399b -->
+<!-- cache-key: cdktf-0.19.0 input-f7a331080867c085f8aaa43e07461e7380ab4d874abfb04d35ff548376c8399b -->

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -113,6 +114,8 @@ func ResourceNATGateway() *schema.Resource {
 }
 
 func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateNatGatewayInput{
@@ -151,19 +154,21 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateNatGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EC2 NAT Gateway: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 NAT Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.NatGateway.NatGatewayId))
 
 	if _, err := WaitNATGatewayCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for EC2 NAT Gateway (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceNATGatewayRead(ctx, d, meta)
+	return append(diags, resourceNATGatewayRead(ctx, d, meta)...)
 }
 
 func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ng, err := FindNATGatewayByID(ctx, conn, d.Id())
@@ -171,11 +176,11 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 NAT Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EC2 NAT Gateway (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
 	var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
@@ -206,10 +211,12 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	setTagsOut(ctx, ng.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	switch d.Get("connectivity_type").(string) {
@@ -227,12 +234,12 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				_, err := conn.AssignPrivateNatGatewayAddressWithContext(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 				}
 
 				for _, privateIP := range flex.ExpandStringValueSet(add) {
 					if _, err := WaitNATGatewayAddressAssigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for EC2 NAT Gateway (%s) private IP address (%s) assign: %s", d.Id(), privateIP, err)
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) assign: %s", d.Id(), privateIP, err)
 					}
 				}
 			}
@@ -246,12 +253,12 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				_, err := conn.UnassignPrivateNatGatewayAddressWithContext(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
 				}
 
 				for _, privateIP := range flex.ExpandStringValueSet(del) {
 					if _, err := WaitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
 					}
 				}
 			}
@@ -280,12 +287,12 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				_, err := conn.AssociateNatGatewayAddressWithContext(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("associating EC2 NAT Gateway (%s) allocation IDs: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "associating EC2 NAT Gateway (%s) allocation IDs: %s", d.Id(), err)
 				}
 
 				for _, allocationID := range flex.ExpandStringValueSet(add) {
 					if _, err := WaitNATGatewayAddressAssociated(ctx, conn, d.Id(), allocationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for EC2 NAT Gateway (%s) allocation ID (%s) associate: %s", d.Id(), allocationID, err)
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) allocation ID (%s) associate: %s", d.Id(), allocationID, err)
 					}
 				}
 			}
@@ -294,7 +301,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				natGateway, err := FindNATGatewayByID(ctx, conn, d.Id())
 
 				if err != nil {
-					return diag.Errorf("reading EC2 NAT Gateway (%s): %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 				}
 
 				allocationIDs := flex.ExpandStringValueSet(del)
@@ -315,22 +322,24 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				_, err = conn.DisassociateNatGatewayAddressWithContext(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("disassociating EC2 NAT Gateway (%s) allocation IDs: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "disassociating EC2 NAT Gateway (%s) allocation IDs: %s", d.Id(), err)
 				}
 
 				for _, allocationID := range allocationIDs {
 					if _, err := WaitNATGatewayAddressDisassociated(ctx, conn, d.Id(), allocationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for EC2 NAT Gateway (%s) allocation ID (%s) disassociate: %s", d.Id(), allocationID, err)
+						return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) allocation ID (%s) disassociate: %s", d.Id(), allocationID, err)
 					}
 				}
 			}
 		}
 	}
 
-	return resourceNATGatewayRead(ctx, d, meta)
+	return append(diags, resourceNATGatewayRead(ctx, d, meta)...)
 }
 
 func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
@@ -339,18 +348,18 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNatGatewayNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EC2 NAT Gateway (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitNATGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for EC2 NAT Gateway (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {

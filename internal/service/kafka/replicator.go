@@ -250,17 +250,17 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateReplicator(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.ReplicatorArn))
 
 	if _, err := waitReplicatorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForCreation, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForCreation, ResNameReplicator, d.Id(), err)
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
@@ -280,7 +280,7 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)
 	}
 
 	sourceAlias := out.ReplicationInfoList[0].SourceKafkaClusterAlias
@@ -342,11 +342,11 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		out, err := conn.UpdateReplicationInfo(ctx, in)
 
 		if err != nil {
-			return append(diags, create.DiagError(names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)
 		}
 
 		if _, err := waitReplicatorUpdated(ctx, conn, aws.ToString(out.ReplicatorArn), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)
 		}
 	}
 
@@ -367,11 +367,11 @@ func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionDeleting, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionDeleting, ResNameReplicator, d.Id(), err)
 	}
 
 	if _, err := waitReplicatorDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForDeletion, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForDeletion, ResNameReplicator, d.Id(), err)
 	}
 
 	return diags
@@ -528,12 +528,12 @@ func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) 
 		tfMap["consumer_groups_to_exclude"] = flex.FlattenStringValueSet(v)
 	}
 
-	if apiObject.SynchroniseConsumerGroupOffsets {
-		tfMap["synchronise_consumer_group_offsets"] = aws.Bool(apiObject.SynchroniseConsumerGroupOffsets)
+	if aws.ToBool(apiObject.SynchroniseConsumerGroupOffsets) {
+		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
 	}
 
-	if apiObject.DetectAndCopyNewConsumerGroups {
-		tfMap["detect_and_copy_new_consumer_groups"] = aws.Bool(apiObject.DetectAndCopyNewConsumerGroups)
+	if aws.ToBool(apiObject.DetectAndCopyNewConsumerGroups) {
+		tfMap["detect_and_copy_new_consumer_groups"] = apiObject.DetectAndCopyNewConsumerGroups
 	}
 
 	return tfMap
@@ -554,16 +554,16 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 		tfMap["topics_to_exclude"] = flex.FlattenStringValueSet(v)
 	}
 
-	if apiObject.CopyTopicConfigurations {
-		tfMap["copy_topic_configurations"] = aws.Bool(apiObject.CopyTopicConfigurations)
+	if aws.ToBool(apiObject.CopyTopicConfigurations) {
+		tfMap["copy_topic_configurations"] = apiObject.CopyTopicConfigurations
 	}
 
-	if apiObject.CopyAccessControlListsForTopics {
-		tfMap["copy_access_control_lists_for_topics"] = aws.Bool(apiObject.CopyAccessControlListsForTopics)
+	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
+		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
 	}
 
-	if apiObject.DetectAndCopyNewTopics {
-		tfMap["detect_and_copy_new_topics"] = aws.Bool(apiObject.CopyAccessControlListsForTopics)
+	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
+		tfMap["detect_and_copy_new_topics"] = apiObject.CopyAccessControlListsForTopics
 	}
 
 	return tfMap
@@ -639,11 +639,11 @@ func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.C
 	}
 
 	if v, ok := tfMap["synchronise_consumer_group_offsets"].(bool); ok {
-		apiObject.SynchroniseConsumerGroupOffsets = v
+		apiObject.SynchroniseConsumerGroupOffsets = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_consumer_groups"].(bool); ok {
-		apiObject.DetectAndCopyNewConsumerGroups = v
+		apiObject.DetectAndCopyNewConsumerGroups = aws.Bool(v)
 	}
 
 	return apiObject
@@ -661,15 +661,15 @@ func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicRepl
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = v
+		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = v
+		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = v
+		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
 	return apiObject
@@ -735,11 +735,11 @@ func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.Consume
 	}
 
 	if v, ok := tfMap["synchronise_consumer_group_offsets"].(bool); ok {
-		apiObject.SynchroniseConsumerGroupOffsets = v
+		apiObject.SynchroniseConsumerGroupOffsets = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_consumer_groups"].(bool); ok {
-		apiObject.DetectAndCopyNewConsumerGroups = v
+		apiObject.DetectAndCopyNewConsumerGroups = aws.Bool(v)
 	}
 
 	return apiObject
@@ -757,15 +757,15 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = v
+		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = v
+		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = v
+		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
 	return apiObject

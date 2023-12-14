@@ -206,7 +206,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceReplicationConfigRead(ctx, d, meta)
+	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
 func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -58,4 +58,4 @@ The `region` configuration block exports the following attributes for each Regio
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 * `status_message` - More information about the status of a Region.
 
-<!-- cache-key: cdktf-0.18.0 input-39319f4ba29ed3dd3b2f5e50f169ffe1879a34918a97973bcb5a09f09dcd8369 -->
+<!-- cache-key: cdktf-0.19.0 input-39319f4ba29ed3dd3b2f5e50f169ffe1879a34918a97973bcb5a09f09dcd8369 -->

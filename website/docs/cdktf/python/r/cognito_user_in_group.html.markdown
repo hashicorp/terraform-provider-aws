@@ -72,4 +72,4 @@ The following arguments are required:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-be59be793cc148b63f6cb2c1176522ea395a72e01fb79223c762c9ea801a348a -->
+<!-- cache-key: cdktf-0.19.0 input-be59be793cc148b63f6cb2c1176522ea395a72e01fb79223c762c9ea801a348a -->

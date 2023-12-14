@@ -79,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tls_enabled` - When true, in-transit encryption is enabled for the cluster.
 * `tags` - Map of tags assigned to the cluster.
 
-<!-- cache-key: cdktf-0.18.0 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->
+<!-- cache-key: cdktf-0.19.0 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->

@@ -121,4 +121,4 @@ Using `terraform import`, import Delivery Channel using the name. For example:
 % terraform import aws_config_delivery_channel.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-54435b5e17865652d2b4e1be7bdaf36c37288ea5a996a242391550ce3763b0a2 -->
+<!-- cache-key: cdktf-0.19.0 input-54435b5e17865652d2b4e1be7bdaf36c37288ea5a996a242391550ce3763b0a2 -->

@@ -93,9 +93,9 @@ This argument supports the following arguments:
 * `clusterIdentifier` - (Required, Forces new resources) The cluster identifier.
 * `clusterEndpointIdentifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.
 * `customEndpointType` - (Required) The type of the endpoint. One of: READER , ANY .
-* `staticMembers` - (Optional) List of DB instance identifiers that are part of the custom endpoint group. Conflicts with `excludedMembers`.
-* `excludedMembers` - (Optional) List of DB instance identifiers that aren't part of the custom endpoint group. All other eligible instances are reachable through the custom endpoint. Only relevant if the list of static members is empty. Conflicts with `staticMembers`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `staticMembers` - (Optional) List of DB instance identifiers that are part of the custom endpoint group. Conflicts with `excluded_members`.
+* `excludedMembers` - (Optional) List of DB instance identifiers that aren't part of the custom endpoint group. All other eligible instances are reachable through the custom endpoint. Only relevant if the list of static members is empty. Conflicts with `static_members`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of cluster
 * `id` - The RDS Cluster Endpoint Identifier
 * `endpoint` - A custom endpoint for the Aurora cluster
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -130,4 +130,4 @@ Using `terraform import`, import RDS Clusters Endpoint using the `clusterEndpoin
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster
 
-<!-- cache-key: cdktf-0.18.0 input-434900fb7bad99c986024771dc6f6eede1b08db3846985a86234a5c3c5be241e -->
+<!-- cache-key: cdktf-0.19.0 input-434900fb7bad99c986024771dc6f6eede1b08db3846985a86234a5c3c5be241e -->

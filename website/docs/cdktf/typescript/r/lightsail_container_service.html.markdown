@@ -184,7 +184,7 @@ This argument supports the following arguments:
 * `privateRegistryAccess` - (Optional) An object to describe the configuration for the container service to access private container image repositories, such as Amazon Elastic Container Registry (Amazon ECR) private repositories. See [Private Registry Access](#private-registry-access) below for more details.
 * `tags` - (Optional) Map of container service tags. To tag at launch, specify the tags in the Launch Template. If
   configured with a provider
-  [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
+  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
   present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Private Registry Access
@@ -216,7 +216,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `resourceType` - The Lightsail resource type of the container service (i.e., ContainerService).
 * `state` - The current state of the container service.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider
-  [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - The publicly accessible URL of the container service. If no public endpoint is specified in the
   currentDeployment, this URL returns a 404 response.
 
@@ -224,9 +224,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -250,4 +250,4 @@ Using `terraform import`, import Lightsail Container Service using the `name`. F
 % terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a73e29d48c4928c341fdc728c20c41a3e699af1e8921fe46e3340cce9c056c70 -->
+<!-- cache-key: cdktf-0.19.0 input-a73e29d48c4928c341fdc728c20c41a3e699af1e8921fe46e3340cce9c056c70 -->

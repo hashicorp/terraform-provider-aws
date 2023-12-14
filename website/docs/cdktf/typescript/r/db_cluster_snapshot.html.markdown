@@ -41,7 +41,7 @@ This resource supports the following arguments:
 
 * `dbClusterIdentifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `dbClusterSnapshotIdentifier` - (Required) The Identifier for the snapshot.
-* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -58,14 +58,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `sourceDbClusterSnapshotIdentifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storageEncrypted` - Whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - The VPC ID associated with the DB cluster snapshot.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20M`)
+* `create` - (Default `20m`)
 
 ## Import
 
@@ -89,4 +89,4 @@ Using `terraform import`, import `awsDbClusterSnapshot` using the cluster snapsh
 % terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-184cf1bfcccfca9c2ff7ce3ea29b9445d23880d46f0be562ac06c71e5ee10f89 -->
+<!-- cache-key: cdktf-0.19.0 input-184cf1bfcccfca9c2ff7ce3ea29b9445d23880d46f0be562ac06c71e5ee10f89 -->

@@ -47,7 +47,7 @@ The following arguments are required:
 * `serviceNetworkIdentifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network. You must use the ARN if the resources specified in the operation are in different accounts.
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -57,18 +57,18 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdBy` - The account that created the association.
 * `customDomainName` - The custom domain name of the service.
 * `dnsEntry` - The DNS name of the service.
-    * `domainName` - The domain name of the service.
-    * `hostedZoneId` - The ID of the hosted zone.
+    * `domain_name` - The domain name of the service.
+    * `hosted_zone_id` - The ID of the hosted zone.
 * `id` - The ID of the association.
 * `status` - The operations status. Valid Values are CREATE_IN_PROGRESS | ACTIVE | DELETE_IN_PROGRESS | CREATE_FAILED | DELETE_FAILED
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import VPC Lattice Service Network Service Association
 % terraform import aws_vpclattice_service_network_service_association.example snsa-05e2474658a88f6ba
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ed0fbd858c03d6277e22292ff2f9c7e7102bc8ebdee62a4f130453206c0b83a7 -->
+<!-- cache-key: cdktf-0.19.0 input-ed0fbd858c03d6277e22292ff2f9c7e7102bc8ebdee62a4f130453206c0b83a7 -->
