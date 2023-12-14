@@ -44,6 +44,7 @@ TF_ACC=1 go test \
     ./internal/flex/... \
     ./internal/framework/... \
     ./internal/generate/... \
+    ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
     ./internal/provider/... \
