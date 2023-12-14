@@ -576,6 +576,10 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
 	}
