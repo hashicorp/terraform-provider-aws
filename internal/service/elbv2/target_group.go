@@ -32,26 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	propagationTimeout = 2 * time.Minute
-)
-
-func healthCheckProtocolEnumValues() []string {
-	return []string{
-		elbv2.ProtocolEnumHttp,
-		elbv2.ProtocolEnumHttps,
-		elbv2.ProtocolEnumTcp,
-	}
-}
-
-func protocolVersionEnumValues() []string {
-	return []string{
-		"GRPC",
-		"HTTP1",
-		"HTTP2",
-	}
-}
-
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
 // @Tags(identifierAttribute="id")

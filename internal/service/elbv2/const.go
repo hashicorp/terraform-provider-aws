@@ -3,6 +3,16 @@
 
 package elbv2
 
+import (
+	"time"
+
+	"github.com/aws/aws-sdk-go/service/elbv2"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
 const (
 	errCodeValidationError = "ValidationError"
 
@@ -78,5 +88,21 @@ func httpXFFHeaderProcessingMode_Values() []string {
 		httpXFFHeaderProcessingModeAppend,
 		httpXFFHeaderProcessingModePreserve,
 		httpXFFHeaderProcessingModeRemove,
+	}
+}
+
+func healthCheckProtocolEnumValues() []string {
+	return []string{
+		elbv2.ProtocolEnumHttp,
+		elbv2.ProtocolEnumHttps,
+		elbv2.ProtocolEnumTcp,
+	}
+}
+
+func protocolVersionEnumValues() []string {
+	return []string{
+		"GRPC",
+		"HTTP1",
+		"HTTP2",
 	}
 }
