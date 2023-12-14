@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -28,7 +27,7 @@ func TestAccFinSpaceKxScalingGroup_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var KxScalingGroup finspace.GetKxScalingGroupOutput
+	var scalingGroup finspace.GetKxScalingGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_scaling_group.test"
 
@@ -44,7 +43,7 @@ func TestAccFinSpaceKxScalingGroup_basic(t *testing.T) {
 			{
 				Config: testAccKxScalingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &KxScalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxScalingGroupStatusActive)),
 				),
@@ -64,7 +63,7 @@ func TestAccFinSpaceKxScalingGroup_disappears(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var KxScalingGroup finspace.GetKxScalingGroupOutput
+	var scalingGroup finspace.GetKxScalingGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_scaling_group.test"
 
@@ -80,7 +79,7 @@ func TestAccFinSpaceKxScalingGroup_disappears(t *testing.T) {
 			{
 				Config: testAccKxScalingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &KxScalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxScalingGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,11 +97,7 @@ func testAccCheckKxScalingGroupDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			input := &finspace.GetKxScalingGroupInput{
-				ScalingGroupName: aws.String(rs.Primary.Attributes["name"]),
-				EnvironmentId:    aws.String(rs.Primary.Attributes["environment_id"]),
-			}
-			_, err := conn.GetKxScalingGroup(ctx, input)
+			_, err := tffinspace.FindKxScalingGroupById(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {
@@ -118,7 +113,7 @@ func testAccCheckKxScalingGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckKxScalingGroupExists(ctx context.Context, name string, KxScalingGroup *finspace.GetKxScalingGroupOutput) resource.TestCheckFunc {
+func testAccCheckKxScalingGroupExists(ctx context.Context, name string, scalingGroup *finspace.GetKxScalingGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -130,16 +125,13 @@ func testAccCheckKxScalingGroupExists(ctx context.Context, name string, KxScalin
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
-		resp, err := conn.GetKxScalingGroup(ctx, &finspace.GetKxScalingGroupInput{
-			ScalingGroupName: aws.String(rs.Primary.Attributes["name"]),
-			EnvironmentId:    aws.String(rs.Primary.Attributes["environment_id"]),
-		})
 
+		resp, err := tffinspace.FindKxScalingGroupById(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxScalingGroup, rs.Primary.ID, err)
 		}
 
-		*KxScalingGroup = *resp
+		*scalingGroup = *resp
 
 		return nil
 	}
@@ -166,45 +158,45 @@ resource "aws_finspace_kx_environment" "test" {
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
-	  "kms:Decrypt",
-	  "kms:GenerateDataKey"	  
-	]
-	  
-	resources = [
-	  aws_kms_key.test.arn,
-	]
-	  
-	principals {		
-	type        = "Service"
-	identifiers = ["finspace.amazonaws.com"]
-	}
-	  
-	condition {
-	  test     = "ArnLike"
-	  variable = "aws:SourceArn"
-	  values   = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
-	  
-	condition {
-	test     = "StringEquals"		
-	variable = "aws:SourceAccount"
-	values   = [data.aws_caller_identity.current.account_id]
-	}
-  }
-  
-  statement {
-	actions = [		
-	  "kms:*",
-	]
-	  
-    resources = [
-	"*",
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
     ]
-	  
+
+	resources = [
+      aws_kms_key.test.arn,
+	]
+
     principals {
-	type        = "AWS"
-	identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
-	}
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      "*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
   }
 }
 	  
@@ -229,15 +221,15 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-  	from_port   = 0
-   	to_port     = 0
+    from_port   = 0
+    to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
     from_port   = 0
-	to_port     = 0
+    to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
