@@ -365,7 +365,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
-	exist, err := FindTargetGroupByName(ctx, conn, name)
+	exist, err := findTargetGroupByName(ctx, conn, name)
 
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", name, err)
@@ -898,7 +898,7 @@ func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*
 		TargetGroupArns: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := FindTargetGroup(ctx, conn, input)
+	output, err := findTargetGroup(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -914,12 +914,12 @@ func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*
 	return output, nil
 }
 
-func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, error) {
+func findTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, error) {
 	input := &elbv2.DescribeTargetGroupsInput{
 		Names: aws.StringSlice([]string{name}),
 	}
 
-	output, err := FindTargetGroup(ctx, conn, input)
+	output, err := findTargetGroup(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -935,7 +935,17 @@ func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) 
 	return output, nil
 }
 
-func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) ([]*elbv2.TargetGroup, error) {
+func findTargetGroup(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) (*elbv2.TargetGroup, error) {
+	output, err := findTargetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) ([]*elbv2.TargetGroup, error) {
 	var output []*elbv2.TargetGroup
 
 	err := conn.DescribeTargetGroupsPagesWithContext(ctx, input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
@@ -964,24 +974,6 @@ func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	}
 
 	return output, nil
-}
-
-func FindTargetGroup(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) (*elbv2.TargetGroup, error) {
-	output, err := FindTargetGroups(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
 }
 
 func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {

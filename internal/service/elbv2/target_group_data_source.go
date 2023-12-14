@@ -184,7 +184,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	results, err := FindTargetGroups(ctx, conn, input)
+	results, err := findTargetGroups(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Groups: %s", err)
