@@ -5,6 +5,7 @@ package ecr
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -133,29 +134,24 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	imageDetail := imageDetails[0]
 
-	params2 := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: []*string{imageDetail.RepositoryName},
+	repositoryName := aws.StringValue(imageDetail.RepositoryName)
+	repositoryInput := &ecr.DescribeRepositoriesInput{
+		RepositoryNames: aws.StringSlice([]string{repositoryName}),
 		RegistryId:      imageDetail.RegistryId,
 	}
 
-	var repositoryDetails []*ecr.Repository
-	err2 := conn.DescribeRepositoriesPages(params2, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
-		repositoryDetails = append(repositoryDetails, page.Repositories...)
-		return true
-	})
+	repository, err := FindRepository(ctx, conn, repositoryInput)
 
-	if err2 != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECR repositories: %s", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
 	}
-
-	repository := repositoryDetails[0]
 
 	d.SetId(aws.StringValue(imageDetail.ImageDigest))
 	d.Set("image_digest", imageDetail.ImageDigest)
 	d.Set("image_pushed_at", imageDetail.ImagePushedAt.Unix())
 	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
 	d.Set("image_tags", aws.StringValueSlice(imageDetail.ImageTags))
-	d.Set("image_uri", aws.String(aws.StringValue(repository.RepositoryUri)+"@"+aws.StringValue(imageDetail.ImageDigest)))
+	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.StringValue(repository.RepositoryUri), aws.StringValue(imageDetail.ImageDigest)))
 	d.Set("registry_id", imageDetail.RegistryId)
 	d.Set("repository_name", imageDetail.RepositoryName)
 
