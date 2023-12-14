@@ -32,7 +32,7 @@ func testAccPreCheckManagedKxLicenseEnabled(t *testing.T) {
 	}
 }
 
-func TestAccSKIPFinSpaceKxCluster_basic(t *testing.T) {
+func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +69,7 @@ func TestAccSKIPFinSpaceKxCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccSKIPFinSpaceKxCluster_disappears(t *testing.T) {
+func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -608,7 +608,7 @@ func TestAccFinSpaceKxCluster_ScalingGroup(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxRDBClusterInScalingGroup_withKxVolume(t *testing.T) {
+func TestAccFinSpaceKxCluster_InScalingGroupWithKxVolume(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -640,7 +640,7 @@ func TestAccFinSpaceKxRDBClusterInScalingGroup_withKxVolume(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxTPClusterInScalingGroup_withKxVolume(t *testing.T) {
+func TestAccFinSpaceKxCluster_InScalingGroupWithKxVolume(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
