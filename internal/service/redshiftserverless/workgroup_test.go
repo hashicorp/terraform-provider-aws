@@ -259,6 +259,33 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_port(rName, 8191),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "port", "8191"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
@@ -414,4 +441,18 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccWorkgroupConfig_port(rName string, port int) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  port           = %[2]d
+}
+`, rName, port)
 }
