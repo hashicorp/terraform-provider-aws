@@ -226,7 +226,7 @@ resource "aws_finspace_kx_dataview" "test" {
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
 
   segment_configurations {
-    db_paths = ["/*"]
+    db_paths    = ["/*"]
     volume_name = aws_finspace_kx_volume.test.name
   }
 }
