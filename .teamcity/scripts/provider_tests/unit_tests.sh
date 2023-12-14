@@ -27,7 +27,6 @@ go test \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
-    ./internal/ujson/... \
     ./internal/vault/... \
     ./internal/verify/... \
     -json
