@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
@@ -14,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 func TestAccFinSpaceKxDataview_basic(t *testing.T) {
@@ -26,7 +28,7 @@ func TestAccFinSpaceKxDataview_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var kxdataview finspace.GetKxDataviewOutput
+	var dataview finspace.GetKxDataviewOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
@@ -42,7 +44,7 @@ func TestAccFinSpaceKxDataview_basic(t *testing.T) {
 			{
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &kxdataview),
+					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
 				),
@@ -61,7 +63,7 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var kxdataview finspace.GetKxDataviewOutput
+	var dataview finspace.GetKxDataviewOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
@@ -77,7 +79,7 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 			{
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &kxdataview),
+					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDataview(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,38 +88,38 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 	})
 }
 
-func testAccKxDataviewConfigBase(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  deletion_window_in_days = 7
+func TestAccFinSpaceKxDataview_withKxVolume(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dataview finspace.GetKxDataviewOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_dataview.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxDataviewConfig_withKxVolume(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
+				),
+			},
+		},
+	})
 }
 
-resource "aws_finspace_kx_environment" "test" {
-	name       = %[1]q
-    kms_key_id = aws_kms_key.test.arn
-}
-resource "aws_finspace_kx_database" "test" {
-  name           = %[1]q
-  environment_id = aws_finspace_kx_environment.test.id
-}
-`, rName)
-}
-func testAccKxDataviewConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccKxDataviewConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_finspace_kx_dataview" "test" {
-  name                 = %[1]q
-  environment_id       = aws_finspace_kx_environment.test.id
-  database_name        = aws_finspace_kx_database.test.name
-  auto_update          = true
-  az_mode              = "SINGLE"
-  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-}
-`, rName))
-}
-
-func testAccCheckKxDataviewExists(ctx context.Context, name string, kxdataview *finspace.GetKxDataviewOutput) resource.TestCheckFunc {
+func testAccCheckKxDataviewExists(ctx context.Context, name string, dataview *finspace.GetKxDataviewOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -138,7 +140,7 @@ func testAccCheckKxDataviewExists(ctx context.Context, name string, kxdataview *
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDataview, rs.Primary.ID, err)
 		}
 
-		*kxdataview = *resp
+		*dataview = *resp
 
 		return nil
 	}
@@ -170,8 +172,43 @@ func testAccCheckKxDataviewDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccKxDataviewVolumeBase(rName string) string {
+func testAccKxDataviewConfigBase(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_finspace_kx_environment" "test" {
+	name       = %[1]q
+    kms_key_id = aws_kms_key.test.arn
+}
+
+resource "aws_finspace_kx_database" "test" {
+  name           = %[1]q
+  environment_id = aws_finspace_kx_environment.test.id
+}
+`, rName)
+}
+
+func testAccKxDataviewConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxDataviewConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_dataview" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  database_name        = aws_finspace_kx_database.test.name
+  auto_update          = true
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
+`, rName))
+}
+
+func testAccKxDataviewConfig_withKxVolume(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxDataviewConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_finspace_kx_volume" "test" {
   name                 = %[1]q
   environment_id       = aws_finspace_kx_environment.test.id
@@ -183,14 +220,7 @@ resource "aws_finspace_kx_volume" "test" {
 	  size= 1200
   }
 }
-`, rName)
-}
 
-func testAccKxDataviewConfig_withKxVolume(rName string) string {
-	return acctest.ConfigCompose(
-		testAccKxDataviewConfigBase(rName),
-		testAccKxDataviewVolumeBase(rName),
-		fmt.Sprintf(`
 resource "aws_finspace_kx_dataview" "test" {
   name                 = %[1]q
   environment_id       = aws_finspace_kx_environment.test.id
@@ -205,40 +235,4 @@ resource "aws_finspace_kx_dataview" "test" {
   }
 }
 `, rName))
-}
-
-func TestAccFinSpaceKxDataview_withKxVolume(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	ctx := acctest.Context(t)
-
-	var kxdataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_finspace_kx_dataview.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
-		},
-		ErrorCheck: acctest.ErrorCheck(t, finspace.ServiceID),
-
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-
-		CheckDestroy: testAccCheckKxDataviewDestroy(ctx),
-
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKxDataviewConfig_withKxVolume(rName),
-
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &kxdataview),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
-				),
-			},
-		},
-	})
 }
