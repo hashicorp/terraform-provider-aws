@@ -162,9 +162,9 @@ data "aws_iam_policy_document" "key_policy" {
       "kms:GenerateDataKey"
     ]
 
-	resources = [
+    resources = [
       aws_kms_key.test.arn,
-	]
+    ]
 
     principals {
       type        = "Service"
@@ -199,7 +199,7 @@ data "aws_iam_policy_document" "key_policy" {
     }
   }
 }
-	  
+
 resource "aws_kms_key_policy" "test" {
   key_id = aws_kms_key.test.id
   policy = data.aws_iam_policy_document.key_policy.json
