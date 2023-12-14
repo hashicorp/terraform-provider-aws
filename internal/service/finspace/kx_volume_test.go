@@ -137,32 +137,10 @@ func testAccCheckKxVolumeExists(ctx context.Context, name string, volume *finspa
 	}
 }
 
-func testAccKxVolumeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccKxVolumeConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_finspace_kx_volume" "test" {
-  name                 = %[1]q
-  environment_id       = aws_finspace_kx_environment.test.id
-  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
-  az_mode              = "SINGLE"
-  type                 = "NAS_1"
-  nas1_configuration {
-   type= "SSD_250"
-   size= 1200
-  }
-}
-`, rName))
-}
-
 func testAccKxVolumeConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-	
-output "account_id" {
-  value = data.aws_caller_identity.current.account_id
-}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -175,49 +153,49 @@ resource "aws_finspace_kx_environment" "test" {
 
 data "aws_iam_policy_document" "key_policy" {
   statement {
-	actions = [
-	  "kms:Decrypt",
-	  "kms:GenerateDataKey"
-	]
-		
-	resources = [
-	  aws_kms_key.test.arn,
-	]
-		
-	principals {
-	  type        = "Service"
-	  identifiers = ["finspace.amazonaws.com"]
-	}
-		
-	condition {
-	  test     = "ArnLike"
-	  variable = "aws:SourceArn"
-	  values   = ["${aws_finspace_kx_environment.test.arn}/*"]
-	}
-		
-	condition {
-	  test     = "StringEquals"
-	  variable = "aws:SourceAccount"
-	  values   = [data.aws_caller_identity.current.account_id]
-	}
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["finspace.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["${aws_finspace_kx_environment.test.arn}/*"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
   }
 
   statement {
-	actions = [
-	  "kms:*",
-	]
-		
+    actions = [
+      "kms:*",
+    ]
+
     resources = [
-	  "*",
-	]
-		
-	principals {
-	  type        = "AWS"
-	  identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
-	}
+      "*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
   }
 }
-		
+
 resource "aws_kms_key_policy" "test" {
   key_id = aws_kms_key.test.id
   policy = data.aws_iam_policy_document.key_policy.json
@@ -240,16 +218,16 @@ resource "aws_security_group" "test" {
 
   ingress {
     from_port   = 0
-	to_port     = 0
-	protocol    = "-1"
-	cidr_blocks = ["0.0.0.0/0"]
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
     from_port   = 0
-	to_port     = 0
-	protocol    = "-1"
-	cidr_blocks = ["0.0.0.0/0"]
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -267,4 +245,22 @@ resource "aws_route" "r" {
   gateway_id             = aws_internet_gateway.test.id
 }
 `, rName)
+}
+
+func testAccKxVolumeConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxVolumeConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_volume" "test" {
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+  nas1_configuration {
+    type= "SSD_250"
+    size= 1200
+  }
+}
+`, rName))
 }
