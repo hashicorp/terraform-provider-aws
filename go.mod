@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/account v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.22.5
-	github.com/aws/aws-sdk-go-v2/service/amp v1.21.3
+	github.com/aws/aws-sdk-go-v2/service/amp v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.39.5
@@ -153,7 +153,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.9 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/amp v1.21.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.4 // indirect

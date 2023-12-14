@@ -246,7 +246,7 @@ func (c *AWSClient) AMPConn(ctx context.Context) *prometheusservice_sdkv1.Promet
 }
 
 func (c *AWSClient) AMPClient(ctx context.Context) *amp_sdkv2.Client {
-	return errs.Must(client[*amp_sdkv2.Client](ctx, c, names.AMP))
+	return errs.Must(client[*amp_sdkv2.Client](ctx, c, names.AMP, make(map[string]any)))
 }
 
 func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {
