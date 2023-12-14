@@ -18,9 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLexV2ModelsSlot_basic(t *testing.T) {
