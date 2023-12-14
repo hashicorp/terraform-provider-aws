@@ -3,10 +3,10 @@ subcategory: "FinSpace"
 layout: "aws"
 page_title: "AWS: aws_finspace_kx_dataview"
 description: |-
-  Terraform resource for managing an AWS FinSpace Kx Dataviewk.
+  Terraform resource for managing an AWS FinSpace Kx Dataview.
 ---
 
-# Resource: aws_finspace_dataview
+# Resource: aws_finspace_kx_dataview
 
 Terraform resource for managing an AWS FinSpace Kx Dataview.
 
