@@ -174,3 +174,10 @@ func networkType_Values() []string {
 		networkTypeIPv4,
 	}
 }
+
+const (
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
+)
