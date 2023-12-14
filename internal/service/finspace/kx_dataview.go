@@ -6,12 +6,16 @@ package finspace
 import (
 	"context"
 	"errors"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -19,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"log"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,17 +52,29 @@ func ResourceKxDataview() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
+			"auto_update": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Required: true,
 			},
-			"environment_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
+			"availability_zone_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+			"az_mode": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
+			},
+			"changeset_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"created_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"database_name": {
 				Type:         schema.TypeString,
@@ -73,25 +87,21 @@ func ResourceKxDataview() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"auto_update": {
-				Type:     schema.TypeBool,
-				ForceNew: true,
-				Required: true,
+			"environment_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			"changeset_id": {
+			"last_modified_timestamp": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
 			"segment_configurations": {
 				Type: schema.TypeList,
@@ -113,14 +123,6 @@ func ResourceKxDataview() *schema.Resource {
 				Optional: true,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
