@@ -58,7 +58,7 @@ func TestAccFinSpaceKxScalingGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxScalingGroup_dissappears(t *testing.T) {
+func TestAccFinSpaceKxScalingGroup_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
