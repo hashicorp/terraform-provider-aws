@@ -175,8 +175,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_finspace_kx_environment" "test" {
-	name       = %[1]q
-    kms_key_id = aws_kms_key.test.arn
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
 }
 
 resource "aws_finspace_kx_database" "test" {
@@ -206,14 +206,14 @@ func testAccKxDataviewConfig_withKxVolume(rName string) string {
 		testAccKxDataviewConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_finspace_kx_volume" "test" {
-  name                 = %[1]q
-  environment_id       = aws_finspace_kx_environment.test.id
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
   availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
-  az_mode              = "SINGLE"
-  type                 = "NAS_1"
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
   nas1_configuration {
-	  type= "SSD_250"
-	  size= 1200
+	type= "SSD_250"
+    size= 1200
   }
 }
 
@@ -226,8 +226,8 @@ resource "aws_finspace_kx_dataview" "test" {
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
 
   segment_configurations {
-      db_paths = ["/*"]
- 	  volume_name = aws_finspace_kx_volume.test.name
+    db_paths = ["/*"]
+ 	volume_name = aws_finspace_kx_volume.test.name
   }
 }
 `, rName))
