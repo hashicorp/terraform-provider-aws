@@ -223,7 +223,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	out, err := findKxVolumeByID(ctx, conn, d.Id())
+	out, err := FindKxVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxVolume (%s) not found, removing from state", d.Id())
@@ -382,7 +382,7 @@ func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, 
 
 func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findKxVolumeByID(ctx, conn, id)
+		out, err := FindKxVolumeByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -395,7 +395,7 @@ func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) retry
 	}
 }
 
-func findKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxVolumeOutput, error) {
+func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxVolumeOutput, error) {
 	parts, err := flex.ExpandResourceId(id, kxVolumeIDPartCount, false)
 	if err != nil {
 		return nil, err

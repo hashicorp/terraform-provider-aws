@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -28,7 +27,7 @@ func TestAccFinSpaceKxVolume_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var KxVolume finspace.GetKxVolumeOutput
+	var volume finspace.GetKxVolumeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_volume.test"
 
@@ -44,7 +43,7 @@ func TestAccFinSpaceKxVolume_basic(t *testing.T) {
 			{
 				Config: testAccKxVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxVolumeExists(ctx, resourceName, &KxVolume),
+					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxVolumeStatusActive)),
 				),
@@ -64,7 +63,7 @@ func TestAccFinSpaceKxVolume_disappears(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var KxVolume finspace.GetKxVolumeOutput
+	var volume finspace.GetKxVolumeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_volume.test"
 
@@ -80,7 +79,7 @@ func TestAccFinSpaceKxVolume_disappears(t *testing.T) {
 			{
 				Config: testAccKxVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxVolumeExists(ctx, resourceName, &KxVolume),
+					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,11 +97,7 @@ func testAccCheckKxVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &finspace.GetKxVolumeInput{
-				VolumeName:    aws.String(rs.Primary.Attributes["name"]),
-				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-			}
-			_, err := conn.GetKxVolume(ctx, input)
+			_, err := tffinspace.FindKxVolumeByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {
@@ -113,6 +108,30 @@ func testAccCheckKxVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxVolume, rs.Primary.ID, errors.New("not destroyed"))
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckKxVolumeExists(ctx context.Context, name string, volume *finspace.GetKxVolumeOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxVolume, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxVolume, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+
+		resp, err := tffinspace.FindKxVolumeByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxVolume, rs.Primary.ID, err)
+		}
+
+		*volume = *resp
 
 		return nil
 	}
@@ -248,31 +267,4 @@ resource "aws_route" "r" {
   gateway_id             = aws_internet_gateway.test.id
 }
 `, rName)
-}
-
-func testAccCheckKxVolumeExists(ctx context.Context, name string, KxVolume *finspace.GetKxVolumeOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxVolume, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxVolume, name, errors.New("not set"))
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
-		resp, err := conn.GetKxVolume(ctx, &finspace.GetKxVolumeInput{
-			VolumeName:    aws.String(rs.Primary.Attributes["name"]),
-			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-		})
-
-		if err != nil {
-			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxVolume, rs.Primary.ID, err)
-		}
-
-		*KxVolume = *resp
-
-		return nil
-	}
 }
