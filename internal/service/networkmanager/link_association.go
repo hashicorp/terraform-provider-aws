@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -57,6 +58,8 @@ func ResourceLinkAssociation() *schema.Resource {
 }
 
 func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -73,25 +76,27 @@ func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.AssociateLinkWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Link Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Link Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitLinkAssociationCreated(ctx, conn, globalNetworkID, linkID, deviceID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Link Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Link Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceLinkAssociationRead(ctx, d, meta)
+	return append(diags, resourceLinkAssociationRead(ctx, d, meta)...)
 }
 
 func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := FindLinkAssociationByThreePartKey(ctx, conn, globalNetworkID, linkID, deviceID)
@@ -99,27 +104,29 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Link Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Link Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Link Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("device_id", output.DeviceId)
 	d.Set("global_network_id", output.GlobalNetworkId)
 	d.Set("link_id", output.LinkId)
 
-	return nil
+	return diags
 }
 
 func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Link Association: %s", d.Id())
@@ -130,18 +137,18 @@ func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Link Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Link Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitLinkAssociationDeleted(ctx, conn, globalNetworkID, linkID, deviceID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Link Association (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Link Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindLinkAssociation(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetLinkAssociationsInput) (*networkmanager.LinkAssociation, error) {

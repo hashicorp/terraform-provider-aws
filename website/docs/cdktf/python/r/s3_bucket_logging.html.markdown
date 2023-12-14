@@ -16,6 +16,8 @@ in the AWS S3 User Guide.
 ~> **Note:** Amazon S3 supports server access logging, AWS CloudTrail, or a combination of both. Refer to the [Logging options for Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html)
 to decide which method meets your requirements.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```python
@@ -66,6 +68,7 @@ This resource supports the following arguments:
 * `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
 * `target_prefix` - (Required) Prefix for all log object keys.
 * `target_grant` - (Optional) Set of configuration blocks with information for granting permissions. [See below](#target_grant).
+* `target_object_key_format` - (Optional) Amazon S3 key format for log objects. [See below](#target_object_key_format).
 
 ### target_grant
 
@@ -82,6 +85,19 @@ The `grantee` configuration block supports the following arguments:
 * `id` - (Optional) Canonical user ID of the grantee.
 * `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
+
+### target_object_key_format
+
+The `target_object_key_format` configuration block supports the following arguments:
+
+* `partitioned_prefix` - (Optional) Partitioned S3 key for log objects. [See below](#partitioned_prefix).
+* `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects. To use, set `simple_prefix {}`.
+
+### partitioned_prefix
+
+The `partitioned_prefix` configuration block supports the following arguments:
+
+* `partition_date_source` - (Required) Specifies the partition date source for the partitioned prefix. Valid values: `EventTime`, `DeliveryTime`.
 
 ## Attribute Reference
 
@@ -129,4 +145,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_logging.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3cba2dd83f76e650304ea09cc4ee162c5bf05b0006a74f1eff49c0cb39bfcded -->
+<!-- cache-key: cdktf-0.19.0 input-84005dc097b2a2ceb5d4b3077a825a1234cf23a38227e29e509ee3ce8851df2f -->

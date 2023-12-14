@@ -277,9 +277,8 @@ func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 		connectionInput.MatchCriteria = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("physical_connection_requirements"); ok {
-		physicalConnectionRequirementsList := v.([]interface{})
-		physicalConnectionRequirementsMap := physicalConnectionRequirementsList[0].(map[string]interface{})
+	if v, ok := d.GetOk("physical_connection_requirements"); ok && v.([]interface{})[0] != nil {
+		physicalConnectionRequirementsMap := v.([]interface{})[0].(map[string]interface{})
 		connectionInput.PhysicalConnectionRequirements = expandPhysicalConnectionRequirements(physicalConnectionRequirementsMap)
 	}
 

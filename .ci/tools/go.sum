@@ -632,8 +632,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFb
 github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 h1:2VTzZjLZBgl62/EtslCrtky5vbi9dd7HrQPQIx6wqiw=
 github.com/hashicorp/consul/api v1.13.0/go.mod h1:ZlVrynguJKcYr54zGaDbaL3fOvKC9m72FhPvA8T35KQ=
 github.com/hashicorp/consul/sdk v0.8.0/go.mod h1:GBvyrGALthsZObzUGsfgHZQDXjg4lOjagTIwIR1vPms=
-github.com/hashicorp/copywrite v0.16.6 h1:tTkXQiFwK/INXptOgxQ8Vu2i2+GjAf8iE8HRw3IhLA0=
-github.com/hashicorp/copywrite v0.16.6/go.mod h1:6wvQH+ICDoD2bpjO1RJ6fi+h3aY5NeLEM12oTkEtFoc=
+github.com/hashicorp/copywrite v0.18.0 h1:6f3aBDyQLBXhD6cdGSnsEM37vCDi3JJrkbR9HPBJf5c=
+github.com/hashicorp/copywrite v0.18.0/go.mod h1:6wvQH+ICDoD2bpjO1RJ6fi+h3aY5NeLEM12oTkEtFoc=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=

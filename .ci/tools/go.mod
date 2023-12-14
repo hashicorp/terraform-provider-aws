@@ -6,7 +6,7 @@ require (
 	github.com/YakDriver/tfproviderdocs v0.11.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.55.2
-	github.com/hashicorp/copywrite v0.16.6
+	github.com/hashicorp/copywrite v0.18.0
 	github.com/hashicorp/go-changelog v0.0.0-20201005170154-56335215ce3a
 	github.com/katbyte/terrafmt v0.5.2
 	github.com/pavius/impi v0.0.3

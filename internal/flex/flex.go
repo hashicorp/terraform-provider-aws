@@ -122,6 +122,13 @@ func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
 	})
 }
 
+// ExpandInt64ValueMap expands a map of string to interface to a map of string to int64
+func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
+	return tfmaps.ApplyToAllValues(m, func(v any) int64 {
+		return int64(v.(int))
+	})
+}
+
 // Expands a map of string to interface to a map of string to *string
 func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	return tfmaps.ApplyToAllValues(m, func(v any) *string {
@@ -282,10 +289,27 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
+// BoolValueToString converts a Go bool value to a string pointer.
+func BoolValueToString(v bool) *string {
+	return aws.String(strconv.FormatBool(v))
+}
+
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
+}
+
+// IntValueToString converts a Go int value to a string pointer.
+func IntValueToString(v int) *string {
+	return aws.String(strconv.Itoa(v))
+}
+
+// StringToIntValue converts a string pointer to a Go int value.
+// Invalid integer strings are converted to 0.
+func StringToIntValue(v *string) int {
+	i, _ := strconv.Atoi(aws.StringValue(v))
+	return i
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant
@@ -311,4 +335,28 @@ func (s Set[T]) Difference(ns Set[T]) Set[T] {
 		}
 	}
 	return result
+}
+
+// DiffStringMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
+	// First, we're creating everything we have.
+	add := ExpandStringMap(newMap)
+
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]*string)
+	unchanged := make(map[string]*string)
+	for k, v := range oldMap {
+		v := v.(string)
+		if old, ok := add[k]; !ok || aws.StringValue(old) != v {
+			// Delete it!
+			remove[k] = aws.String(v)
+		} else if ok {
+			unchanged[k] = aws.String(v)
+			// Already present, so remove from new.
+			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
 }

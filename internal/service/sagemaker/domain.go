@@ -113,6 +113,10 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -158,6 +162,10 @@ func ResourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
@@ -214,11 +222,6 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"execution_role": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
 						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -339,6 +342,195 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
+						"code_editor_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+						},
+						"custom_file_system_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"efs_file_system_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"file_system_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"file_system_path": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"custom_posix_user_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"gid": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1001),
+									},
+									"uid": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(10000),
+									},
+								},
+							},
+						},
+						"default_landing_uri": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"execution_role": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"jupyter_lab_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 200,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+						},
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -379,6 +571,10 @@ func ResourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
@@ -425,6 +621,10 @@ func ResourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
@@ -519,6 +719,10 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -574,6 +778,39 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
+						"studio_web_portal": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.StudioWebPortal_Values(), false),
+						},
+						"space_storage_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_ebs_storage_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"default_ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"maximum_ebs_volume_size_in_gb": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"tensor_board_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -600,6 +837,10 @@ func ResourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
@@ -661,6 +902,10 @@ func ResourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_alias": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
@@ -725,6 +970,10 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"single_sign_on_application_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"single_sign_on_managed_application_instance_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -763,7 +1012,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		VpcId:                aws.String(d.Get("vpc_id").(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		DefaultUserSettings:  expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+		DefaultUserSettings:  expandUserSettings(d.Get("default_user_settings").([]interface{})),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -819,23 +1068,24 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := aws.StringValue(domain.DomainArn)
-	d.Set("domain_name", domain.DomainName)
-	d.Set("auth_mode", domain.AuthMode)
 	d.Set("app_network_access_type", domain.AppNetworkAccessType)
+	d.Set("app_security_group_management", domain.AppSecurityGroupManagement)
 	d.Set("arn", arn)
+	d.Set("auth_mode", domain.AuthMode)
+	d.Set("domain_name", domain.DomainName)
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
+	d.Set("kms_key_id", domain.KmsKeyId)
+	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
+	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
 	d.Set("url", domain.Url)
 	d.Set("vpc_id", domain.VpcId)
-	d.Set("kms_key_id", domain.KmsKeyId)
-	d.Set("app_security_group_management", domain.AppSecurityGroupManagement)
-	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 
 	if err := d.Set("subnet_ids", flex.FlattenStringSet(domain.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("default_user_settings", flattenDomainDefaultUserSettings(domain.DefaultUserSettings)); err != nil {
+	if err := d.Set("default_user_settings", flattenUserSettings(domain.DefaultUserSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_user_settings for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
@@ -860,7 +1110,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if v, ok := d.GetOk("default_user_settings"); ok && len(v.([]interface{})) > 0 {
-			input.DefaultUserSettings = expandDomainDefaultUserSettings(v.([]interface{}))
+			input.DefaultUserSettings = expandUserSettings(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_settings"); ok && len(v.([]interface{})) > 0 {
@@ -958,7 +1208,7 @@ func expandRStudioServerProDomainSettings(l []interface{}) *sagemaker.RStudioSer
 	}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
@@ -996,7 +1246,7 @@ func expandRetentionPolicy(l []interface{}) *sagemaker.RetentionPolicy {
 	return config
 }
 
-func expandDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
+func expandUserSettings(l []interface{}) *sagemaker.UserSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1011,6 +1261,26 @@ func expandDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
 
 	if v, ok := m["execution_role"].(string); ok && v != "" {
 		config.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["default_landing_uri"].(string); ok && v != "" {
+		config.DefaultLandingUri = aws.String(v)
+	}
+
+	if v, ok := m["code_editor_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.CodeEditorAppSettings = expandDomainCodeEditorAppSettings(v)
+	}
+
+	if v, ok := m["custom_file_system_config"].([]interface{}); ok && len(v) > 0 {
+		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	}
+
+	if v, ok := m["custom_posix_user_config"].([]interface{}); ok && len(v) > 0 {
+		config.CustomPosixUserConfig = expandCustomPOSIXUserConfig(v)
+	}
+
+	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.JupyterLabAppSettings = expandDomainJupyterLabAppSettings(v)
 	}
 
 	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
@@ -1031,6 +1301,14 @@ func expandDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
 
 	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 {
 		config.SharingSettings = expandDomainShareSettings(v)
+	}
+
+	if v, ok := m["studio_web_portal"].(string); ok && v != "" {
+		config.StudioWebPortal = aws.String(v)
+	}
+
+	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+		config.SpaceStorageSettings = expandDefaultSpaceStorageSettings(v)
 	}
 
 	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
@@ -1066,6 +1344,74 @@ func expandRStudioServerProAppSettings(l []interface{}) *sagemaker.RStudioServer
 	return config
 }
 
+func expandCustomPOSIXUserConfig(l []interface{}) *sagemaker.CustomPosixUserConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.CustomPosixUserConfig{}
+
+	if v, ok := m["gid"].(int); ok {
+		config.Gid = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["uid"].(int); ok {
+		config.Uid = aws.Int64(int64(v))
+	}
+
+	return config
+}
+
+func expandDomainCodeEditorAppSettings(l []interface{}) *sagemaker.CodeEditorAppSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.CodeEditorAppSettings{}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.LifecycleConfigArns = flex.ExpandStringSet(v)
+	}
+
+	return config
+}
+
+func expandDomainJupyterLabAppSettings(l []interface{}) *sagemaker.JupyterLabAppSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.JupyterLabAppSettings{}
+
+	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
+		config.CodeRepositories = expandCodeRepositories(v.List())
+	}
+
+	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+		config.CustomImages = expandDomainCustomImages(v)
+	}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.LifecycleConfigArns = flex.ExpandStringSet(v)
+	}
+
+	return config
+}
+
 func expandDomainJupyterServerAppSettings(l []interface{}) *sagemaker.JupyterServerAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1080,7 +1426,7 @@ func expandDomainJupyterServerAppSettings(l []interface{}) *sagemaker.JupyterSer
 	}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -1100,7 +1446,7 @@ func expandDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.KernelGate
 	config := &sagemaker.KernelGatewayAppSettings{}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -1124,11 +1470,47 @@ func expandRSessionAppSettings(l []interface{}) *sagemaker.RSessionAppSettings {
 	config := &sagemaker.RSessionAppSettings{}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
+	}
+
+	return config
+}
+
+func expandDefaultSpaceStorageSettings(l []interface{}) *sagemaker.DefaultSpaceStorageSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.DefaultSpaceStorageSettings{}
+
+	if v, ok := m["default_ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultEbsStorageSettings = expandDefaultEBSStorageSettings(v)
+	}
+
+	return config
+}
+
+func expandDefaultEBSStorageSettings(l []interface{}) *sagemaker.DefaultEbsStorageSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.DefaultEbsStorageSettings{}
+
+	if v, ok := m["default_ebs_volume_size_in_gb"].(int); ok {
+		config.DefaultEbsVolumeSizeInGb = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["maximum_ebs_volume_size_in_gb"].(int); ok {
+		config.MaximumEbsVolumeSizeInGb = aws.Int64(int64(v))
 	}
 
 	return config
@@ -1144,13 +1526,13 @@ func expandDomainTensorBoardAppSettings(l []interface{}) *sagemaker.TensorBoardA
 	config := &sagemaker.TensorBoardAppSettings{}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func expandDomainDefaultResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
+func expandResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1169,6 +1551,10 @@ func expandDomainDefaultResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
 
 	if v, ok := m["sagemaker_image_arn"].(string); ok && v != "" {
 		config.SageMakerImageArn = aws.String(v)
+	}
+
+	if v, ok := m["sagemaker_image_version_alias"].(string); ok && v != "" {
+		config.SageMakerImageVersionAlias = aws.String(v)
 	}
 
 	if v, ok := m["sagemaker_image_version_arn"].(string); ok && v != "" {
@@ -1207,13 +1593,25 @@ func expandCanvasAppSettings(l []interface{}) *sagemaker.CanvasAppSettings {
 
 	m := l[0].(map[string]interface{})
 
-	config := &sagemaker.CanvasAppSettings{
-		IdentityProviderOAuthSettings: expandIdentityProviderOAuthSettings(m["identity_provider_oauth_settings"].([]interface{})),
-		DirectDeploySettings:          expandDirectDeploySettings(m["direct_deploy_settings"].([]interface{})),
-		KendraSettings:                expandKendraSettings(m["kendra_settings"].([]interface{})),
-		ModelRegisterSettings:         expandModelRegisterSettings(m["model_register_settings"].([]interface{})),
-		TimeSeriesForecastingSettings: expandTimeSeriesForecastingSettings(m["time_series_forecasting_settings"].([]interface{})),
-		WorkspaceSettings:             expandWorkspaceSettings(m["workspace_settings"].([]interface{})),
+	config := &sagemaker.CanvasAppSettings{}
+
+	if v, ok := m["direct_deploy_settings"].([]interface{}); ok {
+		config.DirectDeploySettings = expandDirectDeploySettings(v)
+	}
+	if v, ok := m["identity_provider_oauth_settings"].([]interface{}); ok {
+		config.IdentityProviderOAuthSettings = expandIdentityProviderOAuthSettings(v)
+	}
+	if v, ok := m["kendra_settings"].([]interface{}); ok {
+		config.KendraSettings = expandKendraSettings(v)
+	}
+	if v, ok := m["model_register_settings"].([]interface{}); ok {
+		config.ModelRegisterSettings = expandModelRegisterSettings(v)
+	}
+	if v, ok := m["time_series_forecasting_settings"].([]interface{}); ok {
+		config.TimeSeriesForecastingSettings = expandTimeSeriesForecastingSettings(v)
+	}
+	if v, ok := m["workspace_settings"].([]interface{}); ok {
+		config.WorkspaceSettings = expandWorkspaceSettings(v)
 	}
 
 	return config
@@ -1358,7 +1756,7 @@ func expandDomainCustomImages(l []interface{}) []*sagemaker.CustomImage {
 	return images
 }
 
-func flattenDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[string]interface{} {
+func flattenUserSettings(config *sagemaker.UserSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -1371,6 +1769,26 @@ func flattenDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[stri
 
 	if config.ExecutionRole != nil {
 		m["execution_role"] = aws.StringValue(config.ExecutionRole)
+	}
+
+	if config.CustomFileSystemConfigs != nil {
+		m["custom_file_system_config"] = flattenCustomFileSystemConfigs(config.CustomFileSystemConfigs)
+	}
+
+	if config.CustomPosixUserConfig != nil {
+		m["custom_posix_user_config"] = flattenCustomPOSIXUserConfig(config.CustomPosixUserConfig)
+	}
+
+	if config.CodeEditorAppSettings != nil {
+		m["code_editor_app_settings"] = flattenDomainCodeEditorAppSettings(config.CodeEditorAppSettings)
+	}
+
+	if config.DefaultLandingUri != nil {
+		m["default_landing_uri"] = aws.StringValue(config.DefaultLandingUri)
+	}
+
+	if config.JupyterLabAppSettings != nil {
+		m["jupyter_lab_app_settings"] = flattenDomainJupyterLabAppSettings(config.JupyterLabAppSettings)
 	}
 
 	if config.JupyterServerAppSettings != nil {
@@ -1391,6 +1809,14 @@ func flattenDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[stri
 
 	if config.SharingSettings != nil {
 		m["sharing_settings"] = flattenDomainShareSettings(config.SharingSettings)
+	}
+
+	if config.StudioWebPortal != nil {
+		m["studio_web_portal"] = aws.StringValue(config.StudioWebPortal)
+	}
+
+	if config.SpaceStorageSettings != nil {
+		m["space_storage_settings"] = flattenDefaultSpaceStorageSettings(config.SpaceStorageSettings)
 	}
 
 	if config.TensorBoardAppSettings != nil {
@@ -1422,7 +1848,7 @@ func flattenRStudioServerProAppSettings(config *sagemaker.RStudioServerProAppSet
 	return []map[string]interface{}{m}
 }
 
-func flattenDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) []map[string]interface{} {
+func flattenResourceSpec(config *sagemaker.ResourceSpec) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -1441,8 +1867,44 @@ func flattenDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) []map[stri
 		m["sagemaker_image_arn"] = aws.StringValue(config.SageMakerImageArn)
 	}
 
+	if config.SageMakerImageVersionAlias != nil {
+		m["sagemaker_image_version_alias"] = aws.StringValue(config.SageMakerImageVersionAlias)
+	}
+
 	if config.SageMakerImageVersionArn != nil {
 		m["sagemaker_image_version_arn"] = aws.StringValue(config.SageMakerImageVersionArn)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDefaultSpaceStorageSettings(config *sagemaker.DefaultSpaceStorageSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.DefaultEbsStorageSettings != nil {
+		m["default_ebs_storage_settings"] = flattenDefaultEBSStorageSettings(config.DefaultEbsStorageSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDefaultEBSStorageSettings(config *sagemaker.DefaultEbsStorageSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.DefaultEbsVolumeSizeInGb != nil {
+		m["default_ebs_volume_size_in_gb"] = aws.Int64Value(config.DefaultEbsVolumeSizeInGb)
+	}
+
+	if config.MaximumEbsVolumeSizeInGb != nil {
+		m["maximum_ebs_volume_size_in_gb"] = aws.Int64Value(config.MaximumEbsVolumeSizeInGb)
 	}
 
 	return []map[string]interface{}{m}
@@ -1456,7 +1918,69 @@ func flattenDomainTensorBoardAppSettings(config *sagemaker.TensorBoardAppSetting
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenCustomPOSIXUserConfig(config *sagemaker.CustomPosixUserConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.Gid != nil {
+		m["gid"] = aws.Int64Value(config.Gid)
+	}
+
+	if config.Uid != nil {
+		m["uid"] = aws.Int64Value(config.Uid)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDomainCodeEditorAppSettings(config *sagemaker.CodeEditorAppSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.DefaultResourceSpec != nil {
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+	}
+
+	if config.LifecycleConfigArns != nil {
+		m["lifecycle_config_arns"] = flex.FlattenStringSet(config.LifecycleConfigArns)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDomainJupyterLabAppSettings(config *sagemaker.JupyterLabAppSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.CodeRepositories != nil {
+		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
+	}
+
+	if config.CustomImages != nil {
+		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
+	}
+
+	if config.DefaultResourceSpec != nil {
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
+	}
+
+	if config.LifecycleConfigArns != nil {
+		m["lifecycle_config_arns"] = flex.FlattenStringSet(config.LifecycleConfigArns)
 	}
 
 	return []map[string]interface{}{m}
@@ -1474,7 +1998,7 @@ func flattenDomainJupyterServerAppSettings(config *sagemaker.JupyterServerAppSet
 	}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -1492,7 +2016,7 @@ func flattenDomainKernelGatewayAppSettings(config *sagemaker.KernelGatewayAppSet
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -1514,7 +2038,7 @@ func flattenRSessionAppSettings(config *sagemaker.RSessionAppSettings) []map[str
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.CustomImages != nil {
@@ -1671,7 +2195,7 @@ func flattenRStudioServerProDomainSettings(config *sagemaker.RStudioServerProDom
 		"r_studio_connect_url":         aws.StringValue(config.RStudioConnectUrl),
 		"domain_execution_role_arn":    aws.StringValue(config.DomainExecutionRoleArn),
 		"r_studio_package_manager_url": aws.StringValue(config.RStudioPackageManagerUrl),
-		"default_resource_spec":        flattenDomainDefaultResourceSpec(config.DefaultResourceSpec),
+		"default_resource_spec":        flattenResourceSpec(config.DefaultResourceSpec),
 	}
 
 	return []map[string]interface{}{m}
@@ -1828,4 +2352,112 @@ func flattenCodeRepositories(apiObjects []*sagemaker.CodeRepository) []interface
 	}
 
 	return tfList
+}
+
+func expandCustomFileSystemConfig(tfMap map[string]interface{}) *sagemaker.CustomFileSystemConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &sagemaker.CustomFileSystemConfig{}
+
+	if v, ok := tfMap["efs_file_system_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EFSFileSystemConfig = expandEFSFileSystemConfig(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCustomFileSystemConfigs(tfList []interface{}) []*sagemaker.CustomFileSystemConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*sagemaker.CustomFileSystemConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCustomFileSystemConfig(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandEFSFileSystemConfig(tfMap map[string]interface{}) *sagemaker.EFSFileSystemConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &sagemaker.EFSFileSystemConfig{}
+
+	if v, ok := tfMap["file_system_id"].(string); ok {
+		apiObject.FileSystemId = aws.String(v)
+	}
+
+	if v, ok := tfMap["file_system_path"].(string); ok {
+		apiObject.FileSystemPath = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenCustomFileSystemConfig(apiObject *sagemaker.CustomFileSystemConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.EFSFileSystemConfig != nil {
+		tfMap["efs_file_system_config"] = flattenEFSFileSystemConfig(apiObject.EFSFileSystemConfig)
+	}
+
+	return tfMap
+}
+
+func flattenCustomFileSystemConfigs(apiObjects []*sagemaker.CustomFileSystemConfig) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenCustomFileSystemConfig(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenEFSFileSystemConfig(apiObject *sagemaker.EFSFileSystemConfig) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.FileSystemId != nil {
+		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+	}
+
+	if apiObject.FileSystemPath != nil {
+		tfMap["file_system_path"] = aws.StringValue(apiObject.FileSystemPath)
+	}
+
+	return []map[string]interface{}{tfMap}
 }

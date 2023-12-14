@@ -109,6 +109,9 @@ service/appconfig:
 service/appconfigdata:
   - 'internal/service/appconfigdata/**/*'
   - 'website/**/appconfigdata_*'
+service/appfabric:
+  - 'internal/service/appfabric/**/*'
+  - 'website/**/appfabric_*'
 service/appflow:
   - 'internal/service/appflow/**/*'
   - 'website/**/appflow_*'
@@ -281,6 +284,9 @@ service/configservice:
 service/connect:
   - 'internal/service/connect/**/*'
   - 'website/**/connect_*'
+service/connectcases:
+  - 'internal/service/connectcases/**/*'
+  - 'website/**/connectcases_*'
 service/connectcontactlens:
   - 'internal/service/connectcontactlens/**/*'
   - 'website/**/connectcontactlens_*'
@@ -432,6 +438,7 @@ service/elbv2:
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
   - 'website/**/lb_hosted*'
+  - 'website/**/lb_trust_store*'
 service/emr:
   - 'internal/service/emr/**/*'
   - 'website/**/emr_*'
@@ -694,6 +701,9 @@ service/medialive:
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
+service/mediapackagev2:
+  - 'internal/service/mediapackagev2/**/*'
+  - 'website/**/media_packagev2_*'
 service/mediapackagevod:
   - 'internal/service/mediapackagevod/**/*'
   - 'website/**/mediapackagevod_*'
@@ -775,6 +785,9 @@ service/opsworkscm:
 service/organizations:
   - 'internal/service/organizations/**/*'
   - 'website/**/organizations_*'
+service/osis:
+  - 'internal/service/osis/**/*'
+  - 'website/**/osis_*'
 service/outposts:
   - 'internal/service/outposts/**/*'
   - 'website/**/outposts_*'
@@ -899,6 +912,7 @@ service/rum:
 service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
+  - 'website/**/s3_directory_bucket*'
   - 'website/**/s3_object*'
   - 'website/**/canonical_user_id*'
 service/s3control:

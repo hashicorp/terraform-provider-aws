@@ -16,6 +16,8 @@ Provides an S3 bucket Object Lock configuration resource. For more information a
 Thus, to **enable** Object Lock for a **new** bucket, see the [Using object lock configuration](s3_bucket.html.markdown#using-object-lock-configuration) section in  the `awsS3Bucket` resource or the [Object Lock configuration for a new bucket](#object-lock-configuration-for-a-new-bucket) example below.
 If you want to **enable** Object Lock for an **existing** bucket, contact AWS Support and see the [Object Lock configuration for an existing bucket](#object-lock-configuration-for-an-existing-bucket) example below.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Object Lock configuration for a new bucket
@@ -199,4 +201,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_object_lock_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-48934903e4041e09bace32f0ac7c06d12e2ec061fd285d0370242e8daf326808 -->
+<!-- cache-key: cdktf-0.19.0 input-f835c6a280945690c7a20614803e9208c78d75c8e471ed1e08dc4614d56fe8f7 -->

@@ -9,14 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
@@ -57,6 +57,30 @@ func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 	})
 }
 
+func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot docdb.DBClusterSnapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
@@ -66,106 +90,62 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := &docdb.DescribeDBClusterSnapshotsInput{
-				DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
+			_, err := tfdocdb.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault) {
-					continue
-				}
 				return err
 			}
 
-			if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
-				return fmt.Errorf("DocumentDB Cluster Snapshot %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("DocumentDB Cluster Snapshot %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, resourceName string, dbClusterSnapshot *docdb.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *docdb.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set for %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
-		request := &docdb.DescribeDBClusterSnapshotsInput{
-			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
-		}
+		output, err := tfdocdb.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
-		response, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, request)
 		if err != nil {
 			return err
 		}
 
-		if response == nil || len(response.DBClusterSnapshots) == 0 || response.DBClusterSnapshots[0] == nil || aws.StringValue(response.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) != rs.Primary.ID {
-			return fmt.Errorf("DocumentDB Cluster Snapshot %q not found", rs.Primary.ID)
-		}
-
-		*dbClusterSnapshot = *response.DBClusterSnapshots[0]
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccClusterSnapshotConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "192.168.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_docdb_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_docdb_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = aws_docdb_subnet_group.test.name
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
+  master_password      = "avoid-plaintext-passwords"
+  master_username      = "tfacctest"
   skip_final_snapshot  = true
 }
 
 resource "aws_docdb_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_docdb_cluster.test.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
-`, rName, rName, rName, rName, rName)
+`, rName))
 }

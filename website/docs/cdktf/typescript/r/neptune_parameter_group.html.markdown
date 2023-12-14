@@ -45,7 +45,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required, Forces new resource) The name of the Neptune parameter group.
+* `name` - (Optional, Forces new resource) The name of the Neptune parameter group.
+* `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.
@@ -87,4 +88,4 @@ Using `terraform import`, import Neptune Parameter Groups using the `name`. For 
 % terraform import aws_neptune_parameter_group.some_pg some-pg
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a1cb01e0292301b60c4b212670b59774de132158f48ab1dd04de5f6d3fa58b10 -->
+<!-- cache-key: cdktf-0.19.0 input-be5d1c3f583ff995c239201e37d2fd118d3f64576d14e1031f1d003e3d679e3c -->

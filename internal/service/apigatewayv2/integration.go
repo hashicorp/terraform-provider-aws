@@ -337,7 +337,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := flex.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {

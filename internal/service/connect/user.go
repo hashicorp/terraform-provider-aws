@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -147,6 +148,8 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
@@ -179,25 +182,27 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect User (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect User (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("creating Connect User (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Connect User (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.UserId)))
 
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeUserWithContext(ctx, &connect.DescribeUserInput{
@@ -208,15 +213,15 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect User (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Connect User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect User (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.User == nil {
-		return diag.Errorf("getting Connect User (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Connect User (%s): empty response", d.Id())
 	}
 
 	user := resp.User
@@ -231,25 +236,27 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
-		return diag.Errorf("setting identity_info: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
 
 	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
-		return diag.Errorf("setting phone_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
 
 	setTagsOut(ctx, resp.User.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// User has 5 update APIs
@@ -273,7 +280,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating User hierarchy_group_id (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating User hierarchy_group_id (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -288,7 +295,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating User identity_info (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating User identity_info (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -303,7 +310,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating User phone_config (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating User phone_config (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -318,7 +325,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating User routing_profile_id (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating User routing_profile_id (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -333,20 +340,22 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating User security_profile_ids (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating User security_profile_ids (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteUserWithContext(ctx, &connect.DeleteUserInput{
@@ -355,10 +364,10 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting User (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func UserParseID(id string) (string, string, error) {

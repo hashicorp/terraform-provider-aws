@@ -77,6 +77,10 @@ variable "workflow_labels" {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
     },
+    "localstack" = {
+      color       = "6577e7", # color:localstack blue-mid
+      description = "LocalStack-specific issues and PRs."
+    },
     "needs-triage" = {
       color       = "dc477d", # color:consul
       description = "Waiting for first response or review from a maintainer."
@@ -128,10 +132,6 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
-    },
-    "service/meta" = {
-      color       = "7b42bc", # color:terraform (logomark)
-      description = "Issues and PRs that correspond to meta data sources."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient
