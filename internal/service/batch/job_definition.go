@@ -51,7 +51,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"eks_properties"},
+				ConflictsWith: []string{"eks_properties", "node_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -73,7 +73,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"eks_properties"},
+				ConflictsWith: []string{"container_properties", "eks_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
