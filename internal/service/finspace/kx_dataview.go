@@ -30,7 +30,6 @@ import (
 // @SDKResource("aws_finspace_kx_dataview", name="Kx Dataview")
 // @Tags(identifierAttribute="arn")
 func ResourceKxDataview() *schema.Resource {
-
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKxDataviewCreate,
 		ReadWithoutTimeout:   resourceKxDataviewRead,
@@ -235,7 +234,7 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		ClientToken:   aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("changeset_id"); ok && d.HasChange("changeset_id") && d.Get("auto_update").(bool) != true {
+	if v, ok := d.GetOk("changeset_id"); ok && d.HasChange("changeset_id") && !d.Get("auto_update").(bool) {
 		in.ChangesetId = aws.String(v.(string))
 	}
 
@@ -300,7 +299,6 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 				LastError:   err,
 				LastRequest: in,
 			}
-
 		}
 		return nil, err
 	}
