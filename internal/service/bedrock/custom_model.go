@@ -68,6 +68,7 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 			"customization_type": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
@@ -75,9 +76,14 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"custom_model_kms_key_id": schema.StringAttribute{
-				Optional: true,
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:((key/[a-zA-Z0-9-]{36})|(alias/[a-zA-Z0-9-_/]+))$`), "minimum length of 1. Maximum length of 2048."),
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 2048),
+				},
 			},
 			"custom_model_name": schema.StringAttribute{
 				Required: true,
