@@ -589,11 +589,11 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := d.Set("scaling_group_configuration", flattenScalingGroupConfiguration(out.ScalingGroupConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	if err := d.Set("tickerplant_log_configuration", flattenTickerplantLogConfiguration(out.TickerplantLogConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
 	// compose cluster ARN using environment ARN
