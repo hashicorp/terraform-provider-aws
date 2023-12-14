@@ -22,8 +22,8 @@ resource "aws_finspace_kx_volume" "example" {
   az_mode            = "SINGLE"
   type               = "NAS_1"
   nas1_configuration {
-    size= 1200
-    type= "SSD_250"
+    size = 1200
+    type = "SSD_250"
   }
 }
 ```
