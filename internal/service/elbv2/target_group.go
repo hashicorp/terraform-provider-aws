@@ -156,23 +156,16 @@ func ResourceTargetGroup() *schema.Resource {
 				Default:  false,
 			},
 			"load_balancing_algorithm_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"round_robin",
-					"least_outstanding_requests",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(loadBalancingAlgorithmType_Values(), false),
 			},
 			"load_balancing_cross_zone_enabled": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"true",
-					"false",
-					"use_load_balancer_configuration",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(loadBalancingCrossZoneEnabled_Values(), false),
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -276,15 +269,9 @@ func ResourceTargetGroup() *schema.Resource {
 							Default:  true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"lb_cookie",               // Only for ALBs
-								"app_cookie",              // Only for ALBs
-								"source_ip",               // Only for NLBs
-								"source_ip_dest_ip",       // Only for GWLBs
-								"source_ip_dest_ip_proto", // Only for GWLBs
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(stickinessType_Values(), false),
 						},
 					},
 				},
@@ -298,20 +285,14 @@ func ResourceTargetGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"on_deregistration": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"rebalance",
-								"no_rebalance",
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(targetFailover_Values(), false),
 						},
 						"on_unhealthy": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"rebalance",
-								"no_rebalance",
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(targetFailover_Values(), false),
 						},
 					},
 				},
