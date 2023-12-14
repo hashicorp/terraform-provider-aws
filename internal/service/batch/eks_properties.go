@@ -187,6 +187,9 @@ func expandVolumeMounts(volumeMounts []interface{}) []*batch.EksContainerVolumeM
 
 func flattenEKSProperties(eksProperties *batch.EksProperties) []interface{} {
 	var eksPropertiesList []interface{}
+	if eksProperties == nil {
+		return eksPropertiesList
+	}
 	if v := eksProperties.PodProperties; v != nil {
 		eksPropertiesList = append(eksPropertiesList, map[string]interface{}{
 			"pod_properties": flattenEKSPodProperties(eksProperties.PodProperties),
