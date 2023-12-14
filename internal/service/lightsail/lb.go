@@ -100,6 +100,8 @@ func ResourceLoadBalancer() *schema.Resource {
 }
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	lbName := d.Get("name").(string)
@@ -116,7 +118,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.CreateLoadBalancer(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateLoadBalancer), ResLoadBalancer, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateLoadBalancer), ResLoadBalancer, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName)
@@ -127,10 +129,12 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(lbName)
 
-	return resourceLoadBalancerRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	lb, err := FindLoadBalancerById(ctx, conn, d.Id())
@@ -138,11 +142,11 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
 	}
 
 	d.Set("arn", lb.Arn)
@@ -158,10 +162,12 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	setTagsOut(ctx, lb.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("name").(string)
 
@@ -177,7 +183,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, healthCheckIn)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancer, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancer, lbName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName)
@@ -187,10 +193,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return resourceLoadBalancerRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("name").(string)
 
@@ -199,7 +207,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteLoadBalancer), ResLoadBalancer, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancer), ResLoadBalancer, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName)
@@ -208,7 +216,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindLoadBalancerById(ctx context.Context, conn *lightsail.Client, name string) (*types.LoadBalancer, error) {
