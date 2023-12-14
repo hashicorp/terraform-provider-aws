@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -113,21 +112,12 @@ func ResourceReplicationConfig() *schema.Resource {
 				ForceNew: true,
 			},
 			"replication_settings": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONRemovingReadOnlyFieldsDiffs(
-					`"historyTimeslotInMinutes"`,
-					`"EnableLogContext"`,
-					`"CloudWatchLogGroup"`,
-					`"CloudWatchLogStream"`,
-				),
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
 			},
 			"replication_type": {
 				Type:         schema.TypeString,
@@ -243,7 +233,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set("replication_config_identifier", replicationConfig.ReplicationConfigIdentifier)
-	d.Set("replication_settings", replicationConfig.ReplicationSettings)
+	d.Set("replication_settings", flattenSettings(aws.StringValue(replicationConfig.ReplicationSettings)))
 	d.Set("replication_type", replicationConfig.ReplicationType)
 	d.Set("source_endpoint_arn", replicationConfig.SourceEndpointArn)
 	d.Set("supplemental_settings", replicationConfig.SupplementalSettings)
