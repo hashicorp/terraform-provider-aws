@@ -222,7 +222,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, clusterReadTimeout, func() (interface{}, error) {
-		return FindClusterByNameOrARN(ctx, conn, d.Id())
+		return findClusterByNameOrARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -295,7 +295,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string) (*ecs.Cluster, error) {
+func findClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string) (*ecs.Cluster, error) {
 	input := &ecs.DescribeClustersInput{
 		Clusters: aws.StringSlice([]string{nameOrARN}),
 		Include:  aws.StringSlice([]string{ecs.ClusterFieldTags, ecs.ClusterFieldConfigurations, ecs.ClusterFieldSettings}),
@@ -348,7 +348,7 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 
 func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := FindClusterByNameOrARN(ctx, conn, arn)
+		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

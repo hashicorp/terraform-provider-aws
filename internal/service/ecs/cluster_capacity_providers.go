@@ -7,20 +7,21 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_ecs_cluster_capacity_providers")
-func ResourceClusterCapacityProviders() *schema.Resource {
+func resourceClusterCapacityProviders() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCapacityProvidersPut,
 		ReadWithoutTimeout:   resourceClusterCapacityProvidersRead,
@@ -79,11 +80,11 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	input := &ecs.PutClusterCapacityProvidersInput{
-		CapacityProviders:               flex.ExpandStringSet(d.Get("capacity_providers").(*schema.Set)),
+		CapacityProviders:               flex.ExpandStringValueSet(d.Get("capacity_providers").(*schema.Set)),
 		Cluster:                         aws.String(clusterName),
 		DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 	}
@@ -108,9 +109,9 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Id())
+	cluster, err := findClusterByNameOrARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		sdkdiag.AppendErrorf(diags, "[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
@@ -122,7 +123,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
+	if err := d.Set("capacity_providers", cluster.CapacityProviders); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_providers: %s", err)
 	}
 	d.Set("cluster_name", cluster.ClusterName)
@@ -136,18 +137,18 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	input := &ecs.PutClusterCapacityProvidersInput{
-		CapacityProviders:               []*string{},
+		CapacityProviders:               []string{},
 		Cluster:                         aws.String(d.Id()),
-		DefaultCapacityProviderStrategy: []*ecs.CapacityProviderStrategyItem{},
+		DefaultCapacityProviderStrategy: []types.CapacityProviderStrategyItem{},
 	}
 
 	log.Printf("[DEBUG] Deleting ECS Cluster Capacity Providers: %s", d.Id())
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
 
-	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+	if errs.IsA[*types.ClusterNotFoundException](err) {
 		return diags
 	}
 
@@ -162,17 +163,17 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.ECS, input *ecs.PutClusterCapacityProvidersInput) error {
+func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, input *ecs.PutClusterCapacityProvidersInput) error {
 	_, err := tfresource.RetryWhen(ctx, clusterUpdateTimeout,
 		func() (interface{}, error) {
-			return conn.PutClusterCapacityProvidersWithContext(ctx, input)
+			return conn.PutClusterCapacityProviders(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
+			if errs.IsAErrorMessageContains[*types.ClientException](err, "Cluster was not ACTIVE") {
 				return true, err
 			}
 
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeResourceInUseException, ecs.ErrCodeUpdateInProgressException) {
+			if errs.IsA[*types.ResourceInUseException](err) || errs.IsA[*types.UpdateInProgressException](err) {
 				return true, err
 			}
 
