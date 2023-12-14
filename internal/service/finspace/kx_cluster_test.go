@@ -672,7 +672,7 @@ func TestAccFinSpaceKxTPClusterInScalingGroup_withKxVolume(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxClusterInScalingGroup_withKxDataview(t *testing.T) {
+func TestAccFinSpaceKxCluster_InScalingGroupWithKxDataview(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
