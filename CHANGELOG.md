@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_polly_voices` ([#34916](https://github.com/hashicorp/terraform-provider-aws/issues/34916))
 * **New Data Source:** `aws_ssoadmin_application_assignments` ([#34796](https://github.com/hashicorp/terraform-provider-aws/issues/34796))
 * **New Data Source:** `aws_ssoadmin_principal_application_assignments` ([#34815](https://github.com/hashicorp/terraform-provider-aws/issues/34815))
+* **New Resource:** `aws_finspace_kx_scaling_group` ([#34832](https://github.com/hashicorp/terraform-provider-aws/issues/34832))
 * **New Resource:** `aws_ssoadmin_trusted_token_issuer` ([#34839](https://github.com/hashicorp/terraform-provider-aws/issues/34839))
 
 ENHANCEMENTS:
