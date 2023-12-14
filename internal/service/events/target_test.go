@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,23 +38,26 @@ func TestAccEventsTarget_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
-
+					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input", ""),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 				),
 			},
 			{
@@ -155,8 +161,8 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexp.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
@@ -815,6 +821,41 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_sageMakerPipeline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sagemaker_pipeline.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.*", map[string]string{
+						"name":  "key",
+						"value": "value",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_Input_transformer(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_target.test"
@@ -851,7 +892,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetConfig_inputTransformer(rName, tooManyInputPaths),
-				ExpectError: regexp.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
+				ExpectError: regexache.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
 			},
 			{
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
@@ -977,7 +1018,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 
@@ -993,7 +1034,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_target" {
@@ -2176,6 +2217,107 @@ resource "aws_sqs_queue" "test" {
   fifo_queue = true
 
   sqs_managed_sse_enabled = true
+}
+`, rName)
+}
+
+func testAccTargetConfig_sageMakerPipeline(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  description         = "schedule_batch_test"
+  schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_sagemaker_pipeline.test.arn
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  sagemaker_pipeline_target {
+    pipeline_parameter_list {
+      name  = "key"
+      value = "value"
+    }
+  }
+
+  target_id = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sagemaker:*",
+            "Effect": "Allow",
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role" "sagemaker" {
+  name               = "%[1]s-2"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_sagemaker_pipeline" "test" {
+  pipeline_name         = %[1]q
+  pipeline_display_name = %[1]q
+  role_arn              = aws_iam_role.sagemaker.arn
+
+  pipeline_definition = jsonencode({
+    Version = "2020-12-01"
+    Steps = [{
+      Name = "Test"
+      Type = "Fail"
+      Arguments = {
+        ErrorMessage = "test"
+      }
+    }]
+  })
 }
 `, rName)
 }

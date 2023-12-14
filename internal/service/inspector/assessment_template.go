@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
@@ -90,7 +93,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 
 func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &inspector.CreateAssessmentTemplateInput{
@@ -108,7 +111,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(output.AssessmentTemplateArn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Inspector Classic Assessment Template (%s) tags: %s", d.Id(), err)
 	}
 
@@ -116,7 +119,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		input := expandEventSubscriptions(v.(*schema.Set).List(), output.AssessmentTemplateArn)
 
 		if err := subscribeToEvents(ctx, conn, input); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 
@@ -125,7 +128,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
 		AssessmentTemplateArns: aws.StringSlice([]string{d.Id()}),
@@ -152,11 +155,11 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	output, err := findSubscriptionsByAssessmentTemplateARN(ctx, conn, arn)
 
 	if err != nil {
-		return create.DiagError(names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	if err := d.Set("event_subscription", flattenSubscriptions(output)); err != nil {
-		return create.DiagError(names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	return diags
@@ -164,7 +167,7 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	if d.HasChange("event_subscription") {
 		old, new := d.GetChange("event_subscription")
@@ -180,11 +183,11 @@ func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 		removeEventSubscriptionsInput := expandEventSubscriptions(eventSubscriptionsToRemove.List(), templateId)
 
 		if err := subscribeToEvents(ctx, conn, addEventSubscriptionsInput); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 
 		if err := unsubscribeFromEvents(ctx, conn, removeEventSubscriptionsInput); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 
@@ -193,7 +196,7 @@ func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceAssessmentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	log.Printf("[INFO] Deleting Inspector Classic Assessment Template: %s", d.Id())
 	_, err := conn.DeleteAssessmentTemplateWithContext(ctx, &inspector.DeleteAssessmentTemplateInput{

@@ -24,9 +24,9 @@ data "aws_networkmanager_device" "example" {
 * `device_id` - (Required) ID of the device.
 * `global_network_id` - (Required) ID of the global network.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the device.
 * `aws_location` - AWS location of the device. Documented below.

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,7 +37,7 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", "CPUUtilization"),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "Average"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexache.MustCompile(`alarm:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
@@ -272,35 +275,35 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "IQM(1:2)"), // IQM accepts no args
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "iqm10"), // IQM accepts no args
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			// {  TODO: more complex regex to reject this
 			// 	Config: testAccMetricAlarmConfig_extendedStatistic(rName, "PR(5%:10%)"),  // PR args must be absolute
-			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// 	ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			// },
 			// {  TODO: more complex regex to reject this
 			// 	Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TC(:)"),  // at least one arg must be provided
-			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// 	ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			// },
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "WM"), // missing syntax
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "p"), // missing arg
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "AB(1:2)"), // unknown stat 'AB'
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "cd42"), // unknown stat 'cd'
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "p88.0"),
@@ -425,7 +428,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_badMetricQuery(rName),
-				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
+				ExpectError: regexache.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionQuery(rName),
@@ -564,7 +567,7 @@ func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricAlarmConfig_missingStatistic(rName),
-				ExpectError: regexp.MustCompile("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm"),
+				ExpectError: regexache.MustCompile("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm"),
 			},
 		},
 	})
@@ -651,7 +654,7 @@ func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.
 			return fmt.Errorf("No CloudWatch Metric Alarm ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		output, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
 
@@ -667,7 +670,7 @@ func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.
 
 func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_metric_alarm" {

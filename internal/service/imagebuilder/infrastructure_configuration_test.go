@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder_test
 
 import (
@@ -576,7 +579,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 
 func testAccCheckInfrastructureConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
@@ -613,7 +616,7 @@ func testAccCheckInfrastructureConfigurationExists(ctx context.Context, resource
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		input := &imagebuilder.GetInfrastructureConfigurationInput{
 			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),

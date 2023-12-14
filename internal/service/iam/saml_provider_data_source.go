@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -8,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -45,20 +49,22 @@ func DataSourceSAMLProvider() *schema.Resource {
 }
 
 func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
 	output, err := FindSAMLProviderByARN(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("reading IAM SAML Provider (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM SAML Provider (%s): %s", arn, err)
 	}
 
 	name, err := nameFromSAMLProviderARN(arn)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(arn)
@@ -79,8 +85,8 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

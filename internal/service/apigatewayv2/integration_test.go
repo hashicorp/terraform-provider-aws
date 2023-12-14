@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
@@ -606,7 +609,7 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 
 func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_integration" {
@@ -633,7 +636,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 func testAccCheckIntegrationDisappears(ctx context.Context, apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		_, err := conn.DeleteIntegrationWithContext(ctx, &apigatewayv2.DeleteIntegrationInput{
 			ApiId:         apiId,
@@ -655,7 +658,7 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, vApiId *string
 			return fmt.Errorf("No API Gateway v2 integration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
@@ -804,16 +807,16 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "MOCK"
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_dataMappingHTTP(rName string) string {
-	return testAccIntegrationConfig_apiHTTP(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -843,11 +846,11 @@ resource "aws_apigatewayv2_integration" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_dataMappingHTTPUpdated(rName string) string {
-	return testAccIntegrationConfig_apiHTTP(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -869,11 +872,11 @@ resource "aws_apigatewayv2_integration" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeHTTP(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -895,11 +898,11 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/json" = ""
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeHTTPUpdated(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -923,7 +926,7 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_lambdaWebSocket(rName string) string {

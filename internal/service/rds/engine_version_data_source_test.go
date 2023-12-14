@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,12 +38,12 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(dataSourceName, "default_character_set"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
-					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexp.MustCompile(`^[1-9][0-9]*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_character_sets.#", regexp.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_feature_names.#", regexp.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexp.MustCompile(`^[0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexp.MustCompile(`^[0-9]*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "supported_character_sets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "supported_feature_names.#", regexache.MustCompile(`^[1-9][0-9]*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexache.MustCompile(`^[0-9]*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_parallel_query"),
@@ -65,7 +68,7 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexp.MustCompile(`^[1-9][0-9]*`)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 				),
 			},
 		},
@@ -85,7 +88,7 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.27"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.32"),
 				),
 			},
 		},
@@ -125,7 +128,7 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnlyExplicit(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexp.MustCompile(`^8\.0\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
 		},
@@ -165,7 +168,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "10.14"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "13.9"),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
 				),
 			},
@@ -174,7 +177,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("mysql"),
@@ -206,7 +209,7 @@ func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine  = "mysql"
-  version = "8.0.27"
+  version = "8.0.32"
 }
 `
 }
@@ -215,7 +218,7 @@ func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["85.9.12", "8.0.27", "8.0.26"]
+  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
 }
 `
 }
@@ -252,7 +255,7 @@ func testAccEngineVersionDataSourceConfig_filter() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine      = "aurora-postgresql"
-  version     = "10.14"
+  version     = "13.9"
   include_all = true
 
   filter {

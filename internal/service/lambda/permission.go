@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -5,9 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -22,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 // @SDKResource("aws_lambda_permission")
 func ResourcePermission() *schema.Resource {
@@ -110,7 +113,7 @@ func ResourcePermission() *schema.Resource {
 
 func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
@@ -171,7 +174,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout,
@@ -240,7 +243,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 
@@ -337,23 +340,8 @@ func FindPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Lambda, f
 	}
 }
 
-func FindPolicyStatementByID(policy *Policy, id string) (*PolicyStatement, error) {
-	log.Printf("[DEBUG] Received %d statements in Lambda policy: %s", len(policy.Statement), policy.Statement)
-	for _, statement := range policy.Statement {
-		if statement.Sid == id {
-			return &statement, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{
-		LastRequest:  id,
-		LastResponse: policy,
-		Message:      fmt.Sprintf("Failed to find statement %q in Lambda policy:\n%s", id, policy.Statement),
-	}
-}
-
 func GetQualifierFromAliasOrVersionARN(arn string) (string, error) {
-	matches := regexp.MustCompile(functionRegexp).FindStringSubmatch(arn)
+	matches := regexache.MustCompile(functionRegexp).FindStringSubmatch(arn)
 	if len(matches) < 8 || matches[7] == "" {
 		return "", fmt.Errorf("Invalid ARN or otherwise unable to get qualifier from ARN (%q)",
 			arn)
@@ -363,7 +351,7 @@ func GetQualifierFromAliasOrVersionARN(arn string) (string, error) {
 }
 
 func GetFunctionNameFromARN(arn string) (string, error) {
-	matches := regexp.MustCompile(functionRegexp).FindStringSubmatch(arn)
+	matches := regexache.MustCompile(functionRegexp).FindStringSubmatch(arn)
 	if len(matches) < 6 || matches[5] == "" {
 		return "", fmt.Errorf("Invalid ARN or otherwise unable to get qualifier from ARN (%q)",
 			arn)
@@ -391,7 +379,7 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 	statementId := idParts[1]
 	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	getFunctionOutput, err := conn.GetFunctionWithContext(ctx, input)
 	if err != nil {
 		return nil, err

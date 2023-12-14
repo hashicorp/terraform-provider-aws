@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -23,7 +26,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 0),
 				),
 			},
 		},

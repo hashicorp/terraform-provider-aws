@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serverlessrepo
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -97,7 +100,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 
 func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	changeSet, err := createCloudFormationChangeSet(ctx, d, meta.(*conns.AWSClient))
 	if err != nil {
@@ -131,10 +134,10 @@ func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn()
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
+	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn(ctx)
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
-	stack, err := tfcloudformation.FindStackByID(ctx, cfConn, d.Id())
+	stack, err := tfcloudformation.FindStackByName(ctx, cfConn, d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
@@ -165,7 +168,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagSemanticVersion)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set outputs: %s", err)
@@ -216,7 +219,7 @@ func flattenParameterDefinitions(parameterDefinitions []*serverlessrepo.Paramete
 
 func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	changeSet, err := createCloudFormationChangeSet(ctx, d, meta.(*conns.AWSClient))
 	if err != nil {
@@ -248,7 +251,7 @@ func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceCloudFormationStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	input := &cloudformation.DeleteStackInput{
@@ -281,8 +284,8 @@ func resourceCloudFormationStackImport(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
-	stack, err := tfcloudformation.FindStackByID(ctx, cfConn, stackID)
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	stack, err := tfcloudformation.FindStackByName(ctx, cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}
@@ -293,15 +296,15 @@ func resourceCloudFormationStackImport(ctx context.Context, d *schema.ResourceDa
 }
 
 func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, client *conns.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
-	serverlessConn := client.ServerlessRepoConn()
-	cfConn := client.CloudFormationConn()
+	serverlessConn := client.ServerlessRepoConn(ctx)
+	cfConn := client.CloudFormationConn(ctx)
 
 	stackName := d.Get("name").(string)
 	changeSetRequest := serverlessrepo.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
 		Capabilities:  flex.ExpandStringSet(d.Get("capabilities").(*schema.Set)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("semantic_version"); ok {
 		changeSetRequest.SemanticVersion = aws.String(v.(string))

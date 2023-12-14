@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package accessanalyzer
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
@@ -52,7 +55,7 @@ func resourceAnalyzer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 			"arn": {
@@ -76,13 +79,13 @@ func resourceAnalyzer() *schema.Resource {
 
 func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get("type").(string)),
 	}
 
@@ -111,7 +114,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzer, err := findAnalyzerByName(ctx, conn, d.Id())
 
@@ -129,7 +132,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", analyzer.Arn)
 	d.Set("type", analyzer.Type)
 
-	SetTagsOut(ctx, analyzer.Tags)
+	setTagsOut(ctx, analyzer.Tags)
 
 	return diags
 }
@@ -144,7 +147,7 @@ func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
 	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{

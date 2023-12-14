@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
@@ -154,7 +157,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 
 func testAccCheckMapDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_map" {
@@ -192,7 +195,7 @@ func testAccCheckMapExists(ctx context.Context, resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		input := &locationservice.DescribeMapInput{
 			MapName: aws.String(rs.Primary.ID),

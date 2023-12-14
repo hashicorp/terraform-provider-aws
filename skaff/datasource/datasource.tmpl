@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -17,10 +20,7 @@ package {{ .ServicePackage }}
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
 // it.
-//
-// Remember to register this new data source in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.{{- end }}
+{{- end }}
 
 import (
 {{- if .IncludeComments }}
@@ -47,8 +47,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-{{- if .AWSGoSDKV2 }}
+{{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
@@ -64,9 +63,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+{{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 {{ if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
@@ -141,7 +143,9 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 					},
 				},
 			},
+			{{- if .IncludeTags }}
 			"tags":         tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
+			{{- end }}
 		},
 	}
 }
@@ -151,6 +155,7 @@ const (
 )
 
 func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
 	// Generally, the Read function should do the following things. Make
@@ -161,13 +166,13 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// 3. Set the ID
 	// 4. Set the arguments and attributes
 	// 5. Set the tags
-	// 6. Return nil
+	// 6. Return diags
 	{{- end }}
 	{{- if .IncludeComments }}
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get information about a resource from AWS using an API Get,
 	// List, or Describe-type function, or, better yet, using a finder. Data
@@ -179,7 +184,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Set the ID
@@ -215,19 +220,19 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Policy))
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	d.Set("policy", p)
@@ -239,14 +244,16 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// below. Many data sources do include tags so this a reminder to include them
 	// where possible.
 	{{- end }}
+	{{- if .IncludeTags }}
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
-	{{ if .IncludeComments }}
-	// TIP: -- 6. Return nil
 	{{- end }}
-	return nil
+	{{ if .IncludeComments }}
+	// TIP: -- 6. Return diags
+	{{- end }}
+	return diags
 }

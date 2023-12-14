@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -40,7 +43,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("webhook:%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("webhook:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "GITHUB_HMAC"),
 					resource.TestCheckResourceAttr(resourceName, "target_action", "Source"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_pipeline", "aws_codepipeline.test", "name"),
@@ -313,7 +316,7 @@ func testAccCheckWebhookExists(ctx context.Context, n string, webhook *codepipel
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		resp, err := tfcodepipeline.GetWebhook(ctx, conn, rs.Primary.ID)
 
@@ -458,11 +461,6 @@ func testAccWebhookConfig_base(rName, githubToken string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {

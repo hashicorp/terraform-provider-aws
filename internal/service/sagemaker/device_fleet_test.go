@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -158,7 +161,7 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 
 func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_device_fleet" {
@@ -194,7 +197,7 @@ func testAccCheckDeviceFleetExists(ctx context.Context, n string, device_fleet *
 			return fmt.Errorf("No sagmaker Device Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -211,11 +214,6 @@ func testAccDeviceFleetBaseConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 data "aws_partition" "current" {}

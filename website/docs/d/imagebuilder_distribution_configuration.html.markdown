@@ -22,9 +22,9 @@ data "aws_imagebuilder_distribution_configuration" "example" {
 
 * `arn` - (Required) ARN of the distribution configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `date_created` - Date the distribution configuration was created.
 * `date_updated` - Date the distribution configuration was updated.

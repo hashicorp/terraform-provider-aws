@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2_test
 
 import (
@@ -56,7 +59,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 		input := &macie2.GetAdministratorAccountInput{}
 		output, err := conn.GetAdministratorAccountWithContext(ctx, input)
 
@@ -74,7 +77,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName stri
 
 func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_invitation_accepter" {

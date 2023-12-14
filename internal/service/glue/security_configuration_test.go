@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -196,7 +199,7 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("No Glue Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := conn.GetSecurityConfigurationWithContext(ctx, &glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
@@ -225,7 +228,7 @@ func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			output, err := conn.GetSecurityConfigurationWithContext(ctx, &glue.GetSecurityConfigurationInput{
 				Name: aws.String(rs.Primary.ID),

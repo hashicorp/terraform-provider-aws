@@ -1,21 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,12 +49,12 @@ func ResourceInstance() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice(lightsail.AddOnType_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenAddOnTypeValues(types.AddOnType("").Values()), false),
 						},
 						"snapshot_time": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
 						},
 						"status": {
 							Type:         schema.TypeString,
@@ -65,8 +70,8 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]`), "must begin with an alphanumeric character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]`), "must begin with an alphanumeric character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"availability_zone": {
@@ -129,11 +134,6 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  "dualstack",
 			},
-			"ipv6_address": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "use `ipv6_addresses` attribute instead",
-			},
 			"ipv6_addresses": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -172,7 +172,9 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	iName := d.Get("name").(string)
 
@@ -180,8 +182,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 		BlueprintId:      aws.String(d.Get("blueprint_id").(string)),
 		BundleId:         aws.String(d.Get("bundle_id").(string)),
-		InstanceNames:    aws.StringSlice([]string{iName}),
-		Tags:             GetTagsIn(ctx),
+		InstanceNames:    []string{iName},
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("key_pair_name"); ok {
@@ -193,15 +195,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
-		in.IpAddressType = aws.String(v.(string))
+		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
-	out, err := conn.CreateInstancesWithContext(ctx, &in)
+	out, err := conn.CreateInstances(ctx, &in)
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateInstance, ResInstance, iName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateInstance), ResInstance, iName, err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateInstance, ResInstance, iName)
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateInstance, ResInstance, iName)
 
 	if diag != nil {
 		return diag
@@ -216,35 +218,37 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			AddOnRequest: expandAddOnRequest(d.Get("add_on").([]interface{})),
 		}
 
-		out, err := conn.EnableAddOnWithContext(ctx, &in)
+		out, err := conn.EnableAddOn(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, iName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeEnableAddOn), ResInstance, iName, err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeEnableAddOn, ResInstance, iName)
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeEnableAddOn, ResInstance, iName)
 
 		if diag != nil {
 			return diag
 		}
 	}
 
-	return resourceInstanceRead(ctx, d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindInstanceById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResInstance, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResInstance, d.Id(), err)
 	}
 
 	d.Set("add_on", flattenAddOns(out.AddOns))
@@ -261,61 +265,60 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("cpu_count", out.Hardware.CpuCount)
 	d.Set("ram_size", out.Hardware.RamSizeInGb)
 
-	// Deprecated: AWS Go SDK v1.36.25 removed Ipv6Address field
-	if len(out.Ipv6Addresses) > 0 {
-		d.Set("ipv6_address", out.Ipv6Addresses[0])
-	}
-
-	d.Set("ipv6_addresses", aws.StringValueSlice(out.Ipv6Addresses))
+	d.Set("ipv6_addresses", out.Ipv6Addresses)
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("is_static_ip", out.IsStaticIp)
 	d.Set("private_ip_address", out.PrivateIpAddress)
 	d.Set("public_ip_address", out.PublicIpAddress)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
-	out, err := conn.DeleteInstanceWithContext(ctx, &lightsail.DeleteInstanceInput{
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+	out, err := conn.DeleteInstance(ctx, &lightsail.DeleteInstanceInput{
 		InstanceName:      aws.String(d.Id()),
 		ForceDeleteAddOns: aws.Bool(true),
 	})
 
-	if err != nil && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil
+	if err != nil && errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResInstance, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResInstance, d.Id(), err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteInstance, ResInstance, d.Id())
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteInstance, ResInstance, d.Id())
 
 	if diag != nil {
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChange("ip_address_type") {
-		out, err := conn.SetIpAddressTypeWithContext(ctx, &lightsail.SetIpAddressTypeInput{
+		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
-			ResourceType:  aws.String("Instance"),
-			IpAddressType: aws.String(d.Get("ip_address_type").(string)),
+			ResourceType:  types.ResourceTypeInstance,
+			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeSetIpAddressType, ResInstance, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetIpAddressType), ResInstance, d.Id(), err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeSetIpAddressType, ResInstance, d.Id())
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetIpAddressType, ResInstance, d.Id())
 
 		if diag != nil {
 			return diag
@@ -325,25 +328,25 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("add_on") {
 		o, n := d.GetChange("add_on")
 
-		if err := updateAddOnWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := updateAddOn(ctx, conn, d.Id(), o, n); err != nil {
 			return err
 		}
 	}
 
-	return resourceInstanceRead(ctx, d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func expandAddOnRequest(addOnListRaw []interface{}) *lightsail.AddOnRequest {
+func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
 	if len(addOnListRaw) == 0 {
-		return &lightsail.AddOnRequest{}
+		return &types.AddOnRequest{}
 	}
 
-	addOnRequest := &lightsail.AddOnRequest{}
+	addOnRequest := &types.AddOnRequest{}
 
 	for _, addOnRaw := range addOnListRaw {
 		addOnMap := addOnRaw.(map[string]interface{})
-		addOnRequest.AddOnType = aws.String(addOnMap["type"].(string))
-		addOnRequest.AutoSnapshotAddOnRequest = &lightsail.AutoSnapshotAddOnRequest{
+		addOnRequest.AddOnType = types.AddOnType(addOnMap["type"].(string))
+		addOnRequest.AutoSnapshotAddOnRequest = &types.AutoSnapshotAddOnRequest{
 			SnapshotTimeOfDay: aws.String(addOnMap["snapshot_time"].(string)),
 		}
 	}
@@ -365,14 +368,14 @@ func expandAddOnEnabled(addOnListRaw []interface{}) bool {
 	return enabled
 }
 
-func flattenAddOns(addOns []*lightsail.AddOn) []interface{} {
+func flattenAddOns(addOns []types.AddOn) []interface{} {
 	var rawAddOns []interface{}
 
 	for _, addOn := range addOns {
 		rawAddOn := map[string]interface{}{
-			"type":          aws.StringValue(addOn.Name),
-			"snapshot_time": aws.StringValue(addOn.SnapshotTimeOfDay),
-			"status":        aws.StringValue(addOn.Status),
+			"type":          aws.ToString(addOn.Name),
+			"snapshot_time": aws.ToString(addOn.SnapshotTimeOfDay),
+			"status":        aws.ToString(addOn.Status),
 		}
 		rawAddOns = append(rawAddOns, rawAddOn)
 	}
@@ -380,7 +383,9 @@ func flattenAddOns(addOns []*lightsail.AddOn) []interface{} {
 	return rawAddOns
 }
 
-func updateAddOnWithContext(ctx context.Context, conn *lightsail.Lightsail, name string, oldAddOnsRaw interface{}, newAddOnsRaw interface{}) diag.Diagnostics {
+func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAddOnsRaw interface{}, newAddOnsRaw interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	oldAddOns := expandAddOnRequest(oldAddOnsRaw.([]interface{}))
 	newAddOns := expandAddOnRequest(newAddOnsRaw.([]interface{}))
 	oldAddOnStatus := expandAddOnEnabled(oldAddOnsRaw.([]interface{}))
@@ -392,13 +397,13 @@ func updateAddOnWithContext(ctx context.Context, conn *lightsail.Lightsail, name
 			AddOnType:    oldAddOns.AddOnType,
 		}
 
-		out, err := conn.DisableAddOnWithContext(ctx, &in)
+		out, err := conn.DisableAddOn(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeDisableAddOn, ResInstance, name, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDisableAddOn), ResInstance, name, err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDisableAddOn, ResInstance, name)
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDisableAddOn, ResInstance, name)
 
 		if diag != nil {
 			return diag
@@ -411,18 +416,50 @@ func updateAddOnWithContext(ctx context.Context, conn *lightsail.Lightsail, name
 			AddOnRequest: newAddOns,
 		}
 
-		out, err := conn.EnableAddOnWithContext(ctx, &in)
+		out, err := conn.EnableAddOn(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeEnableAddOn, ResInstance, name, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeEnableAddOn), ResInstance, name, err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeEnableAddOn, ResInstance, name)
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeEnableAddOn, ResInstance, name)
 
 		if diag != nil {
 			return diag
 		}
 	}
 
-	return nil
+	return diags
+}
+
+func flattenAddOnTypeValues(t []types.AddOnType) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
+}
+
+func FindInstanceById(ctx context.Context, conn *lightsail.Client, id string) (*types.Instance, error) {
+	in := &lightsail.GetInstanceInput{InstanceName: aws.String(id)}
+	out, err := conn.GetInstance(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Instance == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Instance, nil
 }

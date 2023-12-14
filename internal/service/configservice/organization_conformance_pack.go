@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -46,7 +49,7 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
+					validation.StringMatch(regexache.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
 				),
 			},
 			"delivery_s3_key_prefix": {
@@ -86,8 +89,8 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
 			"template_body": {
@@ -105,7 +108,7 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 				ConflictsWith: []string{"template_body"},
 			},
@@ -115,7 +118,7 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 
 func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -164,7 +167,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 
 func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	pack, err := DescribeOrganizationConformancePack(ctx, conn, d.Id())
 
@@ -206,7 +209,7 @@ func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.Reso
 
 func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
@@ -251,7 +254,7 @@ func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.Re
 
 func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.DeleteOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),

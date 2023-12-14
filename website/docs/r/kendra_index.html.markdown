@@ -55,9 +55,24 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
+### With user group resolution configuration
+
+```terraform
+resource "aws_kendra_index" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.this.arn
+
+  user_group_resolution_configuration {
+    user_group_resolution_mode = "AWS_SSO"
+  }
+}
+```
+
 ### With Document Metadata Configuration Updates
 
 #### Specifying the predefined elements
+
+Refer to [Amazon Kendra documentation on built-in document fields](https://docs.aws.amazon.com/kendra/latest/dg/hiw-index.html#index-reserved-fields) for more information.
 
 ```terraform
 resource "aws_kendra_index" "example" {
@@ -225,6 +240,21 @@ resource "aws_kendra_index" "example" {
       facetable   = false
       searchable  = false
       sortable    = false
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
     }
     relevance {
       importance            = 1
@@ -442,6 +472,21 @@ resource "aws_kendra_index" "example" {
   }
 
   document_metadata_configuration_updates {
+    name = "_tenant_id"
+    type = "STRING_VALUE"
+    search {
+      displayable = false
+      facetable   = false
+      searchable  = false
+      sortable    = true
+    }
+    relevance {
+      importance            = 1
+      values_importance_map = {}
+    }
+  }
+
+  document_metadata_configuration_updates {
     name = "_version"
     type = "STRING_VALUE"
     search {
@@ -552,7 +597,7 @@ resource "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. [Detailed below](#capacity_units).
 * `description` - (Optional) The description of the Index.
@@ -648,9 +693,9 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `delete` - (Default `40m`)
 * `update` - (Default `40m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
 * `created_at` - The Unix datetime that the index was created.
@@ -683,8 +728,17 @@ A `text_document_statistics` block supports the following attributes:
 
 ## Import
 
-Amazon Kendra Indexes can be imported using its `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Kendra Indexes using its `id`. For example:
 
+```terraform
+import {
+  to = aws_kendra_index.example
+  id = "12345678-1234-5678-9123-123456789123"
+}
 ```
-$ terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
+
+Using `terraform import`, import Amazon Kendra Indexes using its `id`. For example:
+
+```console
+% terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
 ```

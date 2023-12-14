@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -45,7 +49,9 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
@@ -86,7 +92,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		})
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "listing Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	acceptInvitationInput := &macie2.AcceptInvitationInput{
@@ -97,16 +103,18 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	_, err = conn.AcceptInvitationWithContext(ctx, acceptInvitationInput)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error accepting Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "accepting Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(adminAccountID)
 
-	return resourceInvitationAccepterRead(ctx, d, meta)
+	return append(diags, resourceInvitationAccepterRead(ctx, d, meta)...)
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	var err error
 
@@ -118,24 +126,26 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie InvitationAccepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.Administrator == nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("administrator_account_id", output.Administrator.AccountId)
 	d.Set("invitation_id", output.Administrator.InvitationId)
-	return nil
+	return diags
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}
 
@@ -143,9 +153,9 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.FromErr(fmt.Errorf("error disassociating Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "disassociating Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

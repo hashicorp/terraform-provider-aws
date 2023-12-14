@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -19,9 +22,11 @@ const (
 	ClusterStatusMigrating                  = "migrating"
 	ClusterStatusModifying                  = "modifying"
 	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
+	ClusterStatusPromoting                  = "promoting"
 	ClusterStatusRebooting                  = "rebooting"
 	ClusterStatusRenaming                   = "renaming"
 	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	ClusterStatusScalingCompute             = "scaling-compute"
 	ClusterStatusUpgrading                  = "upgrading"
 )
 
@@ -49,6 +54,9 @@ func StorageType_Values() []string {
 }
 
 const (
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -76,6 +84,7 @@ const (
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
 	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	InstanceStatusIncompatiblCreate                            = "incompatible-create"
 	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
 	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
 	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
@@ -97,9 +106,11 @@ const (
 )
 
 const (
-	InstanceAutomatedBackupStatusPending     = "pending"
-	InstanceAutomatedBackupStatusReplicating = "replicating"
-	InstanceAutomatedBackupStatusRetained    = "retained"
+	GlobalClusterStatusAvailable = "available"
+	GlobalClusterStatusCreating  = "creating"
+	GlobalClusterStatusDeleting  = "deleting"
+	GlobalClusterStatusModifying = "modifying"
+	GlobalClusterStatusUpgrading = "upgrading"
 )
 
 const (
@@ -119,6 +130,7 @@ const (
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
 	ClusterEnginePostgres         = "postgres"
+	ClusterEngineCustomPrefix     = "custom-"
 )
 
 func ClusterEngine_Values() []string {
@@ -127,6 +139,27 @@ func ClusterEngine_Values() []string {
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,
 		ClusterEnginePostgres,
+	}
+}
+
+func ClusterInstanceEngine_Values() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+	}
+}
+
+const (
+	GlobalClusterEngineAurora           = "aurora"
+	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
+	GlobalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+)
+
+func GlobalClusterEngine_Values() []string {
+	return []string{
+		GlobalClusterEngineAurora,
+		GlobalClusterEngineAuroraMySQL,
+		GlobalClusterEngineAuroraPostgreSQL,
 	}
 }
 
@@ -222,6 +255,18 @@ func TimeoutAction_Values() []string {
 	return []string{
 		TimeoutActionForceApplyCapacityChange,
 		TimeoutActionRollbackCapacityChange,
+	}
+}
+
+const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
 	}
 }
 

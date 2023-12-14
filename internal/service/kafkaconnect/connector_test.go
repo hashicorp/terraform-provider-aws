@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect_test
 
 import (
@@ -236,7 +239,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No MSK Connect Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
 
 		_, err := tfkafkaconnect.FindConnectorByARN(ctx, conn, rs.Primary.ID)
 
@@ -246,7 +249,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mskconnect_connector" {

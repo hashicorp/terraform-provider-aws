@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2
 
 import (
@@ -111,12 +114,12 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
 		SubnetIds: flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		TagList:   GetTagsIn(ctx),
+		TagList:   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -145,7 +148,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -174,7 +177,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("subnet_ids", subnetIDs)
 	d.Set("vpc_id", cluster.VpcId)
 
-	SetTagsOut(ctx, cluster.TagList)
+	setTagsOut(ctx, cluster.TagList)
 
 	return diags
 }
@@ -189,7 +192,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 Cluster: %s", d.Id())
 	_, err := conn.DeleteClusterWithContext(ctx, &cloudhsmv2.DeleteClusterInput{

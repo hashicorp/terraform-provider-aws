@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -6,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -33,14 +37,16 @@ func DataSourceGlobalNetwork() *schema.Resource {
 }
 
 func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, globalNetworkID)
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Global Network (%s): %s", globalNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Global Network (%s): %s", globalNetworkID, err)
 	}
 
 	d.SetId(globalNetworkID)
@@ -49,8 +55,8 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
 	if err := d.Set("tags", KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

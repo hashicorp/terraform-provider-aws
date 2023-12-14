@@ -27,21 +27,30 @@ resource "aws_redshift_authentication_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `authentication_profile_name` - (Required, Forces new resource) The name of the authentication profile.
 * `authentication_profile_content` - (Required) The content of the authentication profile in JSON format. The maximum length of the JSON string is determined by a quota for your account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the authentication profile.
 
 ## Import
 
-Redshift Authentication Profiles support import by `authentication_profile_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Authentication by `authentication_profile_name`. For example:
+
+```terraform
+import {
+  to = aws_redshift_authentication_profile.test
+  id = "example"
+}
+```
+
+Using `terraform import`, import Redshift Authentication by `authentication_profile_name`. For example:
 
 ```console
-$ terraform import aws_redshift_authentication_profile.test example
+% terraform import aws_redshift_authentication_profile.test example
 ```

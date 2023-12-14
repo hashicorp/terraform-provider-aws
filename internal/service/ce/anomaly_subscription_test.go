@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +41,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalysubscription/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`anomalysubscription/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
@@ -275,7 +278,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 
 func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomalySubscription *costexplorer.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -304,7 +307,7 @@ func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomal
 
 func testAccCheckAnomalySubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_subscription" {

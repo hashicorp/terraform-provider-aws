@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -91,51 +95,55 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:vpn-connection\/vpn-[0-9a-f]{8,17}$`), "Must be valid VPN ARN"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:vpn-connection\/vpn-[0-9a-f]{8,17}$`), "Must be valid VPN ARN"),
 			},
 		},
 	}
 }
 
 func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
 	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
 	}
 
 	output, err := conn.CreateSiteToSiteVpnAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Site To Site VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Site To Site VPN (%s) Attachment (%s): %s", vpnConnectionARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.SiteToSiteVpnAttachment.Attachment.AttachmentId))
 
 	if _, err := waitSiteToSiteVPNAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Site To Site VPN Attachment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site To Site VPN Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceSiteToSiteVPNAttachmentRead(ctx, d, meta)
+	return append(diags, resourceSiteToSiteVPNAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Site To Site VPN Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := vpnAttachment.Attachment
@@ -157,9 +165,9 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("state", a.State)
 	d.Set("vpn_connection_arn", a.ResourceArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSiteToSiteVPNAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -168,22 +176,24 @@ func resourceSiteToSiteVPNAttachmentUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then VPN Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails
 	output, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 	}
 
 	if state := aws.StringValue(output.Attachment.State); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("cannot delete Network Manager Site To Site VPN Attachment (%s) in state: %s", d.Id(), state)
+		return sdkdiag.AppendErrorf(diags, "cannot delete Network Manager Site To Site VPN Attachment (%s) in state: %s", d.Id(), state)
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Site To Site VPN Attachment: %s", d.Id())
@@ -192,18 +202,18 @@ func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.Resour
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSiteToSiteVPNAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Site To Site VPN Attachment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Site To Site VPN Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.SiteToSiteVpnAttachment, error) {

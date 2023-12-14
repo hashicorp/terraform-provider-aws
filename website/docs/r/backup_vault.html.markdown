@@ -21,16 +21,16 @@ resource "aws_backup_vault" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `force_destroy` - (Optional, Default: `false`) A boolean that indicates that all recovery points stored in the vault are deleted so that the vault can be destroyed without error.
 * `kms_key_arn` - (Optional) The server-side encryption key that is used to protect your backups.
 * `name` - (Required) Name of the backup vault to create.
 * `tags` - (Optional) Metadata that you can assign to help organize the resources that you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the vault.
 * `arn` - The ARN of the vault.
@@ -45,8 +45,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup vault can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup vault using the `name`. For example:
 
+```terraform
+import {
+  to = aws_backup_vault.test-vault
+  id = "TestVault"
+}
 ```
-$ terraform import aws_backup_vault.test-vault TestVault
+
+Using `terraform import`, import Backup vault using the `name`. For example:
+
+```console
+% terraform import aws_backup_vault.test-vault TestVault
 ```

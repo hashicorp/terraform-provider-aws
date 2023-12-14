@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -59,6 +62,10 @@ func DataSourceVPCEndpoint() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"dns_record_ip_type": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"private_dns_only_for_inbound_resolver_endpoint": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -140,7 +147,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 
 func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcEndpointsInput{

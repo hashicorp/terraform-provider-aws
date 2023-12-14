@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -84,7 +89,12 @@ func ResourceVPCEndpoint() *schema.Resource {
 						"dns_record_ip_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.DnsRecordIpType_Values(), false),
+						},
+						"private_dns_only_for_inbound_resolver_endpoint": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
@@ -184,7 +194,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceName := d.Get("service_name").(string)
 	input := &ec2.CreateVpcEndpointInput{
@@ -197,7 +207,13 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+		// that support both gateway and interface endpoints, i.e. S3.
+		if isAmazonS3VPCEndpoint(serviceName) {
+			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		}
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -208,7 +224,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		policy, err := structure.NormalizeJsonString(v)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.PolicyDocument = aws.String(policy)
@@ -228,6 +244,12 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := conn.CreateVpcEndpointWithContext(ctx, input)
 
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.TagSpecifications != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		input.TagSpecifications = nil
+		output, err = conn.CreateVpcEndpointWithContext(ctx, input)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
 	}
@@ -237,12 +259,26 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if _, err = WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): waiting for completion: %s", serviceName, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) create: %s", serviceName, err)
+	}
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.TagSpecifications == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
+
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EC2 VPC Endpoint (%s) tags: %s", serviceName, err)
+		}
 	}
 
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
@@ -250,7 +286,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpce, err := FindVPCEndpointByID(ctx, conn, d.Id())
 
@@ -272,7 +308,6 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()
 	serviceName := aws.StringValue(vpce.ServiceName)
-
 	d.Set("arn", arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
@@ -316,40 +351,48 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	SetTagsOut(ctx, vpce.Tags)
+	setTagsOut(ctx, vpce.Tags)
 
 	return diags
 }
 
 func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s): %s", d.Get("service_name").(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if d.HasChanges("dns_options", "ip_address_type", "policy", "private_dns_enabled", "security_group_ids", "route_table_ids", "subnet_ids") {
+		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("dns_options") {
 			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+				// that support both gateway and interface endpoints, i.e. S3.
+				if isAmazonS3VPCEndpoint(d.Get("service_name").(string)) {
+					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
+				} else {
+					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
+				}
 			}
 		}
 
@@ -358,7 +401,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("private_dns_enabled") {
-			input.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
+			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
 		}
 
 		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringLists(d, "route_table_ids")
@@ -372,7 +415,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 				policy, err := structure.NormalizeJsonString(d.Get("policy"))
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				if policy == "" {
@@ -399,7 +442,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
 	output, err := conn.DeleteVpcEndpointsWithContext(ctx, &ec2.DeleteVpcEndpointsInput{
@@ -450,6 +493,11 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.EC2, vpceID, serviceName s
 	return nil
 }
 
+func isAmazonS3VPCEndpoint(serviceName string) bool {
+	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
+	return ok
+}
+
 func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
@@ -459,6 +507,24 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 
 	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
 		apiObject.DnsRecordIpType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.DnsOptionsSpecification{}
+
+	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
+		apiObject.DnsRecordIpType = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok {
+		apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(v)
 	}
 
 	return apiObject
@@ -509,6 +575,10 @@ func flattenDNSOptions(apiObject *ec2.DnsOptions) map[string]interface{} {
 
 	if v := apiObject.DnsRecordIpType; v != nil {
 		tfMap["dns_record_ip_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrivateDnsOnlyForInboundResolverEndpoint; v != nil {
+		tfMap["private_dns_only_for_inbound_resolver_endpoint"] = aws.BoolValue(v)
 	}
 
 	return tfMap

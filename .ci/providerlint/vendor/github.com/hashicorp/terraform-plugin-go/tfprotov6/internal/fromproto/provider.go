@@ -1,9 +1,46 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fromproto
 
 import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 )
+
+func GetMetadataRequest(in *tfplugin6.GetMetadata_Request) (*tfprotov6.GetMetadataRequest, error) {
+	return &tfprotov6.GetMetadataRequest{}, nil
+}
+
+func GetMetadataResponse(in *tfplugin6.GetMetadata_Response) (*tfprotov6.GetMetadataResponse, error) {
+	if in == nil {
+		return nil, nil
+	}
+
+	resp := &tfprotov6.GetMetadataResponse{
+		DataSources:        make([]tfprotov6.DataSourceMetadata, 0, len(in.DataSources)),
+		Resources:          make([]tfprotov6.ResourceMetadata, 0, len(in.Resources)),
+		ServerCapabilities: ServerCapabilities(in.ServerCapabilities),
+	}
+
+	for _, datasource := range in.DataSources {
+		resp.DataSources = append(resp.DataSources, *DataSourceMetadata(datasource))
+	}
+
+	for _, resource := range in.Resources {
+		resp.Resources = append(resp.Resources, *ResourceMetadata(resource))
+	}
+
+	diags, err := Diagnostics(in.Diagnostics)
+
+	if err != nil {
+		return resp, err
+	}
+
+	resp.Diagnostics = diags
+
+	return resp, nil
+}
 
 func GetProviderSchemaRequest(in *tfplugin6.GetProviderSchema_Request) (*tfprotov6.GetProviderSchemaRequest, error) {
 	return &tfprotov6.GetProviderSchemaRequest{}, nil

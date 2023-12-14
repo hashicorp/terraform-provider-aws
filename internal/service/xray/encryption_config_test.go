@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package xray_test
 
 import (
@@ -70,7 +73,7 @@ func testAccCheckEncryptionConfigExists(ctx context.Context, n string, v *types.
 			return fmt.Errorf("No XRay Encryption Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 		output, err := tfxray.FindEncryptionConfig(ctx, conn)
 

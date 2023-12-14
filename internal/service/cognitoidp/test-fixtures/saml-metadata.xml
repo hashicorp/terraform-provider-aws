@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
+<!--
+ Copyright (c) HashiCorp, Inc.
+ SPDX-License-Identifier: MPL-2.0
+-->
+
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://terraform-dev-ed.my.salesforce.com" validUntil="2070-08-31T14:30:09Z">
   <md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <md:KeyDescriptor use="signing">

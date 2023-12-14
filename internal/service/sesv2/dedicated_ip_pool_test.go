@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,7 +38,7 @@ func TestAccSESV2DedicatedIPPool_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`dedicated-ip-pool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),
 			},
 			{
@@ -156,7 +159,7 @@ func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 
 func testAccCheckDedicatedIPPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_dedicated_ip_pool" {
@@ -189,7 +192,7 @@ func testAccCheckDedicatedIPPoolExists(ctx context.Context, name string) resourc
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPPool, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindDedicatedIPPoolByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -201,7 +204,7 @@ func testAccCheckDedicatedIPPoolExists(ctx context.Context, name string) resourc
 }
 
 func testAccPreCheckDedicatedIPPool(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 	_, err := conn.ListDedicatedIpPools(ctx, &sesv2.ListDedicatedIpPoolsInput{})
 	if acctest.PreCheckSkipError(err) {

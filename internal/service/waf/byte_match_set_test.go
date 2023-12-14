@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
@@ -223,7 +226,7 @@ func TestAccWAFByteMatchSet_disappears(t *testing.T) {
 
 func testAccCheckByteMatchSetDisappears(ctx context.Context, v *waf.ByteMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -277,7 +280,7 @@ func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *waf.ByteMa
 			return fmt.Errorf("No WAF ByteMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetByteMatchSetWithContext(ctx, &waf.GetByteMatchSetInput{
 			ByteMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -302,7 +305,7 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetByteMatchSetWithContext(ctx, &waf.GetByteMatchSetInput{
 				ByteMatchSetId: aws.String(rs.Primary.ID),
 			})

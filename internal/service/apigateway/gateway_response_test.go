@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -92,7 +95,7 @@ func testAccCheckGatewayResponseExists(ctx context.Context, n string, v *apigate
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindGatewayResponseByTwoPartKey(ctx, conn, rs.Primary.Attributes["response_type"], rs.Primary.Attributes["rest_api_id"])
 
@@ -108,7 +111,7 @@ func testAccCheckGatewayResponseExists(ctx context.Context, n string, v *apigate
 
 func testAccCheckGatewayResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_gateway_response" {

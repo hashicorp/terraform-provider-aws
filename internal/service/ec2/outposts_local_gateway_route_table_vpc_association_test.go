@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -126,7 +129,7 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context,
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(ctx, conn, rs.Primary.ID)
 
@@ -148,7 +151,7 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context,
 
 func testAccCheckLocalGatewayRouteTableVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_local_gateway_route_table_vpc_association" {

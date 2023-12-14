@@ -86,7 +86,7 @@ The following arguments are required:
 
 * `service_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service.
 * `listener_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the listener.
-* `action` - (Required) The action for the default rule.
+* `action` - (Required) The action for the listener rule.
 * `match` - (Required) The rule match.
 * `name` - (Required) The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `priority` - (Required) The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
@@ -142,12 +142,13 @@ path match match (`match`) supports the following:
 * `exact` - (Optional) Specifies an exact type match.
 * `prefix` - (Optional) Specifies a prefix type match. Matches the value with the prefix.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the target group.
-* `rule_id` - Unique identifier for the target group.
+* `arn` - The ARN for the listener rule.
+* `id` - A forward slash-delimited string concatenating `service_identifier`, `listener_identifier`, and `rule_id`.
+* `rule_id` - Unique identifier for the listener rule.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
@@ -160,8 +161,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Lattice Listener Rule can be imported using the `example_id_arg`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Listener Rule using the `id`. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_listener_rule.example
+  id = "service123/listener456/rule789"
+}
 ```
-$ terraform import aws_vpclattice_listener_rule.example rft-8012925589
+
+Using `terraform import`, import VPC Lattice Listener Rule using the `id`. For example:
+
+```console
+% terraform import aws_vpclattice_listener_rule.example service123/listener456/rule789
 ```

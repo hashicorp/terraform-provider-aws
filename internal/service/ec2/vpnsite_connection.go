@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -6,11 +9,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"regexp"
 	"sort"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -35,6 +38,7 @@ func ResourceVPNConnection() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPNConnectionRead,
 		UpdateWithoutTimeout: resourceVPNConnectionUpdate,
 		DeleteWithoutTimeout: resourceVPNConnectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -44,11 +48,11 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"core_network_arn": {
+			"core_network_attachment_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"core_network_attachment_arn": {
+			"core_network_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -676,7 +680,7 @@ var (
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
@@ -693,7 +697,6 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Connection: %s", input)
 	output, err := conn.CreateVpnConnectionWithContext(ctx, input)
 
 	if err != nil {
@@ -712,7 +715,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpnConnection, err := FindVPNConnectionByID(ctx, conn, d.Id())
 
@@ -770,7 +773,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	SetTagsOut(ctx, vpnConnection.Tags)
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)
@@ -849,7 +852,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -919,7 +922,6 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel (%d) options: %s", i+1, input)
 			_, err := conn.ModifyVpnTunnelOptionsWithContext(ctx, input)
 
 			if err != nil {
@@ -937,7 +939,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnectionWithContext(ctx, &ec2.DeleteVpnConnectionInput{
@@ -988,8 +990,6 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		if v, ok := d.GetOk("remote_ipv4_network_cidr"); ok {
 			apiObject.RemoteIpv4NetworkCidr = aws.String(v.(string))
 		}
-
-		apiObject.TunnelInsideIpVersion = aws.String(ec2.TunnelInsideIpVersionIpv4)
 	}
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
@@ -1668,8 +1668,8 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
-		validation.StringDoesNotMatch(regexp.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 
@@ -1688,7 +1688,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 
 	return validation.All(
 		validation.IsCIDRNetwork(30, 30),
-		validation.StringMatch(regexp.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
+		validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
 		validation.StringNotInSlice(disallowedCidrs, false),
 	)
 }
@@ -1696,7 +1696,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
 	)
 }
 

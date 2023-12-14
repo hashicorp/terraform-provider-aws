@@ -1,19 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"log"
 	"reflect"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -64,13 +69,13 @@ func ResourceContainerService() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{1,2}|[a-z0-9][a-z0-9-]+[a-z0-9]$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z]{1,2}|[0-9a-z][0-9a-z-]+[0-9a-z]$`), ""),
 				),
 			},
 			"power": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(lightsail.ContainerServicePowerName_Values(), false),
+				ValidateFunc: validation.StringInSlice(flattenContainerServicePowerValues(types.ContainerServicePowerName("").Values()), false),
 			},
 			"power_id": {
 				Type:     schema.TypeString,
@@ -165,14 +170,16 @@ func ResourceContainerService() *schema.Resource {
 }
 
 func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	serviceName := d.Get("name").(string)
 	input := &lightsail.CreateContainerServiceInput{
 		ServiceName: aws.String(serviceName),
-		Power:       aws.String(d.Get("power").(string)),
-		Scale:       aws.Int64(int64(d.Get("scale").(int))),
-		Tags:        GetTagsIn(ctx),
+		Power:       types.ContainerServicePowerName(d.Get("power").(string)),
+		Scale:       aws.Int32(int32(d.Get("scale").(int))),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("public_domain_names"); ok {
@@ -183,15 +190,15 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 		input.PrivateRegistryAccess = expandPrivateRegistryAccess(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.CreateContainerServiceWithContext(ctx, input)
+	_, err := conn.CreateContainerService(ctx, input)
 	if err != nil {
-		return diag.Errorf("error creating Lightsail Container Service (%s): %s", serviceName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lightsail Container Service (%s): %s", serviceName, err)
 	}
 
 	d.SetId(serviceName)
 
 	if err := waitContainerServiceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Lightsail Container Service (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Container Service (%s) creation: %s", d.Id(), err)
 	}
 
 	// once container service creation and/or deployment successful (now enabled by default), disable it if "is_disabled" is true
@@ -201,32 +208,34 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 			IsDisabled:  aws.Bool(true),
 		}
 
-		_, err := conn.UpdateContainerServiceWithContext(ctx, input)
+		_, err := conn.UpdateContainerService(ctx, input)
 		if err != nil {
-			return diag.Errorf("error disabling Lightsail Container Service (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "disabling Lightsail Container Service (%s): %s", d.Id(), err)
 		}
 
 		if err := waitContainerServiceDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("error waiting for Lightsail Container Service (%s) to be disabled: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Container Service (%s) to be disabled: %s", d.Id(), err)
 		}
 	}
 
-	return resourceContainerServiceRead(ctx, d, meta)
+	return append(diags, resourceContainerServiceRead(ctx, d, meta)...)
 }
 
 func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	cs, err := FindContainerServiceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lightsail Container Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Lightsail Container Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", cs.ContainerServiceName)
@@ -235,14 +244,14 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("is_disabled", cs.IsDisabled)
 
 	if err := d.Set("public_domain_names", flattenContainerServicePublicDomainNames(cs.PublicDomainNames)); err != nil {
-		return diag.Errorf("error setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("private_registry_access", []interface{}{flattenPrivateRegistryAccess(cs.PrivateRegistryAccess)}); err != nil {
-		return diag.Errorf("error setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set("arn", cs.Arn)
 	d.Set("availability_zone", cs.Location.AvailabilityZone)
-	d.Set("created_at", aws.TimeValue(cs.CreatedAt).Format(time.RFC3339))
+	d.Set("created_at", aws.ToTime(cs.CreatedAt).Format(time.RFC3339))
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)
@@ -250,13 +259,15 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", cs.State)
 	d.Set("url", cs.Url)
 
-	SetTagsOut(ctx, cs.Tags)
+	setTagsOut(ctx, cs.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		publicDomainNames, _ := containerServicePublicDomainNamesChanged(d)
@@ -264,60 +275,62 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 		input := &lightsail.UpdateContainerServiceInput{
 			ServiceName:       aws.String(d.Id()),
 			IsDisabled:        aws.Bool(d.Get("is_disabled").(bool)),
-			Power:             aws.String(d.Get("power").(string)),
+			Power:             types.ContainerServicePowerName(d.Get("power").(string)),
 			PublicDomainNames: publicDomainNames,
-			Scale:             aws.Int64(int64(d.Get("scale").(int))),
+			Scale:             aws.Int32(int32(d.Get("scale").(int))),
 		}
 
-		_, err := conn.UpdateContainerServiceWithContext(ctx, input)
+		_, err := conn.UpdateContainerService(ctx, input)
 		if err != nil {
-			return diag.Errorf("error updating Lightsail Container Service (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Lightsail Container Service (%s): %s", d.Id(), err)
 		}
 
 		if d.HasChange("is_disabled") && d.Get("is_disabled").(bool) {
 			if err := waitContainerServiceDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("error waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
 			}
 		} else {
 			if err := waitContainerServiceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("error waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Container Service (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceContainerServiceRead(ctx, d, meta)
+	return append(diags, resourceContainerServiceRead(ctx, d, meta)...)
 }
 
 func resourceContainerServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	input := &lightsail.DeleteContainerServiceInput{
 		ServiceName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteContainerServiceWithContext(ctx, input)
+	_, err := conn.DeleteContainerService(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil
+	if IsANotFoundError(err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Lightsail Container Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 
 	if err := waitContainerServiceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Lightsail Container Service (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Container Service (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{}) map[string][]*string {
+func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{}) map[string][]string {
 	if len(rawPublicDomainNames) == 0 {
 		return nil
 	}
 
-	resultMap := make(map[string][]*string)
+	resultMap := make(map[string][]string)
 
 	for _, rpdn := range rawPublicDomainNames {
 		rpdnMap := rpdn.(map[string]interface{})
@@ -327,9 +340,9 @@ func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{})
 		for _, rc := range rawCertificates {
 			rcMap := rc.(map[string]interface{})
 
-			var domainNames []*string
+			var domainNames []string
 			for _, rawDomainName := range rcMap["domain_names"].([]interface{}) {
-				domainNames = append(domainNames, aws.String(rawDomainName.(string)))
+				domainNames = append(domainNames, rawDomainName.(string))
 			}
 
 			certificateName := rcMap["certificate_name"].(string)
@@ -341,12 +354,12 @@ func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{})
 	return resultMap
 }
 
-func expandPrivateRegistryAccess(tfMap map[string]interface{}) *lightsail.PrivateRegistryAccessRequest {
+func expandPrivateRegistryAccess(tfMap map[string]interface{}) *types.PrivateRegistryAccessRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lightsail.PrivateRegistryAccessRequest{}
+	apiObject := &types.PrivateRegistryAccessRequest{}
 
 	if v, ok := tfMap["ecr_image_puller_role"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EcrImagePullerRole = expandECRImagePullerRole(v[0].(map[string]interface{}))
@@ -355,12 +368,12 @@ func expandPrivateRegistryAccess(tfMap map[string]interface{}) *lightsail.Privat
 	return apiObject
 }
 
-func expandECRImagePullerRole(tfMap map[string]interface{}) *lightsail.ContainerServiceECRImagePullerRoleRequest {
+func expandECRImagePullerRole(tfMap map[string]interface{}) *types.ContainerServiceECRImagePullerRoleRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lightsail.ContainerServiceECRImagePullerRoleRequest{}
+	apiObject := &types.ContainerServiceECRImagePullerRoleRequest{}
 
 	if v, ok := tfMap["is_active"].(bool); ok {
 		apiObject.IsActive = aws.Bool(v)
@@ -369,7 +382,7 @@ func expandECRImagePullerRole(tfMap map[string]interface{}) *lightsail.Container
 	return apiObject
 }
 
-func flattenPrivateRegistryAccess(apiObject *lightsail.PrivateRegistryAccess) map[string]interface{} {
+func flattenPrivateRegistryAccess(apiObject *types.PrivateRegistryAccess) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -383,7 +396,7 @@ func flattenPrivateRegistryAccess(apiObject *lightsail.PrivateRegistryAccess) ma
 	return tfMap
 }
 
-func flattenECRImagePullerRole(apiObject *lightsail.ContainerServiceECRImagePullerRole) map[string]interface{} {
+func flattenECRImagePullerRole(apiObject *types.ContainerServiceECRImagePullerRole) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -391,17 +404,17 @@ func flattenECRImagePullerRole(apiObject *lightsail.ContainerServiceECRImagePull
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.IsActive; v != nil {
-		tfMap["is_active"] = aws.BoolValue(v)
+		tfMap["is_active"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.PrincipalArn; v != nil {
-		tfMap["principal_arn"] = aws.StringValue(v)
+		tfMap["principal_arn"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenContainerServicePublicDomainNames(domainNames map[string][]*string) []interface{} {
+func flattenContainerServicePublicDomainNames(domainNames map[string][]string) []interface{} {
 	if domainNames == nil {
 		return []interface{}{}
 	}
@@ -411,7 +424,7 @@ func flattenContainerServicePublicDomainNames(domainNames map[string][]*string) 
 	for certName, domains := range domainNames {
 		rawCertificate := map[string]interface{}{
 			"certificate_name": certName,
-			"domain_names":     aws.StringValueSlice(domains),
+			"domain_names":     domains,
 		}
 
 		rawCertificates = append(rawCertificates, rawCertificate)
@@ -424,7 +437,7 @@ func flattenContainerServicePublicDomainNames(domainNames map[string][]*string) 
 	}
 }
 
-func containerServicePublicDomainNamesChanged(d *schema.ResourceData) (map[string][]*string, bool) {
+func containerServicePublicDomainNamesChanged(d *schema.ResourceData) (map[string][]string, bool) {
 	o, n := d.GetChange("public_domain_names")
 	oldPublicDomainNames := expandContainerServicePublicDomainNames(o.([]interface{}))
 	newPublicDomainNames := expandContainerServicePublicDomainNames(n.([]interface{}))
@@ -432,7 +445,7 @@ func containerServicePublicDomainNamesChanged(d *schema.ResourceData) (map[strin
 	changed := !reflect.DeepEqual(oldPublicDomainNames, newPublicDomainNames)
 	if changed {
 		if newPublicDomainNames == nil {
-			newPublicDomainNames = map[string][]*string{}
+			newPublicDomainNames = map[string][]string{}
 		}
 
 		// if the change is to detach a certificate, in .tf, a certificate block is removed
@@ -440,10 +453,49 @@ func containerServicePublicDomainNamesChanged(d *schema.ResourceData) (map[strin
 		// under the certificate, effectively detaching the certificate
 		for certificateName := range oldPublicDomainNames {
 			if _, ok := newPublicDomainNames[certificateName]; !ok {
-				newPublicDomainNames[certificateName] = []*string{}
+				newPublicDomainNames[certificateName] = []string{}
 			}
 		}
 	}
 
 	return newPublicDomainNames, changed
+}
+
+func flattenContainerServicePowerValues(t []types.ContainerServicePowerName) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
+}
+
+func FindContainerServiceByName(ctx context.Context, conn *lightsail.Client, serviceName string) (*types.ContainerService, error) {
+	input := &lightsail.GetContainerServicesInput{
+		ServiceName: aws.String(serviceName),
+	}
+
+	output, err := conn.GetContainerServices(ctx, input)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ContainerServices) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ContainerServices); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return &output.ContainerServices[0], nil
 }

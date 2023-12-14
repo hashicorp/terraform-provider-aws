@@ -1,12 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
-	"regexp"
+	"strconv"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -347,14 +352,14 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 								ValidateFunc: validation.IntBetween(1, 21),
 							},
 							"column_index": {
-								Type:         schema.TypeInt,
+								Type:         nullable.TypeNullableInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 35),
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 35),
 							},
 							"row_index": {
-								Type:         schema.TypeInt,
+								Type:         nullable.TypeNullableInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 9009),
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 9009),
 							},
 						},
 					},
@@ -375,7 +380,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"optimized_view_port_width": {
 											Type:     schema.TypeString,
-											Required: true,
+											Optional: true,
 										},
 										"resize_option": stringSchema(true, validation.StringInSlice(quicksight.ResizeOption_Values(), false)),
 									},
@@ -456,7 +461,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -468,7 +473,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -513,7 +518,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -755,6 +760,9 @@ func expandGridLayoutScreenCanvasSizeOptions(tfList []interface{}) *quicksight.G
 
 	if v, ok := tfMap["optimized_view_port_width"].(string); ok && v != "" {
 		options.OptimizedViewPortWidth = aws.String(v)
+	}
+	if v, ok := tfMap["resize_option"].(string); ok && v != "" {
+		options.ResizeOption = aws.String(v)
 	}
 
 	return options
@@ -1270,17 +1278,17 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["element_type"].(string); ok && v != "" {
 		layout.ElementType = aws.String(v)
 	}
-	if v, ok := tfMap["column_span"].(int); ok {
+	if v, ok := tfMap["column_span"].(int); ok && v != 0 {
 		layout.ColumnSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["row_span"].(int); ok {
+	if v, ok := tfMap["row_span"].(int); ok && v != 0 {
 		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["column_index"].(int); ok {
-		layout.ColumnIndex = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["column_index"].(string)).Value(); !null {
+		layout.ColumnIndex = aws.Int64(v)
 	}
-	if v, ok := tfMap["row_index"].(int); ok {
-		layout.RowIndex = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["row_index"].(string)).Value(); !null {
+		layout.RowIndex = aws.Int64(v)
 	}
 
 	return layout
@@ -2088,10 +2096,10 @@ func flattenGridLayoutElement(apiObject []*quicksight.GridLayoutElement) []inter
 			"row_span":     aws.Int64Value(config.RowSpan),
 		}
 		if config.ColumnIndex != nil {
-			tfMap["column_index"] = aws.Int64Value(config.ColumnIndex)
+			tfMap["column_index"] = strconv.FormatInt(aws.Int64Value(config.ColumnIndex), 10)
 		}
 		if config.RowIndex != nil {
-			tfMap["row_index"] = aws.Int64Value(config.RowIndex)
+			tfMap["row_index"] = strconv.FormatInt(aws.Int64Value(config.RowIndex), 10)
 		}
 
 		tfList = append(tfList, tfMap)

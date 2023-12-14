@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -97,14 +100,14 @@ func ResourceMountTarget() *schema.Resource {
 
 func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	// CreateMountTarget would return the same Mount Target ID
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
 	subnetID := d.Get("subnet_id").(string)
-	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(), subnetID)
+	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), subnetID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", subnetID, err)
@@ -145,7 +148,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	mt, err := FindMountTargetByID(ctx, conn, d.Id())
 
@@ -192,7 +195,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if d.HasChange("security_groups") {
 		input := &efs.ModifyMountTargetSecurityGroupsInput{
@@ -212,7 +215,7 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS Mount Target: %s", d.Id())
 	_, err := conn.DeleteMountTargetWithContext(ctx, &efs.DeleteMountTargetInput{

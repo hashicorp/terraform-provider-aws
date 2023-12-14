@@ -33,7 +33,7 @@ resource "aws_sagemaker_endpoint_configuration" "ec" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `production_variants` - (Required) An list of ProductionVariant objects, one for each model that you want to host at this endpoint. Fields are documented below.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
@@ -68,6 +68,7 @@ The following arguments are supported:
 
 * `max_concurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
 * `memory_size_in_mb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
+* `provisioned_concurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `max_concurrency`. Valid values are between `1` and `200`.
 
 ### data_capture_config
 
@@ -109,9 +110,9 @@ The following arguments are supported:
 * `error_topic` - (Optional) Amazon SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.
 * `success_topic` - (Optional) Amazon SNS topic to post a notification to when inference completes successfully. If no topic is provided, no notification is sent on success.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint configuration.
 * `name` - The name of the endpoint configuration.
@@ -119,8 +120,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoint configurations can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
+  id = "endpoint-config-foo"
+}
 ```
-$ terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+
+Using `terraform import`, import endpoint configurations using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```

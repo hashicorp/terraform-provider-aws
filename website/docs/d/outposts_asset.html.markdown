@@ -34,7 +34,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `asset_type` - Type of the asset.
 * `host_id` - Host ID of the Dedicated Hosts on the asset, if a Dedicated Host is provisioned.

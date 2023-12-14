@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -38,7 +41,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -58,6 +61,13 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
+			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringLenBetween(1, 256)),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -109,7 +119,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 
 func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appId := d.Get("application_id").(string)
 	name := d.Get("name").(string)
@@ -117,11 +127,15 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 		ApplicationId: aws.String(appId),
 		LocationUri:   aws.String(d.Get("location_uri").(string)),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("retrieval_role_arn"); ok {
@@ -153,7 +167,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
@@ -185,6 +199,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("application_id", output.ApplicationId)
 	d.Set("configuration_profile_id", output.Id)
 	d.Set("description", output.Description)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("location_uri", output.LocationUri)
 	d.Set("name", output.Name)
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
@@ -208,7 +223,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		confProfID, appID, err := ConfigurationProfileParseID(d.Id())
@@ -224,6 +239,10 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 
 		if d.HasChange("description") {
 			updateInput.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("kms_key_identifier") {
+			updateInput.KmsKeyIdentifier = aws.String(d.Get("kms_key_identifier").(string))
 		}
 
 		if d.HasChange("name") {
@@ -250,20 +269,18 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Configuration Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &appconfig.DeleteConfigurationProfileInput{
+	log.Printf("[INFO] Deleting AppConfig Configuration Profile: %s", d.Id())
+	_, err = conn.DeleteConfigurationProfileWithContext(ctx, &appconfig.DeleteConfigurationProfileInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-	}
-
-	_, err = conn.DeleteConfigurationProfileWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

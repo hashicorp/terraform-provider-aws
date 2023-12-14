@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -128,13 +131,13 @@ func resourceVirtualRouterSpecSchema() *schema.Schema {
 
 func resourceVirtualRouterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		Spec:              expandVirtualRouterSpec(d.Get("spec").([]interface{})),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		VirtualRouterName: aws.String(name),
 	}
 
@@ -155,7 +158,7 @@ func resourceVirtualRouterCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
@@ -190,7 +193,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVirtualRouterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualRouterInput{
@@ -215,7 +218,7 @@ func resourceVirtualRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVirtualRouterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Router: %s", d.Id())
 	input := &appmesh.DeleteVirtualRouterInput{
@@ -246,7 +249,7 @@ func resourceVirtualRouterImport(ctx context.Context, d *schema.ResourceData, me
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-router-name'", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	meshName := parts[0]
 	name := parts[1]
 

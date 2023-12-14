@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -132,19 +136,21 @@ func ResourceFindingsFilter() *schema.Resource {
 }
 
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
 	input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie FindingsFilter: %w", err))
+		return sdkdiag.AppendErrorf(diags, "creating Macie FindingsFilter: %s", err)
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -174,16 +180,18 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie FindingsFilter: %w", err))
+		return sdkdiag.AppendErrorf(diags, "creating Macie FindingsFilter: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	return resourceFindingsFilterRead(ctx, d, meta)
+	return append(diags, resourceFindingsFilterRead(ctx, d, meta)...)
 }
 
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -195,15 +203,15 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie FindingsFilter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie FindingsFilter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("finding_criteria", flattenFindingCriteriaFindingsFilter(resp.FindingCriteria)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie FindingsFilter (%s): %w", "finding_criteria", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie FindingsFilter (%s): %s", "finding_criteria", d.Id(), err)
 	}
 	d.Set("name", resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
@@ -211,15 +219,17 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	d.Set("arn", resp.Arn)
 
-	return nil
+	return diags
 }
 
 func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -229,7 +239,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("finding_criteria") {
 		input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Macie FindingsFilter (%s): %s", d.Id(), err)
 		}
 	}
 	if d.HasChange("name") {
@@ -250,14 +260,16 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	_, err = conn.UpdateFindingsFilterWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "updating Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
 
-	return resourceFindingsFilterRead(ctx, d, meta)
+	return append(diags, resourceFindingsFilterRead(ctx, d, meta)...)
 }
 
 func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -267,11 +279,11 @@ func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie FindingsFilter (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.FindingCriteria, error) {
@@ -315,28 +327,28 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.Findin
 		if v, ok := crit["lt"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lt", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "lt", field, err)
 			}
 			conditional.Lt = aws.Int64(i)
 		}
 		if v, ok := crit["lte"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lte", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "lte", field, err)
 			}
 			conditional.Lte = aws.Int64(i)
 		}
 		if v, ok := crit["gt"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gt", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "gt", field, err)
 			}
 			conditional.Gt = aws.Int64(i)
 		}
 		if v, ok := crit["gte"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gte", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "gte", field, err)
 			}
 			conditional.Gte = aws.Int64(i)
 		}

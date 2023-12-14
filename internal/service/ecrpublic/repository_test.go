@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecrpublic_test
 
 import (
@@ -374,7 +377,7 @@ func testAccCheckRepositoryExists(ctx context.Context, name string, res *ecrpubl
 			return fmt.Errorf("No ECR Public repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		output, err := conn.DescribeRepositoriesWithContext(ctx, &ecrpublic.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -394,7 +397,7 @@ func testAccCheckRepositoryExists(ctx context.Context, name string, res *ecrpubl
 
 func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecrpublic_repository" {

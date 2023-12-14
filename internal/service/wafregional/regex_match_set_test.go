@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
@@ -201,7 +204,7 @@ func testAccCheckRegexMatchSetExists(ctx context.Context, n string, v *waf.Regex
 			return fmt.Errorf("No WAF Regional Regex Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		resp, err := conn.GetRegexMatchSetWithContext(ctx, &waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -226,7 +229,7 @@ func testAccCheckRegexMatchSetDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 			resp, err := conn.GetRegexMatchSetWithContext(ctx, &waf.GetRegexMatchSetInput{
 				RegexMatchSetId: aws.String(rs.Primary.ID),
 			})

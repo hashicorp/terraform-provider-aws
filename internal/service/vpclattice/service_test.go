@@ -1,15 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +44,7 @@ func TestAccVPCLatticeService_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("service/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("service/.+$")),
 				),
 			},
 			{
@@ -107,7 +109,7 @@ func TestAccVPCLatticeService_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "custom_domain_name", "example.com"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("service/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("service/.+$")),
 				),
 			},
 			{
@@ -166,25 +168,24 @@ func TestAccVPCLatticeService_tags(t *testing.T) {
 
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_service" {
 				continue
 			}
 
-			_, err := conn.GetService(ctx, &vpclattice.GetServiceInput{
-				ServiceIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindServiceByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameService, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Service %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -202,13 +203,11 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *vpclat
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
-		resp, err := conn.GetService(ctx, &vpclattice.GetServiceInput{
-			ServiceIdentifier: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		resp, err := tfvpclattice.FindServiceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, rs.Primary.ID, err)
+			return err
 		}
 
 		*service = *resp
@@ -218,7 +217,7 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *vpclat
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	input := &vpclattice.ListServicesInput{}
 	_, err := conn.ListServices(ctx, input)

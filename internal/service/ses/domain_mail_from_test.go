@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -150,7 +153,7 @@ func testAccCheckDomainMailFromExists(ctx context.Context, n string) resource.Te
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		params := &ses.GetIdentityMailFromDomainAttributesInput{
 			Identities: []*string{
@@ -173,7 +176,7 @@ func testAccCheckDomainMailFromExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckDomainMailFromDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_domain_mail_from" {
@@ -199,7 +202,7 @@ func testAccCheckDomainMailFromDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccCheckDomainMailFromDisappears(ctx context.Context, identity string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		input := &ses.SetIdentityMailFromDomainInput{
 			Identity:       aws.String(identity),

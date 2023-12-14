@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -43,7 +46,7 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`testgrid-project:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
 				),
 			},
 			{
@@ -56,7 +59,7 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`testgrid-project:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
 				),
 			},
 		},
@@ -193,7 +196,7 @@ func testAccCheckProjectTestGridProjectExists(ctx context.Context, n string, v *
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 		resp, err := tfdevicefarm.FindTestGridProjectByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -210,7 +213,7 @@ func testAccCheckProjectTestGridProjectExists(ctx context.Context, n string, v *
 
 func testAccCheckProjectTestGridProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_test_grid_project" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 import (
@@ -63,7 +66,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	dashboardName := d.Get("dashboard_name").(string)
 	log.Printf("[DEBUG] Reading CloudWatch Dashboard: %s", dashboardName)
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	params := cloudwatch.GetDashboardInput{
 		DashboardName: aws.String(d.Id()),
@@ -77,7 +80,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
 	}
 
 	d.Set("dashboard_arn", resp.DashboardArn)
@@ -88,7 +91,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 	params := cloudwatch.PutDashboardInput{
 		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
 		DashboardName: aws.String(d.Get("dashboard_name").(string)),
@@ -109,7 +112,7 @@ func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	log.Printf("[INFO] Deleting CloudWatch Dashboard %s", d.Id())
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 	params := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []*string{aws.String(d.Id())},
 	}
@@ -118,7 +121,7 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 		if IsDashboardNotFoundErr(err) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting CloudWatch Dashboard: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Dashboard: %s", err)
 	}
 	log.Printf("[INFO] CloudWatch Dashboard %s deleted", d.Id())
 

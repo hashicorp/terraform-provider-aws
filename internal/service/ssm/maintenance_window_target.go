@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -60,7 +63,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{Z}\p{N}_.:/=\-@]*$|resource-groups:ResourceTypeFilters|resource-groups:Name$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^[\p{L}\p{Z}\p{N}_.:/=\-@]*$|resource-groups:ResourceTypeFilters|resource-groups:Name$`), ""),
 								validation.StringLenBetween(1, 163),
 							),
 						},
@@ -78,7 +81,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
 			},
 
 			"description": {
@@ -99,7 +102,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 
 func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
 
@@ -133,7 +136,7 @@ func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.Resour
 
 func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	windowID := d.Get("window_id").(string)
 	params := &ssm.DescribeMaintenanceWindowTargetsInput{
@@ -186,7 +189,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 
 func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
@@ -218,7 +221,7 @@ func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.Resour
 
 func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())
 

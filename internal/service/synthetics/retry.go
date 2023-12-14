@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -29,17 +32,17 @@ func retryCreateCanary(ctx context.Context, conn *synthetics.Synthetics, d *sche
 			// delete canary because it is the only way to reprovision if in an error state
 			err = deleteCanary(ctx, conn, d.Id())
 			if err != nil {
-				return output, fmt.Errorf("error deleting Synthetics Canary on retry (%s): %w", d.Id(), err)
+				return output, fmt.Errorf("deleting Synthetics Canary on retry (%s): %w", d.Id(), err)
 			}
 
 			_, err = conn.CreateCanaryWithContext(ctx, input)
 			if err != nil {
-				return output, fmt.Errorf("error creating Synthetics Canary on retry (%s): %w", d.Id(), err)
+				return output, fmt.Errorf("creating Synthetics Canary on retry (%s): %w", d.Id(), err)
 			}
 
 			_, err = waitCanaryReady(ctx, conn, d.Id())
 			if err != nil {
-				return output, fmt.Errorf("error waiting on Synthetics Canary on retry (%s): %w", d.Id(), err)
+				return output, fmt.Errorf("waiting on Synthetics Canary on retry (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -57,13 +60,13 @@ func deleteCanary(ctx context.Context, conn *synthetics.Synthetics, name string)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Synthetics Canary (%s): %w", name, err)
+		return fmt.Errorf("deleting Synthetics Canary (%s): %w", name, err)
 	}
 
 	_, err = waitCanaryDeleted(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) delete: %w", name, err)
+		return fmt.Errorf("waiting for Synthetics Canary (%s) delete: %w", name, err)
 	}
 
 	return nil

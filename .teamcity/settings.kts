@@ -1,14 +1,17 @@
-import jetbrains.buildServer.configs.kotlin.v2019_2.* // ktlint-disable no-wildcard-imports
-import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
-import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
-import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.schedule
+import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
+import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
+import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
+import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.failureConditions.failOnText
+import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnText
+import jetbrains.buildServer.configs.kotlin.triggers.schedule
 import java.io.File
 import java.time.Duration
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2020.2"
+version = "2023.05"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -51,6 +54,9 @@ project {
         buildType(Sweeper)
     }
 
+    buildType(Sanity)
+    buildType(Performance)
+
     params {
         if (acctestParallelism != "") {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
@@ -74,9 +80,9 @@ project {
             text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
         }
 
-        val branchName = DslContext.getParameter("branch_name", "")
-        if (branchName != "") {
-            text("BRANCH_NAME", branchName, display = ParameterDisplay.HIDDEN)
+        val brancRef = DslContext.getParameter("branch_name", "")
+        if (brancRef != "") {
+            text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
         }
 
         if (tfAccAssumeRoleArn != "") {
@@ -111,10 +117,15 @@ project {
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
 
-        // These should be overridden in the base AWS project
-        param("env.GOPATH", "")
-        param("env.GO111MODULE", "") // No longer needed as of Go 1.16
-        param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
+        // These overrides exist because of the inherited dependency in the existing project structure and can
+        // be removed when this is moved outside of it
+        val isOnPrem = DslContext.getParameter("is_on_prem", "true").equals("true", ignoreCase = true)
+        if (isOnPrem) {
+            // These should be overridden in the base AWS project
+            param("env.GOPATH", "")
+            param("env.GO111MODULE", "") // No longer needed as of Go 1.16
+            param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
+        }
     }
 
     subProject(Services)
@@ -134,11 +145,9 @@ object PullRequest : BuildType({
         executionTimeoutMin = Duration.ofHours(defaultPullRequestTimeoutHours).toMinutes().toInt()
     }
 
+    val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
@@ -157,6 +166,34 @@ object PullRequest : BuildType({
                 param("locks-param", "$alternateAccountLockId readLock")
             }
         }
+
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = true
+                        addStatusText = true
+                    }
+                }
+                branchFilter = "+:*"
+
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+                buildProbablyHanging = false
+            }
+        }
     }
 })
 
@@ -169,6 +206,13 @@ object FullBuild : BuildType({
         showDependenciesChanges = true
     }
 
+    val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+    val notifier: Notifier? = if (notifierConnectionID != "") {
+        Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+    } else {
+        null
+    }
+
     dependencies {
         snapshot(SetUp) {
             reuseBuilds = ReuseBuilds.NO
@@ -179,7 +223,7 @@ object FullBuild : BuildType({
         val testType = DslContext.getParameter("test_type", "")
         val serviceList = if (testType == "orgacct") orgacctServices else services
         serviceList.forEach { (serviceName, displayName) ->
-            snapshot(Service(serviceName, displayName).buildType()) {
+            snapshot(Service(serviceName, displayName).buildType(notifier)) {
                 reuseBuilds = ReuseBuilds.NO
                 onDependencyFailure = FailureAction.ADD_PROBLEM
                 onDependencyCancel = FailureAction.IGNORE
@@ -203,20 +247,24 @@ object FullBuild : BuildType({
         } else {
             "Sun-Thu"
         }
-        triggers {
-            schedule {
-                schedulingPolicy = cron {
-                    dayOfWeek = triggerDay
-                    val triggerHM = LocalTime.from(triggerTime)
-                    hours = triggerHM.getHour().toString()
-                    minutes = triggerHM.getMinute().toString()
-                    timezone = ZoneId.from(triggerTime).toString()
+
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = cron {
+                        dayOfWeek = triggerDay
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hours = triggerHM.getHour().toString()
+                        minutes = triggerHM.getMinute().toString()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "" // For a Composite build, the branch filter must be empty
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = false
+                    enforceCleanCheckoutForDependencies = true
                 }
-                branchFilter = "" // For a Composite build, the branch filter must be empty
-                triggerBuild = always()
-                withPendingChangesOnly = false
-                enableQueueOptimization = false
-                enforceCleanCheckoutForDependencies = true
             }
         }
     }
@@ -233,6 +281,21 @@ object FullBuild : BuildType({
                 param("locks-param", "$alternateAccountLockId readLock")
             }
         }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = simpleMessageFormat()
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
+        }
     }
 })
 
@@ -246,10 +309,7 @@ object SetUp : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "Run provider unit tests"
             scriptContent = File("./scripts/provider_tests/unit_tests.sh").readText()
@@ -269,6 +329,34 @@ object SetUp : BuildType({
         golang {
             testFormat = "json"
         }
+
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = true
+                        addStatusText = true
+                    }
+                }
+                buildStarted = false // With the number of tests, this would be too noisy
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = false // With the number of tests, this would be too noisy
+                firstSuccessAfterFailure = true
+                buildProbablyHanging = false
+                // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
+                // firstBuildErrorOccurs = true
+            }
+        }
     }
 })
 
@@ -277,6 +365,13 @@ object Services : Project({
 
     name = "Services"
 
+    val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+    val notifier: Notifier? = if (notifierConnectionID != "") {
+        Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+    } else {
+        null
+    }
+
     val buildChain = sequential {
         buildType(SetUp)
 
@@ -284,7 +379,7 @@ object Services : Project({
         val serviceList = if (testType == "orgacct") orgacctServices else services
         parallel(options = { onDependencyFailure = FailureAction.IGNORE }) {
             serviceList.forEach { (serviceName, displayName) ->
-                buildType(Service(serviceName, displayName).buildType())
+                buildType(Service(serviceName, displayName).buildType(notifier))
             }
         }
 
@@ -307,11 +402,7 @@ object CleanUp : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            enabled = false
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "Post-Sweeper"
             enabled = false
@@ -330,10 +421,7 @@ object Sweeper : BuildType({
     }
 
     steps {
-        script {
-            name = "Setup GOENV"
-            scriptContent = File("./scripts/setup_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
         script {
             name = "Sweeper"
             scriptContent = File("./scripts/sweeper.sh").readText()
@@ -344,19 +432,159 @@ object Sweeper : BuildType({
     if (triggerTimeRaw != "") {
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
         val triggerTime = formatter.parse(triggerTimeRaw)
-        triggers {
-            schedule {
-                schedulingPolicy = daily {
-                    val triggerHM = LocalTime.from(triggerTime)
-                    hour = triggerHM.getHour()
-                    minute = triggerHM.getMinute()
-                    timezone = ZoneId.from(triggerTime).toString()
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
                 }
-                branchFilter = "+:refs/heads/main"
-                triggerBuild = always()
-                withPendingChangesOnly = false
-                enableQueueOptimization = false
-                enforceCleanCheckoutForDependencies = true
+            }
+        }
+    }
+
+    failureConditions {
+        failOnText {
+            conditionType = BuildFailureOnText.ConditionType.REGEXP
+            pattern = """Sweeper Tests for region \(([-a-z0-9]+)\) ran unsuccessfully"""
+            failureMessage = """Sweeper failure for region "${'$'}1""""
+            reverse = false
+            reportOnlyFirstMatch = false
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            val branchRef = DslContext.getParameter("branch_name", "")
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = branchRef != "refs/heads/main"
+                        addStatusText = true
+                    }
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
+        }
+    }
+})
+
+object Sanity : BuildType({
+    name = "Sanity"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        script {
+            name = "IAM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Logs"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "EC2"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "ECS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "ELBv2"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "KMS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "IAM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Lambda"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Meta"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Route53"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "S3"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Secrets Manager"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "STS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }  
+        script {
+            name = "Report Success"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }    
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("sanity_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
             }
         }
     }
@@ -365,6 +593,82 @@ object Sweeper : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+        }
+    }
+})
+
+object Performance : BuildType({
+    name = "Performance"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        script {
+            name = "Configure Go"
+            scriptContent = File("./scripts/configure_goenv.sh").readText()
+        }
+        script {
+            name = "VPC Main"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "SSM Main"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "VPC Latest Version"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "SSM Latest Version"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "Analysis"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("performance_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
         }
     }
 })

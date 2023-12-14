@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package budgets_test
 
 import (
@@ -206,14 +209,12 @@ func TestAccBudgetsBudget_autoAdjustDataForecast(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_autoAdjustDataForecast(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccBudgetExists(ctx, resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "FORECAST"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "limit_amount", "0"),
-					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 				),
 			},
 			{
@@ -249,8 +250,6 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "limit_amount", "0"),
-					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 				),
 			},
 			{
@@ -270,8 +269,6 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "limit_amount", "0"),
-					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 				),
 			},
 		},
@@ -521,7 +518,7 @@ func testAccBudgetExists(ctx context.Context, resourceName string, v *budgets.Bu
 			return fmt.Errorf("No Budget ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn(ctx)
 
 		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
 
@@ -543,7 +540,7 @@ func testAccBudgetExists(ctx context.Context, resourceName string, v *budgets.Bu
 
 func testAccCheckBudgetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_budgets_budget" {

@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_ec2_client_vpn_endpoint: Add `self_service_portal_url` attribute
+```
+
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `self_service_portal_url` attribute
+```

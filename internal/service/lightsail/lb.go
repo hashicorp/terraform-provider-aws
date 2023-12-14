@@ -1,13 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -79,8 +84,8 @@ func ResourceLoadBalancer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"support_code": {
@@ -95,26 +100,28 @@ func ResourceLoadBalancer() *schema.Resource {
 }
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	lbName := d.Get("name").(string)
 	in := lightsail.CreateLoadBalancerInput{
-		InstancePort:     aws.Int64(int64(d.Get("instance_port").(int))),
+		InstancePort:     int32(d.Get("instance_port").(int)),
 		LoadBalancerName: aws.String(lbName),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if d.Get("health_check_path").(string) != "/" {
 		in.HealthCheckPath = aws.String(d.Get("health_check_path").(string))
 	}
 
-	out, err := conn.CreateLoadBalancerWithContext(ctx, &in)
+	out, err := conn.CreateLoadBalancer(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateLoadBalancer), ResLoadBalancer, lbName, err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName)
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName)
 
 	if diag != nil {
 		return diag
@@ -122,22 +129,24 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(lbName)
 
-	return resourceLoadBalancerRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
 
-	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+
+	lb, err := FindLoadBalancerById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
 	}
 
 	d.Set("arn", lb.Arn)
@@ -151,13 +160,15 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("name", lb.Name)
 	d.Set("support_code", lb.SupportCode)
 
-	SetTagsOut(ctx, lb.Tags)
+	setTagsOut(ctx, lb.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("name").(string)
 
 	in := &lightsail.UpdateLoadBalancerAttributeInput{
@@ -166,42 +177,68 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("health_check_path") {
 		healthCheckIn := in
-		healthCheckIn.AttributeName = aws.String("HealthCheckPath")
+		healthCheckIn.AttributeName = types.LoadBalancerAttributeNameHealthCheckPath
 		healthCheckIn.AttributeValue = aws.String(d.Get("health_check_path").(string))
 
-		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, healthCheckIn)
+		out, err := conn.UpdateLoadBalancerAttribute(ctx, healthCheckIn)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancer, lbName, err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName)
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName)
 
 		if diag != nil {
 			return diag
 		}
 	}
 
-	return resourceLoadBalancerRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("name").(string)
 
-	out, err := conn.DeleteLoadBalancerWithContext(ctx, &lightsail.DeleteLoadBalancerInput{
+	out, err := conn.DeleteLoadBalancer(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancer), ResLoadBalancer, lbName, err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName)
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName)
 
 	if diag != nil {
 		return diag
 	}
 
-	return nil
+	return diags
+}
+
+func FindLoadBalancerById(ctx context.Context, conn *lightsail.Client, name string) (*types.LoadBalancer, error) {
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(name)}
+	out, err := conn.GetLoadBalancer(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	lb := out.LoadBalancer
+
+	return lb, nil
 }

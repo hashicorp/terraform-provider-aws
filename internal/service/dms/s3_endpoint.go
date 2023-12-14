@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -242,6 +245,11 @@ func ResourceS3Endpoint() *schema.Resource {
 					return json
 				},
 			},
+			"glue_catalog_generation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ignore_header_rows": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -319,13 +327,13 @@ const (
 
 func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String("s3"),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -371,7 +379,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil || out == nil || out.Endpoint == nil {
-		return create.DiagError(names.DMS, create.ErrActionCreating, ResNameS3Endpoint, d.Get("endpoint_id").(string), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionCreating, ResNameS3Endpoint, d.Get("endpoint_id").(string), err)
 	}
 
 	d.SetId(d.Get("endpoint_id").(string))
@@ -387,7 +395,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -398,11 +406,11 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	if endpoint.S3Settings == nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), errors.New("no settings returned"))
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), errors.New("no settings returned"))
 	}
 
 	d.Set("endpoint_arn", endpoint.EndpointArn)
@@ -457,6 +465,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
 		d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
 		d.Set("encryption_mode", s3settings.EncryptionMode)
+		d.Set("glue_catalog_generation", s3settings.GlueCatalogGeneration)
 		d.Set("parquet_timestamp_in_millisecond", s3settings.ParquetTimestampInMillisecond)
 		d.Set("parquet_version", s3settings.ParquetVersion)
 		d.Set("preserve_transactions", s3settings.PreserveTransactions)
@@ -466,7 +475,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	p, err := structure.NormalizeJsonString(aws.StringValue(s3settings.ExternalTableDefinition))
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionSetting, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	d.Set("external_table_definition", p)
@@ -476,7 +485,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -529,7 +538,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if err != nil {
-			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
+			return create.AppendDiagError(diags, names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
 		}
 	}
 
@@ -538,7 +547,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
@@ -550,11 +559,11 @@ func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
 	}
 
 	return diags
@@ -567,8 +576,8 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.AddColumnName = aws.Bool(v)
 	}
 
-	if v, ok := d.Get("add_trailing_padding_character").(bool); ok && target { // target
-		s3s.AddTrailingPaddingCharacter = aws.Bool(v)
+	if v, ok := d.GetOk("add_trailing_padding_character"); ok && target { // target
+		s3s.AddTrailingPaddingCharacter = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("bucket_folder"); ok {
@@ -669,6 +678,10 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 
 	if v, ok := d.GetOk("external_table_definition"); ok {
 		s3s.ExternalTableDefinition = aws.String(v.(string))
+	}
+
+	if v, ok := d.Get("glue_catalog_generation").(bool); ok { // target
+		s3s.GlueCatalogGeneration = aws.Bool(v)
 	}
 
 	if v, ok := d.GetOk("ignore_header_rows"); ok {

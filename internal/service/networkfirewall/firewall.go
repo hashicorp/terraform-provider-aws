@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -146,14 +150,16 @@ func ResourceFirewall() *schema.Resource {
 }
 
 func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -180,31 +186,33 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateFirewallWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating NetworkFirewall Firewall (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Firewall (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Firewall.FirewallArn))
 
 	if _, err := waitFirewallCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceFirewallRead(ctx, d, meta)
+	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindFirewallByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
 	firewall := output.Firewall
@@ -212,28 +220,30 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
 	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
-		return diag.Errorf("setting encryption_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
 	if err := d.Set("firewall_status", flattenFirewallStatus(output.FirewallStatus)); err != nil {
-		return diag.Errorf("setting firewall_status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
 	d.Set("name", firewall.FirewallName)
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
-		return diag.Errorf("setting subnet_mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
 	d.Set("update_token", output.UpdateToken)
 	d.Set("vpc_id", firewall.VpcId)
 
-	SetTagsOut(ctx, firewall.Tags)
+	setTagsOut(ctx, firewall.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	updateToken := d.Get("update_token").(string)
 
 	if d.HasChange("delete_protection") {
@@ -246,7 +256,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallDeleteProtectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) delete protection: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) delete protection: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -262,7 +272,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallDescriptionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) description: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) description: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -278,7 +288,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallEncryptionConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) encryption configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) encryption configuration: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -297,7 +307,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallPolicyChangeProtectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) firewall policy change protection: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) firewall policy change protection: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -313,7 +323,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.AssociateFirewallPolicyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) firewall policy ARN: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) firewall policy ARN: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -329,7 +339,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateSubnetChangeProtectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) subnet change protection: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) subnet change protection: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -349,13 +359,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.AssociateSubnetsWithContext(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("associating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "associating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
 			}
 
 			updateToken, err = waitFirewallUpdated(ctx, conn, d.Id())
 
 			if err != nil {
-				return diag.Errorf("waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
 			}
 		}
 
@@ -372,19 +382,21 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				/*updateToken*/ _, err = waitFirewallUpdated(ctx, conn, d.Id())
 
 				if err != nil {
-					return diag.Errorf("waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
 				}
 			} else if !tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidRequestException, "inaccessible") {
-				return diag.Errorf("disassociating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disassociating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceFirewallRead(ctx, d, meta)
+	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
 func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall: %s", d.Id())
 	_, err := conn.DeleteFirewallWithContext(ctx, &networkfirewall.DeleteFirewallInput{
@@ -392,18 +404,18 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting NetworkFirewall Firewall (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFirewallDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for NetworkFirewall Firewall (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallOutput, error) {

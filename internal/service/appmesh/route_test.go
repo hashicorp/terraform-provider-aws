@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh_test
 
 import (
@@ -2100,7 +2103,7 @@ func testAccRouteImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 
 func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_route" {
@@ -2126,7 +2129,7 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckRouteExists(ctx context.Context, n string, v *appmesh.RouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

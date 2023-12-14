@@ -20,14 +20,14 @@ data "aws_ecr_repository" "service" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the ECR Repository.
 * `registry_id` - (Optional) Registry ID where the repository was created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Full ARN of the repository.
 * `encryption_configuration` - Encryption configuration for the repository. See [Encryption Configuration](#encryption-configuration) below.

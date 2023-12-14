@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -68,7 +71,7 @@ func ResourceCustomRoutingListener() *schema.Resource {
 
 func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	acceleratorARN := d.Get("accelerator_arn").(string)
 	input := &globalaccelerator.CreateCustomRoutingListenerInput{
@@ -95,7 +98,7 @@ func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.Resource
 
 func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	listener, err := FindCustomRoutingListenerByARN(ctx, conn, d.Id())
 
@@ -125,7 +128,7 @@ func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.UpdateCustomRoutingListenerInput{
@@ -149,7 +152,7 @@ func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.Resource
 
 func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -159,7 +162,7 @@ func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

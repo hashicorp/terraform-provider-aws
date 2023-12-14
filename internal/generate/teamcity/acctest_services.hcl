@@ -1,4 +1,15 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 service "appautoscaling" {
+  vpc_lock = true
+}
+
+service "apigateway" {
+  vpc_lock = true
+}
+
+service "apigatewayv2" {
   vpc_lock = true
 }
 
@@ -35,6 +46,10 @@ service "datasync" {
   vpc_lock = true
 }
 
+service "deploy" {
+  vpc_lock = true
+}
+
 service "directconnect" {
   vpc_lock = true
 }
@@ -57,6 +72,10 @@ service "ec2" {
 
 service "ecrpublic" {
   region = "us-east-1"
+}
+
+service "ecs" {
+  vpc_lock = true
 }
 
 service "efs" {
@@ -99,6 +118,10 @@ service "fsx" {
   vpc_lock = true
 }
 
+service "imagebuilder" {
+  vpc_lock = true
+}
+
 service "kafka" {
   vpc_lock = true
 }
@@ -132,6 +155,14 @@ service "mwaa" {
 }
 
 service "networkfirewall" {
+  vpc_lock = true
+}
+
+service "networkmanager" {
+  vpc_lock = true
+}
+
+service "opensearch" {
   vpc_lock = true
 }
 

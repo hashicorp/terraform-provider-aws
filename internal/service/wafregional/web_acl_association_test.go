@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
@@ -119,7 +122,7 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 
 func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafregional_web_acl_association" {
@@ -162,7 +165,7 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 
 		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
 		input := &wafregional.GetWebACLForResourceInput{
 			ResourceArn: aws.String(resourceArn),
@@ -189,7 +192,7 @@ func testAccCheckWebACLAssociationDisappears(ctx context.Context, resourceName s
 
 		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
 		input := &wafregional.DisassociateWebACLInput{
 			ResourceArn: aws.String(resourceArn),

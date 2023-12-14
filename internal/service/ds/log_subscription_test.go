@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
@@ -49,7 +52,7 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 
 func testAccCheckLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_log_subscription" {
@@ -88,7 +91,7 @@ func testAccCheckLogSubscriptionExists(ctx context.Context, name string, logGrou
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		res, err := conn.ListLogSubscriptionsWithContext(ctx, &directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),

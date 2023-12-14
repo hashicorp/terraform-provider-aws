@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -5,10 +8,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/synthetics"
@@ -110,7 +113,7 @@ func ResourceCanary() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 21),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
 				),
 			},
 			"run_config": {
@@ -182,7 +185,7 @@ func ResourceCanary() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return new == "rate(0 minute)" && old == "rate(0 hour)"
+								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
 							},
 						},
 					},
@@ -269,7 +272,7 @@ func ResourceCanary() *schema.Resource {
 
 func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &synthetics.CreateCanaryInput{
@@ -277,7 +280,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
 		Name:               aws.String(name),
 		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if code, err := expandCanaryCode(d); err != nil {
@@ -356,7 +359,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	canary, err := FindCanaryByName(ctx, conn, d.Id())
 
@@ -414,14 +417,14 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting artifact_config: %s", err)
 	}
 
-	SetTagsOut(ctx, canary.Tags)
+	setTagsOut(ctx, canary.Tags)
 
 	return diags
 }
 
 func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
@@ -527,7 +530,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
 		if err := stopCanary(ctx, d.Id(), conn); err != nil {

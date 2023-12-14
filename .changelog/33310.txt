@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `scale_in_protected_instances` and `standby_instances` attributes to `instance_refresh.preferences` configuration block
+```

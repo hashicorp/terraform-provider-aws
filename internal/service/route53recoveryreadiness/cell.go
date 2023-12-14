@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness
 
 import (
@@ -72,7 +75,7 @@ func ResourceCell() *schema.Resource {
 
 func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	name := d.Get("cell_name").(string)
 	input := &route53recoveryreadiness.CreateCellInput{
@@ -88,7 +91,7 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.CellName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.CellArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(output.CellArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Cell (%s) tags: %s", d.Id(), err)
 	}
 
@@ -97,7 +100,7 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	input := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
@@ -125,7 +128,7 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &route53recoveryreadiness.UpdateCellInput{
@@ -145,7 +148,7 @@ func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Recovery Readiness Cell: %s", d.Id())
 	_, err := conn.DeleteCellWithContext(ctx, &route53recoveryreadiness.DeleteCellInput{

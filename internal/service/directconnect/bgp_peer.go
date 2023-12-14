@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -82,7 +85,7 @@ func ResourceBGPPeer() *schema.Resource {
 
 func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -108,7 +111,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Creating Direct Connect BGP peer: %#v", req)
 	_, err := conn.CreateBGPPeerWithContext(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Direct Connect BGP peer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect BGP peer: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%d", vifId, addrFamily, asn))
@@ -128,7 +131,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error waiting for Direct Connect BGP peer (%s) to be available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect BGP peer (%s) to be available: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceBGPPeerRead(ctx, d, meta)...)
@@ -136,7 +139,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -144,7 +147,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	bgpPeerRaw, state, err := bgpPeerStateRefresh(ctx, conn, vifId, addrFamily, asn)()
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading Direct Connect BGP peer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect BGP peer: %s", err)
 	}
 	if state == directconnect.BGPPeerStateDeleted {
 		log.Printf("[WARN] Direct Connect BGP peer (%s) not found, removing from state", d.Id())
@@ -165,7 +168,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -303,7 +306,7 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 
 func testAccCheckServiceLinkedRoleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_service_linked_role" {
@@ -340,7 +343,7 @@ func testAccCheckServiceLinkedRoleExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
 

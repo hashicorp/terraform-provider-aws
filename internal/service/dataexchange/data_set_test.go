@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +39,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 			{
@@ -50,7 +53,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 		},
@@ -139,7 +142,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn(ctx)
 		resp, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -156,7 +159,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 
 func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dataexchange_data_set" {

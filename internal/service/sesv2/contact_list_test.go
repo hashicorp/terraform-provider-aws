@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
@@ -191,7 +194,7 @@ func TestAccSESV2ContactList_disappears(t *testing.T) {
 
 func testAccCheckContactListDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_contact_list" {
@@ -226,7 +229,7 @@ func testAccCheckContactListExists(ctx context.Context, name string) resource.Te
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameContactList, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindContactListByID(ctx, conn, rs.Primary.ID)
 

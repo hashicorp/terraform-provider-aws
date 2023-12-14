@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield
 
 import (
@@ -53,12 +56,12 @@ func ResourceProtection() *schema.Resource {
 
 func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(d.Get("name").(string)),
 		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateProtectionWithContext(ctx, input)
@@ -71,7 +74,7 @@ func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceProtectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.DescribeProtectionInput{
 		ProtectionId: aws.String(d.Id()),
@@ -107,7 +110,7 @@ func resourceProtectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceProtectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.DeleteProtectionInput{
 		ProtectionId: aws.String(d.Id()),

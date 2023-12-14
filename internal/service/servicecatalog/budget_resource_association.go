@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -48,7 +51,7 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 
 func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
 		BudgetName: aws.String(d.Get("budget_name").(string)),
@@ -91,7 +94,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 
 func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 
@@ -123,7 +126,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 

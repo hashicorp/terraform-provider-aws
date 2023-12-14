@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -98,7 +101,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 
 func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_export_task" {
@@ -133,7 +136,7 @@ func testAccCheckExportTaskExists(ctx context.Context, name string, exportTask *
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 		resp, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, rs.Primary.ID, err)
@@ -170,11 +173,6 @@ func testAccExportTaskConfigBase(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {
@@ -240,16 +238,14 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  allocated_storage    = 10
-  db_name              = "test"
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t3.micro"
-  username             = "foo"
-  password             = "foobarbaz"
-  parameter_group_name = "default.mysql5.7"
-  skip_final_snapshot  = true
+  identifier          = %[1]q
+  allocated_storage   = 10
+  db_name             = "test"
+  engine              = "mysql"
+  instance_class      = "db.t3.micro"
+  username            = "foo"
+  password            = "foobarbaz"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_snapshot" "test" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager
 
 import (
@@ -95,7 +98,9 @@ func ResourceGrant() *schema.Resource {
 }
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.CreateGrantInput{
 		AllowedOperations: aws.StringSlice(expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List())),
@@ -109,27 +114,29 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	out, err := conn.CreateGrantWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.GrantArn))
 
-	return resourceGrantRead(ctx, d, meta)
+	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
 func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	out, err := FindGrantByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
 	}
 
 	d.Set("allowed_operations", out.GrantedOperations)
@@ -142,11 +149,13 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("status", out.GrantStatus)
 	d.Set("version", out.Version)
 
-	return nil
+	return diags
 }
 
 func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.CreateGrantVersionInput{
 		GrantArn:    aws.String(d.Id()),
@@ -164,24 +173,26 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.CreateGrantVersionWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionUpdating, ResGrant, d.Id(), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionUpdating, ResGrant, d.Id(), err)
 	}
 
-	return resourceGrantRead(ctx, d, meta)
+	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	out, err := FindGrantByARN(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
 	}
 
 	in := &licensemanager.DeleteGrantInput{
@@ -192,10 +203,10 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err = conn.DeleteGrantWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.LicenseManager, create.ErrActionDeleting, ResGrant, d.Id(), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionDeleting, ResGrant, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindGrantByARN(ctx context.Context, conn *licensemanager.LicenseManager, arn string) (*licensemanager.Grant, error) {

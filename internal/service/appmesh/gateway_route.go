@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -104,6 +107,89 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
+								"rewrite": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"hostname": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"default_target_hostname": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+												},
+											},
+											"path": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+												},
+											},
+											"prefix": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"default_prefix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+															ExactlyOneOf: []string{
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
+															},
+														},
+														"value": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
+															ExactlyOneOf: []string{
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
+															},
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+												},
+											},
+										},
+									},
+								},
 								"target": {
 									Type:     schema.TypeList,
 									Required: true,
@@ -129,67 +215,6 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
 													},
-												},
-											},
-										},
-									},
-								},
-								"rewrite": {
-									Type:     schema.TypeList,
-									Optional: true,
-									MinItems: 1,
-									MaxItems: 1,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"hostname": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MinItems: 1,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"default_target_hostname": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-														},
-													},
-												},
-												AtLeastOneOf: []string{
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
-												},
-											},
-											"prefix": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MinItems: 1,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"default_prefix": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-															ExactlyOneOf: []string{
-																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
-																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
-															},
-														},
-														"value": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-															ExactlyOneOf: []string{
-																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
-																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
-															},
-														},
-													},
-												},
-												AtLeastOneOf: []string{
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
-													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
 												},
 											},
 										},
@@ -324,8 +349,8 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										},
 									},
 									AtLeastOneOf: []string{
-										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
@@ -337,11 +362,11 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 								"prefix": {
 									Type:         schema.TypeString,
 									Optional:     true,
-									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
 									AtLeastOneOf: []string{
-										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
 								"query_parameter": {
@@ -480,14 +505,14 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 
 func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateGatewayRouteInput{
 		GatewayRouteName:   aws.String(name),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
 
@@ -508,7 +533,7 @@ func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string))
@@ -544,7 +569,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -570,7 +595,7 @@ func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Gateway Route: %s", d.Id())
 	input := &appmesh.DeleteGatewayRouteInput{
@@ -602,7 +627,7 @@ func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, met
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	meshName := parts[0]
 	virtualGatewayName := parts[1]
 	name := parts[2]
@@ -778,6 +803,15 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 			routeHostnameRewrite.DefaultTargetHostname = aws.String(vDefaultTargetHostname)
 		}
 		routeRewrite.Hostname = routeHostnameRewrite
+	}
+
+	if vRoutePathRewrite, ok := mRouteRewrite["path"].([]interface{}); ok && len(vRoutePathRewrite) > 0 && vRoutePathRewrite[0] != nil {
+		mRoutePathRewrite := vRoutePathRewrite[0].(map[string]interface{})
+		routePathRewrite := &appmesh.HttpGatewayRoutePathRewrite{}
+		if vExact, ok := mRoutePathRewrite["exact"].(string); ok && vExact != "" {
+			routePathRewrite.Exact = aws.String(vExact)
+		}
+		routeRewrite.Path = routePathRewrite
 	}
 
 	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
@@ -1131,6 +1165,13 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrit
 			"default_target_hostname": aws.StringValue(rewriteHostname.DefaultTargetHostname),
 		}
 		mRouteRewrite["hostname"] = []interface{}{mRewriteHostname}
+	}
+
+	if rewritePath := routeRewrite.Path; rewritePath != nil {
+		mRewritePath := map[string]interface{}{
+			"exact": aws.StringValue(rewritePath.Exact),
+		}
+		mRouteRewrite["path"] = []interface{}{mRewritePath}
 	}
 
 	if rewritePrefix := routeRewrite.Prefix; rewritePrefix != nil {

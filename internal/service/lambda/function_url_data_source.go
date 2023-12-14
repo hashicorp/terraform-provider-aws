@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_lambda_function_url")
@@ -94,7 +98,9 @@ func DataSourceFunctionURL() *schema.Resource {
 }
 
 func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -102,7 +108,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
 	if err != nil {
-		return diag.Errorf("error reading Lambda Function URL (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function URL (%s): %s", id, err)
 	}
 
 	functionURL := aws.StringValue(output.FunctionUrl)
@@ -111,7 +117,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
 		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
-			return diag.Errorf("error setting cors: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {
 		d.Set("cors", nil)
@@ -127,12 +133,12 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	// Function URL endpoints have the following format:
 	// https://<url-id>.lambda-url.<region>.on.aws
 	if v, err := url.Parse(functionURL); err != nil {
-		return diag.Errorf("error parsing URL (%s): %s", functionURL, err)
+		return sdkdiag.AppendErrorf(diags, "parsing URL (%s): %s", functionURL, err)
 	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
 		d.Set("url_id", v[0])
 	} else {
 		d.Set("url_id", nil)
 	}
 
-	return nil
+	return diags
 }

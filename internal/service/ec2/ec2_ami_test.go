@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +38,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
@@ -84,7 +87,6 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
-	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	deprecateAt := "2027-10-15T13:17:00.000Z"
 	deprecateAtUpdated := "2028-10-15T13:17:00.000Z"
@@ -99,33 +101,7 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 				Config: testAccAMIConfig_deprecateAt(rName, deprecateAt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
-					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAt),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sda1",
-						"encrypted":             "false",
-						"iops":                  "0",
-						"throughput":            "0",
-						"volume_size":           "8",
-						"outpost_arn":           "",
-						"volume_type":           "standard",
-					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
-					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -140,34 +116,31 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 				Config: testAccAMIConfig_deprecateAt(rName, deprecateAtUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
-					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAtUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sda1",
-						"encrypted":             "false",
-						"iops":                  "0",
-						"throughput":            "0",
-						"volume_size":           "8",
-						"outpost_arn":           "",
-						"volume_type":           "standard",
-					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
-					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+			{
+				Config: testAccAMIConfig_noDeprecateAt(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "deprecation_time", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
 			},
 		},
 	})
@@ -177,7 +150,6 @@ func TestAccEC2AMI_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
-	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	desc := sdkacctest.RandomWithPrefix("desc")
 	descUpdated := sdkacctest.RandomWithPrefix("desc-updated")
@@ -192,32 +164,7 @@ func TestAccEC2AMI_description(t *testing.T) {
 				Config: testAccAMIConfig_desc(rName, desc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
-					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sda1",
-						"encrypted":             "false",
-						"iops":                  "0",
-						"throughput":            "0",
-						"volume_size":           "8",
-						"outpost_arn":           "",
-						"volume_type":           "standard",
-					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
-					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -232,33 +179,16 @@ func TestAccEC2AMI_description(t *testing.T) {
 				Config: testAccAMIConfig_desc(rName, descUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
-					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", descUpdated),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sda1",
-						"encrypted":             "false",
-						"iops":                  "0",
-						"throughput":            "0",
-						"volume_size":           "8",
-						"outpost_arn":           "",
-						"volume_type":           "standard",
-					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
-					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
 			},
 		},
 	})
@@ -306,7 +236,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
@@ -370,7 +300,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
@@ -594,7 +524,7 @@ func TestAccEC2AMI_imdsSupport(t *testing.T) {
 
 func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for n, rs := range s.RootModule().Resources {
 			// The configuration may contain aws_ami data sources.
@@ -636,7 +566,7 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 
@@ -708,6 +638,25 @@ resource "aws_ami" "test" {
   }
 }
 `, rName, deprecateAt))
+}
+
+// testAccAMIConfig_noDeprecateAt should stay in sync with testAccAMIConfig_deprecateAt
+func testAccAMIConfig_noDeprecateAt(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAMIConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
 }
 
 func testAccAMIConfig_desc(rName, desc string) string {
