@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,13 +21,13 @@ import (
 
 func TestAccECSCapacityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider types.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,13 +60,13 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 
 func TestAccECSCapacityProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider types.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,18 +84,18 @@ func TestAccECSCapacityProvider_disappears(t *testing.T) {
 
 func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider types.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, string(types.ManagedScalingStatusEnabled), 300, 10, 1, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -114,7 +115,7 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, string(types.ManagedScalingStatusDisabled), 400, 100, 10, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -128,7 +129,7 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusEnabled, 0, 100, 10, 100),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, string(types.ManagedScalingStatusEnabled), 0, 100, 10, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -147,13 +148,13 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 
 func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider types.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -183,13 +184,13 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 
 func TestAccECSCapacityProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider types.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,14 +231,15 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_capacity_provider" {
 				continue
 			}
 
-			_, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID, partition)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -254,7 +256,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string, provider *ecs.CapacityProvider) resource.TestCheckFunc {
+func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string, provider *types.CapacityProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -265,9 +267,10 @@ func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string
 			return fmt.Errorf("No ECS Capacity Provider ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
-		output, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID, partition)
 
 		if err != nil {
 			return err
