@@ -198,7 +198,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	out, err := findKxDataviewById(ctx, conn, d.Id())
+	out, err := FindKxDataviewById(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxDataview (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -280,7 +280,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxDataviewOutput, error) {
+func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (*finspace.GetKxDataviewOutput, error) {
 	idParts, err := flex.ExpandResourceId(id, kxDataviewIdPartCount, false)
 	if err != nil {
 		return nil, err
@@ -364,7 +364,7 @@ func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string
 
 func statusKxDataview(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findKxDataviewById(ctx, conn, id)
+		out, err := FindKxDataviewById(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -57,6 +56,7 @@ func TestAccFinSpaceKxDataview_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping test in short mode.")
@@ -131,11 +131,8 @@ func testAccCheckKxDataviewExists(ctx context.Context, name string, dataview *fi
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
-		resp, err := conn.GetKxDataview(ctx, &finspace.GetKxDataviewInput{
-			DatabaseName:  aws.String(rs.Primary.Attributes["database_name"]),
-			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-			DataviewName:  aws.String(rs.Primary.Attributes["name"]),
-		})
+
+		resp, err := tffinspace.FindKxDataviewById(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDataview, rs.Primary.ID, err)
 		}
@@ -154,11 +151,8 @@ func testAccCheckKxDataviewDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
-			_, err := conn.GetKxDataview(ctx, &finspace.GetKxDataviewInput{
-				DatabaseName:  aws.String(rs.Primary.Attributes["database_name"]),
-				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-				DataviewName:  aws.String(rs.Primary.Attributes["name"]),
-			})
+
+			_, err := tffinspace.FindKxDataviewById(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if errors.As(err, &nfe) {
@@ -166,8 +160,10 @@ func testAccCheckKxDataviewDestroy(ctx context.Context) resource.TestCheckFunc {
 				}
 				return err
 			}
-			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDataview, rs.Primary.ID, err)
+
+			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDataview, rs.Primary.ID, errors.New("not destroyed"))
 		}
+
 		return nil
 	}
 }
