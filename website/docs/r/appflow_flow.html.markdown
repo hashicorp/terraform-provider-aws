@@ -318,6 +318,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enable_dynamic_field_update` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `include_deleted_records` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Source Properties
 

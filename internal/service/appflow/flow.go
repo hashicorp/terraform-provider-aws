@@ -912,6 +912,11 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 												},
+                                                "data_transfer_api": {
+                                                    Type:     schema.TypeString,
+                                                    Optional: true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+                                                },
 											},
 										},
 									},
@@ -2270,6 +2275,10 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *types.Sales
 		a.Object = aws.String(v)
 	}
 
+	if v, ok := tfMap["data_transfer_api"].(bool); ok {
+		a.DataTransferApi = v
+	}
+
 	return a
 }
 
@@ -3334,6 +3343,7 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 
 	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
+	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 
 	if v := salesforceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)
