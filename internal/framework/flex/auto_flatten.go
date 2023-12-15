@@ -715,14 +715,8 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 
 	t := reflect.ValueOf(to)
 
-	//tStruct := t.Type().Elem()
-	//if tStruct.Kind() == reflect.Ptr {
-	//	tStruct = tStruct.Elem()
-	//}
-
 	i := 0
 	for _, key := range vFrom.MapKeys() {
-		//target := reflect.New(tStruct)
 		target, d := tTo.NewObjectPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -744,11 +738,6 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 
 		t.Index(i).Set(reflect.ValueOf(target))
 		i++
-		//if t.Type().Elem().Kind() == reflect.Struct {
-		//	t.SetMapIndex(key, target.Elem())
-		//} else {
-		//	t.SetMapIndex(key, target)
-		//}
 	}
 
 	val, d := tTo.ValueFromObjectSlice(ctx, to)

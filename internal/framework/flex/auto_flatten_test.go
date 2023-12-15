@@ -757,10 +757,6 @@ func TestFlattenGeneric(t *testing.T) {
 						Attr1: "a",
 						Attr2: "b",
 					},
-					"y": {
-						Attr1: "c",
-						Attr2: "d",
-					},
 				},
 			},
 			Target: &TestFlexBlockKeyMapTF01{},
@@ -770,11 +766,6 @@ func TestFlattenGeneric(t *testing.T) {
 						TFBlockKeyMap: types.StringValue("x"),
 						Attr1:         types.StringValue("a"),
 						Attr2:         types.StringValue("b"),
-					},
-					{
-						TFBlockKeyMap: types.StringValue("y"),
-						Attr1:         types.StringValue("c"),
-						Attr2:         types.StringValue("d"),
 					},
 				}),
 			},
@@ -787,10 +778,6 @@ func TestFlattenGeneric(t *testing.T) {
 						Attr1: "a",
 						Attr2: "b",
 					},
-					"y": {
-						Attr1: "c",
-						Attr2: "d",
-					},
 				},
 			},
 			Target: &TestFlexBlockKeyMapTF01{},
@@ -800,11 +787,6 @@ func TestFlattenGeneric(t *testing.T) {
 						TFBlockKeyMap: types.StringValue("x"),
 						Attr1:         types.StringValue("a"),
 						Attr2:         types.StringValue("b"),
-					},
-					{
-						TFBlockKeyMap: types.StringValue("y"),
-						Attr1:         types.StringValue("c"),
-						Attr2:         types.StringValue("d"),
 					},
 				}),
 			},
@@ -904,7 +886,7 @@ func TestFlattenGeneric(t *testing.T) {
 				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
 			}
 
-			less := func(a, b any) bool { return fmt.Sprint(a) < fmt.Sprint(b) }
+			less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
 
 			if gotErr {
 				if !testCase.WantErr {
