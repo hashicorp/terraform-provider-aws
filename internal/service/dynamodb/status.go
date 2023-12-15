@@ -56,6 +56,10 @@ func statusImport(ctx context.Context, conn *dynamodb.DynamoDB, importArn string
 		}
 		output, err := conn.DescribeImportWithContext(ctx, describeImportInput)
 
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
 		if err != nil {
 			return nil, "", err
 		}
