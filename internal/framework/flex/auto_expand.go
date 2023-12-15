@@ -531,13 +531,13 @@ func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 			//
 			// types.List(OfObject) -> map[string]struct
 			//
-			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
 			return diags
 		case reflect.Ptr:
 			//
 			// types.List(OfObject) -> map[string]*struct
 			//
-			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
 			return diags
 		}
 
@@ -631,7 +631,7 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 }
 
 // nestedKeyObjectToMap copies a Plugin Framework NestedObjectValue to a compatible AWS API map[string]struct value.
-func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwtypes.NestedObjectValue, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -656,7 +656,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwt
 			return diags
 		}
 
-		key, d := blockKeyMap(ctx, f.Index(i).Interface())
+		key, d := blockKeyMap(f.Index(i).Interface())
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -747,7 +747,7 @@ func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwt
 }
 
 // blockKeyMap takes a struct and extracts the value of the `key`
-func blockKeyMap(ctx context.Context, from any) (reflect.Value, diag.Diagnostics) {
+func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom := reflect.ValueOf(from)

@@ -739,7 +739,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 			return diags
 		}
 
-		d = blockKeyMapSet(ctx, target, key.String())
+		d = blockKeyMapSet(target, key.String())
 		diags.Append(d...)
 
 		t.Index(i).Set(reflect.ValueOf(target))
@@ -851,7 +851,7 @@ func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vF
 }
 
 // blockKeyMapSet takes a struct and assigns the value of the `key`
-func blockKeyMapSet(ctx context.Context, to any, key string) diag.Diagnostics {
+func blockKeyMapSet(to any, key string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo := reflect.ValueOf(to)
