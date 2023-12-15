@@ -1340,61 +1340,6 @@ resource "aws_batch_job_definition" "test" {
 }`, rName)
 }
 
-func testAccJobDefinitionConfig_createTypeContainerWithBothProperties(rName string) string {
-	return fmt.Sprintf(`
-
-
-resource "aws_batch_job_definition" "test" {
-  name = %[1]q
-  type = "container"
-  parameters = {
-    param1 = "val1"
-    param2 = "val2"
-  }
-  timeout {
-    attempt_duration_seconds = 60
-  }
-
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-
-  node_properties = jsonencode({
-    mainNode = 1
-    nodeRangeProperties = [
-      {
-        container = {
-          "command" : ["ls", "-la"],
-          "image" : "busybox",
-          "memory" : 512,
-          "vcpus" : 1
-        }
-        targetNodes = "0:"
-      },
-      {
-        container = {
-          command     = ["echo", "test"]
-          environment = []
-          image       = "busybox"
-          memory      = 128
-          mountPoints = []
-          ulimits     = []
-          vcpus       = 1
-          volumes     = []
-        }
-        targetNodes = "1:"
-      }
-    ]
-    numNodes = 4
-  })
-
-}
-	`, rName)
-}
-
 func testAccJobDefinitionConfig_createTypeContainerWithNodeProperties(rName string) string {
 	return fmt.Sprintf(`
 
