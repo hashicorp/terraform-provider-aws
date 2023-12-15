@@ -459,8 +459,12 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 		}
 
+		if v, ok := d.GetOk("target_failover"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			attributes = append(attributes, expandTargetGroupTargetFailoverAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		}
+
 		if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandTargetGroupHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 		}
 
 		if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
@@ -510,24 +514,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 				Key:   aws.String("slow_start.duration_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", v.(int))),
 			})
-		}
-
-		// Only supported for GWLB
-		if protocol == elbv2.ProtocolEnumGeneve {
-			if v, ok := d.GetOk("target_failover"); ok {
-				failoverBlock := v.([]interface{})
-				failover := failoverBlock[0].(map[string]interface{})
-				attributes = append(attributes,
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("target_failover.on_deregistration"),
-						Value: aws.String(failover["on_deregistration"].(string)),
-					},
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("target_failover.on_unhealthy"),
-						Value: aws.String(failover["on_unhealthy"].(string)),
-					},
-				)
-			}
 		}
 	case elbv2.TargetTypeEnumLambda:
 		if v, ok := d.GetOk("lambda_multi_value_headers_enabled"); ok {
@@ -621,6 +607,18 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
+	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
+	}
+
+	if err := d.Set("target_failover", []interface{}{flattenTargetGroupTargetFailoverAttributes(attributes, protocol)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target_failover: %s", err)
+	}
+
+	if err := d.Set("target_health_state", []interface{}{flattenTargetGroupTargetHealthStateAttributes(attributes, protocol)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
+	}
+
 	for _, attr := range attributes {
 		switch aws.StringValue(attr.Key) {
 		case "deregistration_delay.timeout_seconds":
@@ -662,24 +660,6 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 			d.Set("preserve_client_ip", attr.Value)
 		}
-	}
-
-	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
-	}
-
-	if err := d.Set("target_health_state", []interface{}{flattenTargetGroupHealthStateAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
-	}
-
-	// Set target failover attributes for GWLB
-	targetFailoverAttr := flattenTargetGroupFailover(attributes)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening target failover: %s", err)
-	}
-
-	if err := d.Set("target_failover", targetFailoverAttr); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target failover: %s", err)
 	}
 
 	return diags
@@ -752,9 +732,15 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
+		if d.HasChange("target_failover") {
+			if v, ok := d.GetOk("target_failover"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				attributes = append(attributes, expandTargetGroupTargetFailoverAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			}
+		}
+
 		if d.HasChange("target_health_state") {
 			if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				attributes = append(attributes, expandTargetGroupHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+				attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 			}
 		}
 
@@ -808,24 +794,6 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				Value: aws.String(d.Get("load_balancing_cross_zone_enabled").(string)),
 			})
 		}
-
-		if d.HasChange("target_failover") {
-			failoverBlock := d.Get("target_failover").([]interface{})
-			if len(failoverBlock) == 1 {
-				failover := failoverBlock[0].(map[string]interface{})
-				attributes = append(attributes,
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("target_failover.on_deregistration"),
-						Value: aws.String(failover["on_deregistration"].(string)),
-					},
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("target_failover.on_unhealthy"),
-						Value: aws.String(failover["on_unhealthy"].(string)),
-					},
-				)
-			}
-		}
-
 	case elbv2.TargetTypeEnumLambda:
 		if d.HasChange("lambda_multi_value_headers_enabled") {
 			attributes = append(attributes, &elbv2.TargetGroupAttribute{
@@ -1109,7 +1077,52 @@ func flattenTargetGroupStickinessAttributes(apiObjects []*elbv2.TargetGroupAttri
 	return tfMap
 }
 
-func expandTargetGroupHealthStateAttributes(tfMap map[string]interface{}, protocol string) []*elbv2.TargetGroupAttribute {
+func expandTargetGroupTargetFailoverAttributes(tfMap map[string]interface{}, protocol string) []*elbv2.TargetGroupAttribute {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObjects []*elbv2.TargetGroupAttribute
+
+	switch protocol {
+	case elbv2.ProtocolEnumGeneve:
+		apiObjects = append(apiObjects,
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetFailoverOnDeregistration),
+				Value: aws.String(tfMap["on_deregistration"].(string)),
+			},
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetFailoverOnUnhealthy),
+				Value: aws.String(tfMap["on_unhealthy"].(string)),
+			})
+	}
+
+	return apiObjects
+}
+
+func flattenTargetGroupTargetFailoverAttributes(apiObjects []*elbv2.TargetGroupAttribute, protocol string) map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	switch protocol {
+	case elbv2.ProtocolEnumGeneve:
+		for _, apiObject := range apiObjects {
+			switch k, v := aws.StringValue(apiObject.Key), apiObject.Value; k {
+			case targetGroupAttributeTargetFailoverOnDeregistration:
+				tfMap["on_deregistration"] = aws.StringValue(v)
+			case targetGroupAttributeTargetFailoverOnUnhealthy:
+				tfMap["on_unhealthy"] = aws.StringValue(v)
+			}
+		}
+	}
+
+	return tfMap
+}
+
+func expandTargetGroupTargetHealthStateAttributes(tfMap map[string]interface{}, protocol string) []*elbv2.TargetGroupAttribute {
 	if tfMap == nil {
 		return nil
 	}
@@ -1128,7 +1141,7 @@ func expandTargetGroupHealthStateAttributes(tfMap map[string]interface{}, protoc
 	return apiObjects
 }
 
-func flattenTargetGroupHealthStateAttributes(apiObjects []*elbv2.TargetGroupAttribute, protocol string) map[string]interface{} {
+func flattenTargetGroupTargetHealthStateAttributes(apiObjects []*elbv2.TargetGroupAttribute, protocol string) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1146,25 +1159,6 @@ func flattenTargetGroupHealthStateAttributes(apiObjects []*elbv2.TargetGroupAttr
 	}
 
 	return tfMap
-}
-
-func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []interface{} {
-	if len(attributes) == 0 {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	for _, attr := range attributes {
-		switch aws.StringValue(attr.Key) {
-		case "target_failover.on_deregistration":
-			m["on_deregistration"] = aws.StringValue(attr.Value)
-		case "target_failover.on_unhealthy":
-			m["on_unhealthy"] = aws.StringValue(attr.Value)
-		}
-	}
-
-	return []interface{}{m}
 }
 
 func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
