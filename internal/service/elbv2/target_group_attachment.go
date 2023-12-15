@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -92,64 +93,45 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
+	targetGroupARN := d.Get("target_group_arn").(string)
+	input := &elbv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(targetGroupARN),
+		Targets: []*elbv2.TargetDescription{{
+			Id: aws.String(d.Get("target_id").(string)),
+		}},
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
+		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
-	})
+	if v, ok := d.GetOk("port"); ok {
+		input.Targets[0].Port = aws.Int64(int64(v.(int)))
+	}
+
+	output, err := FindTargetHealthDescription(ctx, conn, input)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
-			d.SetId("")
-			return diags
-		}
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException) {
-			log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading Target Health: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group Attachment (%s): %s", d.Id(), err)
 	}
 
-	for _, targetDesc := range resp.TargetHealthDescriptions {
-		if targetDesc == nil || targetDesc.Target == nil {
-			continue
-		}
-
-		if aws.StringValue(targetDesc.Target.Id) == d.Get("target_id").(string) {
-			// These will catch targets being removed by hand (draining as we plan) or that have been removed for a while
-			// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
-			// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
-			if targetDesc.TargetHealth == nil {
-				continue
-			}
-
-			reason := aws.StringValue(targetDesc.TargetHealth.Reason)
-
-			if reason == elbv2.TargetHealthReasonEnumTargetNotRegistered || reason == elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress {
-				log.Printf("[WARN] Target Attachment does not exist, recreating attachment")
+	// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while
+	// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
+	// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
+	if v := output.TargetHealth; v != nil {
+		if reason := aws.StringValue(v.Reason); reason == elbv2.TargetHealthReasonEnumTargetNotRegistered || reason == elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress {
+			if !d.IsNewResource() {
+				log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
 				d.SetId("")
 				return diags
 			}
 		}
-	}
-
-	if len(resp.TargetHealthDescriptions) != 1 {
-		log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
-		d.SetId("")
-		return diags
 	}
 
 	return diags
@@ -187,4 +169,35 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func FindTargetHealthDescription(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput) (*elbv2.TargetHealthDescription, error) {
+	output, err := findTargetHealthDescriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput) ([]*elbv2.TargetHealthDescription, error) {
+	output, err := conn.DescribeTargetHealthWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TargetHealthDescriptions, nil
 }
