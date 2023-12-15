@@ -50,8 +50,8 @@ func ResourceTargetGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
-			lambdaTargetHealthCheckProtocolCustomizeDiff,
-			nonLambdaValidationCustomizeDiff,
+			customizeDiffTargetGroupTargetTypeLambda,
+			customizeDiffTargetGroupTargetTypeNotLambda,
 			verify.SetTagsDiff,
 		),
 
@@ -110,7 +110,7 @@ func ResourceTargetGroup() *schema.Resource {
 							Computed: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 1024),
-								validTargetGroupHealthCheckPath,
+								verify.StringHasPrefix("/"),
 							),
 						},
 						"port": {
@@ -236,10 +236,13 @@ func ResourceTargetGroup() *schema.Resource {
 				Default:  false,
 			},
 			"slow_start": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validateSlowStart,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+				ValidateFunc: validation.Any(
+					validation.IntBetween(0, 0),
+					validation.IntBetween(30, 900),
+				),
 			},
 			"stickiness": {
 				Type:     schema.TypeList,
@@ -523,15 +526,14 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
+	}
 	d.Set("ip_address_type", targetGroup.IpAddressType)
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
 	targetType := aws.StringValue(targetGroup.TargetType)
 	d.Set("target_type", targetType)
-
-	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
-	}
 
 	if _, ok := d.GetOk("port"); targetGroup.Port != nil || ok {
 		d.Set("port", targetGroup.Port)
@@ -934,28 +936,6 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elbv2.ELBV2, arn 
 	return output.Attributes, nil
 }
 
-func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !strings.HasPrefix(value, "/") {
-		errors = append(errors, fmt.Errorf(
-			"%q must begin with a '/' character, got %q", k, value))
-	}
-	return
-}
-
-func validateSlowStart(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(int)
-
-	// Check if the value is between 30-900 or 0 (seconds).
-	if value != 0 && !(value >= 30 && value <= 900) {
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid Slow Start Duration \"%d\". "+
-				"Valid intervals are 30-900 or 0 to disable.",
-			k, value))
-	}
-	return
-}
-
 func validTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -987,6 +967,139 @@ func TargetGroupSuffixFromARN(arn *string) string {
 	}
 
 	return ""
+}
+
+func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	healthCheck := make(map[string]any)
+	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		healthCheck = healthChecks[0].(map[string]interface{})
+	}
+
+	if p, ok := healthCheck["protocol"].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
+		if m := healthCheck["matcher"].(string); m != "" {
+			return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
+				"health_check.matcher",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+			)
+		}
+
+		if m := healthCheck["path"].(string); m != "" {
+			return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
+				"health_check.path",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+			)
+		}
+	}
+
+	protocol := diff.Get("protocol").(string)
+
+	switch protocol {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		if p, ok := healthCheck["protocol"].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
+			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+				"protocol",
+				protocol,
+			)
+		}
+	}
+
+	if diff.Id() == "" {
+		return nil
+	}
+
+	return nil
+}
+
+func customizeDiffTargetGroupTargetTypeLambda(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	if diff.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		return nil
+	}
+
+	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		healthCheck := healthChecks[0].(map[string]interface{})
+		healthCheckProtocol := healthCheck["protocol"].(string)
+
+		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
+			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
+				"health_check.protocol",
+				elbv2.ProtocolEnumTcp,
+				"target_type",
+				elbv2.TargetTypeEnumLambda,
+			)
+		}
+	}
+
+	return nil
+}
+
+func customizeDiffTargetGroupTargetTypeNotLambda(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	targetType := diff.Get("target_type").(string)
+	if targetType == elbv2.TargetTypeEnumLambda {
+		return nil
+	}
+
+	config := diff.GetRawConfig()
+
+	if v := config.GetAttr("port"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"port",
+			"target_type",
+			targetType,
+		)
+	}
+
+	if v := config.GetAttr("protocol"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"protocol",
+			"target_type",
+			targetType,
+		)
+	}
+
+	if v := config.GetAttr("vpc_id"); v.IsKnown() && v.IsNull() {
+		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
+			"vpc_id",
+			"target_type",
+			targetType,
+		)
+	}
+
+	return nil
+}
+
+func flattenTargetGroupHealthCheck(apiObject *elbv2.TargetGroup) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"enabled":             aws.BoolValue(apiObject.HealthCheckEnabled),
+		"healthy_threshold":   int(aws.Int64Value(apiObject.HealthyThresholdCount)),
+		"interval":            int(aws.Int64Value(apiObject.HealthCheckIntervalSeconds)),
+		"port":                aws.StringValue(apiObject.HealthCheckPort),
+		"protocol":            aws.StringValue(apiObject.HealthCheckProtocol),
+		"timeout":             int(aws.Int64Value(apiObject.HealthCheckTimeoutSeconds)),
+		"unhealthy_threshold": int(aws.Int64Value(apiObject.UnhealthyThresholdCount)),
+	}
+
+	if v := apiObject.HealthCheckPath; v != nil {
+		tfMap["path"] = aws.StringValue(v)
+	}
+
+	if apiObject := apiObject.Matcher; apiObject != nil {
+		if v := apiObject.HttpCode; v != nil {
+			tfMap["matcher"] = aws.StringValue(v)
+		}
+		if v := apiObject.GrpcCode; v != nil {
+			tfMap["matcher"] = aws.StringValue(v)
+		}
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protocol string) []*elbv2.TargetGroupAttribute {
@@ -1148,136 +1261,6 @@ func flattenTargetGroupTargetHealthStateAttributes(apiObjects []*elbv2.TargetGro
 	}
 
 	return tfMap
-}
-
-func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-	healthCheck := make(map[string]any)
-	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
-		healthCheck = healthChecks[0].(map[string]interface{})
-	}
-
-	if p, ok := healthCheck["protocol"].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
-		if m := healthCheck["matcher"].(string); m != "" {
-			return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
-				"health_check.matcher",
-				"health_check.protocol",
-				elbv2.ProtocolEnumTcp,
-			)
-		}
-
-		if m := healthCheck["path"].(string); m != "" {
-			return fmt.Errorf("Attribute %q cannot be specified when %q is %q.",
-				"health_check.path",
-				"health_check.protocol",
-				elbv2.ProtocolEnumTcp,
-			)
-		}
-	}
-
-	protocol := diff.Get("protocol").(string)
-
-	switch protocol {
-	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-		if p, ok := healthCheck["protocol"].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
-			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
-				"health_check.protocol",
-				elbv2.ProtocolEnumTcp,
-				"protocol",
-				protocol,
-			)
-		}
-	}
-
-	if diff.Id() == "" {
-		return nil
-	}
-
-	return nil
-}
-
-func lambdaTargetHealthCheckProtocolCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-	if diff.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-		return nil
-	}
-
-	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
-		healthCheck := healthChecks[0].(map[string]interface{})
-		healthCheckProtocol := healthCheck["protocol"].(string)
-
-		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
-			return fmt.Errorf("Attribute %q cannot have value %q when %q is %q.",
-				"health_check.protocol",
-				elbv2.ProtocolEnumTcp,
-				"target_type",
-				elbv2.TargetTypeEnumLambda,
-			)
-		}
-	}
-
-	return nil
-}
-
-func nonLambdaValidationCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-	targetType := diff.Get("target_type").(string)
-	if targetType == elbv2.TargetTypeEnumLambda {
-		return nil
-	}
-
-	config := diff.GetRawConfig()
-
-	if v := config.GetAttr("port"); v.IsKnown() && v.IsNull() {
-		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
-			"port",
-			"target_type",
-			targetType,
-		)
-	}
-
-	if v := config.GetAttr("protocol"); v.IsKnown() && v.IsNull() {
-		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
-			"protocol",
-			"target_type",
-			targetType,
-		)
-	}
-
-	if v := config.GetAttr("vpc_id"); v.IsKnown() && v.IsNull() {
-		return fmt.Errorf("Attribute %q must be specified when %q is %q.",
-			"vpc_id",
-			"target_type",
-			targetType,
-		)
-	}
-
-	return nil
-}
-
-func flattenLbTargetGroupHealthCheck(targetGroup *elbv2.TargetGroup) []interface{} {
-	if targetGroup == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled":             aws.BoolValue(targetGroup.HealthCheckEnabled),
-		"healthy_threshold":   int(aws.Int64Value(targetGroup.HealthyThresholdCount)),
-		"interval":            int(aws.Int64Value(targetGroup.HealthCheckIntervalSeconds)),
-		"port":                aws.StringValue(targetGroup.HealthCheckPort),
-		"protocol":            aws.StringValue(targetGroup.HealthCheckProtocol),
-		"timeout":             int(aws.Int64Value(targetGroup.HealthCheckTimeoutSeconds)),
-		"unhealthy_threshold": int(aws.Int64Value(targetGroup.UnhealthyThresholdCount)),
-	}
-
-	if targetGroup.HealthCheckPath != nil {
-		m["path"] = aws.StringValue(targetGroup.HealthCheckPath)
-	}
-	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
-		m["matcher"] = aws.StringValue(targetGroup.Matcher.HttpCode)
-	}
-	if targetGroup.Matcher != nil && targetGroup.Matcher.GrpcCode != nil {
-		m["matcher"] = aws.StringValue(targetGroup.Matcher.GrpcCode)
-	}
-
-	return []interface{}{m}
 }
 
 func pathString(path cty.Path) string {
