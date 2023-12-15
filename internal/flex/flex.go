@@ -305,6 +305,11 @@ func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
 }
 
+// Int64ValueToString converts a Go int64 value to a string pointer.
+func Int64ValueToString(v int64) *string {
+	return aws.String(strconv.FormatInt(v, 10))
+}
+
 // StringToIntValue converts a string pointer to a Go int value.
 // Invalid integer strings are converted to 0.
 func StringToIntValue(v *string) int {
