@@ -928,7 +928,7 @@ func blockKeyMapSet(to any, key string) diag.Diagnostics {
 			continue // Skip unexported fields.
 		}
 
-		if field.Name != BlockKeyMap {
+		if field.Name != MapBlockKey {
 			continue
 		}
 
@@ -940,7 +940,7 @@ func blockKeyMapSet(to any, key string) diag.Diagnostics {
 		return diags
 	}
 
-	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", BlockKeyMap))
+	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return diags
 }
