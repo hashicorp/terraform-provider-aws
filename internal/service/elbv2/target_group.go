@@ -459,6 +459,10 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 		}
 
+		if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			attributes = append(attributes, expandTargetGroupHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		}
+
 		if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
 			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("deregistration_delay.timeout_seconds"),
@@ -523,22 +527,6 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 						Value: aws.String(failover["on_unhealthy"].(string)),
 					},
 				)
-			}
-		}
-
-		// Only supported for TCP & TLS protocols
-		if v, ok := d.Get("protocol").(string); ok {
-			if v == elbv2.ProtocolEnumTcp || v == elbv2.ProtocolEnumTls {
-				if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 {
-					targetHealthStateBlock := v.([]interface{})
-					targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
-					attributes = append(attributes,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("target_health_state.unhealthy.connection_termination.enabled"),
-							Value: aws.String(strconv.FormatBool(targetHealthState["enable_unhealthy_connection_termination"].(bool))),
-						},
-					)
-				}
 			}
 		}
 	case elbv2.TargetTypeEnumLambda:
@@ -680,12 +668,8 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 
-	targetHealthStateAttr, err := flattenTargetHealthState(attributes)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening target health state: %s", err)
-	}
-	if err := d.Set("target_health_state", targetHealthStateAttr); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target health state: %s", err)
+	if err := d.Set("target_health_state", []interface{}{flattenTargetGroupHealthStateAttributes(attributes, protocol)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
 	}
 
 	// Set target failover attributes for GWLB
@@ -768,6 +752,12 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
+		if d.HasChange("target_health_state") {
+			if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				attributes = append(attributes, expandTargetGroupHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			}
+		}
+
 		if d.HasChange("deregistration_delay") {
 			if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
 				attributes = append(attributes, &elbv2.TargetGroupAttribute{
@@ -817,18 +807,6 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
 				Value: aws.String(d.Get("load_balancing_cross_zone_enabled").(string)),
 			})
-		}
-
-		if d.HasChange("target_health_state") {
-			targetHealthStateBlock := d.Get("target_health_state").([]interface{})
-			if len(targetHealthStateBlock) == 1 {
-				targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
-				attributes = append(attributes,
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("target_health_state.unhealthy.connection_termination.enabled"),
-						Value: aws.String(strconv.FormatBool(targetHealthState["enable_unhealthy_connection_termination"].(bool))),
-					})
-			}
 		}
 
 		if d.HasChange("target_failover") {
@@ -1131,25 +1109,43 @@ func flattenTargetGroupStickinessAttributes(apiObjects []*elbv2.TargetGroupAttri
 	return tfMap
 }
 
-func flattenTargetHealthState(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
-	if len(attributes) == 0 {
-		return []interface{}{}, nil
+func expandTargetGroupHealthStateAttributes(tfMap map[string]interface{}, protocol string) []*elbv2.TargetGroupAttribute {
+	if tfMap == nil {
+		return nil
 	}
 
-	m := make(map[string]interface{})
+	var apiObjects []*elbv2.TargetGroupAttribute
 
-	for _, attr := range attributes {
-		switch aws.StringValue(attr.Key) {
-		case "target_health_state.unhealthy.connection_termination.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return nil, fmt.Errorf("converting target_health_state.unhealthy.connection_termination to bool: %s", aws.StringValue(attr.Value))
+	switch protocol {
+	case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumTls:
+		apiObjects = append(apiObjects,
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetHealthStateUnhealthyConnectionTerminationEnabled),
+				Value: flex.BoolValueToString(tfMap["enable_unhealthy_connection_termination"].(bool)),
+			})
+	}
+
+	return apiObjects
+}
+
+func flattenTargetGroupHealthStateAttributes(apiObjects []*elbv2.TargetGroupAttribute, protocol string) map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	switch protocol {
+	case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumTls:
+		for _, apiObject := range apiObjects {
+			switch k, v := aws.StringValue(apiObject.Key), apiObject.Value; k {
+			case targetGroupAttributeTargetHealthStateUnhealthyConnectionTerminationEnabled:
+				tfMap["enable_unhealthy_connection_termination"] = flex.StringToBoolValue(v)
 			}
-			m["enable_unhealthy_connection_termination"] = enabled
 		}
 	}
 
-	return []interface{}{m}, nil
+	return tfMap
 }
 
 func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []interface{} {
