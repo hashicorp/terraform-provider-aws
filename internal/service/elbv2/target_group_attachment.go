@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -109,7 +110,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 
-	output, err := FindTargetHealthDescription(ctx, conn, input)
+	_, err := FindTargetHealthDescription(ctx, conn, input)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
@@ -119,19 +120,6 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group Attachment (%s): %s", d.Id(), err)
-	}
-
-	// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while
-	// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
-	// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
-	if v := output.TargetHealth; v != nil {
-		if reason := aws.StringValue(v.Reason); reason == elbv2.TargetHealthReasonEnumTargetNotRegistered || reason == elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress {
-			if !d.IsNewResource() {
-				log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
-				d.SetId("")
-				return diags
-			}
-		}
 	}
 
 	return diags
@@ -172,7 +160,21 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func FindTargetHealthDescription(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput) (*elbv2.TargetHealthDescription, error) {
-	output, err := findTargetHealthDescriptions(ctx, conn, input)
+	output, err := findTargetHealthDescriptions(ctx, conn, input, func(v *elbv2.TargetHealthDescription) bool {
+		// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while
+		// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
+		// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
+		if v := v.TargetHealth; v != nil {
+			switch reason := aws.StringValue(v.Reason); reason {
+			case elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress, elbv2.TargetHealthReasonEnumTargetNotRegistered:
+				return false
+			default:
+				return true
+			}
+		}
+
+		return false
+	})
 
 	if err != nil {
 		return nil, err
@@ -181,7 +183,9 @@ func FindTargetHealthDescription(ctx context.Context, conn *elbv2.ELBV2, input *
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput) ([]*elbv2.TargetHealthDescription, error) {
+func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput, filter tfslices.Predicate[*elbv2.TargetHealthDescription]) ([]*elbv2.TargetHealthDescription, error) {
+	var targetHealthDescriptions []*elbv2.TargetHealthDescription
+
 	output, err := conn.DescribeTargetHealthWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException, elbv2.ErrCodeTargetGroupNotFoundException) {
@@ -199,5 +203,11 @@ func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input 
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.TargetHealthDescriptions, nil
+	for _, v := range output.TargetHealthDescriptions {
+		if v != nil && filter(v) {
+			targetHealthDescriptions = append(targetHealthDescriptions, v)
+		}
+	}
+
+	return targetHealthDescriptions, nil
 }
