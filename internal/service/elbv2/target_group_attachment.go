@@ -30,26 +30,23 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
+			"availability_zone": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 			"target_group_arn": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-
 			"target_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-
 			"port": {
 				Type:     schema.TypeInt,
-				ForceNew: true,
-				Optional: true,
-			},
-
-			"availability_zone": {
-				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
@@ -103,35 +100,6 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
-
-	return diags
-}
-
-func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
-
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
-	}
-
-	params := &elbv2.DeregisterTargetsInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
-	}
-
-	_, err := conn.DeregisterTargetsWithContext(ctx, params)
-	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		return sdkdiag.AppendErrorf(diags, "deregistering Targets: %s", err)
-	}
 
 	return diags
 }
@@ -200,6 +168,35 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	return diags
+}
+
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+
+	target := &elbv2.TargetDescription{
+		Id: aws.String(d.Get("target_id").(string)),
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		target.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("availability_zone"); ok {
+		target.AvailabilityZone = aws.String(v.(string))
+	}
+
+	params := &elbv2.DeregisterTargetsInput{
+		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
+		Targets:        []*elbv2.TargetDescription{target},
+	}
+
+	_, err := conn.DeregisterTargetsWithContext(ctx, params)
+	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return sdkdiag.AppendErrorf(diags, "deregistering Targets: %s", err)
 	}
 
 	return diags
