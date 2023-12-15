@@ -409,20 +409,6 @@ func FlattenParameters(list []*elasticache.Parameter) []map[string]interface{} {
 	return result
 }
 
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
-func ExpandParameters(configured []interface{}) []*elasticache.ParameterNameValue {
-	parameters := make([]*elasticache.ParameterNameValue, len(configured))
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for i, pRaw := range configured {
-		parameters[i] = expandParameter(pRaw.(map[string]interface{}))
-	}
-
-	return parameters
-}
-
 func expandParameter(param map[string]interface{}) *elasticache.ParameterNameValue {
 	return &elasticache.ParameterNameValue{
 		ParameterName:  aws.String(param["name"].(string)),

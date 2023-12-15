@@ -314,7 +314,7 @@ func newDeleteObjectVersionError(err types.Error) error {
 // Set `force` to `true` to override any S3 object lock protections on object lock enabled buckets.
 // Returns the number of objects deleted.
 // Use `emptyBucket` to delete all versions of all objects in a bucket.
-func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key string, force, ignoreObjectErrors bool) (int64, error) {
+func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key string, force, ignoreObjectErrors bool, optFns ...func(*s3.Options)) (int64, error) {
 	if key == "" {
 		return 0, errors.New("use `emptyBucket` to delete all versions of all objects in an S3 general purpose bucket")
 	}
@@ -328,7 +328,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 
 	pages := s3.NewListObjectVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 			break
@@ -346,7 +346,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 				continue
 			}
 
-			err := deleteObjectVersion(ctx, conn, bucket, objectKey, objectVersionID, force)
+			err := deleteObjectVersion(ctx, conn, bucket, objectKey, objectVersionID, force, optFns...)
 
 			if err == nil {
 				nObjects++
@@ -360,7 +360,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 					VersionId: aws.String(objectVersionID),
 				}
 
-				output, err := conn.HeadObject(ctx, input)
+				output, err := conn.HeadObject(ctx, input, optFns...)
 
 				if err != nil {
 					log.Printf("[ERROR] Getting S3 Bucket (%s) Object (%s) Version (%s) metadata: %s", bucket, objectKey, objectVersionID, err)
@@ -378,7 +378,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 						VersionId: aws.String(objectVersionID),
 					}
 
-					_, err := conn.PutObjectLegalHold(ctx, input)
+					_, err := conn.PutObjectLegalHold(ctx, input, optFns...)
 
 					if err != nil {
 						log.Printf("[ERROR] Putting S3 Bucket (%s) Object (%s) Version(%s) legal hold: %s", bucket, objectKey, objectVersionID, err)
@@ -387,7 +387,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 					}
 
 					// Attempt to delete again.
-					err = deleteObjectVersion(ctx, conn, bucket, objectKey, objectVersionID, force)
+					err = deleteObjectVersion(ctx, conn, bucket, objectKey, objectVersionID, force, optFns...)
 
 					if err != nil {
 						lastErr = err
@@ -419,7 +419,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 
 	pages = s3.NewListObjectVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 			break
@@ -438,7 +438,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 			}
 
 			// Delete markers have no object lock protections.
-			err := deleteObjectVersion(ctx, conn, bucket, deleteMarkerKey, deleteMarkerVersionID, false)
+			err := deleteObjectVersion(ctx, conn, bucket, deleteMarkerKey, deleteMarkerVersionID, false, optFns...)
 
 			if err != nil {
 				lastErr = err
@@ -459,7 +459,7 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 
 // deleteObjectVersion deletes a specific object version.
 // Set `force` to `true` to override any S3 object lock protections.
-func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, force bool) error {
+func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, force bool, optFns ...func(*s3.Options)) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(b),
 		Key:    aws.String(k),
@@ -473,7 +473,7 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 	}
 
 	log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version (%s)", b, k, v)
-	_, err := conn.DeleteObject(ctx, input)
+	_, err := conn.DeleteObject(ctx, input, optFns...)
 
 	if err != nil {
 		log.Printf("[WARN] Deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
