@@ -5,7 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -58,48 +56,32 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
+	targetGroupARN := d.Get("target_group_arn").(string)
+	input := &elbv2.RegisterTargetsInput{
+		TargetGroupArn: aws.String(targetGroupARN),
+		Targets: []*elbv2.TargetDescription{{
+			Id: aws.String(d.Get("target_id").(string)),
+		}},
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
+		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	params := &elbv2.RegisterTargetsInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
+	if v, ok := d.GetOk("port"); ok {
+		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[INFO] Registering Target %s with Target Group %s", d.Get("target_id").(string),
-		d.Get("target_group_arn").(string))
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+		return conn.RegisterTargetsWithContext(ctx, input)
+	}, elbv2.ErrCodeInvalidTargetException)
 
-	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
-		_, err := conn.RegisterTargetsWithContext(ctx, params)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return retry.RetryableError(fmt.Errorf("attaching instance to LB, retrying: %s", err))
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.RegisterTargetsWithContext(ctx, params)
-	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "registering targets with target group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "registering ELBv2 Target Group (%s) target: %s", targetGroupARN, err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
+	d.SetId(id.PrefixedUniqueId(targetGroupARN + "-"))
 
 	return diags
 }
