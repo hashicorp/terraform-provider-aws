@@ -508,6 +508,14 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		switch tMapElem := vFrom.Type().Elem(); tMapElem.Kind() {
 		case reflect.Struct:
 			switch tTo := tTo.(type) {
+			case basetypes.SetTypable:
+				//
+				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
+				//
+				if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+					return diags
+				}
 			case basetypes.ListTypable:
 				//
 				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
@@ -750,6 +758,67 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 
 	return diags
 }
+
+/*
+func (flattener autoFlattener) structMapToObjectSet(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	n := vFrom.Len()
+	to, d := tTo.NewObjectSlice(ctx, n, n)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	t := reflect.ValueOf(to)
+
+	i := 0
+	for _, key := range vFrom.MapKeys() {
+		target, d := tTo.NewObjectPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		fromInterface := vFrom.MapIndex(key).Interface()
+		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
+			fromInterface = vFrom.MapIndex(key).Elem().Interface()
+		}
+
+		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target, flattener)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		d = blockKeyMapSet(target, key.String())
+		diags.Append(d...)
+
+		t.Index(i).Set(reflect.ValueOf(target))
+		i++
+	}
+
+	val, d := tTo.ValueFromObjectSlice(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+
+	return diags
+}
+*/
 
 // structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
 func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {

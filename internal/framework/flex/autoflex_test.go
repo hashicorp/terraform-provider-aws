@@ -308,6 +308,10 @@ type TestFlexBlockKeyMapTF02 struct {
 	Attr2         types.String `tfsdk:"attr2"`
 }
 
+type TestFlexBlockKeyMapTF03 struct {
+	BlockMap fwtypes.SetNestedObjectValueOf[TestFlexBlockKeyMapTF02] `tfsdk:"block_map"`
+}
+
 type TestFlexBlockKeyMapAWS01 struct {
 	BlockMap map[string]TestFlexBlockKeyMapAWS02
 }

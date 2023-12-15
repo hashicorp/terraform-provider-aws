@@ -771,6 +771,27 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "block key set map",
+			Source: &TestFlexBlockKeyMapAWS01{
+				BlockMap: map[string]TestFlexBlockKeyMapAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+				},
+			},
+			Target: &TestFlexBlockKeyMapTF03{},
+			WantTarget: &TestFlexBlockKeyMapTF03{
+				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+					{
+						TFBlockKeyMap: types.StringValue("x"),
+						Attr1:         types.StringValue("a"),
+						Attr2:         types.StringValue("b"),
+					},
+				}),
+			},
+		},
+		{
 			TestName: "block key map ptr source",
 			Source: &TestFlexBlockKeyMapAWS03{
 				BlockMap: map[string]*TestFlexBlockKeyMapAWS02{

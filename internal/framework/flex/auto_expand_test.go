@@ -606,6 +606,36 @@ func TestExpandGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "block set key map",
+			Source: &TestFlexBlockKeyMapTF03{
+				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+					{
+						TFBlockKeyMap: types.StringValue("x"),
+						Attr1:         types.StringValue("a"),
+						Attr2:         types.StringValue("b"),
+					},
+					{
+						TFBlockKeyMap: types.StringValue("y"),
+						Attr1:         types.StringValue("c"),
+						Attr2:         types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexBlockKeyMapAWS01{},
+			WantTarget: &TestFlexBlockKeyMapAWS01{
+				BlockMap: map[string]TestFlexBlockKeyMapAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+		},
+		{
 			TestName: "block key map ptr source",
 			Source: &TestFlexBlockKeyMapTF01{
 				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexBlockKeyMapTF02{
