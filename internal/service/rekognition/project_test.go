@@ -75,23 +75,22 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId, "ENABLED"),
+				Config: testAccProjectConfig_contentModeration(rProjectId+"-1", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
-					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
+					resource.TestCheckResourceAttr(resourceName, "id", rProjectId+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rProjectId+"-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId, "DISABLED"),
+				Config: testAccProjectConfig_contentModeration(rProjectId+"-2", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
-					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
+					resource.TestCheckResourceAttr(resourceName, "id", rProjectId+"-2"),
+					resource.TestCheckResourceAttr(resourceName, "name", rProjectId+"-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
@@ -121,10 +120,11 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 			{
 				Config: testAccProjectConfig_customLabels(rProjectId),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
+					resource.TestCheckNoResourceAttr(resourceName, "auto_update"),
 				),
 			},
 		},

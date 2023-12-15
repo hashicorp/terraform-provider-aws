@@ -166,10 +166,20 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
+	state.Name = state.Id
 	state.ARN = flex.StringToFramework(ctx, out.ProjectArn)
 	state.AutoUpdate = flex.StringToFramework(ctx, (*string)(&out.AutoUpdate))
 	state.Feature = flex.StringToFramework(ctx, (*string)(&out.Feature))
-	state.Name = state.Id
+
+	if state.Feature == types.StringValue("") {
+		// API returns empty string for default CUSTOM_LABELS value, so we have to set it forcibly to avoid drift
+		state.Feature = flex.StringValueToFramework(ctx, "CUSTOM_LABELS")
+	}
+
+	if state.AutoUpdate == types.StringValue("") {
+		// API returns empty string for unset value, so we have to set it forcibly to avoid drift
+		state.AutoUpdate = types.StringNull()
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
