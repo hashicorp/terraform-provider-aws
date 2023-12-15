@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_alb_target_group", name="Target Group")
@@ -466,63 +467,9 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 		}
-
-		if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("deregistration_delay.timeout_seconds"),
-				Value: aws.String(fmt.Sprintf("%d", v)),
-			})
-		}
-
-		if v, ok := d.GetOk("load_balancing_algorithm_type"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("load_balancing.algorithm.type"),
-				Value: aws.String(v.(string)),
-			})
-		}
-
-		if v, ok := d.GetOk("load_balancing_cross_zone_enabled"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("load_balancing.cross_zone.enabled"),
-				Value: aws.String(v.(string)),
-			})
-		}
-
-		if v, ok := d.GetOk("preserve_client_ip"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("preserve_client_ip.enabled"),
-				Value: aws.String(v.(string)),
-			})
-		}
-
-		if v, ok := d.GetOk("proxy_protocol_v2"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("proxy_protocol_v2.enabled"),
-				Value: aws.String(strconv.FormatBool(v.(bool))),
-			})
-		}
-
-		if v, ok := d.GetOk("connection_termination"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
-				Value: aws.String(strconv.FormatBool(v.(bool))),
-			})
-		}
-
-		if v, ok := d.GetOk("slow_start"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("slow_start.duration_seconds"),
-				Value: aws.String(fmt.Sprintf("%d", v.(int))),
-			})
-		}
-	case elbv2.TargetTypeEnumLambda:
-		if v, ok := d.GetOk("lambda_multi_value_headers_enabled"); ok {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("lambda.multi_value_headers.enabled"),
-				Value: aws.String(strconv.FormatBool(v.(bool))),
-			})
-		}
 	}
+
+	attributes = append(attributes, targetGroupAttributes.expand(d, targetType, false)...)
 
 	if len(attributes) > 0 {
 		input := &elbv2.ModifyTargetGroupAttributesInput{
@@ -619,48 +566,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
 	}
 
-	for _, attr := range attributes {
-		switch aws.StringValue(attr.Key) {
-		case "deregistration_delay.timeout_seconds":
-			d.Set("deregistration_delay", attr.Value)
-		case "lambda.multi_value_headers.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("lambda_multi_value_headers_enabled", enabled)
-		case "proxy_protocol_v2.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("proxy_protocol_v2", enabled)
-		case "deregistration_delay.connection_termination.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("connection_termination", enabled)
-		case "slow_start.duration_seconds":
-			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("slow_start", slowStart)
-		case "load_balancing.algorithm.type":
-			loadBalancingAlgorithm := aws.StringValue(attr.Value)
-			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
-		case "load_balancing.cross_zone.enabled":
-			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
-			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
-		case "preserve_client_ip.enabled":
-			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("preserve_client_ip", attr.Value)
-		}
-	}
+	targetGroupAttributes.flatten(d, targetType, attributes)
 
 	return diags
 }
@@ -743,65 +649,9 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				attributes = append(attributes, expandTargetGroupTargetHealthStateAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 			}
 		}
-
-		if d.HasChange("deregistration_delay") {
-			if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
-				attributes = append(attributes, &elbv2.TargetGroupAttribute{
-					Key:   aws.String("deregistration_delay.timeout_seconds"),
-					Value: aws.String(fmt.Sprintf("%d", v)),
-				})
-			}
-		}
-
-		if d.HasChange("slow_start") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("slow_start.duration_seconds"),
-				Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
-			})
-		}
-
-		if d.HasChange("proxy_protocol_v2") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("proxy_protocol_v2.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
-			})
-		}
-
-		if d.HasChange("connection_termination") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("connection_termination").(bool))),
-			})
-		}
-
-		if d.HasChange("preserve_client_ip") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("preserve_client_ip.enabled"),
-				Value: aws.String(d.Get("preserve_client_ip").(string)),
-			})
-		}
-
-		if d.HasChange("load_balancing_algorithm_type") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("load_balancing.algorithm.type"),
-				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
-			})
-		}
-
-		if d.HasChange("load_balancing_cross_zone_enabled") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("load_balancing.cross_zone.enabled"),
-				Value: aws.String(d.Get("load_balancing_cross_zone_enabled").(string)),
-			})
-		}
-	case elbv2.TargetTypeEnumLambda:
-		if d.HasChange("lambda_multi_value_headers_enabled") {
-			attributes = append(attributes, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("lambda.multi_value_headers.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("lambda_multi_value_headers_enabled").(bool))),
-			})
-		}
 	}
+
+	attributes = append(attributes, targetGroupAttributes.expand(d, targetType, true)...)
 
 	if len(attributes) > 0 {
 		input := &elbv2.ModifyTargetGroupAttributesInput{
@@ -835,6 +685,165 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+type targetGroupAttributeInfo struct {
+	apiAttributeKey      string
+	tfType               schema.ValueType
+	tfNullableType       schema.ValueType
+	targetTypesSupported []string
+}
+
+type targetGroupAttributeMap map[string]targetGroupAttributeInfo
+
+var targetGroupAttributes = targetGroupAttributeMap(map[string]targetGroupAttributeInfo{
+	"connection_termination": {
+		apiAttributeKey:      targetGroupAttributeDeregistrationDelayConnectionTerminationEnabled,
+		tfType:               schema.TypeBool,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"deregistration_delay": {
+		apiAttributeKey:      targetGroupAttributeDeregistrationDelayTimeoutSeconds,
+		tfType:               schema.TypeString,
+		tfNullableType:       schema.TypeInt,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"lambda_multi_value_headers_enabled": {
+		apiAttributeKey:      targetGroupAttributeLambdaMultiValueHeadersEnabled,
+		tfType:               schema.TypeBool,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumLambda},
+	},
+	"load_balancing_algorithm_type": {
+		apiAttributeKey:      targetGroupAttributeLoadBalancingAlgorithmType,
+		tfType:               schema.TypeString,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"load_balancing_cross_zone_enabled": {
+		apiAttributeKey:      targetGroupAttributeLoadBalancingCrossZoneEnabled,
+		tfType:               schema.TypeString,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"preserve_client_ip": {
+		apiAttributeKey:      targetGroupAttributePreserveClientIPEnabled,
+		tfType:               schema.TypeString,
+		tfNullableType:       schema.TypeBool,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"proxy_protocol_v2": {
+		apiAttributeKey:      targetGroupAttributeProxyProtocolV2Enabled,
+		tfType:               schema.TypeBool,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"slow_start": {
+		apiAttributeKey:      targetGroupAttributeSlowStartDurationSeconds,
+		tfType:               schema.TypeInt,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+})
+
+func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType string, update bool) []*elbv2.TargetGroupAttribute {
+	var apiObjects []*elbv2.TargetGroupAttribute
+
+	for tfAttributeName, attributeInfo := range m {
+		if update && !d.HasChange(tfAttributeName) {
+			continue
+		}
+
+		if !slices.Contains(attributeInfo.targetTypesSupported, targetType) {
+			continue
+		}
+
+		switch v, nt, k := d.Get(tfAttributeName), attributeInfo.tfNullableType, aws.String(attributeInfo.apiAttributeKey); nt {
+		case schema.TypeBool:
+			v := v.(string)
+			if v, null, _ := nullable.Bool(v).Value(); !null {
+				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+					Key:   k,
+					Value: flex.BoolValueToString(v),
+				})
+			}
+		case schema.TypeInt:
+			v := v.(string)
+			if v, null, _ := nullable.Int(v).Value(); !null {
+				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+					Key:   k,
+					Value: flex.Int64ValueToString(v),
+				})
+			}
+		default:
+			switch attributeInfo.tfType {
+			case schema.TypeBool:
+				v := v.(bool)
+				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+					Key:   k,
+					Value: flex.BoolValueToString(v),
+				})
+			case schema.TypeInt:
+				v := v.(int)
+				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+					Key:   k,
+					Value: flex.IntValueToString(v),
+				})
+			case schema.TypeString:
+				if v := v.(string); v != "" {
+					apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+						Key:   k,
+						Value: aws.String(v),
+					})
+				}
+			}
+		}
+
+		switch v, t, k := d.Get(tfAttributeName), attributeInfo.tfType, aws.String(attributeInfo.apiAttributeKey); t {
+		case schema.TypeBool:
+			v := v.(bool)
+			apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+				Key:   k,
+				Value: flex.BoolValueToString(v),
+			})
+		case schema.TypeInt:
+			v := v.(int)
+			apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+				Key:   k,
+				Value: flex.IntValueToString(v),
+			})
+		case schema.TypeString:
+			if v := v.(string); v != "" {
+				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+					Key:   k,
+					Value: aws.String(v),
+				})
+			}
+		}
+	}
+
+	return apiObjects
+}
+
+func (m targetGroupAttributeMap) flatten(d *schema.ResourceData, targetType string, apiObjects []*elbv2.TargetGroupAttribute) {
+	for tfAttributeName, attributeInfo := range m {
+		if !slices.Contains(attributeInfo.targetTypesSupported, targetType) {
+			continue
+		}
+
+		k := attributeInfo.apiAttributeKey
+		i := slices.IndexFunc(apiObjects, func(v *elbv2.TargetGroupAttribute) bool {
+			return aws.StringValue(v.Key) == k
+		})
+
+		if i == -1 {
+			continue
+		}
+
+		switch v, t := apiObjects[i].Value, attributeInfo.tfType; t {
+		case schema.TypeBool:
+			d.Set(tfAttributeName, flex.StringToBoolValue(v))
+		case schema.TypeInt:
+			d.Set(tfAttributeName, flex.StringToIntValue(v))
+		case schema.TypeString:
+			d.Set(tfAttributeName, v)
+		}
+	}
 }
 
 func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
