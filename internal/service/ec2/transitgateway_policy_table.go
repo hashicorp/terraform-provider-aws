@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -109,7 +112,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	d.Set("state", transitGatewayPolicyTable.State)
 	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
-	SetTagsOut(ctx, transitGatewayPolicyTable.Tags)
+	setTagsOut(ctx, transitGatewayPolicyTable.Tags)
 
 	return diags
 }

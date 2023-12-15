@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -5,9 +8,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -17,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -38,15 +40,6 @@ func ResourceConfigRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,6 +48,26 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"evaluation_mode": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(configservice.EvaluationMode_Values(), false),
+						},
+					},
+				},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"input_parameters": {
 				Type:         schema.TypeString,
@@ -65,6 +78,10 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
+			},
+			"rule_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"scope": {
 				Type:     schema.TypeList,
@@ -122,7 +139,7 @@ func ResourceConfigRule() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 64),
-											validation.StringMatch(regexp.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
+											validation.StringMatch(regexache.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
 										),
 									},
 									"policy_text": {
@@ -186,6 +203,10 @@ func ResourceConfigRule() *schema.Resource {
 	}
 }
 
+const (
+	ResNameConfigRule = "Config Rule"
+)
+
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
@@ -200,16 +221,22 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("description"); ok {
 		ruleInput.Description = aws.String(v.(string))
 	}
+
+	if v, ok := d.Get("evaluation_mode").(*schema.Set); ok && v.Len() > 0 {
+		ruleInput.EvaluationModes = expandRulesEvaluationModes(v.List())
+	}
+
 	if v, ok := d.GetOk("input_parameters"); ok {
 		ruleInput.InputParameters = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
 		ruleInput.MaximumExecutionFrequency = aws.String(v.(string))
 	}
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -229,7 +256,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWSConfig rule: %s", err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)
 	}
 
 	d.SetId(name)
@@ -248,6 +275,9 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.SetId("")
 		return diags
 	}
+	if err != nil {
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)
+	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
 	d.Set("arn", arn)
@@ -256,6 +286,8 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("description", rule.Description)
 	d.Set("input_parameters", rule.InputParameters)
 	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
+
+	d.Set("evaluation_mode", flattenRuleEvaluationMode(rule.EvaluationModes))
 
 	if rule.Scope != nil {
 		d.Set("scope", flattenRuleScope(rule.Scope))
@@ -290,11 +322,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.DeleteConfigRuleWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting Config Rule failed: %s", err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Config Service Rule (%s) to deleted: %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)
 	}
 
 	return diags

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -37,6 +40,8 @@ func DataSourceFunctions() *schema.Resource {
 }
 
 func dataSourceFunctionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	input := &lambda.ListFunctionsInput{}
@@ -62,12 +67,12 @@ func dataSourceFunctionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lambda, create.ErrActionReading, DSNameFunctions, "", err)
+		return create.AppendDiagError(diags, names.Lambda, create.ErrActionReading, DSNameFunctions, "", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("function_arns", functionARNs)
 	d.Set("function_names", functionNames)
 
-	return nil
+	return diags
 }

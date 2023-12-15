@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -65,7 +68,7 @@ func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceDa
 	input := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	_, err := conn.PutAggregationAuthorizationWithContext(ctx, input)
@@ -84,7 +87,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	d.Set("account_id", accountId)
@@ -98,7 +101,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -116,7 +119,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.IsNewResource() && aggregationAuthorization == nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)

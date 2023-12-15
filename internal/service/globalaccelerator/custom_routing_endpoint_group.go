@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -87,7 +90,7 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				ValidateFunc: verify.ValidRegionName,
 			},
 			"listener_arn": {
 				Type:         schema.TypeString,
@@ -102,13 +105,16 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
-	region := meta.(*conns.AWSClient).Region
 
 	input := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
 		DestinationConfigurations: expandCustomRoutingDestinationConfigurations(d.Get("destination_configuration").(*schema.Set).List()),
-		EndpointGroupRegion:       aws.String(region),
+		EndpointGroupRegion:       aws.String(meta.(*conns.AWSClient).Region),
 		IdempotencyToken:          aws.String(id.UniqueId()),
 		ListenerArn:               aws.String(d.Get("listener_arn").(string)),
+	}
+
+	if v, ok := d.GetOk("endpoint_group_region"); ok {
+		input.EndpointGroupRegion = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateCustomRoutingEndpointGroupWithContext(ctx, input)
@@ -194,7 +200,7 @@ func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.Res
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

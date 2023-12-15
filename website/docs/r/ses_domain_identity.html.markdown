@@ -38,13 +38,13 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The domain name to assign to SES
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the domain identity.
 * `verification_token` - A code which when added to the domain as a TXT record
@@ -58,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES domain identities can be imported using the domain name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES domain identities using the domain name. For example:
 
+```terraform
+import {
+  to = aws_ses_domain_identity.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_ses_domain_identity.example example.com
+
+Using `terraform import`, import SES domain identities using the domain name. For example:
+
+```console
+% terraform import aws_ses_domain_identity.example example.com
 ```

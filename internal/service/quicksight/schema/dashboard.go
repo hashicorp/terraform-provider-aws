@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -22,19 +25,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifiers_declarations": dataSetIdentifierDeclarationsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
 				"analysis_defaults":                 analysisDefaultSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
-				"calculated_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 500,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-							"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
-						},
-					},
-				},
+				"calculated_fields":                 calculatedFieldsSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -42,7 +33,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
@@ -64,7 +55,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 					},
 				},
 				"parameter_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					MinItems: 1,
 					MaxItems: 200,
 					Optional: true,
@@ -355,8 +346,8 @@ func ExpandDashboardDefinition(tfList []interface{}) *quicksight.DashboardVersio
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["calculated_fields"].([]interface{}); ok && len(v) > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v)
+	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
+		definition.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
 		definition.ColumnConfigurations = expandColumnConfigurations(v)
@@ -367,8 +358,8 @@ func ExpandDashboardDefinition(tfList []interface{}) *quicksight.DashboardVersio
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
 		definition.FilterGroups = expandFilterGroups(v)
 	}
-	if v, ok := tfMap["parameter_declarations"].([]interface{}); ok && len(v) > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v)
+	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
+		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
 		definition.Sheets = expandSheetDefinitions(v)

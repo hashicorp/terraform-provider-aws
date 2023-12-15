@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -8,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKDataSource("aws_mq_broker")
@@ -222,7 +226,6 @@ func DataSourceBroker() *schema.Resource {
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      resourceUserHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -234,9 +237,13 @@ func DataSourceBroker() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Computed: true,
 						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"username": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -246,6 +253,8 @@ func DataSourceBroker() *schema.Resource {
 }
 
 func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -277,20 +286,20 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("reading MQ Brokers: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Brokers: %s", err)
 	}
 
 	if n := len(brokers); n == 0 {
-		return diag.Errorf("no MQ Brokers matched")
+		return sdkdiag.AppendErrorf(diags, "no MQ Brokers matched")
 	} else if n > 1 {
-		return diag.Errorf("%d MQ Brokers matched; use additional constraints to reduce matches to a single Broker", n)
+		return sdkdiag.AppendErrorf(diags, "%d MQ Brokers matched; use additional constraints to reduce matches to a single Broker", n)
 	}
 
 	brokerID := aws.StringValue(brokers[0].BrokerId)
 	output, err := FindBrokerByID(ctx, conn, brokerID)
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker (%s): %s", brokerID, err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", brokerID, err)
 	}
 
 	d.SetId(brokerID)
@@ -310,11 +319,11 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
 	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
-		return diag.Errorf("setting configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
-		return diag.Errorf("setting encryption_options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
 	}
 
 	var password string
@@ -323,30 +332,30 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
-		return diag.Errorf("setting ldap_server_metadata: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
 	}
 
 	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
-		return diag.Errorf("setting logs: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
 	}
 
 	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
-		return diag.Errorf("setting maintenance_window_start_time: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
 	rawUsers, err := expandUsersForBroker(ctx, conn, brokerID, output.Users)
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker (%s) users: %s", brokerID, err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", brokerID, err)
 	}
 
 	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return diag.Errorf("setting user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -49,7 +52,7 @@ func TestAccLightsailDiskAttachment_basic(t *testing.T) {
 			},
 			{
 				Config:      testAccDiskAttachmentConfig_basic(dName, liName, diskPathBad),
-				ExpectError: regexp.MustCompile(`The disk path is invalid. You must specify a valid disk path.`),
+				ExpectError: regexache.MustCompile(`The disk path is invalid. You must specify a valid disk path.`),
 			},
 		},
 	})

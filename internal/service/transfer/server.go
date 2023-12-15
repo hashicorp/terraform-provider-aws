@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -162,13 +165,13 @@ func ResourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"pre_authentication_login_banner": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"protocol_details": {
 				Type:     schema.TypeList,
@@ -223,6 +226,15 @@ func ResourceServer() *schema.Resource {
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
+			},
+			"structured_log_destinations": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+				Description: "This is a set of arns of destinations that will receive structured logs from the transfer server",
+				Optional:    true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -286,7 +298,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateServerInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate"); ok {
@@ -366,6 +378,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("security_policy_name"); ok {
 		input.SecurityPolicyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("structured_log_destinations"); ok && v.(*schema.Set).Len() > 0 {
+		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("url"); ok {
@@ -486,6 +502,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
+	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
@@ -495,7 +512,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -662,6 +679,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("security_policy_name") {
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
+
+		// Per the docs it does not matter if this field has changed,
+		// if the update passes this as empty the structured logging will be turned off,
+		// so we need to always pass the new.
+		input.StructuredLogDestinations = flex.ExpandStringSet(d.Get("structured_log_destinations").(*schema.Set))
 
 		if d.HasChange("workflow_details") {
 			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))

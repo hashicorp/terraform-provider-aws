@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
@@ -5,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -96,23 +99,23 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_basic(rNameTooShort),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooShort)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooShort)),
 			},
 			{
 				Config:      testAccDatabaseConfig_basic(rNameTooLong),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooLong)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooLong)),
 			},
 			{
 				Config:      testAccDatabaseConfig_basic(rNameContainsUnderscore),
-				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+				ExpectError: regexache.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
 				Config:      testAccDatabaseConfig_basic(rNameStartingDash),
-				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+				ExpectError: regexache.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
 				Config:      testAccDatabaseConfig_basic(rNameEndingDash),
-				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+				ExpectError: regexache.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
 				Config: testAccDatabaseConfig_basic(rName),
@@ -159,19 +162,19 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameTooShort),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooShort)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooShort)),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameTooLong),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooLong)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooLong)),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameContainsSpaces),
-				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
+				ExpectError: regexache.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameContainsStartingDigit),
-				ExpectError: regexp.MustCompile(`Must begin with a letter`),
+				ExpectError: regexache.MustCompile(`Must begin with a letter`),
 			},
 			{
 				Config: testAccDatabaseConfig_masterDatabaseName(rName, dbName),
@@ -226,23 +229,23 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_masterUsername(rName, usernameTooShort),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooShort)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooShort)),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterUsername(rName, usernameTooLong),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooLong)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooLong)),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterUsername(rName, usernameStartingDigit),
-				ExpectError: regexp.MustCompile(`Must begin with a letter`),
+				ExpectError: regexache.MustCompile(`Must begin with a letter`),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterUsername(rName, usernameContainsDash),
-				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
+				ExpectError: regexache.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterUsername(rName, usernameContainsSpecial),
-				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
+				ExpectError: regexache.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
 				Config: testAccDatabaseConfig_masterUsername(rName, username),
@@ -296,27 +299,27 @@ func TestAccLightsailDatabase_masterPassword(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordTooShort),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooShort)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooShort)),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordTooLong),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooLong)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooLong)),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsSlash),
-				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+				ExpectError: regexache.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsQuotes),
-				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+				ExpectError: regexache.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsAtSymbol),
-				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+				ExpectError: regexache.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsSpaces),
-				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
+				ExpectError: regexache.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 		},
 	})
@@ -341,11 +344,11 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidHour),
-				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidMinute),
-				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
 			},
 			{
 				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:30-10:00"),
@@ -396,15 +399,15 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
-				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
-				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
-				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
@@ -545,19 +548,19 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameTooShort),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooShort)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooShort)),
 			},
 			{
 				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameTooLong),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooLong)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooLong)),
 			},
 			{
 				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameContainsSpaces),
-				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+				ExpectError: regexache.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
 				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameContainsUnderscore),
-				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
+				ExpectError: regexache.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
 				Config: testAccDatabaseConfig_finalSnapshotName(rName, sName),

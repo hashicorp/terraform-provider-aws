@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -80,7 +83,7 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &fsx.CreateBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("file_system_id"); ok {
@@ -153,7 +156,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("volume_id", backup.Volume.VolumeId)
 	}
 
-	SetTagsOut(ctx, backup.Tags)
+	setTagsOut(ctx, backup.Tags)
 
 	return diags
 }

@@ -34,17 +34,26 @@ The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the template alias.
 * `id` - A comma-delimited string joining AWS account ID, template ID, and alias name.
 
 ## Import
 
-QuickSight Template Alias can be imported using the AWS account ID, template ID, and alias name separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Template Alias using the AWS account ID, template ID, and alias name separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_template_alias.example
+  id = "123456789012,example-id,example-alias"
+}
 ```
-$ terraform import aws_quicksight_template_alias.example 123456789012,example-id,example-alias
+
+Using `terraform import`, import QuickSight Template Alias using the AWS account ID, template ID, and alias name separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_template_alias.example 123456789012,example-id,example-alias
 ```

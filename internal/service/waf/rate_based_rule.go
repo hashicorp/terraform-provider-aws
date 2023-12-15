@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -99,7 +102,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 		Name:       aws.String(name),
 		RateKey:    aws.String(d.Get("rate_key").(string)),
 		RateLimit:  aws.Int64(int64(d.Get("rate_limit").(int))),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	wr := NewRetryer(conn)

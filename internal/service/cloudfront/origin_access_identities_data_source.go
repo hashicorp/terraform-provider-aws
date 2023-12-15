@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -11,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @SDKDataSource("aws_cloudfront_origin_access_identities")
@@ -67,7 +70,7 @@ func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.Resourc
 			}
 
 			if len(comments) > 0 {
-				if _, ok := verify.SliceContainsString(comments, aws.StringValue(v.Comment)); !ok {
+				if idx := tfslices.IndexOf(comments, aws.StringValue(v.Comment)); idx == -1 {
 					continue
 				}
 			}

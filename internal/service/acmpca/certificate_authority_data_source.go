@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -197,7 +200,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := ListTags(ctx, conn, certificateAuthorityARN)
+	tags, err := listTags(ctx, conn, certificateAuthorityARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)

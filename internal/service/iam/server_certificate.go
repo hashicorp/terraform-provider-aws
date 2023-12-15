@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -113,7 +116,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -141,7 +144,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	d.Set("name", sslCertName) // Required for resource Read.
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := serverCertificateCreateTags(ctx, conn, sslCertName, tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -192,7 +195,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("upload_date", nil)
 	}
 
-	SetTagsOut(ctx, cert.Tags)
+	setTagsOut(ctx, cert.Tags)
 
 	return diags
 }

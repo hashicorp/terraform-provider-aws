@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -5,8 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
@@ -266,7 +269,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
 	}
 
-	if !regexp.MustCompile(`^events:[a-zA-Z]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^events:[A-Za-z]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be: events: followed by one or more alphabetic characters", k))
 	}
 	return
@@ -275,7 +278,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
 func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
+	if !regexache.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be * or a 12 digit AWS account ID", k))
 	}
 	return
@@ -288,7 +291,7 @@ func validatePermissionStatementID(v interface{}, k string) (ws []string, es []e
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[a-zA-Z0-9-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be one or more alphanumeric, hyphen, or underscore characters", k))
 	}
 	return

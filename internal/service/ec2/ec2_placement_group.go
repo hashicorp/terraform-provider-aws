@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -146,7 +149,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	SetTagsOut(ctx, pg.Tags)
+	setTagsOut(ctx, pg.Tags)
 
 	return diags
 }

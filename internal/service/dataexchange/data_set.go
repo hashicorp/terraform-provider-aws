@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
@@ -65,7 +68,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Name:        aws.String(d.Get("name").(string)),
 		AssetType:   aws.String(d.Get("asset_type").(string)),
 		Description: aws.String(d.Get("description").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateDataSetWithContext(ctx, input)
@@ -99,7 +102,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", dataSet.Description)
 	d.Set("arn", dataSet.Arn)
 
-	SetTagsOut(ctx, dataSet.Tags)
+	setTagsOut(ctx, dataSet.Tags)
 
 	return diags
 }

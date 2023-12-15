@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -53,13 +56,13 @@ func resourceBucketPolicy() *schema.Resource {
 }
 
 func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	bucket := d.Get("bucket").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return diag.FromErr(err)
 	}
 
 	input := &s3control.PutBucketPolicyInput{
@@ -67,7 +70,7 @@ func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 		Policy: aws.String(policy),
 	}
 
-	_, err = conn.PutBucketPolicyWithContext(ctx, input)
+	_, err = conn.PutBucketPolicy(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating S3 Control Bucket Policy (%s): %s", bucket, err)
@@ -79,10 +82,9 @@ func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -91,7 +93,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
-	output, err := FindBucketPolicyByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
+	output, err := findBucketPolicyByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Control Bucket Policy (%s) not found, removing from state", d.Id())
@@ -106,7 +108,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("bucket", d.Id())
 
 	if output.Policy != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.Policy))
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -120,11 +122,11 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return diag.FromErr(err)
 	}
 
 	input := &s3control.PutBucketPolicyInput{
@@ -132,7 +134,7 @@ func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 		Policy: aws.String(policy),
 	}
 
-	_, err = conn.PutBucketPolicyWithContext(ctx, input)
+	_, err = conn.PutBucketPolicy(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("updating S3 Control Bucket Policy (%s): %s", d.Id(), err)
@@ -142,7 +144,7 @@ func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -151,7 +153,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Control Bucket Policy: %s", d.Id())
-	_, err = conn.DeleteBucketPolicyWithContext(ctx, &s3control.DeleteBucketPolicyInput{
+	_, err = conn.DeleteBucketPolicy(ctx, &s3control.DeleteBucketPolicyInput{
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
 	})
@@ -167,13 +169,13 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func FindBucketPolicyByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID, bucket string) (*s3control.GetBucketPolicyOutput, error) {
+func findBucketPolicyByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, bucket string) (*s3control.GetBucketPolicyOutput, error) {
 	input := &s3control.GetBucketPolicyInput{
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(bucket),
 	}
 
-	output, err := conn.GetBucketPolicyWithContext(ctx, input)
+	output, err := conn.GetBucketPolicy(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy, errCodeNoSuchOutpost) {
 		return nil, &retry.NotFoundError{

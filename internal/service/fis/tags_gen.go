@@ -7,21 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists fis service tags.
+// listTags lists fis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn *fis.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *fis.Client, identifier string, optFns ...func(*fis.Options)) (tftags.KeyValueTags, error) {
 	input := &fis.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -33,7 +35,7 @@ func ListTags(ctx context.Context, conn *fis.Client, identifier string) (tftags.
 // ListTags lists fis service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).FISClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).FISClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -53,14 +55,14 @@ func Tags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates KeyValueTags from fis service tags.
+// KeyValueTags creates tftags.KeyValueTags from fis service tags.
 func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns fis service tags from Context.
+// getTagsIn returns fis service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -70,19 +72,21 @@ func GetTagsIn(ctx context.Context) map[string]string {
 	return nil
 }
 
-// SetTagsOut sets fis service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]string) {
+// setTagsOut sets fis service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates fis service tags.
+// updateTags updates fis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *fis.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *fis.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*fis.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.FIS)
@@ -92,7 +96,7 @@ func UpdateTags(ctx context.Context, conn *fis.Client, identifier string, oldTag
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -107,7 +111,7 @@ func UpdateTags(ctx context.Context, conn *fis.Client, identifier string, oldTag
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -120,5 +124,5 @@ func UpdateTags(ctx context.Context, conn *fis.Client, identifier string, oldTag
 // UpdateTags updates fis service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).FISClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).FISClient(ctx), identifier, oldTags, newTags)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -96,7 +99,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateInstanceProfileWithContext(ctx, input)
@@ -131,7 +134,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := instanceProfileCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -190,7 +193,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
 
-	SetTagsOut(ctx, instanceProfile.Tags)
+	setTagsOut(ctx, instanceProfile.Tags)
 
 	return diags
 }

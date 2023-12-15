@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rum
 
 import (
@@ -153,7 +156,7 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
 		Domain:       aws.String(d.Get("domain").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("app_monitor_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -212,7 +215,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("domain", appMon.Domain)
 	d.Set("name", appMon.Name)
 
-	SetTagsOut(ctx, appMon.Tags)
+	setTagsOut(ctx, appMon.Tags)
 
 	return nil
 }

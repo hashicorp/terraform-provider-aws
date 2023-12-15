@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
@@ -24,7 +27,7 @@ func (e *EmptyResultError) Error() string {
 }
 
 func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*EmptyResultError)
 	return ok
 }
 
@@ -61,7 +64,7 @@ func (e *TooManyResultsError) Error() string {
 }
 
 func (e *TooManyResultsError) Is(err error) bool {
-	_, ok := err.(*TooManyResultsError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*TooManyResultsError)
 	return ok
 }
 

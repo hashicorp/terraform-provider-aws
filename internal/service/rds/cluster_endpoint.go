@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -94,7 +97,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterEndpointIdentifier: aws.String(endpointID),
 		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 		EndpointType:                aws.String(d.Get("custom_endpoint_type").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("excluded_members"); ok && v.(*schema.Set).Len() > 0 {

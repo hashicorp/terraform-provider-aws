@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -211,7 +214,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ApiId:      aws.String(apiId),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
 		StageName:  aws.String(d.Get("name").(string)),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("access_log_settings"); ok {
 		req.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
@@ -298,12 +301,12 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", flex.FlattenStringMap(resp.StageVariables))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage_variables: %s", err)
 	}
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	apiOutput, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(apiId),
@@ -392,7 +395,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del, _ := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := flex.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
 				del[k] = aws.String("")

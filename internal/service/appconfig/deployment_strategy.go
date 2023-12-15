@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -92,7 +95,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -201,11 +204,10 @@ func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
-	input := &appconfig.DeleteDeploymentStrategyInput{
+	log.Printf("[INFO] Deleting AppConfig Deployment Strategy: %s", d.Id())
+	_, err := conn.DeleteDeploymentStrategyWithContext(ctx, &appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteDeploymentStrategyWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

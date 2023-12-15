@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -153,16 +157,16 @@ func ResourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.All(
 									validation.Any(
 										validation.StringMatch(
-											regexp.MustCompile(`(^IQM$)|(^(p|tc|tm|ts|wm)(100|\d{1,2})(\.\d{0,10})?$)|(^[ou]\d+(\.\d*)?$)`),
+											regexache.MustCompile(`(^IQM$)|(^(p|tc|tm|ts|wm)(100|\d{1,2})(\.\d{0,10})?$)|(^[ou]\d+(\.\d*)?$)`),
 											"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 										),
 										validation.StringMatch(
-											regexp.MustCompile(`^(TM|TC|TS|WM)\(((((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?:((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%|((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%:(((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?)\)|(TM|TC|TS|WM|PR)\(((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)):((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?|((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?:(\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))\)$`),
+											regexache.MustCompile(`^(TM|TC|TS|WM)\(((((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?:((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%|((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%:(((\d{1,2})(\.\d{0,10})?|100(\.0{0,10})?)%)?)\)|(TM|TC|TS|WM|PR)\(((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)):((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?|((\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))?:(\d+(\.\d{0,10})?|(\d+(\.\d{0,10})?[Ee][+-]?\d+)))\)$`),
 											"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 										),
 									),
 									validation.StringDoesNotMatch(
-										regexp.MustCompile(`^p0(\.0{0,10})?|p100(\.\d{0,10})?$`),
+										regexache.MustCompile(`^p0(\.0{0,10})?|p100(\.\d{0,10})?$`),
 										"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
 									),
 								),
@@ -196,6 +200,8 @@ func ResourceMetricStream() *schema.Resource {
 }
 
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -205,7 +211,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		Name:                         aws.String(name),
 		OutputFormat:                 aws.String(d.Get("output_format").(string)),
 		RoleArn:                      aws.String(d.Get("role_arn").(string)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -230,33 +236,35 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Metric Stream (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Stream (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitMetricStreamRunning(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Metric Stream (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) create: %s", d.Id(), err)
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.Arn), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return resourceMetricStreamRead(ctx, d, meta)
+			return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("setting CloudWatch Metric Stream (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Metric Stream (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceMetricStreamRead(ctx, d, meta)
+	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	output, err := FindMetricStreamByName(ctx, conn, d.Id())
@@ -264,11 +272,11 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
@@ -284,26 +292,28 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if output.IncludeFilters != nil {
 		if err := d.Set("include_filter", flattenMetricStreamFilters(output.IncludeFilters)); err != nil {
-			return diag.Errorf("setting include_filter: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting include_filter: %s", err)
 		}
 	}
 
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
-			return diag.Errorf("setting exclude_filter: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
 		}
 	}
 
 	if output.StatisticsConfigurations != nil {
 		if err := d.Set("statistics_configuration", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
-			return diag.Errorf("setting statistics_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting statistics_configuration: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -330,18 +340,20 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.PutMetricStreamWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch Metric Stream (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Stream (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitMetricStreamRunning(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudWatch Metric Stream (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceMetricStreamRead(ctx, d, meta)
+	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
@@ -350,14 +362,14 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMetricStreamDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for CloudWatch Metric Stream (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindMetricStreamByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
@@ -443,7 +455,7 @@ func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.CloudWatch, n
 func validateMetricStreamName(v interface{}, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
-		validation.StringMatch(regexp.MustCompile(`^[\-_A-Za-z0-9]*$`), "must match [\\-_A-Za-z0-9]"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must match [0-9A-Za-z_-]"),
 	)(v, k)
 }
 

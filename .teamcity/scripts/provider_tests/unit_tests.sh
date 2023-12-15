@@ -16,14 +16,17 @@ go test \
     ./internal/flex/... \
     ./internal/framework/... \
     ./internal/generate/... \
+    ./internal/logging/... \
     ./internal/maps/... \
     ./internal/provider/... \
+    ./internal/retry/... \
     ./internal/sdktypes/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
+    ./internal/ujson/... \
     ./internal/vault/... \
     ./internal/verify/... \
     -json

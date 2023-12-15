@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -169,7 +172,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Name:          aws.String(d.Get("name").(string)),
 		DefaultAction: expandDefaultAction(d.Get("default_action").([]interface{})),
 		Protocol:      types.ListenerProtocol(d.Get("protocol").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("port"); ok && v != nil {

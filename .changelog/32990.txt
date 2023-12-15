@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearch_outbound_connection: Add `connection_properties`, `connection_mode` and `accept_connection` arguments
+```

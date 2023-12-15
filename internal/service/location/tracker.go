@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -76,7 +79,7 @@ func resourceTrackerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreateTrackerInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -139,7 +142,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)

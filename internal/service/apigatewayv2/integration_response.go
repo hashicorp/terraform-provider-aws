@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -114,7 +117,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("content_handling_strategy", resp.ContentHandlingStrategy)
 	d.Set("integration_response_key", resp.IntegrationResponseKey)
-	err = d.Set("response_templates", flex.PointersMapToStringList(resp.ResponseTemplates))
+	err = d.Set("response_templates", flex.FlattenStringMap(resp.ResponseTemplates))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting response_templates: %s", err)
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
@@ -98,7 +101,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := gamelift.CreateScriptInput{
 		Name: aws.String(d.Get("name").(string)),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("storage_location"); ok && len(v.([]interface{})) > 0 {

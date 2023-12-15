@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -109,6 +112,7 @@ func TestParseRecordId(t *testing.T) {
 		{"ABCDEF_prefix._underscore.example.com_A", "ABCDEF", "prefix._underscore.example.com", "A", ""},
 		{"ABCDEF_prefix._underscore.example.com_A_set", "ABCDEF", "prefix._underscore.example.com", "A", "set"},
 		{"ABCDEF_prefix._underscore.example.com_A_set_underscore", "ABCDEF", "prefix._underscore.example.com", "A", "set_underscore"},
+		{"ABCDEF__A", "ABCDEF", "", "A", ""},
 	}
 
 	for _, tc := range cases {
@@ -661,7 +665,7 @@ func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRecordConfig_aliasCustomVPCEndpointSwappedAliasAttributes(rName),
-				ExpectError: regexp.MustCompile(`expected length of`),
+				ExpectError: regexache.MustCompile(`expected length of`),
 			},
 			{
 				Config: testAccRecordConfig_customVPCEndpoint(rName),
@@ -1401,6 +1405,12 @@ func TestAccRoute53Record_empty(t *testing.T) {
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
 		},
 	})
 }
@@ -1519,7 +1529,7 @@ func testAccRecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFun
 			t.Fatalf("Expected an error but got none")
 		}
 
-		re := regexp.MustCompile(`Tried to create resource record set \[name='www.domain.test.', type='A'] but it already exists`)
+		re := regexache.MustCompile(`Tried to create resource record set \[name='www.domain.test.', type='A'] but it already exists`)
 		if !re.MatchString(err.Error()) {
 			t.Fatalf("Expected an error with pattern, no match on: %s", err)
 		}

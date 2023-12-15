@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -104,22 +107,6 @@ func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Glue, name str
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-// FindTableByName returns the Table corresponding to the specified name.
-func FindTableByName(ctx context.Context, conn *glue.Glue, catalogID, dbName, name string) (*glue.GetTableOutput, error) {
-	input := &glue.GetTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		Name:         aws.String(name),
-	}
-
-	output, err := conn.GetTableWithContext(ctx, input)
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil

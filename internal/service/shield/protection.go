@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield
 
 import (
@@ -58,7 +61,7 @@ func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(d.Get("name").(string)),
 		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateProtectionWithContext(ctx, input)

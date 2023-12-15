@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -110,7 +113,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)

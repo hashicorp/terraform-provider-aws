@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -131,7 +134,7 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingGroupInput{
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		ThingGroupName: aws.String(name),
 	}
 

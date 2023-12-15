@@ -9,49 +9,30 @@ permissions:
   pull-requests: write
 
 jobs:
-  cdktfDocs:
-    runs-on:
-      - custom
-      - linux
-      - custom-linux-medium
-    container:
-      image: docker.mirror.hashicorp.services/hashicorp/jsii-terraform
-    env:
-      CHECKPOINT_DISABLE: "1"
-    timeout-minutes: 120
+  generateToken:
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.generate_token.outputs.token }}
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - run: git config --global user.email "github-team-tf-cdk@hashicorp.com"
-      - run: git config --global user.name "team-tf-cdk"
-      - name: Get yarn cache directory path
-        id: global-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
-        id: global-cache
+      - name: Generate Token
+        id: generate_token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
-          path: ${{ steps.global-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-integration-yarn-${{ hashFiles('**/yarn.lock') }}
-      - name: Setup Node.js
-        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c # v3.6.0
-        with:
-          node-version: "18.x"
-      - name: Install cdktf-registry-docs
-        run: npm install -g cdktf-registry-docs@1.12.0
-      - name: Run conversion
-        run: |
-          cdktf-registry-docs convert \
-            --files='*/ec2_*.html.markdown' \
-            --languages='typescript,python' \
-            --parallel-file-conversions=1 \
-            --provider-from-registry="hashicorp/aws" \
-            .
-        env:
-          TF_PLUGIN_CACHE_DIR: ${{ steps.global-cache-dir-path.outputs.dir }}/terraform-plugins
+          app_id: ${{ secrets.APP_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{secrets.APP_PEM }}
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5.0.2
-        with:
-          commit-message: "docs: update cdktf documentation"
-          title: "docs: update cdktf documentation"
-          body: "This PR updates the cdktf related documentation based on the current HCL-based documentation. It is automatically created by the cdktf-documentation GitHub action."
-          token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+  cdktfDocs:
+    needs:
+      - generateToken
+    uses: hashicorp/terraform-cdk/.github/workflows/registry-docs-pr-based.yml@304e2507209c9657135dc7b4b7ee68030327468f
+    secrets:
+      GH_PR_TOKEN: ${{ needs.generateToken.outputs.token }}
+    with:
+      providerFqn: "hashicorp/aws"
+      languages: "typescript,python"
+      files: "d/*.html.markdown,r/*.html.markdown"
+      parallelFileConversions: 1
+      maxRunners: 20
+      cdktfRegistryDocsVersion: "1.14.2"

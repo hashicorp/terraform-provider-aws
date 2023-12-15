@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe
 
 import (
@@ -112,7 +115,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		BaseModelName: types.BaseModelName(d.Get("base_model_name").(string)),
 		LanguageCode:  types.CLMLanguageCode(d.Get("language_code").(string)),
 		ModelName:     aws.String(d.Get("model_name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]interface{})) > 0 {

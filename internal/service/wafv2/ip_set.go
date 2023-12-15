@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,69 +55,71 @@ func ResourceIPSet() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"addresses": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 10000,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
-						o, n := d.GetChange("addresses")
-						oldAddresses := o.(*schema.Set).List()
-						newAddresses := n.(*schema.Set).List()
-						if len(oldAddresses) == len(newAddresses) {
-							for _, ov := range oldAddresses {
-								hasAddress := false
-								for _, nv := range newAddresses {
-									if verify.CIDRBlocksEqual(ov.(string), nv.(string)) {
-										hasAddress = true
-										break
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"addresses": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 10000,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
+							o, n := d.GetChange("addresses")
+							oldAddresses := o.(*schema.Set).List()
+							newAddresses := n.(*schema.Set).List()
+							if len(oldAddresses) == len(newAddresses) {
+								for _, ov := range oldAddresses {
+									hasAddress := false
+									for _, nv := range newAddresses {
+										if itypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
+											hasAddress = true
+											break
+										}
+									}
+									if !hasAddress {
+										return false
 									}
 								}
-								if !hasAddress {
-									return false
-								}
+								return true
 							}
-							return true
 						}
-					}
-					return false
+						return false
+					},
 				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"ip_address_version": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.IPAddressVersion_Values(), false),
-			},
-			"lock_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"ip_address_version": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.IPAddressVersion_Values(), false),
+				},
+				"lock_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -129,7 +135,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		IPAddressVersion: aws.String(d.Get("ip_address_version").(string)),
 		Name:             aws.String(name),
 		Scope:            aws.String(d.Get("scope").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {

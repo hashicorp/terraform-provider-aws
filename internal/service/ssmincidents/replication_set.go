@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents
 
 import (
@@ -107,7 +110,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ssmincidents.CreateReplicationSetInput{
 		Regions: expandRegions(d.Get("region").(*schema.Set).List()),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	createReplicationSetOutput, err := client.CreateReplicationSet(ctx, input)

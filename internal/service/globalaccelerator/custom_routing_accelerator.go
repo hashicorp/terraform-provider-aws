@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -114,9 +117,9 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot start with a hyphen"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -136,7 +139,7 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 		Name:             aws.String(name),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -291,7 +294,7 @@ func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.Resou
 	_, err := conn.UpdateCustomRoutingAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -308,7 +311,7 @@ func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.Resou
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

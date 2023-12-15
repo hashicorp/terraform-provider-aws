@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -59,7 +62,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get("name").(string)
 	in := &synthetics.CreateGroupInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateGroupWithContext(ctx, in)
@@ -97,7 +100,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("group_id", group.Id)
 	d.Set("name", group.Name)
 
-	SetTagsOut(ctx, group.Tags)
+	setTagsOut(ctx, group.Tags)
 
 	return diags
 }

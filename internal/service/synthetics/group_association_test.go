@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,8 +35,8 @@ func TestAccSyntheticsGroupAssociation_basic(t *testing.T) {
 				Config: testAccGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupAssociationExists(ctx, resourceName, &groupSummary),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "canary_arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "group_arn", synthetics.ServiceName, regexp.MustCompile(`group:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "canary_arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "group_arn", synthetics.ServiceName, regexache.MustCompile(`group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),

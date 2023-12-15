@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -118,7 +121,7 @@ func FindMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloud
 
 	output, err := conn.GetMonitoringSubscriptionWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution, cloudfront.ErrCodeNoSuchMonitoringSubscription) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

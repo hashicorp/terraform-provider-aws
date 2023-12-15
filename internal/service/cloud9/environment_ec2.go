@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
@@ -64,9 +67,11 @@ func ResourceEnvironmentEC2() *schema.Resource {
 					"amazonlinux-1-x86_64",
 					"amazonlinux-2-x86_64",
 					"ubuntu-18.04-x86_64",
+					"ubuntu-22.04-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
 			},
 			"instance_type": {
@@ -113,7 +118,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rolesanywhere
 
 import (
@@ -83,7 +86,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
 		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("duration_seconds"); ok {

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -121,7 +124,7 @@ func TestAccVPCManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCManagedPrefixListEntryConfig_expectInvalidType(rName),
-				ExpectError: regexp.MustCompile(`invalid CIDR address: ::/244`),
+				ExpectError: regexache.MustCompile(`invalid CIDR address: ::/244`),
 			},
 		},
 	})
@@ -139,11 +142,11 @@ func TestAccVPCManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCManagedPrefixListEntryConfig_invalidIPv4CIDR(rName),
-				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
 				Config:      testAccVPCManagedPrefixListEntryConfig_invalidIPv6CIDR(rName),
-				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
 	})

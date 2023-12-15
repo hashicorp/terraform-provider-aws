@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -5,10 +8,10 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -192,7 +195,7 @@ func ResourceUserPool() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.Any(
 								validation.StringInSlice([]string{""}, false),
-								validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+								validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
 									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
 							),
 						},
@@ -346,7 +349,7 @@ func ResourceUserPool() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`[\w\s+=,.@-]+`),
+					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
 						`must satisfy regular expression pattern: [\w\s+=,.@-]+`),
 				),
 			},
@@ -621,7 +624,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName:     aws.String(d.Get("name").(string)),
-		UserPoolTags: GetTagsIn(ctx),
+		UserPoolTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -859,7 +862,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	userPool := resp.UserPool
@@ -937,7 +940,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", userPool.Name)
 
-	SetTagsOut(ctx, userPool.UserPoolTags)
+	setTagsOut(ctx, userPool.UserPoolTags)
 
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
 		UserPoolId: aws.String(d.Id()),
@@ -952,7 +955,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	d.Set("mfa_configuration", output.MfaConfiguration)
@@ -1049,7 +1052,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	) {
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
 			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: GetTagsIn(ctx),
+			UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -1810,7 +1813,7 @@ func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovid
 			value["number_attribute_constraints"] = []map[string]interface{}{subvalue}
 		}
 
-		if input.StringAttributeConstraints != nil {
+		if input.StringAttributeConstraints != nil && !skipFlatteningStringAttributeContraints(configuredAttributes, input) {
 			subvalue := make(map[string]interface{})
 
 			if input.StringAttributeConstraints.MinLength != nil {
@@ -2296,4 +2299,27 @@ func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserA
 	m["attributes_require_verification_before_update"] = flex.FlattenStringSet(u.AttributesRequireVerificationBeforeUpdate)
 
 	return []map[string]interface{}{m}
+}
+
+// skipFlatteningStringAttributeContraints returns true when all of the schema arguments
+// match an existing configured attribute, except an empty "string_attribute_constraints" block.
+// In this situation the Describe API returns default constraint values, and a persistent diff
+// would be present if written to state.
+func skipFlatteningStringAttributeContraints(configuredAttributes []*cognitoidentityprovider.SchemaAttributeType, input *cognitoidentityprovider.SchemaAttributeType) bool {
+	skip := false
+	for _, configuredAttribute := range configuredAttributes {
+		// Root elements are all equal
+		if reflect.DeepEqual(input.AttributeDataType, configuredAttribute.AttributeDataType) &&
+			reflect.DeepEqual(input.DeveloperOnlyAttribute, configuredAttribute.DeveloperOnlyAttribute) &&
+			reflect.DeepEqual(input.Mutable, configuredAttribute.Mutable) &&
+			reflect.DeepEqual(input.Name, configuredAttribute.Name) &&
+			reflect.DeepEqual(input.Required, configuredAttribute.Required) &&
+			// The configured "string_attribute_constraints" object is empty, but the returned value is not
+			(aws.StringValue(configuredAttribute.AttributeDataType) == cognitoidentityprovider.AttributeDataTypeString &&
+				configuredAttribute.StringAttributeConstraints == nil &&
+				input.StringAttributeConstraints != nil) {
+			skip = true
+		}
+	}
+	return skip
 }

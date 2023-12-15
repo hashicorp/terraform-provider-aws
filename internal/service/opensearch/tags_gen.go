@@ -8,16 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/aws/aws-sdk-go/service/opensearchservice/opensearchserviceiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists opensearch service tags.
+// listTags lists opensearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &opensearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn opensearchserviceiface.OpenSearchService
 // ListTags lists opensearch service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).OpenSearchConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).OpenSearchConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +78,9 @@ func KeyValueTags(ctx context.Context, tags []*opensearchservice.Tag) tftags.Key
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns opensearch service tags from Context.
+// getTagsIn returns opensearch service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*opensearchservice.Tag {
+func getTagsIn(ctx context.Context) []*opensearchservice.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,19 +90,21 @@ func GetTagsIn(ctx context.Context) []*opensearchservice.Tag {
 	return nil
 }
 
-// SetTagsOut sets opensearch service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*opensearchservice.Tag) {
+// setTagsOut sets opensearch service tags in Context.
+func setTagsOut(ctx context.Context, tags []*opensearchservice.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates opensearch service tags.
+// updateTags updates opensearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.OpenSearch)
@@ -138,5 +142,5 @@ func UpdateTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServi
 // UpdateTags updates opensearch service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).OpenSearchConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).OpenSearchConn(ctx), identifier, oldTags, newTags)
 }

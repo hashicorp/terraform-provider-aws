@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -76,6 +80,10 @@ func ResourceWorkgroup() *schema.Resource {
 								"max_query_temp_blocks_to_disk",
 								"max_join_row_count",
 								"max_nested_loop_join_row_count",
+								// default SSL parameters automatically added by AWS
+								// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+								"require_ssl",
+								"use_fips_ssl",
 							}, false),
 							Required: true,
 						},
@@ -195,7 +203,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get("workgroup_name").(string)
 	input := redshiftserverless.CreateWorkgroupInput{
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		WorkgroupName: aws.String(name),
 	}
 
@@ -391,6 +399,81 @@ func updateWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServe
 	}
 
 	return nil
+}
+
+func FindWorkgroupByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
+	input := &redshiftserverless.GetWorkgroupInput{
+		WorkgroupName: aws.String(name),
+	}
+
+	output, err := conn.GetWorkgroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workgroup, nil
+}
+
+func statusWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindWorkgroupByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string, wait time.Duration) (*redshiftserverless.Workgroup, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{redshiftserverless.WorkgroupStatusCreating, redshiftserverless.WorkgroupStatusModifying},
+		Target:  []string{redshiftserverless.WorkgroupStatusAvailable},
+		Refresh: statusWorkgroup(ctx, conn, name),
+		Timeout: wait,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string, wait time.Duration) (*redshiftserverless.Workgroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{redshiftserverless.WorkgroupStatusAvailable, redshiftserverless.WorkgroupStatusModifying, redshiftserverless.WorkgroupStatusDeleting},
+		Target:  []string{},
+		Refresh: statusWorkgroup(ctx, conn, name),
+		Timeout: wait,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandConfigParameter(tfMap map[string]interface{}) *redshiftserverless.ConfigParameter {

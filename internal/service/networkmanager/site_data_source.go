@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -6,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -57,6 +61,8 @@ func DataSourceSite() *schema.Resource {
 }
 
 func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -65,7 +71,7 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	site, err := FindSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Site (%s): %s", siteID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site (%s): %s", siteID, err)
 	}
 
 	d.SetId(siteID)
@@ -74,7 +80,7 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
-			return diag.Errorf("setting location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
@@ -82,8 +88,8 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("site_id", site.SiteId)
 
 	if err := d.Set("tags", KeyValueTags(ctx, site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

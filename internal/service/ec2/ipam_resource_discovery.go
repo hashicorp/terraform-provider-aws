@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -152,7 +155,7 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("owner_id", rd.OwnerId)
 
-	SetTagsOut(ctx, rd.Tags)
+	setTagsOut(ctx, rd.Tags)
 
 	return diags
 }

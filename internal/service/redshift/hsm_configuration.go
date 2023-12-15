@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -88,7 +91,7 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 		HsmPartitionName:           aws.String(d.Get("hsm_partition_name").(string)),
 		HsmPartitionPassword:       aws.String(d.Get("hsm_partition_password").(string)),
 		HsmServerPublicCertificate: aws.String(d.Get("hsm_server_public_certificate").(string)),
-		Tags:                       GetTagsIn(ctx),
+		Tags:                       getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateHsmConfigurationWithContext(ctx, input)
@@ -133,7 +136,7 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 
-	SetTagsOut(ctx, hsmConfiguration.Tags)
+	setTagsOut(ctx, hsmConfiguration.Tags)
 
 	return diags
 }

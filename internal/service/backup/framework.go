@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -143,7 +146,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 		IdempotencyToken:  aws.String(id.UniqueId()),
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
-		FrameworkTags:     GetTagsIn(ctx),
+		FrameworkTags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

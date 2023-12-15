@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +27,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
+				ExpectError: regexache.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_arn(commonName),
@@ -63,7 +66,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
+				ExpectError: regexache.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName),

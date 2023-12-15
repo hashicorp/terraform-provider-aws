@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -8,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, id, policyType string) (*types.AccessPolicyDetail, error) {
+func findAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, id, policyType string) (*types.AccessPolicyDetail, error) {
 	in := &opensearchserverless.GetAccessPolicyInput{
 		Name: aws.String(id),
 		Type: types.AccessPolicyType(policyType),
@@ -36,7 +40,7 @@ func FindAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	return out.AccessPolicyDetail, nil
 }
 
-func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionDetail, error) {
+func findCollectionByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.CollectionDetail, error) {
 	in := &opensearchserverless.BatchGetCollectionInput{
 		Ids: []string{id},
 	}
@@ -60,7 +64,35 @@ func FindCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 	return &out.CollectionDetails[0], nil
 }
 
-func FindSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
+func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionDetail, error) {
+	in := &opensearchserverless.BatchGetCollectionInput{
+		Names: []string{name},
+	}
+	out, err := conn.BatchGetCollection(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.CollectionDetails == nil || len(out.CollectionDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if len(out.CollectionDetails) > 1 {
+		return nil, tfresource.NewTooManyResultsError(len(out.CollectionDetails), in)
+	}
+
+	return &out.CollectionDetails[0], nil
+}
+
+func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
 	in := &opensearchserverless.GetSecurityConfigInput{
 		Id: aws.String(id),
 	}
@@ -84,7 +116,7 @@ func FindSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Clie
 	return out.SecurityConfigDetail, nil
 }
 
-func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
+func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.SecurityPolicyDetail, error) {
 	in := &opensearchserverless.GetSecurityPolicyInput{
 		Name: aws.String(name),
 		Type: types.SecurityPolicyType(policyType),
@@ -109,7 +141,7 @@ func FindSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	return out.SecurityPolicyDetail, nil
 }
 
-func FindVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
+func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
 	in := &opensearchserverless.BatchGetVpcEndpointInput{
 		Ids: []string{id},
 	}
@@ -132,4 +164,37 @@ func FindVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client,
 	}
 
 	return &out.VpcEndpointDetails[0], nil
+}
+
+func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.LifecyclePolicyDetail, error) {
+	in := &opensearchserverless.BatchGetLifecyclePolicyInput{
+		Identifiers: []types.LifecyclePolicyIdentifier{
+			{
+				Name: aws.String(name),
+				Type: types.LifecyclePolicyType(policyType),
+			},
+		},
+	}
+
+	out, err := conn.BatchGetLifecyclePolicy(ctx, in)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LifecyclePolicyDetails == nil || len(out.LifecyclePolicyDetails) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if len(out.LifecyclePolicyDetails) > 1 {
+		return nil, tfresource.NewTooManyResultsError(len(out.LifecyclePolicyDetails), in)
+	}
+
+	return &out.LifecyclePolicyDetails[0], nil
 }

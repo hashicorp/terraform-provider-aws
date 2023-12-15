@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -8,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -78,6 +82,8 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 }
 
 func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
@@ -105,24 +111,24 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading Default Security Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(sg.GroupId))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := KeyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !newTags.Equal(oldTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
-			return diag.Errorf("updating Default Security Group (%s) tags: %s", d.Id(), err)
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceSecurityGroupUpdate(ctx, d, meta)
+	return append(diags, resourceSecurityGroupUpdate(ctx, d, meta)...)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -76,7 +79,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 
 	in := &sesv2.CreateDedicatedIpPoolInput{
 		PoolName: aws.String(d.Get("pool_name").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("scaling_mode"); ok {
 		in.ScalingMode = types.ScalingMode(v.(string))

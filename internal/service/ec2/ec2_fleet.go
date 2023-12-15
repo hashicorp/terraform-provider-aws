@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -842,7 +845,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_until", aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	SetTagsOut(ctx, fleet.Tags)
+	setTagsOut(ctx, fleet.Tags)
 
 	return diags
 }

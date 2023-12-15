@@ -1,7 +1,7 @@
 // {{ .ListTagsFunc }} lists {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) (tftags.KeyValueTags, error) {
+func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, optFns ...func(*{{ .AWSService }}.Options)) (tftags.KeyValueTags, error) {
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
 		Filters: []*{{ .AWSService  }}.Filter{
@@ -22,7 +22,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 
-	output, err := conn.{{ .ListTagsOp }}(ctx, input)
+	output, err := conn.{{ .ListTagsOp }}(ctx, input, optFns...)
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
@@ -44,12 +44,13 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
 
-// {{ .ListTagsFunc }} lists {{ .ServicePackage }} service tags and set them in Context.
+{{- if .IsDefaultListTags }}
+// {{ .ListTagsFunc | Title }} lists {{ .ServicePackage }} service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
 	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
@@ -62,3 +63,4 @@ func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, iden
 
 	return nil
 }
+{{- end }}

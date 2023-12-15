@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,7 +42,7 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Bucket/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`Bucket/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -48,12 +51,17 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, "force_delete"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+				},
 			},
 		},
 	})
@@ -87,6 +95,9 @@ func TestAccLightsailBucket_BundleId(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+				},
 			},
 			{
 				Config: testAccBucketConfig_bundleId(rName, bundle2),
@@ -153,6 +164,9 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+				},
 			},
 			{
 				Config: testAccBucketConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -228,6 +242,40 @@ func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func TestAccLightsailBucket_forceDelete(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_forceDelete(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+				},
+			},
+		},
+	})
+}
+
 func testAccBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
@@ -269,4 +317,14 @@ resource "aws_lightsail_bucket" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccBucketConfig_forceDelete(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_bucket" "test" {
+  name         = %[1]q
+  bundle_id    = "small_1_0"
+  force_delete = true
+}
+`, rName)
 }

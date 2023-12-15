@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -12,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const mutexLayerKey = `aws_lambda_layer_version`
@@ -123,8 +128,8 @@ func ResourceLayerVersion() *schema.Resource {
 			"source_code_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -198,6 +203,7 @@ func resourceLayerVersionPublish(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.StringValue(result.LayerVersionArn))
+
 	return append(diags, resourceLayerVersionRead(ctx, d, meta)...)
 }
 
@@ -205,94 +211,90 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	layerName, version, err := LayerVersionParseID(d.Id())
+	layerName, versionNumber, err := LayerVersionParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing lambda layer ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	layerVersion, err := conn.GetLayerVersionWithContext(ctx, &lambda.GetLayerVersionInput{
-		LayerName:     aws.String(layerName),
-		VersionNumber: aws.Int64(version),
-	})
+	output, err := FindLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
 
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Lambda Layer Version (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Lambda Layer Version %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Lambda Layer version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("layer_name", layerName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer name: %s", err)
-	}
-	if err := d.Set("version", strconv.FormatInt(version, 10)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer version: %s", err)
-	}
-	if err := d.Set("arn", layerVersion.LayerVersionArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer version arn: %s", err)
-	}
-	if err := d.Set("layer_arn", layerVersion.LayerArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer arn: %s", err)
-	}
-	if err := d.Set("description", layerVersion.Description); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer description: %s", err)
-	}
-	if err := d.Set("license_info", layerVersion.LicenseInfo); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer license info: %s", err)
-	}
-	if err := d.Set("created_date", layerVersion.CreatedDate); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer created date: %s", err)
-	}
-	if err := d.Set("source_code_hash", layerVersion.Content.CodeSha256); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer source code hash: %s", err)
-	}
-	if err := d.Set("signing_profile_version_arn", layerVersion.Content.SigningProfileVersionArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer signing profile arn: %s", err)
-	}
-	if err := d.Set("signing_job_arn", layerVersion.Content.SigningJobArn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer signing job arn: %s", err)
-	}
-	if err := d.Set("source_code_size", layerVersion.Content.CodeSize); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer source code size: %s", err)
-	}
-	if err := d.Set("compatible_runtimes", flex.FlattenStringList(layerVersion.CompatibleRuntimes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer compatible runtimes: %s", err)
-	}
-
-	if err := d.Set("compatible_architectures", flex.FlattenStringList(layerVersion.CompatibleArchitectures)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda layer compatible architectures: %s", err)
-	}
+	d.Set("arn", output.LayerVersionArn)
+	d.Set("compatible_architectures", aws.StringValueSlice(output.CompatibleArchitectures))
+	d.Set("compatible_runtimes", aws.StringValueSlice(output.CompatibleRuntimes))
+	d.Set("created_date", output.CreatedDate)
+	d.Set("description", output.Description)
+	d.Set("layer_arn", output.LayerArn)
+	d.Set("layer_name", layerName)
+	d.Set("license_info", output.LicenseInfo)
+	d.Set("signing_job_arn", output.Content.SigningJobArn)
+	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
+	d.Set("source_code_hash", output.Content.CodeSha256)
+	d.Set("source_code_size", output.Content.CodeSize)
+	d.Set("version", strconv.FormatInt(versionNumber, 10))
 
 	return diags
 }
 
 func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+
+	if d.Get("skip_destroy").(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
-
-	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
+	layerName, versionNumber, err := LayerVersionParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing lambda layer version: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteLayerVersionWithContext(ctx, &lambda.DeleteLayerVersionInput{
-		LayerName:     aws.String(d.Get("layer_name").(string)),
-		VersionNumber: aws.Int64(version),
+		LayerName:     aws.String(layerName),
+		VersionNumber: aws.Int64(versionNumber),
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Lambda layer %q deleted", d.Get("arn").(string))
 	return diags
+}
+
+func FindLayerVersionByTwoPartKey(ctx context.Context, conn *lambda.Lambda, layerName string, versionNumber int64) (*lambda.GetLayerVersionOutput, error) {
+	input := &lambda.GetLayerVersionInput{
+		LayerName:     aws.String(layerName),
+		VersionNumber: aws.Int64(versionNumber),
+	}
+
+	output, err := conn.GetLayerVersionWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func LayerVersionParseID(id string) (layerName string, version int64, err error) {

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -79,7 +82,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
 					validation.StringLenBetween(1, 1024),
 				),
 			},
@@ -89,7 +92,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
 					validation.StringLenBetween(1, 1024),
 				),
 			},
@@ -107,7 +110,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get("password").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		UserName:    aws.String(d.Get("username").(string)),
 	}
 
@@ -159,7 +162,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
 	}
 
-	SetTagsOut(ctx, filesystem.Tags)
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }

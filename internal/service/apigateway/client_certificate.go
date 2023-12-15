@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -67,7 +70,7 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.GenerateClientCertificateInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -113,7 +116,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("expiration_date", cert.ExpirationDate.String())
 	d.Set("pem_encoded_certificate", cert.PemEncodedCertificate)
 
-	SetTagsOut(ctx, cert.Tags)
+	setTagsOut(ctx, cert.Tags)
 
 	return diags
 }

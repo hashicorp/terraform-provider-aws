@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -75,7 +78,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	userGroupID := d.Get("user_group_id").(string)
 	input := &elasticache.CreateUserGroupInput{
 		Engine:      aws.String(d.Get("engine").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		UserGroupId: aws.String(userGroupID),
 	}
 
@@ -103,7 +106,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.

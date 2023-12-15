@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -263,7 +266,6 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 0,
-					MaxItems: 50,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"virtual_service": {
@@ -974,7 +976,7 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		VirtualNodeName: aws.String(name),
 	}
 

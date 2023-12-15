@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity
 
 import (
@@ -131,7 +134,7 @@ func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 		AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),
 		AllowClassicFlow:               aws.Bool(d.Get("allow_classic_flow").(bool)),
-		IdentityPoolTags:               GetTagsIn(ctx),
+		IdentityPoolTags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("developer_provider_name"); ok {
@@ -178,7 +181,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -194,7 +197,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
 
-	SetTagsOut(ctx, ip.IdentityPoolTags)
+	setTagsOut(ctx, ip.IdentityPoolTags)
 
 	if err := d.Set("cognito_identity_providers", flattenIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cognito_identity_providers error: %s", err)

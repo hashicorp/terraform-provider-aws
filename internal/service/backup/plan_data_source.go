@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -58,7 +61,7 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
 	}

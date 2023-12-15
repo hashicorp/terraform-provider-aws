@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -100,7 +103,7 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	in := &sesv2.CreateContactListInput{
 		ContactListName: aws.String(d.Get("contact_list_name").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

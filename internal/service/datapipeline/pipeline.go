@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline
 
 import (
@@ -61,7 +64,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get("name").(string)),
 		UniqueId: aws.String(uniqueID),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -96,7 +99,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
 
-	SetTagsOut(ctx, v.Tags)
+	setTagsOut(ctx, v.Tags)
 
 	return diags
 }
@@ -128,7 +131,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	if err := WaitForDeletion(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func PipelineRetrieve(ctx context.Context, id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {

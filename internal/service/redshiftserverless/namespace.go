@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -110,7 +113,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{
 		NamespaceName: aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_password"); ok {
@@ -256,7 +259,7 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 var (
-	reIAMRole = regexp.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
+	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
 )
 
 func flattenNamespaceIAMRoles(iamRoles []*string) []string {

@@ -3,1964 +3,1127 @@ package conns
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go-v2/service/account"
-	"github.com/aws/aws-sdk-go-v2/service/acm"
-	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
-	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
+	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
+	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
+	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
+	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
+	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
+	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
+	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
+	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
+	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/comprehend"
-	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
+	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
+	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
+	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
+	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
+	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
+	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
+	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/finspace"
-	"github.com/aws/aws-sdk-go-v2/service/fis"
-	"github.com/aws/aws-sdk-go-v2/service/glacier"
-	"github.com/aws/aws-sdk-go-v2/service/healthlake"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/aws/aws-sdk-go-v2/service/ivschat"
-	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
+	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
+	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
+	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
+	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
+	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
+	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
+	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
+	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
+	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
+	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
+	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
+	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
+	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
+	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
+	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
-	"github.com/aws/aws-sdk-go-v2/service/lightsail"
-	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/pipes"
-	"github.com/aws/aws-sdk-go-v2/service/rbin"
+	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
+	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
+	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
+	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
+	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
+	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
+	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
+	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
+	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
+	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
+	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
+	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
-	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
-	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
+	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
+	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
+	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
+	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
-	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/aws/aws-sdk-go-v2/service/securitylake"
-	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
+	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
+	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
+	sns_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sns"
+	sqs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sqs"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
-	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
-	"github.com/aws/aws-sdk-go-v2/service/swf"
-	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/xray"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/aws/aws-sdk-go/service/amplifybackend"
-	"github.com/aws/aws-sdk-go/service/amplifyuibuilder"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/aws/aws-sdk-go/service/apigatewaymanagementapi"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/aws/aws-sdk-go/service/appconfigdata"
-	"github.com/aws/aws-sdk-go/service/appflow"
-	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/aws/aws-sdk-go/service/applicationcostprofiler"
-	"github.com/aws/aws-sdk-go/service/applicationdiscoveryservice"
-	"github.com/aws/aws-sdk-go/service/applicationinsights"
-	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/aws/aws-sdk-go/service/appregistry"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/aws/aws-sdk-go/service/augmentedairuntime"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/aws/aws-sdk-go/service/backupgateway"
-	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/aws/aws-sdk-go/service/billingconductor"
-	"github.com/aws/aws-sdk-go/service/braket"
-	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
-	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
-	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/aws/aws-sdk-go/service/clouddirectory"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/aws/aws-sdk-go/service/cloudsearch"
-	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
-	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/aws/aws-sdk-go/service/codeguruprofiler"
-	"github.com/aws/aws-sdk-go/service/codegurureviewer"
-	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/aws/aws-sdk-go/service/codestar"
-	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/aws/aws-sdk-go/service/codestarnotifications"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/cognitosync"
-	"github.com/aws/aws-sdk-go/service/comprehendmedical"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/aws/aws-sdk-go/service/connectcontactlens"
-	"github.com/aws/aws-sdk-go/service/connectparticipant"
-	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
-	"github.com/aws/aws-sdk-go/service/controltower"
-	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
-	"github.com/aws/aws-sdk-go/service/customerprofiles"
-	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/aws/aws-sdk-go/service/dataexchange"
-	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/aws/aws-sdk-go/service/devopsguru"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/aws/aws-sdk-go/service/dlm"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/aws/aws-sdk-go/service/drs"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodbstreams"
-	"github.com/aws/aws-sdk-go/service/ebs"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/ec2instanceconnect"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/aws/aws-sdk-go/service/elasticinference"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/aws/aws-sdk-go/service/emrserverless"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/aws/aws-sdk-go/service/finspacedata"
-	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/aws/aws-sdk-go/service/forecastqueryservice"
-	"github.com/aws/aws-sdk-go/service/forecastservice"
-	"github.com/aws/aws-sdk-go/service/frauddetector"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/aws/aws-sdk-go/service/gluedatabrew"
-	"github.com/aws/aws-sdk-go/service/greengrass"
-	"github.com/aws/aws-sdk-go/service/greengrassv2"
-	"github.com/aws/aws-sdk-go/service/groundstation"
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/aws/aws-sdk-go/service/health"
-	"github.com/aws/aws-sdk-go/service/honeycode"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/aws/aws-sdk-go/service/internetmonitor"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
-	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
-	"github.com/aws/aws-sdk-go/service/iotanalytics"
-	"github.com/aws/aws-sdk-go/service/iotdataplane"
-	"github.com/aws/aws-sdk-go/service/iotdeviceadvisor"
-	"github.com/aws/aws-sdk-go/service/iotevents"
-	"github.com/aws/aws-sdk-go/service/ioteventsdata"
-	"github.com/aws/aws-sdk-go/service/iotfleethub"
-	"github.com/aws/aws-sdk-go/service/iotjobsdataplane"
-	"github.com/aws/aws-sdk-go/service/iotsecuretunneling"
-	"github.com/aws/aws-sdk-go/service/iotsitewise"
-	"github.com/aws/aws-sdk-go/service/iotthingsgraph"
-	"github.com/aws/aws-sdk-go/service/iottwinmaker"
-	"github.com/aws/aws-sdk-go/service/iotwireless"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/aws/aws-sdk-go/service/keyspaces"
-	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
-	"github.com/aws/aws-sdk-go/service/kinesisvideo"
-	"github.com/aws/aws-sdk-go/service/kinesisvideoarchivedmedia"
-	"github.com/aws/aws-sdk-go/service/kinesisvideomedia"
-	"github.com/aws/aws-sdk-go/service/kinesisvideosignalingchannels"
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/aws/aws-sdk-go/service/lexmodelsv2"
-	"github.com/aws/aws-sdk-go/service/lexruntimeservice"
-	"github.com/aws/aws-sdk-go/service/lexruntimev2"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/aws/aws-sdk-go/service/lookoutequipment"
-	"github.com/aws/aws-sdk-go/service/lookoutforvision"
-	"github.com/aws/aws-sdk-go/service/lookoutmetrics"
-	"github.com/aws/aws-sdk-go/service/machinelearning"
-	"github.com/aws/aws-sdk-go/service/macie"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/aws/aws-sdk-go/service/managedblockchain"
-	"github.com/aws/aws-sdk-go/service/managedgrafana"
-	"github.com/aws/aws-sdk-go/service/marketplacecatalog"
-	"github.com/aws/aws-sdk-go/service/marketplacecommerceanalytics"
-	"github.com/aws/aws-sdk-go/service/marketplaceentitlementservice"
-	"github.com/aws/aws-sdk-go/service/marketplacemetering"
-	"github.com/aws/aws-sdk-go/service/mediaconnect"
-	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/aws/aws-sdk-go/service/mediapackagevod"
-	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/aws/aws-sdk-go/service/mediastoredata"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/aws/aws-sdk-go/service/mgn"
-	"github.com/aws/aws-sdk-go/service/migrationhub"
-	"github.com/aws/aws-sdk-go/service/migrationhubconfig"
-	"github.com/aws/aws-sdk-go/service/migrationhubrefactorspaces"
-	"github.com/aws/aws-sdk-go/service/migrationhubstrategyrecommendations"
-	"github.com/aws/aws-sdk-go/service/mobile"
-	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/aws/aws-sdk-go/service/mturk"
-	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/aws/aws-sdk-go/service/nimblestudio"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/aws/aws-sdk-go/service/opsworkscm"
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/panorama"
-	"github.com/aws/aws-sdk-go/service/personalize"
-	"github.com/aws/aws-sdk-go/service/personalizeevents"
-	"github.com/aws/aws-sdk-go/service/personalizeruntime"
-	"github.com/aws/aws-sdk-go/service/pi"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/aws/aws-sdk-go/service/pinpointemail"
-	"github.com/aws/aws-sdk-go/service/pinpointsmsvoice"
-	"github.com/aws/aws-sdk-go/service/polly"
-	"github.com/aws/aws-sdk-go/service/pricing"
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/aws/aws-sdk-go/service/proton"
-	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/aws/aws-sdk-go/service/qldbsession"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/aws/aws-sdk-go/service/rdsdataservice"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/aws/aws-sdk-go/service/rekognition"
-	"github.com/aws/aws-sdk-go/service/resiliencehub"
-	"github.com/aws/aws-sdk-go/service/resourcegroups"
-	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
-	"github.com/aws/aws-sdk-go/service/robomaker"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/aws/aws-sdk-go/service/route53recoverycluster"
-	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/aws/aws-sdk-go/service/s3outposts"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/aws/aws-sdk-go/service/sagemakeredgemanager"
-	"github.com/aws/aws-sdk-go/service/sagemakerfeaturestoreruntime"
-	"github.com/aws/aws-sdk-go/service/sagemakerruntime"
-	"github.com/aws/aws-sdk-go/service/savingsplans"
-	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/aws/aws-sdk-go/service/simpledb"
-	"github.com/aws/aws-sdk-go/service/sms"
-	"github.com/aws/aws-sdk-go/service/snowball"
-	"github.com/aws/aws-sdk-go/service/snowdevicemanagement"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/sso"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/aws/aws-sdk-go/service/ssooidc"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/aws/aws-sdk-go/service/support"
-	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/aws/aws-sdk-go/service/textract"
-	"github.com/aws/aws-sdk-go/service/timestreamquery"
-	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/aws/aws-sdk-go/service/transcribestreamingservice"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/aws/aws-sdk-go/service/translate"
-	"github.com/aws/aws-sdk-go/service/voiceid"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/aws/aws-sdk-go/service/wellarchitected"
-	"github.com/aws/aws-sdk-go/service/workdocs"
-	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/aws/aws-sdk-go/service/workmail"
-	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/aws/aws-sdk-go/service/workspacesweb"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
+	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
+	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
+	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
+	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
+	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
+	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
+	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
+	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
+	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
+	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
+	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
+	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
+	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
+	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
+	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
+	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
+	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
+	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
+	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
+	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
+	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
+	budgets_sdkv1 "github.com/aws/aws-sdk-go/service/budgets"
+	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
+	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
+	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
+	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
+	cloudhsmv2_sdkv1 "github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	cloudsearch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudsearch"
+	cloudtrail_sdkv1 "github.com/aws/aws-sdk-go/service/cloudtrail"
+	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
+	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
+	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
+	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
+	codecommit_sdkv1 "github.com/aws/aws-sdk-go/service/codecommit"
+	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
+	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
+	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
+	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
+	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
+	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
+	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
+	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
+	datasync_sdkv1 "github.com/aws/aws-sdk-go/service/datasync"
+	dax_sdkv1 "github.com/aws/aws-sdk-go/service/dax"
+	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
+	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
+	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
+	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
+	dlm_sdkv1 "github.com/aws/aws-sdk-go/service/dlm"
+	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
+	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
+	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
+	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
+	ecrpublic_sdkv1 "github.com/aws/aws-sdk-go/service/ecrpublic"
+	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
+	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
+	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
+	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
+	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
+	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
+	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
+	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
+	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
+	firehose_sdkv1 "github.com/aws/aws-sdk-go/service/firehose"
+	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
+	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
+	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
+	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
+	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
+	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
+	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
+	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
+	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
+	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
+	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
+	iotevents_sdkv1 "github.com/aws/aws-sdk-go/service/iotevents"
+	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
+	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
+	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
+	kinesis_sdkv1 "github.com/aws/aws-sdk-go/service/kinesis"
+	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
+	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
+	lakeformation_sdkv1 "github.com/aws/aws-sdk-go/service/lakeformation"
+	lambda_sdkv1 "github.com/aws/aws-sdk-go/service/lambda"
+	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
+	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
+	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
+	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
+	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
+	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
+	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
+	mq_sdkv1 "github.com/aws/aws-sdk-go/service/mq"
+	mwaa_sdkv1 "github.com/aws/aws-sdk-go/service/mwaa"
+	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
+	networkfirewall_sdkv1 "github.com/aws/aws-sdk-go/service/networkfirewall"
+	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
+	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
+	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
+	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
+	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
+	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
+	prometheusservice_sdkv1 "github.com/aws/aws-sdk-go/service/prometheusservice"
+	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
+	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
+	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
+	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
+	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
+	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
+	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
+	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
+	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
+	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
+	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
+	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
+	secretsmanager_sdkv1 "github.com/aws/aws-sdk-go/service/secretsmanager"
+	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
+	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
+	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
+	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
+	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
+	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
+	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
+	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
+	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
+	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
+	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
+	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
+	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
+	wafregional_sdkv1 "github.com/aws/aws-sdk-go/service/wafregional"
+	wafv2_sdkv1 "github.com/aws/aws-sdk-go/service/wafv2"
+	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type AWSClient struct {
-	AccountID               string
-	DefaultTagsConfig       *tftags.DefaultConfig
-	DNSSuffix               string
-	IgnoreTagsConfig        *tftags.IgnoreConfig
-	MediaConvertAccountConn *mediaconvert.MediaConvert
-	Partition               string
-	Region                  string
-	ReverseDNSPrefix        string
-	ServicePackages         map[string]ServicePackage
-	Session                 *session.Session
-	TerraformVersion        string
-
-	httpClient *http.Client
-
-	dsClient        lazyClient[*directoryservice_sdkv2.Client]
-	ec2Client       lazyClient[*ec2_sdkv2.Client]
-	lambdaClient    lazyClient[*lambda_sdkv2.Client]
-	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
-	rdsClient       lazyClient[*rds_sdkv2.Client]
-	s3controlClient lazyClient[*s3control_sdkv2.Client]
-	ssmClient       lazyClient[*ssm_sdkv2.Client]
-
-	acmClient                        *acm.Client
-	acmpcaConn                       *acmpca.ACMPCA
-	ampConn                          *prometheusservice.PrometheusService
-	apigatewayConn                   *apigateway.APIGateway
-	apigatewaymanagementapiConn      *apigatewaymanagementapi.ApiGatewayManagementApi
-	apigatewayv2Conn                 *apigatewayv2.ApiGatewayV2
-	accessanalyzerClient             *accessanalyzer.Client
-	accountClient                    *account.Client
-	alexaforbusinessConn             *alexaforbusiness.AlexaForBusiness
-	amplifyConn                      *amplify.Amplify
-	amplifybackendConn               *amplifybackend.AmplifyBackend
-	amplifyuibuilderConn             *amplifyuibuilder.AmplifyUIBuilder
-	applicationautoscalingConn       *applicationautoscaling.ApplicationAutoScaling
-	appconfigConn                    *appconfig.AppConfig
-	appconfigdataConn                *appconfigdata.AppConfigData
-	appflowConn                      *appflow.Appflow
-	appintegrationsConn              *appintegrationsservice.AppIntegrationsService
-	appmeshConn                      *appmesh.AppMesh
-	apprunnerConn                    *apprunner.AppRunner
-	appstreamConn                    *appstream.AppStream
-	appsyncConn                      *appsync.AppSync
-	applicationcostprofilerConn      *applicationcostprofiler.ApplicationCostProfiler
-	applicationinsightsConn          *applicationinsights.ApplicationInsights
-	athenaConn                       *athena.Athena
-	auditmanagerClient               *auditmanager.Client
-	autoscalingConn                  *autoscaling.AutoScaling
-	autoscalingplansConn             *autoscalingplans.AutoScalingPlans
-	backupConn                       *backup.Backup
-	backupgatewayConn                *backupgateway.BackupGateway
-	batchConn                        *batch.Batch
-	billingconductorConn             *billingconductor.BillingConductor
-	braketConn                       *braket.Braket
-	budgetsConn                      *budgets.Budgets
-	ceConn                           *costexplorer.CostExplorer
-	curConn                          *costandusagereportservice.CostandUsageReportService
-	chimeConn                        *chime.Chime
-	chimesdkidentityConn             *chimesdkidentity.ChimeSDKIdentity
-	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
-	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
-	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
-	chimesdkvoiceConn                *chimesdkvoice.ChimeSDKVoice
-	cleanroomsClient                 *cleanrooms.Client
-	cloud9Conn                       *cloud9.Cloud9
-	cloudcontrolClient               *cloudcontrol.Client
-	clouddirectoryConn               *clouddirectory.CloudDirectory
-	cloudformationConn               *cloudformation.CloudFormation
-	cloudfrontConn                   *cloudfront.CloudFront
-	cloudhsmv2Conn                   *cloudhsmv2.CloudHSMV2
-	cloudsearchConn                  *cloudsearch.CloudSearch
-	cloudsearchdomainConn            *cloudsearchdomain.CloudSearchDomain
-	cloudtrailConn                   *cloudtrail.CloudTrail
-	cloudwatchConn                   *cloudwatch.CloudWatch
-	codeartifactConn                 *codeartifact.CodeArtifact
-	codebuildConn                    *codebuild.CodeBuild
-	codecommitConn                   *codecommit.CodeCommit
-	codeguruprofilerConn             *codeguruprofiler.CodeGuruProfiler
-	codegurureviewerConn             *codegurureviewer.CodeGuruReviewer
-	codepipelineConn                 *codepipeline.CodePipeline
-	codestarConn                     *codestar.CodeStar
-	codestarconnectionsConn          *codestarconnections.CodeStarConnections
-	codestarnotificationsConn        *codestarnotifications.CodeStarNotifications
-	cognitoidpConn                   *cognitoidentityprovider.CognitoIdentityProvider
-	cognitoidentityConn              *cognitoidentity.CognitoIdentity
-	cognitosyncConn                  *cognitosync.CognitoSync
-	comprehendClient                 *comprehend.Client
-	comprehendmedicalConn            *comprehendmedical.ComprehendMedical
-	computeoptimizerClient           *computeoptimizer.Client
-	configserviceConn                *configservice.ConfigService
-	connectConn                      *connect.Connect
-	connectcontactlensConn           *connectcontactlens.ConnectContactLens
-	connectparticipantConn           *connectparticipant.ConnectParticipant
-	controltowerConn                 *controltower.ControlTower
-	customerprofilesConn             *customerprofiles.CustomerProfiles
-	daxConn                          *dax.DAX
-	dlmConn                          *dlm.DLM
-	dmsConn                          *databasemigrationservice.DatabaseMigrationService
-	drsConn                          *drs.Drs
-	dsConn                           *directoryservice.DirectoryService
-	databrewConn                     *gluedatabrew.GlueDataBrew
-	dataexchangeConn                 *dataexchange.DataExchange
-	datapipelineConn                 *datapipeline.DataPipeline
-	datasyncConn                     *datasync.DataSync
-	deployConn                       *codedeploy.CodeDeploy
-	detectiveConn                    *detective.Detective
-	devopsguruConn                   *devopsguru.DevOpsGuru
-	devicefarmConn                   *devicefarm.DeviceFarm
-	directconnectConn                *directconnect.DirectConnect
-	discoveryConn                    *applicationdiscoveryservice.ApplicationDiscoveryService
-	docdbConn                        *docdb.DocDB
-	docdbelasticClient               *docdbelastic.Client
-	dynamodbConn                     *dynamodb.DynamoDB
-	dynamodbstreamsConn              *dynamodbstreams.DynamoDBStreams
-	ebsConn                          *ebs.EBS
-	ec2Conn                          *ec2.EC2
-	ec2instanceconnectConn           *ec2instanceconnect.EC2InstanceConnect
-	ecrConn                          *ecr.ECR
-	ecrpublicConn                    *ecrpublic.ECRPublic
-	ecsConn                          *ecs.ECS
-	efsConn                          *efs.EFS
-	eksConn                          *eks.EKS
-	elbConn                          *elb.ELB
-	elbv2Conn                        *elbv2.ELBV2
-	emrConn                          *emr.EMR
-	emrcontainersConn                *emrcontainers.EMRContainers
-	emrserverlessConn                *emrserverless.EMRServerless
-	elasticacheConn                  *elasticache.ElastiCache
-	elasticbeanstalkConn             *elasticbeanstalk.ElasticBeanstalk
-	elasticinferenceConn             *elasticinference.ElasticInference
-	elastictranscoderConn            *elastictranscoder.ElasticTranscoder
-	esConn                           *elasticsearchservice.ElasticsearchService
-	eventsConn                       *eventbridge.EventBridge
-	evidentlyConn                    *cloudwatchevidently.CloudWatchEvidently
-	fisClient                        *fis.Client
-	fmsConn                          *fms.FMS
-	fsxConn                          *fsx.FSx
-	finspaceClient                   *finspace.Client
-	finspacedataConn                 *finspacedata.FinSpaceData
-	firehoseConn                     *firehose.Firehose
-	forecastConn                     *forecastservice.ForecastService
-	forecastqueryConn                *forecastqueryservice.ForecastQueryService
-	frauddetectorConn                *frauddetector.FraudDetector
-	gameliftConn                     *gamelift.GameLift
-	glacierClient                    *glacier.Client
-	globalacceleratorConn            *globalaccelerator.GlobalAccelerator
-	glueConn                         *glue.Glue
-	grafanaConn                      *managedgrafana.ManagedGrafana
-	greengrassConn                   *greengrass.Greengrass
-	greengrassv2Conn                 *greengrassv2.GreengrassV2
-	groundstationConn                *groundstation.GroundStation
-	guarddutyConn                    *guardduty.GuardDuty
-	healthConn                       *health.Health
-	healthlakeClient                 *healthlake.Client
-	honeycodeConn                    *honeycode.Honeycode
-	iamConn                          *iam.IAM
-	ivsConn                          *ivs.IVS
-	ivschatClient                    *ivschat.Client
-	identitystoreClient              *identitystore.Client
-	imagebuilderConn                 *imagebuilder.Imagebuilder
-	inspectorConn                    *inspector.Inspector
-	inspector2Client                 *inspector2.Client
-	internetmonitorConn              *internetmonitor.InternetMonitor
-	iotConn                          *iot.IoT
-	iot1clickdevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
-	iot1clickprojectsConn            *iot1clickprojects.IoT1ClickProjects
-	iotanalyticsConn                 *iotanalytics.IoTAnalytics
-	iotdataConn                      *iotdataplane.IoTDataPlane
-	iotdeviceadvisorConn             *iotdeviceadvisor.IoTDeviceAdvisor
-	ioteventsConn                    *iotevents.IoTEvents
-	ioteventsdataConn                *ioteventsdata.IoTEventsData
-	iotfleethubConn                  *iotfleethub.IoTFleetHub
-	iotjobsdataConn                  *iotjobsdataplane.IoTJobsDataPlane
-	iotsecuretunnelingConn           *iotsecuretunneling.IoTSecureTunneling
-	iotsitewiseConn                  *iotsitewise.IoTSiteWise
-	iotthingsgraphConn               *iotthingsgraph.IoTThingsGraph
-	iottwinmakerConn                 *iottwinmaker.IoTTwinMaker
-	iotwirelessConn                  *iotwireless.IoTWireless
-	kmsConn                          *kms.KMS
-	kafkaConn                        *kafka.Kafka
-	kafkaconnectConn                 *kafkaconnect.KafkaConnect
-	kendraClient                     *kendra.Client
-	keyspacesConn                    *keyspaces.Keyspaces
-	kinesisConn                      *kinesis.Kinesis
-	kinesisanalyticsConn             *kinesisanalytics.KinesisAnalytics
-	kinesisanalyticsv2Conn           *kinesisanalyticsv2.KinesisAnalyticsV2
-	kinesisvideoConn                 *kinesisvideo.KinesisVideo
-	kinesisvideoarchivedmediaConn    *kinesisvideoarchivedmedia.KinesisVideoArchivedMedia
-	kinesisvideomediaConn            *kinesisvideomedia.KinesisVideoMedia
-	kinesisvideosignalingConn        *kinesisvideosignalingchannels.KinesisVideoSignalingChannels
-	lakeformationConn                *lakeformation.LakeFormation
-	lambdaConn                       *lambda.Lambda
-	lexmodelsConn                    *lexmodelbuildingservice.LexModelBuildingService
-	lexmodelsv2Conn                  *lexmodelsv2.LexModelsV2
-	lexruntimeConn                   *lexruntimeservice.LexRuntimeService
-	lexruntimev2Conn                 *lexruntimev2.LexRuntimeV2
-	licensemanagerConn               *licensemanager.LicenseManager
-	lightsailClient                  *lightsail.Client
-	locationConn                     *locationservice.LocationService
-	logsConn                         *cloudwatchlogs.CloudWatchLogs
-	lookoutequipmentConn             *lookoutequipment.LookoutEquipment
-	lookoutmetricsConn               *lookoutmetrics.LookoutMetrics
-	lookoutvisionConn                *lookoutforvision.LookoutForVision
-	mqConn                           *mq.MQ
-	mturkConn                        *mturk.MTurk
-	mwaaConn                         *mwaa.MWAA
-	machinelearningConn              *machinelearning.MachineLearning
-	macieConn                        *macie.Macie
-	macie2Conn                       *macie2.Macie2
-	managedblockchainConn            *managedblockchain.ManagedBlockchain
-	marketplacecatalogConn           *marketplacecatalog.MarketplaceCatalog
-	marketplacecommerceanalyticsConn *marketplacecommerceanalytics.MarketplaceCommerceAnalytics
-	marketplaceentitlementConn       *marketplaceentitlementservice.MarketplaceEntitlementService
-	marketplacemeteringConn          *marketplacemetering.MarketplaceMetering
-	mediaconnectConn                 *mediaconnect.MediaConnect
-	mediaconvertConn                 *mediaconvert.MediaConvert
-	medialiveClient                  *medialive.Client
-	mediapackageConn                 *mediapackage.MediaPackage
-	mediapackagevodConn              *mediapackagevod.MediaPackageVod
-	mediastoreConn                   *mediastore.MediaStore
-	mediastoredataConn               *mediastoredata.MediaStoreData
-	mediatailorConn                  *mediatailor.MediaTailor
-	memorydbConn                     *memorydb.MemoryDB
-	mghConn                          *migrationhub.MigrationHub
-	mgnConn                          *mgn.Mgn
-	migrationhubconfigConn           *migrationhubconfig.MigrationHubConfig
-	migrationhubrefactorspacesConn   *migrationhubrefactorspaces.MigrationHubRefactorSpaces
-	migrationhubstrategyConn         *migrationhubstrategyrecommendations.MigrationHubStrategyRecommendations
-	mobileConn                       *mobile.Mobile
-	neptuneConn                      *neptune.Neptune
-	networkfirewallConn              *networkfirewall.NetworkFirewall
-	networkmanagerConn               *networkmanager.NetworkManager
-	nimbleConn                       *nimblestudio.NimbleStudio
-	oamClient                        *oam.Client
-	opensearchConn                   *opensearchservice.OpenSearchService
-	opensearchserverlessClient       *opensearchserverless.Client
-	opsworksConn                     *opsworks.OpsWorks
-	opsworkscmConn                   *opsworkscm.OpsWorksCM
-	organizationsConn                *organizations.Organizations
-	outpostsConn                     *outposts.Outposts
-	piConn                           *pi.PI
-	panoramaConn                     *panorama.Panorama
-	personalizeConn                  *personalize.Personalize
-	personalizeeventsConn            *personalizeevents.PersonalizeEvents
-	personalizeruntimeConn           *personalizeruntime.PersonalizeRuntime
-	pinpointConn                     *pinpoint.Pinpoint
-	pinpointemailConn                *pinpointemail.PinpointEmail
-	pinpointsmsvoiceConn             *pinpointsmsvoice.PinpointSMSVoice
-	pipesClient                      *pipes.Client
-	pollyConn                        *polly.Polly
-	pricingConn                      *pricing.Pricing
-	protonConn                       *proton.Proton
-	qldbConn                         *qldb.QLDB
-	qldbsessionConn                  *qldbsession.QLDBSession
-	quicksightConn                   *quicksight.QuickSight
-	ramConn                          *ram.RAM
-	rbinClient                       *rbin.Client
-	rdsConn                          *rds.RDS
-	rdsdataConn                      *rdsdataservice.RDSDataService
-	rumConn                          *cloudwatchrum.CloudWatchRUM
-	redshiftConn                     *redshift.Redshift
-	redshiftdataConn                 *redshiftdataapiservice.RedshiftDataAPIService
-	redshiftserverlessConn           *redshiftserverless.RedshiftServerless
-	rekognitionConn                  *rekognition.Rekognition
-	resiliencehubConn                *resiliencehub.ResilienceHub
-	resourceexplorer2Client          *resourceexplorer2.Client
-	resourcegroupsConn               *resourcegroups.ResourceGroups
-	resourcegroupstaggingapiConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
-	robomakerConn                    *robomaker.RoboMaker
-	rolesanywhereClient              *rolesanywhere.Client
-	route53Conn                      *route53.Route53
-	route53domainsClient             *route53domains.Client
-	route53recoveryclusterConn       *route53recoverycluster.Route53RecoveryCluster
-	route53recoverycontrolconfigConn *route53recoverycontrolconfig.Route53RecoveryControlConfig
-	route53recoveryreadinessConn     *route53recoveryreadiness.Route53RecoveryReadiness
-	route53resolverConn              *route53resolver.Route53Resolver
-	s3Conn                           *s3.S3
-	s3controlConn                    *s3control.S3Control
-	s3outpostsConn                   *s3outposts.S3Outposts
-	sesConn                          *ses.SES
-	sesv2Client                      *sesv2.Client
-	sfnConn                          *sfn.SFN
-	smsConn                          *sms.SMS
-	snsConn                          *sns.SNS
-	sqsConn                          *sqs.SQS
-	ssmConn                          *ssm.SSM
-	ssmcontactsClient                *ssmcontacts.Client
-	ssmincidentsClient               *ssmincidents.Client
-	ssoConn                          *sso.SSO
-	ssoadminConn                     *ssoadmin.SSOAdmin
-	ssooidcConn                      *ssooidc.SSOOIDC
-	stsConn                          *sts.STS
-	swfClient                        *swf.Client
-	sagemakerConn                    *sagemaker.SageMaker
-	sagemakera2iruntimeConn          *augmentedairuntime.AugmentedAIRuntime
-	sagemakeredgeConn                *sagemakeredgemanager.SagemakerEdgeManager
-	sagemakerfeaturestoreruntimeConn *sagemakerfeaturestoreruntime.SageMakerFeatureStoreRuntime
-	sagemakerruntimeConn             *sagemakerruntime.SageMakerRuntime
-	savingsplansConn                 *savingsplans.SavingsPlans
-	schedulerClient                  *scheduler.Client
-	schemasConn                      *schemas.Schemas
-	secretsmanagerConn               *secretsmanager.SecretsManager
-	securityhubConn                  *securityhub.SecurityHub
-	securitylakeClient               *securitylake.Client
-	serverlessrepoConn               *serverlessapplicationrepository.ServerlessApplicationRepository
-	servicecatalogConn               *servicecatalog.ServiceCatalog
-	servicecatalogappregistryConn    *appregistry.AppRegistry
-	servicediscoveryConn             *servicediscovery.ServiceDiscovery
-	servicequotasConn                *servicequotas.ServiceQuotas
-	shieldConn                       *shield.Shield
-	signerConn                       *signer.Signer
-	sdbConn                          *simpledb.SimpleDB
-	snowdevicemanagementConn         *snowdevicemanagement.SnowDeviceManagement
-	snowballConn                     *snowball.Snowball
-	storagegatewayConn               *storagegateway.StorageGateway
-	supportConn                      *support.Support
-	syntheticsConn                   *synthetics.Synthetics
-	textractConn                     *textract.Textract
-	timestreamqueryConn              *timestreamquery.TimestreamQuery
-	timestreamwriteConn              *timestreamwrite.TimestreamWrite
-	transcribeClient                 *transcribe.Client
-	transcribestreamingConn          *transcribestreamingservice.TranscribeStreamingService
-	transferConn                     *transfer.Transfer
-	translateConn                    *translate.Translate
-	vpclatticeClient                 *vpclattice.Client
-	voiceidConn                      *voiceid.VoiceID
-	wafConn                          *waf.WAF
-	wafregionalConn                  *wafregional.WAFRegional
-	wafv2Conn                        *wafv2.WAFV2
-	wellarchitectedConn              *wellarchitected.WellArchitected
-	wisdomConn                       *connectwisdomservice.ConnectWisdomService
-	workdocsConn                     *workdocs.WorkDocs
-	worklinkConn                     *worklink.WorkLink
-	workmailConn                     *workmail.WorkMail
-	workmailmessageflowConn          *workmailmessageflow.WorkMailMessageFlow
-	workspacesConn                   *workspaces.WorkSpaces
-	workspaceswebConn                *workspacesweb.WorkSpacesWeb
-	xrayClient                       *xray.Client
-}
-
-func (client *AWSClient) ACMClient(context.Context) *acm.Client {
-	return client.acmClient
-}
-
-func (client *AWSClient) ACMPCAConn(context.Context) *acmpca.ACMPCA {
-	return client.acmpcaConn
-}
-
-func (client *AWSClient) AMPConn(context.Context) *prometheusservice.PrometheusService {
-	return client.ampConn
-}
-
-func (client *AWSClient) APIGatewayConn(context.Context) *apigateway.APIGateway {
-	return client.apigatewayConn
-}
-
-func (client *AWSClient) APIGatewayManagementAPIConn(context.Context) *apigatewaymanagementapi.ApiGatewayManagementApi {
-	return client.apigatewaymanagementapiConn
-}
-
-func (client *AWSClient) APIGatewayV2Conn(context.Context) *apigatewayv2.ApiGatewayV2 {
-	return client.apigatewayv2Conn
-}
-
-func (client *AWSClient) AccessAnalyzerClient(context.Context) *accessanalyzer.Client {
-	return client.accessanalyzerClient
-}
-
-func (client *AWSClient) AccountClient(context.Context) *account.Client {
-	return client.accountClient
-}
-
-func (client *AWSClient) AlexaForBusinessConn(context.Context) *alexaforbusiness.AlexaForBusiness {
-	return client.alexaforbusinessConn
-}
-
-func (client *AWSClient) AmplifyConn(context.Context) *amplify.Amplify {
-	return client.amplifyConn
-}
-
-func (client *AWSClient) AmplifyBackendConn(context.Context) *amplifybackend.AmplifyBackend {
-	return client.amplifybackendConn
-}
-
-func (client *AWSClient) AmplifyUIBuilderConn(context.Context) *amplifyuibuilder.AmplifyUIBuilder {
-	return client.amplifyuibuilderConn
-}
-
-func (client *AWSClient) AppAutoScalingConn(context.Context) *applicationautoscaling.ApplicationAutoScaling {
-	return client.applicationautoscalingConn
-}
-
-func (client *AWSClient) AppConfigConn(context.Context) *appconfig.AppConfig {
-	return client.appconfigConn
-}
-
-func (client *AWSClient) AppConfigDataConn(context.Context) *appconfigdata.AppConfigData {
-	return client.appconfigdataConn
-}
-
-func (client *AWSClient) AppFlowConn(context.Context) *appflow.Appflow {
-	return client.appflowConn
-}
-
-func (client *AWSClient) AppIntegrationsConn(context.Context) *appintegrationsservice.AppIntegrationsService {
-	return client.appintegrationsConn
-}
-
-func (client *AWSClient) AppMeshConn(context.Context) *appmesh.AppMesh {
-	return client.appmeshConn
-}
-
-func (client *AWSClient) AppRunnerConn(context.Context) *apprunner.AppRunner {
-	return client.apprunnerConn
-}
-
-func (client *AWSClient) AppStreamConn(context.Context) *appstream.AppStream {
-	return client.appstreamConn
-}
-
-func (client *AWSClient) AppSyncConn(context.Context) *appsync.AppSync {
-	return client.appsyncConn
-}
-
-func (client *AWSClient) ApplicationCostProfilerConn(context.Context) *applicationcostprofiler.ApplicationCostProfiler {
-	return client.applicationcostprofilerConn
-}
-
-func (client *AWSClient) ApplicationInsightsConn(context.Context) *applicationinsights.ApplicationInsights {
-	return client.applicationinsightsConn
-}
-
-func (client *AWSClient) AthenaConn(context.Context) *athena.Athena {
-	return client.athenaConn
-}
-
-func (client *AWSClient) AuditManagerClient(context.Context) *auditmanager.Client {
-	return client.auditmanagerClient
-}
-
-func (client *AWSClient) AutoScalingConn(context.Context) *autoscaling.AutoScaling {
-	return client.autoscalingConn
-}
-
-func (client *AWSClient) AutoScalingPlansConn(context.Context) *autoscalingplans.AutoScalingPlans {
-	return client.autoscalingplansConn
-}
-
-func (client *AWSClient) BackupConn(context.Context) *backup.Backup {
-	return client.backupConn
-}
-
-func (client *AWSClient) BackupGatewayConn(context.Context) *backupgateway.BackupGateway {
-	return client.backupgatewayConn
-}
-
-func (client *AWSClient) BatchConn(context.Context) *batch.Batch {
-	return client.batchConn
-}
-
-func (client *AWSClient) BillingConductorConn(context.Context) *billingconductor.BillingConductor {
-	return client.billingconductorConn
-}
-
-func (client *AWSClient) BraketConn(context.Context) *braket.Braket {
-	return client.braketConn
-}
-
-func (client *AWSClient) BudgetsConn(context.Context) *budgets.Budgets {
-	return client.budgetsConn
-}
-
-func (client *AWSClient) CEConn(context.Context) *costexplorer.CostExplorer {
-	return client.ceConn
-}
-
-func (client *AWSClient) CURConn(context.Context) *costandusagereportservice.CostandUsageReportService {
-	return client.curConn
-}
-
-func (client *AWSClient) ChimeConn(context.Context) *chime.Chime {
-	return client.chimeConn
-}
-
-func (client *AWSClient) ChimeSDKIdentityConn(context.Context) *chimesdkidentity.ChimeSDKIdentity {
-	return client.chimesdkidentityConn
-}
-
-func (client *AWSClient) ChimeSDKMediaPipelinesConn(context.Context) *chimesdkmediapipelines.ChimeSDKMediaPipelines {
-	return client.chimesdkmediapipelinesConn
-}
-
-func (client *AWSClient) ChimeSDKMeetingsConn(context.Context) *chimesdkmeetings.ChimeSDKMeetings {
-	return client.chimesdkmeetingsConn
-}
-
-func (client *AWSClient) ChimeSDKMessagingConn(context.Context) *chimesdkmessaging.ChimeSDKMessaging {
-	return client.chimesdkmessagingConn
-}
-
-func (client *AWSClient) ChimeSDKVoiceConn(context.Context) *chimesdkvoice.ChimeSDKVoice {
-	return client.chimesdkvoiceConn
-}
-
-func (client *AWSClient) CleanRoomsClient(context.Context) *cleanrooms.Client {
-	return client.cleanroomsClient
-}
-
-func (client *AWSClient) Cloud9Conn(context.Context) *cloud9.Cloud9 {
-	return client.cloud9Conn
-}
-
-func (client *AWSClient) CloudControlClient(context.Context) *cloudcontrol.Client {
-	return client.cloudcontrolClient
-}
-
-func (client *AWSClient) CloudDirectoryConn(context.Context) *clouddirectory.CloudDirectory {
-	return client.clouddirectoryConn
-}
-
-func (client *AWSClient) CloudFormationConn(context.Context) *cloudformation.CloudFormation {
-	return client.cloudformationConn
-}
-
-func (client *AWSClient) CloudFrontConn(context.Context) *cloudfront.CloudFront {
-	return client.cloudfrontConn
-}
-
-func (client *AWSClient) CloudHSMV2Conn(context.Context) *cloudhsmv2.CloudHSMV2 {
-	return client.cloudhsmv2Conn
-}
-
-func (client *AWSClient) CloudSearchConn(context.Context) *cloudsearch.CloudSearch {
-	return client.cloudsearchConn
-}
-
-func (client *AWSClient) CloudSearchDomainConn(context.Context) *cloudsearchdomain.CloudSearchDomain {
-	return client.cloudsearchdomainConn
-}
-
-func (client *AWSClient) CloudTrailConn(context.Context) *cloudtrail.CloudTrail {
-	return client.cloudtrailConn
-}
-
-func (client *AWSClient) CloudWatchConn(context.Context) *cloudwatch.CloudWatch {
-	return client.cloudwatchConn
-}
-
-func (client *AWSClient) CodeArtifactConn(context.Context) *codeartifact.CodeArtifact {
-	return client.codeartifactConn
-}
-
-func (client *AWSClient) CodeBuildConn(context.Context) *codebuild.CodeBuild {
-	return client.codebuildConn
-}
-
-func (client *AWSClient) CodeCommitConn(context.Context) *codecommit.CodeCommit {
-	return client.codecommitConn
-}
-
-func (client *AWSClient) CodeGuruProfilerConn(context.Context) *codeguruprofiler.CodeGuruProfiler {
-	return client.codeguruprofilerConn
-}
-
-func (client *AWSClient) CodeGuruReviewerConn(context.Context) *codegurureviewer.CodeGuruReviewer {
-	return client.codegurureviewerConn
-}
-
-func (client *AWSClient) CodePipelineConn(context.Context) *codepipeline.CodePipeline {
-	return client.codepipelineConn
-}
-
-func (client *AWSClient) CodeStarConn(context.Context) *codestar.CodeStar {
-	return client.codestarConn
-}
-
-func (client *AWSClient) CodeStarConnectionsConn(context.Context) *codestarconnections.CodeStarConnections {
-	return client.codestarconnectionsConn
-}
-
-func (client *AWSClient) CodeStarNotificationsConn(context.Context) *codestarnotifications.CodeStarNotifications {
-	return client.codestarnotificationsConn
-}
-
-func (client *AWSClient) CognitoIDPConn(context.Context) *cognitoidentityprovider.CognitoIdentityProvider {
-	return client.cognitoidpConn
-}
-
-func (client *AWSClient) CognitoIdentityConn(context.Context) *cognitoidentity.CognitoIdentity {
-	return client.cognitoidentityConn
-}
-
-func (client *AWSClient) CognitoSyncConn(context.Context) *cognitosync.CognitoSync {
-	return client.cognitosyncConn
-}
-
-func (client *AWSClient) ComprehendClient(context.Context) *comprehend.Client {
-	return client.comprehendClient
-}
-
-func (client *AWSClient) ComprehendMedicalConn(context.Context) *comprehendmedical.ComprehendMedical {
-	return client.comprehendmedicalConn
-}
-
-func (client *AWSClient) ComputeOptimizerClient(context.Context) *computeoptimizer.Client {
-	return client.computeoptimizerClient
-}
-
-func (client *AWSClient) ConfigServiceConn(context.Context) *configservice.ConfigService {
-	return client.configserviceConn
-}
-
-func (client *AWSClient) ConnectConn(context.Context) *connect.Connect {
-	return client.connectConn
-}
-
-func (client *AWSClient) ConnectContactLensConn(context.Context) *connectcontactlens.ConnectContactLens {
-	return client.connectcontactlensConn
-}
-
-func (client *AWSClient) ConnectParticipantConn(context.Context) *connectparticipant.ConnectParticipant {
-	return client.connectparticipantConn
-}
-
-func (client *AWSClient) ControlTowerConn(context.Context) *controltower.ControlTower {
-	return client.controltowerConn
-}
-
-func (client *AWSClient) CustomerProfilesConn(context.Context) *customerprofiles.CustomerProfiles {
-	return client.customerprofilesConn
-}
-
-func (client *AWSClient) DAXConn(context.Context) *dax.DAX {
-	return client.daxConn
-}
-
-func (client *AWSClient) DLMConn(context.Context) *dlm.DLM {
-	return client.dlmConn
-}
-
-func (client *AWSClient) DMSConn(context.Context) *databasemigrationservice.DatabaseMigrationService {
-	return client.dmsConn
-}
-
-func (client *AWSClient) DRSConn(context.Context) *drs.Drs {
-	return client.drsConn
-}
-
-func (client *AWSClient) DSConn(context.Context) *directoryservice.DirectoryService {
-	return client.dsConn
-}
-
-func (client *AWSClient) DSClient(context.Context) *directoryservice_sdkv2.Client {
-	return client.dsClient.Client()
-}
-
-func (client *AWSClient) DataBrewConn(context.Context) *gluedatabrew.GlueDataBrew {
-	return client.databrewConn
-}
-
-func (client *AWSClient) DataExchangeConn(context.Context) *dataexchange.DataExchange {
-	return client.dataexchangeConn
-}
-
-func (client *AWSClient) DataPipelineConn(context.Context) *datapipeline.DataPipeline {
-	return client.datapipelineConn
-}
-
-func (client *AWSClient) DataSyncConn(context.Context) *datasync.DataSync {
-	return client.datasyncConn
-}
-
-func (client *AWSClient) DeployConn(context.Context) *codedeploy.CodeDeploy {
-	return client.deployConn
-}
-
-func (client *AWSClient) DetectiveConn(context.Context) *detective.Detective {
-	return client.detectiveConn
-}
-
-func (client *AWSClient) DevOpsGuruConn(context.Context) *devopsguru.DevOpsGuru {
-	return client.devopsguruConn
-}
-
-func (client *AWSClient) DeviceFarmConn(context.Context) *devicefarm.DeviceFarm {
-	return client.devicefarmConn
-}
-
-func (client *AWSClient) DirectConnectConn(context.Context) *directconnect.DirectConnect {
-	return client.directconnectConn
-}
-
-func (client *AWSClient) DiscoveryConn(context.Context) *applicationdiscoveryservice.ApplicationDiscoveryService {
-	return client.discoveryConn
-}
-
-func (client *AWSClient) DocDBConn(context.Context) *docdb.DocDB {
-	return client.docdbConn
-}
-
-func (client *AWSClient) DocDBElasticClient(context.Context) *docdbelastic.Client {
-	return client.docdbelasticClient
-}
-
-func (client *AWSClient) DynamoDBConn(context.Context) *dynamodb.DynamoDB {
-	return client.dynamodbConn
-}
-
-func (client *AWSClient) DynamoDBStreamsConn(context.Context) *dynamodbstreams.DynamoDBStreams {
-	return client.dynamodbstreamsConn
-}
-
-func (client *AWSClient) EBSConn(context.Context) *ebs.EBS {
-	return client.ebsConn
-}
-
-func (client *AWSClient) EC2Conn(context.Context) *ec2.EC2 {
-	return client.ec2Conn
-}
-
-func (client *AWSClient) EC2Client(context.Context) *ec2_sdkv2.Client {
-	return client.ec2Client.Client()
-}
-
-func (client *AWSClient) EC2InstanceConnectConn(context.Context) *ec2instanceconnect.EC2InstanceConnect {
-	return client.ec2instanceconnectConn
-}
-
-func (client *AWSClient) ECRConn(context.Context) *ecr.ECR {
-	return client.ecrConn
-}
-
-func (client *AWSClient) ECRPublicConn(context.Context) *ecrpublic.ECRPublic {
-	return client.ecrpublicConn
-}
-
-func (client *AWSClient) ECSConn(context.Context) *ecs.ECS {
-	return client.ecsConn
+func (c *AWSClient) ACMClient(ctx context.Context) *acm_sdkv2.Client {
+	return errs.Must(client[*acm_sdkv2.Client](ctx, c, names.ACM, make(map[string]any)))
 }
 
-func (client *AWSClient) EFSConn(context.Context) *efs.EFS {
-	return client.efsConn
+func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
+	return errs.Must(conn[*acmpca_sdkv1.ACMPCA](ctx, c, names.ACMPCA, make(map[string]any)))
 }
 
-func (client *AWSClient) EKSConn(context.Context) *eks.EKS {
-	return client.eksConn
+func (c *AWSClient) AMPConn(ctx context.Context) *prometheusservice_sdkv1.PrometheusService {
+	return errs.Must(conn[*prometheusservice_sdkv1.PrometheusService](ctx, c, names.AMP, make(map[string]any)))
 }
 
-func (client *AWSClient) ELBConn(context.Context) *elb.ELB {
-	return client.elbConn
+func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {
+	return errs.Must(conn[*apigateway_sdkv1.APIGateway](ctx, c, names.APIGateway, make(map[string]any)))
 }
 
-func (client *AWSClient) ELBV2Conn(context.Context) *elbv2.ELBV2 {
-	return client.elbv2Conn
+func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.ApiGatewayV2 {
+	return errs.Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](ctx, c, names.APIGatewayV2, make(map[string]any)))
 }
 
-func (client *AWSClient) EMRConn(context.Context) *emr.EMR {
-	return client.emrConn
+func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer_sdkv2.Client {
+	return errs.Must(client[*accessanalyzer_sdkv2.Client](ctx, c, names.AccessAnalyzer, make(map[string]any)))
 }
 
-func (client *AWSClient) EMRContainersConn(context.Context) *emrcontainers.EMRContainers {
-	return client.emrcontainersConn
+func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
+	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
-func (client *AWSClient) EMRServerlessConn(context.Context) *emrserverless.EMRServerless {
-	return client.emrserverlessConn
+func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
+	return errs.Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify, make(map[string]any)))
 }
 
-func (client *AWSClient) ElastiCacheConn(context.Context) *elasticache.ElastiCache {
-	return client.elasticacheConn
+func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
+	return errs.Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling, make(map[string]any)))
 }
 
-func (client *AWSClient) ElasticBeanstalkConn(context.Context) *elasticbeanstalk.ElasticBeanstalk {
-	return client.elasticbeanstalkConn
+func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
+	return errs.Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig, make(map[string]any)))
 }
 
-func (client *AWSClient) ElasticInferenceConn(context.Context) *elasticinference.ElasticInference {
-	return client.elasticinferenceConn
+func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
+	return errs.Must(client[*appconfig_sdkv2.Client](ctx, c, names.AppConfig, make(map[string]any)))
 }
 
-func (client *AWSClient) ElasticTranscoderConn(context.Context) *elastictranscoder.ElasticTranscoder {
-	return client.elastictranscoderConn
+func (c *AWSClient) AppFabricClient(ctx context.Context) *appfabric_sdkv2.Client {
+	return errs.Must(client[*appfabric_sdkv2.Client](ctx, c, names.AppFabric, make(map[string]any)))
 }
 
-func (client *AWSClient) ElasticsearchConn(context.Context) *elasticsearchservice.ElasticsearchService {
-	return client.esConn
+func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
+	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow, make(map[string]any)))
 }
 
-func (client *AWSClient) EventsConn(context.Context) *eventbridge.EventBridge {
-	return client.eventsConn
+func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
+	return errs.Must(conn[*appintegrationsservice_sdkv1.AppIntegrationsService](ctx, c, names.AppIntegrations, make(map[string]any)))
 }
 
-func (client *AWSClient) EvidentlyConn(context.Context) *cloudwatchevidently.CloudWatchEvidently {
-	return client.evidentlyConn
+func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
+	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh, make(map[string]any)))
 }
 
-func (client *AWSClient) FISClient(context.Context) *fis.Client {
-	return client.fisClient
+func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {
+	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner, make(map[string]any)))
 }
 
-func (client *AWSClient) FMSConn(context.Context) *fms.FMS {
-	return client.fmsConn
+func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
+	return errs.Must(conn[*appstream_sdkv1.AppStream](ctx, c, names.AppStream, make(map[string]any)))
 }
 
-func (client *AWSClient) FSxConn(context.Context) *fsx.FSx {
-	return client.fsxConn
+func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
+	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync, make(map[string]any)))
 }
 
-func (client *AWSClient) FinSpaceClient(context.Context) *finspace.Client {
-	return client.finspaceClient
+func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationinsights_sdkv1.ApplicationInsights {
+	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights, make(map[string]any)))
 }
 
-func (client *AWSClient) FinSpaceDataConn(context.Context) *finspacedata.FinSpaceData {
-	return client.finspacedataConn
+func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
+	return errs.Must(client[*athena_sdkv2.Client](ctx, c, names.Athena, make(map[string]any)))
 }
 
-func (client *AWSClient) FirehoseConn(context.Context) *firehose.Firehose {
-	return client.firehoseConn
+func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.Client {
+	return errs.Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager, make(map[string]any)))
 }
 
-func (client *AWSClient) ForecastConn(context.Context) *forecastservice.ForecastService {
-	return client.forecastConn
+func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.AutoScaling {
+	return errs.Must(conn[*autoscaling_sdkv1.AutoScaling](ctx, c, names.AutoScaling, make(map[string]any)))
 }
 
-func (client *AWSClient) ForecastQueryConn(context.Context) *forecastqueryservice.ForecastQueryService {
-	return client.forecastqueryConn
+func (c *AWSClient) AutoScalingPlansConn(ctx context.Context) *autoscalingplans_sdkv1.AutoScalingPlans {
+	return errs.Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](ctx, c, names.AutoScalingPlans, make(map[string]any)))
 }
 
-func (client *AWSClient) FraudDetectorConn(context.Context) *frauddetector.FraudDetector {
-	return client.frauddetectorConn
+func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
+	return errs.Must(conn[*backup_sdkv1.Backup](ctx, c, names.Backup, make(map[string]any)))
 }
 
-func (client *AWSClient) GameLiftConn(context.Context) *gamelift.GameLift {
-	return client.gameliftConn
+func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
+	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch, make(map[string]any)))
 }
 
-func (client *AWSClient) GlacierClient(context.Context) *glacier.Client {
-	return client.glacierClient
+func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock_sdkv2.Client {
+	return errs.Must(client[*bedrock_sdkv2.Client](ctx, c, names.Bedrock, make(map[string]any)))
 }
 
-func (client *AWSClient) GlobalAcceleratorConn(context.Context) *globalaccelerator.GlobalAccelerator {
-	return client.globalacceleratorConn
+func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
+	return errs.Must(conn[*budgets_sdkv1.Budgets](ctx, c, names.Budgets, make(map[string]any)))
 }
 
-func (client *AWSClient) GlueConn(context.Context) *glue.Glue {
-	return client.glueConn
+func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer {
+	return errs.Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE, make(map[string]any)))
 }
 
-func (client *AWSClient) GrafanaConn(context.Context) *managedgrafana.ManagedGrafana {
-	return client.grafanaConn
+func (c *AWSClient) CURConn(ctx context.Context) *costandusagereportservice_sdkv1.CostandUsageReportService {
+	return errs.Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](ctx, c, names.CUR, make(map[string]any)))
 }
 
-func (client *AWSClient) GreengrassConn(context.Context) *greengrass.Greengrass {
-	return client.greengrassConn
+func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
+	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime, make(map[string]any)))
 }
 
-func (client *AWSClient) GreengrassV2Conn(context.Context) *greengrassv2.GreengrassV2 {
-	return client.greengrassv2Conn
+func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines_sdkv2.Client {
+	return errs.Must(client[*chimesdkmediapipelines_sdkv2.Client](ctx, c, names.ChimeSDKMediaPipelines, make(map[string]any)))
 }
 
-func (client *AWSClient) GroundStationConn(context.Context) *groundstation.GroundStation {
-	return client.groundstationConn
+func (c *AWSClient) ChimeSDKVoiceClient(ctx context.Context) *chimesdkvoice_sdkv2.Client {
+	return errs.Must(client[*chimesdkvoice_sdkv2.Client](ctx, c, names.ChimeSDKVoice, make(map[string]any)))
 }
 
-func (client *AWSClient) GuardDutyConn(context.Context) *guardduty.GuardDuty {
-	return client.guarddutyConn
+func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Client {
+	return errs.Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms, make(map[string]any)))
 }
 
-func (client *AWSClient) HealthConn(context.Context) *health.Health {
-	return client.healthConn
+func (c *AWSClient) Cloud9Conn(ctx context.Context) *cloud9_sdkv1.Cloud9 {
+	return errs.Must(conn[*cloud9_sdkv1.Cloud9](ctx, c, names.Cloud9, make(map[string]any)))
 }
 
-func (client *AWSClient) HealthLakeClient(context.Context) *healthlake.Client {
-	return client.healthlakeClient
+func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol_sdkv2.Client {
+	return errs.Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl, make(map[string]any)))
 }
 
-func (client *AWSClient) HoneycodeConn(context.Context) *honeycode.Honeycode {
-	return client.honeycodeConn
+func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv1.CloudFormation {
+	return errs.Must(conn[*cloudformation_sdkv1.CloudFormation](ctx, c, names.CloudFormation, make(map[string]any)))
 }
 
-func (client *AWSClient) IAMConn(context.Context) *iam.IAM {
-	return client.iamConn
+func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudFront {
+	return errs.Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront, make(map[string]any)))
 }
 
-func (client *AWSClient) IVSConn(context.Context) *ivs.IVS {
-	return client.ivsConn
+func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
+	return errs.Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](ctx, c, names.CloudHSMV2, make(map[string]any)))
 }
 
-func (client *AWSClient) IVSChatClient(context.Context) *ivschat.Client {
-	return client.ivschatClient
+func (c *AWSClient) CloudSearchConn(ctx context.Context) *cloudsearch_sdkv1.CloudSearch {
+	return errs.Must(conn[*cloudsearch_sdkv1.CloudSearch](ctx, c, names.CloudSearch, make(map[string]any)))
 }
 
-func (client *AWSClient) IdentityStoreClient(context.Context) *identitystore.Client {
-	return client.identitystoreClient
+func (c *AWSClient) CloudTrailConn(ctx context.Context) *cloudtrail_sdkv1.CloudTrail {
+	return errs.Must(conn[*cloudtrail_sdkv1.CloudTrail](ctx, c, names.CloudTrail, make(map[string]any)))
 }
 
-func (client *AWSClient) ImageBuilderConn(context.Context) *imagebuilder.Imagebuilder {
-	return client.imagebuilderConn
+func (c *AWSClient) CloudWatchConn(ctx context.Context) *cloudwatch_sdkv1.CloudWatch {
+	return errs.Must(conn[*cloudwatch_sdkv1.CloudWatch](ctx, c, names.CloudWatch, make(map[string]any)))
 }
 
-func (client *AWSClient) InspectorConn(context.Context) *inspector.Inspector {
-	return client.inspectorConn
+func (c *AWSClient) CodeArtifactConn(ctx context.Context) *codeartifact_sdkv1.CodeArtifact {
+	return errs.Must(conn[*codeartifact_sdkv1.CodeArtifact](ctx, c, names.CodeArtifact, make(map[string]any)))
 }
 
-func (client *AWSClient) Inspector2Client(context.Context) *inspector2.Client {
-	return client.inspector2Client
+func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuild {
+	return errs.Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild, make(map[string]any)))
 }
 
-func (client *AWSClient) InternetMonitorConn(context.Context) *internetmonitor.InternetMonitor {
-	return client.internetmonitorConn
+func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.Client {
+	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTConn(context.Context) *iot.IoT {
-	return client.iotConn
+func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
+	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit, make(map[string]any)))
 }
 
-func (client *AWSClient) IoT1ClickDevicesConn(context.Context) *iot1clickdevicesservice.IoT1ClickDevicesService {
-	return client.iot1clickdevicesConn
+func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {
+	return errs.Must(client[*codeguruprofiler_sdkv2.Client](ctx, c, names.CodeGuruProfiler, make(map[string]any)))
 }
 
-func (client *AWSClient) IoT1ClickProjectsConn(context.Context) *iot1clickprojects.IoT1ClickProjects {
-	return client.iot1clickprojectsConn
+func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {
+	return errs.Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTAnalyticsConn(context.Context) *iotanalytics.IoTAnalytics {
-	return client.iotanalyticsConn
+func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.CodePipeline {
+	return errs.Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTDataConn(context.Context) *iotdataplane.IoTDataPlane {
-	return client.iotdataConn
+func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections_sdkv2.Client {
+	return errs.Must(client[*codestarconnections_sdkv2.Client](ctx, c, names.CodeStarConnections, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTDeviceAdvisorConn(context.Context) *iotdeviceadvisor.IoTDeviceAdvisor {
-	return client.iotdeviceadvisorConn
+func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarnotifications_sdkv2.Client {
+	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTEventsConn(context.Context) *iotevents.IoTEvents {
-	return client.ioteventsConn
+func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
+	return errs.Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTEventsDataConn(context.Context) *ioteventsdata.IoTEventsData {
-	return client.ioteventsdataConn
+func (c *AWSClient) CognitoIdentityConn(ctx context.Context) *cognitoidentity_sdkv1.CognitoIdentity {
+	return errs.Must(conn[*cognitoidentity_sdkv1.CognitoIdentity](ctx, c, names.CognitoIdentity, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTFleetHubConn(context.Context) *iotfleethub.IoTFleetHub {
-	return client.iotfleethubConn
+func (c *AWSClient) ComprehendClient(ctx context.Context) *comprehend_sdkv2.Client {
+	return errs.Must(client[*comprehend_sdkv2.Client](ctx, c, names.Comprehend, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTJobsDataConn(context.Context) *iotjobsdataplane.IoTJobsDataPlane {
-	return client.iotjobsdataConn
+func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimizer_sdkv2.Client {
+	return errs.Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTSecureTunnelingConn(context.Context) *iotsecuretunneling.IoTSecureTunneling {
-	return client.iotsecuretunnelingConn
+func (c *AWSClient) ConfigServiceConn(ctx context.Context) *configservice_sdkv1.ConfigService {
+	return errs.Must(conn[*configservice_sdkv1.ConfigService](ctx, c, names.ConfigService, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTSiteWiseConn(context.Context) *iotsitewise.IoTSiteWise {
-	return client.iotsitewiseConn
+func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
+	return errs.Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTThingsGraphConn(context.Context) *iotthingsgraph.IoTThingsGraph {
-	return client.iotthingsgraphConn
+func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.Client {
+	return errs.Must(client[*connectcases_sdkv2.Client](ctx, c, names.ConnectCases, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTTwinMakerConn(context.Context) *iottwinmaker.IoTTwinMaker {
-	return client.iottwinmakerConn
+func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower_sdkv2.Client {
+	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower, make(map[string]any)))
 }
 
-func (client *AWSClient) IoTWirelessConn(context.Context) *iotwireless.IoTWireless {
-	return client.iotwirelessConn
+func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
+	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles, make(map[string]any)))
 }
 
-func (client *AWSClient) KMSConn(context.Context) *kms.KMS {
-	return client.kmsConn
+func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
+	return errs.Must(conn[*dax_sdkv1.DAX](ctx, c, names.DAX, make(map[string]any)))
 }
 
-func (client *AWSClient) KafkaConn(context.Context) *kafka.Kafka {
-	return client.kafkaConn
+func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
+	return errs.Must(conn[*dlm_sdkv1.DLM](ctx, c, names.DLM, make(map[string]any)))
 }
 
-func (client *AWSClient) KafkaConnectConn(context.Context) *kafkaconnect.KafkaConnect {
-	return client.kafkaconnectConn
+func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
+	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
 }
 
-func (client *AWSClient) KendraClient(context.Context) *kendra.Client {
-	return client.kendraClient
+func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
+	return errs.Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS, make(map[string]any)))
 }
 
-func (client *AWSClient) KeyspacesConn(context.Context) *keyspaces.Keyspaces {
-	return client.keyspacesConn
+func (c *AWSClient) DSClient(ctx context.Context) *directoryservice_sdkv2.Client {
+	return errs.Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisConn(context.Context) *kinesis.Kinesis {
-	return client.kinesisConn
+func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.DataExchange {
+	return errs.Must(conn[*dataexchange_sdkv1.DataExchange](ctx, c, names.DataExchange, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisAnalyticsConn(context.Context) *kinesisanalytics.KinesisAnalytics {
-	return client.kinesisanalyticsConn
+func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.DataPipeline {
+	return errs.Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisAnalyticsV2Conn(context.Context) *kinesisanalyticsv2.KinesisAnalyticsV2 {
-	return client.kinesisanalyticsv2Conn
+func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
+	return errs.Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisVideoConn(context.Context) *kinesisvideo.KinesisVideo {
-	return client.kinesisvideoConn
+func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
+	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisVideoArchivedMediaConn(context.Context) *kinesisvideoarchivedmedia.KinesisVideoArchivedMedia {
-	return client.kinesisvideoarchivedmediaConn
+func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
+	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisVideoMediaConn(context.Context) *kinesisvideomedia.KinesisVideoMedia {
-	return client.kinesisvideomediaConn
+func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
+	return errs.Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm, make(map[string]any)))
 }
 
-func (client *AWSClient) KinesisVideoSignalingConn(context.Context) *kinesisvideosignalingchannels.KinesisVideoSignalingChannels {
-	return client.kinesisvideosignalingConn
+func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
+	return errs.Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
-func (client *AWSClient) LakeFormationConn(context.Context) *lakeformation.LakeFormation {
-	return client.lakeformationConn
+func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
+	return errs.Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB, make(map[string]any)))
 }
 
-func (client *AWSClient) LambdaConn(context.Context) *lambda.Lambda {
-	return client.lambdaConn
+func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
+	return errs.Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic, make(map[string]any)))
 }
 
-func (client *AWSClient) LambdaClient(context.Context) *lambda_sdkv2.Client {
-	return client.lambdaClient.Client()
+func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
+	return errs.Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB, make(map[string]any)))
 }
 
-func (client *AWSClient) LexModelsConn(context.Context) *lexmodelbuildingservice.LexModelBuildingService {
-	return client.lexmodelsConn
+func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
+	return errs.Must(conn[*ec2_sdkv1.EC2](ctx, c, names.EC2, make(map[string]any)))
 }
 
-func (client *AWSClient) LexModelsV2Conn(context.Context) *lexmodelsv2.LexModelsV2 {
-	return client.lexmodelsv2Conn
+func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
+	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2, make(map[string]any)))
 }
 
-func (client *AWSClient) LexRuntimeConn(context.Context) *lexruntimeservice.LexRuntimeService {
-	return client.lexruntimeConn
+func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
+	return errs.Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR, make(map[string]any)))
 }
 
-func (client *AWSClient) LexRuntimeV2Conn(context.Context) *lexruntimev2.LexRuntimeV2 {
-	return client.lexruntimev2Conn
+func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
+	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR, make(map[string]any)))
 }
 
-func (client *AWSClient) LicenseManagerConn(context.Context) *licensemanager.LicenseManager {
-	return client.licensemanagerConn
+func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
+	return errs.Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic, make(map[string]any)))
 }
 
-func (client *AWSClient) LightsailClient(context.Context) *lightsail.Client {
-	return client.lightsailClient
+func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
+	return errs.Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS, make(map[string]any)))
 }
 
-func (client *AWSClient) LocationConn(context.Context) *locationservice.LocationService {
-	return client.locationConn
+func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
+	return errs.Must(conn[*efs_sdkv1.EFS](ctx, c, names.EFS, make(map[string]any)))
 }
 
-func (client *AWSClient) LogsConn(context.Context) *cloudwatchlogs.CloudWatchLogs {
-	return client.logsConn
+func (c *AWSClient) EKSClient(ctx context.Context) *eks_sdkv2.Client {
+	return errs.Must(client[*eks_sdkv2.Client](ctx, c, names.EKS, make(map[string]any)))
 }
 
-func (client *AWSClient) LogsClient(context.Context) *cloudwatchlogs_sdkv2.Client {
-	return client.logsClient.Client()
+func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
+	return errs.Must(conn[*elb_sdkv1.ELB](ctx, c, names.ELB, make(map[string]any)))
 }
 
-func (client *AWSClient) LookoutEquipmentConn(context.Context) *lookoutequipment.LookoutEquipment {
-	return client.lookoutequipmentConn
+func (c *AWSClient) ELBV2Conn(ctx context.Context) *elbv2_sdkv1.ELBV2 {
+	return errs.Must(conn[*elbv2_sdkv1.ELBV2](ctx, c, names.ELBV2, make(map[string]any)))
 }
 
-func (client *AWSClient) LookoutMetricsConn(context.Context) *lookoutmetrics.LookoutMetrics {
-	return client.lookoutmetricsConn
+func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
+	return errs.Must(conn[*emr_sdkv1.EMR](ctx, c, names.EMR, make(map[string]any)))
 }
 
-func (client *AWSClient) LookoutVisionConn(context.Context) *lookoutforvision.LookoutForVision {
-	return client.lookoutvisionConn
+func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
+	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR, make(map[string]any)))
 }
 
-func (client *AWSClient) MQConn(context.Context) *mq.MQ {
-	return client.mqConn
+func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
+	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers, make(map[string]any)))
 }
 
-func (client *AWSClient) MTurkConn(context.Context) *mturk.MTurk {
-	return client.mturkConn
+func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
+	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless, make(map[string]any)))
 }
 
-func (client *AWSClient) MWAAConn(context.Context) *mwaa.MWAA {
-	return client.mwaaConn
+func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
+	return errs.Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache, make(map[string]any)))
 }
 
-func (client *AWSClient) MachineLearningConn(context.Context) *machinelearning.MachineLearning {
-	return client.machinelearningConn
+func (c *AWSClient) ElasticBeanstalkConn(ctx context.Context) *elasticbeanstalk_sdkv1.ElasticBeanstalk {
+	return errs.Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
 }
 
-func (client *AWSClient) MacieConn(context.Context) *macie.Macie {
-	return client.macieConn
+func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscoder_sdkv1.ElasticTranscoder {
+	return errs.Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](ctx, c, names.ElasticTranscoder, make(map[string]any)))
 }
 
-func (client *AWSClient) Macie2Conn(context.Context) *macie2.Macie2 {
-	return client.macie2Conn
+func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice_sdkv1.ElasticsearchService {
+	return errs.Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
-func (client *AWSClient) ManagedBlockchainConn(context.Context) *managedblockchain.ManagedBlockchain {
-	return client.managedblockchainConn
+func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBridge {
+	return errs.Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events, make(map[string]any)))
 }
 
-func (client *AWSClient) MarketplaceCatalogConn(context.Context) *marketplacecatalog.MarketplaceCatalog {
-	return client.marketplacecatalogConn
+func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently_sdkv2.Client {
+	return errs.Must(client[*evidently_sdkv2.Client](ctx, c, names.Evidently, make(map[string]any)))
 }
 
-func (client *AWSClient) MarketplaceCommerceAnalyticsConn(context.Context) *marketplacecommerceanalytics.MarketplaceCommerceAnalytics {
-	return client.marketplacecommerceanalyticsConn
+func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {
+	return errs.Must(client[*fis_sdkv2.Client](ctx, c, names.FIS, make(map[string]any)))
 }
 
-func (client *AWSClient) MarketplaceEntitlementConn(context.Context) *marketplaceentitlementservice.MarketplaceEntitlementService {
-	return client.marketplaceentitlementConn
+func (c *AWSClient) FMSConn(ctx context.Context) *fms_sdkv1.FMS {
+	return errs.Must(conn[*fms_sdkv1.FMS](ctx, c, names.FMS, make(map[string]any)))
 }
 
-func (client *AWSClient) MarketplaceMeteringConn(context.Context) *marketplacemetering.MarketplaceMetering {
-	return client.marketplacemeteringConn
+func (c *AWSClient) FSxConn(ctx context.Context) *fsx_sdkv1.FSx {
+	return errs.Must(conn[*fsx_sdkv1.FSx](ctx, c, names.FSx, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaConnectConn(context.Context) *mediaconnect.MediaConnect {
-	return client.mediaconnectConn
+func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
+	return errs.Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaConvertConn(context.Context) *mediaconvert.MediaConvert {
-	return client.mediaconvertConn
+func (c *AWSClient) FirehoseConn(ctx context.Context) *firehose_sdkv1.Firehose {
+	return errs.Must(conn[*firehose_sdkv1.Firehose](ctx, c, names.Firehose, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaLiveClient(context.Context) *medialive.Client {
-	return client.medialiveClient
+func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
+	return errs.Must(conn[*gamelift_sdkv1.GameLift](ctx, c, names.GameLift, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaPackageConn(context.Context) *mediapackage.MediaPackage {
-	return client.mediapackageConn
+func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {
+	return errs.Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaPackageVODConn(context.Context) *mediapackagevod.MediaPackageVod {
-	return client.mediapackagevodConn
+func (c *AWSClient) GlobalAcceleratorConn(ctx context.Context) *globalaccelerator_sdkv1.GlobalAccelerator {
+	return errs.Must(conn[*globalaccelerator_sdkv1.GlobalAccelerator](ctx, c, names.GlobalAccelerator, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaStoreConn(context.Context) *mediastore.MediaStore {
-	return client.mediastoreConn
+func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
+	return errs.Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaStoreDataConn(context.Context) *mediastoredata.MediaStoreData {
-	return client.mediastoredataConn
+func (c *AWSClient) GrafanaConn(ctx context.Context) *managedgrafana_sdkv1.ManagedGrafana {
+	return errs.Must(conn[*managedgrafana_sdkv1.ManagedGrafana](ctx, c, names.Grafana, make(map[string]any)))
 }
 
-func (client *AWSClient) MediaTailorConn(context.Context) *mediatailor.MediaTailor {
-	return client.mediatailorConn
+func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greengrass {
+	return errs.Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass, make(map[string]any)))
 }
 
-func (client *AWSClient) MemoryDBConn(context.Context) *memorydb.MemoryDB {
-	return client.memorydbConn
+func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
+	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty, make(map[string]any)))
 }
 
-func (client *AWSClient) MgHConn(context.Context) *migrationhub.MigrationHub {
-	return client.mghConn
+func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Client {
+	return errs.Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake, make(map[string]any)))
 }
 
-func (client *AWSClient) MgnConn(context.Context) *mgn.Mgn {
-	return client.mgnConn
+func (c *AWSClient) IAMConn(ctx context.Context) *iam_sdkv1.IAM {
+	return errs.Must(conn[*iam_sdkv1.IAM](ctx, c, names.IAM, make(map[string]any)))
 }
 
-func (client *AWSClient) MigrationHubConfigConn(context.Context) *migrationhubconfig.MigrationHubConfig {
-	return client.migrationhubconfigConn
+func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
+	return errs.Must(conn[*ivs_sdkv1.IVS](ctx, c, names.IVS, make(map[string]any)))
 }
 
-func (client *AWSClient) MigrationHubRefactorSpacesConn(context.Context) *migrationhubrefactorspaces.MigrationHubRefactorSpaces {
-	return client.migrationhubrefactorspacesConn
+func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
+	return errs.Must(client[*ivschat_sdkv2.Client](ctx, c, names.IVSChat, make(map[string]any)))
 }
 
-func (client *AWSClient) MigrationHubStrategyConn(context.Context) *migrationhubstrategyrecommendations.MigrationHubStrategyRecommendations {
-	return client.migrationhubstrategyConn
+func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv2.Client {
+	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore, make(map[string]any)))
 }
 
-func (client *AWSClient) MobileConn(context.Context) *mobile.Mobile {
-	return client.mobileConn
+func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
+	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder, make(map[string]any)))
 }
 
-func (client *AWSClient) NeptuneConn(context.Context) *neptune.Neptune {
-	return client.neptuneConn
+func (c *AWSClient) InspectorConn(ctx context.Context) *inspector_sdkv1.Inspector {
+	return errs.Must(conn[*inspector_sdkv1.Inspector](ctx, c, names.Inspector, make(map[string]any)))
 }
 
-func (client *AWSClient) NetworkFirewallConn(context.Context) *networkfirewall.NetworkFirewall {
-	return client.networkfirewallConn
+func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Client {
+	return errs.Must(client[*inspector2_sdkv2.Client](ctx, c, names.Inspector2, make(map[string]any)))
 }
 
-func (client *AWSClient) NetworkManagerConn(context.Context) *networkmanager.NetworkManager {
-	return client.networkmanagerConn
+func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor_sdkv2.Client {
+	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
 }
 
-func (client *AWSClient) NimbleConn(context.Context) *nimblestudio.NimbleStudio {
-	return client.nimbleConn
+func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
+	return errs.Must(conn[*iot_sdkv1.IoT](ctx, c, names.IoT, make(map[string]any)))
 }
 
-func (client *AWSClient) ObservabilityAccessManagerClient(context.Context) *oam.Client {
-	return client.oamClient
+func (c *AWSClient) IoTAnalyticsConn(ctx context.Context) *iotanalytics_sdkv1.IoTAnalytics {
+	return errs.Must(conn[*iotanalytics_sdkv1.IoTAnalytics](ctx, c, names.IoTAnalytics, make(map[string]any)))
 }
 
-func (client *AWSClient) OpenSearchConn(context.Context) *opensearchservice.OpenSearchService {
-	return client.opensearchConn
+func (c *AWSClient) IoTEventsConn(ctx context.Context) *iotevents_sdkv1.IoTEvents {
+	return errs.Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents, make(map[string]any)))
 }
 
-func (client *AWSClient) OpenSearchServerlessClient(context.Context) *opensearchserverless.Client {
-	return client.opensearchserverlessClient
+func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
+	return errs.Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS, make(map[string]any)))
 }
 
-func (client *AWSClient) OpsWorksConn(context.Context) *opsworks.OpsWorks {
-	return client.opsworksConn
+func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
+	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka, make(map[string]any)))
 }
 
-func (client *AWSClient) OpsWorksCMConn(context.Context) *opsworkscm.OpsWorksCM {
-	return client.opsworkscmConn
+func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
+	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka, make(map[string]any)))
 }
 
-func (client *AWSClient) OrganizationsConn(context.Context) *organizations.Organizations {
-	return client.organizationsConn
+func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {
+	return errs.Must(conn[*kafkaconnect_sdkv1.KafkaConnect](ctx, c, names.KafkaConnect, make(map[string]any)))
 }
 
-func (client *AWSClient) OutpostsConn(context.Context) *outposts.Outposts {
-	return client.outpostsConn
+func (c *AWSClient) KendraClient(ctx context.Context) *kendra_sdkv2.Client {
+	return errs.Must(client[*kendra_sdkv2.Client](ctx, c, names.Kendra, make(map[string]any)))
 }
 
-func (client *AWSClient) PIConn(context.Context) *pi.PI {
-	return client.piConn
+func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces_sdkv2.Client {
+	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces, make(map[string]any)))
 }
 
-func (client *AWSClient) PanoramaConn(context.Context) *panorama.Panorama {
-	return client.panoramaConn
+func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
+	return errs.Must(conn[*kinesis_sdkv1.Kinesis](ctx, c, names.Kinesis, make(map[string]any)))
 }
 
-func (client *AWSClient) PersonalizeConn(context.Context) *personalize.Personalize {
-	return client.personalizeConn
+func (c *AWSClient) KinesisAnalyticsConn(ctx context.Context) *kinesisanalytics_sdkv1.KinesisAnalytics {
+	return errs.Must(conn[*kinesisanalytics_sdkv1.KinesisAnalytics](ctx, c, names.KinesisAnalytics, make(map[string]any)))
 }
 
-func (client *AWSClient) PersonalizeEventsConn(context.Context) *personalizeevents.PersonalizeEvents {
-	return client.personalizeeventsConn
+func (c *AWSClient) KinesisAnalyticsV2Conn(ctx context.Context) *kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2 {
+	return errs.Must(conn[*kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2](ctx, c, names.KinesisAnalyticsV2, make(map[string]any)))
 }
 
-func (client *AWSClient) PersonalizeRuntimeConn(context.Context) *personalizeruntime.PersonalizeRuntime {
-	return client.personalizeruntimeConn
+func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.KinesisVideo {
+	return errs.Must(conn[*kinesisvideo_sdkv1.KinesisVideo](ctx, c, names.KinesisVideo, make(map[string]any)))
 }
 
-func (client *AWSClient) PinpointConn(context.Context) *pinpoint.Pinpoint {
-	return client.pinpointConn
+func (c *AWSClient) LakeFormationConn(ctx context.Context) *lakeformation_sdkv1.LakeFormation {
+	return errs.Must(conn[*lakeformation_sdkv1.LakeFormation](ctx, c, names.LakeFormation, make(map[string]any)))
 }
 
-func (client *AWSClient) PinpointEmailConn(context.Context) *pinpointemail.PinpointEmail {
-	return client.pinpointemailConn
+func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
+	return errs.Must(conn[*lambda_sdkv1.Lambda](ctx, c, names.Lambda, make(map[string]any)))
 }
 
-func (client *AWSClient) PinpointSMSVoiceConn(context.Context) *pinpointsmsvoice.PinpointSMSVoice {
-	return client.pinpointsmsvoiceConn
+func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
+	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda, make(map[string]any)))
 }
 
-func (client *AWSClient) PipesClient(context.Context) *pipes.Client {
-	return client.pipesClient
+func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
+	return errs.Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels, make(map[string]any)))
 }
 
-func (client *AWSClient) PollyConn(context.Context) *polly.Polly {
-	return client.pollyConn
+func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Client {
+	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models, make(map[string]any)))
 }
 
-func (client *AWSClient) PricingConn(context.Context) *pricing.Pricing {
-	return client.pricingConn
+func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
+	return errs.Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager, make(map[string]any)))
 }
 
-func (client *AWSClient) ProtonConn(context.Context) *proton.Proton {
-	return client.protonConn
+func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client {
+	return errs.Must(client[*lightsail_sdkv2.Client](ctx, c, names.Lightsail, make(map[string]any)))
 }
 
-func (client *AWSClient) QLDBConn(context.Context) *qldb.QLDB {
-	return client.qldbConn
+func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
+	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location, make(map[string]any)))
 }
 
-func (client *AWSClient) QLDBSessionConn(context.Context) *qldbsession.QLDBSession {
-	return client.qldbsessionConn
+func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
+	return errs.Must(client[*cloudwatchlogs_sdkv2.Client](ctx, c, names.Logs, make(map[string]any)))
 }
 
-func (client *AWSClient) QuickSightConn(context.Context) *quicksight.QuickSight {
-	return client.quicksightConn
+func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sdkv2.Client {
+	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
 }
 
-func (client *AWSClient) RAMConn(context.Context) *ram.RAM {
-	return client.ramConn
+func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
+	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ, make(map[string]any)))
 }
 
-func (client *AWSClient) RBinClient(context.Context) *rbin.Client {
-	return client.rbinClient
+func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
+	return errs.Must(conn[*mwaa_sdkv1.MWAA](ctx, c, names.MWAA, make(map[string]any)))
 }
 
-func (client *AWSClient) RDSConn(context.Context) *rds.RDS {
-	return client.rdsConn
+func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
+	return errs.Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2, make(map[string]any)))
 }
 
-func (client *AWSClient) RDSClient(context.Context) *rds_sdkv2.Client {
-	return client.rdsClient.Client()
+func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect_sdkv2.Client {
+	return errs.Must(client[*mediaconnect_sdkv2.Client](ctx, c, names.MediaConnect, make(map[string]any)))
 }
 
-func (client *AWSClient) RDSDataConn(context.Context) *rdsdataservice.RDSDataService {
-	return client.rdsdataConn
+func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.MediaConvert {
+	return errs.Must(conn[*mediaconvert_sdkv1.MediaConvert](ctx, c, names.MediaConvert, make(map[string]any)))
 }
 
-func (client *AWSClient) RUMConn(context.Context) *cloudwatchrum.CloudWatchRUM {
-	return client.rumConn
+func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client {
+	return errs.Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive, make(map[string]any)))
 }
 
-func (client *AWSClient) RedshiftConn(context.Context) *redshift.Redshift {
-	return client.redshiftConn
+func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.Client {
+	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage, make(map[string]any)))
 }
 
-func (client *AWSClient) RedshiftDataConn(context.Context) *redshiftdataapiservice.RedshiftDataAPIService {
-	return client.redshiftdataConn
+func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2_sdkv2.Client {
+	return errs.Must(client[*mediapackagev2_sdkv2.Client](ctx, c, names.MediaPackageV2, make(map[string]any)))
 }
 
-func (client *AWSClient) RedshiftServerlessConn(context.Context) *redshiftserverless.RedshiftServerless {
-	return client.redshiftserverlessConn
+func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {
+	return errs.Must(conn[*mediastore_sdkv1.MediaStore](ctx, c, names.MediaStore, make(map[string]any)))
 }
 
-func (client *AWSClient) RekognitionConn(context.Context) *rekognition.Rekognition {
-	return client.rekognitionConn
+func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
+	return errs.Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB, make(map[string]any)))
 }
 
-func (client *AWSClient) ResilienceHubConn(context.Context) *resiliencehub.ResilienceHub {
-	return client.resiliencehubConn
+func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
+	return errs.Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune, make(map[string]any)))
 }
 
-func (client *AWSClient) ResourceExplorer2Client(context.Context) *resourceexplorer2.Client {
-	return client.resourceexplorer2Client
+func (c *AWSClient) NetworkFirewallConn(ctx context.Context) *networkfirewall_sdkv1.NetworkFirewall {
+	return errs.Must(conn[*networkfirewall_sdkv1.NetworkFirewall](ctx, c, names.NetworkFirewall, make(map[string]any)))
 }
 
-func (client *AWSClient) ResourceGroupsConn(context.Context) *resourcegroups.ResourceGroups {
-	return client.resourcegroupsConn
+func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv1.NetworkManager {
+	return errs.Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager, make(map[string]any)))
 }
 
-func (client *AWSClient) ResourceGroupsTaggingAPIConn(context.Context) *resourcegroupstaggingapi.ResourceGroupsTaggingAPI {
-	return client.resourcegroupstaggingapiConn
+func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_sdkv2.Client {
+	return errs.Must(client[*oam_sdkv2.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
 }
 
-func (client *AWSClient) RoboMakerConn(context.Context) *robomaker.RoboMaker {
-	return client.robomakerConn
+func (c *AWSClient) OpenSearchConn(ctx context.Context) *opensearchservice_sdkv1.OpenSearchService {
+	return errs.Must(conn[*opensearchservice_sdkv1.OpenSearchService](ctx, c, names.OpenSearch, make(map[string]any)))
 }
 
-func (client *AWSClient) RolesAnywhereClient(context.Context) *rolesanywhere.Client {
-	return client.rolesanywhereClient
+func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis_sdkv2.Client {
+	return errs.Must(client[*osis_sdkv2.Client](ctx, c, names.OpenSearchIngestion, make(map[string]any)))
 }
 
-func (client *AWSClient) Route53Conn(context.Context) *route53.Route53 {
-	return client.route53Conn
+func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless_sdkv2.Client {
+	return errs.Must(client[*opensearchserverless_sdkv2.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
 }
 
-func (client *AWSClient) Route53DomainsClient(context.Context) *route53domains.Client {
-	return client.route53domainsClient
+func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
+	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
-func (client *AWSClient) Route53RecoveryClusterConn(context.Context) *route53recoverycluster.Route53RecoveryCluster {
-	return client.route53recoveryclusterConn
+func (c *AWSClient) OrganizationsConn(ctx context.Context) *organizations_sdkv1.Organizations {
+	return errs.Must(conn[*organizations_sdkv1.Organizations](ctx, c, names.Organizations, make(map[string]any)))
 }
 
-func (client *AWSClient) Route53RecoveryControlConfigConn(context.Context) *route53recoverycontrolconfig.Route53RecoveryControlConfig {
-	return client.route53recoverycontrolconfigConn
+func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
+	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts, make(map[string]any)))
 }
 
-func (client *AWSClient) Route53RecoveryReadinessConn(context.Context) *route53recoveryreadiness.Route53RecoveryReadiness {
-	return client.route53recoveryreadinessConn
+func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
+	return errs.Must(conn[*pinpoint_sdkv1.Pinpoint](ctx, c, names.Pinpoint, make(map[string]any)))
 }
 
-func (client *AWSClient) Route53ResolverConn(context.Context) *route53resolver.Route53Resolver {
-	return client.route53resolverConn
+func (c *AWSClient) PipesClient(ctx context.Context) *pipes_sdkv2.Client {
+	return errs.Must(client[*pipes_sdkv2.Client](ctx, c, names.Pipes, make(map[string]any)))
 }
 
-func (client *AWSClient) S3Conn(context.Context) *s3.S3 {
-	return client.s3Conn
+func (c *AWSClient) PollyClient(ctx context.Context) *polly_sdkv2.Client {
+	return errs.Must(client[*polly_sdkv2.Client](ctx, c, names.Polly, make(map[string]any)))
 }
 
-func (client *AWSClient) S3ControlConn(context.Context) *s3control.S3Control {
-	return client.s3controlConn
+func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
+	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing, make(map[string]any)))
 }
 
-func (client *AWSClient) S3ControlClient(context.Context) *s3control_sdkv2.Client {
-	return client.s3controlClient.Client()
+func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
+	return errs.Must(client[*qldb_sdkv2.Client](ctx, c, names.QLDB, make(map[string]any)))
 }
 
-func (client *AWSClient) S3OutpostsConn(context.Context) *s3outposts.S3Outposts {
-	return client.s3outpostsConn
+func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
+	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight, make(map[string]any)))
 }
 
-func (client *AWSClient) SESConn(context.Context) *ses.SES {
-	return client.sesConn
+func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {
+	return errs.Must(conn[*ram_sdkv1.RAM](ctx, c, names.RAM, make(map[string]any)))
 }
 
-func (client *AWSClient) SESV2Client(context.Context) *sesv2.Client {
-	return client.sesv2Client
+func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
+	return errs.Must(client[*rbin_sdkv2.Client](ctx, c, names.RBin, make(map[string]any)))
 }
 
-func (client *AWSClient) SFNConn(context.Context) *sfn.SFN {
-	return client.sfnConn
+func (c *AWSClient) RDSConn(ctx context.Context) *rds_sdkv1.RDS {
+	return errs.Must(conn[*rds_sdkv1.RDS](ctx, c, names.RDS, make(map[string]any)))
 }
 
-func (client *AWSClient) SMSConn(context.Context) *sms.SMS {
-	return client.smsConn
+func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
+	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS, make(map[string]any)))
 }
 
-func (client *AWSClient) SNSConn(context.Context) *sns.SNS {
-	return client.snsConn
+func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatchRUM {
+	return errs.Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](ctx, c, names.RUM, make(map[string]any)))
 }
 
-func (client *AWSClient) SQSConn(context.Context) *sqs.SQS {
-	return client.sqsConn
+func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
+	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift, make(map[string]any)))
 }
 
-func (client *AWSClient) SSMConn(context.Context) *ssm.SSM {
-	return client.ssmConn
+func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.Client {
+	return errs.Must(client[*redshiftdata_sdkv2.Client](ctx, c, names.RedshiftData, make(map[string]any)))
 }
 
-func (client *AWSClient) SSMClient(context.Context) *ssm_sdkv2.Client {
-	return client.ssmClient.Client()
+func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
+	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless, make(map[string]any)))
 }
 
-func (client *AWSClient) SSMContactsClient(context.Context) *ssmcontacts.Client {
-	return client.ssmcontactsClient
+func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2_sdkv2.Client {
+	return errs.Must(client[*resourceexplorer2_sdkv2.Client](ctx, c, names.ResourceExplorer2, make(map[string]any)))
 }
 
-func (client *AWSClient) SSMIncidentsClient(context.Context) *ssmincidents.Client {
-	return client.ssmincidentsClient
+func (c *AWSClient) ResourceGroupsClient(ctx context.Context) *resourcegroups_sdkv2.Client {
+	return errs.Must(client[*resourcegroups_sdkv2.Client](ctx, c, names.ResourceGroups, make(map[string]any)))
 }
 
-func (client *AWSClient) SSOConn(context.Context) *sso.SSO {
-	return client.ssoConn
+func (c *AWSClient) ResourceGroupsTaggingAPIClient(ctx context.Context) *resourcegroupstaggingapi_sdkv2.Client {
+	return errs.Must(client[*resourcegroupstaggingapi_sdkv2.Client](ctx, c, names.ResourceGroupsTaggingAPI, make(map[string]any)))
 }
 
-func (client *AWSClient) SSOAdminConn(context.Context) *ssoadmin.SSOAdmin {
-	return client.ssoadminConn
+func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv2.Client {
+	return errs.Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere, make(map[string]any)))
 }
 
-func (client *AWSClient) SSOOIDCConn(context.Context) *ssooidc.SSOOIDC {
-	return client.ssooidcConn
+func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
+	return errs.Must(conn[*route53_sdkv1.Route53](ctx, c, names.Route53, make(map[string]any)))
 }
 
-func (client *AWSClient) STSConn(context.Context) *sts.STS {
-	return client.stsConn
+func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sdkv2.Client {
+	return errs.Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains, make(map[string]any)))
 }
 
-func (client *AWSClient) SWFClient(context.Context) *swf.Client {
-	return client.swfClient
+func (c *AWSClient) Route53RecoveryControlConfigConn(ctx context.Context) *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
+	return errs.Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](ctx, c, names.Route53RecoveryControlConfig, make(map[string]any)))
 }
 
-func (client *AWSClient) SageMakerConn(context.Context) *sagemaker.SageMaker {
-	return client.sagemakerConn
+func (c *AWSClient) Route53RecoveryReadinessConn(ctx context.Context) *route53recoveryreadiness_sdkv1.Route53RecoveryReadiness {
+	return errs.Must(conn[*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness](ctx, c, names.Route53RecoveryReadiness, make(map[string]any)))
 }
 
-func (client *AWSClient) SageMakerA2IRuntimeConn(context.Context) *augmentedairuntime.AugmentedAIRuntime {
-	return client.sagemakera2iruntimeConn
+func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
+	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver, make(map[string]any)))
 }
 
-func (client *AWSClient) SageMakerEdgeConn(context.Context) *sagemakeredgemanager.SagemakerEdgeManager {
-	return client.sagemakeredgeConn
+func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
+	return errs.Must(conn[*s3_sdkv1.S3](ctx, c, names.S3, make(map[string]any)))
 }
 
-func (client *AWSClient) SageMakerFeatureStoreRuntimeConn(context.Context) *sagemakerfeaturestoreruntime.SageMakerFeatureStoreRuntime {
-	return client.sagemakerfeaturestoreruntimeConn
+func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
+	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, make(map[string]any)))
 }
 
-func (client *AWSClient) SageMakerRuntimeConn(context.Context) *sagemakerruntime.SageMakerRuntime {
-	return client.sagemakerruntimeConn
+func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control_sdkv2.Client {
+	return errs.Must(client[*s3control_sdkv2.Client](ctx, c, names.S3Control, make(map[string]any)))
 }
 
-func (client *AWSClient) SavingsPlansConn(context.Context) *savingsplans.SavingsPlans {
-	return client.savingsplansConn
+func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outposts {
+	return errs.Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts, make(map[string]any)))
 }
 
-func (client *AWSClient) SchedulerClient(context.Context) *scheduler.Client {
-	return client.schedulerClient
+func (c *AWSClient) SESConn(ctx context.Context) *ses_sdkv1.SES {
+	return errs.Must(conn[*ses_sdkv1.SES](ctx, c, names.SES, make(map[string]any)))
 }
 
-func (client *AWSClient) SchemasConn(context.Context) *schemas.Schemas {
-	return client.schemasConn
+func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2_sdkv2.Client {
+	return errs.Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2, make(map[string]any)))
 }
 
-func (client *AWSClient) SecretsManagerConn(context.Context) *secretsmanager.SecretsManager {
-	return client.secretsmanagerConn
+func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
+	return errs.Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN, make(map[string]any)))
 }
 
-func (client *AWSClient) SecurityHubConn(context.Context) *securityhub.SecurityHub {
-	return client.securityhubConn
+func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
+	return errs.Must(client[*sns_sdkv2.Client](ctx, c, names.SNS, make(map[string]any)))
 }
 
-func (client *AWSClient) SecurityLakeClient(context.Context) *securitylake.Client {
-	return client.securitylakeClient
+func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
+	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS, make(map[string]any)))
 }
 
-func (client *AWSClient) ServerlessRepoConn(context.Context) *serverlessapplicationrepository.ServerlessApplicationRepository {
-	return client.serverlessrepoConn
+func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
+	return errs.Must(conn[*ssm_sdkv1.SSM](ctx, c, names.SSM, make(map[string]any)))
 }
 
-func (client *AWSClient) ServiceCatalogConn(context.Context) *servicecatalog.ServiceCatalog {
-	return client.servicecatalogConn
+func (c *AWSClient) SSMClient(ctx context.Context) *ssm_sdkv2.Client {
+	return errs.Must(client[*ssm_sdkv2.Client](ctx, c, names.SSM, make(map[string]any)))
 }
 
-func (client *AWSClient) ServiceCatalogAppRegistryConn(context.Context) *appregistry.AppRegistry {
-	return client.servicecatalogappregistryConn
+func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Client {
+	return errs.Must(client[*ssmcontacts_sdkv2.Client](ctx, c, names.SSMContacts, make(map[string]any)))
 }
 
-func (client *AWSClient) ServiceDiscoveryConn(context.Context) *servicediscovery.ServiceDiscovery {
-	return client.servicediscoveryConn
+func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
+	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents, make(map[string]any)))
 }
 
-func (client *AWSClient) ServiceQuotasConn(context.Context) *servicequotas.ServiceQuotas {
-	return client.servicequotasConn
+func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {
+	return errs.Must(client[*ssoadmin_sdkv2.Client](ctx, c, names.SSOAdmin, make(map[string]any)))
 }
 
-func (client *AWSClient) ShieldConn(context.Context) *shield.Shield {
-	return client.shieldConn
+func (c *AWSClient) STSConn(ctx context.Context) *sts_sdkv1.STS {
+	return errs.Must(conn[*sts_sdkv1.STS](ctx, c, names.STS, make(map[string]any)))
 }
 
-func (client *AWSClient) SignerConn(context.Context) *signer.Signer {
-	return client.signerConn
+func (c *AWSClient) STSClient(ctx context.Context) *sts_sdkv2.Client {
+	return errs.Must(client[*sts_sdkv2.Client](ctx, c, names.STS, make(map[string]any)))
 }
 
-func (client *AWSClient) SimpleDBConn(context.Context) *simpledb.SimpleDB {
-	return client.sdbConn
+func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
+	return errs.Must(client[*swf_sdkv2.Client](ctx, c, names.SWF, make(map[string]any)))
 }
 
-func (client *AWSClient) SnowDeviceManagementConn(context.Context) *snowdevicemanagement.SnowDeviceManagement {
-	return client.snowdevicemanagementConn
+func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
+	return errs.Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker, make(map[string]any)))
 }
 
-func (client *AWSClient) SnowballConn(context.Context) *snowball.Snowball {
-	return client.snowballConn
+func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {
+	return errs.Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler, make(map[string]any)))
 }
 
-func (client *AWSClient) StorageGatewayConn(context.Context) *storagegateway.StorageGateway {
-	return client.storagegatewayConn
+func (c *AWSClient) SchemasConn(ctx context.Context) *schemas_sdkv1.Schemas {
+	return errs.Must(conn[*schemas_sdkv1.Schemas](ctx, c, names.Schemas, make(map[string]any)))
 }
 
-func (client *AWSClient) SupportConn(context.Context) *support.Support {
-	return client.supportConn
+func (c *AWSClient) SecretsManagerConn(ctx context.Context) *secretsmanager_sdkv1.SecretsManager {
+	return errs.Must(conn[*secretsmanager_sdkv1.SecretsManager](ctx, c, names.SecretsManager, make(map[string]any)))
 }
 
-func (client *AWSClient) SyntheticsConn(context.Context) *synthetics.Synthetics {
-	return client.syntheticsConn
+func (c *AWSClient) SecurityHubClient(ctx context.Context) *securityhub_sdkv2.Client {
+	return errs.Must(client[*securityhub_sdkv2.Client](ctx, c, names.SecurityHub, make(map[string]any)))
 }
 
-func (client *AWSClient) TextractConn(context.Context) *textract.Textract {
-	return client.textractConn
+func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake_sdkv2.Client {
+	return errs.Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake, make(map[string]any)))
 }
 
-func (client *AWSClient) TimestreamQueryConn(context.Context) *timestreamquery.TimestreamQuery {
-	return client.timestreamqueryConn
+func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
+	return errs.Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo, make(map[string]any)))
 }
 
-func (client *AWSClient) TimestreamWriteConn(context.Context) *timestreamwrite.TimestreamWrite {
-	return client.timestreamwriteConn
+func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
+	return errs.Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog, make(map[string]any)))
 }
 
-func (client *AWSClient) TranscribeClient(context.Context) *transcribe.Client {
-	return client.transcribeClient
+func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
+	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery, make(map[string]any)))
 }
 
-func (client *AWSClient) TranscribeStreamingConn(context.Context) *transcribestreamingservice.TranscribeStreamingService {
-	return client.transcribestreamingConn
+func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
+	return errs.Must(client[*servicequotas_sdkv2.Client](ctx, c, names.ServiceQuotas, make(map[string]any)))
 }
 
-func (client *AWSClient) TransferConn(context.Context) *transfer.Transfer {
-	return client.transferConn
+func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
+	return errs.Must(conn[*shield_sdkv1.Shield](ctx, c, names.Shield, make(map[string]any)))
 }
 
-func (client *AWSClient) TranslateConn(context.Context) *translate.Translate {
-	return client.translateConn
+func (c *AWSClient) SignerClient(ctx context.Context) *signer_sdkv2.Client {
+	return errs.Must(client[*signer_sdkv2.Client](ctx, c, names.Signer, make(map[string]any)))
 }
 
-func (client *AWSClient) VPCLatticeClient(context.Context) *vpclattice.Client {
-	return client.vpclatticeClient
+func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
+	return errs.Must(conn[*simpledb_sdkv1.SimpleDB](ctx, c, names.SimpleDB, make(map[string]any)))
 }
 
-func (client *AWSClient) VoiceIDConn(context.Context) *voiceid.VoiceID {
-	return client.voiceidConn
+func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv1.StorageGateway {
+	return errs.Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway, make(map[string]any)))
 }
 
-func (client *AWSClient) WAFConn(context.Context) *waf.WAF {
-	return client.wafConn
+func (c *AWSClient) SyntheticsConn(ctx context.Context) *synthetics_sdkv1.Synthetics {
+	return errs.Must(conn[*synthetics_sdkv1.Synthetics](ctx, c, names.Synthetics, make(map[string]any)))
 }
 
-func (client *AWSClient) WAFRegionalConn(context.Context) *wafregional.WAFRegional {
-	return client.wafregionalConn
+func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
+	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite, make(map[string]any)))
 }
 
-func (client *AWSClient) WAFV2Conn(context.Context) *wafv2.WAFV2 {
-	return client.wafv2Conn
+func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
+	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe, make(map[string]any)))
 }
 
-func (client *AWSClient) WellArchitectedConn(context.Context) *wellarchitected.WellArchitected {
-	return client.wellarchitectedConn
+func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
+	return errs.Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer, make(map[string]any)))
 }
 
-func (client *AWSClient) WisdomConn(context.Context) *connectwisdomservice.ConnectWisdomService {
-	return client.wisdomConn
+func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice_sdkv2.Client {
+	return errs.Must(client[*vpclattice_sdkv2.Client](ctx, c, names.VPCLattice, make(map[string]any)))
 }
 
-func (client *AWSClient) WorkDocsConn(context.Context) *workdocs.WorkDocs {
-	return client.workdocsConn
+func (c *AWSClient) VerifiedPermissionsClient(ctx context.Context) *verifiedpermissions_sdkv2.Client {
+	return errs.Must(client[*verifiedpermissions_sdkv2.Client](ctx, c, names.VerifiedPermissions, make(map[string]any)))
 }
 
-func (client *AWSClient) WorkLinkConn(context.Context) *worklink.WorkLink {
-	return client.worklinkConn
+func (c *AWSClient) WAFConn(ctx context.Context) *waf_sdkv1.WAF {
+	return errs.Must(conn[*waf_sdkv1.WAF](ctx, c, names.WAF, make(map[string]any)))
 }
 
-func (client *AWSClient) WorkMailConn(context.Context) *workmail.WorkMail {
-	return client.workmailConn
+func (c *AWSClient) WAFRegionalConn(ctx context.Context) *wafregional_sdkv1.WAFRegional {
+	return errs.Must(conn[*wafregional_sdkv1.WAFRegional](ctx, c, names.WAFRegional, make(map[string]any)))
 }
 
-func (client *AWSClient) WorkMailMessageFlowConn(context.Context) *workmailmessageflow.WorkMailMessageFlow {
-	return client.workmailmessageflowConn
+func (c *AWSClient) WAFV2Conn(ctx context.Context) *wafv2_sdkv1.WAFV2 {
+	return errs.Must(conn[*wafv2_sdkv1.WAFV2](ctx, c, names.WAFV2, make(map[string]any)))
 }
 
-func (client *AWSClient) WorkSpacesConn(context.Context) *workspaces.WorkSpaces {
-	return client.workspacesConn
+func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
+	return errs.Must(conn[*worklink_sdkv1.WorkLink](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
-func (client *AWSClient) WorkSpacesWebConn(context.Context) *workspacesweb.WorkSpacesWeb {
-	return client.workspaceswebConn
+func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
+	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces, make(map[string]any)))
 }
 
-func (client *AWSClient) XRayClient(context.Context) *xray.Client {
-	return client.xrayClient
+func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {
+	return errs.Must(client[*xray_sdkv2.Client](ctx, c, names.XRay, make(map[string]any)))
 }

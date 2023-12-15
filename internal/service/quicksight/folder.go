@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -149,7 +152,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("folder_type"); ok {
@@ -204,7 +207,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", out.Name)
 
 	if len(out.FolderPath) > 0 {
-		d.Set("parent_folder_arn", out.FolderPath[0])
+		d.Set("parent_folder_arn", out.FolderPath[len(out.FolderPath)-1])
 	}
 
 	if err := d.Set("folder_path", flex.FlattenStringList(out.FolderPath)); err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -125,7 +128,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("share_status", shareStatus)
 	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
 	if shareStatus != route53resolver.ShareStatusSharedWithMe {
-		tags, err := ListTags(ctx, conn, arn)
+		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
 			return diag.Errorf("listing tags for Route53 Resolver Rule (%s): %s", arn, err)

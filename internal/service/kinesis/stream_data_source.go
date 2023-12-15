@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -145,7 +148,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("stream_mode_details", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, name)
+	tags, err := listTags(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Stream (%s): %s", name, err)

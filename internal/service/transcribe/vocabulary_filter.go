@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe
 
 import (
@@ -97,7 +100,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 	in := &transcribe.CreateVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Get("vocabulary_filter_name").(string)),
 		LanguageCode:         types.LanguageCode(d.Get("language_code").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("vocabulary_filter_file_uri"); ok {

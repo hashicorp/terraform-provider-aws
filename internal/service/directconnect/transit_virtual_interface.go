@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -138,7 +141,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
 			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
-			Tags:                   GetTagsIn(ctx),
+			Tags:                   getTagsIn(ctx),
 			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
 			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
 		},

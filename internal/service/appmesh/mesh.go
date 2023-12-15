@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -107,7 +110,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(name),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateMeshWithContext(ctx, input)

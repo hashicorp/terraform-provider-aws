@@ -45,20 +45,20 @@ resource "aws_ssmcontacts_contact" "example" {
 
 The following arguments are required:
 
-- `alias` - (Required) A unique and identifiable alias for the contact or escalation plan.
+- `alias` - (Required) A unique and identifiable alias for the contact or escalation plan. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), and hyphens (`-`).
 
 - `type` - (Required) The type of contact engaged. A single contact is type PERSONAL and an escalation
   plan is type ESCALATION.
 
 The following arguments are optional:
 
-- `display_name` - (Optional) Full friendly name of the contact or escalation plan.
+- `display_name` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
 - `tags` - (Optional) Map of tags to assign to the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The Amazon Resource Name (ARN) of the contact or escalation plan.
 
@@ -66,8 +66,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Import SSM Contact using the `ARN`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact using the `ARN`. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_contact.example
+  id = "{ARNValue}"
+}
 ```
-$ terraform import aws_ssmcontacts_contact.example {ARNValue}
+
+Using `terraform import`, import SSM Contact using the `ARN`. For example:
+
+```console
+% terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```

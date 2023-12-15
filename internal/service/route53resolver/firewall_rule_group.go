@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -65,7 +68,7 @@ func resourceFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData
 	input := &route53resolver.CreateFirewallRuleGroupInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-group-")),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateFirewallRuleGroupWithContext(ctx, input)

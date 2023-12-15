@@ -21,8 +21,26 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 		{{- end }}
 	}
+{{- if .ListTagsOpPaginated }}
+	var output []*{{ .TagPackage }}.{{ .TagType }}
+
+	err := conn.{{ .ListTagsOp }}PagesWithContext(ctx, input, func(page *{{ .TagPackage  }}.{{ .ListTagsOp }}Output, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.{{ .ListTagsOutTagsElem }} {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+{{ else }}
 
 	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
+{{- end }}
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
@@ -44,12 +62,17 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{ if .ListTagsOpPaginated }}
+	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{- else }}
+	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{- end }}
 }
 
-// {{ .ListTagsFunc }} lists {{ .ServicePackage }} service tags and set them in Context.
+{{- if .IsDefaultListTags }}
+// {{ .ListTagsFunc | Title }} lists {{ .ServicePackage }} service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
+func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string) error {
 	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
@@ -62,3 +85,4 @@ func (p *servicePackage) {{ .ListTagsFunc }}(ctx context.Context, meta any, iden
 
 	return nil
 }
+{{- end }}

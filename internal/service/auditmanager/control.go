@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -21,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -149,7 +152,7 @@ func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest
 	in := auditmanager.CreateControlInput{
 		Name:                  aws.String(plan.Name.ValueString()),
 		ControlMappingSources: cmsInput,
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 	if !plan.ActionPlanInstructions.IsNull() {
 		in.ActionPlanInstructions = aws.String(plan.ActionPlanInstructions.ValueString())
@@ -431,7 +434,7 @@ func (rd *resourceControlData) refreshFromOutput(ctx context.Context, out *awsty
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 	rd.Type = types.StringValue(string(out.Type))
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }

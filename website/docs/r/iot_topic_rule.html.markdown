@@ -166,7 +166,10 @@ The `iot_events` object takes the following arguments:
 The `kafka` object takes the following arguments:
 
 * `client_properties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
-* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html) .
+* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html).
+* `header` - (Optional) The list of Kafka headers that you specify. Nested arguments below.
+    * `key` - (Required) The key of the Kafka header.
+    * `value` - (Required) The value of the Kafka header.
 * `key` - (Optional) The Kafka message key.
 * `partition` - (Optional) The Kafka message partition.
 * `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.
@@ -224,9 +227,9 @@ The `timestream` object takes the following arguments:
     * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
     * `value` - (Required) An expression that returns a long epoch time value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the topic rule
 * `arn` - The ARN of the topic rule
@@ -234,8 +237,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT Topic Rules can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Topic Rules using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iot_topic_rule.rule
+  id = "<name>"
+}
 ```
-$ terraform import aws_iot_topic_rule.rule <name>
+
+Using `terraform import`, import IoT Topic Rules using the `name`. For example:
+
+```console
+% terraform import aws_iot_topic_rule.rule <name>
 ```

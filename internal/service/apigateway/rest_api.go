@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -19,10 +22,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -178,7 +181,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get("name").(string)
 	input := &apigateway.CreateRestApiInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_key_source"); ok {
@@ -365,7 +368,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("policy", policyToSet)
 
-	SetTagsOut(ctx, api.Tags)
+	setTagsOut(ctx, api.Tags)
 
 	return diags
 }
@@ -395,19 +398,23 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// Remove every binary media types. Simpler to remove and add new ones,
 			// since there are no replacings.
 			for _, v := range old {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:   aws.String(apigateway.OpRemove),
-					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
-				})
+				if e, ok := v.(string); ok {
+					operations = append(operations, &apigateway.PatchOperation{
+						Op:   aws.String(apigateway.OpRemove),
+						Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(e))),
+					})
+				}
 			}
 
 			// Handle additions
 			if len(new) > 0 {
 				for _, v := range new {
-					operations = append(operations, &apigateway.PatchOperation{
-						Op:   aws.String(apigateway.OpAdd),
-						Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
-					})
+					if e, ok := v.(string); ok {
+						operations = append(operations, &apigateway.PatchOperation{
+							Op:   aws.String(apigateway.OpAdd),
+							Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(e))),
+						})
+					}
 				}
 			}
 		}
@@ -626,18 +633,22 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	}
 
 	if v, ok := d.GetOk("binary_media_types"); ok && len(v.([]interface{})) > 0 {
-		for _, elem := range aws.StringValueSlice(output.BinaryMediaTypes) {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String(apigateway.OpRemove),
-				Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem)),
-			})
+		if len(output.BinaryMediaTypes) > 0 {
+			for _, elem := range aws.StringValueSlice(output.BinaryMediaTypes) {
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:   aws.String(apigateway.OpRemove),
+					Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem)),
+				})
+			}
 		}
 
 		for _, elem := range v.([]interface{}) {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String(apigateway.OpAdd),
-				Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem.(string))),
-			})
+			if el, ok := elem.(string); ok {
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:   aws.String(apigateway.OpAdd),
+					Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(el)),
+				})
+			}
 		}
 	}
 

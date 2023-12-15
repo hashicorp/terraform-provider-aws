@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -128,7 +131,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 
 	input := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
@@ -166,7 +169,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
@@ -176,7 +179,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	}
 
 	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
 	}
 
 	aggregator := res.ConfigurationAggregators[0]

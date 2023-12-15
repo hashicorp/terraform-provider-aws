@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -87,10 +90,13 @@ func ResourceGrant() *schema.Resource {
 				Computed: true,
 			},
 			"grantee_principal": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 			"key_id": {
 				Type:     schema.TypeString,
@@ -119,10 +125,13 @@ func ResourceGrant() *schema.Resource {
 				ForceNew: true,
 			},
 			"retiring_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					verify.ValidServicePrincipal,
+				),
 			},
 		},
 	}
@@ -197,11 +206,11 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Grant (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading KMS Grant (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Grant (%s): %s", d.Id(), err)
 	}
 
 	if grant.Constraints != nil {
@@ -328,13 +337,13 @@ func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, g
 		}
 
 		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
-			if !arn.IsARN(principal) {
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
 		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
-			if !arn.IsARN(principal) {
+			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
@@ -452,12 +461,12 @@ func flattenGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
-			m["encryption_context_equals"] = flex.PointersMapToStringList(constraint.EncryptionContextEquals)
+			m["encryption_context_equals"] = flex.FlattenStringMap(constraint.EncryptionContextEquals)
 		}
 	}
 	if constraint.EncryptionContextSubset != nil {
 		if len(constraint.EncryptionContextSubset) > 0 {
-			m["encryption_context_subset"] = flex.PointersMapToStringList(constraint.EncryptionContextSubset)
+			m["encryption_context_subset"] = flex.FlattenStringMap(constraint.EncryptionContextSubset)
 		}
 	}
 	constraints.Add(m)

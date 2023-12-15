@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts
 
 import (
@@ -69,7 +72,7 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Alias:       aws.String(d.Get("alias").(string)),
 		DisplayName: aws.String(d.Get("display_name").(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.ContactType(d.Get("type").(string)),
 	}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -87,7 +90,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ssm.CreateActivationInput{
 		DefaultInstanceName: aws.String(name),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -143,7 +146,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("registration_count", activation.RegistrationsCount)
 	d.Set("registration_limit", activation.RegistrationLimit)
 
-	SetTagsOut(ctx, activation.Tags)
+	setTagsOut(ctx, activation.Tags)
 
 	return diags
 }

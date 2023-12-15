@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -19,7 +22,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_schedule_association.test"
-	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.default"
+	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,11 +32,11 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSnapshotScheduleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
 				),
 			},
 			{
@@ -57,7 +60,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSnapshotScheduleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
@@ -81,7 +84,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears_cluster(t *testing.T)
 		CheckDestroy:             testAccCheckSnapshotScheduleAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
+				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
@@ -99,9 +102,14 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
+			clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
 			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-			_, _, err := tfredshift.FindScheduleAssociationById(ctx, conn, rs.Primary.ID)
+			_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -111,7 +119,7 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				return err
 			}
 
-			return fmt.Errorf("Redshift Schedule Association %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Redshift Snapshot Schedule Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -126,21 +134,26 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
+			return fmt.Errorf("No Redshift Snapshot Schedule Association ID is set")
+		}
+
+		clusterIdentifier, scheduleIdentifier, err := tfredshift.SnapshotScheduleAssociationParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		_, _, err := tfredshift.FindScheduleAssociationById(ctx, conn, rs.Primary.ID)
+		_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
 		return err
 	}
 }
 
-func testAccSnapshotScheduleAssociationConfig_basic(rName, definition string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig_basic(rName, definition), `
+func testAccSnapshotScheduleAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), testAccSnapshotScheduleConfig_basic(rName), `
 resource "aws_redshift_snapshot_schedule_association" "test" {
-  schedule_identifier = aws_redshift_snapshot_schedule.default.id
+  schedule_identifier = aws_redshift_snapshot_schedule.test.id
   cluster_identifier  = aws_redshift_cluster.test.id
 }
 `)

@@ -67,6 +67,7 @@ resource "aws_lakeformation_data_lake_settings" "example" {
 The following arguments are optional:
 
 * `admins` – (Optional) Set of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `read_only_admins` – (Optional) Set of ARNs of AWS Lake Formation principals (IAM users or roles) with only view access to the resources.
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID.
 * `create_database_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
@@ -91,6 +92,6 @@ The following arguments are optional:
 * `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, and `DESCRIBE`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

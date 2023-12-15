@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -33,31 +36,6 @@ func FindNamespaceByName(ctx context.Context, conn *redshiftserverless.RedshiftS
 	}
 
 	return output.Namespace, nil
-}
-
-func FindWorkgroupByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
-	input := &redshiftserverless.GetWorkgroupInput{
-		WorkgroupName: aws.String(name),
-	}
-
-	output, err := conn.GetWorkgroupWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Workgroup, nil
 }
 
 func FindEndpointAccessByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) {

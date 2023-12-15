@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam
 
 import (
@@ -70,7 +73,7 @@ func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	in := &oam.CreateSinkInput{
 		Name: aws.String(d.Get("name").(string)),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateSink(ctx, in)

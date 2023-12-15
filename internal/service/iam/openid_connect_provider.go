@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -77,7 +80,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 
 	input := &iam.CreateOpenIDConnectProviderInput{
 		ClientIDList:   flex.ExpandStringSet(d.Get("client_id_list").(*schema.Set)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
 		Url:            aws.String(d.Get("url").(string)),
 	}
@@ -98,7 +101,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	d.SetId(aws.StringValue(output.OpenIDConnectProviderArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := openIDConnectProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -135,7 +138,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("thumbprint_list", aws.StringValueSlice(output.ThumbprintList))
 	d.Set("url", output.Url)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

@@ -5,6 +5,7 @@ package ssoadmin
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -12,11 +13,47 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceApplication,
+			Name:    "Application",
+		},
+		{
+			Factory: newDataSourceApplicationAssignments,
+			Name:    "Application Assignments",
+		},
+		{
+			Factory: newDataSourceApplicationProviders,
+			Name:    "Application Providers",
+		},
+		{
+			Factory: newDataSourcePrincipalApplicationAssignments,
+			Name:    "Principal Application Assignments",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceApplication,
+			Name:    "Application",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newResourceApplicationAssignment,
+			Name:    "Application Assignment",
+		},
+		{
+			Factory: newResourceApplicationAssignmentConfiguration,
+			Name:    "Application Assignment Configuration",
+		},
+		{
+			Factory: newResourceTrustedTokenIssuer,
+			Name:    "Trusted Token Issuer",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -71,4 +108,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SSOAdmin
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

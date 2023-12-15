@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
@@ -65,7 +68,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
 		Comment:   aws.String(d.Get("comment").(string)),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRevisionWithContext(ctx, input)
@@ -104,7 +107,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", revision.Arn)
 	d.Set("revision_id", revision.Id)
 
-	SetTagsOut(ctx, revision.Tags)
+	setTagsOut(ctx, revision.Tags)
 
 	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,10 +39,6 @@ func ResourceLocationObjectStorage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"access_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -51,6 +51,10 @@ func ResourceLocationObjectStorage() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket_name": {
 				Type:         schema.TypeString,
@@ -110,30 +114,30 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	input := &datasync.CreateLocationObjectStorageInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		BucketName:     aws.String(d.Get("bucket_name").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
-		Tags:           GetTagsIn(ctx),
+		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_key"); ok {
 		input.AccessKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("server_protocol"); ok {
-		input.ServerProtocol = aws.String(v.(string))
+	if v, ok := d.GetOk("secret_key"); ok {
+		input.SecretKey = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("server_certificate"); ok {
+		input.ServerCertificate = []byte(v.(string))
 	}
 
 	if v, ok := d.GetOk("server_port"); ok {
 		input.ServerPort = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("secret_key"); ok {
-		input.SecretKey = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("server_certficate"); ok {
-		input.ServerCertificate = []byte(v.(string))
+	if v, ok := d.GetOk("server_protocol"); ok {
+		input.ServerProtocol = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateLocationObjectStorageWithContext(ctx, input)
@@ -163,31 +167,21 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Object Storage (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.StringValue(output.LocationUri)
+	hostname, bucketName, subdirectory, err := decodeObjectStorageURI(uri)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing DataSync Location Object Storage (%s) location URI: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
+	d.Set("access_key", output.AccessKey)
+	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
+	d.Set("bucket_name", bucketName)
+	d.Set("server_certificate", string(output.ServerCertificate))
+	d.Set("server_hostname", hostname)
+	d.Set("server_port", output.ServerPort)
 	d.Set("server_protocol", output.ServerProtocol)
 	d.Set("subdirectory", subdirectory)
-	d.Set("access_key", output.AccessKey)
-	d.Set("server_port", output.ServerPort)
-	d.Set("server_certificate", string(output.ServerCertificate))
-
-	uri := aws.StringValue(output.LocationUri)
-
-	hostname, bucketName, err := decodeObjectStorageURI(uri)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing DataSync Location Object Storage (%s) object-storage URI: %s", d.Id(), err)
-	}
-
-	d.Set("server_hostname", hostname)
-	d.Set("bucket_name", bucketName)
-
 	d.Set("uri", uri)
 
 	return diags
@@ -197,17 +191,9 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationObjectStorageInput{
 			LocationArn: aws.String(d.Id()),
-		}
-
-		if d.HasChange("server_protocol") {
-			input.ServerProtocol = aws.String(d.Get("server_protocol").(string))
-		}
-
-		if d.HasChange("server_port") {
-			input.ServerPort = aws.Int64(int64(d.Get("server_port").(int)))
 		}
 
 		if d.HasChange("access_key") {
@@ -218,12 +204,20 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 			input.SecretKey = aws.String(d.Get("secret_key").(string))
 		}
 
-		if d.HasChange("subdirectory") {
-			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
+		if d.HasChange("server_certificate") {
+			input.ServerCertificate = []byte(d.Get("server_certificate").(string))
 		}
 
-		if d.HasChange("server_certficate") {
-			input.ServerCertificate = []byte(d.Get("server_certficate").(string))
+		if d.HasChange("server_port") {
+			input.ServerPort = aws.Int64(int64(d.Get("server_port").(int)))
+		}
+
+		if d.HasChange("server_protocol") {
+			input.ServerProtocol = aws.String(d.Get("server_protocol").(string))
+		}
+
+		if d.HasChange("subdirectory") {
+			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
 		}
 
 		_, err := conn.UpdateLocationObjectStorageWithContext(ctx, input)
@@ -240,12 +234,10 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
-		LocationArn: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting DataSync Location Object Storage: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, input)
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+		LocationArn: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
@@ -258,17 +250,42 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func decodeObjectStorageURI(uri string) (string, string, error) {
+func FindLocationObjectStorageByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationObjectStorageOutput, error) {
+	input := &datasync.DescribeLocationObjectStorageInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationObjectStorageWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func decodeObjectStorageURI(uri string) (string, string, string, error) {
 	prefix := "object-storage://"
 	if !strings.HasPrefix(uri, prefix) {
-		return "", "", fmt.Errorf("incorrect uri format needs to start with %s", prefix)
+		return "", "", "", fmt.Errorf("incorrect uri format needs to start with %s", prefix)
 	}
 	trimmedUri := strings.TrimPrefix(uri, prefix)
 	uriParts := strings.Split(trimmedUri, "/")
 
 	if len(uri) < 2 {
-		return "", "", fmt.Errorf("incorrect uri format needs to start with %sSERVER-NAME/BUCKET-NAME/SUBDIRECTORY", prefix)
+		return "", "", "", fmt.Errorf("incorrect uri format needs to start with %sSERVER-NAME/BUCKET-NAME/SUBDIRECTORY", prefix)
 	}
 
-	return uriParts[0], uriParts[1], nil
+	return uriParts[0], uriParts[1], "/" + strings.Join(uriParts[2:], "/"), nil
 }

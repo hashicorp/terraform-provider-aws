@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -77,7 +80,7 @@ func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &fsx.CreateSnapshotInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		Name:               aws.String(d.Get("name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VolumeId:           aws.String(d.Get("volume_id").(string)),
 	}
 

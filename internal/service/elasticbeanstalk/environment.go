@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
@@ -72,7 +75,7 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
@@ -223,7 +226,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
 		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v := d.Get("description"); v.(string) != "" {
@@ -311,7 +314,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -592,7 +595,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -676,8 +679,14 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Elast
 		return nil
 	}
 
-	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) bool {
-		return a.EventDate.Before(aws.TimeValue(b.EventDate))
+	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) int {
+		if a.EventDate.Before(aws.TimeValue(b.EventDate)) {
+			return -1
+		}
+		if a.EventDate.After(aws.TimeValue(b.EventDate)) {
+			return 1
+		}
+		return 0
 	})
 
 	var errors *multierror.Error

@@ -109,16 +109,25 @@ The following arguments are optional:
 * `id` - (Required) ID of the parameter value.
 * `string_value` - (Required) Field value, expressed as a String.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the datapipeline definition.
 
 ## Import
 
-`aws_datapipeline_pipeline_definition` can be imported using the id, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline_definition` using the id. For example:
 
+```terraform
+import {
+  to = aws_datapipeline_pipeline_definition.example
+  id = "df-1234567890"
+}
 ```
-$ terraform import aws_datapipeline_pipeline_definition.example df-1234567890
+
+Using `terraform import`, import `aws_datapipeline_pipeline_definition` using the id. For example:
+
+```console
+% terraform import aws_datapipeline_pipeline_definition.example df-1234567890
 ```

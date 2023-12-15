@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -124,7 +127,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:                     aws.String(d.Get("name").(string)),
 		ServiceRole:              aws.String(d.Get("service_role").(string)),
 		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 		VpcId:                    aws.String(d.Get("vpc_id").(string)),
 		WorkspaceSecurityGroupId: aws.String(d.Get("workspace_security_group_id").(string)),
 	}
@@ -237,7 +240,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
 	d.Set("subnet_ids", flex.FlattenStringSet(studio.SubnetIds))
 
-	SetTagsOut(ctx, studio.Tags)
+	setTagsOut(ctx, studio.Tags)
 
 	return diags
 }

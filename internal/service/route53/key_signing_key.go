@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -74,7 +77,7 @@ func ResourceKeySigningKey() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexp.MustCompile("^[a-zA-Z0-9._-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
+					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_.-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
 				),
 			},
 			"public_key": {

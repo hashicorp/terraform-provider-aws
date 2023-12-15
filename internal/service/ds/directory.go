@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -397,7 +400,7 @@ func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.D
 	input := &directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(name),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -440,7 +443,7 @@ func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.D
 	input := &directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(name),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -480,7 +483,7 @@ func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Dire
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String(name),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -7,11 +10,11 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -23,10 +26,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
@@ -326,6 +330,11 @@ func ResourceBroker() *schema.Resource {
 							Sensitive:    true,
 							ValidateFunc: ValidBrokerPassword,
 						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"username": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -354,6 +363,8 @@ func ResourceBroker() *schema.Resource {
 }
 
 func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("broker_name").(string)
@@ -366,7 +377,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
 
@@ -404,20 +415,22 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	out, err := conn.CreateBrokerWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MQ Broker (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MQ Broker (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
 	if _, err := waitBrokerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MQ Broker (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBrokerRead(ctx, d, meta)
+	return append(diags, resourceBrokerRead(ctx, d, meta)...)
 }
 
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	output, err := FindBrokerByID(ctx, conn, d.Id())
@@ -425,11 +438,11 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
 		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.BrokerArn)
@@ -447,11 +460,11 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
 	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
-		return diag.Errorf("setting configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
-		return diag.Errorf("setting encryption_options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_options: %s", err)
 	}
 
 	var password string
@@ -460,33 +473,35 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
-		return diag.Errorf("setting ldap_server_metadata: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ldap_server_metadata: %s", err)
 	}
 
 	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
-		return diag.Errorf("setting logs: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logs: %s", err)
 	}
 
 	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
-		return diag.Errorf("setting maintenance_window_start_time: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting maintenance_window_start_time: %s", err)
 	}
 
 	rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
 
 	if err != nil {
-		return diag.Errorf("reading MQ Broker (%s) users: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
 	}
 
 	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
-		return diag.Errorf("setting user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	requiresReboot := false
@@ -498,7 +513,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) security groups: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) security groups: %s", d.Id(), err)
 		}
 	}
 
@@ -511,7 +526,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) configuration: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -526,7 +541,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		usersUpdated, err = updateBrokerUsers(ctx, conn, d.Id(), o.(*schema.Set).List(), n.(*schema.Set).List())
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) users: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) users: %s", d.Id(), err)
 		}
 
 		if usersUpdated {
@@ -541,7 +556,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) host instance type: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) host instance type: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -554,7 +569,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -567,7 +582,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -579,18 +594,20 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			return diag.Errorf("rebooting MQ Broker (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "rebooting MQ Broker (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitBrokerRebooted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) reboot: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
@@ -599,18 +616,18 @@ func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MQ Broker (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MQ Broker (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitBrokerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MQ Broker (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
@@ -803,11 +820,12 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {
 				ur = append(ur, &mq.UpdateUserRequest{
-					BrokerId:      aws.String(bId),
-					ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-					Groups:        flex.ExpandStringList(ng),
-					Password:      aws.String(newUserMap["password"].(string)),
-					Username:      aws.String(username),
+					BrokerId:        aws.String(bId),
+					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+					Groups:          flex.ExpandStringList(ng),
+					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+					Password:        aws.String(newUserMap["password"].(string)),
+					Username:        aws.String(username),
 				})
 			}
 
@@ -815,10 +833,11 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 			delete(existingUsers, username)
 		} else {
 			cur := &mq.CreateUserRequest{
-				BrokerId:      aws.String(bId),
-				ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-				Password:      aws.String(newUserMap["password"].(string)),
-				Username:      aws.String(username),
+				BrokerId:        aws.String(bId),
+				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+				Password:        aws.String(newUserMap["password"].(string)),
+				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+				Username:        aws.String(username),
 			}
 			if len(ng) > 0 {
 				cur.Groups = flex.ExpandStringList(ng)
@@ -904,6 +923,9 @@ func expandUsers(cfg []interface{}) []*mq.User {
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
+		if v, ok := u["replication_user"]; ok {
+			user.ReplicationUser = aws.Bool(v.(bool))
+		}
 		if v, ok := u["groups"]; ok {
 			user.Groups = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -930,9 +952,10 @@ func expandUsersForBroker(ctx context.Context, conn *mq.MQ, brokerId string, inp
 		}
 
 		user := &mq.User{
-			ConsoleAccess: uOut.ConsoleAccess,
-			Groups:        uOut.Groups,
-			Username:      uOut.Username,
+			ConsoleAccess:   uOut.ConsoleAccess,
+			Groups:          uOut.Groups,
+			ReplicationUser: uOut.ReplicationUser,
+			Username:        uOut.Username,
 		}
 
 		rawUsers = append(rawUsers, user)
@@ -964,6 +987,9 @@ func flattenUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.BoolValue(u.ConsoleAccess)
+		}
+		if u.ReplicationUser != nil {
+			m["replication_user"] = aws.BoolValue(u.ReplicationUser)
 		}
 		if len(u.Groups) > 0 {
 			m["groups"] = flex.FlattenStringSet(u.Groups)
@@ -1189,5 +1215,5 @@ func expandLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput 
 
 var ValidateBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
-	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 )

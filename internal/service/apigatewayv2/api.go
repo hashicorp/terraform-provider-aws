@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -170,7 +173,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &apigatewayv2.CreateApiInput{
 		Name:         aws.String(name),
 		ProtocolType: aws.String(d.Get("protocol_type").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
@@ -268,7 +271,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("protocol_type", output.ProtocolType)
 	d.Set("route_selection_expression", output.RouteSelectionExpression)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	d.Set("version", output.Version)
 
@@ -412,7 +415,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+		if err := updateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
 			return fmt.Errorf("updating API Gateway v2 API (%s) tags: %w", d.Id(), err)
 		}
 

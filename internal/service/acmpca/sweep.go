@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package acmpca
 
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_acmpca_certificate_authority", &resource.Sweeper{
 		Name: "aws_acmpca_certificate_authority",
 		F:    sweepCertificateAuthorities,
@@ -24,12 +24,12 @@ func init() {
 
 func sweepCertificateAuthorities(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := client.ACMPCAConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -54,7 +54,7 @@ func sweepCertificateAuthorities(region string) error {
 			r := ResourceCertificateAuthority()
 			d := r.Data(nil)
 			d.SetId(arn)
-			d.Set("permanent_deletion_time_in_days", 7)
+			d.Set("permanent_deletion_time_in_days", 7) //nolint:gomnd
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -66,11 +66,11 @@ func sweepCertificateAuthorities(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing ACM PCA Certificate Authorities: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping ACM PCA Certificate Authorities for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, errs)
 		return nil
 	}

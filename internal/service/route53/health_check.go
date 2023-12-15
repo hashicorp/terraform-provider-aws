@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -280,7 +283,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.HealthCheck.Id))
 
-	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package xray
 
 import (
@@ -119,14 +122,14 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		FixedRate:     d.Get("fixed_rate").(float64),
 		Host:          aws.String(d.Get("host").(string)),
 		HTTPMethod:    aws.String(d.Get("http_method").(string)),
-		Priority:      int32(d.Get("priority").(int)),
+		Priority:      aws.Int32(int32(d.Get("priority").(int))),
 		ReservoirSize: int32(d.Get("reservoir_size").(int)),
 		ResourceARN:   aws.String(d.Get("resource_arn").(string)),
 		RuleName:      aws.String(name),
 		ServiceName:   aws.String(d.Get("service_name").(string)),
 		ServiceType:   aws.String(d.Get("service_type").(string)),
 		URLPath:       aws.String(d.Get("url_path").(string)),
-		Version:       int32(d.Get("version").(int)),
+		Version:       aws.Int32(int32(d.Get("version").(int))),
 	}
 
 	if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
@@ -135,7 +138,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &xray.CreateSamplingRuleInput{
 		SamplingRule: samplingRule,
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateSamplingRule(ctx, input)

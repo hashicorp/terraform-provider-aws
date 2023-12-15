@@ -5,6 +5,10 @@ package transfer
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,6 +37,38 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccess,
 			TypeName: "aws_transfer_access",
+		},
+		{
+			Factory:  ResourceAgreement,
+			TypeName: "aws_transfer_agreement",
+			Name:     "Agreement",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceCertificate,
+			TypeName: "aws_transfer_certificate",
+			Name:     "Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceConnector,
+			TypeName: "aws_transfer_connector",
+			Name:     "Connector",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceProfile,
+			TypeName: "aws_transfer_profile",
+			Name:     "Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceServer,
@@ -73,4 +109,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Transfer
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*transfer_sdkv1.Transfer, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return transfer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}
