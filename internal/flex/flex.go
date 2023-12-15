@@ -317,6 +317,13 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
+// StringValueToInt64 converts a string to a Go int64 pointer value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64(v string) *int64 {
+	i, _ := strconv.Atoi(v)
+	return aws.Int64(int64(i))
+}
+
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant
 // returns the number of parts
 func ResourceIdPartCount(id string) int {
