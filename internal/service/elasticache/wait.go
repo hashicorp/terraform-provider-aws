@@ -124,6 +124,61 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCach
 	return nil, err
 }
 
+const (
+	ServerlessCacheCreatedTimeout = 40 * time.Minute
+	ServerlessCacheUpdatedTimeout = 80 * time.Minute
+	ServerlessCacheDeletedTimeout = 40 * time.Minute
+
+	ServerlessCacheAvailableMinTimeout = 10 * time.Second
+	ServerlessCacheAvailableDelay      = 30 * time.Second
+
+	ServerlessCacheDeletedMinTimeout = 10 * time.Second
+	ServerlessCacheDeletedDelay      = 30 * time.Second
+)
+
+// waitCacheClusterAvailable waits for a Cache Cluster to return Available
+func waitServerlesssCacheAvailable(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.ServerlessCache, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ServerlessCacheCreating,
+			ServerlessCacheDeleting,
+			ServerlessCacheModifying,
+		},
+		Target:     []string{ServerlessCacheAvailable},
+		Refresh:    StatusServerlessCache(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: ServerlessCacheAvailableMinTimeout,
+		Delay:      ServerlessCacheAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(*elasticache.ServerlessCache); ok {
+		return v, err
+	}
+	return nil, err
+}
+
+func waitServerlesssCacheDeleted(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.ServerlessCache, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ServerlessCacheCreating,
+			ServerlessCacheDeleting,
+			ServerlessCacheModifying,
+		},
+		Target:     []string{},
+		Refresh:    StatusServerlessCache(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: ServerlessCacheDeletedMinTimeout,
+		Delay:      ServerlessCacheDeletedDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(*elasticache.ServerlessCache); ok {
+		return v, err
+	}
+	return nil, err
+}
+
 // WaitCacheClusterDeleted waits for a Cache Cluster to be deleted
 func WaitCacheClusterDeleted(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) {
 	stateConf := &retry.StateChangeConf{

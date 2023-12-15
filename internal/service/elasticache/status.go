@@ -88,6 +88,29 @@ func StatusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cach
 }
 
 const (
+	ServerlessCacheAvailable = "available"
+	ServerlessCacheCreating  = "creating"
+	ServerlessCacheDeleted   = "deleted"
+	ServerlessCacheDeleting  = "deleting"
+	ServerlessCacheModifying = "modifying"
+)
+
+// StatusCacheCluster fetches the Cache Cluster and its Status
+func StatusServerlessCache(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		c, err := FindElasicCacheServerlessByID(ctx, conn, cacheClusterID)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return c, aws.StringValue(c.Status), nil
+	}
+}
+
+const (
 	GlobalReplicationGroupStatusAvailable   = "available"
 	GlobalReplicationGroupStatusCreating    = "creating"
 	GlobalReplicationGroupStatusModifying   = "modifying"

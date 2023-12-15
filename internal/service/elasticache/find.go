@@ -69,6 +69,14 @@ func FindCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id
 	return FindCacheCluster(ctx, conn, input)
 }
 
+// FindCacheClusterByID retrieves an ElastiCache Cache Cluster by id.
+func FindElasicCacheServerlessByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.ServerlessCache, error) {
+	input := &elasticache.DescribeServerlessCachesInput{
+		ServerlessCacheName: aws.String(id),
+	}
+	return FindServerlessCacheCluster(ctx, conn, input)
+}
+
 // FindCacheClusterWithNodeInfoByID retrieves an ElastiCache Cache Cluster with Node Info by id.
 func FindCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{
@@ -99,6 +107,29 @@ func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input 
 	}
 
 	return result.CacheClusters[0], nil
+}
+
+// FindCacheCluster retrieves an ElastiCache Cache Cluster using DescribeCacheClustersInput.
+func FindServerlessCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeServerlessCachesInput) (*elasticache.ServerlessCache, error) {
+	result, err := conn.DescribeServerlessCachesWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeServerlessCacheNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil || len(result.ServerlessCaches) == 0 || result.ServerlessCaches[0] == nil {
+		return nil, &retry.NotFoundError{
+			Message:     "empty result",
+			LastRequest: input,
+		}
+	}
+
+	return result.ServerlessCaches[0], nil
 }
 
 // FindCacheClustersByID retrieves a list of ElastiCache Cache Clusters by id.
