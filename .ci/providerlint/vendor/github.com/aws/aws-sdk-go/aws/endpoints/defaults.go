@@ -10454,6 +10454,161 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"eks-auth": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{
+					DNSSuffix: "api.aws",
+				},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname:  "{service}-fips.{region}.{dnsSuffix}",
+					DNSSuffix: "api.aws",
+				},
+			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "af-south-1",
+				}: endpoint{
+					Hostname: "eks-auth.af-south-1.api.aws",
+				},
+				endpointKey{
+					Region: "ap-east-1",
+				}: endpoint{
+					Hostname: "eks-auth.ap-east-1.api.aws",
+				},
+				endpointKey{
+					Region: "ap-northeast-1",
+				}: endpoint{
+					Hostname: "eks-auth.ap-northeast-1.api.aws",
+				},
+				endpointKey{
+					Region: "ap-northeast-2",
+				}: endpoint{
+					Hostname: "eks-auth.ap-northeast-2.api.aws",
+				},
+				endpointKey{
+					Region: "ap-northeast-3",
+				}: endpoint{
+					Hostname: "eks-auth.ap-northeast-3.api.aws",
+				},
+				endpointKey{
+					Region: "ap-south-1",
+				}: endpoint{
+					Hostname: "eks-auth.ap-south-1.api.aws",
+				},
+				endpointKey{
+					Region: "ap-south-2",
+				}: endpoint{
+					Hostname: "eks-auth.ap-south-2.api.aws",
+				},
+				endpointKey{
+					Region: "ap-southeast-1",
+				}: endpoint{
+					Hostname: "eks-auth.ap-southeast-1.api.aws",
+				},
+				endpointKey{
+					Region: "ap-southeast-2",
+				}: endpoint{
+					Hostname: "eks-auth.ap-southeast-2.api.aws",
+				},
+				endpointKey{
+					Region: "ap-southeast-3",
+				}: endpoint{
+					Hostname: "eks-auth.ap-southeast-3.api.aws",
+				},
+				endpointKey{
+					Region: "ap-southeast-4",
+				}: endpoint{
+					Hostname: "eks-auth.ap-southeast-4.api.aws",
+				},
+				endpointKey{
+					Region: "ca-central-1",
+				}: endpoint{
+					Hostname: "eks-auth.ca-central-1.api.aws",
+				},
+				endpointKey{
+					Region: "eu-central-1",
+				}: endpoint{
+					Hostname: "eks-auth.eu-central-1.api.aws",
+				},
+				endpointKey{
+					Region: "eu-central-2",
+				}: endpoint{
+					Hostname: "eks-auth.eu-central-2.api.aws",
+				},
+				endpointKey{
+					Region: "eu-north-1",
+				}: endpoint{
+					Hostname: "eks-auth.eu-north-1.api.aws",
+				},
+				endpointKey{
+					Region: "eu-south-1",
+				}: endpoint{
+					Hostname: "eks-auth.eu-south-1.api.aws",
+				},
+				endpointKey{
+					Region: "eu-south-2",
+				}: endpoint{
+					Hostname: "eks-auth.eu-south-2.api.aws",
+				},
+				endpointKey{
+					Region: "eu-west-1",
+				}: endpoint{
+					Hostname: "eks-auth.eu-west-1.api.aws",
+				},
+				endpointKey{
+					Region: "eu-west-2",
+				}: endpoint{
+					Hostname: "eks-auth.eu-west-2.api.aws",
+				},
+				endpointKey{
+					Region: "eu-west-3",
+				}: endpoint{
+					Hostname: "eks-auth.eu-west-3.api.aws",
+				},
+				endpointKey{
+					Region: "il-central-1",
+				}: endpoint{
+					Hostname: "eks-auth.il-central-1.api.aws",
+				},
+				endpointKey{
+					Region: "me-central-1",
+				}: endpoint{
+					Hostname: "eks-auth.me-central-1.api.aws",
+				},
+				endpointKey{
+					Region: "me-south-1",
+				}: endpoint{
+					Hostname: "eks-auth.me-south-1.api.aws",
+				},
+				endpointKey{
+					Region: "sa-east-1",
+				}: endpoint{
+					Hostname: "eks-auth.sa-east-1.api.aws",
+				},
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{
+					Hostname: "eks-auth.us-east-1.api.aws",
+				},
+				endpointKey{
+					Region: "us-east-2",
+				}: endpoint{
+					Hostname: "eks-auth.us-east-2.api.aws",
+				},
+				endpointKey{
+					Region: "us-west-1",
+				}: endpoint{
+					Hostname: "eks-auth.us-west-1.api.aws",
+				},
+				endpointKey{
+					Region: "us-west-2",
+				}: endpoint{
+					Hostname: "eks-auth.us-west-2.api.aws",
+				},
+			},
+		},
 		"elasticache": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -34119,6 +34274,31 @@ var awscnPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"eks-auth": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{
+					DNSSuffix: "api.amazonwebservices.com.cn",
+				},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname:  "{service}-fips.{region}.{dnsSuffix}",
+					DNSSuffix: "api.amazonwebservices.com.cn",
+				},
+			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "cn-north-1",
+				}: endpoint{
+					Hostname: "eks-auth.cn-north-1.api.amazonwebservices.com.cn",
+				},
+				endpointKey{
+					Region: "cn-northwest-1",
+				}: endpoint{
+					Hostname: "eks-auth.cn-northwest-1.api.amazonwebservices.com.cn",
+				},
+			},
+		},
 		"elasticache": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -37677,6 +37857,31 @@ var awsusgovPartition = partition{
 					Variant: fipsVariant,
 				}: endpoint{
 					Hostname: "eks.us-gov-west-1.amazonaws.com",
+				},
+			},
+		},
+		"eks-auth": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{
+					DNSSuffix: "api.aws",
+				},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname:  "{service}-fips.{region}.{dnsSuffix}",
+					DNSSuffix: "api.aws",
+				},
+			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{
+					Hostname: "eks-auth.us-gov-east-1.api.aws",
+				},
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{
+					Hostname: "eks-auth.us-gov-west-1.api.aws",
 				},
 			},
 		},
@@ -42808,11 +43013,41 @@ var awsisoPartition = partition{
 		"ram": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "fips-us-iso-east-1",
+				}: endpoint{
+					Hostname: "ram-fips.us-iso-east-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "fips-us-iso-west-1",
+				}: endpoint{
+					Hostname: "ram-fips.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-iso-east-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "us-iso-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "ram-fips.us-iso-east-1.c2s.ic.gov",
+				},
+				endpointKey{
 					Region: "us-iso-west-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-iso-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "ram-fips.us-iso-west-1.c2s.ic.gov",
+				},
 			},
 		},
 		"rbin": service{
@@ -43678,8 +43913,23 @@ var awsisobPartition = partition{
 		"ram": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "fips-us-isob-east-1",
+				}: endpoint{
+					Hostname: "ram-fips.us-isob-east-1.sc2s.sgov.gov",
+					CredentialScope: credentialScope{
+						Region: "us-isob-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-isob-east-1",
 				}: endpoint{},
+				endpointKey{
+					Region:  "us-isob-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "ram-fips.us-isob-east-1.sc2s.sgov.gov",
+				},
 			},
 		},
 		"rbin": service{
