@@ -5,7 +5,7 @@ import (
 	"context"
 
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // map[string]string handling
@@ -35,6 +35,6 @@ func getTagsInV2(ctx context.Context) map[string]string {
 // setTagsOutV2 sets kafka service tags in Context.
 func setTagsOutV2(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(keyValueTagsV2(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTagsV2(ctx, tags))
 	}
 }

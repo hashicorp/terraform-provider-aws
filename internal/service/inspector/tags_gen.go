@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector/inspectoriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // listTags lists inspector service tags.
@@ -39,7 +39,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -89,6 +89,6 @@ func getTagsIn(ctx context.Context) []*inspector.Tag {
 // setTagsOut sets inspector service tags in Context.
 func setTagsOut(ctx context.Context, tags []*inspector.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
