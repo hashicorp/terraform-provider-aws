@@ -44,7 +44,7 @@ func DataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 			"deregistration_delay": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"health_check": {
