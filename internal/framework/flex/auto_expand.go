@@ -525,11 +525,27 @@ func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 			return diags
 		}
 
+	case reflect.Map:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Struct:
+			//
+			// types.List(OfObject) -> map[string]struct
+			//
+			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tTo, tElem, vTo)...)
+			return diags
+		case reflect.Ptr:
+			//
+			// types.List(OfObject) -> map[string]*struct
+			//
+			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tTo, tElem, vTo)...)
+			return diags
+		}
+
 	case reflect.Slice:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			//
-			// types.List(OfObject) -> []struct.
+			// types.List(OfObject) -> []struct
 			//
 			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
@@ -614,6 +630,51 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	return diags
 }
 
+// nestedKeyObjectToMap copies a Plugin Framework NestedObjectValue to a compatible AWS API map[string]struct value.
+func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Get the nested Objects as a slice.
+	from, d := vFrom.ToObjectSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if tElem.Kind() == reflect.Ptr {
+		tElem = tElem.Elem()
+	}
+
+	// Create a new target slice and expand each element.
+	f := reflect.ValueOf(from)
+	m := reflect.MakeMap(vTo.Type())
+	for i := 0; i < f.Len(); i++ {
+		// Create a new target structure and walk its fields.
+		target := reflect.New(tElem)
+		diags.Append(autoFlexConvertStruct(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		key, d := blockKeyMap(ctx, f.Index(i).Interface())
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		// Set value (or pointer) in the target map.
+		if vTo.Type().Elem().Kind() == reflect.Struct {
+			m.SetMapIndex(key, target.Elem())
+		} else {
+			m.SetMapIndex(key, target)
+		}
+	}
+
+	vTo.Set(m)
+
+	return diags
+}
+
 // objectMap copies a Plugin Framework ObjectMapValue value to a compatible AWS API value.
 func (expander autoExpander) objectMap(ctx context.Context, vFrom fwtypes.ObjectMapValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -683,4 +744,33 @@ func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwt
 	vTo.Set(m)
 
 	return diags
+}
+
+// blockKeyMap takes a struct and extracts the value of the `key`
+func blockKeyMap(ctx context.Context, from any) (reflect.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	valFrom := reflect.ValueOf(from)
+	if kind := valFrom.Kind(); kind == reflect.Ptr {
+		valFrom = valFrom.Elem()
+	}
+
+	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
+		field := typFrom.Field(i)
+		if field.PkgPath != "" {
+			continue // Skip unexported fields.
+		}
+
+		// go from StringValue to string
+		if field.Name == BlockKeyMap {
+			if v, ok := valFrom.Field(i).Interface().(basetypes.StringValue); ok {
+				return reflect.ValueOf(v.ValueString()), diags
+			}
+			return valFrom.Field(i), diags
+		}
+	}
+
+	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", BlockKeyMap))
+
+	return reflect.Zero(reflect.TypeOf("")), diags
 }
