@@ -1,4 +1,9 @@
 ## 5.32.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_ecr_image: Add `image_uri` attribute ([#24526](https://github.com/hashicorp/terraform-provider-aws/issues/24526))
+
 ## 5.31.0 (December 15, 2023)
 
 FEATURES:
