@@ -18,7 +18,7 @@ type ResourcePrefixCtxKey string
 const (
 	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
 	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
-	BlockKeyMap                                = "TFBlockKeyMap"
+	MapBlockKey                                = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -95,7 +95,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		if fieldName == "Tags" {
 			continue // Resource tags are handled separately.
 		}
-		if fieldName == BlockKeyMap {
+		if fieldName == MapBlockKey {
 			continue
 		}
 

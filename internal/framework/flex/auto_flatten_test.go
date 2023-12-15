@@ -750,85 +750,85 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
-			TestName: "block key map",
-			Source: &TestFlexBlockKeyMapAWS01{
-				BlockMap: map[string]TestFlexBlockKeyMapAWS02{
+			TestName: "map block key list",
+			Source: &TestFlexMapBlockKeyAWS01{
+				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
 					},
 				},
 			},
-			Target: &TestFlexBlockKeyMapTF01{},
-			WantTarget: &TestFlexBlockKeyMapTF01{
-				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+			Target: &TestFlexMapBlockKeyTF01{},
+			WantTarget: &TestFlexMapBlockKeyTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
-						TFBlockKeyMap: types.StringValue("x"),
-						Attr1:         types.StringValue("a"),
-						Attr2:         types.StringValue("b"),
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
 					},
 				}),
 			},
 		},
 		{
-			TestName: "block key set map",
-			Source: &TestFlexBlockKeyMapAWS01{
-				BlockMap: map[string]TestFlexBlockKeyMapAWS02{
+			TestName: "map block key set",
+			Source: &TestFlexMapBlockKeyAWS01{
+				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
 					},
 				},
 			},
-			Target: &TestFlexBlockKeyMapTF03{},
-			WantTarget: &TestFlexBlockKeyMapTF03{
-				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+			Target: &TestFlexMapBlockKeyTF03{},
+			WantTarget: &TestFlexMapBlockKeyTF03{
+				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
-						TFBlockKeyMap: types.StringValue("x"),
-						Attr1:         types.StringValue("a"),
-						Attr2:         types.StringValue("b"),
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
 					},
 				}),
 			},
 		},
 		{
-			TestName: "block key map ptr source",
-			Source: &TestFlexBlockKeyMapAWS03{
-				BlockMap: map[string]*TestFlexBlockKeyMapAWS02{
+			TestName: "map block key ptr source",
+			Source: &TestFlexMapBlockKeyAWS03{
+				BlockMap: map[string]*TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
 					},
 				},
 			},
-			Target: &TestFlexBlockKeyMapTF01{},
-			WantTarget: &TestFlexBlockKeyMapTF01{
-				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+			Target: &TestFlexMapBlockKeyTF01{},
+			WantTarget: &TestFlexMapBlockKeyTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
-						TFBlockKeyMap: types.StringValue("x"),
-						Attr1:         types.StringValue("a"),
-						Attr2:         types.StringValue("b"),
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
 					},
 				}),
 			},
 		},
 		{
-			TestName: "block key map ptr both",
-			Source: &TestFlexBlockKeyMapAWS03{
-				BlockMap: map[string]*TestFlexBlockKeyMapAWS02{
+			TestName: "map block key ptr both",
+			Source: &TestFlexMapBlockKeyAWS03{
+				BlockMap: map[string]*TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
 					},
 				},
 			},
-			Target: &TestFlexBlockKeyMapTF01{},
-			WantTarget: &TestFlexBlockKeyMapTF01{
-				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexBlockKeyMapTF02{
+			Target: &TestFlexMapBlockKeyTF01{},
+			WantTarget: &TestFlexMapBlockKeyTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
 					{
-						TFBlockKeyMap: types.StringValue("x"),
-						Attr1:         types.StringValue("a"),
-						Attr2:         types.StringValue("b"),
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
 					},
 				}),
 			},

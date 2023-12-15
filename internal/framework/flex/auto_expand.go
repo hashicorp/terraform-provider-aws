@@ -762,7 +762,7 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 		}
 
 		// go from StringValue to string
-		if field.Name == BlockKeyMap {
+		if field.Name == MapBlockKey {
 			if v, ok := valFrom.Field(i).Interface().(basetypes.StringValue); ok {
 				return reflect.ValueOf(v.ValueString()), diags
 			}
@@ -770,7 +770,7 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 		}
 	}
 
-	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", BlockKeyMap))
+	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return reflect.Zero(reflect.TypeOf("")), diags
 }
