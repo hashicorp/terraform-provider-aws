@@ -233,7 +233,9 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set("replication_config_identifier", replicationConfig.ReplicationConfigIdentifier)
-	d.Set("replication_settings", flattenSettings(aws.StringValue(replicationConfig.ReplicationSettings)))
+	v := flattenTaskSettings(aws.StringValue(replicationConfig.ReplicationSettings))
+	log.Printf("[INFO] replication_settings=%v", v)
+	d.Set("replication_settings", v)
 	d.Set("replication_type", replicationConfig.ReplicationType)
 	d.Set("source_endpoint_arn", replicationConfig.SourceEndpointArn)
 	d.Set("supplemental_settings", replicationConfig.SupplementalSettings)

@@ -10,7 +10,7 @@ import (
 // https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html#CHAP_Tasks.CustomizingTasks.TaskSettings.Example
 // https://mholt.github.io/json-to-go/
 
-type TaskSettings struct {
+type taskSettings struct {
 	TargetMetadata struct {
 		TargetSchema                 string `json:"TargetSchema,omitempty"`
 		SupportLobs                  bool   `json:"SupportLobs,omitempty"`
@@ -143,8 +143,8 @@ type TaskSettings struct {
 	} `json:"ValidationSettings,omitempty"`
 }
 
-func flattenSettings(apiObject string) string {
-	var taskSettings TaskSettings
+func flattenTaskSettings(apiObject string) string {
+	var taskSettings taskSettings
 
 	if err := json.Unmarshal([]byte(apiObject), &taskSettings); err != nil {
 		return apiObject
