@@ -584,9 +584,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindTargetGroupByARN(ctx, conn, d.Id())
-	}, d.IsNewResource())
+	targetGroup, err := FindTargetGroupByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group %s not found, removing from state", d.Id())
@@ -602,9 +600,108 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		runtimeValidations(d, &diags)
 	}
 
-	if err := flattenTargetGroupResource(ctx, d, meta, outputRaw.(*elbv2.TargetGroup)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	targetType := aws.StringValue(targetGroup.TargetType)
+
+	d.Set("arn", targetGroup.TargetGroupArn)
+	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	d.Set("ip_address_type", targetGroup.IpAddressType)
+	d.Set("name", targetGroup.TargetGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
+	d.Set("target_type", targetType)
+
+	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
+
+	if _, ok := d.GetOk("port"); targetGroup.Port != nil || ok {
+		d.Set("port", targetGroup.Port)
+	}
+	if _, ok := d.GetOk("protocol"); targetGroup.Protocol != nil || ok {
+		d.Set("protocol", targetGroup.Protocol)
+	}
+	if _, ok := d.GetOk("protocol_version"); targetGroup.ProtocolVersion != nil || ok {
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
+	}
+	if _, ok := d.GetOk("vpc_id"); targetGroup.VpcId != nil || ok {
+		d.Set("vpc_id", targetGroup.VpcId)
+	}
+
+	attributes, err := findTargetGroupAttributesByARN(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
+	}
+
+	for _, attr := range attributes {
+		switch aws.StringValue(attr.Key) {
+		case "deregistration_delay.timeout_seconds":
+			d.Set("deregistration_delay", attr.Value)
+		case "lambda.multi_value_headers.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("lambda_multi_value_headers_enabled", enabled)
+		case "proxy_protocol_v2.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("proxy_protocol_v2", enabled)
+		case "deregistration_delay.connection_termination.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("connection_termination", enabled)
+		case "slow_start.duration_seconds":
+			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("slow_start", slowStart)
+		case "load_balancing.algorithm.type":
+			loadBalancingAlgorithm := aws.StringValue(attr.Value)
+			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
+		case "load_balancing.cross_zone.enabled":
+			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
+			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
+		case "preserve_client_ip.enabled":
+			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("preserve_client_ip", attr.Value)
+		}
+	}
+
+	stickinessAttr, err := flattenTargetGroupStickiness(attributes)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening stickiness: %s", err)
+	}
+
+	if err := d.Set("stickiness", stickinessAttr); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
+	}
+
+	targetHealthStateAttr, err := flattenTargetHealthState(attributes)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening target health state: %s", err)
+	}
+	if err := d.Set("target_health_state", targetHealthStateAttr); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target health state: %s", err)
+	}
+
+	// Set target failover attributes for GWLB
+	targetFailoverAttr := flattenTargetGroupFailover(attributes)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening target failover: %s", err)
+	}
+
+	if err := d.Set("target_failover", targetFailoverAttr); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target failover: %s", err)
+	}
+
 	return diags
 }
 
@@ -881,6 +978,31 @@ func findTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	return output, nil
 }
 
+func findTargetGroupAttributesByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) ([]*elbv2.TargetGroupAttribute, error) {
+	input := &elbv2.DescribeTargetGroupAttributesInput{
+		TargetGroupArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeTargetGroupAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attributes, nil
+}
+
 func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !strings.HasPrefix(value, "/") {
@@ -975,116 +1097,6 @@ func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protoco
 	}
 
 	return apiObjects
-}
-
-// flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
-func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
-
-	targetType := aws.StringValue(targetGroup.TargetType)
-
-	d.Set("arn", targetGroup.TargetGroupArn)
-	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("ip_address_type", targetGroup.IpAddressType)
-	d.Set("name", targetGroup.TargetGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
-	d.Set("target_type", targetType)
-
-	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
-		return fmt.Errorf("setting health_check: %w", err)
-	}
-
-	if _, ok := d.GetOk("port"); targetGroup.Port != nil || ok {
-		d.Set("port", targetGroup.Port)
-	}
-	if _, ok := d.GetOk("protocol"); targetGroup.Protocol != nil || ok {
-		d.Set("protocol", targetGroup.Protocol)
-	}
-	if _, ok := d.GetOk("protocol_version"); targetGroup.ProtocolVersion != nil || ok {
-		d.Set("protocol_version", targetGroup.ProtocolVersion)
-	}
-	if _, ok := d.GetOk("vpc_id"); targetGroup.VpcId != nil || ok {
-		d.Set("vpc_id", targetGroup.VpcId)
-	}
-
-	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
-		TargetGroupArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("retrieving Target Group Attributes: %w", err)
-	}
-
-	for _, attr := range attrResp.Attributes {
-		switch aws.StringValue(attr.Key) {
-		case "deregistration_delay.timeout_seconds":
-			d.Set("deregistration_delay", attr.Value)
-		case "lambda.multi_value_headers.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("lambda_multi_value_headers_enabled", enabled)
-		case "proxy_protocol_v2.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("proxy_protocol_v2", enabled)
-		case "deregistration_delay.connection_termination.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("connection_termination", enabled)
-		case "slow_start.duration_seconds":
-			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("slow_start", slowStart)
-		case "load_balancing.algorithm.type":
-			loadBalancingAlgorithm := aws.StringValue(attr.Value)
-			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
-		case "load_balancing.cross_zone.enabled":
-			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
-			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
-		case "preserve_client_ip.enabled":
-			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("preserve_client_ip", attr.Value)
-		}
-	}
-
-	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
-	if err != nil {
-		return fmt.Errorf("flattening stickiness: %w", err)
-	}
-
-	if err := d.Set("stickiness", stickinessAttr); err != nil {
-		return fmt.Errorf("setting stickiness: %w", err)
-	}
-
-	targetHealthStateAttr, err := flattenTargetHealthState(attrResp.Attributes)
-	if err != nil {
-		return fmt.Errorf("flattening target health state: %w", err)
-	}
-	if err := d.Set("target_health_state", targetHealthStateAttr); err != nil {
-		return fmt.Errorf("setting target health state: %w", err)
-	}
-
-	// Set target failover attributes for GWLB
-	targetFailoverAttr := flattenTargetGroupFailover(attrResp.Attributes)
-	if err != nil {
-		return fmt.Errorf("flattening target failover: %w", err)
-	}
-
-	if err := d.Set("target_failover", targetFailoverAttr); err != nil {
-		return fmt.Errorf("setting target failover: %w", err)
-	}
-
-	return nil
 }
 
 func flattenTargetHealthState(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
