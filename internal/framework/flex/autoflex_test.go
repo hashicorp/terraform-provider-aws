@@ -297,3 +297,30 @@ type TestFlexTF18 struct {
 	Field5 fwtypes.MapValueOf[types.String]  `tfsdk:"field5"`
 	Field6 fwtypes.MapValueOf[types.String]  `tfsdk:"field6"`
 }
+
+type TestFlexBlockKeyMapTF01 struct {
+	BlockMap fwtypes.ListNestedObjectValueOf[TestFlexBlockKeyMapTF02] `tfsdk:"block_map"`
+}
+
+type TestFlexBlockKeyMapTF02 struct {
+	TFBlockKeyMap types.String `tfsdk:"block_key_map"`
+	Attr1         types.String `tfsdk:"attr1"`
+	Attr2         types.String `tfsdk:"attr2"`
+}
+
+type TestFlexBlockKeyMapTF03 struct {
+	BlockMap fwtypes.SetNestedObjectValueOf[TestFlexBlockKeyMapTF02] `tfsdk:"block_map"`
+}
+
+type TestFlexBlockKeyMapAWS01 struct {
+	BlockMap map[string]TestFlexBlockKeyMapAWS02
+}
+
+type TestFlexBlockKeyMapAWS02 struct {
+	Attr1 string
+	Attr2 string
+}
+
+type TestFlexBlockKeyMapAWS03 struct {
+	BlockMap map[string]*TestFlexBlockKeyMapAWS02
+}

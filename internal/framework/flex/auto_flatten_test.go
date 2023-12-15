@@ -5,11 +5,13 @@ package flex
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -748,6 +750,90 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "block key map",
+			Source: &TestFlexBlockKeyMapAWS01{
+				BlockMap: map[string]TestFlexBlockKeyMapAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+				},
+			},
+			Target: &TestFlexBlockKeyMapTF01{},
+			WantTarget: &TestFlexBlockKeyMapTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+					{
+						TFBlockKeyMap: types.StringValue("x"),
+						Attr1:         types.StringValue("a"),
+						Attr2:         types.StringValue("b"),
+					},
+				}),
+			},
+		},
+		{
+			TestName: "block key set map",
+			Source: &TestFlexBlockKeyMapAWS01{
+				BlockMap: map[string]TestFlexBlockKeyMapAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+				},
+			},
+			Target: &TestFlexBlockKeyMapTF03{},
+			WantTarget: &TestFlexBlockKeyMapTF03{
+				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+					{
+						TFBlockKeyMap: types.StringValue("x"),
+						Attr1:         types.StringValue("a"),
+						Attr2:         types.StringValue("b"),
+					},
+				}),
+			},
+		},
+		{
+			TestName: "block key map ptr source",
+			Source: &TestFlexBlockKeyMapAWS03{
+				BlockMap: map[string]*TestFlexBlockKeyMapAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+				},
+			},
+			Target: &TestFlexBlockKeyMapTF01{},
+			WantTarget: &TestFlexBlockKeyMapTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexBlockKeyMapTF02](ctx, []TestFlexBlockKeyMapTF02{
+					{
+						TFBlockKeyMap: types.StringValue("x"),
+						Attr1:         types.StringValue("a"),
+						Attr2:         types.StringValue("b"),
+					},
+				}),
+			},
+		},
+		{
+			TestName: "block key map ptr both",
+			Source: &TestFlexBlockKeyMapAWS03{
+				BlockMap: map[string]*TestFlexBlockKeyMapAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+				},
+			},
+			Target: &TestFlexBlockKeyMapTF01{},
+			WantTarget: &TestFlexBlockKeyMapTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexBlockKeyMapTF02{
+					{
+						TFBlockKeyMap: types.StringValue("x"),
+						Attr1:         types.StringValue("a"),
+						Attr2:         types.StringValue("b"),
+					},
+				}),
+			},
+		},
+		{
 			TestName: "complex nesting",
 			Source: &TestFlexComplexNestAWS01{
 				DialogAction: &TestFlexComplexNestAWS02{
@@ -812,11 +898,13 @@ func TestFlattenGeneric(t *testing.T) {
 				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
 			}
 
+			less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+
 			if gotErr {
 				if !testCase.WantErr {
 					t.Errorf("err = %q", err)
 				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
