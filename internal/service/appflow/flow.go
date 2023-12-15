@@ -701,8 +701,8 @@ func resourceFlow() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`arn:.*:kms:.*:[0-9]+:.*`), "must be a valid ARN of a Key Management Services (KMS) key"),
 			},
 			"flow_status": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.FlowStatus](),
 			},
 			names.AttrName: {
