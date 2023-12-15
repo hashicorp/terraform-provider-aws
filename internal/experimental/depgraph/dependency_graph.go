@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/stack"
 	"golang.org/x/exp/slices"
 )
 
@@ -204,20 +205,20 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 
 		inCurrentPath := make(map[string]struct{})
 		currentPath := make([]string, 0)
-		todo := newStack()
+		todo := stack.New[*todoValue]()
 
-		todo.push(&todoValue{
+		todo.Push(&todoValue{
 			node: s,
 		})
 
-		for todo.len() > 0 {
-			current := todo.peek().(*todoValue)
+		for todo.Len() > 0 {
+			current := todo.Peek()
 			node := current.node
 
 			if !current.processed {
 				// Visit edges.
 				if slices.Contains(visited, node) {
-					todo.pop()
+					todo.Pop()
 
 					continue
 				}
@@ -232,7 +233,7 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 				nodeEdges := edges[node]
 
 				for i := len(nodeEdges) - 1; i >= 0; i-- {
-					todo.push(&todoValue{
+					todo.Push(&todoValue{
 						node: nodeEdges[i],
 					})
 				}
@@ -241,7 +242,7 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 			} else {
 				// Edges have been visited.
 				// Unroll the stack.
-				todo.pop()
+				todo.Pop()
 				if n := len(currentPath); n > 0 {
 					currentPath = currentPath[:n-1]
 				}
