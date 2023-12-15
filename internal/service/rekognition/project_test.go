@@ -127,6 +127,12 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "auto_update"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"arn"},
+			},
 		},
 	})
 }
