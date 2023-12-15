@@ -324,19 +324,20 @@ func TestIntentAutoFlex(t *testing.T) {
 		TextInputSpecification:         &textInputSpecificationAWS,
 	}
 
-	promptAttemptSpecificationMapTF := map[string]tflexv2models.PromptAttemptSpecification{
-		testString: promptAttemptSpecificationTF,
-	}
+	//promptAttemptSpecificationMapTF := map[string]tflexv2models.PromptAttemptSpecification{
+	//	testString: promptAttemptSpecificationTF,
+	//}
 	promptAttemptSpecificationMapAWS := map[string]lextypes.PromptAttemptSpecification{
 		testString: promptAttemptSpecificationAWS,
 	}
 
 	promptSpecificationTF := tflexv2models.PromptSpecification{
-		MaxRetries:                  types.Int64Value(1),
-		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
-		AllowInterrupt:              types.BoolValue(true),
-		MessageSelectionStrategy:    fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
-		PromptAttemptsSpecification: fwtypes.NewObjectMapValueMapOf[tflexv2models.PromptAttemptSpecification](ctx, promptAttemptSpecificationMapTF),
+		MaxRetries:               types.Int64Value(1),
+		MessageGroup:             fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		AllowInterrupt:           types.BoolValue(true),
+		MessageSelectionStrategy: fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
+		//PromptAttemptsSpecification: fwtypes.NewObjectMapValueMapOf[tflexv2models.PromptAttemptSpecification](ctx, promptAttemptSpecificationMapTF),
+		PromptAttemptsSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
 	}
 	promptSpecificationAWS := lextypes.PromptSpecification{
 		MaxRetries:                  aws.Int32(1),
@@ -713,6 +714,13 @@ func TestIntentAutoFlex(t *testing.T) {
 			TF:         &responseSpecificationTF,
 			AWS:        &lextypes.ResponseSpecification{},
 			WantTarget: &responseSpecificationAWS,
+		},
+		{
+			TestName:   "promptSpecification",
+			Expand:     true,
+			TF:         &promptSpecificationTF,
+			AWS:        &lextypes.PromptSpecification{},
+			WantTarget: &promptSpecificationAWS,
 		},
 		{
 			TestName:   "dialogState",

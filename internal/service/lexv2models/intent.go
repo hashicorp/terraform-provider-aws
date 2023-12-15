@@ -1193,14 +1193,15 @@ type IntentConfirmationSetting struct {
 }
 
 type PromptSpecification struct {
-	MaxRetries                  types.Int64                                           `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]         `tfsdk:"message_groups"`
-	AllowInterrupt              types.Bool                                            `tfsdk:"allow_interrupt"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy] `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.ObjectMapValueOf[PromptAttemptSpecification]  `tfsdk:"prompt_attempts_specification"`
+	MaxRetries                  types.Int64                                                 `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]               `tfsdk:"message_groups"`
+	AllowInterrupt              types.Bool                                                  `tfsdk:"allow_interrupt"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]       `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.ListNestedObjectValueOf[PromptAttemptSpecification] `tfsdk:"prompt_attempts_specification"`
 }
 
 type PromptAttemptSpecification struct {
+	Key                            string                                                          `tfsdk:"-"`
 	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypes]              `tfsdk:"allowed_input_types"`
 	AllowInterrupt                 types.Bool                                                      `tfsdk:"allow_interrupt"`
 	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecification] `tfsdk:"audio_and_dtmf_input_specification"`
