@@ -870,7 +870,6 @@ func blockKeyMapSet(ctx context.Context, to any, key string) diag.Diagnostics {
 			continue // Skip unexported fields.
 		}
 
-		// go to StringValue to string
 		if field.Name != BlockKeyMap {
 			continue
 		}
