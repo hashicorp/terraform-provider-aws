@@ -159,26 +159,31 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
+	targetGroupARN := d.Get("target_group_arn").(string)
+	input := &elbv2.DeregisterTargetsInput{
+		TargetGroupArn: aws.String(targetGroupARN),
+		Targets: []*elbv2.TargetDescription{{
+			Id: aws.String(d.Get("target_id").(string)),
+		}},
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
+		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	params := &elbv2.DeregisterTargetsInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
+	if v, ok := d.GetOk("port"); ok {
+		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 
-	_, err := conn.DeregisterTargetsWithContext(ctx, params)
-	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		return sdkdiag.AppendErrorf(diags, "deregistering Targets: %s", err)
+	log.Printf("[DEBUG] Deleting ELBv2 Target Group Attachment: %s", d.Id())
+	_, err := conn.DeregisterTargetsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deregistering ELBv2 Target Group (%s) target: %s", targetGroupARN, err)
 	}
 
 	return diags
