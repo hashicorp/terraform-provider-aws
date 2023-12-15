@@ -773,46 +773,26 @@ func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType strin
 		default:
 			switch attributeInfo.tfType {
 			case schema.TypeBool:
-				v := v.(bool)
-				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
-					Key:   k,
-					Value: flex.BoolValueToString(v),
-				})
+				if v := v.(bool); v || update {
+					apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+						Key:   k,
+						Value: flex.BoolValueToString(v),
+					})
+				}
 			case schema.TypeInt:
-				v := v.(int)
-				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
-					Key:   k,
-					Value: flex.IntValueToString(v),
-				})
+				if v := v.(int); v > 0 || update {
+					apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
+						Key:   k,
+						Value: flex.IntValueToString(v),
+					})
+				}
 			case schema.TypeString:
-				if v := v.(string); v != "" {
+				if v := v.(string); v != "" || update {
 					apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
 						Key:   k,
 						Value: aws.String(v),
 					})
 				}
-			}
-		}
-
-		switch v, t, k := d.Get(tfAttributeName), attributeInfo.tfType, aws.String(attributeInfo.apiAttributeKey); t {
-		case schema.TypeBool:
-			v := v.(bool)
-			apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
-				Key:   k,
-				Value: flex.BoolValueToString(v),
-			})
-		case schema.TypeInt:
-			v := v.(int)
-			apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
-				Key:   k,
-				Value: flex.IntValueToString(v),
-			})
-		case schema.TypeString:
-			if v := v.(string); v != "" {
-				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
-					Key:   k,
-					Value: aws.String(v),
-				})
 			}
 		}
 	}
