@@ -3,7 +3,7 @@ subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_image"
 description: |-
-  Provides details about an ECR Image
+    Provides details about an ECR Image
 ---
 
 # Data Source: aws_ecr_image
