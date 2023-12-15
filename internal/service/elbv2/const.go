@@ -95,8 +95,8 @@ func httpXFFHeaderProcessingMode_Values() []string {
 const (
 	// The following attributes are supported by all load balancers:
 	targetGroupAttributeDeregistrationDelayTimeoutSeconds = "deregistration_delay.timeout_seconds"
-	targetGroupAttributeDeregistrationStickinessEnabled   = "stickiness.enabled"
-	targetGroupAttributeDeregistrationStickinessType      = "stickiness.enabled"
+	targetGroupAttributeStickinessEnabled                 = "stickiness.enabled"
+	targetGroupAttributeStickinessType                    = "stickiness.type"
 
 	// The following attributes are supported by Application Load Balancers and Network Load Balancers:
 	targetGroupAttributeLoadBalancingCrossZoneEnabled                                         = "load_balancing.cross_zone.enabled"

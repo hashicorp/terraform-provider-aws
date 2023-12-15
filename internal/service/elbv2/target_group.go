@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
@@ -358,15 +359,16 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	runtimeValidations(d, &diags)
 
+	protocol := d.Get("protocol").(string)
+	targetType := d.Get("target_type").(string)
 	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
-		TargetType: aws.String(d.Get("target_type").(string)),
+		TargetType: aws.String(targetType),
 	}
 
-	if targetType := d.Get("target_type").(string); targetType != elbv2.TargetTypeEnumLambda {
+	if targetType != elbv2.TargetTypeEnumLambda {
 		input.Port = aws.Int64(int64(d.Get("port").(int)))
-		protocol := d.Get("protocol").(string)
 		input.Protocol = aws.String(protocol)
 		switch protocol {
 		case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
@@ -393,8 +395,8 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 		}
 
-		protocol := tfMap["protocol"].(string)
-		if protocol != elbv2.ProtocolEnumTcp {
+		healthCheckProtocol := tfMap["protocol"].(string)
+		if healthCheckProtocol != elbv2.ProtocolEnumTcp {
 			if v, ok := tfMap["path"].(string); ok && v != "" {
 				input.HealthCheckPath = aws.String(v)
 			}
@@ -412,9 +414,9 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		if targetType := d.Get("target_type").(string); targetType != elbv2.TargetTypeEnumLambda {
+		if targetType != elbv2.TargetTypeEnumLambda {
 			input.HealthCheckPort = aws.String(tfMap["port"].(string))
-			input.HealthCheckProtocol = aws.String(protocol)
+			input.HealthCheckProtocol = aws.String(healthCheckProtocol)
 		}
 	}
 
@@ -449,65 +451,69 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Target Group (%s) create: %s", d.Id(), err)
 	}
 
-	var attrs []*elbv2.TargetGroupAttribute
+	var attributes []*elbv2.TargetGroupAttribute
 
-	switch d.Get("target_type").(string) {
+	switch targetType {
 	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
+		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+		}
+
 		if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("deregistration_delay.timeout_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", v)),
 			})
 		}
 
 		if v, ok := d.GetOk("load_balancing_algorithm_type"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("load_balancing.algorithm.type"),
 				Value: aws.String(v.(string)),
 			})
 		}
 
 		if v, ok := d.GetOk("load_balancing_cross_zone_enabled"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
 				Value: aws.String(v.(string)),
 			})
 		}
 
 		if v, ok := d.GetOk("preserve_client_ip"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("preserve_client_ip.enabled"),
 				Value: aws.String(v.(string)),
 			})
 		}
 
 		if v, ok := d.GetOk("proxy_protocol_v2"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
 				Value: aws.String(strconv.FormatBool(v.(bool))),
 			})
 		}
 
 		if v, ok := d.GetOk("connection_termination"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
 				Value: aws.String(strconv.FormatBool(v.(bool))),
 			})
 		}
 
 		if v, ok := d.GetOk("slow_start"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("slow_start.duration_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", v.(int))),
 			})
 		}
 
 		// Only supported for GWLB
-		if v, ok := d.Get("protocol").(string); ok && v == elbv2.ProtocolEnumGeneve {
+		if protocol == elbv2.ProtocolEnumGeneve {
 			if v, ok := d.GetOk("target_failover"); ok {
 				failoverBlock := v.([]interface{})
 				failover := failoverBlock[0].(map[string]interface{})
-				attrs = append(attrs,
+				attributes = append(attributes,
 					&elbv2.TargetGroupAttribute{
 						Key:   aws.String("target_failover.on_deregistration"),
 						Value: aws.String(failover["on_deregistration"].(string)),
@@ -526,7 +532,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 				if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 {
 					targetHealthStateBlock := v.([]interface{})
 					targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
-					attrs = append(attrs,
+					attributes = append(attributes,
 						&elbv2.TargetGroupAttribute{
 							Key:   aws.String("target_health_state.unhealthy.connection_termination.enabled"),
 							Value: aws.String(strconv.FormatBool(targetHealthState["enable_unhealthy_connection_termination"].(bool))),
@@ -535,64 +541,25 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 		}
-
-		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
-			stickinessBlocks := v.([]interface{})
-			stickiness := stickinessBlocks[0].(map[string]interface{})
-
-			attrs = append(attrs,
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.enabled"),
-					Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.type"),
-					Value: aws.String(stickiness["type"].(string)),
-				})
-
-			switch d.Get("protocol").(string) {
-			case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-				switch stickiness["type"].(string) {
-				case "lb_cookie":
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-						})
-				case "app_cookie":
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-						},
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.app_cookie.cookie_name"),
-							Value: aws.String(stickiness["cookie_name"].(string)),
-						})
-				default:
-					log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-				}
-			}
-		}
 	case elbv2.TargetTypeEnumLambda:
 		if v, ok := d.GetOk("lambda_multi_value_headers_enabled"); ok {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("lambda.multi_value_headers.enabled"),
 				Value: aws.String(strconv.FormatBool(v.(bool))),
 			})
 		}
 	}
 
-	if len(attrs) > 0 {
-		params := &elbv2.ModifyTargetGroupAttributesInput{
+	if len(attributes) > 0 {
+		input := &elbv2.ModifyTargetGroupAttributesInput{
+			Attributes:     attributes,
 			TargetGroupArn: aws.String(d.Id()),
-			Attributes:     attrs,
 		}
 
-		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, params)
+		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying Target Group Attributes: %s", err)
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 		}
 	}
 
@@ -645,6 +612,9 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
+	protocol := d.Get("protocol").(string)
+	targetType := d.Get("target_type").(string)
+
 	if d.HasChange("health_check") {
 		if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
@@ -661,8 +631,8 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 			}
 
-			protocol := tfMap["protocol"].(string)
-			if protocol != elbv2.ProtocolEnumTcp {
+			healthCheckProtocol := tfMap["protocol"].(string)
+			if healthCheckProtocol != elbv2.ProtocolEnumTcp {
 				if v, ok := tfMap["matcher"].(string); ok {
 					if protocolVersion := d.Get("protocol_version").(string); protocolVersion == protocolVersionGRPC {
 						input.Matcher = &elbv2.Matcher{
@@ -677,9 +647,9 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.HealthCheckPath = aws.String(tfMap["path"].(string))
 			}
 
-			if targetType := d.Get("target_type").(string); targetType != elbv2.TargetTypeEnumLambda {
+			if targetType != elbv2.TargetTypeEnumLambda {
 				input.HealthCheckPort = aws.String(tfMap["port"].(string))
-				input.HealthCheckProtocol = aws.String(protocol)
+				input.HealthCheckProtocol = aws.String(healthCheckProtocol)
 			}
 
 			_, err := conn.ModifyTargetGroupWithContext(ctx, input)
@@ -690,13 +660,24 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	var attrs []*elbv2.TargetGroupAttribute
+	var attributes []*elbv2.TargetGroupAttribute
 
-	switch d.Get("target_type").(string) {
+	switch targetType {
 	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
+		if d.HasChange("stickiness") {
+			if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				attributes = append(attributes, expandTargetGroupStickinessAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
+			} else {
+				attributes = append(attributes, &elbv2.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeStickinessEnabled),
+					Value: flex.BoolValueToString(false),
+				})
+			}
+		}
+
 		if d.HasChange("deregistration_delay") {
 			if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
-				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				attributes = append(attributes, &elbv2.TargetGroupAttribute{
 					Key:   aws.String("deregistration_delay.timeout_seconds"),
 					Value: aws.String(fmt.Sprintf("%d", v)),
 				})
@@ -704,91 +685,42 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("slow_start") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("slow_start.duration_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
 			})
 		}
 
 		if d.HasChange("proxy_protocol_v2") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
 			})
 		}
 
 		if d.HasChange("connection_termination") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("deregistration_delay.connection_termination.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("connection_termination").(bool))),
 			})
 		}
 
 		if d.HasChange("preserve_client_ip") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("preserve_client_ip.enabled"),
 				Value: aws.String(d.Get("preserve_client_ip").(string)),
 			})
 		}
 
-		if d.HasChange("stickiness") {
-			stickinessBlocks := d.Get("stickiness").([]interface{})
-			if len(stickinessBlocks) == 1 {
-				stickiness := stickinessBlocks[0].(map[string]interface{})
-				attrs = append(attrs,
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-					},
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.type"),
-						Value: aws.String(stickiness["type"].(string)),
-					})
-
-				switch d.Get("protocol").(string) {
-				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-					switch stickiness["type"].(string) {
-					case "lb_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.cookie_name"),
-								Value: aws.String(stickiness["cookie_name"].(string)),
-							})
-					case "app_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.cookie_name"),
-								Value: aws.String(stickiness["cookie_name"].(string)),
-							})
-					default:
-						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-					}
-				}
-			} else if len(stickinessBlocks) == 0 {
-				attrs = append(attrs, &elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.enabled"),
-					Value: aws.String("false"),
-				})
-			}
-		}
-
 		if d.HasChange("load_balancing_algorithm_type") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("load_balancing.algorithm.type"),
 				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
 			})
 		}
 
 		if d.HasChange("load_balancing_cross_zone_enabled") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
 				Value: aws.String(d.Get("load_balancing_cross_zone_enabled").(string)),
 			})
@@ -798,7 +730,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			targetHealthStateBlock := d.Get("target_health_state").([]interface{})
 			if len(targetHealthStateBlock) == 1 {
 				targetHealthState := targetHealthStateBlock[0].(map[string]interface{})
-				attrs = append(attrs,
+				attributes = append(attributes,
 					&elbv2.TargetGroupAttribute{
 						Key:   aws.String("target_health_state.unhealthy.connection_termination.enabled"),
 						Value: aws.String(strconv.FormatBool(targetHealthState["enable_unhealthy_connection_termination"].(bool))),
@@ -810,7 +742,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			failoverBlock := d.Get("target_failover").([]interface{})
 			if len(failoverBlock) == 1 {
 				failover := failoverBlock[0].(map[string]interface{})
-				attrs = append(attrs,
+				attributes = append(attributes,
 					&elbv2.TargetGroupAttribute{
 						Key:   aws.String("target_failover.on_deregistration"),
 						Value: aws.String(failover["on_deregistration"].(string)),
@@ -825,22 +757,23 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	case elbv2.TargetTypeEnumLambda:
 		if d.HasChange("lambda_multi_value_headers_enabled") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+			attributes = append(attributes, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("lambda.multi_value_headers.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("lambda_multi_value_headers_enabled").(bool))),
 			})
 		}
 	}
 
-	if len(attrs) > 0 {
-		params := &elbv2.ModifyTargetGroupAttributesInput{
+	if len(attributes) > 0 {
+		input := &elbv2.ModifyTargetGroupAttributesInput{
+			Attributes:     attributes,
 			TargetGroupArn: aws.String(d.Id()),
-			Attributes:     attrs,
 		}
 
-		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, params)
+		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying Target Group Attributes: %s", err)
+			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 		}
 	}
 
@@ -1001,6 +934,47 @@ func TargetGroupSuffixFromARN(arn *string) string {
 	}
 
 	return ""
+}
+
+func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protocol string) []*elbv2.TargetGroupAttribute {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObjects := []*elbv2.TargetGroupAttribute{
+		{
+			Key:   aws.String(targetGroupAttributeStickinessEnabled),
+			Value: flex.BoolValueToString(tfMap["enabled"].(bool)),
+		},
+		{
+			Key:   aws.String(targetGroupAttributeStickinessType),
+			Value: aws.String(tfMap["type"].(string)),
+		},
+	}
+
+	switch protocol {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		switch stickinessType := tfMap["type"].(string); stickinessType {
+		case stickinessTypeLBCookie:
+			apiObjects = append(apiObjects,
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeStickinessLBCookieDurationSeconds),
+					Value: flex.IntValueToString(tfMap["cookie_duration"].(int)),
+				})
+		case stickinessTypeAppCookie:
+			apiObjects = append(apiObjects,
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeStickinessAppCookieCookieName),
+					Value: aws.String(tfMap["cookie_name"].(string)),
+				},
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeStickinessAppCookieDurationSeconds),
+					Value: flex.IntValueToString(tfMap["cookie_duration"].(int)),
+				})
+		}
+	}
+
+	return apiObjects
 }
 
 // flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
