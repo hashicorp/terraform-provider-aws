@@ -3,6 +3,10 @@
 
 package stack
 
+import (
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+)
+
 type stack[T any] struct {
 	top    *stackNode[T]
 	length int
@@ -24,27 +28,25 @@ func (s *stack[T]) Len() int {
 }
 
 // Peek returns the top item on the stack.
-func (s *stack[T]) Peek() T {
+func (s *stack[T]) Peek() option.Option[T] {
 	if s.length == 0 {
-		var zero T
-		return zero
+		return option.None[T]()
 	}
 
-	return s.top.value
+	return option.Some(s.top.value)
 }
 
 // Pop returns the top item on the stack and removes it from the stack.
-func (s *stack[T]) Pop() T {
+func (s *stack[T]) Pop() option.Option[T] {
 	if s.length == 0 {
-		var zero T
-		return zero
+		return option.None[T]()
 	}
 
 	top := s.top
 	s.top = top.prev
 	s.length--
 
-	return top.value
+	return option.Some(top.value)
 }
 
 // Push puts the specified item on the top of the stack.

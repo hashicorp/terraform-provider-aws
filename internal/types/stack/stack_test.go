@@ -16,11 +16,11 @@ func TestStack(t *testing.T) {
 		t.Fatalf("incorrect length. Expected: %d, got: %d", expected, got)
 	}
 
-	if got, expected := s.Peek(), 0; got != expected {
+	if got, expected := s.Peek().IsNone(), true; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 
-	if got, expected := s.Pop(), 0; got != expected {
+	if got, expected := s.Pop().IsSome(), false; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 
@@ -30,11 +30,11 @@ func TestStack(t *testing.T) {
 		t.Fatalf("incorrect length. Expected: %d, got: %d", expected, got)
 	}
 
-	if got, expected := s.Peek(), 1; got != expected {
+	if got, expected := s.Peek().MustUnwrap(), 1; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 
-	if got, expected := s.Pop(), 1; got != expected {
+	if got, expected := s.Pop().MustUnwrap(), 1; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 
@@ -49,15 +49,15 @@ func TestStack(t *testing.T) {
 		t.Fatalf("incorrect length. Expected: %d, got: %d", expected, got)
 	}
 
-	if got, expected := s.Peek(), 3; got != expected {
+	if got, expected := s.Peek().MustUnwrap(), 3; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 
-	if got, expected := s.Pop(), 3; got != expected {
+	if got, expected := s.Pop().MustUnwrap(), 3; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 
-	if got, expected := s.Peek(), 2; got != expected {
+	if got, expected := s.Peek().MustUnwrap(), 2; got != expected {
 		t.Fatalf("incorrect value. Expected: %v, got: %v", expected, got)
 	}
 }

@@ -212,7 +212,7 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 		})
 
 		for todo.Len() > 0 {
-			current := todo.Peek()
+			current := todo.Peek().MustUnwrap()
 			node := current.node
 
 			if !current.processed {
