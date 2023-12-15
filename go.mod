@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.2
+	github.com/aws/aws-sdk-go v1.49.3
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10
@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.12.5
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.5
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.5
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.5
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.5
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.5
 	github.com/beevik/etree v1.2.0
 	github.com/davecgh/go-spew v1.1.1
