@@ -600,13 +600,12 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		runtimeValidations(d, &diags)
 	}
 
-	targetType := aws.StringValue(targetGroup.TargetType)
-
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("ip_address_type", targetGroup.IpAddressType)
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
+	targetType := aws.StringValue(targetGroup.TargetType)
 	d.Set("target_type", targetType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
@@ -616,8 +615,10 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if _, ok := d.GetOk("port"); targetGroup.Port != nil || ok {
 		d.Set("port", targetGroup.Port)
 	}
+	var protocol string
 	if _, ok := d.GetOk("protocol"); targetGroup.Protocol != nil || ok {
-		d.Set("protocol", targetGroup.Protocol)
+		protocol = aws.StringValue(targetGroup.Protocol)
+		d.Set("protocol", protocol)
 	}
 	if _, ok := d.GetOk("protocol_version"); targetGroup.ProtocolVersion != nil || ok {
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
@@ -675,12 +676,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	stickinessAttr, err := flattenTargetGroupStickiness(attributes)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening stickiness: %s", err)
-	}
-
-	if err := d.Set("stickiness", stickinessAttr); err != nil {
+	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 
@@ -1099,6 +1095,42 @@ func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protoco
 	return apiObjects
 }
 
+func flattenTargetGroupStickinessAttributes(apiObjects []*elbv2.TargetGroupAttribute, protocol string) map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	var stickinessType string
+	for _, apiObject := range apiObjects {
+		switch k, v := aws.StringValue(apiObject.Key), apiObject.Value; k {
+		case targetGroupAttributeStickinessEnabled:
+			tfMap["enabled"] = flex.StringToBoolValue(v)
+		case targetGroupAttributeStickinessType:
+			stickinessType = aws.StringValue(v)
+			tfMap["type"] = stickinessType
+		}
+	}
+
+	switch protocol {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		for _, apiObject := range apiObjects {
+			k, v := aws.StringValue(apiObject.Key), apiObject.Value
+			switch {
+			case k == targetGroupAttributeStickinessLBCookieDurationSeconds && stickinessType == stickinessTypeLBCookie:
+				tfMap["cookie_duration"] = flex.StringToIntValue(v)
+			case k == targetGroupAttributeStickinessAppCookieCookieName && stickinessType == stickinessTypeAppCookie:
+				tfMap["cookie_name"] = aws.StringValue(v)
+			case k == targetGroupAttributeStickinessAppCookieDurationSeconds && stickinessType == stickinessTypeAppCookie:
+				tfMap["cookie_duration"] = flex.StringToIntValue(v)
+			}
+		}
+	}
+
+	return tfMap
+}
+
 func flattenTargetHealthState(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
 	if len(attributes) == 0 {
 		return []interface{}{}, nil
@@ -1137,47 +1169,6 @@ func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []inte
 	}
 
 	return []interface{}{m}
-}
-
-func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
-	if len(attributes) == 0 {
-		return []interface{}{}, nil
-	}
-
-	m := make(map[string]interface{})
-
-	for _, attr := range attributes {
-		switch aws.StringValue(attr.Key) {
-		case "stickiness.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return nil, fmt.Errorf("converting stickiness.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			m["enabled"] = enabled
-		case "stickiness.type":
-			m["type"] = aws.StringValue(attr.Value)
-		case "stickiness.lb_cookie.duration_seconds":
-			if sType, ok := m["type"].(string); !ok || sType == "lb_cookie" {
-				duration, err := strconv.Atoi(aws.StringValue(attr.Value))
-				if err != nil {
-					return nil, fmt.Errorf("converting stickiness.lb_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
-				}
-				m["cookie_duration"] = duration
-			}
-		case "stickiness.app_cookie.cookie_name":
-			m["cookie_name"] = aws.StringValue(attr.Value)
-		case "stickiness.app_cookie.duration_seconds":
-			if sType, ok := m["type"].(string); !ok || sType == "app_cookie" {
-				duration, err := strconv.Atoi(aws.StringValue(attr.Value))
-				if err != nil {
-					return nil, fmt.Errorf("converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
-				}
-				m["cookie_duration"] = duration
-			}
-		}
-	}
-
-	return []interface{}{m}, nil
 }
 
 func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {

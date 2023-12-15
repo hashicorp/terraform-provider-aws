@@ -232,24 +232,25 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
 
+	var protocol string
 	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
-		d.Set("vpc_id", targetGroup.VpcId)
 		d.Set("port", targetGroup.Port)
-		d.Set("protocol", targetGroup.Protocol)
+		protocol = aws.StringValue(targetGroup.Protocol)
+		d.Set("protocol", protocol)
+		d.Set("vpc_id", targetGroup.VpcId)
 	}
-	switch d.Get("protocol").(string) {
+	switch protocol {
 	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
-	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
-		TargetGroupArn: aws.String(d.Id()),
-	})
+	attributes, err := findTargetGroupAttributesByARN(ctx, conn, d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving Target Group Attributes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
-	for _, attr := range attrResp.Attributes {
+	for _, attr := range attributes {
 		switch aws.StringValue(attr.Key) {
 		case "deregistration_delay.connection_termination.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
@@ -296,12 +297,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening stickiness: %s", err)
-	}
-
-	if err := d.Set("stickiness", stickinessAttr); err != nil {
+	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 
