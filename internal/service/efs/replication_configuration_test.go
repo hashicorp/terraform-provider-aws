@@ -129,6 +129,39 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 	})
 }
 
+func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_efs_replication_configuration.test"
+	destinationFsResourceName := "aws_efs_file_system.destination"
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationConfig_existingDestination(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -186,6 +219,22 @@ resource "aws_efs_replication_configuration" "test" {
   }
 }
 `, region)
+}
+
+func testAccReplicationConfigurationConfig_existingDestination() string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "source" {}
+
+resource "aws_efs_file_system" "destination" {}
+
+resource "aws_efs_replication_configuration" "test" {
+  source_file_system_id = aws_efs_file_system.source.id
+
+  destination {
+    file_system_id = aws_efs_file_system.destination.id
+  }
+}
+`)
 }
 
 func testAccReplicationConfigurationConfig_full(region string) string {
