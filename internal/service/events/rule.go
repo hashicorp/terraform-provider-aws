@@ -241,6 +241,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("is_enabled", false)
 	}
 	d.Set("state", output.State)
+	d.Set("force", output.Force)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -282,9 +283,14 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	input := &eventbridge.DeleteRuleInput{
-		Name:  aws.String(ruleName),
-		Force: d.Get("force").(*bool),
+		Name: aws.String(ruleName),
 	}
+
+	forceDeletion := d.Get("force").(bool)
+	if forceDeletion {
+		input.Force = aws.Bool(forceDeletion)
+	}
+
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
 	}
