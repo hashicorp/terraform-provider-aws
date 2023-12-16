@@ -576,6 +576,126 @@ func TestExpandGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "map block key list",
+			Source: &TestFlexMapBlockKeyTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+		},
+		{
+			TestName: "map block key set",
+			Source: &TestFlexMapBlockKeyTF03{
+				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+		},
+		{
+			TestName: "map block key ptr source",
+			Source: &TestFlexMapBlockKeyTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+		},
+		{
+			TestName: "map block key ptr both",
+			Source: &TestFlexMapBlockKeyTF01{
+				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
+					{
+						MapBlockKey: types.StringValue("x"),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: types.StringValue("y"),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS03{},
+			WantTarget: &TestFlexMapBlockKeyAWS03{
+				BlockMap: map[string]*TestFlexMapBlockKeyAWS02{
+					"x": {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+		},
+		{
 			TestName: "complex nesting",
 			Source: &TestFlexComplexNestTF01{
 				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
