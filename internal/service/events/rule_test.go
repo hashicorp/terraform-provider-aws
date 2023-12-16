@@ -96,7 +96,6 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "force", "false"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -504,6 +503,38 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsRule_isForceDeletion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 eventbridge.DescribeRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_isForceDeletion(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
+					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccRuleConfig_isForceDeletion(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
 		},
@@ -1008,6 +1039,16 @@ resource "aws_cloudwatch_event_rule" "test" {
   is_enabled          = %[2]t
 }
 `, rName, enabled)
+}
+
+func testAccRuleConfig_isForceDeletion(rName string, force_delete bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+  force_delete          = %[2]t
+}
+`, rName, force_delete)
 }
 
 func testAccRuleConfig_state(rName, state string) string {

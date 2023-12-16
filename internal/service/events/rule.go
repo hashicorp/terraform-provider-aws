@@ -95,7 +95,7 @@ func ResourceRule() *schema.Resource {
 					"state",
 				},
 			},
-			"force": {
+			"force_delete": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -241,7 +241,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("is_enabled", false)
 	}
 	d.Set("state", output.State)
-	d.Set("force", output.Force)
+	d.Set("force_delete", d.Get("force_delete").(bool))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -286,7 +286,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Name: aws.String(ruleName),
 	}
 
-	forceDeletion := d.Get("force").(bool)
+	forceDeletion := d.Get("force_delete").(bool)
 	if forceDeletion {
 		input.Force = aws.Bool(forceDeletion)
 	}
