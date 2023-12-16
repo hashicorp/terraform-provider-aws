@@ -55,6 +55,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 						},
 						"file_system_id": {
 							Type:     schema.TypeString,
+							Computed: true,
 							Optional: true,
 							ForceNew: true,
 						},
