@@ -289,21 +289,18 @@ func resourceElasticacheServerlessRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("engine", output.Engine)
 	d.Set("serverless_cache_name", output.ServerlessCacheName)
 	d.Set("arn", output.ARN)
-
 	d.Set("description", output.Description)
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
+
 	if err := d.Set("cache_usage_limits", flattenCacheUsageLimits(output.CacheUsageLimits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cache_usage_limits: %s", err)
 	}
 
 	d.Set("daily_snapshot_time", output.DailySnapshotTime)
-
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("major_engine_version", output.MajorEngineVersion)
-
 	d.Set("security_group_ids", flex.FlattenStringSet(output.SecurityGroupIds))
 	d.Set("snapshot_retention_limit", output.SnapshotRetentionLimit)
-
 	d.Set("user_group_id", output.UserGroupId)
 
 	if output.CreateTime != nil {
@@ -317,10 +314,10 @@ func resourceElasticacheServerlessRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("full_engine_version", output.FullEngineVersion)
+
 	if err := d.Set("reader_endpoint", flattenEndpoint(output.ReaderEndpoint)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting reader_endpoint: %s", err)
 	}
-
 	d.Set("status", output.Status)
 
 	return diags
@@ -339,13 +336,11 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
 
 		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
 		}
@@ -359,13 +354,11 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
 
 		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
 		}
@@ -379,7 +372,6 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
@@ -394,13 +386,11 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
 
 		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
 		}
@@ -414,13 +404,11 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
 
 		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
 		}
@@ -434,13 +422,11 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
 
 		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
 		}

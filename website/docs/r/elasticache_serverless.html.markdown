@@ -8,9 +8,7 @@ description: |-
 
 # Resource: aws_elasticache_serverless
 
-Provides an ElastiCache Serverlesss Cluster resource, which manages either
-[Memcached cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/WhatIs.html), or
-[Redis Cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html) 
+Provides an ElastiCache Serverlesss Cluster resource which manages memcache or redis.
 
 ## Example Usage
 

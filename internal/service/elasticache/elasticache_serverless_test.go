@@ -364,7 +364,7 @@ resource "aws_elasticache_serverless" "test" {
 	ecpu_per_second {
 	  maximum = 1000
 	}
-  }
+}
   description          = "Test Full Memcached Attributes"
   kms_key_id           = aws_kms_key.test.arn
   major_engine_version = "1.6"
