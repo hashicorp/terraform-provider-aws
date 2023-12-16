@@ -149,7 +149,7 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig_existingDestination(),
+				Config: testAccReplicationConfigurationConfig_existingDestination(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -221,7 +221,7 @@ resource "aws_efs_replication_configuration" "test" {
 `, region)
 }
 
-func testAccReplicationConfigurationConfig_existingDestination() string {
+func testAccReplicationConfigurationConfig_existingDestination(region string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "source" {}
 
@@ -232,9 +232,10 @@ resource "aws_efs_replication_configuration" "test" {
 
   destination {
     file_system_id = aws_efs_file_system.destination.id
+    region = %[1]q
   }
 }
-`)
+`, region)
 }
 
 func testAccReplicationConfigurationConfig_full(region string) string {
