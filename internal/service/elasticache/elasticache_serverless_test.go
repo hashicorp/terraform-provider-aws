@@ -356,15 +356,17 @@ func testAccServerlessElasticCacheConfig_full(rName string) string {
 resource "aws_elasticache_serverless" "test" {
   engine                = "memcached"
   serverless_cache_name = %[1]q
+
   cache_usage_limits {
-	data_storage {
-	  maximum = 10
-	  unit    = "GB"
-	}
-	ecpu_per_second {
-	  maximum = 1000
-	}
-}
+    data_storage {
+      maximum = 10
+      unit    = "GB"
+    }
+    ecpu_per_second {
+    maximum = 1000
+    }
+  }
+  
   description          = "Test Full Memcached Attributes"
   kms_key_id           = aws_kms_key.test.arn
   major_engine_version = "1.6"
@@ -400,15 +402,17 @@ func testAccServerlessElasticCacheConfig_fullRedis(rName string) string {
 resource "aws_elasticache_serverless" "test" {
   engine                = "redis"
   serverless_cache_name = %[1]q
+  
   cache_usage_limits {
-	data_storage {
-	  maximum = 10
-	  unit    = "GB"
-	}
-	ecpu_per_second {
-	  maximum = 1000
-	}
+    data_storage {
+      maximum = 10
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = 1000
+    }
   }
+
   daily_snapshot_time      = "09:00"
   description              = "Test Full Redis Attributes"
   kms_key_id               = aws_kms_key.test.arn
