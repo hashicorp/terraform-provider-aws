@@ -7,7 +7,7 @@ description: Provides an Elastic File System (EFS) Replication Configuration.
 
 # Resource: aws_efs_replication_configuration
 
-Creates a replica of an existing EFS file system in the same or another region. Creating this resource causes the source EFS file system to be replicated to a new read-only destination EFS file system. Deleting this resource will cause the replication from source to destination to stop and the destination file system will no longer be read only.
+Creates a replica of an existing EFS file system in the same or another region. Creating this resource causes the source EFS file system to be replicated to a new read-only destination EFS file system (unless using the `destination.file_system_id` attribute). Deleting this resource will cause the replication from source to destination to stop and the destination file system will no longer be read only.
 
 ~> **NOTE:** Deleting this resource does **not** delete the destination file system that was created.
 
