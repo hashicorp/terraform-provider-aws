@@ -10,7 +10,7 @@ description: |-
 
 Provides an ElastiCache Serverlesss Cluster resource, which manages either
 [Memcached cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/WhatIs.html), or
-[Redis Cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html), 
+[Redis Cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html) 
 
 ## Example Usage
 
@@ -29,11 +29,11 @@ resource "aws_elasticache_serverless" "example" {
       maximum = 5
     }
   }
-  description           = "Test Server"
-  kms_key_id            = aws_kms_key.test.arn
-  major_engine_version  = "1.6"
-  security_group_ids    = [aws_security_group.test.id]
-  subnet_ids            = aws_subnet.test[*].id
+  description          = "Test Server"
+  kms_key_id           = aws_kms_key.test.arn
+  major_engine_version = "1.6"
+  security_group_ids   = [aws_security_group.test.id]
+  subnet_ids           = aws_subnet.test[*].id
 }
 ```
 
@@ -41,8 +41,8 @@ resource "aws_elasticache_serverless" "example" {
 
 ```terraform
 resource "aws_elasticache_serverless" "example" {
-  engine                    = "redis"
-  serverless_cache_name     = "example"
+  engine                = "redis"
+  serverless_cache_name = "example"
   cache_usage_limits {
     data_storage {
       maximum = 10
@@ -52,13 +52,13 @@ resource "aws_elasticache_serverless" "example" {
       maximum = 5
     }
   }
-  daily_snapshot_time       = "09:00"
-  description               = "Test Server"
-  kms_key_id                = aws_kms_key.test.arn
-  major_engine_version      = "1.6"
-  snapshot_retention_limit  = 1
-  security_group_ids        = [aws_security_group.test.id]
-  subnet_ids                = aws_subnet.test[*].id
+  daily_snapshot_time      = "09:00"
+  description              = "Test Server"
+  kms_key_id               = aws_kms_key.test.arn
+  major_engine_version     = "1.6"
+  snapshot_retention_limit = 1
+  security_group_ids       = [aws_security_group.test.id]
+  subnet_ids               = aws_subnet.test[*].id
 }
 ```
 
@@ -129,7 +129,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_elasticache_serverless.my_cluster
+  to                    = aws_elasticache_serverless.my_cluster
   serverless_cache_name = "my_cluster"
 }
 ```
@@ -137,5 +137,5 @@ import {
 Using `terraform import`, import ElastiCache Serverless Clusters using the `sserverless_cache_name`. For example:
 
 ```console
-% terraform import aws_elasticache_cluster.my_cluster my_cluster
+% terraform import aws_elasticache_serverless.my_cluster my_cluster
 ```

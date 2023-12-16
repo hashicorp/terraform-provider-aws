@@ -254,7 +254,7 @@ func TestAccServerlessElastiCache_update(t *testing.T) {
 	})
 }
 
-func TestAccServerlessElastiCache_dissapears(t *testing.T) {
+func TestAccServerlessElastiCache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -358,18 +358,18 @@ resource "aws_elasticache_serverless" "test" {
   serverless_cache_name = %[1]q
   cache_usage_limits {
 	data_storage {
-		maximum = 10
-		unit    = "GB"
+	  maximum = 10
+	  unit    = "GB"
 	}
 	ecpu_per_second {
-		maximum = 1000
+	  maximum = 1000
 	}
   }
-  description           = "Test Full Memcached Attributes"
-  kms_key_id            = aws_kms_key.test.arn
-  major_engine_version  = "1.6"
-  security_group_ids    = [aws_security_group.test.id]
-  subnet_ids            = aws_subnet.test[*].id
+  description          = "Test Full Memcached Attributes"
+  kms_key_id           = aws_kms_key.test.arn
+  major_engine_version = "1.6"
+  security_group_ids   = [aws_security_group.test.id]
+  subnet_ids           = aws_subnet.test[*].id
   tags = {
     Name = %[1]q
   }
@@ -383,13 +383,13 @@ resource "aws_security_group" "test" {
   name        = %[1]q
   description = %[1]q
   vpc_id      = aws_vpc.test.id
- 
+
   ingress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
-    }
+  }
 }
 `, rName))
 }
@@ -402,20 +402,20 @@ resource "aws_elasticache_serverless" "test" {
   serverless_cache_name = %[1]q
   cache_usage_limits {
 	data_storage {
-		maximum = 10
-		unit    = "GB"
+	  maximum = 10
+	  unit    = "GB"
 	}
 	ecpu_per_second {
-		maximum = 1000
+	  maximum = 1000
 	}
   }
-  daily_snapshot_time       = "09:00"
-  description               = "Test Full Redis Attributes"
-  kms_key_id                = aws_kms_key.test.arn
-  major_engine_version      = "7"
-  snapshot_retention_limit  = 1
-  security_group_ids        = [aws_security_group.test.id]
-  subnet_ids                = aws_subnet.test[*].id
+  daily_snapshot_time      = "09:00"
+  description              = "Test Full Redis Attributes"
+  kms_key_id               = aws_kms_key.test.arn
+  major_engine_version     = "7"
+  snapshot_retention_limit = 1
+  security_group_ids       = [aws_security_group.test.id]
+  subnet_ids               = aws_subnet.test[*].id
   tags = {
     Name = %[1]q
   }
@@ -429,13 +429,13 @@ resource "aws_security_group" "test" {
   name        = %[1]q
   description = %[1]q
   vpc_id      = aws_vpc.test.id
- 
+
   ingress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
-    }
+  }
 }
 `, rName))
 }
