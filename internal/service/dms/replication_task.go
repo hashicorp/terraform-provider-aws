@@ -72,10 +72,11 @@ func ResourceReplicationTask() *schema.Resource {
 				ValidateFunc: validReplicationTaskID,
 			},
 			"replication_task_settings": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      suppressEquivalentTaskSettings,
+				DiffSuppressOnRefresh: true,
 			},
 			"source_endpoint_arn": {
 				Type:         schema.TypeString,
