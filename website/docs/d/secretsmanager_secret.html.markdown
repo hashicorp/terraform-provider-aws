@@ -43,3 +43,5 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the secret.
 * `tags` - Tags of the secret.
 * `policy` - Resource-based policy document that's attached to the secret.
+* `created_date` - Created date of the secret.
+* `last_changed_date` - Last updated date of the secret.
