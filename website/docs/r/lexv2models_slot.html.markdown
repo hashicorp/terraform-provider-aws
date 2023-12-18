@@ -28,20 +28,28 @@ resource "aws_lexv2models_slot" "example" {
 
 The following arguments are required:
 
-* `bot_id` - (Required)
-* `bot_version` - (Required)
-* `intent_id` - (Required)
-* `locale_id` - (Required)
-* `name` - (Required)
-* `value_elicitation_setting` - (Required)
+* `bot_id` - (Required) Identifier of the bot associated with the slot.
+* `bot_version` - (Required) Version of the bot associated with the slot.
+* `intent_id` - (Required) Identifier of the intent that contains the slot.
+* `locale_id` - (Required) Identifier of the language and locale that the slot will be used in.
+* `name` - (Required) Name of the slot.
+* `value_elicitation_setting` - (Required) Specifies prompts that Amazon Lex sends to the user to elicit a response that provides the value for the slot.
 
 The following arguments are optional:
 
-* `description` - (Optional)
-* `multiple_values_setting` - (Optional)
-* `obfuscation_setting` - (Optional)
-* `slot_type_id` - (Optional)
-* `sub_slot_setting` - (Optional)
+* `description` - (Optional) Description of the slot.
+* `multiple_values_setting` - (Optional) Indicates whether the slot returns multiple values in one response. See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
+* `obfuscation_setting` - (Optional) Determines how slot values are used in Amazon CloudWatch logs. See the [`obfuscation_setting` argument reference](#obfuscation_setting-argument-reference) below.
+* `slot_type_id` - (Optional) Unique identifier for the slot type associated with this slot.
+* `sub_slot_setting` - (Optional) Specifications for the constituent sub slots and the expression for the composite slot.
+
+### `multiple_values_setting` Argument Reference
+
+* `allow_multiple_values` - (Optional) Indicates whether a slot can return multiple values. When `true`, the slot may return more than one value in a response. When `false`, the slot returns only a single value. Multi-value slots are only available in the `en-US` locale.
+
+### `obfuscation_setting` Argument Reference
+
+* `obfuscation_setting_type` - (Required) Whether Amazon Lex obscures slot values in conversation logs. Valid values are `DefaultObfuscation` and `None`.
 
 ## Attribute Reference
 
@@ -65,12 +73,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lexv2models_slot.example
-  id = "slot-id-12345678"
+  id = "bot-1234,1,intent-5678,en-US,slot-9012"
 }
 ```
 
 Using `terraform import`, import Lex V2 Models Slot using the `id`. For example:
 
 ```console
-% terraform import aws_lexv2models_slot.example slot-id-12345678
+% terraform import aws_lexv2models_slot.example bot-1234,1,intent-5678,en-US,slot-9012
 ```
