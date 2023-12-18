@@ -44,7 +44,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the application.
+* `id` - A comma-delimited string concatenating `application_arn` and `scope`.
 
 ## Import
 
