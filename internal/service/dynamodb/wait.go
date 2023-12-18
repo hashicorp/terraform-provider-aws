@@ -77,6 +77,27 @@ func waitTableActive(ctx context.Context, conn *dynamodb.DynamoDB, tableName str
 	return nil, err
 }
 
+func waitImportComplete(ctx context.Context, conn *dynamodb.DynamoDB, importArn string, timeout time.Duration) (*dynamodb.DescribeImportOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{dynamodb.ImportStatusInProgress},
+		Target:  []string{dynamodb.ImportStatusCompleted},
+		Timeout: maxDuration(createTableTimeout, timeout),
+		Refresh: statusImport(ctx, conn, importArn),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("ImportArn %q : %w", importArn, err)
+	}
+
+	if output, ok := outputRaw.(*dynamodb.DescribeImportOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTableDeleted(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{dynamodb.TableStatusActive, dynamodb.TableStatusDeleting},
