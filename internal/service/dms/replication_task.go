@@ -47,9 +47,9 @@ func ResourceReplicationTask() *schema.Resource {
 				ConflictsWith: []string{"cdc_start_time"},
 			},
 			"cdc_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Requires a Unix timestamp in seconds. Example 1484346880
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidStringDateOrPositiveInt,
 				ConflictsWith: []string{"cdc_start_position"},
 			},
 			"migration_type": {
@@ -135,11 +135,19 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("cdc_start_time"); ok {
-		seconds, err := strconv.ParseInt(v.(string), 10, 64)
+		// Check if input is RFC3339 date string or UNIX timestamp.
+		dateTime, err := time.Parse(time.RFC3339, v.(string))
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "DMS create replication task. Invalid CDC Unix timestamp: %s", err)
+			// Not a valid RF3339 date, checking if this is a UNIX timestamp.
+			seconds, err := strconv.ParseInt(v.(string), 10, 64)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "DMS create replication task. Invalid Unix timestamp given for cdc_start_time parameter: %s", err)
+			}
+			request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
+		} else {
+			request.CdcStartTime = aws.Time(dateTime)
 		}
-		request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 	}
 
 	if v, ok := d.GetOk("replication_task_settings"); ok {
@@ -224,11 +232,14 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("cdc_start_time") {
-			seconds, err := strconv.ParseInt(d.Get("cdc_start_time").(string), 10, 64)
+			// Parse the RFC3339 date string into a time.Time object
+			dateTime, err := time.Parse(time.RFC3339, d.Get("cdc_start_time").(string))
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "DMS update replication task. Invalid CRC Unix timestamp: %s", err)
+				return sdkdiag.AppendErrorf(diags, "DMS update replication task. Invalid cdc_start_time value: %s", err)
 			}
-			input.CdcStartTime = aws.Time(time.Unix(seconds, 0))
+
+			input.CdcStartTime = aws.Time(dateTime)
 		}
 
 		if d.HasChange("replication_task_settings") {
