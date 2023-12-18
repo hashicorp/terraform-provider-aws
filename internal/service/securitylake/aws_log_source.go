@@ -199,12 +199,7 @@ func (r *resourceAwsLogSource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	if len(out.Sources) == 0 {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if tfresource.NotFound(err) || out.Sources == nil {
+	if tfresource.NotFound(err) || len(out.Sources) == 0 {
 		resp.State.RemoveResource(ctx)
 		return
 	}

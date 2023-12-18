@@ -87,8 +87,8 @@ func testAccCheckAwsLogSourceDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			out, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, rs.Primary.ID)
-			fmt.Println(out.Sources)
-			if tfresource.NotFound(err) || out.Sources == nil {
+
+			if tfresource.NotFound(err) || len(out.Sources) == 0 {
 				continue
 			}
 
