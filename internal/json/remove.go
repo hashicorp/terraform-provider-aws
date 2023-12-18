@@ -7,6 +7,7 @@ import (
 	"bytes"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/json/ujson"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/stack"
 )
 
 // RemoveFields removes the specified fields from a valid JSON string.
@@ -60,7 +61,7 @@ func RemoveEmptyFields(in string) string {
 // Returns the new JSON string and the number of empty fields removed.
 func removeEmptyFields(in string) (string, int) {
 	out := make([]byte, 0, len(in))
-	lenBefore := 0
+	before := stack.New[int]()
 	removed := 0
 
 	err := ujson.Walk([]byte(in), func(_ int, key, value []byte) bool {
@@ -72,21 +73,21 @@ func removeEmptyFields(in string) (string, int) {
 		case 'n': // Null (null)
 			skip = true
 		case '[': // Start of array
-			lenBefore = n
+			before.Push(n)
 		case ']': // End of array
+			i := before.Pop().MustUnwrap()
 			if out[n-1] == '[' {
 				// Truncate output.
-				out = out[:lenBefore]
-				lenBefore = 0
+				out = out[:i]
 				skip = true
 			}
 		case '{': // Start of object
-			lenBefore = n
+			before.Push(n)
 		case '}': // End of object
+			i := before.Pop().MustUnwrap()
 			if n > 1 && out[n-1] == '{' {
 				// Truncate output.
-				out = out[:lenBefore]
-				lenBefore = 0
+				out = out[:i]
 				skip = true
 			}
 		}
