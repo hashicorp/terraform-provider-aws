@@ -47,8 +47,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - 
-* `slot_id` - 
+* `id` - A comma-delimited string concatenating `bot_id`, `bot_version`, `intent_id`, `locale_id`, and `slot_id`.
+* `slot_id` - Unique identifier associated with the slot.
 
 ## Timeouts
 

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -41,6 +42,8 @@ func newResourceSlot(_ context.Context) (resource.ResourceWithConfigure, error) 
 
 const (
 	ResNameSlot = "Slot"
+
+	slotIDPartCount = 5
 )
 
 type resourceSlot struct {
@@ -132,6 +135,24 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
+
+	idParts := []string{
+		aws.ToString(out.BotId),
+		aws.ToString(out.BotVersion),
+		aws.ToString(out.IntentId),
+		aws.ToString(out.LocaleId),
+		aws.ToString(out.SlotId),
+	}
+	id, err := intflex.FlattenResourceId(idParts, slotIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameSlot, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -252,8 +273,17 @@ func (r *resourceSlot) ImportState(ctx context.Context, req resource.ImportState
 }
 
 func findSlotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeSlotOutput, error) {
+	parts, err := intflex.ExpandResourceId(id, slotIDPartCount, false)
+	if err != nil {
+		return nil, err
+	}
+
 	in := &lexmodelsv2.DescribeSlotInput{
-		SlotId: aws.String(id),
+		BotId:      aws.String(parts[0]),
+		BotVersion: aws.String(parts[1]),
+		IntentId:   aws.String(parts[2]),
+		LocaleId:   aws.String(parts[3]),
+		SlotId:     aws.String(parts[4]),
 	}
 
 	out, err := conn.DescribeSlot(ctx, in)
