@@ -11,6 +11,9 @@ const (
 	// Attribute of the diagnostic being logged.
 	KeyDiagnosticAttribute = "diagnostic_attribute"
 
+	// Function Argument of the diagnostic being logged.
+	KeyDiagnosticFunctionArgument = "diagnostic_function_argument"
+
 	// Number of the error diagnostics.
 	KeyDiagnosticErrorCount = "diagnostic_error_count"
 

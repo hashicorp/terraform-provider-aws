@@ -75,15 +75,12 @@ func Marshal(v interface{}) ([]byte, error) {
 }
 
 type Encoder struct {
-	w writer
-
-	buf     []byte
-	timeBuf []byte
-
-	dict map[string]int
-
-	flags     uint32
+	w         writer
+	dict      map[string]int
 	structTag string
+	buf       []byte
+	timeBuf   []byte
+	flags     uint32
 }
 
 // NewEncoder returns a new encoder that writes to w.
@@ -107,7 +104,7 @@ func (e *Encoder) Reset(w io.Writer) {
 
 // ResetDict is like Reset, but also resets the dict.
 func (e *Encoder) ResetDict(w io.Writer, dict map[string]int) {
-	e.resetWriter(w)
+	e.ResetWriter(w)
 	e.flags = 0
 	e.structTag = ""
 	e.dict = dict
@@ -121,9 +118,12 @@ func (e *Encoder) WithDict(dict map[string]int, fn func(*Encoder) error) error {
 	return err
 }
 
-func (e *Encoder) resetWriter(w io.Writer) {
+func (e *Encoder) ResetWriter(w io.Writer) {
+	e.dict = nil
 	if bw, ok := w.(writer); ok {
 		e.w = bw
+	} else if w == nil {
+		e.w = nil
 	} else {
 		e.w = newByteWriter(w)
 	}
@@ -132,6 +132,7 @@ func (e *Encoder) resetWriter(w io.Writer) {
 // SetSortMapKeys causes the Encoder to encode map keys in increasing order.
 // Supported map types are:
 //   - map[string]string
+//   - map[string]bool
 //   - map[string]interface{}
 func (e *Encoder) SetSortMapKeys(on bool) *Encoder {
 	if on {

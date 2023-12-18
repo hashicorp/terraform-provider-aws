@@ -901,3 +901,123 @@ func (s *server) ImportResourceState(ctx context.Context, req *tfplugin6.ImportR
 	}
 	return ret, nil
 }
+
+func (s *server) CallFunction(ctx context.Context, protoReq *tfplugin6.CallFunction_Request) (*tfplugin6.CallFunction_Response, error) {
+	rpc := "CallFunction"
+	ctx = s.loggingContext(ctx)
+	ctx = logging.RpcContext(ctx, rpc)
+	ctx = s.stoppableContext(ctx)
+	logging.ProtocolTrace(ctx, "Received request")
+	defer logging.ProtocolTrace(ctx, "Served request")
+
+	// Remove this check and error in preference of s.downstream.CallFunction
+	// below once ProviderServer interface requires FunctionServer.
+	// Reference: https://github.com/hashicorp/terraform-plugin-go/issues/353
+	functionServer, ok := s.downstream.(tfprotov6.FunctionServer)
+
+	if !ok {
+		logging.ProtocolError(ctx, "ProviderServer does not implement FunctionServer")
+
+		protoResp := &tfplugin6.CallFunction_Response{
+			Diagnostics: []*tfplugin6.Diagnostic{
+				{
+					Severity: tfplugin6.Diagnostic_ERROR,
+					Summary:  "Provider Functions Not Implemented",
+					Detail: "A provider-defined function call was received by the provider, however the provider does not implement functions. " +
+						"Either upgrade the provider to a version that implements provider-defined functions or this is a bug in Terraform that should be reported to the Terraform maintainers.",
+				},
+			},
+		}
+
+		return protoResp, nil
+	}
+
+	req, err := fromproto.CallFunctionRequest(protoReq)
+
+	if err != nil {
+		logging.ProtocolError(ctx, "Error converting request from protobuf", map[string]any{logging.KeyError: err})
+
+		return nil, err
+	}
+
+	for position, argument := range req.Arguments {
+		logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", fmt.Sprintf("Arguments_%d", position), argument)
+	}
+
+	ctx = tf6serverlogging.DownstreamRequest(ctx)
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-go/issues/353
+	// resp, err := s.downstream.CallFunction(ctx, req)
+	resp, err := functionServer.CallFunction(ctx, req)
+
+	if err != nil {
+		logging.ProtocolError(ctx, "Error from downstream", map[string]any{logging.KeyError: err})
+		return nil, err
+	}
+
+	tf6serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
+	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Response", "Result", resp.Result)
+
+	protoResp, err := toproto.CallFunction_Response(resp)
+
+	if err != nil {
+		logging.ProtocolError(ctx, "Error converting response to protobuf", map[string]any{logging.KeyError: err})
+		return nil, err
+	}
+
+	return protoResp, nil
+}
+
+func (s *server) GetFunctions(ctx context.Context, protoReq *tfplugin6.GetFunctions_Request) (*tfplugin6.GetFunctions_Response, error) {
+	rpc := "GetFunctions"
+	ctx = s.loggingContext(ctx)
+	ctx = logging.RpcContext(ctx, rpc)
+	ctx = s.stoppableContext(ctx)
+	logging.ProtocolTrace(ctx, "Received request")
+	defer logging.ProtocolTrace(ctx, "Served request")
+
+	// Remove this check and response in preference of s.downstream.GetFunctions
+	// below once ProviderServer interface requires FunctionServer.
+	// Reference: https://github.com/hashicorp/terraform-plugin-go/issues/353
+	functionServer, ok := s.downstream.(tfprotov6.FunctionServer)
+
+	if !ok {
+		logging.ProtocolWarn(ctx, "ProviderServer does not implement FunctionServer")
+
+		protoResp := &tfplugin6.GetFunctions_Response{
+			Functions: map[string]*tfplugin6.Function{},
+		}
+
+		return protoResp, nil
+	}
+
+	req, err := fromproto.GetFunctionsRequest(protoReq)
+
+	if err != nil {
+		logging.ProtocolError(ctx, "Error converting request from protobuf", map[string]any{logging.KeyError: err})
+
+		return nil, err
+	}
+
+	ctx = tf6serverlogging.DownstreamRequest(ctx)
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-go/issues/353
+	// resp, err := s.downstream.GetFunctions(ctx, req)
+	resp, err := functionServer.GetFunctions(ctx, req)
+
+	if err != nil {
+		logging.ProtocolError(ctx, "Error from downstream", map[string]any{logging.KeyError: err})
+		return nil, err
+	}
+
+	tf6serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
+
+	protoResp, err := toproto.GetFunctions_Response(resp)
+
+	if err != nil {
+		logging.ProtocolError(ctx, "Error converting response to protobuf", map[string]any{logging.KeyError: err})
+		return nil, err
+	}
+
+	return protoResp, nil
+}
