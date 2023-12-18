@@ -351,6 +351,39 @@ func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
 	})
 }
 
+func TestAccDMSReplicationTask_move(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+	instanceOne := "aws_dms_replication_instance.test"
+	instanceTwo := "aws_dms_replication_instance.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationTaskConfig_move(rName, "aws_dms_replication_instance.test.replication_instance_arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", instanceOne, "replication_instance_arn"),
+				),
+			},
+			{
+				Config: testAccReplicationTaskConfig_move(rName, "aws_dms_replication_instance.test2.replication_instance_arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", instanceTwo, "replication_instance_arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationTaskExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -930,4 +963,78 @@ resource "aws_dms_replication_task" "test" {
   target_endpoint_arn       = aws_dms_endpoint.target.endpoint_arn
 }
 `, cdcStartPosition, rName))
+}
+
+func testAccReplicationTaskConfig_move(rName, arn string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_subnet" "test1" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_subnet" "test2" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id            = aws_vpc.test.id
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+resource "aws_dms_endpoint" "source" {
+  database_name = %[1]q
+  endpoint_id   = "%[1]s-source"
+  endpoint_type = "source"
+  engine_name   = "aurora"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
+  port          = 3306
+  username      = "tftest"
+  password      = "tftest"
+}
+resource "aws_dms_endpoint" "target" {
+  database_name = %[1]q
+  endpoint_id   = "%[1]s-target"
+  endpoint_type = "target"
+  engine_name   = "aurora"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
+  port          = 3306
+  username      = "tftest"
+  password      = "tftest"
+}
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "terraform test for replication subnet group"
+  subnet_ids                           = [aws_subnet.test1.id, aws_subnet.test2.id]
+}
+resource "aws_dms_replication_instance" "test" {
+  allocated_storage            = 5
+  auto_minor_version_upgrade   = true
+  replication_instance_class   = "dms.c4.large"
+  replication_instance_id      = %[1]q
+  preferred_maintenance_window = "sun:00:30-sun:02:30"
+  publicly_accessible          = false
+  replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+}
+resource "aws_dms_replication_instance" "test2" {
+  allocated_storage            = 5
+  auto_minor_version_upgrade   = true
+  replication_instance_class   = "dms.c4.large"
+  replication_instance_id      = "%[1]s-2"
+  preferred_maintenance_window = "sun:00:30-sun:02:30"
+  publicly_accessible          = false
+  replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+}
+`, rName))
 }
