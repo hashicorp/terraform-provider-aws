@@ -75,9 +75,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceElasticacheServerless,
+			Factory:  ResourceServerlessCache,
 			TypeName: "aws_elasticache_serverless",
-			Name:     "ElastiCache Serverless",
+			Name:     "Serverless Cache",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},

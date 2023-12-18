@@ -27,14 +27,14 @@ const (
 	serverlesClusterCreatedTimeout = 15 * time.Minute
 )
 
-// @SDKResource("aws_elasticache_serverless", name="ElastiCache Serverless")
+// @SDKResource("aws_elasticache_serverless", name="Serverless Cache")
 // @Tags(identifierAttribute="arn")
-func ResourceElasticacheServerless() *schema.Resource {
+func ResourceServerlessCache() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceElasticacheServerlessCreate,
-		ReadWithoutTimeout:   resourceElasticacheServerlessRead,
-		UpdateWithoutTimeout: resourceElasticacheServerlessUpdate,
-		DeleteWithoutTimeout: resourceElasticacheServerlessDelete,
+		CreateWithoutTimeout: resourceServerlessCacheCreate,
+		ReadWithoutTimeout:   resourceServerlessCacheRead,
+		UpdateWithoutTimeout: resourceServerlessCacheUpdate,
+		DeleteWithoutTimeout: resourceServerlessCacheDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -201,7 +201,7 @@ func ResourceElasticacheServerless() *schema.Resource {
 	}
 }
 
-func resourceElasticacheServerlessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerlessCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
@@ -267,10 +267,10 @@ func resourceElasticacheServerlessCreate(ctx context.Context, d *schema.Resource
 	if _, err := waitServerlesssCacheAvailable(ctx, conn, d.Id(), serverlesClusterCreatedTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) create: %s", d.Id(), err)
 	}
-	return append(diags, resourceElasticacheServerlessRead(ctx, d, meta)...)
+	return append(diags, resourceServerlessCacheRead(ctx, d, meta)...)
 }
 
-func resourceElasticacheServerlessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerlessCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
@@ -323,7 +323,7 @@ func resourceElasticacheServerlessRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServerlessCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
@@ -430,14 +430,14 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return append(diags, resourceElasticacheServerlessRead(ctx, d, meta)...)
+	return append(diags, resourceServerlessCacheRead(ctx, d, meta)...)
 }
 
-func resourceElasticacheServerlessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServerlessCacheDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Sserverless ElastiCache: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Serverless ElastiCache: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
 		return conn.DeleteServerlessCacheWithContext(ctx, &elasticache.DeleteServerlessCacheInput{
 			ServerlessCacheName: aws.String(d.Id()),

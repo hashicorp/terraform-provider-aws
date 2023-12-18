@@ -275,7 +275,7 @@ func TestAccServerlessElastiCache_disappears(t *testing.T) {
 				Config: testAccServerlessElasticCacheConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlesssElasticCacheExists(ctx, resourceName, &serverlessElasticCache),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceElasticacheServerless(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceServerlessCache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
