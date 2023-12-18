@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -135,18 +135,11 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("cdc_start_time"); ok {
-		// Check if input is RFC3339 date string or UNIX timestamp.
-		dateTime, err := time.Parse(time.RFC3339, v.(string))
-
-		if err != nil {
-			// Not a valid RF3339 date, checking if this is a UNIX timestamp.
-			seconds, err := strconv.ParseInt(v.(string), 10, 64)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "DMS create replication task. Invalid Unix timestamp given for cdc_start_time parameter: %s", err)
-			}
-			request.CdcStartTime = aws.Time(time.Unix(seconds, 0))
+		v := v.(string)
+		if t, err := time.Parse(time.RFC3339, v); err != nil {
+			request.CdcStartTime = aws.Time(time.Unix(flex.StringValueToInt64Value(v), 0))
 		} else {
-			request.CdcStartTime = aws.Time(dateTime)
+			request.CdcStartTime = aws.Time(t)
 		}
 	}
 
@@ -232,14 +225,14 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("cdc_start_time") {
-			// Parse the RFC3339 date string into a time.Time object
-			dateTime, err := time.Parse(time.RFC3339, d.Get("cdc_start_time").(string))
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "DMS update replication task. Invalid cdc_start_time value: %s", err)
+			if v, ok := d.GetOk("cdc_start_time"); ok {
+				v := v.(string)
+				if t, err := time.Parse(time.RFC3339, v); err != nil {
+					input.CdcStartTime = aws.Time(time.Unix(flex.StringValueToInt64Value(v), 0))
+				} else {
+					input.CdcStartTime = aws.Time(t)
+				}
 			}
-
-			input.CdcStartTime = aws.Time(dateTime)
 		}
 
 		if d.HasChange("replication_task_settings") {
