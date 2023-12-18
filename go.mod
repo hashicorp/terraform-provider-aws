@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.2
+	github.com/aws/aws-sdk-go v1.49.4
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10
@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.12.5
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.5
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.5
@@ -70,12 +70,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.14.3
-	github.com/aws/aws-sdk-go-v2/service/rds v1.64.5
+	github.com/aws/aws-sdk-go-v2/service/rds v1.64.6
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.5
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.5
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.6
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.5
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.5
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.5
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.5
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.5
 	github.com/beevik/etree v1.2.0
 	github.com/davecgh/go-spew v1.1.1
