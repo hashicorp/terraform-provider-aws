@@ -5,6 +5,7 @@ package dms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -153,7 +154,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(taskID)
 
-	if err := waitReplicationTaskReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitReplicationTaskReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) create: %s", d.Id(), err)
 	}
 
@@ -238,7 +239,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
-		if err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
@@ -265,7 +266,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "moving DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
-		if err := waitReplicationTaskMoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitReplicationTaskMoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
@@ -312,7 +313,7 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Task (%s): %s", d.Id(), err)
 	}
 
-	if err := waitReplicationTaskDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitReplicationTaskDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) delete: %s", d.Id(), err)
 	}
 
@@ -393,11 +394,20 @@ func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServi
 	}
 }
 
-const (
-	replicationTaskRunningTimeout = 5 * time.Minute
-)
+func setLastReplicationTaskError(err error, replication *dms.ReplicationTask) {
+	var errs []error
 
-func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	if v := aws.StringValue(replication.LastFailureMessage); v != "" {
+		errs = append(errs, errors.New(v))
+	}
+	if v := aws.StringValue(replication.StopReason); v != "" {
+		errs = append(errs, errors.New(v))
+	}
+
+	tfresource.SetLastError(err, errors.Join(errs...))
+}
+
+func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
@@ -407,13 +417,17 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
@@ -423,13 +437,17 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigratio
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
@@ -439,13 +457,17 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationSe
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
@@ -455,60 +477,85 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationSe
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
 		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    replicationTaskRunningTimeout,
+		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:                    []string{replicationTaskStatusStopped},
 		Refresh:                   statusReplicationTask(ctx, conn, id),
-		Timeout:                   replicationTaskRunningTimeout,
+		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second, // Wait 60 secs before starting
 		ContinuousTargetOccurence: 2,
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
 		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
 		Refresh:                   statusReplicationTask(ctx, conn, id),
-		Timeout:                   replicationTaskRunningTimeout,
+		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second, // Wait 60 secs before starting
 		ContinuousTargetOccurence: 2,
 	}
 
-	// Wait, catching any errors
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+		setLastReplicationTaskError(err, output)
+		return output, err
+	}
+
+	return nil, err
 }
 
 func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
@@ -538,7 +585,7 @@ func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServic
 		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
 	}
 
-	if err := waitReplicationTaskRunning(ctx, conn, id); err != nil {
+	if _, err := waitReplicationTaskRunning(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for DMS Replication Task (%s) start: %w", id, err)
 	}
 
@@ -575,7 +622,7 @@ func stopReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService
 		return fmt.Errorf("stopping DMS Replication Task (%s): %w", id, err)
 	}
 
-	if err := waitReplicationTaskStopped(ctx, conn, id); err != nil {
+	if _, err := waitReplicationTaskStopped(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for DMS Replication Task (%s) stop: %w", id, err)
 	}
 

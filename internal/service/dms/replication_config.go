@@ -291,7 +291,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.ModifyReplicationConfigWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Config (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Config (%s): %s", d.Id(), err)
 		}
 
 		if d.Get("start_replication").(bool) {

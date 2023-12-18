@@ -1692,7 +1692,7 @@ func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigra
 		case replicationTaskStatusRunning, replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped:
 			continue
 		case replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting:
-			if err := waitReplicationTaskSteady(ctx, conn, rtID); err != nil {
+			if _, err := waitReplicationTaskSteady(ctx, conn, rtID); err != nil {
 				return err
 			}
 		}
