@@ -414,7 +414,7 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -434,7 +434,7 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigratio
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -454,7 +454,7 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationSe
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -474,7 +474,7 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationSe
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -497,7 +497,7 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigration
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -520,7 +520,7 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigration
 		Refresh:                   statusReplicationTask(ctx, conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
-		Delay:                     60 * time.Second, // Wait 60 secs before starting
+		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -544,7 +544,7 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationS
 		Refresh:                   statusReplicationTask(ctx, conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
-		Delay:                     60 * time.Second, // Wait 60 secs before starting
+		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}
 
