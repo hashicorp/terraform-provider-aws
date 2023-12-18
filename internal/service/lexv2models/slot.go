@@ -97,6 +97,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"obfuscation_setting":       lexschema.ObfuscationSettingBlock(ctx),
 			"value_elicitation_setting": lexschema.ValueElicitationSettingBlock(ctx),
 		},
 	}
@@ -314,6 +315,7 @@ type resourceSlotData struct {
 	IntentID                 types.String                                                           `tfsdk:"intent_id"`
 	LocaleID                 types.String                                                           `tfsdk:"locale_id"`
 	Name                     types.String                                                           `tfsdk:"name"`
+	ObfuscationSetting       fwtypes.ListNestedObjectValueOf[lexschema.ObfuscationSettingData]      `tfsdk:"obfuscation_setting"`
 	Timeouts                 timeouts.Value                                                         `tfsdk:"timeouts"`
 	SlotTypeID               types.String                                                           `tfsdk:"slot_type_id"`
 	ValueElicitationSettings fwtypes.ListNestedObjectValueOf[lexschema.ValueElicitationSettingData] `tfsdk:"value_elicitation_settings"`
