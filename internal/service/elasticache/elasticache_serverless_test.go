@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccServerlessElastiCache_basic(t *testing.T) {
+func TestAccElastiCacheServerless_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -61,7 +61,7 @@ func TestAccServerlessElastiCache_basic(t *testing.T) {
 	})
 }
 
-func TestAccServerlessElastiCache_basicRedis(t *testing.T) {
+func TestAccElastiCacheServerless_basicRedis(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -105,7 +105,7 @@ func TestAccServerlessElastiCache_basicRedis(t *testing.T) {
 	})
 }
 
-func TestAccServerlessElastiCache_full(t *testing.T) {
+func TestAccElastiCacheServerless_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -148,7 +148,7 @@ func TestAccServerlessElastiCache_full(t *testing.T) {
 	})
 }
 
-func TestAccServerlessElastiCache_fullRedis(t *testing.T) {
+func TestAccElastiCacheServerless_fullRedis(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -191,7 +191,7 @@ func TestAccServerlessElastiCache_fullRedis(t *testing.T) {
 	})
 }
 
-func TestAccServerlessElastiCache_update(t *testing.T) {
+func TestAccElastiCacheServerless_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -254,7 +254,7 @@ func TestAccServerlessElastiCache_update(t *testing.T) {
 	})
 }
 
-func TestAccServerlessElastiCache_disappears(t *testing.T) {
+func TestAccElastiCacheServerless_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
