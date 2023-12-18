@@ -28,7 +28,11 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 	applicationResourceName := "aws_ssoadmin_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx),
@@ -57,7 +61,11 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 	resourceName := "aws_ssoadmin_application_access_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx),
