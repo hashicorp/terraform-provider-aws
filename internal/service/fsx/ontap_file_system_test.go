@@ -105,6 +105,38 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 	})
 }
 
+func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_haPair(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeSingleAz2),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "2"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "3072"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
 func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
@@ -681,6 +713,23 @@ resource "aws_fsx_ontap_file_system" "test" {
   subnet_ids          = [aws_subnet.test[0].id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 128
+  preferred_subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccONTAPFileSystemConfig_haPair(rName string) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 2048
+  subnet_ids          = [aws_subnet.test[0].id]
+  deployment_type     = "SINGLE_AZ_2"
+  ha_pairs            = 2
+  throughput_capacity_per_ha_pair = 3072
   preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {

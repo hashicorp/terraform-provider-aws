@@ -102,6 +102,10 @@ func DataSourceONTAPFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"ha_pairs": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
 			"id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -148,6 +152,10 @@ func DataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"throughput_capacity_per_ha_pair": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -191,6 +199,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(filesystem.OntapConfiguration.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
+	d.Set("ha_pairs", filesystem.OntapConfiguration.HAPairs)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
@@ -200,6 +209,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", filesystem.OntapConfiguration.ThroughputCapacity)
+	d.Set("throughput_capacity_per_ha_pair", filesystem.OntapConfiguration.ThroughputCapacityPerHAPair)
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", filesystem.OntapConfiguration.WeeklyMaintenanceStartTime)
 
