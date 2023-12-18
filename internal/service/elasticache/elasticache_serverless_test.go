@@ -285,7 +285,6 @@ func TestAccServerlessElastiCache_disappears(t *testing.T) {
 
 func testAccCheckServerlesssElasticCacheExists(ctx context.Context, resourceName string, v *elasticache.ServerlessCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)

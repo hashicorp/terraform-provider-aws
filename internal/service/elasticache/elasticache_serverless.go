@@ -321,7 +321,6 @@ func resourceElasticacheServerlessRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("status", output.Status)
 
 	return diags
-
 }
 
 func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -375,7 +374,6 @@ func resourceElasticacheServerlessUpdate(ctx context.Context, d *schema.Resource
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChanges("security_group_ids") {
@@ -509,7 +507,6 @@ func expandECPUPerSecond(tfMap []interface{}) *elasticache.ECPUPerSecond {
 }
 
 func flattenCacheUsageLimits(apiObject *elasticache.CacheUsageLimits) []map[string]interface{} {
-
 	if apiObject == nil {
 		return []map[string]interface{}{}
 	}
@@ -561,7 +558,6 @@ func flattenECPUSecond(apiObjects *elasticache.ECPUPerSecond) []map[string]inter
 }
 
 func flattenEndpoint(apiObject *elasticache.Endpoint) []map[string]interface{} {
-
 	if apiObject == nil {
 		return []map[string]interface{}{}
 	}
