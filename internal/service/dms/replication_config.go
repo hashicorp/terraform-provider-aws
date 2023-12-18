@@ -5,6 +5,7 @@ package dms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -462,6 +464,22 @@ func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, 
 	}
 }
 
+func setLastReplicationError(err error, replication *dms.Replication) {
+	var errs []error
+
+	errs = append(errs, tfslices.ApplyToAll(replication.FailureMessages, func(v *string) error {
+		if v := aws.StringValue(v); v != "" {
+			return errors.New(v)
+		}
+		return nil
+	})...)
+	if v := aws.StringValue(replication.StopReason); v != "" {
+		errs = append(errs, errors.New(v))
+	}
+
+	tfresource.SetLastError(err, errors.Join(errs...))
+}
+
 func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
@@ -484,6 +502,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -503,6 +522,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -522,6 +542,7 @@ func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
