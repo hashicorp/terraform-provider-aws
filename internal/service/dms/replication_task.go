@@ -5,7 +5,6 @@ package dms
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -182,26 +181,16 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", d.Id(), err)
 	}
 
-	if task == nil {
-		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): empty output", d.Id())
-	}
-
 	d.Set("cdc_start_position", task.CdcStartPosition)
 	d.Set("migration_type", task.MigrationType)
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
 	d.Set("replication_task_arn", task.ReplicationTaskArn)
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
+	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
 	d.Set("status", task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
-
-	settings, err := replicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", d.Id(), err)
-	}
-
-	d.Set("replication_task_settings", settings)
 
 	return diags
 }
@@ -352,176 +341,40 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func replicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
-	var settingsData map[string]interface{}
-	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
-		return nil, err
-	}
-
-	controlTablesSettings, ok := settingsData["ControlTablesSettings"].(map[string]interface{})
-	if ok {
-		delete(controlTablesSettings, "historyTimeslotInMinutes")
-	}
-
-	logging, ok := settingsData["Logging"].(map[string]interface{})
-	if ok {
-		delete(logging, "EnableLogContext")
-		delete(logging, "CloudWatchLogGroup")
-		delete(logging, "CloudWatchLogStream")
-	}
-
-	cleanedSettings, err := json.Marshal(settingsData)
-	if err != nil {
-		return nil, err
-	}
-
-	cleanedSettingsString := string(cleanedSettings)
-	return &cleanedSettingsString, nil
-}
-
-func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
-	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
-
-	task, err := FindReplicationTaskByID(ctx, conn, id)
-	if err != nil {
-		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
-	}
-
-	if task == nil {
-		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
-	}
-
-	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
-	if aws.StringValue(task.Status) != replicationTaskStatusReady {
-		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
-	}
-
-	_, err = conn.StartReplicationTaskWithContext(ctx, &dms.StartReplicationTaskInput{
-		ReplicationTaskArn:       task.ReplicationTaskArn,
-		StartReplicationTaskType: aws.String(startReplicationTaskType),
-	})
-
-	if err != nil {
-		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
-	}
-
-	err = waitReplicationTaskRunning(ctx, conn, id)
-	if err != nil {
-		return fmt.Errorf("waiting for DMS Replication Task (%s) start: %w", id, err)
-	}
-
-	return nil
-}
-
-func stopReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
-	log.Printf("[DEBUG] Stopping DMS Replication Task: %s", id)
-
-	task, err := FindReplicationTaskByID(ctx, conn, id)
-	if err != nil {
-		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
-	}
-
-	if task == nil {
-		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
-	}
-
-	_, err = conn.StopReplicationTaskWithContext(ctx, &dms.StopReplicationTaskInput{
-		ReplicationTaskArn: task.ReplicationTaskArn,
-	})
-
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "is currently not running") {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("stopping DMS Replication Task (%s): %w", id, err)
-	}
-
-	err = waitReplicationTaskStopped(ctx, conn, id)
-	if err != nil {
-		return fmt.Errorf("waiting for DMS Replication Task (%s) stop: %w", id, err)
-	}
-
-	return nil
-}
-
 func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
 	input := &dms.DescribeReplicationTasksInput{
 		Filters: []*dms.Filter{
 			{
 				Name:   aws.String("replication-task-id"),
-				Values: []*string{aws.String(id)}, // Must use d.Id() to work with import.
+				Values: aws.StringSlice([]string{id}),
 			},
 		},
 	}
-	return FindReplicationTask(ctx, conn, input)
+
+	return findReplicationTask(ctx, conn, input)
 }
 
-func FindReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationTasksInput) (*dms.ReplicationTask, error) {
-	var results []*dms.ReplicationTask
-
-	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, task := range page.ReplicationTasks {
-			if task == nil {
-				continue
-			}
-			results = append(results, task)
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationTasksInput) (*dms.ReplicationTask, error) {
+	output, err := findReplicationTasks(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(results) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(results); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return results[0], nil
+	return tfresource.AssertSinglePtrResult(output)
 }
 
-func FindReplicationTasksByEndpointARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) ([]*dms.ReplicationTask, error) {
-	input := &dms.DescribeReplicationTasksInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("endpoint-arn"),
-				Values: []*string{aws.String(arn)},
-			},
-		},
-	}
-
-	var results []*dms.ReplicationTask
+func findReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationTasksInput) ([]*dms.ReplicationTask, error) {
+	var output []*dms.ReplicationTask
 
 	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, task := range page.ReplicationTasks {
-			if task == nil {
-				continue
-			}
-
-			switch aws.StringValue(task.Status) {
-			case replicationTaskStatusRunning, replicationTaskStatusStarting:
-				results = append(results, task)
+		for _, v := range page.ReplicationTasks {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
@@ -539,7 +392,11 @@ func FindReplicationTasksByEndpointARN(ctx context.Context, conn *dms.DatabaseMi
 		return nil, err
 	}
 
-	return results, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
@@ -674,4 +531,70 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationS
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
+
+	task, err := FindReplicationTaskByID(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
+	}
+
+	if task == nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
+	}
+
+	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
+	if aws.StringValue(task.Status) != replicationTaskStatusReady {
+		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
+	}
+
+	_, err = conn.StartReplicationTaskWithContext(ctx, &dms.StartReplicationTaskInput{
+		ReplicationTaskArn:       task.ReplicationTaskArn,
+		StartReplicationTaskType: aws.String(startReplicationTaskType),
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
+	}
+
+	err = waitReplicationTaskRunning(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("waiting for DMS Replication Task (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+func stopReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
+	log.Printf("[DEBUG] Stopping DMS Replication Task: %s", id)
+
+	task, err := FindReplicationTaskByID(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
+	}
+
+	if task == nil {
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
+	}
+
+	_, err = conn.StopReplicationTaskWithContext(ctx, &dms.StopReplicationTaskInput{
+		ReplicationTaskArn: task.ReplicationTaskArn,
+	})
+
+	if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "is currently not running") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("stopping DMS Replication Task (%s): %w", id, err)
+	}
+
+	err = waitReplicationTaskStopped(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("waiting for DMS Replication Task (%s) stop: %w", id, err)
+	}
+
+	return nil
 }

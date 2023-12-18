@@ -1681,7 +1681,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 }
 
 func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) error {
-	tasks, err := FindReplicationTasksByEndpointARN(ctx, conn, arn)
+	tasks, err := findReplicationTasksByEndpointARN(ctx, conn, arn)
 	if err != nil {
 		return err
 	}
@@ -1706,7 +1706,7 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrati
 		return nil, err
 	}
 
-	tasks, err := FindReplicationTasksByEndpointARN(ctx, conn, arn)
+	tasks, err := findReplicationTasksByEndpointARN(ctx, conn, arn)
 	if err != nil {
 		return nil, err
 	}
@@ -1772,6 +1772,19 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrat
 	}
 
 	return nil
+}
+
+func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) ([]*dms.ReplicationTask, error) {
+	input := &dms.DescribeReplicationTasksInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("endpoint-arn"),
+				Values: aws.StringSlice([]string{arn}),
+			},
+		},
+	}
+
+	return findReplicationTasks(ctx, conn, input)
 }
 
 func flattenOpenSearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
