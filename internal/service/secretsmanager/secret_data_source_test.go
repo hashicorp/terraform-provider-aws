@@ -120,6 +120,8 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 			"name",
 			"policy",
 			"tags.#",
+			"created_date",
+			"last_changed_date",
 		}
 
 		for _, attrName := range attrNames {

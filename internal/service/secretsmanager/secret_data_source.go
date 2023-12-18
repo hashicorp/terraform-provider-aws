@@ -52,6 +52,14 @@ func DataSourceSecret() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_changed_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -99,6 +107,8 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
 	d.Set("policy", "")
+	d.Set("created_date", aws.String(output.CreatedDate.Format("2006-01-02T15:04:05Z07:00")))
+	d.Set("last_changed_date", aws.String(output.LastChangedDate.Format("2006-01-02T15:04:05Z07:00")))
 
 	pIn := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),

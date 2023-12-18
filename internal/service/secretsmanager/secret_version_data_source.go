@@ -57,6 +57,10 @@ func DataSourceSecretVersion() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -99,6 +103,7 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("version_id", output.VersionId)
 	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("arn", output.ARN)
+	d.Set("created_date", aws.String(output.CreatedDate.Format("2006-01-02T15:04:05Z07:00")))
 
 	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting version_stages: %s", err)
