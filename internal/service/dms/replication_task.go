@@ -371,10 +371,6 @@ func findReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationServic
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
 	return output, nil
 }
 
