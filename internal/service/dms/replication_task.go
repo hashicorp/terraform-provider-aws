@@ -310,19 +310,14 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
-		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+	if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &dms.DeleteReplicationTaskInput{
+	log.Printf("[DEBUG] Deleting DMS Replication Task: %s", d.Id())
+	_, err := conn.DeleteReplicationTaskWithContext(ctx, &dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] DMS delete replication task: %#v", input)
-
-	_, err := conn.DeleteReplicationTaskWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return diags
@@ -333,10 +328,7 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err := waitReplicationTaskDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
