@@ -277,7 +277,7 @@ func expandIntelligentTieringFilter(ctx context.Context, tfMap map[string]interf
 	var tags []types.Tag
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		tags = tagsV2(tftags.New(ctx, v))
+		tags = Tags(tftags.New(ctx, v))
 	}
 
 	apiObject := &types.IntelligentTieringFilter{}
@@ -365,7 +365,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = keyValueTagsV2(ctx, []types.Tag{*v}).Map()
+			tfMap["tags"] = keyValueTags(ctx, []types.Tag{*v}).Map()
 		}
 	} else {
 		apiObject := apiObject.And
@@ -375,7 +375,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 		}
 
 		if v := apiObject.Tags; v != nil {
-			tfMap["tags"] = keyValueTagsV2(ctx, v).Map()
+			tfMap["tags"] = keyValueTags(ctx, v).Map()
 		}
 	}
 

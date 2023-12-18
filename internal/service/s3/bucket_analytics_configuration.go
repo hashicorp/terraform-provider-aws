@@ -266,7 +266,7 @@ func expandAnalyticsFilter(ctx context.Context, m map[string]interface{}) types.
 
 	var tags []types.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -365,7 +365,7 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 			result["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			result["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+			result["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.AnalyticsFilterMemberPrefix:
 		result["prefix"] = v.Value
@@ -373,7 +373,7 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 		tags := []types.Tag{
 			v.Value,
 		}
-		result["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+		result["tags"] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}

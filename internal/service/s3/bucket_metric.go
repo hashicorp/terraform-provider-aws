@@ -194,7 +194,7 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 
 	var tags []types.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	var metricsFilter types.MetricsFilter
@@ -233,7 +233,7 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 			m["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+			m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.MetricsFilterMemberPrefix:
 		m["prefix"] = v.Value
@@ -241,7 +241,7 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 		tags := []types.Tag{
 			v.Value,
 		}
-		m["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}

@@ -828,7 +828,7 @@ func expandReplicationRuleFilterMemberAnd(ctx context.Context, l []interface{}) 
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		tags := tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Value.Tags = tags
 		}
@@ -1073,7 +1073,7 @@ func flattenReplicationRuleFilterMemberAnd(ctx context.Context, op *types.Replic
 	}
 
 	if v := op.Value.Tags; v != nil {
-		m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}

@@ -718,7 +718,7 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 	}
 
 	if v, ok := m["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		tags := tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Value.Tags = tags
 		}
@@ -963,7 +963,7 @@ func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.Lifec
 	}
 
 	if v := andOp.Value.Tags; v != nil {
-		m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
