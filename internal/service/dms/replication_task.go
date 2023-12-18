@@ -535,33 +535,33 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationS
 }
 
 func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
-	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
-
 	task, err := FindReplicationTaskByID(ctx, conn, id)
+
 	if err != nil {
 		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
 	}
 
-	if task == nil {
-		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
+	taskStatus := aws.StringValue(task.Status)
+	if taskStatus == replicationTaskStatusRunning {
+		return nil
 	}
 
 	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
-	if aws.StringValue(task.Status) != replicationTaskStatusReady {
+	if taskStatus != replicationTaskStatusReady {
 		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
 	}
-
-	_, err = conn.StartReplicationTaskWithContext(ctx, &dms.StartReplicationTaskInput{
+	input := &dms.StartReplicationTaskInput{
 		ReplicationTaskArn:       task.ReplicationTaskArn,
 		StartReplicationTaskType: aws.String(startReplicationTaskType),
-	})
+	}
+
+	_, err = conn.StartReplicationTaskWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
 	}
 
-	err = waitReplicationTaskRunning(ctx, conn, id)
-	if err != nil {
+	if err := waitReplicationTaskRunning(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for DMS Replication Task (%s) start: %w", id, err)
 	}
 
