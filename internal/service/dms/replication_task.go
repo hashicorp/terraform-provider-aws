@@ -117,12 +117,11 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	taskId := d.Get("replication_task_id").(string)
-
-	request := &dms.CreateReplicationTaskInput{
+	taskID := d.Get("replication_task_id").(string)
+	input := &dms.CreateReplicationTaskInput{
 		MigrationType:             aws.String(d.Get("migration_type").(string)),
 		ReplicationInstanceArn:    aws.String(d.Get("replication_instance_arn").(string)),
-		ReplicationTaskIdentifier: aws.String(taskId),
+		ReplicationTaskIdentifier: aws.String(taskID),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
 		Tags:                      getTagsIn(ctx),
@@ -130,33 +129,32 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("cdc_start_position"); ok {
-		request.CdcStartPosition = aws.String(v.(string))
+		input.CdcStartPosition = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cdc_start_time"); ok {
 		v := v.(string)
 		if t, err := time.Parse(time.RFC3339, v); err != nil {
-			request.CdcStartTime = aws.Time(time.Unix(flex.StringValueToInt64Value(v), 0))
+			input.CdcStartTime = aws.Time(time.Unix(flex.StringValueToInt64Value(v), 0))
 		} else {
-			request.CdcStartTime = aws.Time(t)
+			input.CdcStartTime = aws.Time(t)
 		}
 	}
 
 	if v, ok := d.GetOk("replication_task_settings"); ok {
-		request.ReplicationTaskSettings = aws.String(v.(string))
+		input.ReplicationTaskSettings = aws.String(v.(string))
 	}
 
-	log.Println("[DEBUG] DMS create replication task:", request)
+	_, err := conn.CreateReplicationTaskWithContext(ctx, input)
 
-	_, err := conn.CreateReplicationTaskWithContext(ctx, request)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Task (%s): %s", taskId, err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Task (%s): %s", taskID, err)
 	}
 
-	d.SetId(taskId)
+	d.SetId(taskID)
 
 	if err := waitReplicationTaskReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) create: %s", d.Id(), err)
 	}
 
 	if d.Get("start_replication_task").(bool) {
