@@ -200,10 +200,14 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_replication_task", "replication_instance_arn") {
+	if d.HasChangesExcept("tags", "tags_all", "replication_instance_arn", "start_replication_task") {
+		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		input := &dms.ModifyReplicationTaskInput{
-			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 			MigrationType:      aws.String(d.Get("migration_type").(string)),
+			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 			TableMappings:      aws.String(d.Get("table_mappings").(string)),
 		}
 
@@ -223,25 +227,15 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("replication_task_settings") {
-			if v, ok := d.Get("replication_task_settings").(string); ok && v != "" {
-				input.ReplicationTaskSettings = aws.String(v)
-			} else {
-				input.ReplicationTaskSettings = nil
+			if v, ok := d.GetOk("replication_task_settings"); ok {
+				input.ReplicationTaskSettings = aws.String(v.(string))
 			}
 		}
 
-		status := d.Get("status").(string)
-		if status == replicationTaskStatusRunning {
-			log.Println("[DEBUG] stopping DMS replication task:", input)
-			if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		log.Println("[DEBUG] updating DMS replication task:", input)
 		_, err := conn.ModifyReplicationTaskWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Task (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
 		if err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -249,28 +243,24 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			err := startReplicationTask(ctx, conn, d.Id())
-			if err != nil {
+			if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
 	if d.HasChange("replication_instance_arn") {
+		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		input := &dms.MoveReplicationTaskInput{
 			ReplicationTaskArn:           aws.String(d.Get("replication_task_arn").(string)),
 			TargetReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
 		}
-		status := d.Get("status").(string)
-		if status == replicationTaskStatusRunning {
-			log.Println("[DEBUG] stopping DMS replication task:", input)
-			if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
 
-		log.Println("[DEBUG] moving DMS replication task:", input)
 		_, err := conn.MoveReplicationTaskWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving DMS Replication Task (%s): %s", d.Id(), err)
 		}
@@ -287,19 +277,14 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChanges("start_replication_task") {
-		status := d.Get("status").(string)
+		var f func(context.Context, *dms.DatabaseMigrationService, string) error
 		if d.Get("start_replication_task").(bool) {
-			if status != replicationTaskStatusRunning {
-				if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
-			}
+			f = startReplicationTask
 		} else {
-			if status == replicationTaskStatusRunning {
-				if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
-			}
+			f = stopReplicationTask
+		}
+		if err := f(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
