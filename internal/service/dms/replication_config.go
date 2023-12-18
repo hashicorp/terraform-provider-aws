@@ -557,7 +557,6 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 	}
 
 	replicationStatus := aws.StringValue(replication.Status)
-
 	if replicationStatus == replicationStatusRunning {
 		return nil
 	}
@@ -596,7 +595,6 @@ func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, ar
 	}
 
 	replicationStatus := aws.StringValue(replication.Status)
-
 	if replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
 		return nil
 	}

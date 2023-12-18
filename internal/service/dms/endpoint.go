@@ -1716,7 +1716,7 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrati
 		rtID := aws.StringValue(task.ReplicationTaskIdentifier)
 		switch aws.StringValue(task.Status) {
 		case replicationTaskStatusRunning:
-			err := stopReplicationTask(ctx, rtID, conn)
+			err := stopReplicationTask(ctx, conn, rtID)
 
 			if err != nil {
 				return stoppedTasks, err
