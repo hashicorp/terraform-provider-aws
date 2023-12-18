@@ -91,22 +91,27 @@ func MessageGroupsBlock(ctx context.Context) schema.ListNestedBlock {
 			},
 		},
 	}
+
 	return schema.ListNestedBlock{
 		Validators: []validator.List{
-			listvalidator.SizeAtLeast(1),
+			listvalidator.IsRequired(),
 		},
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroupData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"message": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
 					Validators: []validator.List{
+						listvalidator.IsRequired(),
 						listvalidator.SizeBetween(1, 1),
 					},
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
 					NestedObject: messageNBO,
 				},
 				"variations": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
+					CustomType: fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeBetween(0, 2),
+					},
 					NestedObject: messageNBO,
 				},
 			},
