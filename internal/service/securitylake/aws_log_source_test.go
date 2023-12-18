@@ -69,7 +69,7 @@ func TestAccSecurityLakeAwsLogSource_disappears(t *testing.T) {
 				Config: testAccAwsLogSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLogSourceExists(ctx, resourceName, &awslogSource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceAwsLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,9 +87,8 @@ func testAccCheckAwsLogSourceDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			out, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, rs.Primary.ID)
-			fmt.Println(out)
-
-			if tfresource.NotFound(err) {
+			fmt.Println(out.Sources)
+			if tfresource.NotFound(err) || out.Sources == nil {
 				continue
 			}
 
