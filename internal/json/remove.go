@@ -45,7 +45,7 @@ func RemoveFields(in string, fields ...string) string {
 }
 
 // RemoveEmptyFields removes all empty fields from a valid JSON string.
-func RemoveEmptyFields(in string) string {
+func RemoveEmptyFields(in []byte) []byte {
 	n := 0
 	for {
 		in, n = removeEmptyFields(in)
@@ -59,12 +59,12 @@ func RemoveEmptyFields(in string) string {
 
 // removeEmptyFields removes `null`, empty array (`[]`) and empty object (`{}`) fields from a valid JSON string.
 // Returns the new JSON string and the number of empty fields removed.
-func removeEmptyFields(in string) (string, int) {
+func removeEmptyFields(in []byte) ([]byte, int) {
 	out := make([]byte, 0, len(in))
 	before := stack.New[int]()
 	removed := 0
 
-	err := ujson.Walk([]byte(in), func(_ int, key, value []byte) bool {
+	err := ujson.Walk(in, func(_ int, key, value []byte) bool {
 		n := len(out)
 
 		// For valid JSON, value will never be empty.
@@ -110,8 +110,8 @@ func removeEmptyFields(in string) (string, int) {
 	})
 
 	if err != nil {
-		return "", 0
+		return nil, 0
 	}
 
-	return string(out), removed
+	return out, removed
 }

@@ -119,11 +119,9 @@ func TestRemoveEmptyFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := RemoveEmptyFields(testCase.input), testCase.want; got != want {
+			if got, want := RemoveEmptyFields([]byte(testCase.input)), testCase.want; string(got) != want {
 				t.Errorf("RemoveEmptyFields(%q) = %q, want %q", testCase.input, got, want)
 			}
 		})
 	}
 }
-
-// {"TargetMetadata":{"SupportLobs":true,"LimitedSizeLobMode":true,"LobMaxSize":32},"FullLoadSettings":{"TargetTablePrepMode":"DROP_AND_CREATE","MaxFullLoadSubTasks":8,"TransactionConsistencyTimeout":600,"CommitRate":10000},"TTSettings":{"TTS3Settings":{},"TTRecordSettings":{}},"Logging":{},"ControlTablesSettings":{"HistoryTimeslotInMinutes":5},"StreamBufferSettings":{"StreamBufferCount":3,"StreamBufferSizeInMB":8},"ChangeProcessingTuning":{"BatchApplyPreserveTransaction":true,"BatchApplyTimeoutMin":1,"BatchApplyTimeoutMax":30,"BatchApplyMemoryLimit":500,"MinTransactionSize":1000,"CommitTimeout":1,"MemoryLimitTotal":1024,"MemoryKeepTime":60,"StatementCacheSize":50},"ChangeProcessingDdlHandlingPolicy":{"HandleSourceTableDropped":true,"HandleSourceTableTruncated":true,"HandleSourceTableAltered":true},"LoopbackPreventionSettings":{},"CharacterSetSettings":{"CharacterSetSupport":{}},"BeforeImageSettings":{},"ErrorBehavior":{"DataErrorPolicy":"LOG_ERROR","DataTruncationErrorPolicy":"LOG_ERROR","DataErrorEscalationPolicy":"SUSPEND_TABLE","TableErrorPolicy":"SUSPEND_TABLE","TableErrorEscalationPolicy":"STOP_TASK","RecoverableErrorCount":-1,"RecoverableErrorInterval":5,"RecoverableErrorThrottling":true,"RecoverableErrorThrottlingMax":1800,"ApplyErrorDeletePolicy":"IGNORE_RECORD","ApplyErrorInsertPolicy":"LOG_ERROR","ApplyErrorUpdatePolicy":"LOG_ERROR","ApplyErrorEscalationPolicy":"LOG_ERROR","FullLoadIgnoreConflicts":true},"ValidationSettings":{"ValidationMode":"ROW_LEVEL","ThreadCount":5,"PartitionSize":10000,"FailureMaxCount":10000,"TableFailureMaxCount":1000}}
