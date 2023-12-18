@@ -755,5 +755,6 @@ resource "aws_dms_replication_task" "test" {
   }
 
   target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
+}
 `, rName, arn))
 }
