@@ -97,6 +97,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"multiple_values_setting":   lexschema.MultipleValuesSettingBlock(ctx),
 			"obfuscation_setting":       lexschema.ObfuscationSettingBlock(ctx),
 			"value_elicitation_setting": lexschema.ValueElicitationSettingBlock(ctx),
 		},
@@ -314,6 +315,7 @@ type resourceSlotData struct {
 	ID                       types.String                                                           `tfsdk:"id"`
 	IntentID                 types.String                                                           `tfsdk:"intent_id"`
 	LocaleID                 types.String                                                           `tfsdk:"locale_id"`
+	MultipleValuesSetting    fwtypes.ListNestedObjectValueOf[lexschema.MultipleValuesSettingData]   `tfsdk:"multiple_values_setting"`
 	Name                     types.String                                                           `tfsdk:"name"`
 	ObfuscationSetting       fwtypes.ListNestedObjectValueOf[lexschema.ObfuscationSettingData]      `tfsdk:"obfuscation_setting"`
 	Timeouts                 timeouts.Value                                                         `tfsdk:"timeouts"`
