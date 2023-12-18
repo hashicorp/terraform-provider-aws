@@ -5,6 +5,10 @@ package dms
 
 import (
 	"encoding/json"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html#CHAP_Tasks.CustomizingTasks.TaskSettings.Example
@@ -143,7 +147,10 @@ type taskSettings struct {
 	} `json:"ValidationSettings,omitempty"`
 }
 
-func flattenTaskSettings(apiObject string) string {
+// normalizeTaskSettings returns a normalized DMS task settings JSON string.
+// Read-only (non-configurable) fields are removed by using the published "schema".
+// Empty fields are then removed.
+func normalizeTaskSettings(apiObject string) string {
 	var taskSettings taskSettings
 
 	if err := json.Unmarshal([]byte(apiObject), &taskSettings); err != nil {
@@ -153,6 +160,17 @@ func flattenTaskSettings(apiObject string) string {
 	if b, err := json.Marshal(&taskSettings); err != nil {
 		return apiObject
 	} else {
-		return string(b)
+		return string(tfjson.RemoveEmptyFields(b))
 	}
+}
+
+// suppressEquivalentTaskSettings provides custom difference suppression for task settings.
+func suppressEquivalentTaskSettings(k, old, new string, d *schema.ResourceData) bool {
+	if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
+		return old == new
+	}
+
+	old, new = normalizeTaskSettings(old), normalizeTaskSettings(new)
+
+	return verify.JSONStringsEqual(old, new)
 }
