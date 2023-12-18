@@ -6,8 +6,6 @@ package ssoadmin
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -22,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -36,6 +35,8 @@ func newResourceApplicationAccessScope(_ context.Context) (resource.ResourceWith
 
 const (
 	ResNameApplicationAccessScope = "Application Access Scope"
+
+	applicationAccessScopeIDPartCount = 2
 )
 
 type resourceApplicationAccessScope struct {
@@ -108,7 +109,20 @@ func (r *resourceApplicationAccessScope) Create(ctx context.Context, req resourc
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, ApplicationAccessScopeCreateResourceID(plan.ApplicationARN.ValueString(), plan.Scope.ValueString()))
+	idParts := []string{
+		plan.ApplicationARN.ValueString(),
+		plan.Scope.ValueString(),
+	}
+	id, err := intflex.FlattenResourceId(idParts, applicationAccessScopeIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameApplicationAccessScope, plan.ApplicationARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -122,9 +136,7 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 		return
 	}
 
-	applicationARN, scope, _ := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
-
-	out, err := findApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+	out, err := findApplicationAccessScopeByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -137,7 +149,18 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.ApplicationARN = flex.StringToFrameworkARN(ctx, aws.String(applicationARN))
+	// ApplicationARN is not returned in the finder output. To allow import to set
+	// all attributes correctly, parse the ID for this value instead.
+	parts, err := intflex.ExpandResourceId(state.ID.ValueString(), applicationAccessScopeIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionSetting, ResNameApplicationAccessScope, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state.ApplicationARN = fwtypes.ARNValue(parts[0])
 	state.AuthorizedTargets = flex.FlattenFrameworkStringValueList(ctx, out.AuthorizedTargets)
 	state.Scope = flex.StringToFramework(ctx, out.Scope)
 
@@ -157,10 +180,9 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	applicationARN, scope, _ := ApplicationAccessScopeParseResourceID(state.ID.ValueString())
 	in := &ssoadmin.DeleteApplicationAccessScopeInput{
-		ApplicationArn: aws.String(applicationARN),
-		Scope:          aws.String(scope),
+		ApplicationArn: aws.String(state.ApplicationARN.ValueString()),
+		Scope:          aws.String(state.Scope.ValueString()),
 	}
 
 	_, err := conn.DeleteApplicationAccessScope(ctx, in)
@@ -180,29 +202,15 @@ func (r *resourceApplicationAccessScope) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-const applicationAccessScopeIDSeparator = ","
-
-func ApplicationAccessScopeCreateResourceID(applicationARN, scope string) *string {
-	parts := []string{applicationARN, scope}
-	id := strings.Join(parts, applicationAccessScopeIDSeparator)
-
-	return &id
-}
-
-func ApplicationAccessScopeParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, applicationAccessScopeIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {
+	parts, err := intflex.ExpandResourceId(id, applicationAccessScopeIDPartCount, false)
+	if err != nil {
+		return nil, err
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPLICATION_ARN%[2]sSCOPE", id, applicationAccessScopeIDSeparator)
-}
-
-func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, applicationARN, scope string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {
 	in := &ssoadmin.GetApplicationAccessScopeInput{
-		ApplicationArn: aws.String(applicationARN),
-		Scope:          aws.String(scope),
+		ApplicationArn: aws.String(parts[0]),
+		Scope:          aws.String(parts[1]),
 	}
 
 	out, err := conn.GetApplicationAccessScope(ctx, in)

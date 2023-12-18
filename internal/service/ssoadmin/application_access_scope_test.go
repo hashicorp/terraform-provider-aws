@@ -48,7 +48,6 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccApplicationAccessScopeImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -91,8 +90,7 @@ func testAccCheckApplicationAccessScopeDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			applicationARN, scope, _ := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
-			_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+			_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -120,24 +118,12 @@ func testAccCheckApplicationAccessScopeExists(ctx context.Context, name string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		applicationARN, scope, _ := tfssoadmin.ApplicationAccessScopeParseResourceID(rs.Primary.ID)
-		_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, applicationARN, scope)
+		_, err := tfssoadmin.FindApplicationAccessScopeByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAccessScope, rs.Primary.ID, err)
 		}
 
 		return nil
-	}
-}
-
-func testAccApplicationAccessScopeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["application_arn"], rs.Primary.Attributes["scope"]), nil
 	}
 }
 
