@@ -1,11 +1,20 @@
 package securitylake_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -15,9 +24,7 @@ func TestAccSecurityLakeAwsLogSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// var awslogsource securitylake.CreateAwsLogSourceOutput
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// resourceName := "aws_securitylake_aws_log_source.test"
+	resourceName := "aws_securitylake_aws_log_source.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -26,117 +33,109 @@ func TestAccSecurityLakeAwsLogSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		CheckDestroy:             testAccCheckAwsLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsLogSourceConfig_basic(),
 				Check:  resource.ComposeAggregateTestCheckFunc(),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{""},
+			},
 		},
 	})
 }
 
-// func TestAccSecurityLakeAwsLogSource_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccSecurityLakeAwsLogSource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// 	var awslogsource securitylake.DescribeAwsLogSourceResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_securitylake_aws_log_source.test"
+	resourceName := "aws_securitylake_aws_log_source.test"
+	var awslogSource types.AwsLogSourceConfiguration
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.SecurityLakeEndpointID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckAwsLogSourceDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAwsLogSourceConfig_basic(rName, testAccAwsLogSourceVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAwsLogSourceExists(ctx, resourceName, &awslogsource),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceAwsLogSource = newResourceAwsLogSource
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceAwsLogSource, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAwsLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsLogSourceConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLogSourceExists(ctx, resourceName, &awslogSource),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// func testAccCheckAwsLogSourceDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+func testAccCheckAwsLogSourceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
 
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_securitylake_aws_log_source" {
-// 				continue
-// 			}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_securitylake_aws_log_source" {
+				continue
+			}
 
-// 			input := &securitylake.DescribeAwsLogSourceInput{
-// 				AwsLogSourceId: aws.String(rs.Primary.ID),
-// 			}
-// 			_, err := conn.DescribeAwsLogSource(ctx, &securitylake.DescribeAwsLogSourceInput{
-// 				AwsLogSourceId: aws.String(rs.Primary.ID),
-// 			})
-// 			if errs.IsA[*types.ResourceNotFoundException](err){
-// 				return nil
-// 			}
-// 			if err != nil {
-// 				return nil
-// 			}
+			out, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, rs.Primary.ID)
+			fmt.Println(out)
 
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingDestroyed, tfsecuritylake.ResNameAwsLogSource, rs.Primary.ID, errors.New("not destroyed"))
-// 		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-// 		return nil
-// 	}
-// }
+			if err != nil {
+				return err
+			}
 
-// func testAccCheckAwsLogSourceExists(ctx context.Context, name string, awslogsource *securitylake.DescribeAwsLogSourceResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[name]
-// 		if !ok {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, name, errors.New("not found"))
-// 		}
+			return create.Error(names.SecurityLake, create.ErrActionCheckingDestroyed, tfsecuritylake.ResNameAwsLogSource, rs.Primary.ID, errors.New("not destroyed"))
+		}
 
-// 		if rs.Primary.ID == "" {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, name, errors.New("not set"))
-// 		}
+		return nil
+	}
+}
 
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-// 		resp, err := conn.DescribeAwsLogSource(ctx, &securitylake.DescribeAwsLogSourceInput{
-// 			AwsLogSourceId: aws.String(rs.Primary.ID),
-// 		})
+func testAccCheckAwsLogSourceExists(ctx context.Context, name string, awsLogSource *awstypes.AwsLogSourceConfiguration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, name, errors.New("not found"))
+		}
 
-// 		if err != nil {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, rs.Primary.ID, err)
-// 		}
+		if rs.Primary.ID == "" {
+			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, name, errors.New("not set"))
+		}
 
-// 		*awslogsource = *resp
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+		logSources, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, rs.Primary.ID, err)
+		}
+		resp, err := tfsecuritylake.ExtractAwsLogSourceConfiguration(logSources)
 
-// 		return nil
-// 	}
-// }
+		*awsLogSource = *resp
+
+		return nil
+	}
+}
 
 func testAccAwsLogSourceConfig_basic() string {
 	return fmt.Sprintf(`
 
-resource "aws_securitylake_aws_log_source" "example" {
+resource "aws_securitylake_aws_log_source" "test" {
 	sources {
-		regions         = "eu-west-2"
+		regions        = ["eu-west-2"]
 		source_name    = "ROUTE53"
-		source_version = "latest"
+		source_version = "1.0"
 	}
 }
 `)
