@@ -66,6 +66,7 @@ const (
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
+	PollyEndpointID                      = "polly"
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
 	RedshiftDataEndpointID               = "redshift-data"

@@ -68,13 +68,6 @@ func NewWarningDiagnostic(summary, detail string) diag.Diagnostic {
 	}
 }
 
-func FromAttributeError(path cty.Path, err error) diag.Diagnostic {
-	return withPath(
-		NewErrorDiagnostic(err.Error(), ""),
-		path,
-	)
-}
-
 func withPath(d diag.Diagnostic, path cty.Path) diag.Diagnostic {
 	d.AttributePath = path
 	return d

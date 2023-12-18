@@ -305,11 +305,23 @@ func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
 }
 
+// Int64ValueToString converts a Go int64 value to a string pointer.
+func Int64ValueToString(v int64) *string {
+	return aws.String(strconv.FormatInt(v, 10))
+}
+
 // StringToIntValue converts a string pointer to a Go int value.
 // Invalid integer strings are converted to 0.
 func StringToIntValue(v *string) int {
 	i, _ := strconv.Atoi(aws.StringValue(v))
 	return i
+}
+
+// StringValueToInt64 converts a string to a Go int64 pointer value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64(v string) *int64 {
+	i, _ := strconv.Atoi(v)
+	return aws.Int64(int64(i))
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant

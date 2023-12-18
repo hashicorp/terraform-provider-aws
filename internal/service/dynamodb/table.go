@@ -602,7 +602,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		input.TableCreationParameters = tcp
 
-		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
+		importTableOutput, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
 			return conn.ImportTableWithContext(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
@@ -619,6 +619,12 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 
 		if err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
+		}
+
+		importArn := importTableOutput.(*dynamodb.ImportTableOutput).ImportTableDescription.ImportArn
+		if _, err = waitImportComplete(ctx, conn, aws.StringValue(importArn), d.Timeout(schema.TimeoutCreate)); err != nil {
+			d.SetId(tableName)
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
 		}
 	} else {

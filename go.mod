@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.1
+	github.com/aws/aws-sdk-go v1.49.2
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.10
@@ -41,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/eks v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/emr v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.5
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.5
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/osis v1.6.5
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.9.5
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/polly v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.19.5
@@ -117,10 +117,10 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v1.4.2
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
-	github.com/hashicorp/terraform-plugin-go v0.19.1
+	github.com/hashicorp/terraform-plugin-go v0.20.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
-	github.com/hashicorp/terraform-plugin-mux v0.12.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.30.0
+	github.com/hashicorp/terraform-plugin-mux v0.13.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.31.0
 	github.com/hashicorp/terraform-plugin-testing v1.6.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20230413205102-771768614e91
@@ -176,8 +176,8 @@ require (
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
-	github.com/hashicorp/go-plugin v1.5.2 // indirect
-	github.com/hashicorp/hc-install v0.6.1 // indirect
+	github.com/hashicorp/go-plugin v1.6.0 // indirect
+	github.com/hashicorp/hc-install v0.6.2 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.19.0 // indirect
 	github.com/hashicorp/terraform-json v0.18.0 // indirect
@@ -206,13 +206,13 @@ require (
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
-	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
-	google.golang.org/grpc v1.59.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
+	google.golang.org/grpc v1.60.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

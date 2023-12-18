@@ -1,9 +1,26 @@
-## 5.31.0 (Unreleased)
+## 5.32.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_ecr_image: Add `image_uri` attribute ([#24526](https://github.com/hashicorp/terraform-provider-aws/issues/24526))
+
+BUG FIXES:
+
+* data-source/aws_lb_target_group: Change `deregistration_delay` from `TypeInt` to `TypeString` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
+* resource/aws_dynamodb_table: Fix error when waiting for snapshot to be created ([#34848](https://github.com/hashicorp/terraform-provider-aws/issues/34848))
+* resource/aws_lb_target_group: Fix diff on `stickiness.cookie_name` when `stickiness.type` is `lb_cookie` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
+
+## 5.31.0 (December 15, 2023)
 
 FEATURES:
 
+* **New Data Source:** `aws_polly_voices` ([#34916](https://github.com/hashicorp/terraform-provider-aws/issues/34916))
 * **New Data Source:** `aws_ssoadmin_application_assignments` ([#34796](https://github.com/hashicorp/terraform-provider-aws/issues/34796))
 * **New Data Source:** `aws_ssoadmin_principal_application_assignments` ([#34815](https://github.com/hashicorp/terraform-provider-aws/issues/34815))
+* **New Resource:** `aws_finspace_kx_dataview` ([#34828](https://github.com/hashicorp/terraform-provider-aws/issues/34828))
+* **New Resource:** `aws_finspace_kx_scaling_group` ([#34832](https://github.com/hashicorp/terraform-provider-aws/issues/34832))
+* **New Resource:** `aws_finspace_kx_volume` ([#34833](https://github.com/hashicorp/terraform-provider-aws/issues/34833))
+* **New Resource:** `aws_ssoadmin_trusted_token_issuer` ([#34839](https://github.com/hashicorp/terraform-provider-aws/issues/34839))
 
 ENHANCEMENTS:
 
@@ -15,6 +32,8 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Add support for IBM Db2 databases ([#34834](https://github.com/hashicorp/terraform-provider-aws/issues/34834))
 * resource/aws_dms_endpoint: Add `elasticsearch_settings.use_new_mapping_type` argument ([#29470](https://github.com/hashicorp/terraform-provider-aws/issues/29470))
 * resource/aws_dms_endpoint: Add `postgres_settings` configuration block ([#34724](https://github.com/hashicorp/terraform-provider-aws/issues/34724))
+* resource/aws_finspace_kx_cluster: Add `database.dataview_name`, `scaling_group_configuration`, and `tickerplant_log_configuration` arguments. ([#34831](https://github.com/hashicorp/terraform-provider-aws/issues/34831))
+* resource/aws_finspace_kx_cluster: The `capacity_configuration` argument is now optional. ([#34831](https://github.com/hashicorp/terraform-provider-aws/issues/34831))
 * resource/aws_lb: Add `connection_logs` configuration block ([#34864](https://github.com/hashicorp/terraform-provider-aws/issues/34864))
 * resource/aws_lb: Add plan-time validation that exactly one of either `subnets` or `subnet_mapping` is configured ([#33205](https://github.com/hashicorp/terraform-provider-aws/issues/33205))
 * resource/aws_lb: Allow the number of `subnet_mapping`s for Application Load Balancers to be changed without recreating the resource ([#33205](https://github.com/hashicorp/terraform-provider-aws/issues/33205))
@@ -30,6 +49,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_group: Fix `invalid new value for .skip_destroy: was cty.False, but now null` errors ([#30354](https://github.com/hashicorp/terraform-provider-aws/issues/30354))
 * resource/aws_cloudwatch_log_group: Remove default value (`STANDARD`) for `log_group_class` argument and mark as Computed. This fixes `InvalidParameterException: Only Standard log class is supported` errors in AWS Regions other than AWS Commercial ([#34812](https://github.com/hashicorp/terraform-provider-aws/issues/34812))
 * resource/aws_db_instance: Fix error where Terraform loses track of resource if Blue/Green Deployment is applied outside of Terraform ([#34728](https://github.com/hashicorp/terraform-provider-aws/issues/34728))
+* resource/aws_dms_event_subscription: `source_ids` and `source_type` are Required ([#33731](https://github.com/hashicorp/terraform-provider-aws/issues/33731))
 * resource/aws_ecr_pull_through_cache_rule: Fix plan time validation for `ecr_repository_prefix` ([#34716](https://github.com/hashicorp/terraform-provider-aws/issues/34716))
 * resource/aws_lb: Correct in-place update of `security_groups` for Network Load Balancers when the new value is Computed ([#33205](https://github.com/hashicorp/terraform-provider-aws/issues/33205))
 * resource/aws_lb: Fix `InvalidConfigurationRequest: Load balancer attribute key 'dns_record.client_routing_policy' is not supported on load balancers with type 'network'` errors on resource Create in AWS GovCloud (US) ([#34135](https://github.com/hashicorp/terraform-provider-aws/issues/34135))
