@@ -12,6 +12,8 @@ import (
 
 const (
 	errCodeAccessDenied                         = "AccessDenied"
+	errCodeBucketAlreadyExists                  = "BucketAlreadyExists"
+	errCodeBucketAlreadyOwnedByYou              = "BucketAlreadyOwnedByYou"
 	errCodeBucketNotEmpty                       = "BucketNotEmpty"
 	errCodeInvalidArgument                      = "InvalidArgument"
 	errCodeInvalidBucketState                   = "InvalidBucketState"
@@ -42,10 +44,6 @@ const (
 	// and so far has been noticed with calls to GetBucketWebsite.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645
 	errCodeXNotImplemented = "XNotImplemented"
-)
-
-const (
-	ErrMessageBucketAlreadyExists = "bucket already exists"
 )
 
 func errDirectoryBucket(err error) error {

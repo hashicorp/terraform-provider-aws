@@ -33,6 +33,8 @@ var (
 	IsDirectoryBucket                     = isDirectoryBucket
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 
+	ErrCodeBucketAlreadyExists     = errCodeBucketAlreadyExists
+	ErrCodeBucketAlreadyOwnedByYou = errCodeBucketAlreadyOwnedByYou
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
