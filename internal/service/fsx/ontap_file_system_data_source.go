@@ -104,7 +104,7 @@ func DataSourceONTAPFileSystem() *schema.Resource {
 			},
 			"ha_pairs": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Computed: true,
 			},
 			"id": {
 				Type:     schema.TypeString,
