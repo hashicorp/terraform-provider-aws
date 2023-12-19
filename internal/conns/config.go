@@ -199,7 +199,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
-	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
+	client.ReverseDNSPrefix = names.ReverseDNS(DNSSuffix)
 	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
