@@ -136,7 +136,6 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				Default:      "standard",
 				ValidateFunc: validation.StringInSlice(storage_type_Values(), false),
 			},
 			"port": {
