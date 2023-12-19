@@ -53,6 +53,7 @@ This resource supports the following arguments:
 * `instance_class` - (Required) The instance class to use.
 * `neptune_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise) A subnet group to associate with this neptune instance. **NOTE:** This must match the `neptune_subnet_group_name` of the attached [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html).
 * `neptune_parameter_group_name` - (Optional) The name of the neptune parameter group to associate with this instance.
+* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`
 * `port` - (Optional) The port on which the DB accepts connections. Defaults to `8182`.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00"
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.

@@ -131,6 +131,13 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(storage_type_Values(), false),
+			},
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -218,6 +225,10 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.DBSubnetGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("storage_type"); ok {
+		input.StorageType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("preferred_backup_window"); ok {
 		input.PreferredBackupWindow = aws.String(v.(string))
 	}
@@ -277,6 +288,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	if db.DBSubnetGroup != nil {
 		d.Set("neptune_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
 	}
+	d.Set("storage_type", db.StorageType)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)

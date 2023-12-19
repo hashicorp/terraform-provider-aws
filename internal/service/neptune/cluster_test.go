@@ -88,6 +88,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "standard"),
 				),
 			},
 			testAccClusterImportStep(resourceName),

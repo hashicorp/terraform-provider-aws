@@ -211,6 +211,13 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(storage_type_Values(), false),
+			},
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -540,6 +547,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_arn", dbc.KmsKeyId)
 	d.Set("neptune_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("storage_type", dbc.StorageType)
 	d.Set("port", dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
@@ -579,6 +587,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if v, ok := d.GetOk("neptune_instance_parameter_group_name"); ok {
 				input.DBInstanceParameterGroupName = aws.String(v.(string))
 			}
+		}
+
+		if d.HasChange("storage_type") {
+			input.StorageType = aws.String(d.Get("storage_type").(string))
 		}
 
 		if d.HasChange("vpc_security_group_ids") {

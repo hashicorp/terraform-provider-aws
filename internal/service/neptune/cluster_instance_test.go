@@ -61,6 +61,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "writer", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "standard"),
 				),
 			},
 			{
