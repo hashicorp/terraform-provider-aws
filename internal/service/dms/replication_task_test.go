@@ -525,7 +525,7 @@ resource "aws_dms_replication_task" "test" {
 }
 
 func testAccReplicationTaskConfig_start(rName string, startTask bool, ruleName string) string {
-	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_instance" "test" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true

@@ -30,7 +30,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfig_basic(rName),
+				Config: testAccReplicationConfigConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -78,7 +78,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfig_basic(rName),
+				Config: testAccReplicationConfigConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
@@ -101,7 +101,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccReplicationConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -109,7 +109,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReplicationConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -118,7 +118,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccReplicationConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -141,7 +141,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfig_update(rName, "cdc", 2, 16),
+				Config: testAccReplicationConfigConfig_update(rName, "cdc", 2, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -151,7 +151,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationConfig_update(rName, "cdc", 4, 32),
+				Config: testAccReplicationConfigConfig_update(rName, "cdc", 4, 32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -177,7 +177,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfig_startReplication(rName, true),
+				Config: testAccReplicationConfigConfig_startReplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "start_replication", "true"),
@@ -190,7 +190,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
 			},
 			{
-				Config: testAccReplicationConfig_startReplication(rName, false),
+				Config: testAccReplicationConfigConfig_startReplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
@@ -241,14 +241,9 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccReplicationConfig_base(rName string) string {
+// testAccRDSClustersConfig_base configures a pair of Aurora RDS clusters (and instances) ready for replication.
+func testAccRDSClustersConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-resource "aws_dms_replication_subnet_group" "test" {
-  replication_subnet_group_id          = %[1]q
-  replication_subnet_group_description = "terraform test"
-  subnet_ids                           = aws_subnet.test[*].id
-}
-
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
@@ -353,6 +348,16 @@ resource "aws_rds_cluster_instance" "target" {
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_subnet_group_name = aws_db_subnet_group.test.name
 }
+`, rName))
+}
+
+func testAccReplicationConfigConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccRDSClustersConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "terraform test"
+  subnet_ids                           = aws_subnet.test[*].id
+}
 
 resource "aws_dms_endpoint" "target" {
   database_name = "tftest"
@@ -378,8 +383,8 @@ resource "aws_dms_endpoint" "source" {
 `, rName))
 }
 
-func testAccReplicationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
+func testAccReplicationConfigConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
@@ -398,8 +403,8 @@ resource "aws_dms_replication_config" "test" {
 `, rName))
 }
 
-func testAccReplicationConfig_update(rName, replicationType string, minCapacity, maxCapacity int) string {
-	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
+func testAccReplicationConfigConfig_update(rName, replicationType string, minCapacity, maxCapacity int) string {
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
@@ -418,8 +423,8 @@ resource "aws_dms_replication_config" "test" {
 `, rName, replicationType, maxCapacity, minCapacity))
 }
 
-func testAccReplicationConfig_startReplication(rName string, start bool) string {
-	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
+func testAccReplicationConfigConfig_startReplication(rName string, start bool) string {
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
@@ -440,8 +445,8 @@ resource "aws_dms_replication_config" "test" {
 `, rName, start))
 }
 
-func testAccReplicationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
+func testAccReplicationConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
@@ -463,8 +468,8 @@ resource "aws_dms_replication_config" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccReplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
+func testAccReplicationConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
