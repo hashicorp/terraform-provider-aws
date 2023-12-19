@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Fix error when waiting for snapshot to be created ([#34848](https://github.com/hashicorp/terraform-provider-aws/issues/34848))
 * resource/aws_lb_target_group: Fix diff on `stickiness.cookie_name` when `stickiness.type` is `lb_cookie` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
 * resource/aws_memorydb_cluster: Treat `snapshotting` status as pending when creating cluster ([#31077](https://github.com/hashicorp/terraform-provider-aws/issues/31077))
+* resource/aws_ssoadmin_application: Fix `portal_options.sign_in_options.application_url` triggering `ValidationError` when unset ([#34967](https://github.com/hashicorp/terraform-provider-aws/issues/34967))
 
 ## 5.31.0 (December 15, 2023)
 
