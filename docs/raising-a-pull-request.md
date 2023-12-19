@@ -150,14 +150,14 @@ The below are style-based items that _may_ be noted during review and are recomm
   ```go
   // Direct Connect Virtual Interface ARN.
   // See https://docs.aws.amazon.com/directconnect/latest/UserGuide/security_iam_service-with-iam.html#security_iam_service-with-iam-id-based-policies-resources.
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
+  arn := arn.ARN{
+      Partition: meta.(*conns.AWSClient).Partition,
+      Region:    meta.(*conns.AWSClient).Region,
+      Service:   "directconnect",
+      AccountID: meta.(*conns.AWSClient).AccountID,
+      Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+  }.String()
+  d.Set("arn", arn)
   ```
 
   When the `arn` attribute is synthesized this way, add the resource to the [list](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id) of those affected by the provider's `skip_requesting_account_id` attribute.
