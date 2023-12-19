@@ -47,6 +47,12 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"arn_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"container_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -63,12 +69,14 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobContainerProperties,
 			},
+
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
+
 			"node_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -84,6 +92,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobNodeProperties,
 			},
+
 			"eks_properties": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
@@ -309,12 +318,14 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+
 			"platform_capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -324,12 +335,14 @@ func ResourceJobDefinition() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
 			},
+
 			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
+
 			"retry_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -393,12 +406,20 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"revision": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+
+			"scheduling_priority": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -415,6 +436,7 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -507,6 +529,10 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("scheduling_priority"); ok {
+		input.SchedulingPriority = aws.Int64(int64(v.(int)))
+	}
+
 	output, err := conn.RegisterJobDefinitionWithContext(ctx, input)
 
 	if err != nil {
@@ -535,6 +561,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("arn", jobDefinition.JobDefinitionArn)
+	d.Set("arn_prefix", strings.TrimSuffix(*jobDefinition.JobDefinitionArn, fmt.Sprintf(":%d", *jobDefinition.Revision)))
 
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 
@@ -585,6 +612,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("revision", jobDefinition.Revision)
 	d.Set("type", jobDefinition.Type)
+	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 
 	return diags
 }

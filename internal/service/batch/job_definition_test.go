@@ -39,6 +39,7 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "container_properties", `{
 						"command": ["echo", "test"],
 						"image": "busybox",
@@ -61,6 +62,7 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "container"),
+					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", "2"),
 				),
 			},
 			{
@@ -876,6 +878,8 @@ resource "aws_batch_job_definition" "test" {
   })
   name = %[1]q
   type = "container"
+  
+  scheduling_priority = 2
 }
 `, rName)
 }
