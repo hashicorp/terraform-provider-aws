@@ -1118,6 +1118,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("object_lock_enabled", nil)
 	}
 
+	//
+	// Bucket Region etc.
+	//
+
 	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
 		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle()
 	})
@@ -1133,10 +1137,8 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("region", region)
-
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Id(), region))
 
-	// Add the hosted zone ID for this bucket's region as an attribute
 	hostedZoneID, err := hostedZoneIDForRegion(region)
 	if err != nil {
 		log.Printf("[WARN] %s", err)
@@ -1150,35 +1152,27 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("website_endpoint", endpoint)
 	}
 
-	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
-		return BucketListTags(ctx, conn, d.Id())
-	}, s3.ErrCodeNoSuchBucket)
+	//
+	// Bucket Tags.
+	//
 
-	// The S3 API method calls above can occasionally return no error (i.e. NoSuchBucket)
-	// after a bucket has been deleted (eventual consistency woes :/), thus, when making extra S3 API calls
-	// such as GetBucketTagging, the error should be caught for non-new buckets as follows.
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	tags, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (tftags.KeyValueTags, error) {
+		return BucketListTags(ctx, conn, d.Id())
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	if tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented) {
-		return diags
-	}
-
-	if err != nil {
+	switch {
+	case err == nil:
+		setTagsOut(ctx, Tags(tags))
+	case tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented):
+	default:
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
-
-	tags, ok := tagsRaw.(tftags.KeyValueTags)
-
-	if !ok {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
-	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
