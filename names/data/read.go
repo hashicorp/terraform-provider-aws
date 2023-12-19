@@ -76,6 +76,14 @@ func (sr ServiceRecord) ClientSDKV2() string {
 	return sr[colClientSDKV2]
 }
 
+func (sr ServiceRecord) ResourcePrefix() string {
+	prefix := sr.ResourcePrefixCorrect()
+	if sr.ResourcePrefixActual() != "" {
+		prefix = sr.ResourcePrefixActual()
+	}
+	return prefix
+}
+
 func (sr ServiceRecord) ResourcePrefixActual() string {
 	return sr[colResourcePrefixActual]
 }

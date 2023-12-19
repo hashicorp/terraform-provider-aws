@@ -110,6 +110,10 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i, l.HumanFriendly())
 		}
 
+		if l.ResourcePrefixCorrect() == "" && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect must have a value if Exclude is blank", i, l.HumanFriendly())
+		}
+
 		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
 			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i, l.HumanFriendly())
 		}
@@ -183,7 +187,7 @@ func main() {
 
 		allChecks++
 	}
-	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 37))
+	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 38))
 
 	var fileErrs bool
 

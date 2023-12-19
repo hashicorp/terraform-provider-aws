@@ -45,17 +45,9 @@ func main() {
 			continue
 		}
 
-		if l.ResourcePrefixActual() == "" && l.ResourcePrefixCorrect() == "" {
-			continue
-		}
-
 		p := l.ProviderPackage()
 
-		rp := l.ResourcePrefixCorrect()
-
-		if l.ResourcePrefixActual() != "" {
-			rp = l.ResourcePrefixActual()
-		}
+		rp := l.ResourcePrefix()
 
 		s := ServiceDatum{
 			ProviderPackage: p,
