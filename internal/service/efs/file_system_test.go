@@ -110,6 +110,33 @@ func TestAccEFSFileSystem_performanceMode(t *testing.T) {
 	})
 }
 
+func TestAccEFSFileSystem_protection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_protection,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
@@ -451,6 +478,14 @@ resource "aws_efs_file_system" "test" {}
 const testAccFileSystemConfig_performanceMode = `
 resource "aws_efs_file_system" "test" {
   performance_mode = "maxIO"
+}
+`
+
+const testAccFileSystemConfig_protection = `
+resource "aws_efs_file_system" "test" {
+  protection {	
+    replication_overwrite = "DISABLED"
+  }
 }
 `
 
