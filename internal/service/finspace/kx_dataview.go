@@ -185,9 +185,21 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if out == nil || out.DataviewName == nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), errors.New("empty output"))
 	}
+
 	if _, err := waitKxDataviewCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxDataview, d.Get("name").(string), err)
 	}
+
+	// The CreateKxDataview API currently fails to tag the Dataview when the
+	// Tags field is set. Until the API is fixed, tag after creation instead.
+	//
+	// TODO: the identifier passed to createTags here likely needs to be an ARN, but this attribute
+	// is not returned from the create or describe APIs. The ARN may need to be manually constructed
+	// in order for tag after create to function.
+	//
+	// if err := createTags(ctx, conn, aws.ToString(out.DataviewName), getTagsIn(ctx)); err != nil {
+	//     return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Id(), err)
+	// }
 
 	return append(diags, resourceKxDataviewRead(ctx, d, meta)...)
 }
