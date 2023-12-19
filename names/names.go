@@ -148,6 +148,13 @@ const (
 	// AWS GovCloud (US) partition's regions.
 	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
 	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
+
+	// AWS ISO (US) partition's regions.
+	USISOEast1RegionID = "us-iso-east-1" // US ISO East.
+	USISOWest1RegionID = "us-iso-west-1" // US ISO WEST.
+
+	// AWS ISOB (US) partition's regions.
+	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
 )
 
 func DNSSuffixForPartition(partition string) string {
@@ -164,6 +171,21 @@ func DNSSuffixForPartition(partition string) string {
 		return "csp.hci.ic.gov"
 	default:
 		return "amazonaws.com"
+	}
+}
+
+func PartitionForRegion(region string) string {
+	switch region {
+	case CNNorth1RegionID, CNNorthwest1RegionID:
+		return ChinaPartitionID
+	case USISOEast1RegionID, USISOWest1RegionID:
+		return ISOPartitionID
+	case USISOBEast1RegionID:
+		return ISOBPartitionID
+	case USGovEast1RegionID, USGovWest1RegionID:
+		return USGovCloudPartitionID
+	default:
+		return StandardPartitionID
 	}
 }
 
