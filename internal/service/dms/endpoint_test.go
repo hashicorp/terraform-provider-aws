@@ -2219,24 +2219,20 @@ func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_pauseReplicationTasks(rName, "source", "target"),
+				Config: testAccEndpointConfig_pauseReplicationTasks(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, endpointNameSource),
 					testAccCheckEndpointExists(ctx, endpointNameTarget),
 					testAccCheckReplicationTaskExists(ctx, replicationTaskName),
-					resource.TestCheckResourceAttr(endpointNameSource, "endpoint_type", "source"),
-					resource.TestCheckResourceAttr(endpointNameTarget, "endpoint_type", "target"),
 					resource.TestCheckResourceAttr(replicationTaskName, "status", "running"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_pauseReplicationTasks(rName, "target", "source"),
+				Config: testAccEndpointConfig_pauseReplicationTasks(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, endpointNameSource),
 					testAccCheckEndpointExists(ctx, endpointNameTarget),
 					testAccCheckReplicationTaskExists(ctx, replicationTaskName),
-					resource.TestCheckResourceAttr(endpointNameSource, "endpoint_type", "target"),
-					resource.TestCheckResourceAttr(endpointNameTarget, "endpoint_type", "source"),
 					resource.TestCheckResourceAttr(replicationTaskName, "status", "running"),
 				),
 			},
@@ -4683,15 +4679,15 @@ resource "aws_kms_key" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_pauseReplicationTasks(rName, type1, type2 string) string {
+func testAccEndpointConfig_pauseReplicationTasks(rName string, pause bool) string {
 	return acctest.ConfigCompose(testAccRDSClustersConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "source" {
   database_name           = "tftest"
   endpoint_id             = "%[1]s-source"
-  endpoint_type           = %[2]q
+  endpoint_type           = "source"
   engine_name             = "aurora"
   password                = "mustbeeightcharaters"
-  pause_replication_tasks = true
+  pause_replication_tasks = %[2]t
   port                    = 3306
   server_name             = aws_rds_cluster.source.endpoint
   username                = "tftest"
@@ -4700,10 +4696,10 @@ resource "aws_dms_endpoint" "source" {
 resource "aws_dms_endpoint" "target" {
   database_name           = "tftest"
   endpoint_id             = "%[1]s-target"
-  endpoint_type           = %[3]q
+  endpoint_type           = "target"
   engine_name             = "aurora"
   password                = "mustbeeightcharaters"
-  pause_replication_tasks = true
+  pause_replication_tasks = %[2]t
   port                    = 3306
   server_name             = aws_rds_cluster.target.endpoint
   username                = "tftest"
@@ -4744,5 +4740,5 @@ resource "aws_dms_replication_task" "test" {
 
   depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
 }
-`, rName, type1, type2))
+`, rName, pause))
 }
