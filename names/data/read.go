@@ -96,8 +96,11 @@ func (sr ServiceRecord) FilePrefix() string {
 	return sr[colFilePrefix]
 }
 
-func (sr ServiceRecord) DocPrefix() string {
-	return sr[colDocPrefix]
+func (sr ServiceRecord) DocPrefix() []string {
+	if sr[colDocPrefix] == "" {
+		return nil
+	}
+	return strings.Split(sr[colDocPrefix], ";")
 }
 
 func (sr ServiceRecord) HumanFriendly() string {

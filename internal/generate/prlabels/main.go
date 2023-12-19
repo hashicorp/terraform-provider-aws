@@ -59,7 +59,7 @@ func main() {
 			ProviderPackage: p,
 			ActualPackage:   ap,
 			FilePrefix:      l.FilePrefix(),
-			DocPrefixes:     strings.Split(l.DocPrefix(), ";"),
+			DocPrefixes:     l.DocPrefix(),
 		}
 
 		td.Services = append(td.Services, s)

@@ -134,7 +134,7 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, Brand must be AWS, Amazon, or blank; found %s", l.HumanFriendly(), i, l.Brand())
 		}
 
-		if (!l.Exclude() || (l.Exclude() && l.AllowedSubcategory() != "")) && l.DocPrefix() == "" {
+		if (!l.Exclude() || (l.Exclude() && l.AllowedSubcategory() != "")) && len(l.DocPrefix()) == 0 {
 			log.Fatalf("in service data, line %d, for service %s, DocPrefix cannot be blank unless Exclude is non-blank and AllowedSubcategory is blank", i, l.HumanFriendly())
 		}
 
@@ -149,7 +149,7 @@ func main() {
 		checkAllLowercase(i, l.HumanFriendly(), "ResourcePrefixActual", l.ResourcePrefixActual())
 		checkAllLowercase(i, l.HumanFriendly(), "ResourcePrefixCorrect", l.ResourcePrefixCorrect())
 		checkAllLowercase(i, l.HumanFriendly(), "FilePrefix", l.FilePrefix())
-		checkAllLowercase(i, l.HumanFriendly(), "DocPrefix", l.DocPrefix())
+		checkAllLowercase(i, l.HumanFriendly(), "DocPrefix", l.DocPrefix()...)
 
 		checkNotAllLowercase(i, l.HumanFriendly(), "ProviderNameUpper", l.ProviderNameUpper())
 		checkNotAllLowercase(i, l.HumanFriendly(), "GoV1ClientTypeName", l.GoV1ClientTypeName())
@@ -181,7 +181,7 @@ func main() {
 
 		docPrefixes = append(docPrefixes, DocPrefix{
 			HumanFriendly:  l.HumanFriendly(),
-			DocPrefixRegex: strings.Split(l.DocPrefix(), ";"),
+			DocPrefixRegex: l.DocPrefix(),
 			ResourceRegex:  rre,
 		})
 
