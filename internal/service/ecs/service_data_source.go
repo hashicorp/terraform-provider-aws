@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_ecs_service")
-func DataSourceService() *schema.Resource {
+func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
 
@@ -57,7 +57,7 @@ func DataSourceService() *schema.Resource {
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterArn := d.Get("cluster_arn").(string)
@@ -65,11 +65,11 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	params := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(clusterArn),
-		Services: []*string{aws.String(serviceName)},
+		Services: []string{serviceName},
 	}
 
 	log.Printf("[DEBUG] Reading ECS Service: %s", params)
-	desc, err := conn.DescribeServicesWithContext(ctx, params)
+	desc, err := conn.DescribeServices(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", serviceName, err)
@@ -84,7 +84,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	service := desc.Services[0]
-	d.SetId(aws.StringValue(service.ServiceArn))
+	d.SetId(aws.ToString(service.ServiceArn))
 
 	d.Set("service_name", service.ServiceName)
 	d.Set("arn", service.ServiceArn)

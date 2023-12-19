@@ -33,7 +33,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ecs_container_definition",
 		},
 		{
-			Factory:  DataSourceService,
+			Factory:  dataSourceService,
 			TypeName: "aws_ecs_service",
 		},
 		{
