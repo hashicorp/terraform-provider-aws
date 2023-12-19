@@ -100,6 +100,10 @@ const (
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
 	ChinaPartitionID      = "aws-cn"     // AWS China partition.
+	ISOPartitionID        = "aws-iso"    // AWS ISO (US) partition.
+	ISOBPartitionID       = "aws-iso-b"  // AWS ISOB (US) partition.
+	ISOEPartitionID       = "aws-iso-e"  // AWS ISOE (Europe) partition.
+	ISOFPartitionID       = "aws-iso-f"  // AWS ISOF partition.
 	StandardPartitionID   = "aws"        // AWS Standard partition.
 	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 )
@@ -145,6 +149,23 @@ const (
 	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
 	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
 )
+
+func DNSSuffixForPartition(partition string) string {
+	switch partition {
+	case ChinaPartitionID:
+		return "amazonaws.com.cn"
+	case ISOPartitionID:
+		return "c2s.ic.gov"
+	case ISOBPartitionID:
+		return "sc2s.sgov.gov"
+	case ISOEPartitionID:
+		return "cloud.adc-e.uk"
+	case ISOFPartitionID:
+		return "csp.hci.ic.gov"
+	default:
+		return "amazonaws.com"
+	}
+}
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
 // described in detail in README.md.
