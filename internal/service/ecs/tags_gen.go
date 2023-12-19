@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,8 +24,8 @@ import (
 // This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn *ecs.Client, identifier, key string) (*string, error) {
-	listTags, err := listTags(ctx, conn, identifier)
+func GetTag(ctx context.Context, conn *ecs.Client, identifier, key string, optFns ...func(*ecs.Options)) (*string, error) {
+	listTags, err := listTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -40,12 +41,12 @@ func GetTag(ctx context.Context, conn *ecs.Client, identifier, key string) (*str
 // listTags lists ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *ecs.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *ecs.Client, identifier string, optFns ...func(*ecs.Options)) (tftags.KeyValueTags, error) {
 	input := &ecs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
 		return nil, &retry.NotFoundError{
@@ -77,21 +78,38 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]string handling
+// []*SERVICE.Tag handling
 
 // Tags returns ecs service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
-	return tags.Map()
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := awstypes.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
 }
 
 // KeyValueTags creates tftags.KeyValueTags from ecs service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
-	return tftags.New(ctx, tags)
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.ToString(tag.Key)] = tag.Value
+	}
+
+	return tftags.New(ctx, m)
 }
 
 // getTagsIn returns ecs service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]string {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -102,25 +120,25 @@ func getTagsIn(ctx context.Context) map[string]string {
 }
 
 // setTagsOut sets ecs service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]string) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // createTags creates ecs service tags for new resources.
-func createTags(ctx context.Context, conn *ecs.Client, identifier string, tags map[string]string) error {
+func createTags(ctx context.Context, conn *ecs.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, tags)
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
 // updateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*ecs.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -134,7 +152,7 @@ func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTag
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -149,7 +167,7 @@ func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTag
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

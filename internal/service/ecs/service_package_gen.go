@@ -25,11 +25,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_ecs_cluster",
 		},
 		{
-			Factory:  DataSourceContainerDefinition,
+			Factory:  dataSourceContainerDefinition,
 			TypeName: "aws_ecs_container_definition",
 		},
 		{
@@ -54,7 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ecs_account_setting_default",
 		},
 		{
-			Factory:  ResourceCapacityProvider,
+			Factory:  resourceCapacityProvider,
 			TypeName: "aws_ecs_capacity_provider",
 			Name:     "Capacity Provider",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,7 +62,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_ecs_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,7 +70,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterCapacityProviders,
+			Factory:  resourceClusterCapacityProviders,
 			TypeName: "aws_ecs_cluster_capacity_providers",
 		},
 		{
