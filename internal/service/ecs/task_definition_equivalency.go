@@ -10,9 +10,9 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/mitchellh/copystructure"
 )
 
@@ -56,7 +56,7 @@ func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	return equal, nil
 }
 
-type containerDefinitions []*ecs.ContainerDefinition
+type containerDefinitions []types.ContainerDefinition
 
 func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 	// Deal with fields which may be re-ordered in the API
@@ -64,17 +64,14 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults
-		if def.Cpu != nil && aws.Int64Value(def.Cpu) == 0 {
-			def.Cpu = nil
-		}
 		if def.Essential == nil {
 			def.Essential = aws.Bool(true)
 		}
 		for j, pm := range def.PortMappings {
-			if pm.Protocol != nil && aws.StringValue(pm.Protocol) == "tcp" {
-				cd[i].PortMappings[j].Protocol = nil
+			if pm.Protocol != "" && string(pm.Protocol) == "tcp" {
+				cd[i].PortMappings[j].Protocol = ""
 			}
-			if pm.HostPort != nil && aws.Int64Value(pm.HostPort) == 0 {
+			if pm.HostPort != nil && aws.ToInt32(pm.HostPort) == 0 {
 				cd[i].PortMappings[j].HostPort = nil
 			}
 			if isAWSVPC && cd[i].PortMappings[j].HostPort == nil {
@@ -99,8 +96,8 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 				}
 			}
 		}
-		iface := definition.Interface().(ecs.ContainerDefinition)
-		cd[i] = &iface
+		iface := definition.Interface().(types.ContainerDefinition)
+		cd[i] = iface
 	}
 	return nil
 }
@@ -108,7 +105,7 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 func (cd containerDefinitions) OrderEnvironmentVariables() {
 	for _, def := range cd {
 		sort.Slice(def.Environment, func(i, j int) bool {
-			return aws.StringValue(def.Environment[i].Name) < aws.StringValue(def.Environment[j].Name)
+			return aws.ToString(def.Environment[i].Name) < aws.ToString(def.Environment[j].Name)
 		})
 	}
 }
