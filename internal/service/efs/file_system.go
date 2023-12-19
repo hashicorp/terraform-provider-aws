@@ -121,7 +121,8 @@ func ResourceFileSystem() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
 			},
 			"protection": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -240,7 +241,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("protection"); ok {
-		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, expandFileSystemProtection(d.Id(), v.(map[string]interface{})))
+		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, expandFileSystemProtection(d.Id(), v.([]interface{})))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
@@ -353,9 +354,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChanges("protection") {
-		input := expandFileSystemProtection(d.Id(), d.Get("protection").(map[string]interface{}))
-
-		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, expandFileSystemProtection(d.Id(), d.Get("protection").([]interface{})))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
@@ -572,8 +571,13 @@ func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{}
 	return []interface{}{m}
 }
 
-func expandFileSystemProtection(id string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+func expandFileSystemProtection(id string, tfList []interface{}) *efs.UpdateFileSystemProtectionInput {
+	if len(tfList) == 0 {
+		return nil
+	}
+
 	var apiObject *efs.UpdateFileSystemProtectionInput
+	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject.SetFileSystemId(id)
 
@@ -584,16 +588,16 @@ func expandFileSystemProtection(id string, tfMap map[string]interface{}) *efs.Up
 	return apiObject
 }
 
-func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription) map[string]interface{} {
-	var m map[string]interface{}
-
+func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription) []interface{} {
 	if protection == nil {
-		return map[string]interface{}{}
+		return []interface{}{}
 	}
+
+	tfMap := map[string]interface{}{}
 
 	if protection.ReplicationOverwriteProtection != nil {
-		m["replication_overwrite"] = protection.ReplicationOverwriteProtection
+		tfMap["replication_overwrite"] = protection.ReplicationOverwriteProtection
 	}
 
-	return m
+	return []interface{}{tfMap}
 }

@@ -85,14 +85,13 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"protection": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"replication_overwrite": {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(efs.ReplicationOverwriteProtection_Values(), false),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
