@@ -319,13 +319,13 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 	// UpdatePolicy is not possible to set with CreateComputeEnvironment
 	if v, ok := d.GetOk("update_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		inputeUpdateOnCreate := &batch.UpdateComputeEnvironmentInput{
+		inputUpdateOnCreate := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
 			UpdatePolicy:       expandComputeEnvironmentUpdatePolicy(v.([]interface{})),
 		}
-		log.Printf("[DEBUG] Creating Batch Compute Environment extra arguments: %s", input)
+		log.Printf("[DEBUG] Creating Batch Compute Environment extra arguments: %s", inputUpdateOnCreate)
 
-		if _, err := conn.UpdateComputeEnvironmentWithContext(ctx, inputeUpdateOnCreate); err != nil {
+		if _, err := conn.UpdateComputeEnvironmentWithContext(ctx, inputUpdateOnCreate); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Create Batch Compute Environment extra arguments through UpdateComputeEnvironment (%s): %s", d.Id(), err)
 		}
 
