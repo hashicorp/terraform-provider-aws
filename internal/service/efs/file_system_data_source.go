@@ -84,6 +84,19 @@ func DataSourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"protection": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_overwrite": {
+							Type:         schema.TypeString,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(efs.ReplicationOverwriteProtection_Values(), false),
+						},
+					},
+				},
+			},
 			"provisioned_throughput_in_mibps": {
 				Type:     schema.TypeFloat,
 				Computed: true,
@@ -161,6 +174,10 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
+	}
+
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
 	}
 
 	return diags
