@@ -213,63 +213,63 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
 
-### eks_properties
+### `eks_properties`
 
-* `pod_properties` - The properties for the Kubernetes pod resources of a job.
+* `pod_properties` - The properties for the Kubernetes pod resources of a job. See [`pod_properties`](#pod_properties) below.
 
-### pod_properties
+### `pod_properties`
 
-* `containers` - The properties of the container that's used on the Amazon EKS pod. See [containers](#containers)
-* `dns_policy` - (Optional) The DNS policy for the pod. The default value is `ClusterFirst`. If the hostNetwork parameter is not specified, the default is `ClusterFirstWithHostNet`. ClusterFirst indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
-* `host_network` - (Optional) Indicates if the pod uses the hosts' network IP address. The default value is `true`. Setting this to false enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `containers` - The properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
+* `dns_policy` - (Optional) The DNS policy for the pod. The default value is `ClusterFirst`. If the `host_network` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
+* `host_network` - (Optional) Indicates if the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
 * `service_account_name` - (Optional) The name of the service account that's used to run the pod.
 * `volumes` - (Optional) Specifies the volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
 
-### containers
+### `containers`
 
 * `image` - The Docker image used to start the container.
 * `args` - An array of arguments to the entrypoint. If this isn't specified, the CMD of the container image is used. This corresponds to the args member in the Entrypoint portion of the Pod in Kubernetes. Environment variable references are expanded using the container's environment.
 * `command` - The entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
-* `env` - The environment variables to pass to a container. See [EKS Environment](#eks_environment)
+* `env` - The environment variables to pass to a container. See [EKS Environment](#eks_environment) below.
 * `image_pull_policy` - The image pull policy for the container. Supported values are `Always`, `IfNotPresent`, and `Never`.
 * `name` - The name of the container. If the name isn't specified, the default name "Default" is used. Each container in a pod must have a unique name.
-* `resources` - The type and amount of resources to assign to a container. The supported resources include `memory`, `cpu`, and `nvidia.com/gpu`
-* `security_context` - The security context for a job
+* `resources` - The type and amount of resources to assign to a container. The supported resources include `memory`, `cpu`, and `nvidia.com/gpu`.
+* `security_context` - The security context for a job.
 * `volume_mounts` - The volume mounts for the container.
 
-### eks_environment
+### `eks_environment`
 
 * `name` - The name of the environment variable.
 * `value` - The value of the environment variable.
 
-### eks_empty_dir
+### `eks_empty_dir`
 
 * `medium` - (Optional) The medium to store the volume. The default value is an empty string, which uses the storage of the node.
 * `size_limit` - The maximum size of the volume. By default, there's no maximum size defined.
 
-### eks_host_path
+### `eks_host_path`
 
 * `path` - The path of the file or directory on the host to mount into containers on the pod.
 
-### eks_secret
+### `eks_secret`
 
 * `secret_name` - The name of the secret. The name must be allowed as a DNS subdomain name.
 * `optional` - (Optional) Specifies whether the secret or the secret's keys must be defined.
 
-### retry_strategy
+### `retry_strategy`
 
 * `attempts` - (Optional) The number of times to move a job to the `RUNNABLE` status. You may specify between `1` and `10` attempts.
 * `evaluate_on_exit` - (Optional) The [evaluate on exit](#evaluate_on_exit) conditions under which the job should be retried or failed. If this parameter is specified, then the `attempts` parameter must also be specified. You may specify up to 5 configuration blocks.
 
-#### evaluate_on_exit
+#### `evaluate_on_exit`
 
 * `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
 * `on_exit_code` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `on_reason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `on_status_reason` - (Optional) A glob pattern to match against the status reason returned for a job.
 
-### timeout
+### `timeout`
 
 * `attempt_duration_seconds` - (Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is `60` seconds.
 
