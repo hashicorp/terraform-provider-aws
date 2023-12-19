@@ -15,7 +15,7 @@ import (
 )
 
 // @SDKDataSource("aws_ecs_cluster")
-func DataSourceCluster() *schema.Resource {
+func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
 
