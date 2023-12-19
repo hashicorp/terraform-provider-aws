@@ -100,11 +100,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}.String()
 	d.Set("arn", arn)
 	d.Set("bucket_domain_name", awsClient.PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
-	if regionalDomainName, err := BucketRegionalDomainName(bucket, region); err == nil {
-		d.Set("bucket_regional_domain_name", regionalDomainName)
-	} else {
-		log.Printf("[WARN] BucketRegionalDomainName: %s", err)
-	}
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucket, region))
 	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
 		d.Set("hosted_zone_id", hostedZoneID)
 	} else {
@@ -112,9 +108,9 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("region", region)
 	if _, err := findBucketWebsite(ctx, conn, bucket, ""); err == nil {
-		website := WebsiteEndpoint(awsClient, bucket, region)
-		d.Set("website_domain", website.Domain)
-		d.Set("website_endpoint", website.Endpoint)
+		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
+		d.Set("website_domain", domain)
+		d.Set("website_endpoint", endpoint)
 	} else if !tfresource.NotFound(err) {
 		log.Printf("[WARN] Reading S3 Bucket (%s) Website: %s", bucket, err)
 	}

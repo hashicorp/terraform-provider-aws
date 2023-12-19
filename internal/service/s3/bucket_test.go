@@ -2397,13 +2397,7 @@ func TestBucketRegionalDomainName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		output, err := tfs3.BucketRegionalDomainName(bucket, tc.Region)
-		if tc.ExpectedErrCount == 0 && err != nil {
-			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Region, err)
-		}
-		if tc.ExpectedErrCount > 0 && err == nil {
-			t.Fatalf("expected %q to trigger an error", tc.Region)
-		}
+		output := tfs3.BucketRegionalDomainName(bucket, tc.Region)
 		if output != tc.ExpectedOutput {
 			t.Fatalf("expected %q, received %q", tc.ExpectedOutput, output)
 		}
@@ -2420,59 +2414,35 @@ func TestWebsiteEndpoint(t *testing.T) {
 		Expected           string
 	}{
 		{
-			TestingClient: &conns.AWSClient{
-				DNSSuffix: "amazonaws.com",
-				Region:    names.USEast1RegionID,
-			},
 			LocationConstraint: "",
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", names.USEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			TestingClient: &conns.AWSClient{
-				DNSSuffix: "amazonaws.com",
-				Region:    names.USEast2RegionID,
-			},
 			LocationConstraint: names.USEast2RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USEast2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			TestingClient: &conns.AWSClient{
-				DNSSuffix: "amazonaws.com",
-				Region:    names.USGovEast1RegionID,
-			},
 			LocationConstraint: names.USGovEast1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USGovEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			TestingClient: &conns.AWSClient{
-				DNSSuffix: "c2s.ic.gov",
-				Region:    "us-iso-east-1",
-			},
 			LocationConstraint: "us-iso-east-1",
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.c2s.ic.gov", "us-iso-east-1"),
 		},
 		{
-			TestingClient: &conns.AWSClient{
-				DNSSuffix: "sc2s.sgov.gov",
-				Region:    "us-isob-east-1",
-			},
 			LocationConstraint: "us-isob-east-1",
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.sc2s.sgov.gov", "us-isob-east-1"),
 		},
 		{
-			TestingClient: &conns.AWSClient{
-				DNSSuffix: "amazonaws.com.cn",
-				Region:    names.CNNorth1RegionID,
-			},
 			LocationConstraint: names.CNNorth1RegionID,
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com.cn", names.CNNorth1RegionID),
 		},
 	}
 
 	for _, testCase := range testCases {
-		got := tfs3.WebsiteEndpoint(testCase.TestingClient, "bucket-name", testCase.LocationConstraint)
-		if got.Endpoint != testCase.Expected {
-			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
+		got, _ := tfs3.BucketWebsiteEndpointAndDomain("bucket-name", testCase.LocationConstraint)
+		if got != testCase.Expected {
+			t.Errorf("BucketWebsiteEndpointAndDomain(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got, testCase.Expected)
 		}
 	}
 }
@@ -2693,17 +2663,12 @@ func testAccCheckBucketDomainName(resourceName string, attributeName string, buc
 }
 
 func testAccBucketRegionalDomainName(bucket, region string) string {
-	regionalEndpoint, err := tfs3.BucketRegionalDomainName(bucket, region)
-	if err != nil {
-		return fmt.Sprintf("regional endpoint not found for S3 Bucket (%s)", bucket)
-	}
-	return regionalEndpoint
+	return tfs3.BucketRegionalDomainName(bucket, region)
 }
 
 func testAccCheckBucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		website := tfs3.WebsiteEndpoint(acctest.Provider.Meta().(*conns.AWSClient), bucketName, region)
-		expectedValue := website.Endpoint
+		expectedValue, _ := tfs3.BucketWebsiteEndpointAndDomain(bucketName, region)
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
 	}

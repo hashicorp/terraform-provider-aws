@@ -236,7 +236,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for S3 Bucket Website Configuration (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceBucketWebsiteConfigurationRead(ctx, d, meta)
@@ -289,9 +289,9 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	if output, err := findBucketLocation(ctx, conn, bucket, expectedBucketOwner); err != nil {
 		return diag.Errorf("reading S3 Bucket (%s) Location: %s", d.Id(), err)
 	} else {
-		website := WebsiteEndpoint(meta.(*conns.AWSClient), bucket, string(output.LocationConstraint))
-		d.Set("website_domain", website.Domain)
-		d.Set("website_endpoint", website.Endpoint)
+		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, string(output.LocationConstraint))
+		d.Set("website_domain", domain)
+		d.Set("website_endpoint", endpoint)
 	}
 
 	return nil
@@ -391,7 +391,7 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for S3 Bucket Website Configuration (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

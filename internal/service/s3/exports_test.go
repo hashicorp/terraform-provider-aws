@@ -7,6 +7,8 @@ package s3
 var (
 	ResourceDirectoryBucket = newDirectoryBucketResource
 
+	BucketRegionalDomainName              = bucketRegionalDomainName
+	BucketWebsiteEndpointAndDomain        = bucketWebsiteEndpointAndDomain
 	DeleteAllObjectVersions               = deleteAllObjectVersions
 	EmptyBucket                           = emptyBucket
 	FindAnalyticsConfiguration            = findAnalyticsConfiguration
