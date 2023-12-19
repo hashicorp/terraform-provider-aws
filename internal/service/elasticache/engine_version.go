@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"regexp"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -172,16 +172,15 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	if err != nil {
 		return fmt.Errorf("reading engine version: %w", err)
 	}
-	if engineVersion.Segments()[0] < 6 {
+	majorEngineVersion := engineVersion.Segments()[0]
+	if majorEngineVersion < 6 {
 		d.Set("engine_version", engineVersion.String())
+	} else if majorEngineVersion == 6 && strings.HasSuffix(d.Get("engine_version").(string), ".x") {
+		// Engine version 6 may be specified as 6.x which should use the latest minor version for major version 6.
+		d.Set("engine_version", fmt.Sprintf("%d.x", majorEngineVersion))
 	} else {
-		// Handle major-only version number
-		configVersion := d.Get("engine_version").(string)
-		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
-			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
-		} else {
-			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
-		}
+		// Engine version 6+ must be specified as <major>.<minor> only, no patch segment.
+		d.Set("engine_version", fmt.Sprintf("%d.%d", majorEngineVersion, engineVersion.Segments()[1]))
 	}
 	d.Set("engine_version_actual", engineVersion.String())
 
