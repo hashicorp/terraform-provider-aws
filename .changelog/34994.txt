@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_backup_plan: Add opt_in_to_archive_for_supported_resources attribute to lifecycle configuration block
+```
