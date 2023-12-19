@@ -105,4 +105,3 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 ```console
 % terraform import aws_backup_plan.test <id>
 ```
-website/docs/r/backup_plan.html.markdown
