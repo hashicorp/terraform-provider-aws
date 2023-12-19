@@ -29,6 +29,14 @@ func (sr ServiceRecord) GoV2Package() string {
 	return sr[colGoV2Package]
 }
 
+func (sr ServiceRecord) ProviderPackage() string {
+	pkg := sr.ProviderPackageCorrect()
+	if sr.ProviderPackageActual() != "" {
+		pkg = sr.ProviderPackageActual()
+	}
+	return pkg
+}
+
 func (sr ServiceRecord) ProviderPackageActual() string {
 	return sr[colProviderPackageActual]
 }

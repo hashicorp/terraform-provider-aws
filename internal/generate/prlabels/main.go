@@ -47,11 +47,7 @@ func main() {
 			continue
 		}
 
-		p := l.ProviderPackageCorrect()
-
-		if l.ProviderPackageActual() != "" {
-			p = l.ProviderPackageActual()
-		}
+		p := l.ProviderPackage()
 
 		ap := p
 

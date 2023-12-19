@@ -44,11 +44,7 @@ func main() {
 
 	for _, l := range data {
 		// See internal/generate/namesconsts/main.go.
-		p := l.ProviderPackageCorrect()
-
-		if l.ProviderPackageActual() != "" {
-			p = l.ProviderPackageActual()
-		}
+		p := l.ProviderPackage()
 
 		spdFile := fmt.Sprintf("../service/%s/service_package_gen.go", p)
 

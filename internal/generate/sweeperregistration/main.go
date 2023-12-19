@@ -52,11 +52,7 @@ func main() {
 			continue
 		}
 
-		p := l.ProviderPackageCorrect()
-
-		if l.ProviderPackageActual() != "" {
-			p = l.ProviderPackageActual()
-		}
+		p := l.ProviderPackage()
 
 		if _, err := os.Stat(fmt.Sprintf("../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue

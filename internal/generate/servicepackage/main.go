@@ -41,11 +41,7 @@ func main() {
 
 	for _, l := range data {
 		// See internal/generate/namesconsts/main.go.
-		p := l.ProviderPackageCorrect()
-
-		if l.ProviderPackageActual() != "" {
-			p = l.ProviderPackageActual()
-		}
+		p := l.ProviderPackage()
 
 		if p != servicePackage {
 			continue

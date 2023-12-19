@@ -158,11 +158,7 @@ func readCSVIntoServiceData() error {
 			continue
 		}
 
-		p := l.ProviderPackageCorrect()
-
-		if l.ProviderPackageActual() != "" {
-			p = l.ProviderPackageActual()
-		}
+		p := l.ProviderPackage()
 
 		serviceData[p] = &ServiceDatum{
 			Brand:              l.Brand(),
