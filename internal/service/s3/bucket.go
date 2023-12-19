@@ -877,7 +877,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	switch {
 	case err == nil:
-		if err := d.Set("cors_rule", flattenBucketCorsRules(corsRules)); err != nil {
+		if err := d.Set("cors_rule", flattenBucketCORSRules(corsRules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_rule: %s", err)
 		}
 	case tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented):
@@ -1150,6 +1150,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
+	} else {
+		d.Set("website_domain", nil)
+		d.Set("website_endpoint", nil)
 	}
 
 	//
@@ -1179,38 +1182,100 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		// Retry due to S3 eventual consistency
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
-			return nil, terr
-		}, s3.ErrCodeNoSuchBucket)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) tags: %s", d.Id(), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	// Note: Order of argument updates below is important
 
 	if d.HasChange("policy") {
-		if err := resourceBucketInternalPolicyUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Policy: %s", d.Id(), err)
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if policy == "" {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.DeleteBucketPolicy(ctx, &s3.DeleteBucketPolicyInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) policy: %s", d.Id(), err)
+			}
+		} else {
+			input := &s3.PutBucketPolicyInput{
+				Bucket: aws.String(d.Id()),
+				Policy: aws.String(policy),
+			}
+
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.PutBucketPolicy(ctx, input)
+			}, errCodeMalformedPolicy, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) policy: %s", d.Id(), err)
+			}
 		}
 	}
 
 	if d.HasChange("cors_rule") {
-		if err := resourceBucketInternalCorsUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) CORS Rules: %s", d.Id(), err)
+		if v, ok := d.GetOk("cors_rule"); ok && len(v.([]interface{})) == 0 {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.DeleteBucketCors(ctx, &s3.DeleteBucketCorsInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
+			}
+		} else {
+			input := &s3.PutBucketCorsInput{
+				Bucket: aws.String(d.Id()),
+				CORSConfiguration: &types.CORSConfiguration{
+					CORSRules: expandCORSRules(d.Get("cors_rule").(*schema.Set).List()),
+				},
+			}
+
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.PutBucketCors(ctx, input)
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
+			}
 		}
 	}
 
 	if d.HasChange("website") {
-		if err := resourceBucketInternalWebsiteUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Website: %s", d.Id(), err)
+		if v, ok := d.GetOk("website"); ok && len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.DeleteBucketWebsite(ctx, &s3.DeleteBucketWebsiteInput{
+					Bucket: aws.String(d.Id()),
+				})
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) website configuration: %s", d.Id(), err)
+			}
+		} else {
+			websiteConfig, err := expandBucketWebsiteConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			input := &s3.PutBucketWebsiteInput{
+				Bucket:               aws.String(d.Id()),
+				WebsiteConfiguration: websiteConfig,
+			}
+
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.PutBucketWebsite(ctx, input)
+			}, errCodeNoSuchBucket)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) website configuration: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -1285,6 +1350,20 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		// Retry due to S3 eventual consistency.
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
+			return nil, terr
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
@@ -1317,7 +1396,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				log.Printf("[DEBUG] Deleted %d S3 objects", n)
 			}
 
-			// Recurse until all objects are deleted or an error is returned
+			// Recurse until all objects are deleted or an error is returned.
 			return resourceBucketDelete(ctx, d, meta)
 		}
 	}
@@ -1442,72 +1521,6 @@ func resourceBucketInternalACLUpdate(ctx context.Context, conn *s3.S3, d *schema
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAclWithContext(ctx, input)
-	}, s3.ErrCodeNoSuchBucket)
-
-	return err
-}
-
-func resourceBucketInternalCorsUpdate(ctx context.Context, conn *s3.S3, d *schema.ResourceData) error {
-	rawCors := d.Get("cors_rule").([]interface{})
-
-	if len(rawCors) == 0 {
-		// Delete CORS
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.DeleteBucketCorsWithContext(ctx, &s3.DeleteBucketCorsInput{
-				Bucket: aws.String(d.Id()),
-			})
-		}, s3.ErrCodeNoSuchBucket)
-
-		if err != nil {
-			return fmt.Errorf("deleting S3 Bucket (%s) CORS: %w", d.Id(), err)
-		}
-
-		return nil
-	}
-	// Put CORS
-	rules := make([]*s3.CORSRule, 0, len(rawCors))
-	for _, cors := range rawCors {
-		// Prevent panic
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7546
-		corsMap, ok := cors.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		r := &s3.CORSRule{}
-		for k, v := range corsMap {
-			if k == "max_age_seconds" {
-				r.MaxAgeSeconds = aws.Int64(int64(v.(int)))
-			} else {
-				vMap := make([]*string, len(v.([]interface{})))
-				for i, vv := range v.([]interface{}) {
-					if str, ok := vv.(string); ok {
-						vMap[i] = aws.String(str)
-					}
-				}
-				switch k {
-				case "allowed_headers":
-					r.AllowedHeaders = vMap
-				case "allowed_methods":
-					r.AllowedMethods = vMap
-				case "allowed_origins":
-					r.AllowedOrigins = vMap
-				case "expose_headers":
-					r.ExposeHeaders = vMap
-				}
-			}
-		}
-		rules = append(rules, r)
-	}
-
-	input := &s3.PutBucketCorsInput{
-		Bucket: aws.String(d.Id()),
-		CORSConfiguration: &s3.CORSConfiguration{
-			CORSRules: rules,
-		},
-	}
-
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-		return conn.PutBucketCorsWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
 	return err
@@ -1757,49 +1770,6 @@ func resourceBucketInternalObjectLockConfigurationUpdate(ctx context.Context, co
 	return err
 }
 
-func resourceBucketInternalPolicyUpdate(ctx context.Context, conn *s3.S3, d *schema.ResourceData) error {
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-	if err != nil {
-		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
-	}
-
-	if policy == "" {
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.DeleteBucketPolicyWithContext(ctx, &s3.DeleteBucketPolicyInput{
-				Bucket: aws.String(d.Id()),
-			})
-		}, s3.ErrCodeNoSuchBucket)
-
-		if err != nil {
-			return fmt.Errorf("deleting S3 Bucket (%s) policy: %w", d.Id(), err)
-		}
-
-		return nil
-	}
-
-	params := &s3.PutBucketPolicyInput{
-		Bucket: aws.String(d.Id()),
-		Policy: aws.String(policy),
-	}
-
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.PutBucketPolicyWithContext(ctx, params)
-		if tfawserr.ErrCodeEquals(err, errCodeMalformedPolicy, s3.ErrCodeNoSuchBucket) {
-			return retry.RetryableError(err)
-		}
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketPolicyWithContext(ctx, params)
-	}
-
-	return err
-}
-
 func resourceBucketInternalReplicationConfigurationUpdate(ctx context.Context, conn *s3.S3, d *schema.ResourceData) error {
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
 
@@ -1947,77 +1917,73 @@ func resourceBucketInternalVersioningUpdate(ctx context.Context, conn *s3.S3, bu
 	return err
 }
 
-func resourceBucketInternalWebsiteUpdate(ctx context.Context, conn *s3.S3, d *schema.ResourceData) error {
-	ws := d.Get("website").([]interface{})
-
-	if len(ws) == 0 {
-		input := &s3.DeleteBucketWebsiteInput{
-			Bucket: aws.String(d.Id()),
-		}
-
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.DeleteBucketWebsiteWithContext(ctx, input)
-		}, s3.ErrCodeNoSuchBucket)
-
-		if err != nil {
-			return fmt.Errorf("deleting S3 Bucket (%s) Website: %w", d.Id(), err)
-		}
-
-		d.Set("website_endpoint", "")
-		d.Set("website_domain", "")
-
-		return nil
-	}
-
-	websiteConfig, err := expandWebsiteConfiguration(ws)
-	if err != nil {
-		return fmt.Errorf("expanding S3 Bucket (%s) website configuration: %w", d.Id(), err)
-	}
-
-	input := &s3.PutBucketWebsiteInput{
-		Bucket:               aws.String(d.Id()),
-		WebsiteConfiguration: websiteConfig,
-	}
-
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-		return conn.PutBucketWebsiteWithContext(ctx, input)
-	}, s3.ErrCodeNoSuchBucket)
-
-	return err
-}
-
 ///////////////////////////////////////////// Expand and Flatten functions /////////////////////////////////////////////
 
 // Cors Rule functions
 
-func flattenBucketCorsRules(rules []*s3.CORSRule) []interface{} {
-	var results []interface{}
+func expandBucketCORSRules(l []interface{}) []types.CORSRule {
+	if len(l) == 0 {
+		return nil
+	}
 
-	for _, rule := range rules {
-		if rule == nil {
+	var rules []types.CORSRule
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
 			continue
 		}
 
-		m := make(map[string]interface{})
+		rule := types.CORSRule{}
+
+		if v, ok := tfMap["allowed_headers"].([]interface{}); ok && len(v) > 0 {
+			rule.AllowedHeaders = flex.ExpandStringValueList(v)
+		}
+
+		if v, ok := tfMap["allowed_methods"].([]interface{}); ok && len(v) > 0 {
+			rule.AllowedMethods = flex.ExpandStringValueList(v)
+		}
+
+		if v, ok := tfMap["allowed_origins"].([]interface{}); ok && len(v) > 0 {
+			rule.AllowedOrigins = flex.ExpandStringValueList(v)
+		}
+
+		if v, ok := tfMap["expose_headers"].([]interface{}); ok && len(v) > 0 {
+			rule.ExposeHeaders = flex.ExpandStringValueList(v)
+		}
+
+		if v, ok := tfMap["max_age_seconds"].(int); ok {
+			rule.MaxAgeSeconds = aws.Int32(int32(v))
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func flattenBucketCORSRules(rules []types.CORSRule) []interface{} {
+	var results []interface{}
+
+	for _, rule := range rules {
+		m := map[string]interface{}{
+			"max_age_seconds": rule.MaxAgeSeconds,
+		}
 
 		if len(rule.AllowedHeaders) > 0 {
-			m["allowed_headers"] = flex.FlattenStringList(rule.AllowedHeaders)
+			m["allowed_headers"] = rule.AllowedHeaders
 		}
 
 		if len(rule.AllowedMethods) > 0 {
-			m["allowed_methods"] = flex.FlattenStringList(rule.AllowedMethods)
+			m["allowed_methods"] = rule.AllowedMethods
 		}
 
 		if len(rule.AllowedOrigins) > 0 {
-			m["allowed_origins"] = flex.FlattenStringList(rule.AllowedOrigins)
+			m["allowed_origins"] = rule.AllowedOrigins
 		}
 
 		if len(rule.ExposeHeaders) > 0 {
-			m["expose_headers"] = flex.FlattenStringList(rule.ExposeHeaders)
-		}
-
-		if rule.MaxAgeSeconds != nil {
-			m["max_age_seconds"] = int(aws.Int64Value(rule.MaxAgeSeconds))
+			m["expose_headers"] = rule.ExposeHeaders
 		}
 
 		results = append(results, m)
@@ -2842,62 +2808,54 @@ func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
 
 // Website functions
 
-func expandWebsiteConfiguration(l []interface{}) (*s3.WebsiteConfiguration, error) {
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
+func expandBucketWebsiteConfiguration(tfMap map[string]interface{}) (*types.WebsiteConfiguration, error) {
+	websiteConfig := &types.WebsiteConfiguration{}
 
-	website, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil, nil
-	}
-
-	websiteConfiguration := &s3.WebsiteConfiguration{}
-
-	if v, ok := website["index_document"].(string); ok && v != "" {
-		websiteConfiguration.IndexDocument = &s3.IndexDocument{
+	if v, ok := tfMap["index_document"].(string); ok && v != "" {
+		websiteConfig.IndexDocument = &types.IndexDocument{
 			Suffix: aws.String(v),
 		}
 	}
 
-	if v, ok := website["error_document"].(string); ok && v != "" {
-		websiteConfiguration.ErrorDocument = &s3.ErrorDocument{
+	if v, ok := tfMap["error_document"].(string); ok && v != "" {
+		websiteConfig.ErrorDocument = &types.ErrorDocument{
 			Key: aws.String(v),
 		}
 	}
 
-	if v, ok := website["redirect_all_requests_to"].(string); ok && v != "" {
+	if v, ok := tfMap["redirect_all_requests_to"].(string); ok && v != "" {
 		redirect, err := url.Parse(v)
 		if err == nil && redirect.Scheme != "" {
-			var redirectHostBuf bytes.Buffer
-			redirectHostBuf.WriteString(redirect.Host)
+			var buf bytes.Buffer
+
+			buf.WriteString(redirect.Host)
 			if redirect.Path != "" {
-				redirectHostBuf.WriteString(redirect.Path)
+				buf.WriteString(redirect.Path)
 			}
 			if redirect.RawQuery != "" {
-				redirectHostBuf.WriteString("?")
-				redirectHostBuf.WriteString(redirect.RawQuery)
+				buf.WriteString("?")
+				buf.WriteString(redirect.RawQuery)
 			}
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{
-				HostName: aws.String(redirectHostBuf.String()),
-				Protocol: aws.String(redirect.Scheme),
+			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
+				HostName: aws.String(buf.String()),
+				Protocol: types.Protocol(redirect.Scheme),
 			}
 		} else {
-			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{
+			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
 				HostName: aws.String(v),
 			}
 		}
 	}
 
-	if v, ok := website["routing_rules"].(string); ok && v != "" {
-		var unmarshaledRules []*s3.RoutingRule
-		if err := json.Unmarshal([]byte(v), &unmarshaledRules); err != nil {
+	if v, ok := tfMap["routing_rules"].(string); ok && v != "" {
+		var routingRules []types.RoutingRule
+		if err := json.Unmarshal([]byte(v), &routingRules); err != nil {
 			return nil, err
 		}
-		websiteConfiguration.RoutingRules = unmarshaledRules
+		websiteConfig.RoutingRules = routingRules
 	}
 
-	return websiteConfiguration, nil
+	return websiteConfig, nil
 }
 
 func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
