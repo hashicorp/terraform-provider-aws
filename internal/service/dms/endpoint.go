@@ -1757,7 +1757,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrat
 			Filters: []*dms.Filter{
 				{
 					Name:   aws.String("endpoint-arn"),
-					Values: []*string{aws.String(arn)},
+					Values: aws.StringSlice([]string{arn}),
 				},
 			},
 		})

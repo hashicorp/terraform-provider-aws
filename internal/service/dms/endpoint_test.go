@@ -2219,22 +2219,24 @@ func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_pauseReplicationTasks(rName, "3306"),
+				Config: testAccEndpointConfig_pauseReplicationTasks(rName, "source", "target"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, endpointNameSource),
 					testAccCheckEndpointExists(ctx, endpointNameTarget),
 					testAccCheckReplicationTaskExists(ctx, replicationTaskName),
-					resource.TestCheckResourceAttr(endpointNameTarget, "port", "3306"),
+					resource.TestCheckResourceAttr(endpointNameSource, "endpoint_type", "source"),
+					resource.TestCheckResourceAttr(endpointNameTarget, "endpoint_type", "target"),
 					resource.TestCheckResourceAttr(replicationTaskName, "status", "running"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_pauseReplicationTasks(rName, "3307"),
+				Config: testAccEndpointConfig_pauseReplicationTasks(rName, "target", "source"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, endpointNameSource),
 					testAccCheckEndpointExists(ctx, endpointNameTarget),
 					testAccCheckReplicationTaskExists(ctx, replicationTaskName),
-					resource.TestCheckResourceAttr(endpointNameTarget, "port", "3307"),
+					resource.TestCheckResourceAttr(endpointNameSource, "endpoint_type", "target"),
+					resource.TestCheckResourceAttr(endpointNameTarget, "endpoint_type", "source"),
 					resource.TestCheckResourceAttr(replicationTaskName, "status", "running"),
 				),
 			},
@@ -4681,154 +4683,16 @@ resource "aws_kms_key" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_pauseReplicationTasks(rName, port string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    protocol  = -1
-    self      = true
-    from_port = 0
-    to_port   = 0
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_rds_engine_version" "default" {
-  engine = "aurora-mysql"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = ["db.t3.small", "db.t3.medium", "db.t3.large"]
-}
-
-resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "%[1]s-pg-cluster"
-  family      = data.aws_rds_engine_version.default.parameter_group_family
-  description = "DMS cluster parameter group"
-
-  parameter {
-    name         = "binlog_format"
-    value        = "ROW"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name         = "binlog_row_image"
-    value        = "Full"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name         = "binlog_checksum"
-    value        = "NONE"
-    apply_method = "pending-reboot"
-  }
-}
-
-resource "aws_rds_cluster" "source" {
-  cluster_identifier              = "%[1]s-aurora-cluster-source"
-  engine                          = data.aws_rds_orderable_db_instance.test.engine
-  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
-  database_name                   = "tftest"
-  master_username                 = "tftest"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
-  vpc_security_group_ids          = [aws_security_group.test.id]
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
-}
-
-resource "aws_rds_cluster_instance" "source" {
-  identifier           = "%[1]s-source-primary"
-  cluster_identifier   = aws_rds_cluster.source.id
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_subnet_group_name = aws_db_subnet_group.test.name
-}
-
-resource "aws_rds_cluster" "target" {
-  cluster_identifier     = "%[1]s-aurora-cluster-target"
-  engine                 = data.aws_rds_orderable_db_instance.test.engine
-  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
-  database_name          = "tftest"
-  master_username        = "tftest"
-  master_password        = "mustbeeightcharaters"
-  skip_final_snapshot    = true
-  vpc_security_group_ids = [aws_security_group.test.id]
-  db_subnet_group_name   = aws_db_subnet_group.test.name
-}
-
-resource "aws_rds_cluster_instance" "target" {
-  identifier           = "%[1]s-target-primary"
-  cluster_identifier   = aws_rds_cluster.target.id
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_subnet_group_name = aws_db_subnet_group.test.name
-}
-
+func testAccEndpointConfig_pauseReplicationTasks(rName, type1, type2 string) string {
+	return acctest.ConfigCompose(testAccRDSClustersConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "source" {
   database_name           = "tftest"
   endpoint_id             = "%[1]s-source"
-  endpoint_type           = "source"
+  endpoint_type           = %[2]q
   engine_name             = "aurora"
   password                = "mustbeeightcharaters"
   pause_replication_tasks = true
-  port                    = %[2]s
+  port                    = 3306
   server_name             = aws_rds_cluster.source.endpoint
   username                = "tftest"
 }
@@ -4836,11 +4700,11 @@ resource "aws_dms_endpoint" "source" {
 resource "aws_dms_endpoint" "target" {
   database_name           = "tftest"
   endpoint_id             = "%[1]s-target"
-  endpoint_type           = "target"
+  endpoint_type           = %[3]q
   engine_name             = "aurora"
   password                = "mustbeeightcharaters"
   pause_replication_tasks = true
-  port                    = %[2]s
+  port                    = 3306
   server_name             = aws_rds_cluster.target.endpoint
   username                = "tftest"
 }
@@ -4848,7 +4712,7 @@ resource "aws_dms_endpoint" "target" {
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = "terraform test for replication subnet group"
-  subnet_ids                           = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids                           = aws_subnet.test[*].id
 }
 
 resource "aws_dms_replication_instance" "test" {
@@ -4880,5 +4744,5 @@ resource "aws_dms_replication_task" "test" {
 
   depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
 }
-`, rName, port))
+`, rName, type1, type2))
 }
