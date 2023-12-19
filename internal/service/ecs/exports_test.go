@@ -7,7 +7,9 @@ package ecs
 var (
 	ResourceCapacityProvider = resourceCapacityProvider
 	ResourceCluster          = resourceCluster
+	ResourceService          = resourceService
 
 	FindCapacityProviderByARN = findCapacityProviderByARN
 	FindClusterByNameOrARN    = findClusterByNameOrARN
+	FindServiceNoTagsByID     = findServiceNoTagsByID
 )

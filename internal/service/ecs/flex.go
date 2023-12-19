@@ -47,8 +47,8 @@ func flattenCapacityProviderStrategy(cps []types.CapacityProviderStrategyItem) [
 
 // Takes the result of flatmap. Expand for an array of load balancers and
 // returns ecs.LoadBalancer compatible objects
-func expandLoadBalancers(configured []interface{}) []*types.LoadBalancer {
-	loadBalancers := make([]*types.LoadBalancer, 0, len(configured))
+func expandLoadBalancers(configured []interface{}) []types.LoadBalancer {
+	loadBalancers := make([]types.LoadBalancer, 0, len(configured))
 
 	// Loop over our configured load balancers and create
 	// an array of aws-sdk-go compatible objects
@@ -67,14 +67,14 @@ func expandLoadBalancers(configured []interface{}) []*types.LoadBalancer {
 			l.TargetGroupArn = aws.String(v.(string))
 		}
 
-		loadBalancers = append(loadBalancers, l)
+		loadBalancers = append(loadBalancers, *l)
 	}
 
 	return loadBalancers
 }
 
 // Flattens an array of ECS LoadBalancers into a []map[string]interface{}
-func flattenLoadBalancers(list []*types.LoadBalancer) []map[string]interface{} {
+func flattenLoadBalancers(list []types.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
 		l := map[string]interface{}{
@@ -156,8 +156,8 @@ func flattenTaskSetLoadBalancers(list []*types.LoadBalancer) []map[string]interf
 
 // Expand for an array of service registries and
 // returns ecs.ServiceRegistry compatible objects for an ECS TaskSet
-func expandServiceRegistries(l []interface{}) []*types.ServiceRegistry {
-	result := make([]*types.ServiceRegistry, 0, len(l))
+func expandServiceRegistries(l []interface{}) []types.ServiceRegistry {
+	result := make([]types.ServiceRegistry, 0, len(l))
 
 	for _, v := range l {
 		m := v.(map[string]interface{})
@@ -173,7 +173,7 @@ func expandServiceRegistries(l []interface{}) []*types.ServiceRegistry {
 		if raw, ok := m["port"].(int); ok && raw > 0 {
 			sr.Port = aws.Int32(int32(raw))
 		}
-		result = append(result, sr)
+		result = append(result, *sr)
 	}
 
 	return result
