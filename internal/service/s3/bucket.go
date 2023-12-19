@@ -1289,34 +1289,26 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
-	connSDKv2 := meta.(*conns.AWSClient).S3Client(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	log.Printf("[INFO] Deleting S3 Bucket: %s", d.Id())
-	_, err := conn.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{
+	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
 		Bucket: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return nil
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if d.Get("force_destroy").(bool) {
-			// Use a S3 service client that can handle multiple slashes in URIs.
-			// While aws_s3_object resources cannot create these object
-			// keys, other AWS services and applications using the S3 Bucket can.
-			conn := meta.(*conns.AWSClient).S3Client(ctx)
-
-			// bucket may have things delete them
-			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %s", err)
-
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
 			var objectLockEnabled bool
 			objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 			if objectLockConfiguration != nil {
-				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
+				objectLockEnabled = objectLockConfiguration.ObjectLockEnabled == types.ObjectLockEnabledEnabled
 			}
 
 			if n, err := emptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
@@ -1325,24 +1317,24 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				log.Printf("[DEBUG] Deleted %d S3 objects", n)
 			}
 
-			// this line recurses until all objects are deleted or an error is returned
+			// Recurse until all objects are deleted or an error is returned
 			return resourceBucketDelete(ctx, d, meta)
 		}
 	}
 
 	if err != nil {
-		return create.DiagError(names.S3, create.ErrActionDeleting, resNameBucket, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return nil, findBucket(ctx, connSDKv2, d.Id())
+		return nil, findBucket(ctx, conn, d.Id())
 	})
 
 	if err != nil {
-		return create.DiagError(names.S3, create.ErrActionWaitingForDeletion, resNameBucket, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) error {
