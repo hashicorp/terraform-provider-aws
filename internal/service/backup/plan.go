@@ -127,6 +127,11 @@ func ResourcePlan() *schema.Resource {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
+												"opt_in_to_archive_for_supported_resources": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
 											},
 										},
 									},
