@@ -120,6 +120,21 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
 			},
+			"protection": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_overwrite": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(efs.ReplicationOverwriteProtection_Values(), false),
+						},
+					},
+				},
+			},
 			"provisioned_throughput_in_mibps": {
 				Type:     schema.TypeFloat,
 				Optional: true,
@@ -224,6 +239,14 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
+	if v, ok := d.GetOk("protection"); ok {
+		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, expandFileSystemProtection(d.Id(), v.(map[string]interface{})))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
@@ -260,6 +283,10 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting size_in_bytes: %s", err)
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
+
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
 
 	setTagsOut(ctx, fs.Tags)
 
@@ -322,6 +349,16 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("protection") {
+		input := expandFileSystemProtection(d.Id(), d.Get("protection").(map[string]interface{}))
+
+		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
 		}
 	}
 
@@ -533,4 +570,30 @@ func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{}
 	}
 
 	return []interface{}{m}
+}
+
+func expandFileSystemProtection(id string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+	var apiObject *efs.UpdateFileSystemProtectionInput
+
+	apiObject.SetFileSystemId(id)
+
+	if v, ok := tfMap["replication_overwrite"].(string); ok && v != "" {
+		apiObject.SetReplicationOverwriteProtection(v)
+	}
+
+	return apiObject
+}
+
+func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription) map[string]interface{} {
+	var m map[string]interface{}
+
+	if protection == nil {
+		return map[string]interface{}{}
+	}
+
+	if protection.ReplicationOverwriteProtection != nil {
+		m["replication_overwrite"] = protection.ReplicationOverwriteProtection
+	}
+
+	return m
 }
