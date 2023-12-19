@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -49,18 +51,20 @@ func (r *resourceCustomModel) Metadata(_ context.Context, request resource.Metad
 	resp.TypeName = "aws_bedrock_custom_model"
 }
 
+// This resource is a composition of the following APIs. These APIs do not have consitently named attributes, so we will normalize them here.
+// - CreateModelCustomizationJob
+// - GetModelCustomizationJob
+// - GetCustomModel
 func (r *resourceCustomModel) Schema(ctx context.Context, request resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"base_model_identifier": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
+			"arn": framework.ARNAttributeComputedOnly(),
+			"base_model_arn": schema.StringAttribute{
 				Required:   true,
+				CustomType: fwtypes.ARNType,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 				},
@@ -75,9 +79,28 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					enum.FrameworkValidate[awstypes.CustomizationType](),
 				},
 			},
-			"custom_model_kms_key_id": schema.StringAttribute{
+			"hyper_parameters": schema.MapAttribute{
+				Required:    true,
+				ElementType: types.StringType,
+			},
+			"job_arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"job_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9\+\-\.])*$`),
+						"must be up to 63 letters (uppercase and lowercase), numbers, plus sign, dashes, and dots, and must start with an alphanumeric"),
+				},
+			},
+			"job_tags": tftags.TagsAttribute(),
+			"job_role_arn": schema.StringAttribute{
+				Required: true,
 				CustomType: fwtypes.ARNType,
-				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -85,75 +108,33 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					stringvalidator.LengthBetween(1, 2048),
 				},
 			},
-			"custom_model_name": schema.StringAttribute{
+			"job_status": schema.StringAttribute{
+				Computed: true,
+			},
+			"kms_key_arn": schema.StringAttribute{
+				Optional:   true,
+				CustomType: fwtypes.ARNType,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 2048),
+				},
+			},
+			"name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
 				},
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9a-zA-Z][_-]?)+$`), "minimum length of 1. Maximum length of 63."),
-			},
-			"hyper_parameters": schema.MapAttribute{
-				Required:    true,
-				ElementType: types.StringType,
-				// ForceNew: true,
-				// Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"id": framework.IDAttribute(),
-			"job_name": schema.StringAttribute{
-				Required: true,
-				// ForceNew: true,
-			},
-			"job_tags": tftags.TagsAttribute(),
-			"output_data_config": schema.StringAttribute{
-				Required: true,
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$`), "minimum length of 1. Maximum length of 1024."),
-			},
-			"role_arn": schema.StringAttribute{
-				Required: true,
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$`), "minimum length of 1. Maximum length of 2048."),
-			},
-			"training_data_config": schema.StringAttribute{
-				Required: true,
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$`), "minimum length of 1. Maximum length of 1024."),
-			},
-			"base_model_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"creation_time": schema.StringAttribute{
-				Computed: true,
-			},
-			"job_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"model_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"model_kms_key_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"model_name": schema.StringAttribute{
-				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"validation_data_config": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"validators": schema.SetAttribute{
-						Validators: []validator.Set{
-							setvalidator.SizeBetween(0, 10),
-						},
-						ElementType: types.StringType,
-						Optional:    true,
-					},
-				},
-			},
-			"vpc_config": schema.ListNestedBlock{
+			"job_vpc_config": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -166,7 +147,42 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 						"subnet_ids": schema.SetAttribute{
 							ElementType: types.StringType,
 							Required:    true,
-							// ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[-0-9a-zA-Z]+$`), "minimum length of 1. Maximum length of 32."),
+						},
+					},
+				},
+			},
+			"output_data_config": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"s3_uri": schema.StringAttribute{
+							ElementType:  types.StringType,
+							Required:     true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 1024),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI")
+							},
+						},
+					},
+				},
+			},
+			"training_data_config": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"s3_uri": schema.StringAttribute{
+							ElementType:  types.StringType,
+							Required:     true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 1024),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI")
+							},
 						},
 					},
 				},
@@ -183,6 +199,32 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
+			"validation_data_config": schema.SetNestedBlock{
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(10),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"validator": schema.SetNestedBlock{
+							Validators: []validator.Set{
+								setvalidator.IsRequired(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"s3_uri": schema.StringAttribute{
+										ElementType:  types.StringType,
+										Required:     true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 1024),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI")
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"validation_metrics": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -192,9 +234,6 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-			}),
 		},
 	}
 }
