@@ -30,8 +30,10 @@ var (
 	FindPublicAccessBlockConfiguration    = findPublicAccessBlockConfiguration
 	FindReplicationConfiguration          = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
+	HostedZoneIDForRegion                 = hostedZoneIDForRegion
 	IsDirectoryBucket                     = isDirectoryBucket
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
+	ValidBucketName                       = validBucketName
 
 	ErrCodeBucketAlreadyExists     = errCodeBucketAlreadyExists
 	ErrCodeBucketAlreadyOwnedByYou = errCodeBucketAlreadyOwnedByYou

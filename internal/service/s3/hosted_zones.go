@@ -45,9 +45,9 @@ var hostedZoneIDsMap = map[string]string{
 	names.USWest2RegionID:      "Z3BJ6K6RIION7M",
 }
 
-// Returns the hosted zone ID for an S3 website endpoint Region.
+// hostedZoneIDForRegion returns the Route 53 hosted zone ID for an S3 website endpoint Region.
 // This can be used as input to the aws_route53_record resource's zone_id argument.
-func HostedZoneIDForRegion(region string) (string, error) {
+func hostedZoneIDForRegion(region string) (string, error) {
 	if v, ok := hostedZoneIDsMap[region]; ok {
 		return v, nil
 	}

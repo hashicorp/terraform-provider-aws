@@ -105,7 +105,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		log.Printf("[WARN] BucketRegionalDomainName: %s", err)
 	}
-	if hostedZoneID, err := HostedZoneIDForRegion(region); err == nil {
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
 		d.Set("hosted_zone_id", hostedZoneID)
 	} else {
 		log.Printf("[WARN] HostedZoneIDForRegion: %s", err)
