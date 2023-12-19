@@ -128,10 +128,13 @@ func ResourceFileSystem() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"replication_overwrite": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(efs.ReplicationOverwriteProtection_Values(), false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								efs.ReplicationOverwriteProtectionEnabled,
+								efs.ReplicationOverwriteProtectionDisabled,
+							}, false),
 						},
 					},
 				},
