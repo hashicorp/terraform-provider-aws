@@ -10,6 +10,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+const (
+	ImagePullPolicyAlways       = "Always"
+	ImagePullPolicyIfNotPresent = "IfNotPresent"
+	ImagePullPolicyNever        = "Never"
+)
+
+func ImagePullPolicy_Values() []string {
+	return []string{
+		ImagePullPolicyAlways,
+		ImagePullPolicyIfNotPresent,
+		ImagePullPolicyNever,
+	}
+}
+
+const (
+	DNSPolicyDefault                 = "Default"
+	DNSPolicyClusterFirst            = "ClusterFirst"
+	DNSPolicyClusterFirstWithHostNet = "ClusterFirstWithHostNet"
+)
+
+func DNSPolicy_Values() []string {
+	return []string{
+		DNSPolicyDefault,
+		DNSPolicyClusterFirst,
+		DNSPolicyClusterFirstWithHostNet,
+	}
+}
+
 func expandEKSPodProperties(podPropsMap map[string]interface{}) *batch.EksPodProperties {
 	podProps := &batch.EksPodProperties{}
 
@@ -232,6 +260,7 @@ func flattenEKSPodProperties(podProperties *batch.EksPodProperties) (tfList []in
 	tfList = append(tfList, tfMap)
 	return tfList
 }
+
 func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{}) {
 	for _, container := range containers {
 		tfMap := map[string]interface{}{}

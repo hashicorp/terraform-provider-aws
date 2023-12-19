@@ -134,13 +134,9 @@ func ResourceJobDefinition() *schema.Resource {
 													Required: true,
 												},
 												"image_pull_policy": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"Always",
-														"IfNotPresent",
-														"Never",
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(ImagePullPolicy_Values(), false),
 												},
 												"name": {
 													Type:     schema.TypeString,
@@ -220,7 +216,7 @@ func ResourceJobDefinition() *schema.Resource {
 									"dns_policy": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice([]string{"Default", "ClusterFirst", "ClusterFirstWithHostNet"}, false),
+										ValidateFunc: validation.StringInSlice(DNSPolicy_Values(), false),
 									},
 									"host_network": {
 										Type:     schema.TypeBool,
@@ -460,6 +456,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				input.ContainerProperties = props
 			}
 		}
+
 		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 {
 			eksProps := v.([]interface{})[0].(map[string]interface{})
 			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
