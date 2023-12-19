@@ -1116,7 +1116,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrMessageContains(err, errCodeServerSideEncryptionConfigurationNotFound, "encryption configuration was not found") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeServerSideEncryptionConfigurationNotFound) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket encryption: %s", err)
 	}
 
