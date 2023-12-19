@@ -576,13 +576,13 @@ func expandFileSystemProtection(id string, tfList []interface{}) *efs.UpdateFile
 		return nil
 	}
 
-	var apiObject *efs.UpdateFileSystemProtectionInput
 	tfMap := tfList[0].(map[string]interface{})
-
-	apiObject.SetFileSystemId(id)
+	apiObject := &efs.UpdateFileSystemProtectionInput{
+		FileSystemId: &id,
+	}
 
 	if v, ok := tfMap["replication_overwrite"].(string); ok && v != "" {
-		apiObject.SetReplicationOverwriteProtection(v)
+		apiObject.ReplicationOverwriteProtection = &v
 	}
 
 	return apiObject
