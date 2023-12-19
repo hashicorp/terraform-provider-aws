@@ -81,6 +81,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	clusterName := d.Get("cluster_name").(string)
 	input := &ecs.PutClusterCapacityProvidersInput{
@@ -99,7 +100,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 		d.SetId(clusterName)
 	}
 
-	if _, err := waitClusterAvailable(ctx, conn, clusterName); err != nil {
+	if _, err := waitClusterAvailable(ctx, conn, clusterName, partition); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster Capacity Providers (%s) update: %s", d.Id(), err)
 	}
 
@@ -110,8 +111,9 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
-	cluster, err := findClusterByNameOrARN(ctx, conn, d.Id())
+	cluster, err := findClusterByNameOrARN(ctx, conn, d.Id(), partition)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		sdkdiag.AppendErrorf(diags, "[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
@@ -138,6 +140,7 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	input := &ecs.PutClusterCapacityProvidersInput{
 		CapacityProviders:               []string{},
@@ -156,7 +159,7 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Cluster Capacity Providers (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(ctx, conn, d.Id(), partition); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster Capacity Providers (%s) delete: %s", d.Id(), err)
 	}
 

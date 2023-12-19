@@ -30,7 +30,7 @@ func expandCapacityProviderStrategy(cps *schema.Set) []types.CapacityProviderStr
 	return results
 }
 
-func flattenCapacityProviderStrategy(cps []*types.CapacityProviderStrategyItem) []map[string]interface{} {
+func flattenCapacityProviderStrategy(cps []types.CapacityProviderStrategyItem) []map[string]interface{} {
 	if cps == nil {
 		return nil
 	}

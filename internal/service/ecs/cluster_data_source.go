@@ -6,7 +6,7 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -80,17 +80,18 @@ func DataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
-	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string))
+	cluster, err := findClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string), partition)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", clusterName, err)
 	}
 
-	d.SetId(aws.StringValue(cluster.ClusterArn))
+	d.SetId(aws.ToString(cluster.ClusterArn))
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
 	d.Set("running_tasks_count", cluster.RunningTasksCount)

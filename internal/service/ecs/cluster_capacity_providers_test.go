@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -129,7 +128,7 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
 					func(s *terraform.State) error {
-						if got, want := int(aws.Int64Value(cluster.RegisteredContainerInstancesCount)), 2; got != want {
+						if got, want := int(cluster.RegisteredContainerInstancesCount), 2; got != want {
 							return fmt.Errorf("RegisteredContainerInstancesCount = %v, want %v", got, want)
 						}
 
