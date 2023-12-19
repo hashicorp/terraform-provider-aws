@@ -901,3 +901,64 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 		})
 	}
 }
+
+func Test_setEngineVersionRedis(t *testing.T) {
+	testcases := map[string]struct {
+		configVersion     string
+		apiVersion        string
+		wantEngineVersion string
+		wantErr           *regexp.Regexp
+	}{
+		"pre version 6": {
+			configVersion:     "1.2.3",
+			apiVersion:        "1.2.3",
+			wantEngineVersion: "1.2.3",
+		},
+		"version 6 with x suffix": {
+			configVersion:     "6.x",
+			apiVersion:        "6.2.0",
+			wantEngineVersion: "6.x",
+		},
+		"version 6 without x suffix": {
+			configVersion:     "6.2",
+			apiVersion:        "6.2.0",
+			wantEngineVersion: "6.2",
+		},
+		"version 7": {
+			configVersion:     "7.1",
+			apiVersion:        "7.1.0",
+			wantEngineVersion: "7.1",
+		},
+		"outdated config engine version 6 but api engine version 7": {
+			configVersion:     "6.x",
+			apiVersion:        "7.1.0",
+			wantEngineVersion: "7.1",
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			resourceData := ResourceReplicationGroup().TestResourceData()
+			if err := resourceData.Set("engine_version", testcase.configVersion); err != nil {
+				t.Fatal("set engine_version:", err)
+			}
+
+			err := setEngineVersionRedis(resourceData, &testcase.apiVersion)
+			if testcase.wantErr != nil && err == nil {
+				t.Error("expected error, got none")
+			} else if testcase.wantErr != nil && !testcase.wantErr.MatchString(err.Error()) {
+				t.Error("unexpected error:", err)
+			} else {
+				gotEngineVersion := resourceData.Get("engine_version").(string)
+				gotEngineVersionActual := resourceData.Get("engine_version_actual").(string)
+
+				if gotEngineVersion != testcase.wantEngineVersion {
+					t.Errorf("expected engine_version: %q, got engine_version: %q", testcase.wantEngineVersion, gotEngineVersion)
+				}
+				if gotEngineVersionActual != testcase.apiVersion {
+					t.Errorf("expected engine_version_actual: %q, got engine_version_actual: %q", testcase.apiVersion, gotEngineVersionActual)
+				}
+			}
+		})
+	}
+}
