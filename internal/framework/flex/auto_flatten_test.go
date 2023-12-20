@@ -841,10 +841,6 @@ func TestFlattenGeneric(t *testing.T) {
 						Attr1: "a",
 						Attr2: "b",
 					},
-					string(TestEnumScalar): {
-						Attr1: "c",
-						Attr2: "d",
-					},
 				},
 			},
 			Target: &TestFlexMapBlockKeyTF04{},
@@ -854,11 +850,6 @@ func TestFlattenGeneric(t *testing.T) {
 						MapBlockKey: fwtypes.StringEnumValue(TestEnumList),
 						Attr1:       types.StringValue("a"),
 						Attr2:       types.StringValue("b"),
-					},
-					{
-						MapBlockKey: fwtypes.StringEnumValue(TestEnumScalar),
-						Attr1:       types.StringValue("c"),
-						Attr2:       types.StringValue("d"),
 					},
 				}),
 			},
