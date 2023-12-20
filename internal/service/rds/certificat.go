@@ -47,10 +47,12 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		CertificateIdentifier: aws.String(d.Get("certificate_identifier").(string)),
 	}
 
-	_, err := conn.ModifyCertificates(ctx, input)
+	output, err := conn.ModifyCertificates(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", d.Id(), err)
 	}
+
+	d.SetId(*(*output).Certificate.CertificateIdentifier)
 
 	return diags
 }
@@ -93,7 +95,6 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds_sdkv2.ModifyCertificatesInput{
-		CertificateIdentifier:  aws.String(d.Get("certificate_identifier").(string)),
 		RemoveCustomerOverride: aws.Bool(true),
 	}
 
