@@ -750,6 +750,12 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "Z.2X"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"timeout"},
+			},
 		},
 	})
 }

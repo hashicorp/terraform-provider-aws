@@ -61,10 +61,11 @@ func ResourceJob() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
 						},
 						"runtime": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+							ConflictsWith: []string{"timeout"},
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validation.StringInSlice([]string{"Ray2.4"}, true),
 						},
 						"script_location": {
 							Type:     schema.TypeString,
@@ -168,6 +169,9 @@ func ResourceJob() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return isRayJob(d)
+				},
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
@@ -377,8 +381,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("timeout"); ok {
-			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
+		if false == isRayJob(d) {
+			if v, ok := d.GetOk("timeout"); ok {
+				jobUpdate.Timeout = aws.Int64(int64(v.(int)))
+			}
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
@@ -504,4 +510,14 @@ func flattenNotificationProperty(notificationProperty *glue.NotificationProperty
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func isRayJob(d *schema.ResourceData) bool {
+	command := d.Get("command").([]interface{})
+	for _, elem := range command {
+		commandMap := elem.(map[string]interface{})
+		name := commandMap["name"].(string)
+		return name == "glueray"
+	}
+	return false
 }
