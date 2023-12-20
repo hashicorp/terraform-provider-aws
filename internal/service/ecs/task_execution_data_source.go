@@ -7,13 +7,15 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,7 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_ecs_task_execution")
-func DataSourceTaskExecution() *schema.Resource {
+func dataSourceTaskExecution() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTaskExecutionRead,
 
@@ -70,9 +72,9 @@ func DataSourceTaskExecution() *schema.Resource {
 				Optional: true,
 			},
 			"launch_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.LaunchType](),
 			},
 			"network_configuration": {
 				Type:     schema.TypeList,
@@ -154,9 +156,9 @@ func DataSourceTaskExecution() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(ecs.ResourceType_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.ResourceType](),
 												},
 												"value": {
 													Type:     schema.TypeString,
@@ -214,9 +216,9 @@ func DataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ecs.PlacementConstraintType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
 						},
 					},
 				},
@@ -243,9 +245,9 @@ func DataSourceTaskExecution() *schema.Resource {
 				Optional: true,
 			},
 			"propagate_tags": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ecs.PropagateTags_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.PropagateTags](),
 			},
 			"reference_id": {
 				Type:     schema.TypeString,
@@ -275,7 +277,7 @@ const (
 
 func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	cluster := d.Get("cluster").(string)
 	taskDefinition := d.Get("task_definition").(string)
@@ -296,19 +298,19 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("desired_count"); ok {
-		input.Count = aws.Int64(int64(v.(int)))
+		input.Count = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk("enable_ecs_managed_tags"); ok {
-		input.EnableECSManagedTags = aws.Bool(v.(bool))
+		input.EnableECSManagedTags = v.(bool)
 	}
 	if v, ok := d.GetOk("enable_execute_command"); ok {
-		input.EnableExecuteCommand = aws.Bool(v.(bool))
+		input.EnableExecuteCommand = v.(bool)
 	}
 	if v, ok := d.GetOk("group"); ok {
 		input.Group = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("launch_type"); ok {
-		input.LaunchType = aws.String(v.(string))
+		input.LaunchType = types.LaunchType(v.(string))
 	}
 	if v, ok := d.GetOk("network_configuration"); ok {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
@@ -334,7 +336,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.PlatformVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("propagate_tags"); ok {
-		input.PropagateTags = aws.String(v.(string))
+		input.PropagateTags = types.PropagateTags(v.(string))
 	}
 	if v, ok := d.GetOk("reference_id"); ok {
 		input.ReferenceId = aws.String(v.(string))
@@ -343,7 +345,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.StartedBy = aws.String(v.(string))
 	}
 
-	out, err := conn.RunTaskWithContext(ctx, &input)
+	out, err := conn.RunTask(ctx, &input)
 	if err != nil {
 		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 	}
@@ -360,12 +362,12 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
+func expandTaskOverride(tfList []interface{}) *types.TaskOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObject := &ecs.TaskOverride{}
+	apiObject := &types.TaskOverride{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["cpu"]; ok {
@@ -390,91 +392,91 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	return apiObject
 }
 
-func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []*ecs.InferenceAcceleratorOverride {
+func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []types.InferenceAcceleratorOverride {
 	if tfSet.Len() == 0 {
 		return nil
 	}
-	apiObject := make([]*ecs.InferenceAcceleratorOverride, 0)
+	apiObject := make([]types.InferenceAcceleratorOverride, 0)
 
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
-		iao := &ecs.InferenceAcceleratorOverride{
+		iao := &types.InferenceAcceleratorOverride{
 			DeviceName: aws.String(tfMap["device_name"].(string)),
 			DeviceType: aws.String(tfMap["device_type"].(string)),
 		}
-		apiObject = append(apiObject, iao)
+		apiObject = append(apiObject, *iao)
 	}
 
 	return apiObject
 }
 
-func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
+func expandContainerOverride(tfList []interface{}) []types.ContainerOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
-	apiObject := make([]*ecs.ContainerOverride, 0)
+	apiObject := make([]types.ContainerOverride, 0)
 
 	for _, item := range tfList {
 		tfMap := item.(map[string]interface{})
-		co := &ecs.ContainerOverride{
+		co := &types.ContainerOverride{
 			Name: aws.String(tfMap["name"].(string)),
 		}
 		if v, ok := tfMap["command"]; ok {
 			commandStrings := v.([]interface{})
-			co.Command = flex.ExpandStringList(commandStrings)
+			co.Command = flex.ExpandStringValueList(commandStrings)
 		}
 		if v, ok := tfMap["cpu"]; ok {
-			co.Cpu = aws.Int64(int64(v.(int)))
+			co.Cpu = aws.Int32(int32(v.(int)))
 		}
 		if v, ok := tfMap["environment"]; ok {
 			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
 		if v, ok := tfMap["memory"]; ok {
-			co.Memory = aws.Int64(int64(v.(int)))
+			co.Memory = aws.Int32(int32(v.(int)))
 		}
 		if v, ok := tfMap["memory_reservation"]; ok {
-			co.MemoryReservation = aws.Int64(int64(v.(int)))
+			co.MemoryReservation = aws.Int32(int32(v.(int)))
 		}
 		if v, ok := tfMap["resource_requirements"]; ok {
 			co.ResourceRequirements = expandResourceRequirements(v.(*schema.Set))
 		}
-		apiObject = append(apiObject, co)
+		apiObject = append(apiObject, *co)
 	}
 
 	return apiObject
 }
 
-func expandTaskEnvironment(tfSet *schema.Set) []*ecs.KeyValuePair {
+func expandTaskEnvironment(tfSet *schema.Set) []types.KeyValuePair {
 	if tfSet.Len() == 0 {
 		return nil
 	}
-	apiObject := make([]*ecs.KeyValuePair, 0)
+	apiObject := make([]types.KeyValuePair, 0)
 
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
-		te := &ecs.KeyValuePair{
+		te := &types.KeyValuePair{
 			Name:  aws.String(tfMap["key"].(string)),
 			Value: aws.String(tfMap["value"].(string)),
 		}
-		apiObject = append(apiObject, te)
+		apiObject = append(apiObject, *te)
 	}
 
 	return apiObject
 }
 
-func expandResourceRequirements(tfSet *schema.Set) []*ecs.ResourceRequirement {
+func expandResourceRequirements(tfSet *schema.Set) []types.ResourceRequirement {
 	if tfSet.Len() == 0 {
 		return nil
 	}
 
-	apiObject := make([]*ecs.ResourceRequirement, 0)
+	apiObject := make([]types.ResourceRequirement, 0)
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
-		rr := &ecs.ResourceRequirement{
-			Type:  aws.String(tfMap["type"].(string)),
+		rr := &types.ResourceRequirement{
+			Type:  types.ResourceType(tfMap["type"].(string)),
 			Value: aws.String(tfMap["value"].(string)),
 		}
-		apiObject = append(apiObject, rr)
+		apiObject = append(apiObject, *rr)
 	}
 
 	return apiObject
