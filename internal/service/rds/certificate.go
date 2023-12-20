@@ -29,12 +29,6 @@ func ResourceCertificate() *schema.Resource {
 				Optional: false,
 				Computed: false,
 			},
-			"remove_customer_override": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: false,
-				Default:  false,
-			},
 		},
 	}
 }
