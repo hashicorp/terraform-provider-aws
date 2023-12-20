@@ -366,7 +366,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	if *ontapConfig.HAPairs > int64(1) {
+	if aws.Int64Value(ontapConfig.HAPairs) > int64(1) {
 		d.Set("throughput_capacity", nil)
 	} else {
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
