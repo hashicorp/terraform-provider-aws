@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lextypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
+	"github.com/aws/smithy-go/middleware"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -153,17 +153,6 @@ func TestIntentAutoFlex(t *testing.T) {
 		InterpretedValue: aws.String(testString),
 	}
 
-	slotValueOverrideTF := tflexv2models.SlotValueOverride{
-		MapBlockKey: types.StringValue(testString),
-		Shape:       fwtypes.StringEnumValue(lextypes.SlotShapeList),
-		Value:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
-		//Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
-		//	{
-		//		Shape: types.StringValue(testString),
-		//		Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
-		//	},
-		//}
-	}
 	slotValueOverrideAWS := lextypes.SlotValueOverride{
 		Shape: lextypes.SlotShapeList,
 		Value: &slotValueAWS,
@@ -175,15 +164,28 @@ func TestIntentAutoFlex(t *testing.T) {
 		//}
 	}
 
+	slotValueOverrideMapTF := tflexv2models.SlotValueOverride{
+		MapBlockKey: types.StringValue(testString),
+		Shape:       fwtypes.StringEnumValue(lextypes.SlotShapeList),
+		Value:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
+		//Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
+		//	{
+		//		Shape: types.StringValue(testString),
+		//		Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
+		//	},
+		//}
+	}
+	slotValueOverrideMapAWS := map[string]lextypes.SlotValueOverride{
+		testString: slotValueOverrideAWS,
+	}
+
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		Slot: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueOverrideTF),
+		Slot: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueOverrideMapTF),
 	}
 	intentOverrideAWS := lextypes.IntentOverride{
-		Name: aws.String(testString),
-		Slots: map[string]lextypes.SlotValueOverride{
-			testString: slotValueOverrideAWS,
-		},
+		Name:  aws.String(testString),
+		Slots: slotValueOverrideMapAWS,
 	}
 
 	dialogActionTF := tflexv2models.DialogAction{
@@ -654,7 +656,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		Description:            types.StringValue(testString),
 		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
 		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
-		ID:                     types.StringValue(testString),
+		IntentID:               types.StringValue(testString),
 		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
 		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
 		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
@@ -689,171 +691,109 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testCases := []struct {
-		TestName   string
-		Expand     bool
-		TF         any
-		AWS        any
-		WantTarget any
-		WantErr    bool
+		TestName string
+		TFFull   any
+		AWSFull  any
+		TFEmpty  any
+		AWSEmpty any
+		WantErr  bool
 	}{
 		{
-			TestName:   "message",
-			Expand:     true,
-			TF:         &messageTF,
-			AWS:        &lextypes.Message{},
-			WantTarget: &messageAWS,
+			TestName: "message",
+			TFFull:   &messageTF,
+			TFEmpty:  &tflexv2models.Message{},
+			AWSFull:  &messageAWS,
+			AWSEmpty: &lextypes.Message{},
 		},
 		{
-			TestName:   "responseSpecification",
-			Expand:     true,
-			TF:         &responseSpecificationTF,
-			AWS:        &lextypes.ResponseSpecification{},
-			WantTarget: &responseSpecificationAWS,
+			TestName: "responseSpecification",
+			TFFull:   &responseSpecificationTF,
+			TFEmpty:  &tflexv2models.ResponseSpecification{},
+			AWSFull:  &responseSpecificationAWS,
+			AWSEmpty: &lextypes.ResponseSpecification{},
 		},
 		{
-			TestName:   "promptSpecification",
-			Expand:     true,
-			TF:         &promptSpecificationTF,
-			AWS:        &lextypes.PromptSpecification{},
-			WantTarget: &promptSpecificationAWS,
+			TestName: "promptSpecification",
+			TFFull:   &promptSpecificationTF,
+			TFEmpty:  &tflexv2models.PromptSpecification{},
+			AWSFull:  &promptSpecificationAWS,
+			AWSEmpty: &lextypes.PromptSpecification{},
 		},
 		{
-			TestName:   "dialogState",
-			Expand:     true,
-			TF:         &dialogStateTF,
-			AWS:        &lextypes.DialogState{},
-			WantTarget: &dialogStateAWS,
+			TestName: "dialogState",
+			TFFull:   &dialogStateTF,
+			TFEmpty:  &tflexv2models.DialogState{},
+			AWSFull:  &dialogStateAWS,
+			AWSEmpty: &lextypes.DialogState{},
 		},
 		{
-			TestName:   "conditionalSpecification",
-			Expand:     true,
-			TF:         &conditionalSpecificationTF,
-			AWS:        &lextypes.ConditionalSpecification{},
-			WantTarget: &conditionalSpecificationAWS,
+			TestName: "dialogAction",
+			TFFull:   &dialogActionTF,
+			TFEmpty:  &tflexv2models.DialogAction{},
+			AWSFull:  &dialogActionAWS,
+			AWSEmpty: &lextypes.DialogAction{},
 		},
 		{
-			TestName:   "intentClosingSetting",
-			Expand:     true,
-			TF:         &intentClosingSettingTF,
-			AWS:        &lextypes.IntentClosingSetting{},
-			WantTarget: &intentClosingSettingAWS,
+			TestName: "conditionalSpecification",
+			TFFull:   &conditionalSpecificationTF,
+			TFEmpty:  &tflexv2models.ConditionalSpecification{},
+			AWSFull:  &conditionalSpecificationAWS,
+			AWSEmpty: &lextypes.ConditionalSpecification{},
 		},
 		{
-			TestName:   "intentConfirmationSetting",
-			Expand:     true,
-			TF:         &intentConfirmationSettingTF,
-			AWS:        &lextypes.IntentConfirmationSetting{},
-			WantTarget: &intentConfirmationSettingAWS,
+			TestName: "intentClosingSetting",
+			TFFull:   &intentClosingSettingTF,
+			TFEmpty:  &tflexv2models.IntentClosingSetting{},
+			AWSFull:  &intentClosingSettingAWS,
+			AWSEmpty: &lextypes.IntentClosingSetting{},
 		},
 		{
-			TestName:   "create intent",
-			Expand:     true,
-			TF:         &intentCreateTF,
-			AWS:        &lexmodelsv2.CreateIntentInput{},
-			WantTarget: &intentCreateAWS,
+			TestName: "intentConfirmationSetting",
+			TFFull:   &intentConfirmationSettingTF,
+			TFEmpty:  &tflexv2models.IntentConfirmationSetting{},
+			AWSFull:  &intentConfirmationSettingAWS,
+			AWSEmpty: &lextypes.IntentConfirmationSetting{},
 		},
 		{
-			TestName:   "update intent",
-			Expand:     true,
-			TF:         &intentModifyTF,
-			AWS:        &lexmodelsv2.UpdateIntentInput{},
-			WantTarget: &intentModifyAWS,
+			TestName: "intentOverride",
+			TFFull:   &intentOverrideTF,
+			TFEmpty:  &tflexv2models.IntentOverride{},
+			AWSFull:  &intentOverrideAWS,
+			AWSEmpty: &lextypes.IntentOverride{},
 		},
 		{
-			TestName:   "message",
-			Expand:     false,
-			TF:         &tflexv2models.Message{},
-			AWS:        &messageAWS,
-			WantTarget: &messageTF,
+			TestName: "slotValue",
+			TFFull:   &slotValueTF,
+			TFEmpty:  &tflexv2models.SlotValue{},
+			AWSFull:  &slotValueAWS,
+			AWSEmpty: &lextypes.SlotValue{},
 		},
 		{
-			TestName:   "responseSpecification",
-			Expand:     false,
-			TF:         &tflexv2models.ResponseSpecification{},
-			AWS:        &responseSpecificationAWS,
-			WantTarget: &responseSpecificationTF,
+			TestName: "create intent",
+			TFFull:   &intentCreateTF,
+			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			AWSFull:  &intentCreateAWS,
+			AWSEmpty: &lexmodelsv2.CreateIntentInput{},
 		},
 		{
-			TestName:   "dialogState",
-			Expand:     false,
-			TF:         &tflexv2models.DialogState{},
-			AWS:        &dialogStateAWS,
-			WantTarget: &dialogStateTF,
+			TestName: "update intent",
+			TFFull:   &intentModifyTF,
+			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			AWSFull:  &intentModifyAWS,
+			AWSEmpty: &lexmodelsv2.UpdateIntentInput{},
 		},
 		{
-			TestName:   "dialogAction",
-			Expand:     false,
-			TF:         &tflexv2models.DialogAction{},
-			AWS:        &dialogActionAWS,
-			WantTarget: &dialogActionTF,
-		},
-		{
-			TestName:   "intentOverride",
-			Expand:     false,
-			TF:         &tflexv2models.IntentOverride{},
-			AWS:        &intentOverrideAWS,
-			WantTarget: &intentOverrideTF,
-		},
-		{
-			TestName:   "slotValue",
-			Expand:     false,
-			TF:         &tflexv2models.SlotValue{},
-			AWS:        &slotValueAWS,
-			WantTarget: &slotValueTF,
-		},
-		{
-			TestName:   "slotValueOverride",
-			Expand:     false,
-			TF:         &tflexv2models.SlotValueOverride{},
-			AWS:        &slotValueOverrideAWS,
-			WantTarget: &slotValueOverrideTF,
-		},
-		{
-			TestName:   "conditionalSpecification",
-			Expand:     false,
-			TF:         &tflexv2models.ConditionalSpecification{},
-			AWS:        &conditionalSpecificationAWS,
-			WantTarget: &conditionalSpecificationTF,
-		},
-		{
-			TestName:   "intentClosingSetting",
-			Expand:     false,
-			TF:         &tflexv2models.IntentClosingSetting{},
-			AWS:        &intentClosingSettingAWS,
-			WantTarget: &intentClosingSettingTF,
-		},
-		{
-			TestName:   "intentConfirmationSetting",
-			Expand:     false,
-			TF:         &tflexv2models.IntentConfirmationSetting{},
-			AWS:        &intentConfirmationSettingAWS,
-			WantTarget: &intentConfirmationSettingTF,
-		},
-		{
-			TestName:   "create intent",
-			Expand:     false,
-			TF:         &tflexv2models.ResourceIntentData{},
-			AWS:        &intentCreateAWS,
-			WantTarget: &intentCreateTF,
-		},
-		{
-			TestName:   "update intent",
-			Expand:     false,
-			TF:         &tflexv2models.ResourceIntentData{},
-			AWS:        &intentModifyAWS,
-			WantTarget: &intentModifyTF,
-		},
-		{
-			TestName:   "describe intent",
-			Expand:     false,
-			TF:         &tflexv2models.ResourceIntentData{},
-			AWS:        &intentDescribeAWS,
-			WantTarget: &intentDescribeTF,
+			TestName: "describe intent",
+			TFFull:   &intentDescribeTF,
+			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			AWSFull:  &intentDescribeAWS,
+			AWSEmpty: &lexmodelsv2.DescribeIntentOutput{},
 		},
 	}
 
 	ignoreExpoOpts := cmpopts.IgnoreUnexported(
 		lexmodelsv2.CreateIntentInput{},
+		lexmodelsv2.DescribeIntentOutput{},
 		lexmodelsv2.UpdateIntentInput{},
 		lextypes.AllowedInputTypes{},
 		lextypes.AudioAndDTMFInputSpecification{},
@@ -896,23 +836,16 @@ func TestIntentAutoFlex(t *testing.T) {
 		lextypes.SlotValueOverride{},
 		lextypes.SSMLMessage{},
 		lextypes.TextInputSpecification{},
+		middleware.Metadata{},
 	)
 
 	for _, testCase := range testCases {
 		testCase := testCase
-		testType := "expand"
-		if !testCase.Expand {
-			testType = "flatten"
-		}
-		t.Run(fmt.Sprintf("%s %s", testType, testCase.TestName), func(t *testing.T) {
+
+		t.Run(fmt.Sprintf("expand %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			var diags diag.Diagnostics
-			if testCase.Expand {
-				diags = flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.TF, testCase.AWS)
-			} else {
-				diags = flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.AWS, testCase.TF)
-			}
+			diags := flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.TFFull, testCase.AWSEmpty)
 
 			gotErr := diags != nil
 
@@ -924,18 +857,36 @@ func TestIntentAutoFlex(t *testing.T) {
 				if !testCase.WantErr {
 					t.Errorf("err = %q", diags)
 				}
-			} else if testCase.Expand {
-				if diff := cmp.Diff(testCase.AWS, testCase.WantTarget, ignoreExpoOpts); diff != "" {
+			} else {
+				if diff := cmp.Diff(testCase.AWSEmpty, testCase.AWSFull, ignoreExpoOpts); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+
+		t.Run(fmt.Sprintf("flatten %s", testCase.TestName), func(t *testing.T) {
+			t.Parallel()
+
+			diags := flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.AWSFull, testCase.TFEmpty)
+
+			gotErr := diags != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", diags)
 				}
 			} else {
 				// because TF type has .Equal method, cmp can act strangely - string comparison shortcut
 				// avoids
-				if fmt.Sprint(testCase.TF) == fmt.Sprint(testCase.WantTarget) {
+				if fmt.Sprint(testCase.TFEmpty) == fmt.Sprint(testCase.TFFull) {
 					return
 				}
 
-				if diff := cmp.Diff(testCase.TF, testCase.WantTarget, ignoreExpoOpts); diff != "" {
+				if diff := cmp.Diff(testCase.TFEmpty, testCase.TFFull, ignoreExpoOpts); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
