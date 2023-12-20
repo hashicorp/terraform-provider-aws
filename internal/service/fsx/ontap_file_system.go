@@ -223,7 +223,7 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			},
 			"throughput_capacity_per_ha_pair": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{3072, 6144}),
 			},
 			"vpc_id": {
