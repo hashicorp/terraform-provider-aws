@@ -8,6 +8,7 @@ var (
 	ResourceCapacityProvider = resourceCapacityProvider
 	ResourceCluster          = resourceCluster
 	ResourceService          = resourceService
+	ResourceTag              = resourceTag
 	ResourceTaskDefinition   = resourceTaskDefinition
 	ResourceTaskSet          = resourceTaskSet
 

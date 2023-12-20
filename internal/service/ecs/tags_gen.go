@@ -8,9 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -47,13 +45,6 @@ func listTags(ctx context.Context, conn *ecs.Client, identifier string, optFns .
 	}
 
 	output, err := conn.ListTagsForResource(ctx, input, optFns...)
-
-	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
 
 	if err != nil {
 		return tftags.New(ctx, nil), err

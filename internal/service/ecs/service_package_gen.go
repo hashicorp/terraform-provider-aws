@@ -82,7 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTag,
+			Factory:  resourceTag,
 			TypeName: "aws_ecs_tag",
 		},
 		{
