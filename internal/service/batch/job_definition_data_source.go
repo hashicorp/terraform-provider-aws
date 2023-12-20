@@ -612,7 +612,7 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 		}
 
 		if data.Revision.IsNull() {
-			var latestRevision int32 = 0
+			var latestRevision int32
 			for _, _jd := range jds {
 				if aws.Int32Value(_jd.Revision) > latestRevision {
 					latestRevision = aws.Int32Value(_jd.Revision)
@@ -660,7 +660,7 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 func frameworkFlattenEKSproperties(ctx context.Context, apiObject *batchtypes.EksProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
 	if apiObject == nil {
 		data.EksProperties = types.ObjectNull(eksPropertiesAttr)
-		return
+		return diags
 	}
 	props := map[string]attr.Value{
 		"dns_policy":           flex.StringToFramework(ctx, apiObject.PodProperties.DnsPolicy),
@@ -708,8 +708,7 @@ func frameworkFlattenEKSproperties(ctx context.Context, apiObject *batchtypes.Ek
 	return diags
 }
 
-func frameworkFlattenEKSContainer(ctx context.Context, apiObject []batchtypes.EksContainer) []attr.Value {
-	var containers []attr.Value
+func frameworkFlattenEKSContainer(ctx context.Context, apiObject []batchtypes.EksContainer) (containers []attr.Value) {
 	for _, c := range apiObject {
 		props := map[string]attr.Value{
 			"image":             flex.StringToFramework(ctx, c.Image),
@@ -907,10 +906,10 @@ func frameworkFlattenContainerProperties(ctx context.Context, c *batchtypes.Cont
 	} else {
 		containerProps["environment"] = types.ListNull(types.ObjectType{AttrTypes: keyValuePairAttr})
 	}
-	if len(c.Environment) > 0 {
+	if len(c.MountPoints) > 0 {
 		var mountPoints []attr.Value
 		for _, m := range c.MountPoints {
-			mountPoints = append(environment, types.ObjectValueMust(mountPointAttr, map[string]attr.Value{
+			mountPoints = append(mountPoints, types.ObjectValueMust(mountPointAttr, map[string]attr.Value{
 				"container_path": flex.StringToFramework(ctx, m.ContainerPath),
 				"read_only":      flex.BoolToFramework(ctx, m.ReadOnly),
 				"source_volume":  flex.StringToFramework(ctx, m.SourceVolume),
@@ -1008,10 +1007,10 @@ func frameworkFlattenContainerProperties(ctx context.Context, c *batchtypes.Cont
 						"iam":             flex.StringToFramework(ctx, aws.String(string(vol.EfsVolumeConfiguration.AuthorizationConfig.Iam))),
 					}),
 				})
-
 			}
 			volumes = append(volumes, types.ObjectValueMust(volumeAttr, volume))
 		}
+		containerProps["volumes"] = types.ListValueMust(types.ObjectType{AttrTypes: volumeAttr}, volumes)
 	} else {
 		containerProps["volumes"] = types.ListNull(types.ObjectType{AttrTypes: volumeAttr})
 	}
@@ -1070,7 +1069,7 @@ func frameworkFlattenRetryStrategy(ctx context.Context, jd *batchtypes.RetryStra
 	att["evaluate_on_exit"] = types.ListType{ElemType: types.ObjectType{AttrTypes: evaluateOnExitAttr}}
 	if jd == nil {
 		data.RetryStrategy = types.ObjectNull(att)
-		return
+		return diags
 	}
 
 	var elems []attr.Value
@@ -1081,7 +1080,12 @@ func frameworkFlattenRetryStrategy(ctx context.Context, jd *batchtypes.RetryStra
 			"on_reason":        flex.StringToFramework(ctx, apiObject.OnReason),
 			"on_status_reason": flex.StringToFramework(ctx, apiObject.OnStatusReason),
 		}
-		elems = append(elems, types.ObjectValueMust(evaluateOnExitAttr, obj))
+		elem, d := types.ObjectValue(evaluateOnExitAttr, obj)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		elems = append(elems, elem)
 	}
 
 	if elems == nil {
@@ -1090,9 +1094,14 @@ func frameworkFlattenRetryStrategy(ctx context.Context, jd *batchtypes.RetryStra
 			"evaluate_on_exit": types.ListNull(types.ObjectType{AttrTypes: evaluateOnExitAttr}),
 		})
 	} else {
+		eval, d := types.ListValue(types.ObjectType{AttrTypes: evaluateOnExitAttr}, elems)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
 		data.RetryStrategy = types.ObjectValueMust(att, map[string]attr.Value{
 			"attempts":         flex.Int32ToFramework(ctx, jd.Attempts),
-			"evaluate_on_exit": types.ListValueMust(types.ObjectType{AttrTypes: evaluateOnExitAttr}, elems),
+			"evaluate_on_exit": eval,
 		})
 	}
 	return diags
