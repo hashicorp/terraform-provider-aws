@@ -676,19 +676,35 @@ func frameworkFlattenEKSproperties(ctx context.Context, apiObject *batchtypes.Ek
 	}
 
 	if len(apiObject.PodProperties.Containers) > 0 {
-		props["containers"] = types.ListValueMust(types.ObjectType{AttrTypes: eksContainerAttr}, frameworkFlattenEKSContainer(ctx, apiObject.PodProperties.Containers))
+		container, d := types.ListValue(types.ObjectType{AttrTypes: eksContainerAttr}, frameworkFlattenEKSContainer(ctx, apiObject.PodProperties.Containers))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		props["containers"] = container
 	} else {
 		props["containers"] = types.ListNull(types.ObjectType{AttrTypes: eksContainerAttr})
 	}
 	if len(apiObject.PodProperties.Volumes) > 0 {
-		props["volumes"] = types.ListValueMust(types.ObjectType{AttrTypes: eksVolumeAttr}, frameworkFlattenEKSVolume(ctx, apiObject.PodProperties.Volumes))
+		volume, d := types.ListValue(types.ObjectType{AttrTypes: eksVolumeAttr}, frameworkFlattenEKSVolume(ctx, apiObject.PodProperties.Volumes))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		props["volumes"] = volume
 	} else {
 		props["volumes"] = types.ListNull(types.ObjectType{AttrTypes: eksVolumeAttr})
 	}
+
+	podProps, d := types.ObjectValue(eksPodPropertiesAttr, props)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
 	data.EksProperties = types.ObjectValueMust(eksPropertiesAttr, map[string]attr.Value{
-		"pod_properties": types.ObjectValueMust(eksPodPropertiesAttr, props),
+		"pod_properties": podProps,
 	})
-	return
+	return diags
 }
 
 func frameworkFlattenEKSContainer(ctx context.Context, apiObject []batchtypes.EksContainer) []attr.Value {
@@ -800,7 +816,7 @@ func frameworkFlattenEKSVolume(ctx context.Context, apiObject []batchtypes.EksVo
 		}
 		volumes = append(volumes, types.ObjectValueMust(eksVolumeAttr, volume))
 	}
-	return
+	return volumes
 }
 
 func frameworkFlattenEKSContainerVolumeMount(ctx context.Context, apiObject []batchtypes.EksContainerVolumeMount) (volumeMounts []attr.Value) {
@@ -1078,7 +1094,7 @@ func frameworkFlattenRetryStrategy(ctx context.Context, jd *batchtypes.RetryStra
 			"evaluate_on_exit": types.ListValueMust(types.ObjectType{AttrTypes: evaluateOnExitAttr}, elems),
 		})
 	}
-	return
+	return diags
 }
 
 type dataSourceJobDefinitionData struct {
