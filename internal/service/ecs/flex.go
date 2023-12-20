@@ -97,12 +97,12 @@ func flattenLoadBalancers(list []types.LoadBalancer) []map[string]interface{} {
 
 // Expand for an array of load balancers and
 // returns ecs.LoadBalancer compatible objects for an ECS TaskSet
-func expandTaskSetLoadBalancers(l []interface{}) []*types.LoadBalancer {
+func expandTaskSetLoadBalancers(l []interface{}) []types.LoadBalancer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	loadBalancers := make([]*types.LoadBalancer, 0, len(l))
+	loadBalancers := make([]types.LoadBalancer, 0, len(l))
 
 	// Loop over our configured load balancers and create
 	// an array of aws-sdk-go compatible objects
@@ -126,14 +126,14 @@ func expandTaskSetLoadBalancers(l []interface{}) []*types.LoadBalancer {
 			l.TargetGroupArn = aws.String(v.(string))
 		}
 
-		loadBalancers = append(loadBalancers, l)
+		loadBalancers = append(loadBalancers, *l)
 	}
 
 	return loadBalancers
 }
 
 // Flattens an array of ECS LoadBalancers (of an ECS TaskSet) into a []map[string]interface{}
-func flattenTaskSetLoadBalancers(list []*types.LoadBalancer) []map[string]interface{} {
+func flattenTaskSetLoadBalancers(list []types.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
 		l := map[string]interface{}{

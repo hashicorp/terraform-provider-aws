@@ -9,6 +9,7 @@ var (
 	ResourceCluster          = resourceCluster
 	ResourceService          = resourceService
 	ResourceTaskDefinition   = resourceTaskDefinition
+	ResourceTaskSet          = resourceTaskSet
 
 	FindCapacityProviderByARN = findCapacityProviderByARN
 	FindClusterByNameOrARN    = findClusterByNameOrARN
