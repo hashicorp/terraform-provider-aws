@@ -48,7 +48,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
+				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id", "image_id"},
 			},
 		},
 	})
@@ -130,7 +130,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
+				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id", "image_id"},
 			},
 			{
 				Config: testAccEnvironmentEC2Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -253,6 +253,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test[0].id
+  image_id      = "amazonlinux-2023-x86_64"
 }
 `, rName))
 }
@@ -282,6 +283,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test[0].id
+  image_id      = "amazonlinux-2023-x86_64"
 
   tags = {
     %[2]q = %[3]q
@@ -296,6 +298,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test[0].id
+  image_id      = "amazonlinux-2023-x86_64"
 
   tags = {
     %[2]q = %[3]q

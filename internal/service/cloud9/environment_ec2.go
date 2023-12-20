@@ -61,15 +61,17 @@ func ResourceEnvironmentEC2() *schema.Resource {
 			},
 			"image_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"amazonlinux-1-x86_64",
 					"amazonlinux-2-x86_64",
+					"amazonlinux-2023-x86_64",
 					"ubuntu-18.04-x86_64",
 					"ubuntu-22.04-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
@@ -117,6 +119,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
+		ImageId:            aws.String(d.Get("image_id").(string)),
 		Name:               aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
@@ -126,9 +129,6 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("image_id"); ok {
-		input.ImageId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("owner_arn"); ok {
 		input.OwnerArn = aws.String(v.(string))
