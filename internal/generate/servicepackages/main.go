@@ -15,12 +15,10 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 func main() {
-	const (
-		namesDataFile = `../../names/names_data.csv`
-	)
 	filename := `service_packages_gen.go`
 
 	flag.Parse()
@@ -35,21 +33,17 @@ func main() {
 
 	g.Infof("Generating %s/%s", packageName, filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{
 		PackageName: packageName,
 	}
 
-	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
+	for _, l := range data {
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}

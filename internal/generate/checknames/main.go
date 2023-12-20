@@ -8,7 +8,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/csv"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -19,9 +18,12 @@ import (
 
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-const namesDataFile = "../../../names/names_data.csv"
+const (
+	lineOffset = 2 // 1 for skipping header line + 1 to translate from 0-based to 1-based index
+)
 
 // DocPrefix tests/column needs to be reworked for compatibility with tfproviderdocs
 type DocPrefix struct {
@@ -34,31 +36,19 @@ var allDocs int // currently skipping this test
 var allChecks int
 
 func main() {
-	fmt.Printf("Checking %s\n", strings.TrimPrefix(namesDataFile, "../../../"))
+	fmt.Println("Checking service data")
 
-	f, err := os.Open(namesDataFile)
+	data, err := data.ReadAllServiceData()
+
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error reading service data: %s", err)
 	}
 
 	docPrefixes := []DocPrefix{} // test to be reworked
 
 	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
 		if l[names.ColHumanFriendly] == "" {
-			log.Fatalf("in names_data.csv line %d, HumanFriendly cannot be blank", i+1)
+			log.Fatalf("in service data, line %d, HumanFriendly cannot be blank", i+lineOffset)
 		}
 
 		// TODO: Check for duplicates in HumanFriendly, ProviderPackageActual,
@@ -66,33 +56,33 @@ func main() {
 		// ResourcePrefixActual, ResourcePrefixCorrect, FilePrefix, DocPrefix
 
 		if l[names.ColAWSCLIV2Command] != "" && strings.Replace(l[names.ColAWSCLIV2Command], "-", "", -1) != l[names.ColAWSCLIV2CommandNoDashes] {
-			log.Fatalf("in names_data.csv, for service %s, AWSCLIV2CommandNoDashes must be the same as AWSCLIV2Command without dashes (%s)", l[names.ColHumanFriendly], strings.Replace(l[names.ColAWSCLIV2Command], "-", "", -1))
+			log.Fatalf("in service data, line %d, for service %s, AWSCLIV2CommandNoDashes must be the same as AWSCLIV2Command without dashes (%s)", i, l[names.ColHumanFriendly], strings.Replace(l[names.ColAWSCLIV2Command], "-", "", -1))
 		}
 
 		if l[names.ColProviderPackageCorrect] != "" && l[names.ColAWSCLIV2CommandNoDashes] != "" && l[names.ColGoV2Package] != "" {
 			if len(l[names.ColAWSCLIV2CommandNoDashes]) < len(l[names.ColGoV2Package]) && l[names.ColProviderPackageCorrect] != l[names.ColAWSCLIV2CommandNoDashes] {
-				log.Fatalf("in names_data.csv, for service %s, ProviderPackageCorrect must be shorter of AWSCLIV2CommandNoDashes (%s) and GoV2Package (%s)", l[names.ColHumanFriendly], l[names.ColAWSCLIV2CommandNoDashes], l[names.ColGoV2Package])
+				log.Fatalf("in service data, line %d, for service %s, ProviderPackageCorrect must be shorter of AWSCLIV2CommandNoDashes (%s) and GoV2Package (%s)", i, l[names.ColHumanFriendly], l[names.ColAWSCLIV2CommandNoDashes], l[names.ColGoV2Package])
 			}
 
 			if len(l[names.ColAWSCLIV2CommandNoDashes]) > len(l[names.ColGoV2Package]) && l[names.ColProviderPackageCorrect] != l[names.ColGoV2Package] {
-				log.Fatalf("in names_data.csv, for service %s, ProviderPackageCorrect must be shorter of AWSCLIV2CommandNoDashes (%s) and GoV2Package (%s)", l[names.ColHumanFriendly], l[names.ColAWSCLIV2CommandNoDashes], l[names.ColGoV2Package])
+				log.Fatalf("in service data, line %d, for service %s, ProviderPackageCorrect must be shorter of AWSCLIV2CommandNoDashes (%s) and GoV2Package (%s)", i, l[names.ColHumanFriendly], l[names.ColAWSCLIV2CommandNoDashes], l[names.ColGoV2Package])
 			}
 		}
 
 		if l[names.ColAWSCLIV2CommandNoDashes] == "" && l[names.ColGoV2Package] == "" && l[names.ColExclude] == "" {
-			log.Fatalf("in names_data.csv, for service %s, if Exclude is blank, either AWSCLIV2CommandNoDashes or GoV2Package must have values", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, if Exclude is blank, either AWSCLIV2CommandNoDashes or GoV2Package must have values", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColProviderPackageActual] != "" && l[names.ColProviderPackageCorrect] == "" {
-			log.Fatalf("in names_data.csv, for service %s, ProviderPackageActual can't be non-blank if ProviderPackageCorrect is blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual can't be non-blank if ProviderPackageCorrect is blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" && l[names.ColExclude] == "" {
-			log.Fatalf("in names_data.csv, for service %s, ProviderPackageActual and ProviderPackageCorrect cannot both be blank unless Exclude is non-blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual and ProviderPackageCorrect cannot both be blank unless Exclude is non-blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColProviderPackageCorrect] != "" && l[names.ColProviderPackageActual] == l[names.ColProviderPackageCorrect] {
-			log.Fatalf("in names_data.csv, for service %s, ProviderPackageActual should only be used if different from ProviderPackageCorrect", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual should only be used if different from ProviderPackageCorrect", i, l[names.ColHumanFriendly])
 		}
 
 		packageToUse := l[names.ColProviderPackageCorrect]
@@ -106,74 +96,80 @@ func main() {
 
 			for _, v := range p {
 				if v == packageToUse {
-					log.Fatalf("in names_data.csv, for service %s, Aliases should not include ProviderPackageActual, if not blank, or ProviderPackageCorrect, if not blank and ProviderPackageActual is blank", l[names.ColHumanFriendly])
+					log.Fatalf("in service data, line %d, for service %s, Aliases should not include ProviderPackageActual, if not blank, or ProviderPackageCorrect, if not blank and ProviderPackageActual is blank", i, l[names.ColHumanFriendly])
 				}
 			}
 		}
 
 		if l[names.ColClientSDKV1] == "" && l[names.ColClientSDKV2] == "" && l[names.ColExclude] == "" {
-			log.Fatalf("in names_data.csv, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColClientSDKV1] != "" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColClientSDKV2] != "" && l[names.ColGoV2Package] == "" {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColResourcePrefixCorrect] != "" && l[names.ColResourcePrefixCorrect] != fmt.Sprintf("aws_%s_", l[names.ColProviderPackageCorrect]) {
-			log.Fatalf("in names_data.csv, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColResourcePrefixCorrect] != "" && l[names.ColResourcePrefixActual] == l[names.ColResourcePrefixCorrect] {
-			log.Fatalf("in names_data.csv, for service %s, ResourcePrefixActual should not be the same as ResourcePrefixCorrect, set ResourcePrefixActual to blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixActual should not be the same as ResourcePrefixCorrect, set ResourcePrefixActual to blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColSplitPackageRealPackage] != "" && (l[names.ColProviderPackageCorrect] == "" || l[names.ColFilePrefix] == "" || l[names.ColResourcePrefixActual] == "") {
-			log.Fatalf("in names_data.csv, for service %s, if SplitPackageRealPackage has a value, ProviderPackageCorrect, ResourcePrefixActual and FilePrefix must have values", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, if SplitPackageRealPackage has a value, ProviderPackageCorrect, ResourcePrefixActual and FilePrefix must have values", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColSplitPackageRealPackage] == "" && l[names.ColFilePrefix] != "" {
-			log.Fatalf("in names_data.csv, for service %s, if SplitPackageRealPackge is blank, FilePrefix must also be blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, if SplitPackageRealPackge is blank, FilePrefix must also be blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColBrand] != "AWS" && l[names.ColBrand] != "Amazon" && l[names.ColBrand] != "" {
-			log.Fatalf("in names_data.csv, for service %s, Brand must be AWS, Amazon, or blank; found %s", l[names.ColHumanFriendly], l[names.ColBrand])
+			log.Fatalf("in service data, line %d, for service %s, Brand must be AWS, Amazon, or blank; found %s", l[names.ColHumanFriendly], i, l[names.ColBrand])
 		}
 
 		if (l[names.ColExclude] == "" || (l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] != "")) && l[names.ColDocPrefix] == "" {
-			log.Fatalf("in names_data.csv, for service %s, DocPrefix cannot be blank unless Exclude is non-blank and AllowedSubcategory is blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, DocPrefix cannot be blank unless Exclude is non-blank and AllowedSubcategory is blank", i, l[names.ColHumanFriendly])
 		}
 
-		checkAllLowercase(l[names.ColHumanFriendly], "AWSCLIV2Command", l[names.ColAWSCLIV2Command])
-		checkAllLowercase(l[names.ColHumanFriendly], "AWSCLIV2CommandNoDashes", l[names.ColAWSCLIV2CommandNoDashes])
-		checkAllLowercase(l[names.ColHumanFriendly], "GoV1Package", l[names.ColGoV1Package])
-		checkAllLowercase(l[names.ColHumanFriendly], "GoV2Package", l[names.ColGoV2Package])
-		checkAllLowercase(l[names.ColHumanFriendly], "ProviderPackageActual", l[names.ColProviderPackageActual])
-		checkAllLowercase(l[names.ColHumanFriendly], "ProviderPackageCorrect", l[names.ColProviderPackageCorrect])
-		checkAllLowercase(l[names.ColHumanFriendly], "SplitPackageRealPackage", l[names.ColSplitPackageRealPackage])
-		checkAllLowercase(l[names.ColHumanFriendly], "Aliases", l[names.ColAliases])
-		checkAllLowercase(l[names.ColHumanFriendly], "ResourcePrefixActual", l[names.ColResourcePrefixActual])
-		checkAllLowercase(l[names.ColHumanFriendly], "ResourcePrefixCorrect", l[names.ColResourcePrefixCorrect])
-		checkAllLowercase(l[names.ColHumanFriendly], "FilePrefix", l[names.ColFilePrefix])
-		checkAllLowercase(l[names.ColHumanFriendly], "DocPrefix", l[names.ColDocPrefix])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "AWSCLIV2Command", l[names.ColAWSCLIV2Command])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "AWSCLIV2CommandNoDashes", l[names.ColAWSCLIV2CommandNoDashes])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "GoV1Package", l[names.ColGoV1Package])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "GoV2Package", l[names.ColGoV2Package])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "ProviderPackageActual", l[names.ColProviderPackageActual])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "ProviderPackageCorrect", l[names.ColProviderPackageCorrect])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "SplitPackageRealPackage", l[names.ColSplitPackageRealPackage])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "Aliases", l[names.ColAliases])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "ResourcePrefixActual", l[names.ColResourcePrefixActual])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "ResourcePrefixCorrect", l[names.ColResourcePrefixCorrect])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "FilePrefix", l[names.ColFilePrefix])
+		checkAllLowercase(i, l[names.ColHumanFriendly], "DocPrefix", l[names.ColDocPrefix])
 
-		checkNotAllLowercase(l[names.ColHumanFriendly], "ProviderNameUpper", l[names.ColProviderNameUpper])
-		checkNotAllLowercase(l[names.ColHumanFriendly], "GoV1ClientTypeName", l[names.ColGoV1ClientTypeName])
-		checkNotAllLowercase(l[names.ColHumanFriendly], "HumanFriendly", l[names.ColHumanFriendly])
+		checkNotAllLowercase(i, l[names.ColHumanFriendly], "ProviderNameUpper", l[names.ColProviderNameUpper])
+		checkNotAllLowercase(i, l[names.ColHumanFriendly], "GoV1ClientTypeName", l[names.ColGoV1ClientTypeName])
+		checkNotAllLowercase(i, l[names.ColHumanFriendly], "HumanFriendly", l[names.ColHumanFriendly])
 
 		if l[names.ColExclude] == "" && l[names.ColAllowedSubcategory] != "" {
-			log.Fatalf("in names_data.csv, for service %s, AllowedSubcategory can only be non-blank if Exclude is non-blank", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, AllowedSubcategory can only be non-blank if Exclude is non-blank", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColExclude] != "" && l[names.ColNote] == "" {
-			log.Fatalf("in names_data.csv, for service %s, if Exclude is not blank, include a Note why", l[names.ColHumanFriendly])
+			log.Fatalf("in service data, line %d, for service %s, if Exclude is not blank, include a Note why", i, l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
 			continue
+		}
+
+		deprecatedEnvVar := l[names.ColDeprecatedEnvVar] != ""
+		tfAwsEnvVar := l[names.ColTfAwsEnvVar] != ""
+		if deprecatedEnvVar != tfAwsEnvVar {
+			log.Fatalf("in service data, line %d, for service %s, either both DeprecatedEnvVar and TfAwsEnvVar must be specified or neither can be", i, l[names.ColHumanFriendly])
 		}
 
 		rre := l[names.ColResourcePrefixActual]
@@ -190,7 +186,7 @@ func main() {
 
 		allChecks++
 	}
-	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 36))
+	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 37))
 
 	var fileErrs bool
 
@@ -214,15 +210,15 @@ func main() {
 	fmt.Printf("  Checked %d documentation files to ensure filename prefix, resource name, label regex, and subcategory match, 0 errors.\n", allDocs)
 }
 
-func checkAllLowercase(service, name, value string) {
+func checkAllLowercase(i int, service, name, value string) {
 	if value != "" && strings.ToLower(value) != value {
-		log.Fatalf("in names_data.csv, for service %s, %s should not include uppercase letters (%s)", service, name, value)
+		log.Fatalf("in service data, line %d, for service %s, %s should not include uppercase letters (%s)", i, service, name, value)
 	}
 }
 
-func checkNotAllLowercase(service, name, value string) {
+func checkNotAllLowercase(i int, service, name, value string) {
 	if value != "" && strings.ToLower(value) == value {
-		log.Fatalf("in names_data.csv, for service %s, %s should be properly capitalized; it does not include uppercase letters (%s)", service, name, value)
+		log.Fatalf("in service data, line %d, for service %s, %s should be properly capitalized; it does not include uppercase letters (%s)", i, service, name, value)
 	}
 }
 

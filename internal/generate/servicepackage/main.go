@@ -20,31 +20,27 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/exp/slices"
 )
 
 func main() {
 	const (
-		filename      = `service_package_gen.go`
-		namesDataFile = `../../../names/names_data.csv`
+		filename = `service_package_gen.go`
 	)
 	g := common.NewGenerator()
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
 
 	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
-	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
+	for _, l := range data {
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}

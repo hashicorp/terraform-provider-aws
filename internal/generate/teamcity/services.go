@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
@@ -36,7 +37,6 @@ type TemplateData struct {
 func main() {
 	const (
 		servicesAllFile   = `../../../.teamcity/components/generated/services_all.kt`
-		namesDataFile     = "../../../names/names_data.csv"
 		serviceConfigFile = "./acctest_services.hcl"
 	)
 	g := common.NewGenerator()
@@ -49,19 +49,15 @@ func main() {
 		g.Fatalf("error reading %s: %s", serviceConfigFile, err)
 	}
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
+	for _, l := range data {
 		if l[names.ColExclude] != "" {
 			continue
 		}

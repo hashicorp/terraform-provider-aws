@@ -3,25 +3,24 @@
 
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
-// access to data found in the names_data.csv file, which provides additional
+// access to data found in the data/names_data.csv file, which provides additional
 // service-related name information.
 //
 // Consumers of the names package include the conns package
 // (internal/conn/conns.go), the provider package
 // (internal/provider/provider.go), generators, and the skaff tool.
 //
-// It is very important that information in the names_data.csv be exactly
+// It is very important that information in the data/names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
 package names
 
 import (
-	_ "embed"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/exp/slices"
 )
 
@@ -115,7 +114,7 @@ const (
 	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
 )
 
-// Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
+// Type ServiceDatum corresponds closely to columns in `data/names_data.csv` and are
 // described in detail in README.md.
 type ServiceDatum struct {
 	Aliases            []string
@@ -142,25 +141,16 @@ func init() {
 	}
 }
 
-//go:embed names_data.csv
-var namesData string
-
 func readCSVIntoServiceData() error {
 	// names_data.csv is dynamically embedded so changes, additions should be made
 	// there also
 
-	r := csv.NewReader(strings.NewReader(namesData))
-
-	d, err := r.ReadAll()
+	d, err := data.ReadAllServiceData()
 	if err != nil {
 		return fmt.Errorf("reading CSV into service data: %w", err)
 	}
 
-	for i, l := range d {
-		if i < 1 { // omit header line
-			continue
-		}
-
+	for _, l := range d {
 		if l[ColExclude] != "" {
 			continue
 		}
@@ -183,7 +173,7 @@ func readCSVIntoServiceData() error {
 			Brand:              l[ColBrand],
 			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
 			EndpointOnly:       l[ColEndpointOnly] != "",
-			EnvVar:             l[ColEnvVar],
+			EnvVar:             l[ColTfAwsEnvVar],
 			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
 			GoV1Package:        l[ColGoV1Package],
 			GoV2Package:        l[ColGoV2Package],

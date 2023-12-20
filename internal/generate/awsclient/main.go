@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
@@ -28,26 +29,21 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `awsclient_gen.go`
-		namesDataFile = "../../names/names_data.csv"
+		filename = `awsclient_gen.go`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating internal/conns/%s", filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // skip header
-			continue
-		}
-
+	for _, l := range data {
 		if l[names.ColExclude] != "" {
 			continue
 		}
