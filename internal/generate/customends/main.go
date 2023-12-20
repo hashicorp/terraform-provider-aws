@@ -27,6 +27,8 @@ type serviceDatum struct {
 	Aliases          []string
 	TfAwsEnvVar      string
 	DeprecatedEnvVar string
+	AwsEnvVar        string
+	SharedConfigKey  string
 }
 
 type TemplateData struct {
@@ -58,11 +60,13 @@ func main() {
 		}
 
 		sd := serviceDatum{
-			HumanFriendly:    l.ProviderNameUpper(),
+			HumanFriendly:    l.HumanFriendly(),
 			ProviderPackage:  l.ProviderPackage(),
 			Aliases:          l.Aliases(),
 			TfAwsEnvVar:      l.TFAWSEnvVar(),
 			DeprecatedEnvVar: l.DeprecatedEnvVar(),
+			AwsEnvVar:        l.AWSServiceEnvVar(),
+			SharedConfigKey:  l.AWSConfigParameter(),
 		}
 
 		td.Services = append(td.Services, sd)
