@@ -893,15 +893,3 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 
 	return diags
 }
-
-func attemptMapBlockKeySet(value reflect.Value, newValue interface{}) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-		}
-	}()
-
-	// Attempt to set the value
-	value.Set(reflect.ValueOf(newValue))
-	return nil
-}
