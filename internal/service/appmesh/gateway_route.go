@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -173,7 +173,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 														"value": {
 															Type:         schema.TypeString,
 															Optional:     true,
-															ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+															ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
 															ExactlyOneOf: []string{
 																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
 																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
@@ -362,7 +362,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 								"prefix": {
 									Type:         schema.TypeString,
 									Optional:     true,
-									ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
 									AtLeastOneOf: []string{
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),

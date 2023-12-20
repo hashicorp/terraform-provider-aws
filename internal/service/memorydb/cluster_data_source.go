@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -163,6 +164,8 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -171,7 +174,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	cluster, err := FindClusterByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MemoryDB Cluster", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Cluster", err))
 	}
 
 	d.SetId(aws.StringValue(cluster.Name))
@@ -188,7 +191,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if v := aws.StringValue(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
-			return diag.Errorf("reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
 		d.Set("data_tiering", b)
@@ -204,7 +207,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
 	if err != nil {
-		return diag.Errorf("reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
@@ -218,7 +221,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
 
 	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
-		return diag.Errorf("failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
@@ -236,12 +239,12 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

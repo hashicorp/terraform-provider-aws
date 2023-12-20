@@ -27,6 +27,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
 			"basic":                             testAccOrganization_basic,
+			"disappears":                        testAccOrganization_disappears,
 			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
 			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
 			"FeatureSet_Basic":                  testAccOrganization_FeatureSet,
@@ -35,8 +36,6 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_basic":                  testAccOrganizationDataSource_basic,
 			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
-			"ChildAccountsDataSource":           testAccOrganizationalUnitChildAccountsDataSource_basic,
-			"DescendantAccountsDataSource":      testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 		},
 		"Account": {
 			"basic":           testAccAccount_basic,
@@ -46,13 +45,14 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"GovCloud":        testAccAccount_govCloud,
 		},
 		"OrganizationalUnit": {
-			"basic":      testAccOrganizationalUnit_basic,
-			"disappears": testAccOrganizationalUnit_disappears,
-			"Name":       testAccOrganizationalUnit_Name,
-			"Tags":       testAccOrganizationalUnit_Tags,
-		},
-		"OrganizationalUnits": {
-			"DataSource": testAccOrganizationalUnitsDataSource_basic,
+			"basic":                              testAccOrganizationalUnit_basic,
+			"disappears":                         testAccOrganizationalUnit_disappears,
+			"update":                             testAccOrganizationalUnit_update,
+			"tags":                               testAccOrganizationalUnit_tags,
+			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
+			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
+			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
+			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,
 		},
 		"Policy": {
 			"basic":                  testAccPolicy_basic,

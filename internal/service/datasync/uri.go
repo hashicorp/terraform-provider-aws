@@ -5,15 +5,15 @@ package datasync
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 )
 
 var (
-	locationURIPattern                      = regexp.MustCompile(`^(efs|hdfs|nfs|s3|smb|fsx[a-z0-9]+)://(.+)$`)
-	locationURIGlobalIDAndSubdirPattern     = regexp.MustCompile(`^([a-zA-Z0-9.\-]+)(?::\d{0,5})?(/.*)$`)
-	s3OutpostsAccessPointARNResourcePattern = regexp.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
+	locationURIPattern                      = regexache.MustCompile(`^(azure-blob|efs|fsx[0-9a-z-]+|hdfs|nfs|s3|smb)://(.+)$`)
+	locationURIGlobalIDAndSubdirPattern     = regexache.MustCompile(`^([0-9A-Za-z.-]+)(?::\d{0,5})?(/.*)$`)
+	s3OutpostsAccessPointARNResourcePattern = regexache.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
 )
 
 // subdirectoryFromLocationURI extracts the subdirectory from a location URI.

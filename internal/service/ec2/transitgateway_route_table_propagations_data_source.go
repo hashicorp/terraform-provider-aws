@@ -26,7 +26,7 @@ func DataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -51,7 +51,7 @@ func dataSourceTransitGatewayRouteTablePropagationsRead(ctx context.Context, d *
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

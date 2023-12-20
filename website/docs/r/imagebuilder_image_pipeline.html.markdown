@@ -38,10 +38,25 @@ The following arguments are optional:
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
+* `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
 * `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### image_scanning_configuration
+
+The following arguments are optional:
+
+* `image_scanning_enabled` - (Optional) Whether image scans are enabled. Defaults to `false`.
+* `ecr_configuration` - (Optional) Configuration block with ECR configuration for image scanning. Detailed below.
+
+### ecr_configuration
+
+The following arguments are optional:
+
+* `container tags` - (Optional) list of tags to apply to scanned images
+* `repository_name` - (Optional) The name of the repository to scan
 
 ### image_tests_configuration
 

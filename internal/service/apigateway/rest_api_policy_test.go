@@ -6,10 +6,10 @@ package apigateway_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -37,7 +37,7 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"execute-api:Invoke".+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Action":"execute-api:Invoke".+`)),
 				),
 			},
 			{
@@ -50,7 +50,7 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
 			},
 		},
 	})

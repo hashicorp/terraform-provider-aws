@@ -92,6 +92,7 @@ The follow arguments are optional:
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
 * `owner` - (Optional) Owner of the table.
+* `open_table_format_input` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input) below.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
 * `partition_index` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
 * `partition_keys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
@@ -101,6 +102,21 @@ The follow arguments are optional:
 * `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
+
+### open_table_format_input
+
+~> **NOTE:** A `open_table_format_input` cannot be added to an existing `glue_catalog_table`.
+This will destroy and recreate the table, possibly resulting in data loss.
+
+* `iceberg_input` - (Required) Configuration block for iceberg table config. See [`iceberg_input`](#iceberg_input) below.
+
+### iceberg_input
+
+~> **NOTE:** A `iceberg_input` cannot be added to an existing `open_table_format_input`.
+This will destroy and recreate the table, possibly resulting in data loss.
+
+* `metadata_operation` - (Required) A required metadata operation. Can only be set to CREATE.
+* `version` - (Optional) The table version for the Iceberg table. Defaults to 2.
 
 ### partition_index
 

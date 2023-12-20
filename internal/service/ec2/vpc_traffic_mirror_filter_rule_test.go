@@ -6,10 +6,10 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -49,8 +49,8 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", ec2.ServiceName, regexp.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", ec2.ServiceName, regexache.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum1)),
@@ -67,7 +67,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_full(dstCidr, srcCidr, action, direction, description, ruleNum1, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum1)),
@@ -88,7 +88,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_full(dstCidr, srcCidr, action, direction, description, ruleNum2, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum2)),
@@ -109,7 +109,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum1)),

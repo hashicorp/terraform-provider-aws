@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	ErrCodeValidationError = "ValidationError"
+	errCodeValidationError = "ValidationError"
 )
 
 func StackSetOperationError(apiObjects []*cloudformation.StackSetOperationResultSummary) error {

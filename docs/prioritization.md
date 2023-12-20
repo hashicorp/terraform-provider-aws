@@ -8,7 +8,7 @@ This document describes how we handle prioritization of work from a variety of i
 
 ### What this document is not
 
-Due to the variety of input sources, the scale of the provider, and resource constraints, it is impossible to give a hard number on how each of the factors outlined in this document are weighted. Instead, the goal of the document is to give a transparent, but generalized assessment of each of the sources of input so that the community has a better idea of why things are prioritized the way they are. Additional information may be found in the [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/faq.md#how-do-you-decide-what-gets-merged-for-each-release).
+Due to the variety of input sources, the scale of the provider, and resource constraints, it is impossible to give a hard number on how each of the factors outlined in this document are weighted. Instead, the goal of the document is to give a transparent, but generalized assessment of each of the sources of input so that the community has a better idea of why things are prioritized the way they are. Additional information may be found in the [FAQ](faq.md#how-do-you-decide-what-gets-merged-for-each-release).
 
 ## Prioritization
 

@@ -19,7 +19,7 @@ package configservice_test
 // 				Check: resource.ComposeTestCheckFunc(
 // 					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
 // 					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "name"),
-// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, acctest.Region()))),
+// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, acctest.Region()))),
 // 				),
 // 			},
 // 			{

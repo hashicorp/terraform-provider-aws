@@ -39,6 +39,7 @@ This data source supports the following arguments:
 * `max_keys` - (Optional) Maximum object keys to return (Default: 1000)
 * `start_after` - (Optional) Returns key names lexicographically after a specific object key in your bucket (Default: none; S3 lists object keys in UTF-8 character encoding in lexicographical order)
 * `fetch_owner` - (Optional) Boolean specifying whether to populate the owner list (Default: false)
+* `request_payer` - (Optional) Confirms that the requester knows that they will be charged for the request. Bucket owners need not specify this parameter in their requests. If included, the only valid value is `requester`.
 
 ## Attribute Reference
 
@@ -48,3 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `common_prefixes` - List of any keys between `prefix` and the next occurrence of `delimiter` (i.e., similar to subdirectories of the `prefix` "directory"); the list is only returned when you specify `delimiter`
 * `id` - S3 Bucket.
 * `owners` - List of strings representing object owner IDs (see `fetch_owner` above)
+* `request_charged` - If present, indicates that the requester was successfully charged for the request.

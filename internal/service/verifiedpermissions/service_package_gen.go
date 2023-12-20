@@ -40,7 +40,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return verifiedpermissions_sdkv2.NewFromConfig(cfg, func(o *verifiedpermissions_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = verifiedpermissions_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

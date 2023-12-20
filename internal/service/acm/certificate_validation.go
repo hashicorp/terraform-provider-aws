@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -51,17 +52,19 @@ func resourceCertificateValidation() *schema.Resource {
 }
 
 func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := findCertificateByARN(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
 	}
 
 	if v := certificate.Type; v != types.CertificateTypeAmazonIssued {
-		return diag.Errorf("ACM Certificate (%s) has type %s, no validation necessary", arn, v)
+		return sdkdiag.AppendErrorf(diags, "ACM Certificate (%s) has type %s, no validation necessary", arn, v)
 	}
 
 	if v, ok := d.GetOk("validation_record_fqdns"); ok && v.(*schema.Set).Len() > 0 {
@@ -69,7 +72,7 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 
 		for _, domainValidation := range certificate.DomainValidationOptions {
 			if v := domainValidation.ValidationMethod; v != types.ValidationMethodDns {
-				return diag.Errorf("validation_record_fqdns is not valid for %s validation", v)
+				return sdkdiag.AppendErrorf(diags, "validation_record_fqdns is not valid for %s validation", v)
 			}
 
 			if v := domainValidation.ResourceRecord; v != nil {
@@ -90,20 +93,22 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 				errs = multierror.Append(errs, fmt.Errorf("missing %s DNS validation record: %s", aws.ToString(domainValidation.DomainName), fqdn))
 			}
 
-			return diag.FromErr(errs)
+			return sdkdiag.AppendFromErr(diags, errs)
 		}
 	}
 
 	if _, err := waitCertificateIssued(ctx, conn, arn, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for ACM Certificate (%s) to be issued: %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) to be issued: %s", arn, err)
 	}
 
 	d.SetId(aws.ToTime(certificate.IssuedAt).String())
 
-	return resourceCertificateValidationRead(ctx, d, meta)
+	return append(diags, resourceCertificateValidationRead(ctx, d, meta)...)
 }
 
 func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	arn := d.Get("certificate_arn").(string)
@@ -112,16 +117,16 @@ func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", arn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
 	}
 
 	d.Set("certificate_arn", certificate.CertificateArn)
 
-	return nil
+	return diags
 }
 
 func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn string) (*types.CertificateDetail, error) {

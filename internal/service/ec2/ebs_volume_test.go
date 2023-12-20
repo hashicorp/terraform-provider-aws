@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,7 +35,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -342,7 +342,7 @@ func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_invalidIOPSForType,
-				ExpectError: regexp.MustCompile(`'iops' must not be set when 'type' is`),
+				ExpectError: regexache.MustCompile(`'iops' must not be set when 'type' is`),
 			},
 		},
 	})
@@ -358,7 +358,7 @@ func TestAccEC2EBSVolume_invalidThroughputForType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_invalidThroughputForType,
-				ExpectError: regexp.MustCompile(`'throughput' must not be set when 'type' is`),
+				ExpectError: regexache.MustCompile(`'throughput' must not be set when 'type' is`),
 			},
 		},
 	})
@@ -482,7 +482,7 @@ func TestAccEC2EBSVolume_multiAttach_gp2(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSVolumeConfig_invalidMultiAttachEnabledForType,
-				ExpectError: regexp.MustCompile(`'multi_attach_enabled' must not be set when 'type' is`),
+				ExpectError: regexache.MustCompile(`'multi_attach_enabled' must not be set when 'type' is`),
 			},
 		},
 	})
@@ -534,7 +534,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -574,7 +574,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -598,7 +598,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -632,7 +632,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -656,7 +656,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -690,7 +690,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "3000", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -714,7 +714,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp2", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -748,7 +748,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "io1", "4000", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -772,7 +772,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "100", "gp3", "4000", "125"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -807,7 +807,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 				Config: testAccEBSVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -848,7 +848,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 				Config: testAccEBSVolumeConfig_snapshotIdAndSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),

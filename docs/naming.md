@@ -120,7 +120,8 @@ In general, follow Go best practices for good variable and constant naming.
 4. To improve readability, consider including the resource name in variable and constant names that pertain only to that resource. For example, for a string constant for a "Role" resource and a "not found" status, use `roleStatusNotFound` or `RoleStatusNotFound`, if used outside the service's package.
 5. Do not include "AWS" or "Aws" in the name.
 
-**NOTE:** Give priority to using constants from the AWS SDK for Go rather than defining new constants for the same values.
+!!! note
+    Give priority to constants from the AWS SDK for Go rather than defining new constants for the same values.
 
 ## Acceptance and Unit Tests
 
@@ -174,7 +175,8 @@ This rule is for functions defined in the _test_ context (i.e., in a file ending
 
 This rule is for functions defined in the _test_ context (i.e., in a file ending with `_test.go`) that return a string with Terraform configuration. For test support functions, see [Test Support Functions](#test-support-functions) above. Or, for non-test functions, see [Functions](#functions) above.
 
-**NOTE:** This rule is not widely used currently. However, new functions and functions you change should follow it.
+!!! note
+    This rule is not widely used currently. However, new functions and functions you change should follow it.
 
 ### Rule
 

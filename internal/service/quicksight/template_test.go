@@ -614,6 +614,12 @@ resource "aws_quicksight_template" "test" {
               header_style {
                 background_color = "#99CCFF"
                 height           = 20
+                font_configuration {
+                  font_color = "#212121"
+                  font_size {
+                    relative = "LARGE"
+                  }
+                }
               }
             }
             sort_configuration {

@@ -6,10 +6,10 @@ package lightsail_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -214,7 +214,7 @@ func TestAccLightsailContainerService_publicDomainNames(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccContainerServiceConfig_publicDomainNames(rName),
-				ExpectError: regexp.MustCompile(`do not exist`),
+				ExpectError: regexache.MustCompile(`do not exist`),
 			},
 		},
 	})

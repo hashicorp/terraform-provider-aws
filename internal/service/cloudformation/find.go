@@ -39,44 +39,6 @@ func FindChangeSetByStackIDAndChangeSetName(ctx context.Context, conn *cloudform
 	return output, nil
 }
 
-func FindStackByID(ctx context.Context, conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
-	input := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(id),
-	}
-
-	output, err := conn.DescribeStacksWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "does not exist") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.Stacks) == 0 || output.Stacks[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Stacks); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	stack := output.Stacks[0]
-
-	if status := aws.StringValue(stack.StackStatus); status == cloudformation.StackStatusDeleteComplete {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-			Message:     status,
-		}
-	}
-
-	return stack, nil
-}
-
 func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) ([]*cloudformation.StackInstanceSummary, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),

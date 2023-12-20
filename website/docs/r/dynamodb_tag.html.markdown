@@ -43,7 +43,7 @@ resource "aws_dynamodb_table" "example" {
 resource "aws_dynamodb_tag" "test" {
   provider = aws.replica
 
-  resource_arn = replace(aws_dynamodb_table.test.arn, data.aws_region.current.name, data.aws_region.replica.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.replica.name)
   key          = "testkey"
   value        = "testvalue"
 }

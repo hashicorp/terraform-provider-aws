@@ -98,6 +98,28 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 	})
 }
 
+func testAccDataLakeSettings_readOnlyAdmins(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lakeformation_data_lake_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeSettingsConfig_readOnlyAdmins,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "read_only_admins.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "read_only_admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
@@ -125,6 +147,10 @@ func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheck
 
 			if output != nil && output.DataLakeSettings != nil && len(output.DataLakeSettings.DataLakeAdmins) > 0 {
 				return fmt.Errorf("Lake Formation data lake admin(s) (%s) still exist", rs.Primary.ID)
+			}
+
+			if output != nil && output.DataLakeSettings != nil && len(output.DataLakeSettings.ReadOnlyAdmins) > 0 {
+				return fmt.Errorf("Lake Formation data lake read only admin(s) (%s) still exist", rs.Primary.ID)
 			}
 		}
 
@@ -194,5 +220,19 @@ data "aws_iam_session_context" "current" {
 
 resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+`
+
+const testAccDataLakeSettingsConfig_readOnlyAdmins = `
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  catalog_id = data.aws_caller_identity.current.account_id
+
+  read_only_admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 `

@@ -58,7 +58,7 @@ func main() {
 		}
 
 		if l[names.ColHumanFriendly] == "" {
-			log.Fatal("in names_data.csv, HumanFriendly cannot be blank")
+			log.Fatalf("in names_data.csv line %d, HumanFriendly cannot be blank", i+1)
 		}
 
 		// TODO: Check for duplicates in HumanFriendly, ProviderPackageActual,

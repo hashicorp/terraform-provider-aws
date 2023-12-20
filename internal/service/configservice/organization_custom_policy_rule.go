@@ -145,6 +145,8 @@ const (
 )
 
 func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	name := d.Get("name").(string)
 
@@ -196,42 +198,44 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	out, err := conn.PutOrganizationConfigRuleWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomPolicyRule, name, err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomPolicyRule, name, err)
 	}
 
 	if out == nil || out.OrganizationConfigRuleArn == nil {
-		return create.DiagError(names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomPolicyRule, name, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomPolicyRule, name, errors.New("empty output"))
 	}
 
 	d.SetId(name)
 
 	if err := waitForOrganizationRuleStatusCreateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionWaitingForCreation, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForCreation, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
-	return resourceOrganizationCustomPolicyRuleRead(ctx, d, meta)
+	return append(diags, resourceOrganizationCustomPolicyRuleRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	rule, err := FindOrganizationConfigRule(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Config %s (%s) not found, removing from state", ResNameOrganizationCustomPolicyRule, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if rule.OrganizationManagedRuleMetadata != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), errors.New("expected ResNameOrganizationCustomPolicy, found Organization Managed Rule"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), errors.New("expected ResNameOrganizationCustomPolicy, found Organization Managed Rule"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), errors.New("expected ResNameOrganizationCustomPolicy, found Organization Custom Rule"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), errors.New("expected ResNameOrganizationCustomPolicy, found Organization Custom Rule"))
 	}
 
 	if rule.OrganizationCustomPolicyRuleMetadata == nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), errors.New("empty metadata"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), errors.New("empty metadata"))
 	}
 
 	in := &configservice.GetOrganizationCustomRulePolicyInput{
@@ -240,19 +244,19 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 	policy, err := conn.GetOrganizationCustomRulePolicyWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
 	d.Set("arn", rule.OrganizationConfigRuleArn)
 
 	if err := d.Set("debug_log_delivery_accounts", aws.StringValueSlice(rule.OrganizationCustomPolicyRuleMetadata.DebugLogDeliveryAccounts)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
 	d.Set("description", rule.OrganizationCustomPolicyRuleMetadata.Description)
 
 	if err := d.Set("excluded_accounts", aws.StringValueSlice(rule.ExcludedAccounts)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
 	d.Set("input_parameters", rule.OrganizationCustomPolicyRuleMetadata.InputParameters)
@@ -263,20 +267,22 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 	d.Set("resource_id_scope", rule.OrganizationCustomPolicyRuleMetadata.ResourceIdScope)
 
 	if err := d.Set("resource_types_scope", aws.StringValueSlice(rule.OrganizationCustomPolicyRuleMetadata.ResourceTypesScope)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
 	d.Set("tag_key_scope", rule.OrganizationCustomPolicyRuleMetadata.TagKeyScope)
 	d.Set("tag_value_scope", rule.OrganizationCustomPolicyRuleMetadata.TagValueScope)
 
 	if err := d.Set("trigger_types", aws.StringValueSlice(rule.OrganizationCustomPolicyRuleMetadata.OrganizationConfigRuleTriggerTypes)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	in := &configservice.PutOrganizationConfigRuleInput{
@@ -327,18 +333,20 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 	log.Printf("[DEBUG] Updating ConfigService %s (%s): %#v", ResNameOrganizationCustomPolicyRule, d.Id(), in)
 	_, err := conn.PutOrganizationConfigRuleWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionUpdating, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionUpdating, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
 	err = waitForOrganizationRuleStatusUpdateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionWaitingForUpdate, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForUpdate, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
-	return resourceOrganizationCustomPolicyRuleRead(ctx, d, meta)
+	return append(diags, resourceOrganizationCustomPolicyRuleRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	log.Printf("[INFO] Deleting ConfigService %s %s", ResNameOrganizationCustomPolicyRule, d.Id())
@@ -350,16 +358,16 @@ func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.R
 	_, err := conn.DeleteOrganizationConfigRuleWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
 	if err := waitForOrganizationRuleStatusDeleteSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameOrganizationCustomPolicyRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForDeletion, ResNameOrganizationCustomPolicyRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

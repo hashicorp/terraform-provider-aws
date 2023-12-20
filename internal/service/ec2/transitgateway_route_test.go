@@ -184,7 +184,7 @@ func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *ec2
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		output, err := tfec2.FindTransitGatewayRoute(ctx, conn, transitGatewayRouteTableID, destination)
+		output, err := tfec2.FindTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
 		if err != nil {
 			return err
@@ -211,7 +211,7 @@ func testAccCheckTransitGatewayRouteDestroy(ctx context.Context) resource.TestCh
 				return err
 			}
 
-			_, err = tfec2.FindTransitGatewayRoute(ctx, conn, transitGatewayRouteTableID, destination)
+			_, err = tfec2.FindTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
 			if tfresource.NotFound(err) {
 				continue

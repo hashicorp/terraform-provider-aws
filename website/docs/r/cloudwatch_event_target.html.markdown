@@ -453,7 +453,7 @@ resource "aws_cloudwatch_event_target" "example" {
 -> **Note:** In order to be able to have your AWS Lambda function or
    SNS topic invoked by an EventBridge rule, you must set up the right permissions
    using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic.policy`](/docs/providers/aws/r/sns_topic.html#policy).
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
    More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are required:
@@ -477,6 +477,7 @@ The following arguments are optional:
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
+* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
 
@@ -571,6 +572,15 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 ### sqs_target
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
+
+### sagemaker_pipeline_target
+
+* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution.
+
+#### pipeline_parameter_list
+
+* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
 
 ## Attribute Reference
 

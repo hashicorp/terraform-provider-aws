@@ -17,7 +17,6 @@ variable "team_project_field_status_values" {
     "Waiting"       = "e85f2e5d",
     "Maintainer PR" = "28a034bc",
     "Pending Merge" = "043bc06e",
-    "Backlog"       = "ef47b7a3",
     "Done"          = "98236657"
   }
 }

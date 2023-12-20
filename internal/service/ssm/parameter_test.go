@@ -6,9 +6,9 @@ package ssm_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -51,6 +51,37 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
+// TestAccSSMParameter_multiple is mostly a performance benchmark
+func TestAccSSMParameter_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param ssm.Parameter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_multiple(rName, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s-1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
+					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
+				),
 			},
 		},
 	})
@@ -846,7 +877,7 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 			},
 			{
 				Config:      testAccParameterConfig_insecure(rName, "SecureString", "notsecret"),
-				ExpectError: regexp.MustCompile("invalid configuration"),
+				ExpectError: regexache.MustCompile("invalid configuration"),
 			},
 		},
 	})
@@ -1110,6 +1141,130 @@ func testAccParameterConfig_basic(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
+  type  = %[2]q
+  value = %[3]q
+}
+`, rName, pType, value)
+}
+
+func testAccParameterConfig_multiple(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  = "%[1]s-1"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test2" {
+  name  = "%[1]s-2"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test3" {
+  name  = "%[1]s-3"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test4" {
+  name  = "%[1]s-4"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test5" {
+  name  = "%[1]s-5"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test6" {
+  name  = "%[1]s-6"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test7" {
+  name  = "%[1]s-7"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test8" {
+  name  = "%[1]s-8"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test9" {
+  name  = "%[1]s-9"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test10" {
+  name  = "%[1]s-10"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test11" {
+  name  = "%[1]s-11"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test12" {
+  name  = "%[1]s-12"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test13" {
+  name  = "%[1]s-13"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test14" {
+  name  = "%[1]s-14"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test15" {
+  name  = "%[1]s-15"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test16" {
+  name  = "%[1]s-16"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test17" {
+  name  = "%[1]s-17"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test18" {
+  name  = "%[1]s-18"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test19" {
+  name  = "%[1]s-19"
+  type  = %[2]q
+  value = %[3]q
+}
+
+resource "aws_ssm_parameter" "test20" {
+  name  = "%[1]s-20"
   type  = %[2]q
   value = %[3]q
 }

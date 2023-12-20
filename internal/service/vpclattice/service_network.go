@@ -5,7 +5,6 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
 	"log"
 	"strings"
 
@@ -20,15 +19,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_service_network", name="ServiceNetwork")
+// @SDKResource("aws_vpclattice_service_network", name="Service Network")
 // @Tags(identifierAttribute="arn")
-func ResourceServiceNetwork() *schema.Resource {
+func resourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkCreate,
 		ReadWithoutTimeout:   resourceServiceNetworkRead,
@@ -82,12 +82,9 @@ func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	out, err := conn.CreateServiceNetwork(ctx, in)
+
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetwork, d.Get("name").(string), err)
-	}
-
-	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetwork, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -129,8 +126,8 @@ func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 			in.AuthType = types.AuthType(d.Get("auth_type").(string))
 		}
 
-		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateServiceNetwork(ctx, in)
+
 		if err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameServiceNetwork, d.Id(), err)
 		}
@@ -147,12 +144,11 @@ func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 		ServiceNetworkIdentifier: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetwork, d.Id(), err)
 	}
 
@@ -164,15 +160,15 @@ func findServiceNetworkByID(ctx context.Context, conn *vpclattice.Client, id str
 		ServiceNetworkIdentifier: aws.String(id),
 	}
 	out, err := conn.GetServiceNetwork(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 

@@ -34,9 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the access log subscription.
 * `arn` - Amazon Resource Name (ARN) of the access log subscription.
-* `resource_identifier` - ID of the service network or service.
 * `resource_arn` - Amazon Resource Name (ARN) of the service network or service.
-* `destination_arn` - Amazon Resource Name (ARN) of the log destination.
 
 ## Import
 

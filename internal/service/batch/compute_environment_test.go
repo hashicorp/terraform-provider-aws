@@ -6,9 +6,9 @@ package batch_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/google/go-cmp/cmp"
@@ -361,6 +361,101 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_updatePolicyCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce batch.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName, 30, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.terminate_jobs_on_update", "false"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName, 60, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.terminate_jobs_on_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.job_execution_timeout_minutes", "60"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce batch.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyOmitted(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName, 60, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.terminate_jobs_on_update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "update_policy.0.job_execution_timeout_minutes", "60"),
+				),
 			},
 		},
 	})
@@ -865,7 +960,7 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/batch`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexache.MustCompile(`role/aws-service-role/batch`)),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
@@ -1593,7 +1688,7 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentConfig_unmanagedResources(rName),
-				ExpectError: regexp.MustCompile("no `compute_resources` can be specified when `type` is \"UNMANAGED\""),
+				ExpectError: regexache.MustCompile("no `compute_resources` can be specified when `type` is \"UNMANAGED\""),
 			},
 		},
 	})
@@ -1759,7 +1854,7 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentConfig_ec2NoResources(rName),
-				ExpectError: regexp.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
+				ExpectError: regexache.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
 			},
 		},
 	})
@@ -1882,6 +1977,87 @@ EOF
 resource "aws_iam_role_policy_attachment" "batch_service" {
   role       = aws_iam_role.batch_service.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+}
+
+resource "aws_iam_role" "ec2_spot_fleet" {
+  name = "%[1]s_ec2_spot_fleet"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "spotfleet.${data.aws_partition.current.dns_suffix}"
+    }
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_spot_fleet" {
+  role       = aws_iam_role.ec2_spot_fleet.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccComputeEnvironmentConfig_baseDefaultSLR(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "ecs_instance" {
+  name = "%[1]s_ecs_instance"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+    }
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance" {
+  role       = aws_iam_role.ecs_instance.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance" {
+  name = %[1]q
+  role = aws_iam_role_policy_attachment.ecs_instance.role
 }
 
 resource "aws_iam_role" "ec2_spot_fleet" {
@@ -2302,6 +2478,61 @@ resource "aws_batch_compute_environment" "test" {
   service_role = aws_iam_role.batch_service.arn
   type         = "MANAGED"
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
+}
+
+func testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName string, timeout int, terminate bool) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  update_policy {
+    job_execution_timeout_minutes = %[2]d
+    terminate_jobs_on_update      = %[3]t
+  }
+
+  type = "MANAGED"
+}
+`, rName, timeout, terminate))
+}
+
+func testAccComputeEnvironmentConfig_ec2UpdatePolicyOmitted(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  type = "MANAGED"
 }
 `, rName))
 }

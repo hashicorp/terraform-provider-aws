@@ -102,11 +102,6 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "extended_s3"

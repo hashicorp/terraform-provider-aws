@@ -35,7 +35,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `profile_id`  - The unique identifier for the AS2 profile
+* `arn` - The ARN of the profile.
+* `profile_id`  - The unique identifier for the AS2 profile.
 
 ## Import
 

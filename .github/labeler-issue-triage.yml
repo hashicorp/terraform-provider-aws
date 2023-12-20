@@ -57,6 +57,8 @@ service/appconfig:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfig_'
 service/appconfigdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfigdata_'
+service/appfabric:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appfabric_'
 service/appflow:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appflow_'
 service/appintegrations:
@@ -87,6 +89,8 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bedrock:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -133,6 +137,8 @@ service/codeartifact:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeartifact_'
 service/codebuild:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codebuild_'
+service/codecatalyst:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
 service/codeguruprofiler:
@@ -163,6 +169,8 @@ service/configservice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_config_'
 service/connect:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connect_'
+service/connectcases:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcases_'
 service/connectcontactlens:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcontactlens_'
 service/connectparticipant:
@@ -244,7 +252,7 @@ service/elastictranscoder:
 service/elb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)'
 service/elbv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s|_trust_store)'
 service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
@@ -375,12 +383,12 @@ service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
-service/lexmodelsv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexmodelsv2_'
 service/lexruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntime_'
 service/lexruntimev2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntimev2_'
+service/lexv2models:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/licensemanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_licensemanager_'
 service/lightsail:
@@ -419,6 +427,8 @@ service/medialive:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_medialive_'
 service/mediapackage:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_package_'
+service/mediapackagev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_packagev2_'
 service/mediapackagevod:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mediapackagevod_'
 service/mediastore:
@@ -469,6 +479,8 @@ service/opsworkscm:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opsworkscm_'
 service/organizations:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_organizations_'
+service/osis:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_osis_'
 service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
@@ -544,7 +556,7 @@ service/route53resolver:
 service/rum:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rum_'
 service/s3:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:

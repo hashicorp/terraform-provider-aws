@@ -6,10 +6,10 @@ package apigateway_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +38,7 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/authorizers/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/.+/authorizers/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -251,15 +251,15 @@ func TestAccAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationDefaultToken(rName),
-				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
+				ExpectError: regexache.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
 			},
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationRequest(rName),
-				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
+				ExpectError: regexache.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
 			},
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationCognito(rName),
-				ExpectError: regexp.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
+				ExpectError: regexache.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
 			},
 		},
 	})

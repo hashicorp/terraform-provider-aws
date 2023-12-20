@@ -137,7 +137,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn(ctx)
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
-	stack, err := tfcloudformation.FindStackByID(ctx, cfConn, d.Id())
+	stack, err := tfcloudformation.FindStackByName(ctx, cfConn, d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
@@ -285,7 +285,7 @@ func resourceCloudFormationStackImport(ctx context.Context, d *schema.ResourceDa
 	}
 
 	cfConn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
-	stack, err := tfcloudformation.FindStackByID(ctx, cfConn, stackID)
+	stack, err := tfcloudformation.FindStackByName(ctx, cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}

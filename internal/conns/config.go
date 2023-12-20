@@ -5,15 +5,20 @@ package conns
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
+	"github.com/hashicorp/aws-sdk-go-base/v2/logging"
+	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,14 +35,17 @@ type Config struct {
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
 	ForbiddenAccountIds            []string
-	HTTPProxy                      string
+	HTTPProxy                      *string
+	HTTPSProxy                     *string
 	IgnoreTagsConfig               *tftags.IgnoreConfig
 	Insecure                       bool
 	MaxRetries                     int
+	NoProxy                        string
 	Profile                        string
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
 	S3UsePathStyle                 bool
+	S3UsEast1RegionalEndpoint      endpoints_sdkv1.S3UsEast1RegionalEndpoint
 	SecretKey                      string
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
@@ -54,24 +62,35 @@ type Config struct {
 
 // ConfigureProvider configures the provided provider Meta (instance data).
 func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	ctx, logger := logging.NewTfLogger(ctx)
+
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
+		AllowedAccountIds:             c.AllowedAccountIds,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
 		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
+		ForbiddenAccountIds:           c.ForbiddenAccountIds,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
 		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
+		HTTPSProxy:                    c.HTTPSProxy,
+		HTTPProxyMode:                 awsbase.HTTPProxyModeLegacy,
+		Logger:                        logger,
 		MaxRetries:                    c.MaxRetries,
+		NoProxy:                       c.NoProxy,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
 		RetryMode:                     c.RetryMode,
 		SecretKey:                     c.SecretKey,
 		SkipCredsValidation:           c.SkipCredsValidation,
 		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		SsoEndpoint:                   c.Endpoints[names.SSO],
 		StsEndpoint:                   c.Endpoints[names.STS],
 		SuppressDebugLog:              c.SuppressDebugLog,
 		Token:                         c.Token,
@@ -104,54 +123,69 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	// Avoid duplicate calls to STS by enabling SkipCredsValidation for the call to GetAwsConfig
+	// and then restoring the configured value for the call to GetAwsAccountIDAndPartition.
+	skipCredsValidation := awsbaseConfig.SkipCredsValidation
+	awsbaseConfig.SkipCredsValidation = true
+
 	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
-	ctx, cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
-	if err != nil {
-		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
+	ctx, cfg, awsDiags := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
+
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  d.Summary(),
+			Detail:   d.Detail(),
+		})
+	}
+
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	if !c.SkipRegionValidation {
-		if err := awsbase.ValidateRegion(cfg.Region); err != nil {
-			return nil, diag.FromErr(err)
+		if err := basevalidation.SupportedRegion(cfg.Region); err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 	c.Region = cfg.Region
 
+	awsbaseConfig.SkipCredsValidation = skipCredsValidation
+
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
-	if err != nil {
-		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
+	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
+			Detail:   d.Detail(),
+		})
+	}
+
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
-	if err != nil {
-		return nil, diag.Errorf("retrieving AWS account details: %s", err)
+	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
+			Detail:   d.Detail(),
+		})
 	}
 
 	if accountID == "" {
-		// TODO: Make this a Warning Diagnostic
-		log.Println("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+		diags = append(diags, errs.NewWarningDiagnostic(
+			"AWS account ID not found for provider",
+			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
 	}
 
-	if len(c.ForbiddenAccountIds) > 0 {
-		for _, forbiddenAccountID := range c.ForbiddenAccountIds {
-			if accountID == forbiddenAccountID {
-				return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
-			}
-		}
-	}
-	if len(c.AllowedAccountIds) > 0 {
-		found := false
-		for _, allowedAccountID := range c.AllowedAccountIds {
-			if accountID == allowedAccountID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
-		}
+	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
+	if err != nil {
+		return nil, sdkdiag.AppendErrorf(diags, err.Error())
 	}
 
 	DNSSuffix := "amazonaws.com"
@@ -175,8 +209,21 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.clients = make(map[string]any, 0)
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
+	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
+	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion
 
-	return client, nil
+	return client, diags
+}
+
+func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
+	switch s {
+	case basediag.SeverityWarning:
+		return diag.Warning
+	case basediag.SeverityError:
+		return diag.Error
+	default:
+		return -1
+	}
 }

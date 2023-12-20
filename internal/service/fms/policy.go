@@ -6,14 +6,15 @@ package fms
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -24,13 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNamePolicy = "Policy"
-)
-
 // @SDKResource("aws_fms_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
-func ResourcePolicy() *schema.Resource {
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -131,7 +128,7 @@ func ResourcePolicy() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 				ConflictsWith: []string{"resource_type_list"},
 			},
 			"resource_type_list": {
@@ -140,7 +137,7 @@ func ResourcePolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 				},
 				ConflictsWith: []string{"resource_type"},
 			},
@@ -151,9 +148,15 @@ func ResourcePolicy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"managed_service_data": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+							Type:                  schema.TypeString,
+							Optional:              true,
+							ValidateFunc:          validation.StringIsJSON,
+							DiffSuppressFunc:      suppressEquivalentManagedServiceDataJSON,
+							DiffSuppressOnRefresh: true,
+							StateFunc: func(v interface{}) string {
+								json, _ := structure.NormalizeJsonString(v)
+								return json
+							},
 						},
 						"policy_option": {
 							Type:     schema.TypeList,
@@ -229,7 +232,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
-	output, err := FindPolicyByID(ctx, conn, d.Id())
+	output, err := findPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FMS Policy %s not found, removing from state", d.Id())
@@ -315,7 +318,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func FindPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
+func findPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
 	input := &fms.GetPolicyInput{
 		PolicyId: aws.String(id),
 	}

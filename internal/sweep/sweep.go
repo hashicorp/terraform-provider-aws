@@ -12,6 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
@@ -102,6 +104,10 @@ type Sweepable interface {
 }
 
 func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
+	if len(sweepables) == 0 {
+		tflog.Info(ctx, "No resources to sweep")
+	}
+
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
@@ -132,4 +138,39 @@ func PartitionDNSSuffix(region string) string {
 		return partition.DNSSuffix()
 	}
 	return "amazonaws.com"
+}
+
+type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)
+
+func Register(name string, f SweeperFn, dependencies ...string) {
+	resource.AddTestSweepers(name, &resource.Sweeper{
+		Name: name,
+		F: func(region string) error {
+			ctx := Context(region)
+			ctx = logWithResourceType(ctx, name)
+
+			client, err := SharedRegionalSweepClient(ctx, region)
+			if err != nil {
+				return fmt.Errorf("getting client: %w", err)
+			}
+			sweepResources, err := f(ctx, client)
+
+			if SkipSweepError(err) {
+				tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("listing %q (%s): %w", name, region, err)
+			}
+
+			err = SweepOrchestrator(ctx, sweepResources)
+			if err != nil {
+				return fmt.Errorf("sweeping %q (%s): %w", name, region, err)
+			}
+
+			return nil
+		},
+	})
 }

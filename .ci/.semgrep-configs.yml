@@ -17,7 +17,7 @@ rules:
       - metavariable-pattern:
           metavariable: "$VALUE"
           patterns:
-            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config(_[a-zA-Z0-9_]+_|_)[a-z0-9].*"
+            - pattern-not-regex: "testAcc[0-9A-Za-z]+Config(_[0-9A-Za-z_]+_|_)[0-9a-z].*"
             - pattern-not: acctest.ConfigCompose(...)
             - pattern-not: "..."
     severity: WARNING
@@ -39,7 +39,7 @@ rules:
       - metavariable-pattern:
           metavariable: "$VALUE"
           patterns:
-            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config(_[a-zA-Z0-9_]+_|_)[a-z0-9].*"
+            - pattern-not-regex: "testAcc[0-9A-Za-z]+Config(_[0-9A-Za-z_]+_|_)[0-9a-z].*"
             - pattern-not-regex: "acctest\\..*"
     severity: WARNING
 

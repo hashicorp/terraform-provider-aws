@@ -109,7 +109,7 @@ resource "aws_iam_role_policy" "example" {
 resource "aws_codebuild_project" "example" {
   name          = "test-project"
   description   = "test_codebuild_project"
-  build_timeout = "5"
+  build_timeout = 5
   service_role  = aws_iam_role.example.arn
 
   artifacts {
@@ -185,8 +185,8 @@ resource "aws_codebuild_project" "example" {
 resource "aws_codebuild_project" "project-with-cache" {
   name           = "test-project-cache"
   description    = "test_codebuild_project_cache"
-  build_timeout  = "5"
-  queued_timeout = "5"
+  build_timeout  = 5
+  queued_timeout = 5
 
   service_role = aws_iam_role.example.arn
 
