@@ -18,7 +18,6 @@ package names
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/exp/slices"
@@ -121,12 +120,12 @@ type ServiceDatum struct {
 	Brand              string
 	DeprecatedEnvVar   string
 	EndpointOnly       bool
-	EnvVar             string
 	GoV1ClientTypeName string
 	GoV1Package        string
 	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
+	TfAwsEnvVar        string
 }
 
 // serviceData key is the AWS provider service package
@@ -151,40 +150,40 @@ func readCSVIntoServiceData() error {
 	}
 
 	for _, l := range d {
-		if l[ColExclude] != "" {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[ColNotImplemented] != "" && l[ColEndpointOnly] == "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
-		if l[ColProviderPackageActual] == "" && l[ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
-		p := l[ColProviderPackageCorrect]
+		p := l.ProviderPackageCorrect()
 
-		if l[ColProviderPackageActual] != "" {
-			p = l[ColProviderPackageActual]
+		if l.ProviderPackageActual() != "" {
+			p = l.ProviderPackageActual()
 		}
 
 		serviceData[p] = &ServiceDatum{
-			Brand:              l[ColBrand],
-			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
-			EndpointOnly:       l[ColEndpointOnly] != "",
-			EnvVar:             l[ColTfAwsEnvVar],
-			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
-			GoV1Package:        l[ColGoV1Package],
-			GoV2Package:        l[ColGoV2Package],
-			HumanFriendly:      l[ColHumanFriendly],
-			ProviderNameUpper:  l[ColProviderNameUpper],
+			Brand:              l.Brand(),
+			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
+			EndpointOnly:       l.EndpointOnly(),
+			GoV1ClientTypeName: l.GoV1ClientTypeName(),
+			GoV1Package:        l.GoV1Package(),
+			GoV2Package:        l.GoV2Package(),
+			HumanFriendly:      l.HumanFriendly(),
+			ProviderNameUpper:  l.ProviderNameUpper(),
+			TfAwsEnvVar:        l.TfAwsEnvVar(),
 		}
 
 		a := []string{p}
 
-		if l[ColAliases] != "" {
-			a = append(a, strings.Split(l[ColAliases], ";")...)
+		if len(l.Aliases()) > 0 {
+			a = append(a, l.Aliases()...)
 		}
 
 		serviceData[p].Aliases = a
@@ -287,9 +286,9 @@ func DeprecatedEnvVar(service string) string {
 	return ""
 }
 
-func EnvVar(service string) string {
+func TfAwsEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.EnvVar
+		return v.TfAwsEnvVar
 	}
 
 	return ""

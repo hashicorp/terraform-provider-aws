@@ -11,7 +11,6 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -44,30 +43,30 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l[names.ColExclude] != "" {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColNotImplemented] != "" {
+		if l.NotImplemented() {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
 		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			GoV1Package:       l[names.ColGoV1Package],
-			GoV2Package:       l[names.ColGoV2Package],
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoV1Package:       l.GoV1Package(),
+			GoV2Package:       l.GoV2Package(),
 		}
 
-		if l[names.ColClientSDKV1] != "" {
+		if l.ClientSDKV1() != "" {
 			s.SDKVersion = "1"
-			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
+			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
-		if l[names.ColClientSDKV2] != "" {
-			if l[names.ColClientSDKV1] != "" {
+		if l.ClientSDKV2() != "" {
+			if l.ClientSDKV1() != "" {
 				s.SDKVersion = "1,2"
 			} else {
 				s.SDKVersion = "2"

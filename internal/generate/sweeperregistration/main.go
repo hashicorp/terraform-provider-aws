@@ -15,7 +15,6 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -49,18 +48,18 @@ func main() {
 	}
 
 	for _, l := range data {
-		if l[names.ColExclude] != "" {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
-		p := l[names.ColProviderPackageCorrect]
+		p := l.ProviderPackageCorrect()
 
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
+		if l.ProviderPackageActual() != "" {
+			p = l.ProviderPackageActual()
 		}
 
 		if _, err := os.Stat(fmt.Sprintf("../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {

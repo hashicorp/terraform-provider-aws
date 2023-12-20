@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -44,31 +43,31 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
+		if l.Exclude() && l.AllowedSubcategory() == "" {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
-		p := l[names.ColProviderPackageCorrect]
+		p := l.ProviderPackageCorrect()
 
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
+		if l.ProviderPackageActual() != "" {
+			p = l.ProviderPackageActual()
 		}
 
 		ap := p
 
-		if l[names.ColSplitPackageRealPackage] != "" {
-			ap = l[names.ColSplitPackageRealPackage]
+		if l.SplitPackageRealPackage() != "" {
+			ap = l.SplitPackageRealPackage()
 		}
 
 		s := ServiceDatum{
 			ProviderPackage: p,
 			ActualPackage:   ap,
-			FilePrefix:      l[names.ColFilePrefix],
-			DocPrefixes:     strings.Split(l[names.ColDocPrefix], ";"),
+			FilePrefix:      l.FilePrefix(),
+			DocPrefixes:     strings.Split(l.DocPrefix(), ";"),
 		}
 
 		td.Services = append(td.Services, s)

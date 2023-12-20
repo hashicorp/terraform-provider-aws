@@ -14,7 +14,6 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -44,15 +43,15 @@ func main() {
 	}
 
 	for _, l := range data {
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
 		// See internal/generate/namesconsts/main.go.
-		p := l[names.ColProviderPackageCorrect]
+		p := l.ProviderPackageCorrect()
 
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
+		if l.ProviderPackageActual() != "" {
+			p = l.ProviderPackageActual()
 		}
 
 		spdFile := fmt.Sprintf("../service/%s/service_package_gen.go", p)

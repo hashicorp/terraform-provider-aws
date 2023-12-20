@@ -19,7 +19,6 @@ import (
 	"github.com/YakDriver/regexache"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/exp/slices"
 )
@@ -41,15 +40,15 @@ func main() {
 	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
 	for _, l := range data {
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
 		// See internal/generate/namesconsts/main.go.
-		p := l[names.ColProviderPackageCorrect]
+		p := l.ProviderPackageCorrect()
 
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
+		if l.ProviderPackageActual() != "" {
+			p = l.ProviderPackageActual()
 		}
 
 		if p != servicePackage {
@@ -74,23 +73,23 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			SkipClientGenerate:   l[names.ColSkipClientGenerate] != "",
-			GoV1Package:          l[names.ColGoV1Package],
-			GoV2Package:          l[names.ColGoV2Package],
+			SkipClientGenerate:   l.SkipClientGenerate(),
+			GoV1Package:          l.GoV1Package(),
+			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
-			ProviderNameUpper:    l[names.ColProviderNameUpper],
+			ProviderNameUpper:    l.ProviderNameUpper(),
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
 			SDKResources:         v.sdkResources,
 		}
 
-		if l[names.ColClientSDKV1] != "" {
+		if l.ClientSDKV1() != "" {
 			s.SDKVersion = "1"
-			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
+			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
-		if l[names.ColClientSDKV2] != "" {
-			if l[names.ColClientSDKV1] != "" {
+		if l.ClientSDKV2() != "" {
+			if l.ClientSDKV1() != "" {
 				s.SDKVersion = "1,2"
 			} else {
 				s.SDKVersion = "2"

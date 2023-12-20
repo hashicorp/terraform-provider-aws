@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -41,16 +40,16 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
+		if l.Exclude() && l.AllowedSubcategory() == "" {
 			continue
 		}
 
-		if l[names.ColNotImplemented] != "" {
+		if l.NotImplemented() {
 			continue
 		}
 
 		sd := ServiceDatum{
-			HumanFriendly: l[names.ColHumanFriendly],
+			HumanFriendly: l.HumanFriendly(),
 		}
 
 		td.Services = append(td.Services, sd)

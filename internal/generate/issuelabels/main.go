@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -42,28 +41,28 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
+		if l.Exclude() && l.AllowedSubcategory() == "" {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
 			continue
 		}
 
-		if l[names.ColResourcePrefixActual] == "" && l[names.ColResourcePrefixCorrect] == "" {
+		if l.ResourcePrefixActual() == "" && l.ResourcePrefixCorrect() == "" {
 			continue
 		}
 
-		p := l[names.ColProviderPackageCorrect]
+		p := l.ProviderPackageCorrect()
 
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
+		if l.ProviderPackageActual() != "" {
+			p = l.ProviderPackageActual()
 		}
 
-		rp := l[names.ColResourcePrefixCorrect]
+		rp := l.ResourcePrefixCorrect()
 
-		if l[names.ColResourcePrefixActual] != "" {
-			rp = l[names.ColResourcePrefixActual]
+		if l.ResourcePrefixActual() != "" {
+			rp = l.ResourcePrefixActual()
 		}
 
 		s := ServiceDatum{
