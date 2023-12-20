@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Add support scale out file system with multiple HA pairs.
+```
+
+```release-note:enhancement
+data-source/aws_fsx_ontap_file_system: Add `ha_pairs` and `throughput_per_ha_pair` attributes
+```

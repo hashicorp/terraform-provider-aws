@@ -303,7 +303,6 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("throughput_capacity"); ok {
-
 		input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(v.(int)))
 	}
 
