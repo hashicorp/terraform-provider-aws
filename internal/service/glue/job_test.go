@@ -739,7 +739,7 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_rayJob(rName),
+				Config: testAccJobConfig_rayJob(rName, "description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
@@ -748,6 +748,39 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.runtime", "Ray2.4"),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "Z.2X"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_rayJobUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job glue.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_rayJob(rName, "Initial job"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueray"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.runtime", "Ray2.4"),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", "Z.2X"),
+				),
+			},
+			{
+				Config: testAccJobConfig_rayJob(rName, "Updated job"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated job"),
 				),
 			},
 		},
@@ -1226,11 +1259,12 @@ resource "aws_glue_job" "test" {
 `, rName, pythonVersion))
 }
 
-func testAccJobConfig_rayJob(rName string) string {
+func testAccJobConfig_rayJob(rName string, description string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
   glue_version      = "4.0"
   name              = %[1]q
+  description  		= %[2]q
   role_arn          = aws_iam_role.test.arn
   worker_type       = "Z.2X"
   number_of_workers = 10
@@ -1244,7 +1278,7 @@ resource "aws_glue_job" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName))
+`, rName, description))
 }
 
 func testAccJobConfig_maxCapacity(rName string, maxCapacity float64) string {
