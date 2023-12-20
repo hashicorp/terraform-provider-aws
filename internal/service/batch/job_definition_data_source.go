@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @FrameworkDataSource(name="Job Definition")
 func newDataSourceJobDefinition(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceJobDefinition{}, nil
 }
