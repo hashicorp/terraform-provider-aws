@@ -154,8 +154,9 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	slotValueOverrideTF := tflexv2models.SlotValueOverride{
-		Shape: fwtypes.StringEnumValue(lextypes.SlotShapeList),
-		Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
+		MapBlockKey: types.StringValue(testString),
+		Shape:       fwtypes.StringEnumValue(lextypes.SlotShapeList),
+		Value:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
 		//Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
 		//	{
 		//		Shape: types.StringValue(testString),
@@ -176,9 +177,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		Slots: fwtypes.NewObjectMapValueMapOf[tflexv2models.SlotValueOverride](ctx, map[string]tflexv2models.SlotValueOverride{
-			testString: slotValueOverrideTF,
-		}),
+		Slot: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueOverrideTF),
 	}
 	intentOverrideAWS := lextypes.IntentOverride{
 		Name: aws.String(testString),
@@ -311,7 +310,8 @@ func TestIntentAutoFlex(t *testing.T) {
 		StartTimeoutMs: aws.Int32(1),
 	}
 
-	promptAttemptSpecificationTF := tflexv2models.PromptAttemptSpecification{
+	promptAttemptSpecificationTF := tflexv2models.PromptAttemptsSpecification{
+		MapBlockKey:                    fwtypes.StringEnumValue(tflexv2models.PromptAttemptsTypeInitial),
 		AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypesTF),
 		AllowInterrupt:                 types.BoolValue(true),
 		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecificationTF),
@@ -324,27 +324,21 @@ func TestIntentAutoFlex(t *testing.T) {
 		TextInputSpecification:         &textInputSpecificationAWS,
 	}
 
-	//promptAttemptSpecificationMapTF := map[string]tflexv2models.PromptAttemptSpecification{
-	//	testString: promptAttemptSpecificationTF,
-	//}
-	promptAttemptSpecificationMapAWS := map[string]lextypes.PromptAttemptSpecification{
-		testString: promptAttemptSpecificationAWS,
-	}
-
 	promptSpecificationTF := tflexv2models.PromptSpecification{
-		MaxRetries:               types.Int64Value(1),
-		MessageGroup:             fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
-		AllowInterrupt:           types.BoolValue(true),
-		MessageSelectionStrategy: fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
-		//PromptAttemptsSpecification: fwtypes.NewObjectMapValueMapOf[tflexv2models.PromptAttemptSpecification](ctx, promptAttemptSpecificationMapTF),
+		MaxRetries:                  types.Int64Value(1),
+		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		AllowInterrupt:              types.BoolValue(true),
+		MessageSelectionStrategy:    fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
 		PromptAttemptsSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
 	}
 	promptSpecificationAWS := lextypes.PromptSpecification{
-		MaxRetries:                  aws.Int32(1),
-		MessageGroups:               messageGroupAWS,
-		AllowInterrupt:              aws.Bool(true),
-		MessageSelectionStrategy:    lextypes.MessageSelectionStrategyOrdered,
-		PromptAttemptsSpecification: promptAttemptSpecificationMapAWS,
+		MaxRetries:               aws.Int32(1),
+		MessageGroups:            messageGroupAWS,
+		AllowInterrupt:           aws.Bool(true),
+		MessageSelectionStrategy: lextypes.MessageSelectionStrategyOrdered,
+		PromptAttemptsSpecification: map[string]lextypes.PromptAttemptSpecification{
+			string(tflexv2models.PromptAttemptsTypeInitial): promptAttemptSpecificationAWS,
+		},
 	}
 
 	failureSuccessTimeoutTF := tflexv2models.FailureSuccessTimeout{
@@ -358,6 +352,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
 		TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
 	}
+
 	postCodeHookSpecificationAWS := lextypes.PostDialogCodeHookInvocationSpecification{
 		FailureConditional: &conditionalSpecificationAWS,
 		FailureNextStep:    &dialogStateAWS,

@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,6 +30,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// todo:
+//  x invalid result object
+//  x get basic test working
+//  x import/ID
+//  - test all attributes
+//  x tags (no tags on intents)
+//  - slot_priority on create
+//  x prompt_attempts_specification schema
+//  x prompt_attempts_specification model
+//  x prompt_attempts_specification test
+//  x intent-slots-slot-value-override schema
+//  x intent-slots-slot-value-override model
+//  - intent-slots-slot-value-override test
+//  x timeouts
+//  - updates
+//  x disappears
 
 // @FrameworkResource(name="Intent")
 func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -157,23 +173,40 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 		},
 	}
-	// O for "Object"
-	slotValueOverrideO := types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"shape": types.StringType,
-			"value": types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"interpreted_value": types.StringType,
+
+	slotValueOverrideLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotValueOverride](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				flex.MapBlockKey: schema.StringAttribute{
+					Required: true,
+					// pattern: ^([0-9a-zA-Z][_-]?){1,100}$
+				},
+				"shape": schema.StringAttribute{
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.SlotShape](),
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"value": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[SlotValue](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"interpreted_value": schema.StringAttribute{
+								Optional: true,
+								// min length: 1
+							},
+						},
+					},
 				},
 			},
 		},
 	}
 
-	// This recursive type blows up autoflex and potentially schema.
-	// In order to continue work, we are intentionally leaving this out for now
-	// and will need to return to it when needed.
-
-	//slotValueOverrideO.AttrTypes["values"] = slotValueOverrideO
+	// slotValueOverrideLNB.NestedObject.Blocks["values"] = slotValueOverrideLNB // recursive type, purposely left out, future feature
 
 	dialogStateNBO := schema.NestedBlockObject{
 		Attributes: map[string]schema.Attribute{
@@ -213,10 +246,9 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 						"name": schema.StringAttribute{
 							Optional: true,
 						},
-						"slots": schema.MapAttribute{
-							Optional:    true,
-							ElementType: slotValueOverrideO,
-						},
+					},
+					Blocks: map[string]schema.Block{
+						"slot": slotValueOverrideLNB,
 					},
 				},
 			},
@@ -336,6 +368,126 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				NestedObject: dialogStateNBO,
 			},
 			"timeout_response": responseSpecificationLNB,
+		},
+	}
+
+	promptAttemptsSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				flex.MapBlockKey: schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),
+				},
+				"allow_interrupt": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"allowed_input_types": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[AllowedInputTypes](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"allow_audio_input": schema.BoolAttribute{
+								Required: true,
+							},
+							"allow_dtmf_input": schema.BoolAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"audio_and_dtmf_input_specification": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[AudioAndDTMFInputSpecification](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"start_timeout_ms": schema.Int64Attribute{
+								Required:   true,
+								Validators: []validator.Int64{
+									// at least 1
+								},
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"audio_specification": schema.ListNestedBlock{
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								CustomType: fwtypes.NewListNestedObjectTypeOf[AudioSpecification](ctx),
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"end_timeout_ms": schema.Int64Attribute{
+											Required:   true,
+											Validators: []validator.Int64{
+												// at least 1
+											},
+										},
+										"max_length_ms": schema.Int64Attribute{
+											Required:   true,
+											Validators: []validator.Int64{
+												// at least 1
+											},
+										},
+									},
+								},
+							},
+							"dtmf_specification": schema.ListNestedBlock{
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								CustomType: fwtypes.NewListNestedObjectTypeOf[DTMFSpecification](ctx),
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"deletion_character": schema.StringAttribute{
+											Required: true,
+											// pattern: ^[A-D0-9#*]{1}$
+										},
+										"end_character": schema.StringAttribute{
+											Required: true,
+											// pattern: ^[A-D0-9#*]{1}$
+										},
+										"end_timeout_ms": schema.Int64Attribute{
+											Required:   true,
+											Validators: []validator.Int64{
+												// at least 1
+											},
+										},
+										"max_length": schema.Int64Attribute{
+											Required:   true,
+											Validators: []validator.Int64{
+												//validators.Int64Between(1, 1024),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"text_input_specification": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[TextInputSpecification](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"start_timeout_ms": schema.Int64Attribute{
+								Required: true,
+								//Min:       1,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -607,57 +759,10 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 										Optional:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.MessageSelectionStrategy](),
 									},
-									// New autoflex:
-									//  - MapNestedAttributeOf
-									//  - ObjectAttributeOf
-									// but, v5 v v6 and attributes not supported
-									//  - could model maps as blocks and frankenstein some autoflex
-									"prompt_attempts_specification1": schema.MapNestedAttribute{
-										Optional:   true,
-										CustomType: fwtypes.NewObjectMapTypeOf[PromptAttemptSpecification](ctx),
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"allowed_input_types": schema.ObjectAttribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-									"prompt_attempts_specification2": schema.MapAttribute{
-										ElementType: types.ObjectType{
-											AttrTypes: map[string]attr.Type{
-												"allowed_input_types": types.ObjectType{
-													AttrTypes: map[string]attr.Type{
-														"allow_audio_input": types.BoolType,
-														"allow_dtmf_input":  types.BoolType,
-													},
-												},
-												"allow_interrupt": types.BoolType,
-												"audio_and_dtmf_input_specification": types.ObjectType{
-													AttrTypes: map[string]attr.Type{
-														"start_timeout_ms": types.Int64Type,
-														"audio_specification": types.ObjectType{
-															AttrTypes: map[string]attr.Type{
-																"end_timeout_ms": types.Int64Type,
-																"max_length_ms":  types.Int64Type,
-															},
-														},
-														"dtmf_specification": types.ObjectType{
-															AttrTypes: map[string]attr.Type{
-																"deletion_character": types.StringType,
-																"end_character":      types.StringType,
-																"end_timeout_ms":     types.Int64Type,
-																"max_length":         types.Int64Type,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
 								},
 								Blocks: map[string]schema.Block{
-									"message_group": messageGroupLNB,
+									"message_group":                 messageGroupLNB,
+									"prompt_attempts_specification": promptAttemptsSpecificationLNB,
 								},
 							},
 						},
@@ -741,17 +846,6 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 }
-
-// todo:
-//  x invalid result object
-//  x get basic test working
-//  x import/ID
-//  - test all attributes
-//  x tags (no tags on intents)
-//  - slot_priority
-//  x timeouts
-//  - updates
-//  x disappears
 
 func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
@@ -1055,6 +1149,29 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 	return out, nil
 }
 
+type PromptAttemptsType string
+
+// Enum values for PromptAttemptsType
+const (
+	PromptAttemptsTypeInitial PromptAttemptsType = "Initial"
+	PromptAttemptsTypeRetry1  PromptAttemptsType = "Retry1"
+	PromptAttemptsTypeRetry2  PromptAttemptsType = "Retry2"
+	PromptAttemptsTypeRetry3  PromptAttemptsType = "Retry3"
+	PromptAttemptsTypeRetry4  PromptAttemptsType = "Retry4"
+	PromptAttemptsTypeRetry5  PromptAttemptsType = "Retry5"
+)
+
+func (PromptAttemptsType) Values() []PromptAttemptsType {
+	return []PromptAttemptsType{
+		"Initial",
+		"Retry1",
+		"Retry2",
+		"Retry3",
+		"Retry4",
+		"Retry5",
+	}
+}
+
 type ResourceIntentData struct {
 	BotID                  types.String                                                 `tfsdk:"bot_id"`
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
@@ -1157,14 +1274,15 @@ type DialogAction struct {
 }
 
 type IntentOverride struct {
-	Name  types.String                                `tfsdk:"name"`
-	Slots fwtypes.ObjectMapValueOf[SlotValueOverride] `tfsdk:"slots"`
+	Name types.String                                       `tfsdk:"name"`
+	Slot fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"slot"`
 }
 
 type SlotValueOverride struct {
-	Shape fwtypes.StringEnum[awstypes.SlotShape]     `tfsdk:"shape"`
-	Value fwtypes.ListNestedObjectValueOf[SlotValue] `tfsdk:"value"`
-	//Values fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"values"`
+	MapBlockKey types.String                               `tfsdk:"map_block_key"`
+	Shape       fwtypes.StringEnum[awstypes.SlotShape]     `tfsdk:"shape"`
+	Value       fwtypes.ListNestedObjectValueOf[SlotValue] `tfsdk:"value"`
+	//Values fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"values"` // recursive type, future support, needs additional development
 }
 
 type SlotValue struct {
@@ -1193,15 +1311,15 @@ type IntentConfirmationSetting struct {
 }
 
 type PromptSpecification struct {
-	MaxRetries                  types.Int64                                                 `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]               `tfsdk:"message_groups"`
-	AllowInterrupt              types.Bool                                                  `tfsdk:"allow_interrupt"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]       `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.ListNestedObjectValueOf[PromptAttemptSpecification] `tfsdk:"prompt_attempts_specification"`
+	MaxRetries                  types.Int64                                                  `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]                `tfsdk:"message_groups"`
+	AllowInterrupt              types.Bool                                                   `tfsdk:"allow_interrupt"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]        `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.ListNestedObjectValueOf[PromptAttemptsSpecification] `tfsdk:"prompt_attempts_specification"`
 }
 
-type PromptAttemptSpecification struct {
-	Key                            string                                                          `tfsdk:"-"`
+type PromptAttemptsSpecification struct {
+	MapBlockKey                    fwtypes.StringEnum[PromptAttemptsType]                          `tfsdk:"map_block_key"`
 	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypes]              `tfsdk:"allowed_input_types"`
 	AllowInterrupt                 types.Bool                                                      `tfsdk:"allow_interrupt"`
 	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecification] `tfsdk:"audio_and_dtmf_input_specification"`
