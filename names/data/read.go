@@ -7,6 +7,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/csv"
+	"errors"
 	"io"
 	"strings"
 )
@@ -144,15 +145,18 @@ func ReadAllServiceData() (results []ServiceRecord, err error) {
 	// reader.ReuseRecord = true
 
 	// Skip the header
-	reader.Read()
+	_, err = reader.Read()
+	if err != nil {
+		return
+	}
 
 	for {
 		r, err := reader.Read()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
 		results = append(results, ServiceRecord(r))
 	}
