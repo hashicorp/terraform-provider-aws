@@ -113,10 +113,6 @@ func main() {
 			continue
 		}
 
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
-			continue
-		}
-
 		p := l.ProviderPackageCorrect()
 
 		if l.ProviderPackageActual() != "" {

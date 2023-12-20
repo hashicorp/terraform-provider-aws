@@ -43,10 +43,6 @@ func main() {
 	}
 
 	for _, l := range data {
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
-			continue
-		}
-
 		// See internal/generate/namesconsts/main.go.
 		p := l.ProviderPackageCorrect()
 

@@ -45,10 +45,6 @@ func main() {
 			continue
 		}
 
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
-			continue
-		}
-
 		if l.ResourcePrefixActual() == "" && l.ResourcePrefixCorrect() == "" {
 			continue
 		}

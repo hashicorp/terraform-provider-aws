@@ -51,10 +51,6 @@ func main() {
 			continue
 		}
 
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" {
-			continue
-		}
-
 		s := ServiceDatum{
 			ProviderNameUpper: l.ProviderNameUpper(),
 			GoV1Package:       l.GoV1Package(),
