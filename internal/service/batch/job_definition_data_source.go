@@ -571,6 +571,7 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 			)
 			return
 		}
+		// nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
 		jd = *out
 	}
 
