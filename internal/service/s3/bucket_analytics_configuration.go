@@ -336,7 +336,7 @@ func expandAnalyticsExportDestination(edl []interface{}) *types.AnalyticsExportD
 	return result
 }
 
-func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination {
+func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination { // nosemgrep:ci.s3-in-func-name
 	result := &types.AnalyticsS3BucketDestination{}
 
 	if len(bdl) != 0 && bdl[0] != nil {
@@ -412,7 +412,7 @@ func flattenAnalyticsExportDestination(destination *types.AnalyticsExportDestina
 	}
 }
 
-func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} {
+func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} { // nosemgrep:ci.s3-in-func-name
 	if bucketDestination == nil {
 		return nil
 	}
