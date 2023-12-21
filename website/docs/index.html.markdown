@@ -413,6 +413,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
     - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
     - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+    - [`aws_finspace_kx_dataview` resource](/docs/providers/aws/r/finspace_kx_dataview.html)
     - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html)
     - [`aws_glue_catalog_database` resource](/docs/providers/aws/r/glue_catalog_database.html)
     - [`aws_glue_catalog_table` resource](/docs/providers/aws/r/glue_catalog_table.html)

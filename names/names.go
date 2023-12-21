@@ -3,25 +3,24 @@
 
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
-// access to data found in the names_data.csv file, which provides additional
+// access to data found in the data/names_data.csv file, which provides additional
 // service-related name information.
 //
 // Consumers of the names package include the conns package
 // (internal/conn/conns.go), the provider package
 // (internal/provider/provider.go), generators, and the skaff tool.
 //
-// It is very important that information in the names_data.csv be exactly
+// It is very important that information in the data/names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
 package names
 
 import (
-	_ "embed"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/exp/slices"
 )
 
@@ -201,19 +200,19 @@ func ReverseDNS(hostname string) string {
 	return strings.Join(parts, ".")
 }
 
-// Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
+// Type ServiceDatum corresponds closely to columns in `data/names_data.csv` and are
 // described in detail in README.md.
 type ServiceDatum struct {
 	Aliases            []string
 	Brand              string
 	DeprecatedEnvVar   string
 	EndpointOnly       bool
-	EnvVar             string
 	GoV1ClientTypeName string
 	GoV1Package        string
 	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
+	TfAwsEnvVar        string
 }
 
 // serviceData key is the AWS provider service package
@@ -228,59 +227,42 @@ func init() {
 	}
 }
 
-//go:embed names_data.csv
-var namesData string
-
 func readCSVIntoServiceData() error {
 	// names_data.csv is dynamically embedded so changes, additions should be made
 	// there also
 
-	r := csv.NewReader(strings.NewReader(namesData))
-
-	d, err := r.ReadAll()
+	d, err := data.ReadAllServiceData()
 	if err != nil {
 		return fmt.Errorf("reading CSV into service data: %w", err)
 	}
 
-	for i, l := range d {
-		if i < 1 { // omit header line
+	for _, l := range d {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[ColExclude] != "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
-		if l[ColNotImplemented] != "" && l[ColEndpointOnly] == "" {
-			continue
-		}
-
-		if l[ColProviderPackageActual] == "" && l[ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[ColProviderPackageCorrect]
-
-		if l[ColProviderPackageActual] != "" {
-			p = l[ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		serviceData[p] = &ServiceDatum{
-			Brand:              l[ColBrand],
-			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
-			EndpointOnly:       l[ColEndpointOnly] != "",
-			EnvVar:             l[ColEnvVar],
-			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
-			GoV1Package:        l[ColGoV1Package],
-			GoV2Package:        l[ColGoV2Package],
-			HumanFriendly:      l[ColHumanFriendly],
-			ProviderNameUpper:  l[ColProviderNameUpper],
+			Brand:              l.Brand(),
+			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
+			EndpointOnly:       l.EndpointOnly(),
+			GoV1ClientTypeName: l.GoV1ClientTypeName(),
+			GoV1Package:        l.GoV1Package(),
+			GoV2Package:        l.GoV2Package(),
+			HumanFriendly:      l.HumanFriendly(),
+			ProviderNameUpper:  l.ProviderNameUpper(),
+			TfAwsEnvVar:        l.TfAwsEnvVar(),
 		}
 
 		a := []string{p}
 
-		if l[ColAliases] != "" {
-			a = append(a, strings.Split(l[ColAliases], ";")...)
+		if len(l.Aliases()) > 0 {
+			a = append(a, l.Aliases()...)
 		}
 
 		serviceData[p].Aliases = a
@@ -383,9 +365,9 @@ func DeprecatedEnvVar(service string) string {
 	return ""
 }
 
-func EnvVar(service string) string {
+func TfAwsEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.EnvVar
+		return v.TfAwsEnvVar
 	}
 
 	return ""
