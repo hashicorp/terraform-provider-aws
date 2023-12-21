@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
@@ -86,7 +87,17 @@ func testAccCheckAwsLogSourceDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			out, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, rs.Primary.ID)
+			regionsCount, err := strconv.Atoi(rs.Primary.Attributes["sources.0.regions.#"])
+			if err != nil {
+				return fmt.Errorf("error parsing regions count: %s", err)
+			}
+
+			var regions []string
+			for i := 0; i < regionsCount; i++ {
+				regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("sources.0.regions.%d", i)])
+			}
+
+			out, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, regions, rs.Primary.ID)
 
 			if tfresource.NotFound(err) || len(out.Sources) == 0 {
 				continue
@@ -115,11 +126,29 @@ func testAccCheckAwsLogSourceExists(ctx context.Context, name string, awsLogSour
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-		logSources, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, rs.Primary.ID)
+
+		regionsCount, err := strconv.Atoi(rs.Primary.Attributes["sources.0.regions.#"])
 		if err != nil {
-			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, rs.Primary.ID, err)
+			return fmt.Errorf("error parsing regions count: %s", err)
 		}
-		resp, err := tfsecuritylake.ExtractAwsLogSourceConfiguration(logSources)
+
+		var regions []string
+		for i := 0; i < regionsCount; i++ {
+			regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("sources.0.regions.%d", i)])
+		}
+
+		logSources, err := tfsecuritylake.FindAwsLogSourceById(ctx, conn, regions, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, rs.Primary.ID, err)
+		}
+
+		var resp *awstypes.AwsLogSourceConfiguration
+		if len(logSources.Sources) > 0 {
+			resp, err = tfsecuritylake.ExtractAwsLogSourceConfiguration(logSources)
+			if err != nil {
+				return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameAwsLogSource, rs.Primary.ID, err)
+			}
+		}
 
 		*awsLogSource = *resp
 
@@ -132,7 +161,7 @@ func testAccAwsLogSourceConfig_basic() string {
 
 resource "aws_securitylake_aws_log_source" "test" {
 	sources {
-		regions        = ["eu-west-2"]
+		regions        = ["eu-west-2","eu-west-1"]
 		source_name    = "ROUTE53"
 		source_version = "1.0"
 	}

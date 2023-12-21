@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -131,28 +130,28 @@ func (r *resourceAwsLogSource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	//Looking if datalake exists to create a uniqu ID for the Log Resource
-	datalakeIn := &securitylake.ListDataLakesInput{
-		Regions: regions,
-	}
+	// datalakeIn := &securitylake.ListDataLakesInput{
+	// 	Regions: regions,
+	// }
 
-	datalakes, err := conn.ListDataLakes(ctx, datalakeIn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
+	// datalakes, err := conn.ListDataLakes(ctx, datalakeIn)
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(
+	// 		create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
+	// 		err.Error(),
+	// 	)
+	// 	return
+	// }
 
 	//Creating the unique ID
-	datalake := datalakes.DataLakes[0]
+	// datalake := datalakes.DataLakes[0]
 	var id string
 	for _, awsLogawsLogSources := range awsLogSources {
-		id = *datalake.DataLakeArn + "/" + awsLogawsLogSources.SourceName.ValueString() + "/" + awsLogawsLogSources.SourceVersion.ValueString()
+		id = awsLogawsLogSources.SourceName.ValueString() + "/" + awsLogawsLogSources.SourceVersion.ValueString()
 	}
 
 	data.ID = flex.StringToFramework(ctx, &id)
-	out, err := findAwsLogSourceById(ctx, conn, id)
+	out, err := findAwsLogSourceById(ctx, conn, regions, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
@@ -190,7 +189,21 @@ func (r *resourceAwsLogSource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	out, err := findAwsLogSourceById(ctx, conn, data.ID.ValueString())
+	var awsLogSources []awsLogSourceSourcesModel
+	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &awsLogSources, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var regions []string
+	for _, awsLogSource := range awsLogSources {
+		resp.Diagnostics.Append(awsLogSource.Regions.ElementsAs(ctx, &regions, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	out, err := findAwsLogSourceById(ctx, conn, regions, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
@@ -243,11 +256,38 @@ func (r *resourceAwsLogSource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	out, err := findAwsLogSourceById(ctx, conn, data.ID.ValueString())
+	var awsLogSources []awsLogSourceSourcesModel
+	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &awsLogSources, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var regions []string
+	for _, awsLogSource := range awsLogSources {
+		resp.Diagnostics.Append(awsLogSource.Regions.ElementsAs(ctx, &regions, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	out, err := findAwsLogSourceById(ctx, conn, regions, data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
 	//Trying to get the informatiom we need from output
-	config, err := extractAwsLogSourceConfiguration(out)
+	var config *awstypes.AwsLogSourceConfiguration
+
+	config, err = extractAwsLogSourceConfiguration(out)
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
 			err.Error(),
@@ -260,10 +300,6 @@ func (r *resourceAwsLogSource) Delete(ctx context.Context, req resource.DeleteRe
 	})
 
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameAwsLogSource, data.ID.String(), err),
 			err.Error(),
@@ -273,7 +309,7 @@ func (r *resourceAwsLogSource) Delete(ctx context.Context, req resource.DeleteRe
 
 }
 
-func findAwsLogSourceById(ctx context.Context, conn *securitylake.Client, id string) (*securitylake.ListLogSourcesOutput, error) {
+func findAwsLogSourceById(ctx context.Context, conn *securitylake.Client, regions []string, id string) (*securitylake.ListLogSourcesOutput, error) {
 
 	parsedID, err := parseARNString(id)
 	if err != nil {
@@ -291,13 +327,13 @@ func findAwsLogSourceById(ctx context.Context, conn *securitylake.Client, id str
 	}
 
 	input := &securitylake.ListLogSourcesInput{
-		Regions: []string{parsedID.Regions},
+		Regions: regions,
 		Sources: []awstypes.LogSourceResource{logSourceResource},
 	}
 
 	output, err := conn.ListLogSources(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("error listing log sources for region %s: %w", parsedID.Regions, err)
+		return nil, fmt.Errorf("error listing log sources for region %s: %w", regions, err)
 	}
 
 	return output, nil
@@ -321,63 +357,68 @@ type awsLogSourceSourcesModel struct {
 }
 
 type ParsedID struct {
-	Accounts      string
-	Regions       string
 	SourceName    string
 	SourceVersion string
 }
 
 // parsing id that includes datalake arn.
 func parseARNString(s string) (*ParsedID, error) {
-	v, err := arn.Parse(s)
 
-	if err != nil {
-		return nil, err
-	}
-
-	resource := v.Resource
-
-	parts := strings.Split(resource, "/")
-	if len(parts) < 2 {
+	parts := strings.Split(s, "/")
+	if len(parts) < 1 {
 		return nil, fmt.Errorf("invalid ID format")
 	}
 
 	return &ParsedID{
-		Accounts:      v.AccountID,
-		Regions:       v.Region,
-		SourceName:    parts[len(parts)-2],
-		SourceVersion: parts[len(parts)-1],
+		SourceName:    parts[0],
+		SourceVersion: parts[1],
 	}, nil
 }
 
 // extractAwsLogSourceConfiguration extracts the configuration from the first log source in the output.
 func extractAwsLogSourceConfiguration(out *securitylake.ListLogSourcesOutput) (*awstypes.AwsLogSourceConfiguration, error) {
 	if len(out.Sources) == 0 {
-		return nil, fmt.Errorf("no log sources found in the output")
+		var nfe *awstypes.ResourceNotFoundException
+		return nil, nfe
 	}
 
-	logSource := out.Sources[0]
 	var awsLogSourceResource awstypes.AwsLogSourceResource
-
-	// Assuming the log source has at least one source.
-	if len(logSource.Sources) == 0 {
-		return nil, fmt.Errorf("no log source resources found")
-	}
-
-	// Extracting AwsLogSourceResource
-	if awsLogSource, ok := logSource.Sources[0].(*awstypes.LogSourceResourceMemberAwsLogSource); ok {
-		awsLogSourceResource = awsLogSource.Value
-	} else {
-		return nil, fmt.Errorf("log source resource is not of type AwsLogSourceResource")
+	var accounts []string
+	var regions []string
+	for _, logSource := range out.Sources {
+		if logSource.Account != nil {
+			if !contains(accounts, *logSource.Account) {
+				accounts = append(accounts, *logSource.Account)
+			}
+		}
+		if logSource.Region != nil {
+			regions = append(regions, *logSource.Region)
+		}
+		// Extracting AwsLogSourceResource
+		if awsLogSource, ok := logSource.Sources[0].(*awstypes.LogSourceResourceMemberAwsLogSource); ok {
+			awsLogSourceResource = awsLogSource.Value
+		} else {
+			return nil, fmt.Errorf("log source resource is not of type AwsLogSourceResource")
+		}
 	}
 
 	// Creating the configuration
 	config := &awstypes.AwsLogSourceConfiguration{
-		Accounts:      []string{*logSource.Account},
-		Regions:       []string{*logSource.Region},
+		Accounts:      accounts,
+		Regions:       regions,
 		SourceName:    awsLogSourceResource.SourceName,
 		SourceVersion: awsLogSourceResource.SourceVersion,
 	}
 
 	return config, nil
+}
+
+// contains checks if a string is present in a slice.
+func contains(slice []string, str string) bool {
+	for _, v := range slice {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
