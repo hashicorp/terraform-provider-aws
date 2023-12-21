@@ -317,11 +317,17 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
-// StringValueToInt64 converts a string to a Go int64 pointer value.
+// StringValueToInt64 converts a string to a Go int64 pointer.
 // Invalid integer strings are converted to 0.
 func StringValueToInt64(v string) *int64 {
-	i, _ := strconv.Atoi(v)
-	return aws.Int64(int64(i))
+	return aws.Int64(StringValueToInt64Value(v))
+}
+
+// StringValueToInt64Value converts a string to a Go int64 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64Value(v string) int64 {
+	i, _ := strconv.ParseInt(v, 0, 64)
+	return i
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant

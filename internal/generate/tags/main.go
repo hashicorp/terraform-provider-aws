@@ -206,18 +206,18 @@ type TemplateData struct {
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
-	ConnsPkg         bool
-	FmtPkg           bool
-	HelperSchemaPkg  bool
-	InternalTypesPkg bool
-	LoggingPkg       bool
-	NamesPkg         bool
-	SkipAWSImp       bool
-	SkipServiceImp   bool
-	SkipTypesImp     bool
-	TfLogPkg         bool
-	TfResourcePkg    bool
-	TimePkg          bool
+	ConnsPkg          bool
+	FmtPkg            bool
+	HelperSchemaPkg   bool
+	InternalOptionPkg bool
+	LoggingPkg        bool
+	NamesPkg          bool
+	SkipAWSImp        bool
+	SkipServiceImp    bool
+	SkipTypesImp      bool
+	TfLogPkg          bool
+	TfResourcePkg     bool
+	TimePkg           bool
 
 	IsDefaultListTags   bool
 	IsDefaultUpdateTags bool
@@ -298,18 +298,18 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:         (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
-		FmtPkg:           *updateTags,
-		HelperSchemaPkg:  awsPkg == "autoscaling",
-		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
-		LoggingPkg:       *updateTags,
-		NamesPkg:         *updateTags && !*skipNamesImp,
-		SkipAWSImp:       *skipAWSImp,
-		SkipServiceImp:   *skipServiceImp,
-		SkipTypesImp:     *skipTypesImp,
-		TfLogPkg:         *updateTags,
-		TfResourcePkg:    (*getTag || *waitForPropagation),
-		TimePkg:          *waitForPropagation,
+		ConnsPkg:          (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
+		FmtPkg:            *updateTags,
+		HelperSchemaPkg:   awsPkg == "autoscaling",
+		InternalOptionPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
+		LoggingPkg:        *updateTags,
+		NamesPkg:          *updateTags && !*skipNamesImp,
+		SkipAWSImp:        *skipAWSImp,
+		SkipServiceImp:    *skipServiceImp,
+		SkipTypesImp:      *skipTypesImp,
+		TfLogPkg:          *updateTags,
+		TfResourcePkg:     (*getTag || *waitForPropagation),
+		TimePkg:           *waitForPropagation,
 
 		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
