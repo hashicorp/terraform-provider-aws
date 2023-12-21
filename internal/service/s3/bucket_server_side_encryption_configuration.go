@@ -288,12 +288,14 @@ func flattenServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []
 	var results []interface{}
 
 	for _, rule := range rules {
-		m := map[string]interface{}{
-			"bucket_key_enabled": rule.BucketKeyEnabled,
-		}
+		m := make(map[string]interface{})
 
 		if rule.ApplyServerSideEncryptionByDefault != nil {
 			m["apply_server_side_encryption_by_default"] = flattenServerSideEncryptionByDefault(rule.ApplyServerSideEncryptionByDefault)
+		}
+
+		if rule.BucketKeyEnabled != nil {
+			m["bucket_key_enabled"] = aws.ToBool(rule.BucketKeyEnabled)
 		}
 
 		results = append(results, m)

@@ -220,6 +220,34 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
+func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.CORSRule, error) {
+	input := &s3.GetBucketCorsInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetBucketCors(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CORSRules) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CORSRules, nil
+}
+
 func expandCORSRules(l []interface{}) []types.CORSRule {
 	if len(l) == 0 {
 		return nil
@@ -297,32 +325,4 @@ func flattenCORSRules(rules []types.CORSRule) []interface{} {
 	}
 
 	return results
-}
-
-func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.CORSRule, error) {
-	input := &s3.GetBucketCorsInput{
-		Bucket: aws.String(bucket),
-	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetBucketCors(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.CORSRules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.CORSRules, nil
 }

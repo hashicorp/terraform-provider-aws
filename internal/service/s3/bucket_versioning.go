@@ -167,7 +167,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenBucketVersioningConfiguration(output)); err != nil {
+	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
 		return diag.Errorf("setting versioning_configuration: %s", err)
 	}
 
@@ -271,7 +271,7 @@ func expandBucketVersioningConfiguration(l []interface{}) *types.VersioningConfi
 	return result
 }
 
-func flattenBucketVersioningConfiguration(config *s3.GetBucketVersioningOutput) []interface{} {
+func flattenVersioning(config *s3.GetBucketVersioningOutput) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}

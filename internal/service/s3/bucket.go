@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -849,7 +850,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	switch {
 	case err == nil:
-		if err := d.Set("grant", flattenGrants(bucketACL)); err != nil {
+		if err := d.Set("grant", flattenBucketGrants(bucketACL)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting grant: %s", err)
 		}
 	case tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented):
@@ -925,7 +926,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	switch {
 	case err == nil:
-		if err := d.Set("versioning", flattenVersioning(bucketVersioning)); err != nil {
+		if err := d.Set("versioning", flattenBucketVersioning(bucketVersioning)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting versioning: %s", err)
 		}
 	case tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented):
@@ -1065,7 +1066,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	switch {
 	case err == nil:
-		if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(encryptionConfiguration)); err != nil {
+		if err := d.Set("server_side_encryption_configuration", flattenBucketServerSideEncryptionConfiguration(encryptionConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_side_encryption_configuration: %s", err)
 		}
 	case tfawserr.ErrCodeEquals(err, errCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented):
@@ -1334,7 +1335,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		input := &s3.PutBucketAclInput{
 			AccessControlPolicy: &types.AccessControlPolicy{
-				Grants: expandGrants(d.Get("grant").(*schema.Set).List()),
+				Grants: expandBucketGrants(d.Get("grant").(*schema.Set).List()),
 				Owner:  bucketACL.Owner,
 			},
 			Bucket: aws.String(d.Id()),
@@ -1700,6 +1701,10 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 	return fmt.Sprintf("%s.%s", bucket, domain), domain
 }
 
+//
+// Bucket CORS Configuration.
+//
+
 func expandBucketCORSRules(l []interface{}) []types.CORSRule {
 	if len(l) == 0 {
 		return nil
@@ -1771,970 +1776,132 @@ func flattenBucketCORSRules(rules []types.CORSRule) []interface{} {
 	return results
 }
 
-// Grants functions
+//
+// Bucket Website Configuration.
+//
 
-func expandGrants(l []interface{}) []*s3.Grant {
-	var grants []*s3.Grant
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		if v, ok := tfMap["permissions"].(*schema.Set); ok {
-			for _, rawPermission := range v.List() {
-				permission, ok := rawPermission.(string)
-				if !ok {
-					continue
-				}
-
-				grantee := &s3.Grantee{}
-
-				if v, ok := tfMap["id"].(string); ok && v != "" {
-					grantee.SetID(v)
-				}
-
-				if v, ok := tfMap["type"].(string); ok && v != "" {
-					grantee.SetType(v)
-				}
-
-				if v, ok := tfMap["uri"].(string); ok && v != "" {
-					grantee.SetURI(v)
-				}
-
-				g := &s3.Grant{
-					Grantee:    grantee,
-					Permission: aws.String(permission),
-				}
-
-				grants = append(grants, g)
-			}
-		}
-	}
-	return grants
-}
-
-func flattenGrants(ap *s3.GetBucketAclOutput) []interface{} {
-	if len(ap.Grants) == 0 {
-		return []interface{}{}
-	}
-
-	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
-		for _, pg := range grants {
-			pgt := pg.(map[string]interface{})
-			if pgt["type"] == grantee["type"] && pgt["id"] == grantee["id"] && pgt["uri"] == grantee["uri"] &&
-				pgt["permissions"].(*schema.Set).Len() > 0 {
-				return pg, true
-			}
-		}
-		return nil, false
-	}
-
-	grants := make([]interface{}, 0, len(ap.Grants))
-	for _, granteeObject := range ap.Grants {
-		grantee := make(map[string]interface{})
-		grantee["type"] = aws.StringValue(granteeObject.Grantee.Type)
-
-		if granteeObject.Grantee.ID != nil {
-			grantee["id"] = aws.StringValue(granteeObject.Grantee.ID)
-		}
-		if granteeObject.Grantee.URI != nil {
-			grantee["uri"] = aws.StringValue(granteeObject.Grantee.URI)
-		}
-		if pg, ok := getGrant(grants, grantee); ok {
-			pg.(map[string]interface{})["permissions"].(*schema.Set).Add(aws.StringValue(granteeObject.Permission))
-		} else {
-			grantee["permissions"] = schema.NewSet(schema.HashString, []interface{}{aws.StringValue(granteeObject.Permission)})
-			grants = append(grants, grantee)
-		}
-	}
-
-	return grants
-}
-
-// Lifecycle Rule functions
-
-func expandBucketLifecycleRules(ctx context.Context, l []interface{}) []types.LifecycleRule {
+func expandBucketWebsiteConfiguration(l []interface{}) (*types.WebsiteConfiguration, error) {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return nil, nil
 	}
 
-	var results []types.LifecycleRule
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		result := types.LifecycleRule{}
-
-		if v, ok := tfMap["abort_incomplete_multipart_upload"].(int); ok && v > 0 {
-			result.AbortIncompleteMultipartUpload = &types.AbortIncompleteMultipartUpload{
-				DaysAfterInitiation: aws.Int32(int32(v)),
-			}
-		}
-
-		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
-			result.Expiration = expandBucketLifecycleRuleExpiration(v)
-		}
-
-		var filter types.LifecycleRuleFilter
-		prefix := tfMap["prefix"].(string)
-		if tags := Tags(tftags.New(ctx, tfMap["tags"]).IgnoreAWS()); len(tags) > 0 {
-			filter = &types.LifecycleRuleFilterMemberAnd{
-				Value: types.LifecycleRuleAndOperator{
-					Prefix: aws.String(prefix),
-					Tags:   tags,
-				},
-			}
-		} else {
-			filter = &types.LifecycleRuleFilterMemberPrefix{
-				Value: prefix,
-			}
-		}
-		result.Filter = filter
-
-		if v, ok := tfMap["id"].(string); ok {
-			result.ID = aws.String(v)
-		} else {
-			result.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
-		}
-
-		if v, ok := tfMap["noncurrent_version_expiration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.NoncurrentVersionExpiration = expandBucketLifecycleRuleNoncurrentVersionExpiration(v[0].(map[string]interface{}))
-		}
-
-		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.NoncurrentVersionTransitions = expandBucketLifecycleRuleNoncurrentVersionTransitions(v.List())
-		}
-
-		if v, ok := tfMap["enabled"].(bool); ok && v {
-			result.Status = types.ExpirationStatusEnabled
-		} else {
-			result.Status = types.ExpirationStatusDisabled
-		}
-
-		if v, ok := tfMap["transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.Transitions = expandBucketLifecycleRuleTransitions(v.List())
-		}
-
-		// As a lifecycle rule requires 1 or more transition/expiration actions,
-		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
-		// the rule while keeping the policy unaffected if the conditions are not met.
-		if result.AbortIncompleteMultipartUpload == nil && result.Expiration == nil && result.NoncurrentVersionExpiration == nil && result.NoncurrentVersionTransitions == nil && result.Transitions == nil {
-			result.Expiration = &types.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
-		}
-
-		results = append(results, result)
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil, nil
 	}
 
-	return results
+	websiteConfig := &types.WebsiteConfiguration{}
+
+	if v, ok := tfMap["index_document"].(string); ok && v != "" {
+		websiteConfig.IndexDocument = &types.IndexDocument{
+			Suffix: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["error_document"].(string); ok && v != "" {
+		websiteConfig.ErrorDocument = &types.ErrorDocument{
+			Key: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["redirect_all_requests_to"].(string); ok && v != "" {
+		redirect, err := url.Parse(v)
+		if err == nil && redirect.Scheme != "" {
+			var buf bytes.Buffer
+
+			buf.WriteString(redirect.Host)
+			if redirect.Path != "" {
+				buf.WriteString(redirect.Path)
+			}
+			if redirect.RawQuery != "" {
+				buf.WriteString("?")
+				buf.WriteString(redirect.RawQuery)
+			}
+			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
+				HostName: aws.String(buf.String()),
+				Protocol: types.Protocol(redirect.Scheme),
+			}
+		} else {
+			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
+				HostName: aws.String(v),
+			}
+		}
+	}
+
+	if v, ok := tfMap["routing_rules"].(string); ok && v != "" {
+		var routingRules []types.RoutingRule
+		if err := json.Unmarshal([]byte(v), &routingRules); err != nil {
+			return nil, err
+		}
+		websiteConfig.RoutingRules = routingRules
+	}
+
+	return websiteConfig, nil
 }
 
-func expandBucketLifecycleRuleExpiration(l []interface{}) *types.LifecycleExpiration {
-	if len(l) == 0 {
-		return nil
+func flattenBucketWebsite(apiObject *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
+	if apiObject == nil {
+		return []interface{}{}, nil
 	}
 
-	result := &types.LifecycleExpiration{}
+	m := make(map[string]interface{})
 
-	if l[0] == nil {
-		return result
+	if v := apiObject.IndexDocument; v != nil {
+		m["index_document"] = aws.ToString(v.Suffix)
 	}
 
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["date"].(string); ok && v != "" {
-		t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
-		result.Date = aws.Time(t)
-	} else if v, ok := m["days"].(int); ok && v > 0 {
-		result.Days = aws.Int32(int32(v))
-	} else if v, ok := m["expired_object_delete_marker"].(bool); ok {
-		result.ExpiredObjectDeleteMarker = aws.Bool(v)
+	if v := apiObject.ErrorDocument; v != nil {
+		m["error_document"] = aws.ToString(v.Key)
 	}
 
-	return result
-}
+	if apiObject := apiObject.RedirectAllRequestsTo; apiObject != nil {
+		hostName := aws.ToString(apiObject.HostName)
 
-func expandBucketLifecycleRuleNoncurrentVersionExpiration(m map[string]interface{}) *types.NoncurrentVersionExpiration {
+		if apiObject.Protocol == "" {
+			m["redirect_all_requests_to"] = hostName
+		} else {
+			var host string
+			var path string
+			var query string
+
+			parsedHostName, err := url.Parse(hostName)
+			if err == nil {
+				host = parsedHostName.Host
+				path = parsedHostName.Path
+				query = parsedHostName.RawQuery
+			} else {
+				host = hostName
+			}
+
+			m["redirect_all_requests_to"] = (&url.URL{
+				Scheme:   string(apiObject.Protocol),
+				Host:     host,
+				Path:     path,
+				RawQuery: query,
+			}).String()
+		}
+	}
+
+	if apiObject := apiObject.RoutingRules; apiObject != nil {
+		rr, err := normalizeRoutingRules(apiObject)
+		if err != nil {
+			return nil, err
+		}
+		m["routing_rules"] = rr
+	}
+
+	// We have special handling for the website configuration,
+	// so only return the configuration if there is one.
 	if len(m) == 0 {
-		return nil
+		return []interface{}{}, nil
 	}
 
-	var result *types.NoncurrentVersionExpiration
-
-	if v, ok := m["days"].(int); ok {
-		result = &types.NoncurrentVersionExpiration{
-			NoncurrentDays: aws.Int32(int32(v)),
-		}
-	}
-
-	return result
+	return []interface{}{m}, nil
 }
 
-func expandBucketLifecycleRuleNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersionTransition {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	var results []types.NoncurrentVersionTransition
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		transition := types.NoncurrentVersionTransition{}
-
-		if v, ok := tfMap["days"].(int); ok {
-			transition.NoncurrentDays = aws.Int32(int32(v))
-		}
-
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
-			transition.StorageClass = types.TransitionStorageClass(v)
-		}
-
-		results = append(results, transition)
-	}
-
-	return results
-}
-
-func expandBucketLifecycleRuleTransitions(l []interface{}) []types.Transition {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	var results []types.Transition
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		transition := types.Transition{}
-
-		if v, ok := tfMap["date"].(string); ok && v != "" {
-			t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
-			transition.Date = aws.Time(t)
-		} else if v, ok := tfMap["days"].(int); ok && v >= 0 {
-			transition.Days = aws.Int32(int32(v))
-		}
-
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
-			transition.StorageClass = types.TransitionStorageClass(v)
-		}
-
-		results = append(results, transition)
-	}
-
-	return results
-}
-
-func flattenBucketLifecycleRuleExpiration(expiration *s3.LifecycleExpiration) []interface{} {
-	if expiration == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if expiration.Date != nil {
-		m["date"] = (aws.TimeValue(expiration.Date)).Format("2006-01-02")
-	}
-	if expiration.Days != nil {
-		m["days"] = int(aws.Int64Value(expiration.Days))
-	}
-	if expiration.ExpiredObjectDeleteMarker != nil {
-		m["expired_object_delete_marker"] = aws.BoolValue(expiration.ExpiredObjectDeleteMarker)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBucketLifecycleRules(ctx context.Context, lifecycleRules []*s3.LifecycleRule) []interface{} {
-	if len(lifecycleRules) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, lifecycleRule := range lifecycleRules {
-		if lifecycleRule == nil {
-			continue
-		}
-
-		rule := make(map[string]interface{})
-
-		// AbortIncompleteMultipartUploadDays
-		if lifecycleRule.AbortIncompleteMultipartUpload != nil {
-			if lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation != nil {
-				rule["abort_incomplete_multipart_upload_days"] = int(aws.Int64Value(lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation))
-			}
-		}
-
-		// ID
-		if lifecycleRule.ID != nil {
-			rule["id"] = aws.StringValue(lifecycleRule.ID)
-		}
-
-		// Filter
-		if filter := lifecycleRule.Filter; filter != nil {
-			if filter.And != nil {
-				// Prefix
-				if filter.And.Prefix != nil {
-					rule["prefix"] = aws.StringValue(filter.And.Prefix)
-				}
-				// Tag
-				if len(filter.And.Tags) > 0 {
-					rule["tags"] = KeyValueTags(ctx, filter.And.Tags).IgnoreAWS().Map()
-				}
-			} else {
-				// Prefix
-				if filter.Prefix != nil {
-					rule["prefix"] = aws.StringValue(filter.Prefix)
-				}
-				// Tag
-				if filter.Tag != nil {
-					rule["tags"] = KeyValueTags(ctx, []*s3.Tag{filter.Tag}).IgnoreAWS().Map()
-				}
-			}
-		}
-
-		// Prefix
-		if lifecycleRule.Prefix != nil {
-			rule["prefix"] = aws.StringValue(lifecycleRule.Prefix)
-		}
-
-		// Enabled
-		if lifecycleRule.Status != nil {
-			if aws.StringValue(lifecycleRule.Status) == s3.ExpirationStatusEnabled {
-				rule["enabled"] = true
-			} else {
-				rule["enabled"] = false
-			}
-		}
-
-		// Expiration
-		if lifecycleRule.Expiration != nil {
-			rule["expiration"] = flattenBucketLifecycleRuleExpiration(lifecycleRule.Expiration)
-		}
-
-		// NoncurrentVersionExpiration
-		if lifecycleRule.NoncurrentVersionExpiration != nil {
-			e := make(map[string]interface{})
-			if lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays != nil {
-				e["days"] = int(aws.Int64Value(lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays))
-			}
-			rule["noncurrent_version_expiration"] = []interface{}{e}
-		}
-
-		// NoncurrentVersionTransition
-		if len(lifecycleRule.NoncurrentVersionTransitions) > 0 {
-			rule["noncurrent_version_transition"] = flattenBucketLifecycleRuleNoncurrentVersionTransitions(lifecycleRule.NoncurrentVersionTransitions)
-		}
-
-		// Transition
-		if len(lifecycleRule.Transitions) > 0 {
-			rule["transition"] = flattenBucketLifecycleRuleTransitions(lifecycleRule.Transitions)
-		}
-
-		results = append(results, rule)
-	}
-
-	return results
-}
-
-func flattenBucketLifecycleRuleNoncurrentVersionTransitions(transitions []*s3.NoncurrentVersionTransition) []interface{} {
-	if len(transitions) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, t := range transitions {
-		m := make(map[string]interface{})
-
-		if t.NoncurrentDays != nil {
-			m["days"] = int(aws.Int64Value(t.NoncurrentDays))
-		}
-
-		if t.StorageClass != nil {
-			m["storage_class"] = aws.StringValue(t.StorageClass)
-		}
-
-		results = append(results, m)
-	}
-
-	return results
-}
-
-func flattenBucketLifecycleRuleTransitions(transitions []*s3.Transition) []interface{} {
-	if len(transitions) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, t := range transitions {
-		m := make(map[string]interface{})
-
-		if t.Date != nil {
-			m["date"] = (aws.TimeValue(t.Date)).Format("2006-01-02")
-		}
-		if t.Days != nil {
-			m["days"] = int(aws.Int64Value(t.Days))
-		}
-		if t.StorageClass != nil {
-			m["storage_class"] = aws.StringValue(t.StorageClass)
-		}
-
-		results = append(results, m)
-	}
-
-	return results
-}
-
-// Logging functions
-
-func flattenBucketLoggingEnabled(loggingEnabled *s3.LoggingEnabled) []interface{} {
-	if loggingEnabled == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if loggingEnabled.TargetBucket != nil {
-		m["target_bucket"] = aws.StringValue(loggingEnabled.TargetBucket)
-	}
-	if loggingEnabled.TargetPrefix != nil {
-		m["target_prefix"] = aws.StringValue(loggingEnabled.TargetPrefix)
-	}
-
-	return []interface{}{m}
-}
-
-func expandBucketServerSideEncryptionRules(l []interface{}) []types.ServerSideEncryptionRule {
-	var rules []types.ServerSideEncryptionRule
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		rule := types.ServerSideEncryptionRule{}
-
-		if v, ok := tfMap["apply_server_side_encryption_by_default"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.ApplyServerSideEncryptionByDefault = expandBucketServerSideEncryptionByDefault(v)
-		}
-
-		if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
-			rule.BucketKeyEnabled = aws.Bool(v)
-		}
-
-		rules = append(rules, rule)
-	}
-
-	return rules
-}
-
-func expandBucketServerSideEncryptionByDefault(l []interface{}) *types.ServerSideEncryptionByDefault {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	sse := &types.ServerSideEncryptionByDefault{}
-
-	if v, ok := tfMap["kms_master_key_id"].(string); ok && v != "" {
-		sse.KMSMasterKeyID = aws.String(v)
-	}
-
-	if v, ok := tfMap["sse_algorithm"].(string); ok && v != "" {
-		sse.SSEAlgorithm = types.ServerSideEncryption(v)
-	}
-
-	return sse
-}
-
-// Object Lock Configuration functions
-
-func expandBucketObjectLockConfiguration(l []interface{}) *types.ObjectLockConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	apiObject := &types.ObjectLockConfiguration{}
-
-	if v, ok := tfMap["object_lock_enabled"].(string); ok && v != "" {
-		apiObject.ObjectLockEnabled = types.ObjectLockEnabled(v)
-	}
-
-	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 {
-		tfMap := v[0].(map[string]interface{})
-
-		if v, ok := tfMap["default_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			tfMap := v[0].(map[string]interface{})
-
-			apiObject.Rule = &types.ObjectLockRule{
-				DefaultRetention: &types.DefaultRetention{},
-			}
-
-			if v, ok := tfMap["days"].(int); ok && v > 0 {
-				apiObject.Rule.DefaultRetention.Days = aws.Int32(int32(v))
-			}
-			if v, ok := tfMap["mode"].(string); ok && v != "" {
-				apiObject.Rule.DefaultRetention.Mode = types.ObjectLockRetentionMode(v)
-			}
-			if v, ok := tfMap["years"].(int); ok && v > 0 {
-				apiObject.Rule.DefaultRetention.Years = aws.Int32(int32(v))
-			}
-		}
-	}
-
-	return apiObject
-}
-
-func flattenObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interface{} {
-	if conf == nil {
-		return []interface{}{}
-	}
-
-	mConf := map[string]interface{}{
-		"object_lock_enabled": aws.StringValue(conf.ObjectLockEnabled),
-	}
-
-	if conf.Rule != nil && conf.Rule.DefaultRetention != nil {
-		mRule := map[string]interface{}{
-			"default_retention": []interface{}{
-				map[string]interface{}{
-					"mode":  aws.StringValue(conf.Rule.DefaultRetention.Mode),
-					"days":  int(aws.Int64Value(conf.Rule.DefaultRetention.Days)),
-					"years": int(aws.Int64Value(conf.Rule.DefaultRetention.Years)),
-				},
-			},
-		}
-
-		mConf["rule"] = []interface{}{mRule}
-	}
-
-	return []interface{}{mConf}
-}
-
-func expandBucketReplicationConfiguration(ctx context.Context, l []interface{}) *types.ReplicationConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	apiObject := &types.ReplicationConfiguration{}
-
-	if v, ok := tfMap["role"].(string); ok {
-		apiObject.Role = aws.String(v)
-	}
-
-	if v, ok := tfMap["rules"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Rules = expandBucketReplicationConfigurationRules(ctx, v.List())
-	}
-
-	return apiObject
-}
-
-func expandBucketReplicationConfigurationRules(ctx context.Context, l []interface{}) []types.ReplicationRule {
-	var rules []types.ReplicationRule
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		rule := types.ReplicationRule{}
-
-		if v, ok := tfMap["status"].(string); ok && v != "" {
-			rule.Status = types.ReplicationRuleStatus(v)
-		} else {
-			continue
-		}
-
-		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.Destination = expandBucketReplicationConfigurationRulesDestination(v)
-		} else {
-			rule.Destination = &types.Destination{}
-		}
-
-		if v, ok := tfMap["id"].(string); ok && v != "" {
-			rule.ID = aws.String(v)
-		}
-
-		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.SourceSelectionCriteria = expandBucketReplicationConfigurationRulesSourceSelectionCriteria(v)
-		}
-
-		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.SourceSelectionCriteria = expandBucketReplicationConfigurationRulesSourceSelectionCriteria(v)
-		}
-
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			// XML schema V2.
-			tfMap := v[0].(map[string]interface{})
-			var filter types.ReplicationRuleFilter
-
-			if tags := Tags(tftags.New(ctx, tfMap["tags"]).IgnoreAWS()); len(tags) > 0 {
-				filter = &types.ReplicationRuleFilterMemberAnd{
-					Value: types.ReplicationRuleAndOperator{
-						Prefix: aws.String(tfMap["prefix"].(string)),
-						Tags:   tags,
-					},
-				}
-			} else {
-				filter = &types.ReplicationRuleFilterMemberPrefix{
-					Value: tfMap["prefix"].(string),
-				}
-			}
-
-			rule.Filter = filter
-			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
-
-			if v, ok := tfMap["delete_marker_replication_status"].(string); ok && v != "" {
-				rule.DeleteMarkerReplication = &types.DeleteMarkerReplication{
-					Status: types.DeleteMarkerReplicationStatus(v),
-				}
-			} else {
-				rule.DeleteMarkerReplication = &types.DeleteMarkerReplication{
-					Status: types.DeleteMarkerReplicationStatusDisabled,
-				}
-			}
-		} else {
-			// XML schema V1.
-			rule.Prefix = aws.String(tfMap["prefix"].(string))
-		}
-
-		rules = append(rules, rule)
-	}
-
-	return rules
-}
-
-func expandBucketReplicationConfigurationRulesDestination(l []interface{}) *types.Destination {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	apiObject := &types.Destination{}
-
-	if v, ok := tfMap["bucket"].(string); ok {
-		apiObject.Bucket = aws.String(v)
-	}
-
-	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
-		apiObject.StorageClass = types.StorageClass(v)
-	}
-
-	if v, ok := tfMap["replica_kms_key_id"].(string); ok && v != "" {
-		apiObject.EncryptionConfiguration = &types.EncryptionConfiguration{
-			ReplicaKmsKeyID: aws.String(v),
-		}
-	}
-
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
-		apiObject.Account = aws.String(v)
-	}
-
-	if v, ok := tfMap["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		aclTranslationValues := v[0].(map[string]interface{})
-		ruleAclTranslation := &s3.AccessControlTranslation{}
-		ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
-		apiObject.AccessControlTranslation = ruleAclTranslation
-	}
-
-	// replication metrics (required for RTC)
-	if v, ok := tfMap["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		metricsConfig := &s3.Metrics{}
-		metricsValues := v[0].(map[string]interface{})
-		metricsConfig.EventThreshold = &s3.ReplicationTimeValue{}
-		metricsConfig.Status = aws.String(metricsValues["status"].(string))
-		metricsConfig.EventThreshold.Minutes = aws.Int64(int64(metricsValues["minutes"].(int)))
-		apiObject.Metrics = metricsConfig
-	}
-
-	// replication time control (RTC)
-	if v, ok := tfMap["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		rtcValues := v[0].(map[string]interface{})
-		rtcConfig := &s3.ReplicationTime{}
-		rtcConfig.Status = aws.String(rtcValues["status"].(string))
-		rtcConfig.Time = &s3.ReplicationTimeValue{}
-		rtcConfig.Time.Minutes = aws.Int64(int64(rtcValues["minutes"].(int)))
-		apiObject.ReplicationTime = rtcConfig
-	}
-
-	return apiObject
-}
-
-func expandBucketReplicationConfigurationRulesSourceSelectionCriteria(l []interface{}) *types.SourceSelectionCriteria {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	result := &types.SourceSelectionCriteria{}
-
-	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		tfMap := v[0].(map[string]interface{})
-		apiObject := &types.SseKmsEncryptedObjects{}
-
-		if tfMap["enabled"].(bool) {
-			apiObject.Status = types.SseKmsEncryptedObjectsStatusEnabled
-		} else {
-			apiObject.Status = types.SseKmsEncryptedObjectsStatusDisabled
-		}
-
-		result.SseKmsEncryptedObjects = apiObject
-	}
-
-	return result
-}
-
-func flattenBucketReplicationConfiguration(ctx context.Context, r *s3.ReplicationConfiguration) []interface{} {
-	if r == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if r.Role != nil {
-		m["role"] = aws.StringValue(r.Role)
-	}
-
-	if len(r.Rules) > 0 {
-		m["rules"] = flattenBucketReplicationConfigurationReplicationRules(ctx, r.Rules)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBucketReplicationConfigurationReplicationRuleDestination(d *s3.Destination) []interface{} {
-	if d == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if d.Bucket != nil {
-		m["bucket"] = aws.StringValue(d.Bucket)
-	}
-
-	if d.StorageClass != nil {
-		m["storage_class"] = aws.StringValue(d.StorageClass)
-	}
-
-	if d.ReplicationTime != nil {
-		rtc := map[string]interface{}{
-			"minutes": int(aws.Int64Value(d.ReplicationTime.Time.Minutes)),
-			"status":  aws.StringValue(d.ReplicationTime.Status),
-		}
-		m["replication_time"] = []interface{}{rtc}
-	}
-
-	if d.Metrics != nil {
-		metrics := map[string]interface{}{
-			"status": aws.StringValue(d.Metrics.Status),
-		}
-
-		if d.Metrics.EventThreshold != nil {
-			metrics["minutes"] = int(aws.Int64Value(d.Metrics.EventThreshold.Minutes))
-		}
-
-		m["metrics"] = []interface{}{metrics}
-	}
-	if d.EncryptionConfiguration != nil {
-		if d.EncryptionConfiguration.ReplicaKmsKeyID != nil {
-			m["replica_kms_key_id"] = aws.StringValue(d.EncryptionConfiguration.ReplicaKmsKeyID)
-		}
-	}
-
-	if d.Account != nil {
-		m["account_id"] = aws.StringValue(d.Account)
-	}
-
-	if d.AccessControlTranslation != nil {
-		rdt := map[string]interface{}{
-			"owner": aws.StringValue(d.AccessControlTranslation.Owner),
-		}
-		m["access_control_translation"] = []interface{}{rdt}
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBucketReplicationConfigurationReplicationRuleFilter(ctx context.Context, filter *s3.ReplicationRuleFilter) []interface{} {
-	if filter == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if filter.Prefix != nil {
-		m["prefix"] = aws.StringValue(filter.Prefix)
-	}
-
-	if filter.Tag != nil {
-		m["tags"] = KeyValueTags(ctx, []*s3.Tag{filter.Tag}).IgnoreAWS().Map()
-	}
-
-	if filter.And != nil {
-		m["prefix"] = aws.StringValue(filter.And.Prefix)
-		m["tags"] = KeyValueTags(ctx, filter.And.Tags).IgnoreAWS().Map()
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteria(ssc *s3.SourceSelectionCriteria) []interface{} {
-	if ssc == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if ssc.SseKmsEncryptedObjects != nil {
-		m["sse_kms_encrypted_objects"] = flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteriaSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteriaSSEKMSEncryptedObjects(objs *s3.SseKmsEncryptedObjects) []interface{} {
-	if objs == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if aws.StringValue(objs.Status) == s3.SseKmsEncryptedObjectsStatusEnabled {
-		m["enabled"] = true
-	} else if aws.StringValue(objs.Status) == s3.SseKmsEncryptedObjectsStatusDisabled {
-		m["enabled"] = false
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBucketReplicationConfigurationReplicationRules(ctx context.Context, rules []*s3.ReplicationRule) []interface{} {
-	var results []interface{}
-
-	for _, rule := range rules {
-		if rule == nil {
-			continue
-		}
-
-		m := make(map[string]interface{})
-
-		if rule.Destination != nil {
-			m["destination"] = flattenBucketReplicationConfigurationReplicationRuleDestination(rule.Destination)
-		}
-
-		if rule.ID != nil {
-			m["id"] = aws.StringValue(rule.ID)
-		}
-
-		if rule.Prefix != nil {
-			m["prefix"] = aws.StringValue(rule.Prefix)
-		}
-		if rule.Status != nil {
-			m["status"] = aws.StringValue(rule.Status)
-		}
-		if rule.SourceSelectionCriteria != nil {
-			m["source_selection_criteria"] = flattenBucketReplicationConfigurationReplicationRuleSourceSelectionCriteria(rule.SourceSelectionCriteria)
-		}
-
-		if rule.Priority != nil {
-			m["priority"] = int(aws.Int64Value(rule.Priority))
-		}
-
-		if rule.Filter != nil {
-			m["filter"] = flattenBucketReplicationConfigurationReplicationRuleFilter(ctx, rule.Filter)
-		}
-
-		if rule.DeleteMarkerReplication != nil {
-			if rule.DeleteMarkerReplication.Status != nil && aws.StringValue(rule.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
-				m["delete_marker_replication_status"] = aws.StringValue(rule.DeleteMarkerReplication.Status)
-			}
-		}
-
-		results = append(results, m)
-	}
-
-	return results
-}
-
-// Server Side Encryption Configuration functions
-
-func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []interface{} {
-	if c == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"rule": flattenServerSideEncryptionConfigurationRules(c.Rules),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenServerSideEncryptionConfigurationRules(rules []*s3.ServerSideEncryptionRule) []interface{} {
-	var results []interface{}
-
-	for _, rule := range rules {
-		m := make(map[string]interface{})
-
-		if rule.BucketKeyEnabled != nil {
-			m["bucket_key_enabled"] = aws.BoolValue(rule.BucketKeyEnabled)
-		}
-
-		if rule.ApplyServerSideEncryptionByDefault != nil {
-			m["apply_server_side_encryption_by_default"] = []interface{}{
-				map[string]interface{}{
-					"kms_master_key_id": aws.StringValue(rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID),
-					"sse_algorithm":     aws.StringValue(rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm),
-				},
-			}
-		}
-
-		results = append(results, m)
-	}
-
-	return results
-}
-
-// Versioning functions
+//
+// Bucket Versioning.
+//
 
 func expandBucketVersioningConfigurationCreate(l []interface{}) *types.VersioningConfiguration {
 	if len(l) == 0 || l[0] == nil {
@@ -2799,188 +1966,976 @@ func expandBucketVersioningConfigurationUpdate(l []interface{}) *types.Versionin
 	return apiObject
 }
 
-func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
-	if versioning == nil {
+func flattenBucketVersioning(config *s3.GetBucketVersioningOutput) []interface{} {
+	if config == nil {
 		return []interface{}{}
 	}
 
-	vc := make(map[string]interface{})
-
-	if aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
-		vc["enabled"] = true
-	} else {
-		vc["enabled"] = false
+	m := map[string]interface{}{
+		"enabled":    config.Status == types.BucketVersioningStatusEnabled,
+		"mfa_delete": config.MFADelete == types.MFADeleteStatusEnabled,
 	}
 
-	if aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
-		vc["mfa_delete"] = true
-	} else {
-		vc["mfa_delete"] = false
-	}
-
-	return []interface{}{vc}
+	return []interface{}{m}
 }
 
-// Website functions
+//
+// Bucket ACL.
+//
 
-func expandBucketWebsiteConfiguration(l []interface{}) (*types.WebsiteConfiguration, error) {
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
+func expandBucketGrants(l []interface{}) []types.Grant {
+	var grants []types.Grant
 
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil, nil
-	}
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-	websiteConfig := &types.WebsiteConfiguration{}
+		if v, ok := tfMap["permissions"].(*schema.Set); ok {
+			for _, rawPermission := range v.List() {
+				permission, ok := rawPermission.(string)
+				if !ok {
+					continue
+				}
 
-	if v, ok := tfMap["index_document"].(string); ok && v != "" {
-		websiteConfig.IndexDocument = &types.IndexDocument{
-			Suffix: aws.String(v),
+				grantee := &types.Grantee{}
+
+				if v, ok := tfMap["id"].(string); ok && v != "" {
+					grantee.ID = aws.String(v)
+				}
+
+				if v, ok := tfMap["type"].(string); ok && v != "" {
+					grantee.Type = types.Type(v)
+				}
+
+				if v, ok := tfMap["uri"].(string); ok && v != "" {
+					grantee.URI = aws.String(v)
+				}
+
+				grant := types.Grant{
+					Grantee:    grantee,
+					Permission: types.Permission(permission),
+				}
+
+				grants = append(grants, grant)
+			}
 		}
 	}
 
-	if v, ok := tfMap["error_document"].(string); ok && v != "" {
-		websiteConfig.ErrorDocument = &types.ErrorDocument{
-			Key: aws.String(v),
-		}
+	return grants
+}
+
+func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
+	if len(apiObject.Grants) == 0 {
+		return []interface{}{}
 	}
 
-	if v, ok := tfMap["redirect_all_requests_to"].(string); ok && v != "" {
-		redirect, err := url.Parse(v)
-		if err == nil && redirect.Scheme != "" {
-			var buf bytes.Buffer
+	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
+		for _, grant := range grants {
+			tfMap := grant.(map[string]interface{})
+			if tfMap["type"] == grantee["type"] && tfMap["id"] == grantee["id"] && tfMap["uri"] == grantee["uri"] && tfMap["permissions"].(*schema.Set).Len() > 0 {
+				return grant, true
+			}
+		}
+		return nil, false
+	}
 
-			buf.WriteString(redirect.Host)
-			if redirect.Path != "" {
-				buf.WriteString(redirect.Path)
-			}
-			if redirect.RawQuery != "" {
-				buf.WriteString("?")
-				buf.WriteString(redirect.RawQuery)
-			}
-			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
-				HostName: aws.String(buf.String()),
-				Protocol: types.Protocol(redirect.Scheme),
-			}
+	results := make([]interface{}, 0, len(apiObject.Grants))
+
+	for _, apiObject := range apiObject.Grants {
+		grantee := apiObject.Grantee
+
+		m := map[string]interface{}{
+			"type": grantee.Type,
+		}
+
+		if grantee.ID != nil {
+			m["id"] = aws.ToString(grantee.ID)
+		}
+
+		if grantee.URI != nil {
+			m["uri"] = aws.ToString(grantee.URI)
+		}
+
+		if v, ok := getGrant(results, m); ok {
+			v.(map[string]interface{})["permissions"].(*schema.Set).Add(apiObject.Permission)
 		} else {
-			websiteConfig.RedirectAllRequestsTo = &types.RedirectAllRequestsTo{
-				HostName: aws.String(v),
-			}
+			m["permissions"] = schema.NewSet(schema.HashString, []interface{}{apiObject.Permission})
+			results = append(results, m)
 		}
 	}
 
-	if v, ok := tfMap["routing_rules"].(string); ok && v != "" {
-		var routingRules []types.RoutingRule
-		if err := json.Unmarshal([]byte(v), &routingRules); err != nil {
-			return nil, err
-		}
-		websiteConfig.RoutingRules = routingRules
-	}
-
-	return websiteConfig, nil
+	return results
 }
 
-func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
-	if ws == nil {
-		return []interface{}{}, nil
+//
+// Bucket Logging.
+//
+
+func flattenBucketLoggingEnabled(apiObject *types.LoggingEnabled) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 
-	if v := ws.IndexDocument; v != nil {
-		m["index_document"] = aws.StringValue(v.Suffix)
+	if apiObject.TargetBucket != nil {
+		m["target_bucket"] = aws.ToString(apiObject.TargetBucket)
 	}
 
-	if v := ws.ErrorDocument; v != nil {
-		m["error_document"] = aws.StringValue(v.Key)
+	if apiObject.TargetPrefix != nil {
+		m["target_prefix"] = aws.ToString(apiObject.TargetPrefix)
 	}
 
-	if v := ws.RedirectAllRequestsTo; v != nil {
-		if v.Protocol == nil {
-			m["redirect_all_requests_to"] = aws.StringValue(v.HostName)
-		} else {
-			var host string
-			var path string
-			var query string
-			parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
-			if err == nil {
-				host = parsedHostName.Host
-				path = parsedHostName.Path
-				query = parsedHostName.RawQuery
-			} else {
-				host = aws.StringValue(v.HostName)
-				path = ""
-			}
-
-			m["redirect_all_requests_to"] = (&url.URL{
-				Host:     host,
-				Path:     path,
-				Scheme:   aws.StringValue(v.Protocol),
-				RawQuery: query,
-			}).String()
-		}
-	}
-
-	if v := ws.RoutingRules; v != nil {
-		rr, err := normalizeRoutingRules(v)
-		if err != nil {
-			return nil, fmt.Errorf("while marshaling routing rules: %w", err)
-		}
-		m["routing_rules"] = rr
-	}
-
-	// We have special handling for the website configuration,
-	// so only return the configuration if there is any
-	if len(m) == 0 {
-		return []interface{}{}, nil
-	}
-
-	return []interface{}{m}, nil
+	return []interface{}{m}
 }
 
-func normalizeRoutingRules(w []*s3.RoutingRule) (string, error) {
-	withNulls, err := json.Marshal(w)
-	if err != nil {
-		return "", err
+//
+// Bucket Lifecycle Configuration.
+//
+
+func expandBucketLifecycleRules(ctx context.Context, l []interface{}) []types.LifecycleRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
 	}
 
-	var rules []map[string]interface{}
-	if err := json.Unmarshal(withNulls, &rules); err != nil {
-		return "", err
-	}
+	var results []types.LifecycleRule
 
-	var cleanRules []map[string]interface{}
-	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
-	}
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-	withoutNulls, err := json.Marshal(cleanRules)
-	if err != nil {
-		return "", err
-	}
-
-	return string(withoutNulls), nil
-}
-
-func removeNil(data map[string]interface{}) map[string]interface{} {
-	withoutNil := make(map[string]interface{})
-
-	for k, v := range data {
-		if v == nil {
+		if !ok {
 			continue
 		}
 
-		switch v := v.(type) {
-		case map[string]interface{}:
-			withoutNil[k] = removeNil(v)
-		default:
-			withoutNil[k] = v
+		result := types.LifecycleRule{}
+
+		if v, ok := tfMap["abort_incomplete_multipart_upload"].(int); ok && v > 0 {
+			result.AbortIncompleteMultipartUpload = &types.AbortIncompleteMultipartUpload{
+				DaysAfterInitiation: aws.Int32(int32(v)),
+			}
+		}
+
+		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
+			result.Expiration = expandBucketLifecycleExpiration(v)
+		}
+
+		var filter types.LifecycleRuleFilter
+		prefix := tfMap["prefix"].(string)
+		if tags := Tags(tftags.New(ctx, tfMap["tags"]).IgnoreAWS()); len(tags) > 0 {
+			filter = &types.LifecycleRuleFilterMemberAnd{
+				Value: types.LifecycleRuleAndOperator{
+					Prefix: aws.String(prefix),
+					Tags:   tags,
+				},
+			}
+		} else {
+			filter = &types.LifecycleRuleFilterMemberPrefix{
+				Value: prefix,
+			}
+		}
+		result.Filter = filter
+
+		if v, ok := tfMap["id"].(string); ok {
+			result.ID = aws.String(v)
+		} else {
+			result.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
+		}
+
+		if v, ok := tfMap["noncurrent_version_expiration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			result.NoncurrentVersionExpiration = expandBucketNoncurrentVersionExpiration(v[0].(map[string]interface{}))
+		}
+
+		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
+			result.NoncurrentVersionTransitions = expandBucketNoncurrentVersionTransition(v.List())
+		}
+
+		if v, ok := tfMap["enabled"].(bool); ok && v {
+			result.Status = types.ExpirationStatusEnabled
+		} else {
+			result.Status = types.ExpirationStatusDisabled
+		}
+
+		if v, ok := tfMap["transition"].(*schema.Set); ok && v.Len() > 0 {
+			result.Transitions = expandBucketTransitions(v.List())
+		}
+
+		// As a lifecycle rule requires 1 or more transition/expiration actions,
+		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
+		// the rule while keeping the policy unaffected if the conditions are not met.
+		if result.AbortIncompleteMultipartUpload == nil && result.Expiration == nil && result.NoncurrentVersionExpiration == nil && result.NoncurrentVersionTransitions == nil && result.Transitions == nil {
+			result.Expiration = &types.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
+		}
+
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func expandBucketLifecycleExpiration(l []interface{}) *types.LifecycleExpiration {
+	if len(l) == 0 {
+		return nil
+	}
+
+	result := &types.LifecycleExpiration{}
+
+	if l[0] == nil {
+		return result
+	}
+
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["date"].(string); ok && v != "" {
+		t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
+		result.Date = aws.Time(t)
+	} else if v, ok := m["days"].(int); ok && v > 0 {
+		result.Days = aws.Int32(int32(v))
+	} else if v, ok := m["expired_object_delete_marker"].(bool); ok {
+		result.ExpiredObjectDeleteMarker = aws.Bool(v)
+	}
+
+	return result
+}
+
+func expandBucketNoncurrentVersionExpiration(m map[string]interface{}) *types.NoncurrentVersionExpiration {
+	if len(m) == 0 {
+		return nil
+	}
+
+	var result *types.NoncurrentVersionExpiration
+
+	if v, ok := m["days"].(int); ok {
+		result = &types.NoncurrentVersionExpiration{
+			NoncurrentDays: aws.Int32(int32(v)),
 		}
 	}
 
-	return withoutNil
+	return result
+}
+
+func expandBucketNoncurrentVersionTransition(l []interface{}) []types.NoncurrentVersionTransition {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	var results []types.NoncurrentVersionTransition
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		transition := types.NoncurrentVersionTransition{}
+
+		if v, ok := tfMap["days"].(int); ok {
+			transition.NoncurrentDays = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+			transition.StorageClass = types.TransitionStorageClass(v)
+		}
+
+		results = append(results, transition)
+	}
+
+	return results
+}
+
+func expandBucketTransitions(l []interface{}) []types.Transition {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	var results []types.Transition
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		transition := types.Transition{}
+
+		if v, ok := tfMap["date"].(string); ok && v != "" {
+			t, _ := time.Parse(time.RFC3339, v+"T00:00:00Z")
+			transition.Date = aws.Time(t)
+		} else if v, ok := tfMap["days"].(int); ok && v >= 0 {
+			transition.Days = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+			transition.StorageClass = types.TransitionStorageClass(v)
+		}
+
+		results = append(results, transition)
+	}
+
+	return results
+}
+
+func flattenBucketLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []interface{} {
+	if len(rules) == 0 {
+		return []interface{}{}
+	}
+
+	var results []interface{}
+
+	for _, rule := range rules {
+		m := make(map[string]interface{})
+
+		if apiObject := rule.AbortIncompleteMultipartUpload; apiObject != nil {
+			if apiObject.DaysAfterInitiation != nil {
+				m["abort_incomplete_multipart_upload_days"] = aws.ToInt32(apiObject.DaysAfterInitiation)
+			}
+		}
+
+		if rule.Expiration != nil {
+			m["expiration"] = flattenBucketLifecycleExpiration(rule.Expiration)
+		}
+
+		if filter := rule.Filter; filter != nil {
+			switch v := filter.(type) {
+			case *types.LifecycleRuleFilterMemberAnd:
+				if v := v.Value.Prefix; v != nil {
+					m["prefix"] = aws.ToString(v)
+				}
+				if v := v.Value.Tags; v != nil {
+					m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
+				}
+			case *types.LifecycleRuleFilterMemberPrefix:
+				m["prefix"] = v.Value
+			case *types.LifecycleRuleFilterMemberTag:
+				m["tags"] = keyValueTags(ctx, tfslices.Of(v.Value)).IgnoreAWS().Map()
+			}
+		}
+
+		if rule.ID != nil {
+			m["id"] = aws.ToString(rule.ID)
+		}
+
+		if rule.Prefix != nil {
+			m["prefix"] = aws.ToString(rule.Prefix)
+		}
+
+		m["enabled"] = rule.Status == types.ExpirationStatusEnabled
+
+		if rule.NoncurrentVersionExpiration != nil {
+			tfMap := make(map[string]interface{})
+
+			if apiObject := rule.NoncurrentVersionExpiration.NoncurrentDays; apiObject != nil {
+				tfMap["days"] = aws.ToInt32(apiObject)
+			}
+
+			m["noncurrent_version_expiration"] = []interface{}{tfMap}
+		}
+
+		if rule.NoncurrentVersionTransitions != nil {
+			m["noncurrent_version_transition"] = flattenBucketNoncurrentVersionTransitions(rule.NoncurrentVersionTransitions)
+		}
+
+		if rule.Transitions != nil {
+			m["transition"] = flattenBucketTransitions(rule.Transitions)
+		}
+
+		results = append(results, m)
+	}
+
+	return results
+}
+
+func flattenBucketLifecycleExpiration(expiration *types.LifecycleExpiration) []interface{} {
+	if expiration == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if expiration.Date != nil {
+		m["date"] = expiration.Date.Format("2006-01-02")
+	}
+
+	if expiration.Days != nil {
+		m["days"] = aws.ToInt32(expiration.Days)
+	}
+
+	if expiration.ExpiredObjectDeleteMarker != nil {
+		m["expired_object_delete_marker"] = aws.ToBool(expiration.ExpiredObjectDeleteMarker)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBucketNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTransition) []interface{} {
+	if len(transitions) == 0 {
+		return []interface{}{}
+	}
+
+	var results []interface{}
+
+	for _, transition := range transitions {
+		m := map[string]interface{}{
+			"storage_class": transition.StorageClass,
+		}
+
+		if transition.NoncurrentDays != nil {
+			m["days"] = aws.ToInt32(transition.NoncurrentDays)
+		}
+
+		results = append(results, m)
+	}
+
+	return results
+}
+
+func flattenBucketTransitions(transitions []types.Transition) []interface{} {
+	if len(transitions) == 0 {
+		return []interface{}{}
+	}
+
+	var results []interface{}
+
+	for _, transition := range transitions {
+		m := map[string]interface{}{
+			"storage_class": transition.StorageClass,
+		}
+
+		if transition.Date != nil {
+			m["date"] = transition.Date.Format("2006-01-02")
+		}
+
+		if transition.Days != nil {
+			m["days"] = aws.ToInt32(transition.Days)
+		}
+
+		results = append(results, m)
+	}
+
+	return results
+}
+
+//
+// Bucket Replication Configuration.
+//
+
+func expandBucketReplicationConfiguration(ctx context.Context, l []interface{}) *types.ReplicationConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicationConfiguration{}
+
+	if v, ok := tfMap["role"].(string); ok {
+		apiObject.Role = aws.String(v)
+	}
+
+	if v, ok := tfMap["rules"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Rules = expandBucketReplicationRules(ctx, v.List())
+	}
+
+	return apiObject
+}
+
+func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.ReplicationRule {
+	var rules []types.ReplicationRule
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		rule := types.ReplicationRule{}
+
+		if v, ok := tfMap["status"].(string); ok && v != "" {
+			rule.Status = types.ReplicationRuleStatus(v)
+		} else {
+			continue
+		}
+
+		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.Destination = expandBucketDestination(v)
+		} else {
+			rule.Destination = &types.Destination{}
+		}
+
+		if v, ok := tfMap["id"].(string); ok && v != "" {
+			rule.ID = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.SourceSelectionCriteria = expandBucketSourceSelectionCriteria(v)
+		}
+
+		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			// XML schema V2.
+			tfMap := v[0].(map[string]interface{})
+			var filter types.ReplicationRuleFilter
+
+			if tags := Tags(tftags.New(ctx, tfMap["tags"]).IgnoreAWS()); len(tags) > 0 {
+				filter = &types.ReplicationRuleFilterMemberAnd{
+					Value: types.ReplicationRuleAndOperator{
+						Prefix: aws.String(tfMap["prefix"].(string)),
+						Tags:   tags,
+					},
+				}
+			} else {
+				filter = &types.ReplicationRuleFilterMemberPrefix{
+					Value: tfMap["prefix"].(string),
+				}
+			}
+
+			rule.Filter = filter
+			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
+
+			if v, ok := tfMap["delete_marker_replication_status"].(string); ok && v != "" {
+				rule.DeleteMarkerReplication = &types.DeleteMarkerReplication{
+					Status: types.DeleteMarkerReplicationStatus(v),
+				}
+			} else {
+				rule.DeleteMarkerReplication = &types.DeleteMarkerReplication{
+					Status: types.DeleteMarkerReplicationStatusDisabled,
+				}
+			}
+		} else {
+			// XML schema V1.
+			rule.Prefix = aws.String(tfMap["prefix"].(string))
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func expandBucketDestination(l []interface{}) *types.Destination {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.Destination{}
+
+	if v, ok := tfMap["bucket"].(string); ok {
+		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		apiObject.StorageClass = types.StorageClass(v)
+	}
+
+	if v, ok := tfMap["replica_kms_key_id"].(string); ok && v != "" {
+		apiObject.EncryptionConfiguration = &types.EncryptionConfiguration{
+			ReplicaKmsKeyID: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.Account = aws.String(v)
+	}
+
+	if v, ok := tfMap["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		apiObject.AccessControlTranslation = &types.AccessControlTranslation{
+			Owner: types.OwnerOverride(tfMap["owner"].(string)),
+		}
+	}
+
+	if v, ok := tfMap["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		apiObject.Metrics = &types.Metrics{
+			EventThreshold: &types.ReplicationTimeValue{
+				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+			},
+			Status: types.MetricsStatus(tfMap["status"].(string)),
+		}
+	}
+
+	if v, ok := tfMap["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		apiObject.ReplicationTime = &types.ReplicationTime{
+			Status: types.ReplicationTimeStatus(tfMap["status"].(string)),
+			Time: &types.ReplicationTimeValue{
+				Minutes: aws.Int32(int32(tfMap["minutes"].(int))),
+			},
+		}
+	}
+
+	return apiObject
+}
+
+func expandBucketSourceSelectionCriteria(l []interface{}) *types.SourceSelectionCriteria {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.SourceSelectionCriteria{}
+
+	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+		apiObject := &types.SseKmsEncryptedObjects{}
+
+		if tfMap["enabled"].(bool) {
+			apiObject.Status = types.SseKmsEncryptedObjectsStatusEnabled
+		} else {
+			apiObject.Status = types.SseKmsEncryptedObjectsStatusDisabled
+		}
+
+		result.SseKmsEncryptedObjects = apiObject
+	}
+
+	return result
+}
+
+func flattenBucketReplicationConfiguration(ctx context.Context, apiObject *types.ReplicationConfiguration) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if apiObject.Role != nil {
+		m["role"] = aws.ToString(apiObject.Role)
+	}
+
+	if len(apiObject.Rules) > 0 {
+		m["rules"] = flattenBucketReplicationRules(ctx, apiObject.Rules)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBucketReplicationRules(ctx context.Context, rules []types.ReplicationRule) []interface{} {
+	if len(rules) == 0 {
+		return []interface{}{}
+	}
+
+	var results []interface{}
+
+	for _, rule := range rules {
+		m := map[string]interface{}{
+			"status": rule.Status,
+		}
+
+		if apiObject := rule.DeleteMarkerReplication; apiObject != nil {
+			if apiObject.Status == types.DeleteMarkerReplicationStatusEnabled {
+				m["delete_marker_replication_status"] = apiObject.Status
+			}
+		}
+
+		if rule.Destination != nil {
+			m["destination"] = flattenBucketDestination(rule.Destination)
+		}
+
+		if rule.Filter != nil {
+			m["filter"] = flattenBucketReplicationRuleFilter(ctx, rule.Filter)
+		}
+
+		if rule.ID != nil {
+			m["id"] = aws.ToString(rule.ID)
+		}
+
+		if rule.Priority != nil {
+			m["priority"] = aws.ToInt32(rule.Priority)
+		}
+
+		if rule.Prefix != nil {
+			m["prefix"] = aws.ToString(rule.Prefix)
+		}
+
+		if rule.SourceSelectionCriteria != nil {
+			m["source_selection_criteria"] = flattenBucketSourceSelectionCriteria(rule.SourceSelectionCriteria)
+		}
+
+		results = append(results, m)
+	}
+
+	return results
+}
+
+func flattenBucketDestination(dest *types.Destination) []interface{} {
+	if dest == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"storage_class": dest.StorageClass,
+	}
+
+	if apiObject := dest.AccessControlTranslation; apiObject != nil {
+		tfMap := map[string]interface{}{
+			"owner": apiObject.Owner,
+		}
+
+		m["access_control_translation"] = []interface{}{tfMap}
+	}
+
+	if dest.Account != nil {
+		m["account"] = aws.ToString(dest.Account)
+	}
+
+	if dest.Bucket != nil {
+		m["bucket"] = aws.ToString(dest.Bucket)
+	}
+
+	if apiObject := dest.EncryptionConfiguration; apiObject != nil {
+		if apiObject.ReplicaKmsKeyID != nil {
+			m["replica_kms_key_id"] = aws.ToString(apiObject.ReplicaKmsKeyID)
+		}
+	}
+
+	if apiObject := dest.Metrics; apiObject != nil {
+		tfMap := map[string]interface{}{
+			"status": apiObject.Status,
+		}
+
+		if apiObject.EventThreshold != nil {
+			tfMap["minutes"] = aws.ToInt32(apiObject.EventThreshold.Minutes)
+		}
+
+		m["metrics"] = []interface{}{tfMap}
+	}
+
+	if apiObject := dest.ReplicationTime; apiObject != nil {
+		tfMap := map[string]interface{}{
+			"minutes": aws.ToInt32(apiObject.Time.Minutes),
+			"status":  apiObject.Status,
+		}
+
+		m["replication_time"] = []interface{}{tfMap}
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBucketReplicationRuleFilter(ctx context.Context, filter types.ReplicationRuleFilter) []interface{} {
+	if filter == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	switch v := filter.(type) {
+	case *types.ReplicationRuleFilterMemberAnd:
+		m["prefix"] = aws.ToString(v.Value.Prefix)
+		m["tags"] = keyValueTags(ctx, v.Value.Tags).IgnoreAWS().Map()
+	case *types.ReplicationRuleFilterMemberPrefix:
+		m["prefix"] = v.Value
+	case *types.ReplicationRuleFilterMemberTag:
+		m["tags"] = keyValueTags(ctx, tfslices.Of(v.Value)).IgnoreAWS().Map()
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBucketSourceSelectionCriteria(ssc *types.SourceSelectionCriteria) []interface{} {
+	if ssc == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if ssc.SseKmsEncryptedObjects != nil {
+		m["sse_kms_encrypted_objects"] = flattenBucketSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBucketSSEKMSEncryptedObjects(objects *types.SseKmsEncryptedObjects) []interface{} {
+	if objects == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if objects.Status == types.SseKmsEncryptedObjectsStatusEnabled {
+		m["enabled"] = true
+	} else if objects.Status == types.SseKmsEncryptedObjectsStatusDisabled {
+		m["enabled"] = false
+	}
+
+	return []interface{}{m}
+}
+
+//
+// Bucket Server-side Encryption Configuration.
+//
+
+func expandBucketServerSideEncryptionRules(l []interface{}) []types.ServerSideEncryptionRule {
+	var rules []types.ServerSideEncryptionRule
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		rule := types.ServerSideEncryptionRule{}
+
+		if v, ok := tfMap["apply_server_side_encryption_by_default"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.ApplyServerSideEncryptionByDefault = expandBucketServerSideEncryptionByDefault(v)
+		}
+
+		if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
+			rule.BucketKeyEnabled = aws.Bool(v)
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func expandBucketServerSideEncryptionByDefault(l []interface{}) *types.ServerSideEncryptionByDefault {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	sse := &types.ServerSideEncryptionByDefault{}
+
+	if v, ok := tfMap["kms_master_key_id"].(string); ok && v != "" {
+		sse.KMSMasterKeyID = aws.String(v)
+	}
+
+	if v, ok := tfMap["sse_algorithm"].(string); ok && v != "" {
+		sse.SSEAlgorithm = types.ServerSideEncryption(v)
+	}
+
+	return sse
+}
+
+func flattenBucketServerSideEncryptionConfiguration(apiObject *types.ServerSideEncryptionConfiguration) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"rule": flattenBucketServerSideEncryptionRules(apiObject.Rules),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBucketServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []interface{} {
+	var results []interface{}
+
+	for _, rule := range rules {
+		m := make(map[string]interface{})
+
+		if apiObject := rule.ApplyServerSideEncryptionByDefault; apiObject != nil {
+			m["apply_server_side_encryption_by_default"] = []interface{}{
+				map[string]interface{}{
+					"kms_master_key_id": aws.ToString(apiObject.KMSMasterKeyID),
+					"sse_algorithm":     apiObject.SSEAlgorithm,
+				},
+			}
+		}
+
+		if rule.BucketKeyEnabled != nil {
+			m["bucket_key_enabled"] = aws.ToBool(rule.BucketKeyEnabled)
+		}
+
+		results = append(results, m)
+	}
+
+	return results
+}
+
+//
+// Bucket Object Lock Configuration.
+//
+
+func expandBucketObjectLockConfiguration(l []interface{}) *types.ObjectLockConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ObjectLockConfiguration{}
+
+	if v, ok := tfMap["object_lock_enabled"].(string); ok && v != "" {
+		apiObject.ObjectLockEnabled = types.ObjectLockEnabled(v)
+	}
+
+	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 {
+		tfMap := v[0].(map[string]interface{})
+
+		if v, ok := tfMap["default_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			apiObject.Rule = &types.ObjectLockRule{
+				DefaultRetention: &types.DefaultRetention{},
+			}
+
+			if v, ok := tfMap["days"].(int); ok && v > 0 {
+				apiObject.Rule.DefaultRetention.Days = aws.Int32(int32(v))
+			}
+			if v, ok := tfMap["mode"].(string); ok && v != "" {
+				apiObject.Rule.DefaultRetention.Mode = types.ObjectLockRetentionMode(v)
+			}
+			if v, ok := tfMap["years"].(int); ok && v > 0 {
+				apiObject.Rule.DefaultRetention.Years = aws.Int32(int32(v))
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"object_lock_enabled": apiObject.ObjectLockEnabled,
+	}
+
+	if apiObject.Rule != nil && apiObject.Rule.DefaultRetention != nil {
+		apiObject := apiObject.Rule.DefaultRetention
+		tfMap := map[string]interface{}{
+			"default_retention": []interface{}{
+				map[string]interface{}{
+					"days":  aws.ToInt32(apiObject.Days),
+					"mode":  apiObject.Mode,
+					"years": aws.ToInt32(apiObject.Years),
+				},
+			},
+		}
+
+		m["rule"] = []interface{}{tfMap}
+	}
+
+	return []interface{}{m}
 }
 
 // validBucketName validates any S3 bucket name that is not inside the us-east-1 region.

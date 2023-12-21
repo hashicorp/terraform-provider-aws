@@ -482,15 +482,15 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		rule := types.ReplicationRule{}
 
 		if v, ok := tfMap["delete_marker_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.DeleteMarkerReplication = expandReplicationRuleDeleteMarkerReplication(v)
+			rule.DeleteMarkerReplication = expandDeleteMarkerReplication(v)
 		}
 
 		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.Destination = expandReplicationRuleDestination(v)
+			rule.Destination = expandDestination(v)
 		}
 
 		if v, ok := tfMap["existing_object_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.ExistingObjectReplication = expandReplicationRuleExistingObjectReplication(v)
+			rule.ExistingObjectReplication = expandExistingObjectReplication(v)
 		}
 
 		if v, ok := tfMap["id"].(string); ok && v != "" {
@@ -498,7 +498,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		}
 
 		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.SourceSelectionCriteria = expandReplicationRuleSourceSelectionCriteria(v)
+			rule.SourceSelectionCriteria = expandSourceSelectionCriteria(v)
 		}
 
 		if v, ok := tfMap["status"].(string); ok && v != "" {
@@ -523,7 +523,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 	return rules
 }
 
-func expandReplicationRuleDeleteMarkerReplication(l []interface{}) *types.DeleteMarkerReplication {
+func expandDeleteMarkerReplication(l []interface{}) *types.DeleteMarkerReplication {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -543,7 +543,7 @@ func expandReplicationRuleDeleteMarkerReplication(l []interface{}) *types.Delete
 	return result
 }
 
-func expandReplicationRuleDestination(l []interface{}) *types.Destination {
+func expandDestination(l []interface{}) *types.Destination {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -557,7 +557,7 @@ func expandReplicationRuleDestination(l []interface{}) *types.Destination {
 	result := &types.Destination{}
 
 	if v, ok := tfMap["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.AccessControlTranslation = expandReplicationRuleDestinationAccessControlTranslation(v)
+		result.AccessControlTranslation = expandAccessControlTranslation(v)
 	}
 
 	if v, ok := tfMap["account"].(string); ok && v != "" {
@@ -569,15 +569,15 @@ func expandReplicationRuleDestination(l []interface{}) *types.Destination {
 	}
 
 	if v, ok := tfMap["encryption_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.EncryptionConfiguration = expandReplicationRuleDestinationEncryptionConfiguration(v)
+		result.EncryptionConfiguration = expandEncryptionConfiguration(v)
 	}
 
 	if v, ok := tfMap["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.Metrics = expandReplicationRuleDestinationMetrics(v)
+		result.Metrics = expandMetrics(v)
 	}
 
 	if v, ok := tfMap["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ReplicationTime = expandReplicationRuleDestinationReplicationTime(v)
+		result.ReplicationTime = expandReplicationTime(v)
 	}
 
 	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
@@ -587,7 +587,7 @@ func expandReplicationRuleDestination(l []interface{}) *types.Destination {
 	return result
 }
 
-func expandReplicationRuleDestinationAccessControlTranslation(l []interface{}) *types.AccessControlTranslation {
+func expandAccessControlTranslation(l []interface{}) *types.AccessControlTranslation {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -607,7 +607,7 @@ func expandReplicationRuleDestinationAccessControlTranslation(l []interface{}) *
 	return result
 }
 
-func expandReplicationRuleDestinationEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
+func expandEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -627,7 +627,7 @@ func expandReplicationRuleDestinationEncryptionConfiguration(l []interface{}) *t
 	return result
 }
 
-func expandReplicationRuleDestinationMetrics(l []interface{}) *types.Metrics {
+func expandMetrics(l []interface{}) *types.Metrics {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -641,7 +641,7 @@ func expandReplicationRuleDestinationMetrics(l []interface{}) *types.Metrics {
 	result := &types.Metrics{}
 
 	if v, ok := tfMap["event_threshold"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.EventThreshold = expandReplicationRuleDestinationReplicationTimeValue(v)
+		result.EventThreshold = expandReplicationTimeValue(v)
 	}
 
 	if v, ok := tfMap["status"].(string); ok && v != "" {
@@ -651,7 +651,7 @@ func expandReplicationRuleDestinationMetrics(l []interface{}) *types.Metrics {
 	return result
 }
 
-func expandReplicationRuleDestinationReplicationTime(l []interface{}) *types.ReplicationTime {
+func expandReplicationTime(l []interface{}) *types.ReplicationTime {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -669,13 +669,13 @@ func expandReplicationRuleDestinationReplicationTime(l []interface{}) *types.Rep
 	}
 
 	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.Time = expandReplicationRuleDestinationReplicationTimeValue(v)
+		result.Time = expandReplicationTimeValue(v)
 	}
 
 	return result
 }
 
-func expandReplicationRuleDestinationReplicationTimeValue(l []interface{}) *types.ReplicationTimeValue {
+func expandReplicationTimeValue(l []interface{}) *types.ReplicationTimeValue {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -695,7 +695,7 @@ func expandReplicationRuleDestinationReplicationTimeValue(l []interface{}) *type
 	return result
 }
 
-func expandReplicationRuleExistingObjectReplication(l []interface{}) *types.ExistingObjectReplication {
+func expandExistingObjectReplication(l []interface{}) *types.ExistingObjectReplication {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -715,7 +715,7 @@ func expandReplicationRuleExistingObjectReplication(l []interface{}) *types.Exis
 	return result
 }
 
-func expandReplicationRuleSourceSelectionCriteria(l []interface{}) *types.SourceSelectionCriteria {
+func expandSourceSelectionCriteria(l []interface{}) *types.SourceSelectionCriteria {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -728,17 +728,17 @@ func expandReplicationRuleSourceSelectionCriteria(l []interface{}) *types.Source
 	result := &types.SourceSelectionCriteria{}
 
 	if v, ok := tfMap["replica_modifications"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ReplicaModifications = expandSourceSelectionCriteriaReplicaModifications(v)
+		result.ReplicaModifications = expandReplicaModifications(v)
 	}
 
 	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.SseKmsEncryptedObjects = expandSourceSelectionCriteriaSSEKMSEncryptedObjects(v)
+		result.SseKmsEncryptedObjects = expandSSEKMSEncryptedObjects(v)
 	}
 
 	return result
 }
 
-func expandSourceSelectionCriteriaReplicaModifications(l []interface{}) *types.ReplicaModifications {
+func expandReplicaModifications(l []interface{}) *types.ReplicaModifications {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -758,7 +758,7 @@ func expandSourceSelectionCriteriaReplicaModifications(l []interface{}) *types.R
 	return result
 }
 
-func expandSourceSelectionCriteriaSSEKMSEncryptedObjects(l []interface{}) *types.SseKmsEncryptedObjects {
+func expandSSEKMSEncryptedObjects(l []interface{}) *types.SseKmsEncryptedObjects {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -872,20 +872,19 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 
 	for _, rule := range rules {
 		m := map[string]interface{}{
-			"priority": rule.Priority,
-			"status":   rule.Status,
+			"status": rule.Status,
 		}
 
 		if rule.DeleteMarkerReplication != nil {
-			m["delete_marker_replication"] = flattenReplicationRuleDeleteMarkerReplication(rule.DeleteMarkerReplication)
+			m["delete_marker_replication"] = flattenDeleteMarkerReplication(rule.DeleteMarkerReplication)
 		}
 
 		if rule.Destination != nil {
-			m["destination"] = flattenReplicationRuleDestination(rule.Destination)
+			m["destination"] = flattenDestination(rule.Destination)
 		}
 
 		if rule.ExistingObjectReplication != nil {
-			m["existing_object_replication"] = flattenReplicationRuleExistingObjectReplication(rule.ExistingObjectReplication)
+			m["existing_object_replication"] = flattenExistingObjectReplication(rule.ExistingObjectReplication)
 		}
 
 		if rule.Filter != nil {
@@ -896,12 +895,16 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 			m["id"] = aws.ToString(rule.ID)
 		}
 
+		if rule.Priority != nil {
+			m["priority"] = aws.ToInt32(rule.Priority)
+		}
+
 		if rule.Prefix != nil {
 			m["prefix"] = aws.ToString(rule.Prefix)
 		}
 
 		if rule.SourceSelectionCriteria != nil {
-			m["source_selection_criteria"] = flattenReplicationRuleSourceSelectionCriteria(rule.SourceSelectionCriteria)
+			m["source_selection_criteria"] = flattenSourceSelectionCriteria(rule.SourceSelectionCriteria)
 		}
 
 		results = append(results, m)
@@ -910,7 +913,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 	return results
 }
 
-func flattenReplicationRuleDeleteMarkerReplication(dmr *types.DeleteMarkerReplication) []interface{} {
+func flattenDeleteMarkerReplication(dmr *types.DeleteMarkerReplication) []interface{} {
 	if dmr == nil {
 		return []interface{}{}
 	}
@@ -922,7 +925,7 @@ func flattenReplicationRuleDeleteMarkerReplication(dmr *types.DeleteMarkerReplic
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleDestination(dest *types.Destination) []interface{} {
+func flattenDestination(dest *types.Destination) []interface{} {
 	if dest == nil {
 		return []interface{}{}
 	}
@@ -932,7 +935,7 @@ func flattenReplicationRuleDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.AccessControlTranslation != nil {
-		m["access_control_translation"] = flattenReplicationRuleDestinationAccessControlTranslation(dest.AccessControlTranslation)
+		m["access_control_translation"] = flattenAccessControlTranslation(dest.AccessControlTranslation)
 	}
 
 	if dest.Account != nil {
@@ -944,21 +947,21 @@ func flattenReplicationRuleDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.EncryptionConfiguration != nil {
-		m["encryption_configuration"] = flattenReplicationRuleDestinationEncryptionConfiguration(dest.EncryptionConfiguration)
+		m["encryption_configuration"] = flattenEncryptionConfiguration(dest.EncryptionConfiguration)
 	}
 
 	if dest.Metrics != nil {
-		m["metrics"] = flattenReplicationRuleDestinationMetrics(dest.Metrics)
+		m["metrics"] = flattenMetrics(dest.Metrics)
 	}
 
 	if dest.ReplicationTime != nil {
-		m["replication_time"] = flattenReplicationRuleDestinationReplicationTime(dest.ReplicationTime)
+		m["replication_time"] = flattenReplicationReplicationTime(dest.ReplicationTime)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleDestinationAccessControlTranslation(act *types.AccessControlTranslation) []interface{} {
+func flattenAccessControlTranslation(act *types.AccessControlTranslation) []interface{} {
 	if act == nil {
 		return []interface{}{}
 	}
@@ -970,7 +973,7 @@ func flattenReplicationRuleDestinationAccessControlTranslation(act *types.Access
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleDestinationEncryptionConfiguration(ec *types.EncryptionConfiguration) []interface{} {
+func flattenEncryptionConfiguration(ec *types.EncryptionConfiguration) []interface{} {
 	if ec == nil {
 		return []interface{}{}
 	}
@@ -984,7 +987,7 @@ func flattenReplicationRuleDestinationEncryptionConfiguration(ec *types.Encrypti
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleDestinationMetrics(metrics *types.Metrics) []interface{} {
+func flattenMetrics(metrics *types.Metrics) []interface{} {
 	if metrics == nil {
 		return []interface{}{}
 	}
@@ -994,13 +997,13 @@ func flattenReplicationRuleDestinationMetrics(metrics *types.Metrics) []interfac
 	}
 
 	if metrics.EventThreshold != nil {
-		m["event_threshold"] = flattenReplicationRuleDestinationReplicationTimeValue(metrics.EventThreshold)
+		m["event_threshold"] = flattenReplicationTimeValue(metrics.EventThreshold)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleDestinationReplicationTimeValue(rtv *types.ReplicationTimeValue) []interface{} {
+func flattenReplicationTimeValue(rtv *types.ReplicationTimeValue) []interface{} {
 	if rtv == nil {
 		return []interface{}{}
 	}
@@ -1012,7 +1015,7 @@ func flattenReplicationRuleDestinationReplicationTimeValue(rtv *types.Replicatio
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleDestinationReplicationTime(rt *types.ReplicationTime) []interface{} {
+func flattenReplicationReplicationTime(rt *types.ReplicationTime) []interface{} {
 	if rt == nil {
 		return []interface{}{}
 	}
@@ -1022,13 +1025,13 @@ func flattenReplicationRuleDestinationReplicationTime(rt *types.ReplicationTime)
 	}
 
 	if rt.Time != nil {
-		m["time"] = flattenReplicationRuleDestinationReplicationTimeValue(rt.Time)
+		m["time"] = flattenReplicationTimeValue(rt.Time)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleExistingObjectReplication(eor *types.ExistingObjectReplication) []interface{} {
+func flattenExistingObjectReplication(eor *types.ExistingObjectReplication) []interface{} {
 	if eor == nil {
 		return []interface{}{}
 	}
@@ -1097,7 +1100,7 @@ func flattenReplicationRuleFilterMemberTag(op *types.ReplicationRuleFilterMember
 	return []interface{}{m}
 }
 
-func flattenReplicationRuleSourceSelectionCriteria(ssc *types.SourceSelectionCriteria) []interface{} {
+func flattenSourceSelectionCriteria(ssc *types.SourceSelectionCriteria) []interface{} {
 	if ssc == nil {
 		return []interface{}{}
 	}
@@ -1105,17 +1108,17 @@ func flattenReplicationRuleSourceSelectionCriteria(ssc *types.SourceSelectionCri
 	m := make(map[string]interface{})
 
 	if ssc.ReplicaModifications != nil {
-		m["replica_modifications"] = flattenSourceSelectionCriteriaReplicaModifications(ssc.ReplicaModifications)
+		m["replica_modifications"] = flattenReplicaModifications(ssc.ReplicaModifications)
 	}
 
 	if ssc.SseKmsEncryptedObjects != nil {
-		m["sse_kms_encrypted_objects"] = flattenSourceSelectionCriteriaSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
+		m["sse_kms_encrypted_objects"] = flattenSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenSourceSelectionCriteriaReplicaModifications(rc *types.ReplicaModifications) []interface{} {
+func flattenReplicaModifications(rc *types.ReplicaModifications) []interface{} {
 	if rc == nil {
 		return []interface{}{}
 	}
@@ -1127,7 +1130,7 @@ func flattenSourceSelectionCriteriaReplicaModifications(rc *types.ReplicaModific
 	return []interface{}{m}
 }
 
-func flattenSourceSelectionCriteriaSSEKMSEncryptedObjects(objects *types.SseKmsEncryptedObjects) []interface{} {
+func flattenSSEKMSEncryptedObjects(objects *types.SseKmsEncryptedObjects) []interface{} {
 	if objects == nil {
 		return []interface{}{}
 	}
