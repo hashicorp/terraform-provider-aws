@@ -11,6 +11,53 @@ import (
 	"testing"
 )
 
+func TestDNSSuffixForPartition(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "China",
+			input:    ChinaPartitionID,
+			expected: "amazonaws.com.cn",
+		},
+		{
+			name:     "GovCloud",
+			input:    USGovCloudPartitionID,
+			expected: "amazonaws.com",
+		},
+		{
+			name:     "standard",
+			input:    StandardPartitionID,
+			expected: "amazonaws.com",
+		},
+		{
+			name:     "default",
+			input:    "custom",
+			expected: "amazonaws.com",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := DNSSuffixForPartition(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
 func TestPartitionForRegion(t *testing.T) {
 	t.Parallel()
 

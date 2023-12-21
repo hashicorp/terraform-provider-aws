@@ -159,6 +159,8 @@ const (
 
 func DNSSuffixForPartition(partition string) string {
 	switch partition {
+	case "":
+		return ""
 	case ChinaPartitionID:
 		return "amazonaws.com.cn"
 	case ISOPartitionID:
