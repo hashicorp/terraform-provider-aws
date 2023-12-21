@@ -509,7 +509,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var err error
 
-	input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
+	input.Actions, err = expandLbListenerActions(d, d.Get("action").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -802,7 +802,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange("action") {
 			var err error
-			input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
+			input.Actions, err = expandLbListenerActions(d, d.Get("action").([]interface{}))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

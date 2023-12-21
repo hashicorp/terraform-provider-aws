@@ -6,6 +6,7 @@ package elbv2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -51,8 +53,99 @@ func ResourceListener() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
+		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				var errx []error
+
+				path := cty.GetAttrPath("default_action")
+
+				if v, ok := d.GetOk("default_action"); ok && len(v.([]any)) > 0 {
+					for i, a := range v.([]any) {
+						action := a.(map[string]interface{})
+
+						path := path.IndexInt(i)
+						tga, tgaOk := action["target_group_arn"].(string)
+						f, fOk := action["forward"].([]any)
+
+						if tgaOk && tga != "" && fOk && len(f) > 0 {
+							errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+								"Invalid Attribute Combination",
+								fmt.Sprintf("Only one of %q or %q can be specified",
+									"target_group_arn",
+									"forward",
+								),
+							)))
+						}
+
+						path = path.GetAttr("type")
+
+						switch action["type"].(string) {
+						case elbv2.ActionTypeEnumForward:
+							if tga == "" && len(f) == 0 {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+										"target_group_arn", "forward",
+										"type",
+										elbv2.ActionTypeEnumForward,
+									),
+								)))
+							}
+
+						case elbv2.ActionTypeEnumRedirect:
+							if v, ok := action["redirect"].([]any); ok && len(v) == 0 {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+										"redirect",
+										"type",
+										elbv2.ActionTypeEnumRedirect,
+									),
+								)))
+							}
+
+						case elbv2.ActionTypeEnumFixedResponse:
+							if v, ok := action["fixed_response"].([]any); ok && len(v) == 0 {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+										"fixed_response",
+										"type",
+										elbv2.ActionTypeEnumFixedResponse,
+									),
+								)))
+							}
+
+						case elbv2.ActionTypeEnumAuthenticateCognito:
+							if v, ok := action["authenticate_cognito"].([]any); ok && len(v) == 0 {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+										"authenticate_cognito",
+										"type",
+										elbv2.ActionTypeEnumAuthenticateCognito,
+									),
+								)))
+							}
+
+						case elbv2.ActionTypeEnumAuthenticateOidc:
+							if v, ok := action["authenticate_oidc"].([]any); ok && len(v) == 0 {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+										"authenticate_oidc",
+										"type",
+										elbv2.ActionTypeEnumAuthenticateOidc,
+									),
+								)))
+							}
+						}
+					}
+				}
+
+				return errors.Join(errx...)
+			},
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -82,10 +175,9 @@ func ResourceListener() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"authenticate_cognito": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumAuthenticateCognito),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -134,10 +226,9 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"authenticate_oidc": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumAuthenticateOidc),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -198,10 +289,9 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"fixed_response": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumFixedResponse),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"content_type": {
@@ -229,10 +319,9 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"forward": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
@@ -286,10 +375,9 @@ func ResourceListener() *schema.Resource {
 							ValidateFunc: validation.IntBetween(1, 50000),
 						},
 						"redirect": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumRedirect),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
@@ -334,10 +422,9 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"target_group_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							ValidateFunc:     verify.ValidARN,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -407,21 +494,6 @@ func ResourceListener() *schema.Resource {
 	}
 }
 
-func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		take := 2
-		i := strings.IndexFunc(k, func(r rune) bool {
-			if r == '.' {
-				take -= 1
-				return take == 0
-			}
-			return false
-		})
-		at := k[:i+1] + "type"
-		return d.Get(at).(string) != t
-	}
-}
-
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
@@ -444,7 +516,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("default_action"); ok && len(v.([]interface{})) > 0 {
 		var err error
-		input.DefaultActions, err = expandLbListenerActions(v.([]interface{}))
+		input.DefaultActions, err = expandLbListenerActions(d, v.([]interface{}))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -578,7 +650,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("default_action") {
 			var err error
-			input.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
+			input.DefaultActions, err = expandLbListenerActions(d, d.Get("default_action").([]interface{}))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -701,7 +773,7 @@ func findListeners(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Describe
 	return output, nil
 }
 
-func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
+func expandLbListenerActions(d *schema.ResourceData, l []interface{}) ([]*elbv2.Action, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}
@@ -709,11 +781,16 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 	var actions []*elbv2.Action
 	var err error
 
+	// TODO: this breaks `listener_rule`
+	actionsPath := cty.GetAttrPath("default_action")
+
 	for i, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
+
+		actionPath := actionsPath.IndexInt(i)
 
 		action := &elbv2.Action{
 			Order: aws.Int64(int64(i + 1)),
@@ -726,41 +803,42 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 
 		switch tfMap["type"].(string) {
 		case elbv2.ActionTypeEnumForward:
-			if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
-				action.TargetGroupArn = aws.String(v)
-			} else if v, ok := tfMap["forward"].([]interface{}); ok {
-				action.ForwardConfig = expandLbListenerActionForwardConfig(v)
-			} else {
-				err = errors.New("for actions of type 'forward', you must specify a 'forward' block or 'target_group_arn'")
+			rawConfig := d.GetRawConfig()
+			if rawConfig.IsKnown() && !rawConfig.IsNull() {
+				path := actionPath.GetAttr("target_group_arn")
+				var value cty.Value
+				value, err = path.Apply(rawConfig)
+				if err != nil {
+					return nil, err
+				}
+				if value.IsKnown() && !value.IsNull() && value.AsString() != "" {
+					action.TargetGroupArn = aws.String(value.AsString())
+				}
+				path = actionPath.GetAttr("forward")
+				value, err = path.Apply(rawConfig)
+				if err != nil {
+					return nil, err
+				}
+				if value.IsKnown() && !value.IsNull() && value.LengthInt() > 0 {
+					action.ForwardConfig = expandLbListenerActionForwardConfig(tfMap["forward"].([]any))
+				}
 			}
 
 		case elbv2.ActionTypeEnumRedirect:
-			if v, ok := tfMap["redirect"].([]interface{}); ok {
-				action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
-			} else {
-				err = errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
-			}
+			v := tfMap["redirect"].([]interface{})
+			action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
 
 		case elbv2.ActionTypeEnumFixedResponse:
-			if v, ok := tfMap["fixed_response"].([]interface{}); ok {
-				action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
-			} else {
-				err = errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
-			}
+			v := tfMap["fixed_response"].([]interface{})
+			action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
 
 		case elbv2.ActionTypeEnumAuthenticateCognito:
-			if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
-				action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
-			} else {
-				err = errors.New("for actions of type 'authenticate-cognito', you must specify a 'authenticate_cognito' block")
-			}
+			v := tfMap["authenticate_cognito"].([]interface{})
+			action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
 
 		case elbv2.ActionTypeEnumAuthenticateOidc:
-			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
-				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
-			} else {
-				err = errors.New("for actions of type 'authenticate-oidc', you must specify a 'authenticate_oidc' block")
-			}
+			v := tfMap["authenticate_oidc"].([]interface{})
+			action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 		}
 
 		actions = append(actions, action)

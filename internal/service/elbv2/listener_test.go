@@ -6,6 +6,7 @@ package elbv2_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -45,8 +46,11 @@ func TestAccELBV2Listener_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
 				),
@@ -106,6 +110,52 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = rName[:30]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_forwardBasic(rName, "test1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccListenerConfig_forwardBasic(rName, "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.Listener
@@ -135,6 +185,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
 			},
@@ -159,6 +210,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
 			},
@@ -186,6 +238,30 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 		},
 	})
 }
+
+func TestAccELBV2Listener_StickinessBug(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccListenerConfig_StickinessBug(rName),
+				ExpectError: regexache.MustCompile(`Only one of "target_group_arn" or "forward" can be specified`),
+			},
+		},
+	})
+}
+
+// TODO:
+// * switch from `target_group_arn` to `forward`, no change otherwise
+// * switch from `target_group_arn` to `forward`, weight & stickiness
+// * switch from `forward` to `target_group_arn`, without other params
+// * switch from `forward` to `target_group_arn`, dropping other params
 
 func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -655,6 +731,83 @@ func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_EmptyDefaultAction(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		actionType    string
+		expectedError *regexp.Regexp
+	}{
+		elbv2.ActionTypeEnumForward: {
+			actionType: elbv2.ActionTypeEnumForward,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+				"target_group_arn", "forward",
+				"type",
+				elbv2.ActionTypeEnumForward,
+			)),
+		},
+
+		elbv2.ActionTypeEnumAuthenticateOidc: {
+			actionType: elbv2.ActionTypeEnumAuthenticateOidc,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"authenticate_oidc",
+				"type",
+				elbv2.ActionTypeEnumAuthenticateOidc,
+			)),
+		},
+
+		elbv2.ActionTypeEnumAuthenticateCognito: {
+			actionType: elbv2.ActionTypeEnumAuthenticateCognito,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"authenticate_cognito",
+				"type",
+				elbv2.ActionTypeEnumAuthenticateCognito,
+			)),
+		},
+
+		elbv2.ActionTypeEnumRedirect: {
+			actionType: elbv2.ActionTypeEnumRedirect,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"redirect",
+				"type",
+				elbv2.ActionTypeEnumRedirect,
+			)),
+		},
+
+		elbv2.ActionTypeEnumFixedResponse: {
+			actionType: elbv2.ActionTypeEnumFixedResponse,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"fixed_response",
+				"type",
+				elbv2.ActionTypeEnumFixedResponse,
+			)),
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckListenerDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config:      testAccListenerConfig_EmptyDefaultAction(rName, testcase.actionType),
+						ExpectError: testcase.expectedError,
+					},
+				},
+			})
+
+		})
+	}
+}
+
 func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newDefaultActions []*elbv2.Action
@@ -766,8 +919,8 @@ resource "aws_lb_listener" "test" {
   port              = "80"
 
   default_action {
-    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
+    target_group_arn = aws_lb_target_group.test.id
   }
 }
 
@@ -807,6 +960,67 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccListenerConfig_forwardBasic(rName, targetName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "440"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.%[2]s.arn
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+}
+
+resource "aws_lb_target_group" "test1" {
+  name     = "%[1]s-1"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%[1]s-2"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+`, rName, targetName))
 }
 
 func testAccListenerConfig_forwardWeighted(rName, rName2 string) string {
@@ -980,6 +1194,70 @@ resource "aws_lb_target_group" "test2" {
   }
 }
 `, rName, rName2))
+}
+
+func testAccListenerConfig_StickinessBug(rName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "440"
+
+  default_action {
+    type = "forward"
+
+    target_group_arn = aws_lb_target_group.test.arn
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test.arn
+        weight = 1
+      }
+
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
@@ -1852,4 +2130,54 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccListenerConfig_EmptyDefaultAction(rName, action string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    type = %[2]q
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, action))
 }
