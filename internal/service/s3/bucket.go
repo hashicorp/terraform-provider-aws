@@ -2061,7 +2061,7 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 		if v, ok := getGrant(results, m); ok {
 			v.(map[string]interface{})["permissions"].(*schema.Set).Add(apiObject.Permission)
 		} else {
-			m["permissions"] = schema.NewSet(schema.HashString, []interface{}{apiObject.Permission})
+			m["permissions"] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
 			results = append(results, m)
 		}
 	}
