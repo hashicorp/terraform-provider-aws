@@ -2415,23 +2415,23 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}{
 		{
 			LocationConstraint: "",
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", names.USEast1RegionID, acctest.PartitionDNSSuffix()),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", names.USEast1RegionID),
 		},
 		{
 			LocationConstraint: names.USEast2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USEast2RegionID, acctest.PartitionDNSSuffix()),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USEast2RegionID),
 		},
 		{
 			LocationConstraint: names.USGovEast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USGovEast1RegionID, acctest.PartitionDNSSuffix()),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USGovEast1RegionID),
 		},
 		{
-			LocationConstraint: "us-iso-east-1",
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.c2s.ic.gov", "us-iso-east-1"),
+			LocationConstraint: names.USISOEast1RegionID,
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.c2s.ic.gov", names.USISOEast1RegionID),
 		},
 		{
-			LocationConstraint: "us-isob-east-1",
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.sc2s.sgov.gov", "us-isob-east-1"),
+			LocationConstraint: names.USISOBEast1RegionID,
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.sc2s.sgov.gov", names.USISOBEast1RegionID),
 		},
 		{
 			LocationConstraint: names.CNNorth1RegionID,
