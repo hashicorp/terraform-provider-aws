@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -45,7 +46,7 @@ type Config struct {
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
 	S3UsePathStyle                 bool
-	S3UsEast1RegionalEndpoint      endpoints_sdkv1.S3UsEast1RegionalEndpoint
+	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
@@ -211,7 +212,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
-	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
+	client.s3USEast1RegionalEndpoint = c.S3USEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion
 
 	return client, diags
@@ -225,5 +226,14 @@ func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
 		return diag.Error
 	default:
 		return -1
+	}
+}
+
+func NormalizeS3USEast1RegionalEndpoint(v string) string {
+	switch v := strings.ToLower(v); v {
+	case "legacy", "regional":
+		return v
+	default:
+		return ""
 	}
 }

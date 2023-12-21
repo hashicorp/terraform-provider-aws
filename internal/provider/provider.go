@@ -14,7 +14,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -500,11 +499,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
-		endpoint, err := endpoints.GetS3UsEast1RegionalEndpoint(v)
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
-		}
-		config.S3UsEast1RegionalEndpoint = endpoint
+		config.S3USEast1RegionalEndpoint = conns.NormalizeS3USEast1RegionalEndpoint(v)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {

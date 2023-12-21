@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +21,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	return s3.NewFromConfig(cfg, func(o *s3.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
-		} else if o.Region == names.USEast1RegionID && config["s3_us_east_1_regional_endpoint"].(endpoints_sdkv1.S3UsEast1RegionalEndpoint) != endpoints_sdkv1.RegionalS3UsEast1Endpoint {
+		} else if o.Region == names.USEast1RegionID && config["s3_us_east_1_regional_endpoint"].(string) != "regional" {
 			// Maintain the AWS SDK for Go v1 default of using the global endpoint in us-east-1.
 			// See https://github.com/hashicorp/terraform-provider-aws/issues/33028.
 			o.Region = names.GlobalRegionID
