@@ -124,6 +124,7 @@ const (
 	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
 	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
 	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
+	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
 	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
 	EUCentral2RegionID   = "eu-central-2"   // Europe (Zurich).
 	EUNorth1RegionID     = "eu-north-1"     // Europe (Stockholm).
