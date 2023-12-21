@@ -176,6 +176,8 @@ func DNSSuffixForPartition(partition string) string {
 
 func PartitionForRegion(region string) string {
 	switch region {
+	case "":
+		return ""
 	case CNNorth1RegionID, CNNorthwest1RegionID:
 		return ChinaPartitionID
 	case USISOEast1RegionID, USISOWest1RegionID:

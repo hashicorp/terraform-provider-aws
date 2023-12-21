@@ -11,6 +11,53 @@ import (
 	"testing"
 )
 
+func TestPartitionForRegion(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "China",
+			input:    CNNorth1RegionID,
+			expected: ChinaPartitionID,
+		},
+		{
+			name:     "GovCloud",
+			input:    USGovWest1RegionID,
+			expected: USGovCloudPartitionID,
+		},
+		{
+			name:     "standard",
+			input:    USWest2RegionID,
+			expected: StandardPartitionID,
+		},
+		{
+			name:     "default",
+			input:    "custom",
+			expected: StandardPartitionID,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := PartitionForRegion(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
 func TestReverseDNS(t *testing.T) {
 	t.Parallel()
 
