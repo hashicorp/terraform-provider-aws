@@ -478,6 +478,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		if !ok {
 			continue
 		}
+
 		rule := types.ReplicationRule{}
 
 		if v, ok := tfMap["delete_marker_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -720,7 +721,6 @@ func expandReplicationRuleSourceSelectionCriteria(l []interface{}) *types.Source
 	}
 
 	tfMap, ok := l[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
