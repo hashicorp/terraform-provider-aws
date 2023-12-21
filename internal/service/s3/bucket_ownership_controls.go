@@ -169,6 +169,31 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
+func findOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) (*types.OwnershipControls, error) {
+	input := &s3.GetBucketOwnershipControlsInput{
+		Bucket: aws.String(bucket),
+	}
+
+	output, err := conn.GetBucketOwnershipControls(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeOwnershipControlsNotFoundError) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.OwnershipControls == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.OwnershipControls, nil
+}
+
 func expandOwnershipControlsRules(tfList []interface{}) []types.OwnershipControlsRule {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -219,29 +244,4 @@ func flattenOwnershipControlsRule(apiObject types.OwnershipControlsRule) map[str
 	}
 
 	return tfMap
-}
-
-func findOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) (*types.OwnershipControls, error) {
-	input := &s3.GetBucketOwnershipControlsInput{
-		Bucket: aws.String(bucket),
-	}
-
-	output, err := conn.GetBucketOwnershipControls(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeOwnershipControlsNotFoundError) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.OwnershipControls == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.OwnershipControls, nil
 }

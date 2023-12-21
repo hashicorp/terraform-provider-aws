@@ -331,12 +331,12 @@ func expandAnalyticsExportDestination(edl []interface{}) *types.AnalyticsExportD
 
 	if len(edl) != 0 && edl[0] != nil {
 		edm := edl[0].(map[string]interface{})
-		result.S3BucketDestination = expandAnalyticsBucketDestination(edm["s3_bucket_destination"].([]interface{}))
+		result.S3BucketDestination = expandAnalyticsS3BucketDestination(edm["s3_bucket_destination"].([]interface{}))
 	}
 	return result
 }
 
-func expandAnalyticsBucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination {
+func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination {
 	result := &types.AnalyticsS3BucketDestination{}
 
 	if len(bdl) != 0 && bdl[0] != nil {
@@ -407,12 +407,12 @@ func flattenAnalyticsExportDestination(destination *types.AnalyticsExportDestina
 
 	return []interface{}{
 		map[string]interface{}{
-			"s3_bucket_destination": flattenAnalyticsBucketDestination(destination.S3BucketDestination),
+			"s3_bucket_destination": flattenAnalyticsS3BucketDestination(destination.S3BucketDestination),
 		},
 	}
 }
 
-func flattenAnalyticsBucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} {
+func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} {
 	if bucketDestination == nil {
 		return nil
 	}

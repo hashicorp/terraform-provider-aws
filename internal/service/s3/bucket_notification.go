@@ -383,6 +383,34 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
+func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketNotificationConfigurationOutput, error) {
+	input := &s3.GetBucketNotificationConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetBucketNotificationConfiguration(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func flattenNotificationConfigurationFilter(filter *types.NotificationConfigurationFilter) map[string]interface{} {
 	filterRules := map[string]interface{}{}
 	if filter.Key == nil || filter.Key.FilterRules == nil {
@@ -455,32 +483,4 @@ func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfigura
 	}
 
 	return lambdaFunctionNotifications
-}
-
-func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketNotificationConfigurationOutput, error) {
-	input := &s3.GetBucketNotificationConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetBucketNotificationConfiguration(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }
