@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,7 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -182,7 +185,12 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			Attributes: map[string]schema.Attribute{
 				"map_block_key": schema.StringAttribute{
 					Required: true,
-					// pattern: ^([0-9a-zA-Z][_-]?){1,100}$
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(
+							regexp.MustCompile(` ^([0-9a-zA-Z][_-]?){1,100}$`),
+							"alphanumeric characters and hyphens (-) and underscores (_) at the end and must be between 1 and 100 characters in length",
+						),
+					},
 				},
 				"shape": schema.StringAttribute{
 					Optional:   true,
@@ -199,7 +207,9 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 						Attributes: map[string]schema.Attribute{
 							"interpreted_value": schema.StringAttribute{
 								Optional: true,
-								// min length: 1
+								Validators: []validator.String{
+									stringvalidator.LengthAtLeast(1),
+								},
 							},
 						},
 					},
@@ -413,9 +423,9 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"start_timeout_ms": schema.Int64Attribute{
-								Required:   true,
+								Required: true,
 								Validators: []validator.Int64{
-									// at least 1
+									int64validator.AtLeast(1),
 								},
 							},
 						},
@@ -428,15 +438,15 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 								NestedObject: schema.NestedBlockObject{
 									Attributes: map[string]schema.Attribute{
 										"end_timeout_ms": schema.Int64Attribute{
-											Required:   true,
+											Required: true,
 											Validators: []validator.Int64{
-												// at least 1
+												int64validator.AtLeast(1),
 											},
 										},
 										"max_length_ms": schema.Int64Attribute{
-											Required:   true,
+											Required: true,
 											Validators: []validator.Int64{
-												// at least 1
+												int64validator.AtLeast(1),
 											},
 										},
 									},
@@ -451,22 +461,32 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 									Attributes: map[string]schema.Attribute{
 										"deletion_character": schema.StringAttribute{
 											Required: true,
-											// pattern: ^[A-D0-9#*]{1}$
+											Validators: []validator.String{
+												stringvalidator.RegexMatches(
+													regexp.MustCompile(`^[A-D0-9#*]{1}$`),
+													"alphanumeric characters",
+												),
+											},
 										},
 										"end_character": schema.StringAttribute{
 											Required: true,
-											// pattern: ^[A-D0-9#*]{1}$
+											Validators: []validator.String{
+												stringvalidator.RegexMatches(
+													regexp.MustCompile(`^[A-D0-9#*]{1}$`),
+													"alphanumeric characters",
+												),
+											},
 										},
 										"end_timeout_ms": schema.Int64Attribute{
-											Required:   true,
+											Required: true,
 											Validators: []validator.Int64{
-												// at least 1
+												int64validator.AtLeast(1),
 											},
 										},
 										"max_length": schema.Int64Attribute{
-											Required:   true,
+											Required: true,
 											Validators: []validator.Int64{
-												//validators.Int64Between(1, 1024),
+												int64validator.Between(1, 1024),
 											},
 										},
 									},
