@@ -713,6 +713,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	bucket := create.Name(d.Get("bucket").(string), d.Get("bucket_prefix").(string))
 	region := meta.(*conns.AWSClient).Region
 
+	if err := validBucketName(bucket, region); err != nil {
+		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
+	}
+
 	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
 	// current account. It also resets the Bucket ACLs.
 	if region == names.USEast1RegionID {
@@ -735,16 +739,11 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ACL = types.BucketCannedACLPrivate
 	}
 
-	// Special case us-east-1 region and do not set the LocationConstraint.
-	// See "Request Elements: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
+	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
 	if region != names.USEast1RegionID {
 		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
 			LocationConstraint: types.BucketLocationConstraint(region),
 		}
-	}
-
-	if err := validBucketName(bucket, region); err != nil {
-		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
 
 	// S3 Object Lock is not supported on all partitions.
