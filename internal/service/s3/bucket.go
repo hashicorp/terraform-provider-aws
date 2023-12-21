@@ -1225,7 +1225,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input := &s3.PutBucketCorsInput{
 				Bucket: aws.String(d.Id()),
 				CORSConfiguration: &types.CORSConfiguration{
-					CORSRules: expandCORSRules(d.Get("cors_rule").(*schema.Set).List()),
+					CORSRules: expandBucketCORSRules(d.Get("cors_rule").(*schema.Set).List()),
 				},
 			}
 
