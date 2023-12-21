@@ -10,6 +10,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// Float32FromFrameworkFloat64 converts a Framework Float64 value to a float64 pointer.
+func Float32FromFrameworkFloat64(ctx context.Context, v types.Float64) *float32 {
+	if v.IsNull() || v.IsUnknown() {
+		return nil
+	}
+
+	f := v.ValueFloat64()
+	if f == 0 {
+		return nil
+	}
+
+	return aws.Float32(float32(f))
+}
+
 // Float64ToFramework converts a float64 pointer to a Framework Float64 value.
 // A nil float64 pointer is converted to a null Float64.
 func Float64ToFramework(ctx context.Context, v *float64) types.Float64 {

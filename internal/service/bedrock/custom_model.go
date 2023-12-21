@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -99,7 +98,7 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 			},
 			"job_tags": tftags.TagsAttribute(),
 			"job_role_arn": schema.StringAttribute{
-				Required: true,
+				Required:   true,
 				CustomType: fwtypes.ARNType,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -138,6 +137,7 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfig](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"security_group_ids": schema.SetAttribute{
@@ -156,32 +156,36 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[outputDataConfig](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"s3_uri": schema.StringAttribute{
-							ElementType:  types.StringType,
-							Required:     true,
+							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 1024),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI")
+								stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI"),
 							},
 						},
 					},
 				},
 			},
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
 			"training_data_config": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[trainingDataConfig](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"s3_uri": schema.StringAttribute{
-							ElementType:  types.StringType,
-							Required:     true,
+							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 1024),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI")
+								stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI"),
 							},
 						},
 					},
@@ -191,6 +195,7 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[trainingMetrics](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"training_loss": schema.Float64Attribute{
@@ -199,24 +204,26 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"validation_data_config": schema.SetNestedBlock{
-				Validators: []validator.Set{
-					setvalidator.SizeAtMost(10),
+			"validation_data_config": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[validationDataConfig](ctx),
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"validator": schema.SetNestedBlock{
-							Validators: []validator.Set{
-								setvalidator.IsRequired(),
+					Blocks: map[string]schema.Block{
+						"validator": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(10),
 							},
+							CustomType: fwtypes.NewListNestedObjectTypeOf[validatorConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"s3_uri": schema.StringAttribute{
-										ElementType:  types.StringType,
-										Required:     true,
+										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 1024),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI")
+											stringvalidator.RegexMatches(regexache.MustCompile(`^s3://`), "minimum length of 1. Maximum length of 1024. Must be an S3 URI"),
 										},
 									},
 								},
@@ -226,6 +233,7 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"validation_metrics": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[validationMetrics](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"validation_loss": schema.Float64Attribute{
@@ -238,76 +246,69 @@ func (r *resourceCustomModel) Schema(ctx context.Context, request resource.Schem
 	}
 }
 
-func (r *resourceCustomModel) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resourceCustomModelModel
+func (r *resourceCustomModel) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().BedrockClient(ctx)
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	var data resourceCustomModelData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().BedrockClient(ctx)
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	job_tags := defaultTagsConfig.MergeTags(tftags.New(ctx, data.JobTags))
+	var outputData []outputDataConfig
+	response.Diagnostics.Append(data.OutputDataConfig.ElementsAs(ctx, &outputData, false)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	var trainingData []trainingDataConfig
+	response.Diagnostics.Append(data.TrainingDataConfig.ElementsAs(ctx, &trainingData, false)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	input := &bedrock.CreateModelCustomizationJobInput{
-		BaseModelIdentifier: data.BaseModelId.ValueStringPointer(),
-		CustomModelName:     data.CustomModelName.ValueStringPointer(),
+		BaseModelIdentifier: data.BaseModelArn.ValueStringPointer(),
+		CustomModelName:     data.Name.ValueStringPointer(),
+		CustomModelTags:     getTagsIn(ctx),
+		HyperParameters:     flex.ExpandFrameworkStringValueMap(ctx, data.HyperParameters),
 		JobName:             data.JobName.ValueStringPointer(),
-		RoleArn:             data.RoleArn.ValueStringPointer(),
-		TrainingDataConfig: &bedrock_types.TrainingDataConfig{
-			S3Uri: data.TrainingDataConfig.ValueStringPointer(),
-		},
-		OutputDataConfig: &bedrock_types.OutputDataConfig{
-			S3Uri: data.OutputDataConfig.ValueStringPointer(),
-		},
-		CustomModelTags:      getTagsIn(ctx),
-		ValidationDataConfig: expandValidationDataConfig(ctx, data.ValidationDataConfig, diag.Diagnostics{}),
+		OutputDataConfig:    expandOutputDataConfig(ctx, outputData),
+		TrainingDataConfig:  expandTrainingDataConfig(ctx, trainingData),
+		RoleArn:             data.JobRoleArn.ValueStringPointer(),
 	}
 
-	var hp map[string]string
-	resp.Diagnostics.Append(data.HyperParameters.ElementsAs(ctx, &hp, false)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if !data.CustomizationType.IsNull() {
+		input.CustomModelName = data.CustomizationType.ValueStringPointer()
 	}
-	input.HyperParameters = hp
+	if !data.KmsKeyArn.IsNull() {
+		input.CustomModelKmsKeyId = data.KmsKeyArn.ValueStringPointer()
+	}
+	if !data.JobTags.IsNull() {
+		input.JobTags = Tags(tftags.New(ctx, data.JobTags))
+	}
+	if !data.JobVpcConfig.IsNull() {
+		var vpcData []vpcConfig
+		response.Diagnostics.Append(data.JobVpcConfig.ElementsAs(ctx, &vpcData, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.VpcConfig = expandVPCConfig(ctx, vpcData)
+	}
+	if !data.ValidationDataConfig.IsNull() {
+		var validationData []validationDataConfig
+		response.Diagnostics.Append(data.ValidationDataConfig.ElementsAs(ctx, &validationData, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ValidationDataConfig = expandValidationDataConfig(ctx, validationData, diag.Diagnostics{})
+	}
 
-	if !data.ClientRequestToken.IsNull() {
-		input.ClientRequestToken = data.ClientRequestToken.ValueStringPointer()
-	}
-	if !data.CustomModelKmsKeyId.IsNull() {
-		input.CustomModelKmsKeyId = data.CustomModelKmsKeyId.ValueStringPointer()
-	}
-	var vpcConfigs []vpcConfig
-	resp.Diagnostics.Append(data.VpcConfig.ElementsAs(ctx, &vpcConfigs, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	vpcConfig := expandVPCConfig(ctx, vpcConfigs)
-	if len(vpcConfigs) > 0 {
-		input.VpcConfig = &vpcConfig[0]
-	}
-
-	if len(job_tags) > 0 {
-		input.JobTags = Tags(tftags.New(ctx, job_tags.IgnoreAWS()))
-	}
-
-	tflog.Info(ctx, "CreateModelCustomizationJobInput:", map[string]any{
-		"BaseModelIdentifier":  input.BaseModelIdentifier,
-		"ClientRequestToken":   input.ClientRequestToken,
-		"CustomModelName":      input.CustomModelName,
-		"CustomModelKmsKeyId":  input.CustomModelKmsKeyId,
-		"JobName":              input.JobName,
-		"RoleArn":              input.RoleArn,
-		"OutputDataConfig":     input.OutputDataConfig.S3Uri,
-		"TrainingDataConfig":   input.TrainingDataConfig.S3Uri,
-		"ValidationDataConfig": input.ValidationDataConfig,
-		"VpcConfig":            input.VpcConfig,
-	})
-
-	jobStart, err := conn.CreateModelCustomizationJob(ctx, input)
+	job, err := conn.CreateModelCustomizationJob(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError("creating Bedrock Custom Model Customization Job", err.Error())
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, "ModelCustomizationJob", data.JobName.ValueString(), nil),
+			err.Error(),
+		)
 		return
 	}
 
@@ -315,54 +316,45 @@ func (r *resourceCustomModel) Create(ctx context.Context, req resource.CreateReq
 	// data.ID = flex.StringValueToFramework(ctx, "tf-acc-test-1531621220222582981")
 	// data.JobArn = flex.StringValueToFramework(ctx, "arn:aws:bedrock:us-east-1:219858395663:model-customization-job/amazon.titan-text-express-v1:0:8k/pc2v9cmxjzlq")
 
-	data.ID = data.CustomModelName
 	// Also save job arn into state now incase we need to cancel and destroy.
-	data.JobArn = flex.StringToFramework(ctx, jobStart.JobArn)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	data.JobArn = flex.StringToFramework(ctx, job.JobArn)
+
+	response.Diagnostics.Append(data.refresh(ctx, conn)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	err = waitForModelCustomizationJob(ctx, conn, *jobStart.JobArn, createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError("failed to complete model customisation job", err.Error())
-		return
-	}
-
-	resp.Diagnostics.Append(data.refresh(ctx, conn)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCustomModel) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceCustomModelModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *resourceCustomModel) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceCustomModelData
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	resp.Diagnostics.Append(data.refresh(ctx, conn)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(data.refresh(ctx, conn)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCustomModel) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceCustomModel) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	tflog.Trace(ctx, "Update not supported.")
 }
 
-func (r *resourceCustomModel) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceCustomModel) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().BedrockClient(ctx)
 
 	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
 	if err != nil {
-		resp.Diagnostics.AddError("failed to delete model invocation logging configuration", err.Error())
+		response.Diagnostics.AddError("failed to delete model invocation logging configuration", err.Error())
 		return
 	}
 }
 
-func (r *resourceCustomModel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *resourceCustomModel) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 func waitForModelCustomizationJob(ctx context.Context, conn *bedrock.Client, jobArn string, timeout time.Duration) error {
@@ -389,70 +381,68 @@ func waitForModelCustomizationJob(ctx context.Context, conn *bedrock.Client, job
 	})
 }
 
-type resourceCustomModelModel struct {
-	ID                   types.String        `tfsdk:"id"`
-	BaseModelId          types.String        `tfsdk:"base_model_id"`
-	ClientRequestToken   types.String        `tfsdk:"client_request_token"`
-	CustomModelKmsKeyId  types.String        `tfsdk:"custom_model_kms_key_id"`
-	CustomModelName      types.String        `tfsdk:"custom_model_name"`
-	HyperParameters      types.Map           `tfsdk:"hyper_parameters"`
-	JobName              types.String        `tfsdk:"job_name"`
-	JobTags              types.Map           `tfsdk:"job_tags"`
-	OutputDataConfig     types.String        `tfsdk:"output_data_config"`
-	RoleArn              types.String        `tfsdk:"role_arn"`
-	TrainingDataConfig   types.String        `tfsdk:"training_data_config"`
-	BaseModelArn         types.String        `tfsdk:"base_model_arn"`
-	CreationTime         types.String        `tfsdk:"creation_time"`
-	JobArn               types.String        `tfsdk:"job_arn"`
-	ModelArn             types.String        `tfsdk:"model_arn"`
-	ModelKmsKeyArn       types.String        `tfsdk:"model_kms_key_arn"`
-	ModelName            types.String        `tfsdk:"model_name"`
-	ValidationDataConfig types.Object        `tfsdk:"validation_data_config"`
-	VpcConfig            types.List          `tfsdk:"vpc_config"`
-	TrainingMetrics      types.List          `tfsdk:"training_metrics"`
-	ValidationMetrics    []validationMetrics `tfsdk:"validation_metrics"`
-	Tags                 types.Map           `tfsdk:"tags"`
-	TagsAll              types.Map           `tfsdk:"tags_all"`
-	Timeouts             timeouts.Value      `tfsdk:"timeouts"`
+type resourceCustomModelData struct {
+	Arn                  types.String                                          `tfsdk:"arn"`
+	BaseModelArn         types.String                                          `tfsdk:"base_model_arn"`
+	CustomizationType    types.String                                          `tfsdk:"customization_type"`
+	HyperParameters      types.Map                                             `tfsdk:"hyper_parameters"`
+	Id                   types.String                                          `tfsdk:"id"`
+	JobArn               types.String                                          `tfsdk:"job_arn"`
+	JobName              types.String                                          `tfsdk:"job_name"`
+	JobTags              types.Map                                             `tfsdk:"job_tags"`
+	JobRoleArn           types.String                                          `tfsdk:"job_role_arn"`
+	JobStatus            types.String                                          `tfsdk:"job_status"`
+	JobVpcConfig         fwtypes.ListNestedObjectValueOf[vpcConfig]            `tfsdk:"job_vpc_config"`
+	KmsKeyArn            types.String                                          `tfsdk:"kms_key_arn"`
+	Name                 types.String                                          `tfsdk:"name"`
+	OutputDataConfig     fwtypes.ListNestedObjectValueOf[outputDataConfig]     `tfsdk:"output_data_config"`
+	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[trainingDataConfig]   `tfsdk:"training_data_config"`
+	TrainingMetrics      fwtypes.ListNestedObjectValueOf[trainingMetrics]      `tfsdk:"training_metrics"`
+	ValidationDataConfig fwtypes.ListNestedObjectValueOf[validationDataConfig] `tfsdk:"validation_data_config"`
+	ValidationMetrics    fwtypes.ListNestedObjectValueOf[validationMetrics]    `tfsdk:"validation_metrics"`
+	Tags                 types.Map                                             `tfsdk:"tags"`
+	TagsAll              types.Map                                             `tfsdk:"tags_all"`
+	Timeouts             timeouts.Value                                        `tfsdk:"timeouts"`
 }
 
-func (data *resourceCustomModelModel) refresh(ctx context.Context, conn *bedrock.Client) diag.Diagnostics {
+func (data *resourceCustomModelData) refresh(ctx context.Context, conn *bedrock.Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	modelId := data.ID
-	input := &bedrock.GetCustomModelInput{
-		ModelIdentifier: modelId.ValueStringPointer(),
-	}
-	output, err := conn.GetCustomModel(ctx, input)
-	if err != nil {
-		// If we got here, the state has the model name and the job arn.
-		// Should we check for tainted state instead?
-		tflog.Info(ctx, "resourceCustomModelRead: Error reading Bedrock Custom Model. Ignoring to allow destroy to attempt to cleanup.")
-		return diags
-	}
+	/* 	modelId := data.ID
+	   	input := &bedrock.GetCustomModelInput{
+	   		ModelIdentifier: modelId.ValueStringPointer(),
+	   	}
+	   	output, err := conn.GetCustomModel(ctx, input)
 
-	data.BaseModelArn = flex.StringToFramework(ctx, output.BaseModelArn)
-	data.CreationTime = flex.StringValueToFramework(ctx, output.CreationTime.Format((time.RFC3339)))
-	data.HyperParameters = flex.FlattenFrameworkStringValueMap(ctx, output.HyperParameters)
-	data.JobArn = flex.StringToFramework(ctx, output.JobArn)
-	// This is nil in the model object - could be a bug
-	// However this is already in state so we can skip setting this here and avoid a forced update due to value change.
-	// d.Set("job_name", model.JobName)
-	data.ModelArn = flex.StringToFramework(ctx, output.ModelArn)
-	data.ModelKmsKeyArn = flex.StringToFramework(ctx, output.ModelKmsKeyArn)
-	data.ModelName = flex.StringToFramework(ctx, output.ModelName)
-	data.OutputDataConfig = flex.StringToFramework(ctx, output.OutputDataConfig.S3Uri)
-	data.TrainingDataConfig = flex.StringToFramework(ctx, output.TrainingDataConfig.S3Uri)
-	data.TrainingMetrics = flattenTrainingMetrics(ctx, output.TrainingMetrics)
-	data.ValidationDataConfig = flattenValidationDataConfig(ctx, output.ValidationDataConfig)
-	data.ValidationMetrics = flattenValidationMetrics(ctx, output.ValidationMetrics)
+	   	if err != nil {
+	   		// If we got here, the state has the model name and the job arn.
+	   		// Should we check for tainted state instead?
+	   		tflog.Info(ctx, "resourceCustomModelRead: Error reading Bedrock Custom Model. Ignoring to allow destroy to attempt to cleanup.")
+	   		return diags
+	   	}
 
-	jobTags, err := listTags(ctx, conn, *output.JobArn)
-	if err != nil {
-		diags.AddError("reading Tags for Job", err.Error())
-		return diags
-	}
-	data.JobTags = flex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
+	   	data.BaseModelArn = flex.StringToFramework(ctx, output.BaseModelArn)
+	   	data.CreationTime = flex.StringValueToFramework(ctx, output.CreationTime.Format((time.RFC3339)))
+	   	data.HyperParameters = flex.FlattenFrameworkStringValueMap(ctx, output.HyperParameters)
+	   	data.JobArn = flex.StringToFramework(ctx, output.JobArn)
+	   	// This is nil in the model object - could be a bug
+	   	// However this is already in state so we can skip setting this here and avoid a forced update due to value change.
+	   	// d.Set("job_name", model.JobName)
+	   	data.ModelArn = flex.StringToFramework(ctx, output.ModelArn)
+	   	data.ModelKmsKeyArn = flex.StringToFramework(ctx, output.ModelKmsKeyArn)
+	   	data.ModelName = flex.StringToFramework(ctx, output.ModelName)
+	   	data.OutputDataConfig = flex.StringToFramework(ctx, output.OutputDataConfig.S3Uri)
+	   	data.TrainingDataConfig = flex.StringToFramework(ctx, output.TrainingDataConfig.S3Uri)
+	   	data.TrainingMetrics = flattenTrainingMetrics(ctx, output.TrainingMetrics)
+	   	data.ValidationDataConfig = flattenValidationDataConfig(ctx, output.ValidationDataConfig)
+	   	data.ValidationMetrics = flattenValidationMetrics(ctx, output.ValidationMetrics)
 
+	   	jobTags, err := listTags(ctx, conn, *output.JobArn)
+	   	if err != nil {
+	   		diags.AddError("reading Tags for Job", err.Error())
+	   		return diags
+	   	}
+	   	data.JobTags = flex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
+	*/
 	return diags
 }
