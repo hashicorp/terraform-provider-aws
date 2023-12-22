@@ -42,4 +42,5 @@ var (
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
+	S3BucketPropagationTimeout     = s3BucketPropagationTimeout
 )
