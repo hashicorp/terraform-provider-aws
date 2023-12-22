@@ -48,7 +48,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccS3Bucket_Basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
 	hostedZoneID, _ := tfs3.HostedZoneIDForRegion(region)
 	resourceName := "aws_s3_bucket.test"
@@ -60,21 +60,46 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_basic(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acceleration_status", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "acl"),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					testAccCheckBucketDomainName(resourceName, "bucket_domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
+					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "CanonicalUser",
+						"uri":           "",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", hostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "region", region),
-					resource.TestCheckNoResourceAttr(resourceName, "website_endpoint"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					testAccCheckBucketDomainName(resourceName, "bucket_domain_name", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "website_domain"),
+					resource.TestCheckNoResourceAttr(resourceName, "website_endpoint"),
 				),
 			},
 			{
