@@ -133,7 +133,7 @@ This resource supports the following arguments:
 * `description` - (Optional) The description for the allocation.
 * `disallowedCidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipamPoolId` - (Required) The ID of the pool to which you want to assign a CIDR.
-* `netmaskLength` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0128`.
+* `netmaskLength` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-128`.
 
 ## Attribute Reference
 
@@ -166,4 +166,4 @@ Using `terraform import`, import IPAM allocations using the allocation `id` and 
 % terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ddd73bf852bf7f559291762467aeca147a50810e7c21dd054f1b8efa8376bf13 -->
+<!-- cache-key: cdktf-0.19.0 input-ddd73bf852bf7f559291762467aeca147a50810e7c21dd054f1b8efa8376bf13 -->

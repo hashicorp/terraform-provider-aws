@@ -47,10 +47,10 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `name` - (Required) Name for the alias you are creating. Pattern: `(?!^[09]+$)([aZAZ09_]+)`
+* `name` - (Required) Name for the alias you are creating. Pattern: `(?!^[0-9]+$)([a-zA-Z0-9-_]+)`
 * `description` - (Optional) Description of the alias.
 * `functionName` - (Required) Lambda Function name or ARN.
-* `functionVersion` - (Required) Lambda function version for which you are creating the alias. Pattern: `(\$latest|[09]+)`.
+* `functionVersion` - (Required) Lambda function version for which you are creating the alias. Pattern: `(\$LATEST|[0-9]+)`.
 * `routingConfig` - (Optional) The Lambda alias' route configuration settings. Fields documented below
 
 `routingConfig` supports the following arguments:
@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) identifying your Lambda function alias.
-* `invokeArn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in [`awsApiGatewayIntegration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`
+* `invokeArn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`
 
 [1]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [2]: http://docs.aws.amazon.com/lambda/latest/dg/API_CreateAlias.html
@@ -90,4 +90,4 @@ Using `terraform import`, import Lambda Function Aliases using the `functionName
 % terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8fb769e7276158548fab5fb93af4f2a28e9364558792a79cc5b94ffb6bf2c452 -->
+<!-- cache-key: cdktf-0.19.0 input-8fb769e7276158548fab5fb93af4f2a28e9364558792a79cc5b94ffb6bf2c452 -->

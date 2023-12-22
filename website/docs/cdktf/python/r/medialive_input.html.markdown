@@ -128,4 +128,4 @@ Using `terraform import`, import MediaLive Input using the `id`. For example:
 % terraform import aws_medialive_input.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->
+<!-- cache-key: cdktf-0.19.0 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->

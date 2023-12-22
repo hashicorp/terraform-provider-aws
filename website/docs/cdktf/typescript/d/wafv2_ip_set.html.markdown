@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAFv2 IP Set.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `cloudfront` or `regional`. To work with CloudFront, you must also specify the region `usEast1` (N. Virginia) on the AWS provider.
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
 ## Attribute Reference
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Unique identifier for the set.
 * `ipAddressVersion` - IP address version of the set.
 
-<!-- cache-key: cdktf-0.18.0 input-d7ec9696daa356516487e670fd980b4d44f0e307cfc20630bd6d1fb8fc4322b0 -->
+<!-- cache-key: cdktf-0.19.0 input-d7ec9696daa356516487e670fd980b4d44f0e307cfc20630bd6d1fb8fc4322b0 -->

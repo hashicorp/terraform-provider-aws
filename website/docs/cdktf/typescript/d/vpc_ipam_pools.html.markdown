@@ -70,7 +70,7 @@ This data source exports the following attributes in addition to the arguments a
 The following attributes are available on each pool entry found.
 
 * `addressFamily` - IP protocol assigned to this pool.
-* `allocationDefaultNetmaskLength` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10000/8` and you enter 16 here, new allocations will default to `10000/16`.
+* `allocationDefaultNetmaskLength` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
 * `allocationMaxNetmaskLength` - The maximum netmask length that will be required for CIDR allocations in this pool.
 * `allocationMinNetmaskLength` - The minimum netmask length that will be required for CIDR allocations in this pool.
 * `allocationResourceTags` - Tags that are required to create resources in using this pool.
@@ -85,4 +85,4 @@ The following attributes are available on each pool entry found.
 * `sourceIpamPoolId` - ID of the source IPAM pool.
 * `tags` - Map of tags to assigned to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-0f25f29b8da73a8eab1f57b2d6fd05fbdbacc033fa3a351d8ef07553310a8208 -->
+<!-- cache-key: cdktf-0.19.0 input-0f25f29b8da73a8eab1f57b2d6fd05fbdbacc033fa3a351d8ef07553310a8208 -->

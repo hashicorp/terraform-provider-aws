@@ -44,9 +44,9 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `assessmentId` - (Required) Identifier for the assessment.
-* `controlSetId` - (Required) Assessment control set name. This value is the control set name used during assessment creation (not the AWS-generated ID). The `id` suffix on this attribute has been preserved to be consistent with the underlying AWS API.
+* `controlSetId` - (Required) Assessment control set name. This value is the control set name used during assessment creation (not the AWS-generated ID). The `_id` suffix on this attribute has been preserved to be consistent with the underlying AWS API.
 * `roleArn` - (Required) Amazon Resource Name (ARN) of the IAM role.
-* `roleType` - (Required) Type of customer persona. For assessment delegation, type must always be `resourceOwner`.
+* `roleType` - (Required) Type of customer persona. For assessment delegation, type must always be `RESOURCE_OWNER`.
 
 The following arguments are optional:
 
@@ -57,7 +57,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `delegationId` - Unique identifier for the delegation.
-* `id` - Unique identifier for the resource. This is a comma-separated string containing `assessmentId`, `roleArn`, and `controlSetId`.
+* `id` - Unique identifier for the resource. This is a comma-separated string containing `assessment_id`, `role_arn`, and `control_set_id`.
 * `status` - Status of the delegation.
 
 ## Import
@@ -82,4 +82,4 @@ Using `terraform import`, import Audit Manager Assessment Delegation using the `
 % terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a28cb94ff95d8ebfec7195b030654929667d5f4188784ab4f4a6c94229437e4d -->
+<!-- cache-key: cdktf-0.19.0 input-a28cb94ff95d8ebfec7195b030654929667d5f4188784ab4f4a6c94229437e4d -->

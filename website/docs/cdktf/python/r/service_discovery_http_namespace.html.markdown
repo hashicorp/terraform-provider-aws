@@ -66,4 +66,4 @@ Using `terraform import`, import Service Discovery HTTP Namespace using the name
 % terraform import aws_service_discovery_http_namespace.example ns-1234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-72ee12af572418f0c5d18cd5ae2d5d173e51de9928465723b81dfdbd70c4804b -->
+<!-- cache-key: cdktf-0.19.0 input-72ee12af572418f0c5d18cd5ae2d5d173e51de9928465723b81dfdbd70c4804b -->

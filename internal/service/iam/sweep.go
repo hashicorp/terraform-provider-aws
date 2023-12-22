@@ -683,7 +683,7 @@ func sweepUsers(region string) error {
 
 			log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
 
-			if err := DetachPolicyFromUser(ctx, conn, username, policyARN); err != nil {
+			if err := detachPolicyFromUser(ctx, conn, username, policyARN); err != nil {
 				sweeperErr := fmt.Errorf("error detaching IAM User (%s) attached policy (%s): %s", username, policyARN, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)

@@ -66,4 +66,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `severity_rating` – The severity of findings generated from this security standard control.
 * `title` – The standard control title.
 
-<!-- cache-key: cdktf-0.18.0 input-4f2686dbc145e094fc564010e6dbf6ac103f5be38f045e92ccb633c43bb96b39 -->
+<!-- cache-key: cdktf-0.19.0 input-4f2686dbc145e094fc564010e6dbf6ac103f5be38f045e92ccb633c43bb96b39 -->

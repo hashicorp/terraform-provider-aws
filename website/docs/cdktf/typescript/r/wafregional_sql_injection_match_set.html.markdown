@@ -55,17 +55,17 @@ This resource supports the following arguments:
 
 * `fieldToMatch` - (Required) Specifies where in a web request to look for snippets of malicious SQL code.
 * `textTransformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
-  If you specify a transformation, AWS WAF performs the transformation on `fieldToMatch` before inspecting a request for a match.
-  e.g., `cmdLine`, `htmlEntityDecode` or `none`.
+  If you specify a transformation, AWS WAF performs the transformation on `field_to_match` before inspecting a request for a match.
+  e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_SqlInjectionMatchTuple.html#WAF-Type-regional_SqlInjectionMatchTuple-TextTransformation)
   for all supported values.
 
 ### `fieldToMatch`
 
-* `data` - (Optional) When `type` is `header`, enter the name of the header that you want to search, e.g., `userAgent` or `referer`.
+* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g., `User-Agent` or `Referer`.
   If `type` is any other value, omit this field.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
-  e.g., `header`, `method` or `body`.
+  e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_FieldToMatch.html)
   for all supported values.
 
@@ -97,4 +97,4 @@ Using `terraform import`, import WAF Regional Sql Injection Match Set using the 
 % terraform import aws_wafregional_sql_injection_match_set.sql_injection_match_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-adfcd685dca95982844290477cadf9fa51737f4a170db60101e185299508456a -->
+<!-- cache-key: cdktf-0.19.0 input-adfcd685dca95982844290477cadf9fa51737f4a170db60101e185299508456a -->

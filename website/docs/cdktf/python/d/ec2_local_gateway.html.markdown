@@ -80,4 +80,4 @@ The following attributes are additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-e9224792e92736687e2ac8179a6512547c5aaa4078c6bb91db11fd714268b0ee -->
+<!-- cache-key: cdktf-0.19.0 input-e9224792e92736687e2ac8179a6512547c5aaa4078c6bb91db11fd714268b0ee -->

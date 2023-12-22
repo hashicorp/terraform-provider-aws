@@ -85,23 +85,23 @@ This resource supports the following arguments:
 
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance.
 * `permissionSetArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set that the admin wants to grant the principal access to.
-* `principalId` - (Required, Forces new resource) An identifier for an object in SSO, such as a user or group. PrincipalIds are GUIDs (For example, `f81D4Fae7Dec11D0A76500A0C91E6Bf6`).
-* `principalType` - (Required, Forces new resource) The entity type for which the assignment will be created. Valid values: `user`, `group`.
+* `principalId` - (Required, Forces new resource) An identifier for an object in SSO, such as a user or group. PrincipalIds are GUIDs (For example, `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`).
+* `principalType` - (Required, Forces new resource) The entity type for which the assignment will be created. Valid values: `USER`, `GROUP`.
 * `targetId` - (Required, Forces new resource) An AWS account identifier, typically a 10-12 digit string.
-* `targetType` - (Optional, Forces new resource) The entity type for which the assignment will be created. Valid values: `awsAccount`.
+* `targetType` - (Optional, Forces new resource) The entity type for which the assignment will be created. Valid values: `AWS_ACCOUNT`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The identifier of the Account Assignment i.e., `principalId`, `principalType`, `targetId`, `targetType`, `permissionSetArn`, `instanceArn` separated by commas (`,`).
+* `id` - The identifier of the Account Assignment i.e., `principal_id`, `principal_type`, `target_id`, `target_type`, `permission_set_arn`, `instance_arn` separated by commas (`,`).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -125,4 +125,4 @@ Using `terraform import`, import SSO Account Assignments using the `principalId`
 % terraform import aws_ssoadmin_account_assignment.example f81d4fae-7dec-11d0-a765-00a0c91e6bf6,GROUP,1234567890,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef,arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8b452aa69c7edc6b5216675cd1c17412026fe86f918609ce3cea201495fc2f0e -->
+<!-- cache-key: cdktf-0.19.0 input-8b452aa69c7edc6b5216675cd1c17412026fe86f918609ce3cea201495fc2f0e -->

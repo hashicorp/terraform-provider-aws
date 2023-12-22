@@ -125,18 +125,18 @@ This resource supports the following arguments:
 
 * `restApiId` - (Required) ID of the associated REST API
 * `resourceId` - (Required) API resource ID
-* `httpMethod` - (Required) HTTP Method (`get`, `post`, `put`, `delete`, `head`, `options`, `any`)
-* `authorization` - (Required) Type of authorization used for the method (`none`, `custom`, `awsIam`, `cognitoUserPools`)
-* `authorizerId` - (Optional) Authorizer id to be used when the authorization is `custom` or `cognitoUserPools`
-* `authorizationScopes` - (Optional) Authorization scopes used when the authorization is `cognitoUserPools`
+* `httpMethod` - (Required) HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
+* `authorization` - (Required) Type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`, `COGNITO_USER_POOLS`)
+* `authorizerId` - (Optional) Authorizer id to be used when the authorization is `CUSTOM` or `COGNITO_USER_POOLS`
+* `authorizationScopes` - (Optional) Authorization scopes used when the authorization is `COGNITO_USER_POOLS`
 * `apiKeyRequired` - (Optional) Specify if the method requires an API key
 * `operationName` - (Optional) Function name that will be given to the method when generating an SDK through API Gateway. If omitted, API Gateway will generate a function name based on the resource path and HTTP verb.
 * `requestModels` - (Optional) Map of the API models used for the request's content type
   where key is the content type (e.g., `application/json`)
-  and value is either `error`, `empty` (built-in models) or `awsApiGatewayModel`'s `name`.
-* `requestValidatorId` - (Optional) ID of a `awsApiGatewayRequestValidator`
+  and value is either `Error`, `Empty` (built-in models) or `aws_api_gateway_model`'s `name`.
+* `requestValidatorId` - (Optional) ID of a `aws_api_gateway_request_validator`
 * `requestParameters` - (Optional) Map of request parameters (from the path, query string and headers) that should be passed to the integration. The boolean value indicates whether the parameter is required (`true`) or optional (`false`).
-  For example: `request_parameters = {"method.request.header.X-Some-Header" = true "method.request.querystring.some-query-param" = true}` would define that the header `xSomeHeader` and the query string `someQueryParam` must be provided in the request.
+  For example: `request_parameters = {"method.request.header.X-Some-Header" = true "method.request.querystring.some-query-param" = true}` would define that the header `X-Some-Header` and the query string `some-query-param` must be provided in the request.
 
 ## Attribute Reference
 
@@ -164,4 +164,4 @@ Using `terraform import`, import `awsApiGatewayMethod` using `restApiId/resource
 % terraform import aws_api_gateway_method.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d5fc57c36d3feff79723b5c6ed0551e4895d96864eaac47e1cfecf484fd84f98 -->
+<!-- cache-key: cdktf-0.19.0 input-d5fc57c36d3feff79723b5c6ed0551e4895d96864eaac47e1cfecf484fd84f98 -->

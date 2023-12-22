@@ -57,4 +57,4 @@ The following attribute is additionally exported:
 * `statusMessage` - Additional information about the status of the response, if available.
 * `vpcId` - The unique identifier of the VPC that is associated with the rule group.
 
-<!-- cache-key: cdktf-0.18.0 input-96baaccea7a8993bc2b43ff8bcd9ea43595994e4407fb3bc1d20edf090565dd8 -->
+<!-- cache-key: cdktf-0.19.0 input-96baaccea7a8993bc2b43ff8bcd9ea43595994e4407fb3bc1d20edf090565dd8 -->

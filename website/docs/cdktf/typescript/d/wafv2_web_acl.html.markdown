@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAFv2 Web ACL.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `cloudfront` or `regional`. To work with CloudFront, you must also specify the region `usEast1` (N. Virginia) on the AWS provider.
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
 ## Attribute Reference
 
@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the WebACL that helps with identification.
 * `id` - Unique identifier of the WebACL.
 
-<!-- cache-key: cdktf-0.18.0 input-af626ac3c0fee58373df42af4a4ea59647ddfb9c8a5feb783fe3c2a90de2da07 -->
+<!-- cache-key: cdktf-0.19.0 input-af626ac3c0fee58373df42af4a4ea59647ddfb9c8a5feb783fe3c2a90de2da07 -->

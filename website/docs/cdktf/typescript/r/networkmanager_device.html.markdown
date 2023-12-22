@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `model` - (Optional) The model of device.
 * `serialNumber` - (Optional) The serial number of the device.
 * `siteId` - (Optional) The ID of the site.
-* `tags` - (Optional) Key-value tags for the device. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the device. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) The type of device.
 * `vendor` - (Optional) The vendor of the device.
 
@@ -67,7 +67,7 @@ The `location` object supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the device.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -91,4 +91,4 @@ Using `terraform import`, import `awsNetworkmanagerDevice` using the device ARN.
 % terraform import aws_networkmanager_device.example arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/device-07f6fd08867abc123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-75ef73ba82c65c2eb02fee62646d84caef3f0d89552cdf12c29281e3363f4d2e -->
+<!-- cache-key: cdktf-0.19.0 input-75ef73ba82c65c2eb02fee62646d84caef3f0d89552cdf12c29281e3363f4d2e -->

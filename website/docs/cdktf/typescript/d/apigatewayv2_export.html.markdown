@@ -41,9 +41,9 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `apiId` - (Required) API identifier.
-* `specification` - (Required) Version of the API specification to use. `oas30`, for OpenAPI 3.0, is the only supported value.
-* `outputType` - (Required) Output type of the exported definition file. Valid values are `json` and `yaml`.
-* `exportVersion` - (Optional) Version of the API Gateway export algorithm. API Gateway uses the latest version by default. Currently, the only supported version is `10`.
+* `specification` - (Required) Version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
+* `outputType` - (Required) Output type of the exported definition file. Valid values are `JSON` and `YAML`.
+* `exportVersion` - (Optional) Version of the API Gateway export algorithm. API Gateway uses the latest version by default. Currently, the only supported version is `1.0`.
 * `includeExtensions` - (Optional) Whether to include API Gateway extensions in the exported API definition. API Gateway extensions are included by default.
 * `stageName` - (Optional) Name of the API stage to export. If you don't specify this property, a representation of the latest API configuration is exported.
 
@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - API identifier.
 * `body` - ID of the API.
 
-<!-- cache-key: cdktf-0.18.0 input-6480a64e749693f83cf73592ca35d58ca5a49b6e975099c338b5341415898a74 -->
+<!-- cache-key: cdktf-0.19.0 input-6480a64e749693f83cf73592ca35d58ca5a49b6e975099c338b5341415898a74 -->

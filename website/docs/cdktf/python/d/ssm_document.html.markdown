@@ -73,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content` - Contents of the document.
 * `document_type` - Type of the document.
 
-<!-- cache-key: cdktf-0.18.0 input-9343adb58c9912030cbf5122132a6b4bd27fc637380c9a974b20e323246d88d8 -->
+<!-- cache-key: cdktf-0.19.0 input-9343adb58c9912030cbf5122132a6b4bd27fc637380c9a974b20e323246d88d8 -->

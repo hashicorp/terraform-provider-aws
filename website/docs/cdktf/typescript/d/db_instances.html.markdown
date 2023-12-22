@@ -69,7 +69,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
-* `filter` - (Optional) Configuration block(s) used to filter instances with AWS supported attributes, such as `engine`, `dbClusterId` or `dbInstanceId` for example. Detailed below.
+* `filter` - (Optional) Configuration block(s) used to filter instances with AWS supported attributes, such as `engine`, `db-cluster-id` or `db-instance-id` for example. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instances.
 
 ### filter Configuration block
@@ -86,4 +86,4 @@ This data source exports the following attributes in addition to the arguments a
 * `instanceArns` - ARNs of the matched RDS instances.
 * `instanceIdentifiers` - Identifiers of the matched RDS instances.
 
-<!-- cache-key: cdktf-0.18.0 input-759327832e7c9698cbc6e9a3c77063f37e9ca19af1429332b64a60ca9d471f64 -->
+<!-- cache-key: cdktf-0.19.0 input-759327832e7c9698cbc6e9a3c77063f37e9ca19af1429332b64a60ca9d471f64 -->

@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports
 * `node_arn` - ARN of the node
 
-<!-- cache-key: cdktf-0.18.0 input-bff2642a3e21e8b608fc7f2ec749ea4dc2c86d2f7735aae811865faa68478e8c -->
+<!-- cache-key: cdktf-0.19.0 input-bff2642a3e21e8b608fc7f2ec749ea4dc2c86d2f7735aae811865faa68478e8c -->

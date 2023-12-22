@@ -81,7 +81,7 @@ This configuration block supports the following attributes:
 This configuration block supports the following attributes:
 
 * `desiredInstanceType` - (Optional) The instance type that you want to preconfigure for your domain. See the [AWS documentation](https://docs.aws.amazon.com/cloudsearch/latest/developerguide/API_ScalingParameters.html) for valid values.
-* `desiredPartitionCount` - (Optional) The number of partitions you want to preconfigure for your domain. Only valid when you select `search2Xlarge` as the instance type.
+* `desiredPartitionCount` - (Optional) The number of partitions you want to preconfigure for your domain. Only valid when you select `search.2xlarge` as the instance type.
 * `desiredReplicationCount` - (Optional) The number of replicas you want to preconfigure for each index partition.
 
 ### index_field
@@ -89,7 +89,7 @@ This configuration block supports the following attributes:
 This configuration block supports the following attributes:
 
 * `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 3 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
-* `type` - (Required) The field type. Valid values: `date`, `dateArray`, `double`, `doubleArray`, `int`, `intArray`, `literal`, `literalArray`, `text`, `textArray`.
+* `type` - (Required) The field type. Valid values: `date`, `date-array`, `double`, `double-array`, `int`, `int-array`, `literal`, `literal-array`, `text`, `text-array`.
 * `analysisScheme` - (Optional) The analysis scheme you want to use for a `text` field. The analysis scheme specifies the language-specific text processing options that are used during indexing.
 * `defaultValue` - (Optional) The default value for the field. This value is used when no value is specified for the field in the document data.
 * `facet` - (Optional) You can get facet information by enabling this.
@@ -112,9 +112,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -138,4 +138,4 @@ Using `terraform import`, import CloudSearch Domains using the `name`. For examp
 % terraform import aws_cloudsearch_domain.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-df7fa25a0a776188ea2cf1cb4023457fb311e8f2073fe09ae64b76245200a9e4 -->
+<!-- cache-key: cdktf-0.19.0 input-df7fa25a0a776188ea2cf1cb4023457fb311e8f2073fe09ae64b76245200a9e4 -->

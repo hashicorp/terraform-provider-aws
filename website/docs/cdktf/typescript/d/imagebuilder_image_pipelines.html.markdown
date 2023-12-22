@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Image Pipelines.
 * `names` - Set of names of the matched Image Builder Image Pipelines.
 
-<!-- cache-key: cdktf-0.18.0 input-9aa1a817b341dd2fe9ffacd11d32c26b3c20e350b371b04907e37c56aa311d03 -->
+<!-- cache-key: cdktf-0.19.0 input-9aa1a817b341dd2fe9ffacd11d32c26b3c20e350b371b04907e37c56aa311d03 -->

@@ -163,17 +163,17 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `destinationConfiguration` - (Required) Object containing destination configuration for where chat activity will be logged. This object must contain exactly one of the following children arguments:
-    * `cloudwatchLogs` - An Amazon CloudWatch Logs destination configuration where chat activity will be logged.
-        * `logGroupName` - Name of the Amazon Cloudwatch Logs destination where chat activity will be logged.
+    * `cloudwatch_logs` - An Amazon CloudWatch Logs destination configuration where chat activity will be logged.
+        * `log_group_name` - Name of the Amazon Cloudwatch Logs destination where chat activity will be logged.
     * `firehose` - An Amazon Kinesis Data Firehose destination configuration where chat activity will be logged.
-        * `deliveryStreamName` - Name of the Amazon Kinesis Firehose delivery stream where chat activity will be logged.
+        * `delivery_stream_name` - Name of the Amazon Kinesis Firehose delivery stream where chat activity will be logged.
     * `s3` - An Amazon S3 destination configuration where chat activity will be logged.
-        * `bucketName` - Name of the Amazon S3 bucket where chat activity will be logged.
+        * `bucket_name` - Name of the Amazon S3 bucket where chat activity will be logged.
 
 The following arguments are optional:
 
 * `name` - (Optional) Logging Configuration name.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -182,15 +182,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Logging Configuration.
 * `id` - ID of the Logging Configuration.
 * `state` - State of the Logging Configuration.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -214,4 +214,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Logging Configurat
 % terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->
+<!-- cache-key: cdktf-0.19.0 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->

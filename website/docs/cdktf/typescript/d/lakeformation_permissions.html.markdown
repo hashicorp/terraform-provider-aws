@@ -157,7 +157,7 @@ The following argument is optional:
 
 The following arguments are required:
 
-* `resourceType` – (Required) Resource type for which the tag policy applies. Valid values are `database` and `table`.
+* `resourceType` – (Required) Resource type for which the tag policy applies. Valid values are `DATABASE` and `TABLE`.
 * `expression` - (Required) List of tag conditions that apply to the resource's tag policy. Configuration block for tag conditions that apply to the policy. See [`expression`](#expression) below.
 
 The following argument is optional:
@@ -191,8 +191,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `catalogId` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `columnNames` - (Optional) Set of column names for the table. At least one of `columnNames` or `excludedColumnNames` is required.
-* `excludedColumnNames` - (Optional) Set of column names for the table to exclude. At least one of `columnNames` or `excludedColumnNames` is required.
+* `columnNames` - (Optional) Set of column names for the table. At least one of `column_names` or `excluded_column_names` is required.
+* `excludedColumnNames` - (Optional) Set of column names for the table to exclude. At least one of `column_names` or `excluded_column_names` is required.
 
 ## Attribute Reference
 
@@ -201,4 +201,4 @@ In addition to the above arguments, the following attribute is exported:
 * `permissions` – List of permissions granted to the principal. For details on permissions, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `permissionsWithGrantOption` - Subset of `permissions` which the principal can pass.
 
-<!-- cache-key: cdktf-0.18.0 input-f820afbcf35bc80d4121f086cb449534cf9844817817f907e94a928ec49659fd -->
+<!-- cache-key: cdktf-0.19.0 input-f820afbcf35bc80d4121f086cb449534cf9844817817f907e94a928ec49659fd -->

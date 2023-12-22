@@ -149,4 +149,4 @@ Using `terraform import`, import endpoint configurations using the `name`. For e
 % terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a480c542052fe4577930c727244f5ec85cceca16de58e98751ed63acbfadd2a7 -->
+<!-- cache-key: cdktf-0.19.0 input-a480c542052fe4577930c727244f5ec85cceca16de58e98751ed63acbfadd2a7 -->

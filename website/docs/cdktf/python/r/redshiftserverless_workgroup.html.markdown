@@ -110,4 +110,4 @@ Using `terraform import`, import Redshift Serverless Workgroups using the `workg
 % terraform import aws_redshiftserverless_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f8191fced5005bdb54568b11bf8280442d2128c6ce0381714a2d602f4d39f748 -->
+<!-- cache-key: cdktf-0.19.0 input-f8191fced5005bdb54568b11bf8280442d2128c6ce0381714a2d602f4d39f748 -->

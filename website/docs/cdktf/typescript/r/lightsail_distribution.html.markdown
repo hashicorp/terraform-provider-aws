@@ -242,12 +242,12 @@ The following arguments are optional:
 * `isEnabled` - (Optional) Indicates whether the distribution is enabled. Default: `true`.
 * `tags` - (Optional) Map of tags for the Lightsail Distribution. If
   configured with a provider
-  [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
+  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
   present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### default_cache_behavior
 
-* `behavior` - (Required) The cache behavior of the distribution. Valid values: `cache` and `dontCache`.
+* `behavior` - (Required) The cache behavior of the distribution. Valid values: `cache` and `dont-cache`.
 
 ### origin
 
@@ -300,7 +300,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `resourceType` - The Lightsail resource type (e.g., Distribution).
 * `status` - The status of the distribution.
 * `supportCode` - The support code. Include this code in your email to support when you have questions about your Lightsail distribution. This code enables our support team to look up your Lightsail information more easily.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### location
 
@@ -311,9 +311,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -337,4 +337,4 @@ Using `terraform import`, import Lightsail Distribution using the `id`. For exam
 % terraform import aws_lightsail_distribution.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->
+<!-- cache-key: cdktf-0.19.0 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->

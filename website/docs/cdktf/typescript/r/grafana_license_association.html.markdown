@@ -73,15 +73,15 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `licenseType` - (Required) The type of license for the workspace license association. Valid values are `enterprise` and `enterpriseFreeTrial`.
+* `licenseType` - (Required) The type of license for the workspace license association. Valid values are `ENTERPRISE` and `ENTERPRISE_FREE_TRIAL`.
 * `workspaceId` - (Required) The workspace id.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `freeTrialExpiration` - If `licenseType` is set to `enterpriseFreeTrial`, this is the expiration date of the free trial.
-* `licenseExpiration` - If `licenseType` is set to `enterprise`, this is the expiration date of the enterprise license.
+* `freeTrialExpiration` - If `license_type` is set to `ENTERPRISE_FREE_TRIAL`, this is the expiration date of the free trial.
+* `licenseExpiration` - If `license_type` is set to `ENTERPRISE`, this is the expiration date of the enterprise license.
 
 ## Import
 
@@ -105,4 +105,4 @@ Using `terraform import`, import Grafana workspace license association using the
 % terraform import aws_grafana_license_association.example g-2054c75a02
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-90acddbaf917f9205b009266924d2aa8cb3bd6ec3e83679cbf909ed8d07bd217 -->
+<!-- cache-key: cdktf-0.19.0 input-90acddbaf917f9205b009266924d2aa8cb3bd6ec3e83679cbf909ed8d07bd217 -->

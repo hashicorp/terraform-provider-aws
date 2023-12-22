@@ -136,12 +136,12 @@ This resource supports the following arguments:
 * `roleArn` – (Required) The ARN of the IAM role associated with this ML Transform.
 * `description` – (Optional) Description of the ML Transform.
 * `glueVersion` - (Optional) The version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `maxCapacity` – (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `maxCapacity` is a mutually exclusive option with `numberOfWorkers` and `workerType`.
+* `maxCapacity` – (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
 * `maxRetries` – (Optional) The maximum number of times to retry this ML Transform if it fails.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` – (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
-* `workerType` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `standard`, `g1X`, or `g2X`. Required with `numberOfWorkers`.
-* `numberOfWorkers` - (Optional) The number of workers of a defined `workerType` that are allocated when an ML Transform runs. Required with `workerType`.
+* `workerType` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `number_of_workers`.
+* `numberOfWorkers` - (Optional) The number of workers of a defined `worker_type` that are allocated when an ML Transform runs. Required with `worker_type`.
 
 ### input_record_tables
 
@@ -170,7 +170,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Glue ML Transform ID.
 * `labelCount` - The number of labels available for this transform.
 * `schema` - The object that represents the schema that this transform accepts. see [Schema](#schema).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### schema
 
@@ -199,4 +199,4 @@ Using `terraform import`, import Glue ML Transforms using `id`. For example:
 % terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-295ef64caa0ed9cd96476b3d72c04967e7f94dc142182bf5b2175f9cde26f649 -->
+<!-- cache-key: cdktf-0.19.0 input-295ef64caa0ed9cd96476b3d72c04967e7f94dc142182bf5b2175f9cde26f649 -->

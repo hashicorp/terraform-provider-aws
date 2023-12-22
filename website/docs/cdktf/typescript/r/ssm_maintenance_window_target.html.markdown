@@ -97,7 +97,7 @@ This resource supports the following arguments:
 * `windowId` - (Required) The Id of the maintenance window to register the target with.
 * `name` - (Optional) The name of the maintenance window target.
 * `description` - (Optional) The description of the maintenance window target.
-* `resourceType` - (Required) The type of target being registered with the Maintenance Window. Possible values are `instance` and `resourceGroup`.
+* `resourceType` - (Required) The type of target being registered with the Maintenance Window. Possible values are `INSTANCE` and `RESOURCE_GROUP`.
 * `targets` - (Required) The targets to register with the maintenance window. In other words, the instances to run commands on when the maintenance window runs. You can specify targets using instance IDs, resource group names, or tags that have been applied to instances. For more information about these examples formats see
  (https://docs.aws.amazon.com/systems-manager/latest/userguide/mw-cli-tutorial-targets-examples.html)
 * `ownerInformation` - (Optional) User-provided value that will be included in any CloudWatch events raised while running tasks for these targets in this Maintenance Window.
@@ -130,4 +130,4 @@ Using `terraform import`, import SSM Maintenance Window targets using `windowId/
 % terraform import aws_ssm_maintenance_window_target.example mw-0c50858d01EXAMPLE/23639a0b-ddbc-4bca-9e72-78d96EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-23b182db6aa7bfeef9866d68456e0abddd9b0255898371206b63dfe63dfee54e -->
+<!-- cache-key: cdktf-0.19.0 input-23b182db6aa7bfeef9866d68456e0abddd9b0255898371206b63dfe63dfee54e -->

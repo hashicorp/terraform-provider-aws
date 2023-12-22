@@ -78,4 +78,4 @@ Using `terraform import`, import Direct Connect LAGs using the LAG `id`. For exa
 % terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ed3f72bbdf567cfec0fe7862f21073034886100b66c1dcbdcdf0587bf6a6a4c4 -->
+<!-- cache-key: cdktf-0.19.0 input-ed3f72bbdf567cfec0fe7862f21073034886100b66c1dcbdcdf0587bf6a6a4c4 -->

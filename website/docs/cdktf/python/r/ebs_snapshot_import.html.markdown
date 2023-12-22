@@ -94,4 +94,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.18.0 input-a913e99cf61c1c6954df7657480fc954e915e7e612a83eefbf5010e1f4fc479d -->
+<!-- cache-key: cdktf-0.19.0 input-a913e99cf61c1c6954df7657480fc954e915e7e612a83eefbf5010e1f4fc479d -->

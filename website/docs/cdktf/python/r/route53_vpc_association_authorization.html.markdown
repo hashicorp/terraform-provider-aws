@@ -107,4 +107,4 @@ Using `terraform import`, import Route 53 VPC Association Authorizations using t
 % terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5538910c15da1bdf9d215131a092f3a81fc71383f121c9a24ab62a7757345a40 -->
+<!-- cache-key: cdktf-0.19.0 input-5538910c15da1bdf9d215131a092f3a81fc71383f121c9a24ab62a7757345a40 -->

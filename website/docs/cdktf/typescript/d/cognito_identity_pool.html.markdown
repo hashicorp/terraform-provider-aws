@@ -46,7 +46,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - An identity pool ID, e.g. `usWest2:1A2345678901234B5CdeF6789G01H2I3`.
+* `id` - An identity pool ID, e.g. `us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3`.
 * `arn` - ARN of the Pool.
 * `allowUnauthenticatedIdentities` - Whether the identity pool supports unauthenticated logins or not.
 * `allowClassicFlow` - Whether the classic / basic authentication flow is enabled.
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supportedLoginProviders` - Key-Value pairs mapping provider names to provider app IDs.
 * `tags` - A map of tags to assigned to the Identity Pool.
 
-<!-- cache-key: cdktf-0.18.0 input-6bbe3d8309c3b6b61d82ed31432b903fb83ab96fbd1ea591aba2ca68e658f68f -->
+<!-- cache-key: cdktf-0.19.0 input-6bbe3d8309c3b6b61d82ed31432b903fb83ab96fbd1ea591aba2ca68e658f68f -->

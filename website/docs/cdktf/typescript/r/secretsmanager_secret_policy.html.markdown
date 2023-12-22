@@ -74,7 +74,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `policy` - (Required) Valid JSON document representing a [resource policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html). For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Unlike `awsSecretsmanagerSecret`, where `policy` can be set to `"{}"` to delete the policy, `"{}"` is not a valid policy since `policy` is required.
+* `policy` - (Required) Valid JSON document representing a [resource policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html). For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Unlike `aws_secretsmanager_secret`, where `policy` can be set to `"{}"` to delete the policy, `"{}"` is not a valid policy since `policy` is required.
 * `secretArn` - (Required) Secret ARN.
 
 The following arguments are optional:
@@ -109,4 +109,4 @@ Using `terraform import`, import `awsSecretsmanagerSecretPolicy` using the secre
 % terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-645c813817dc94994f91896c0dc33ab5185045f6665587858a142de45a69dfb5 -->
+<!-- cache-key: cdktf-0.19.0 input-645c813817dc94994f91896c0dc33ab5185045f6665587858a142de45a69dfb5 -->

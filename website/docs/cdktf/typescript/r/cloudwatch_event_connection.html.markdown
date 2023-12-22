@@ -195,15 +195,15 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
-* `authorizationType` - (Required) Choose the type of authorization to use for the connection. One of `apiKey`,`basic`,`oauthClientCredentials`.
+* `authorizationType` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `authParameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
-* `invocationHttpParameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 
 `authParameters` support the following:
 
 * `apiKey` - (Optional) Parameters used for API_KEY authorization. An API key to include in the header for each authentication request. A maximum of 1 are allowed. Conflicts with `basic` and `oauth`. Documented below.
-* `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `apiKey` and `oauth`. Documented below.
-* `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `apiKey`. Documented below.
+* `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `api_key` and `oauth`. Documented below.
+* `invocationHttpParameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
+* `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `api_key`. Documented below.
 
 `apiKey` support the following:
 
@@ -220,8 +220,8 @@ This resource supports the following arguments:
 * `authorizationEndpoint` - (Required) The URL to the authorization endpoint.
 * `httpMethod` - (Required) A password for the authorization. Created and stored in AWS Secrets Manager.
 * `clientParameters` - (Required) Contains the client parameters for OAuth authorization. Contains the following two parameters.
-    * `clientId` - (Required) The client ID for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
-    * `clientSecret` - (Required) The client secret for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
+    * `client_id` - (Required) The client ID for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
+    * `client_secret` - (Required) The client secret for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
 * `oauthHttpParameters` - (Required) OAuth Http Parameters are additional credentials used to sign the request to the authorization endpoint to exchange the OAuth Client information for an access token. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 
 `invocationHttpParameters` and `oauthHttpParameters` support the following:
@@ -229,17 +229,17 @@ This resource supports the following arguments:
 * `body` - (Optional) Contains additional body string parameters for the connection. You can include up to 100 additional body string parameters per request. Each additional parameter counts towards the event payload size, which cannot exceed 64 KB. Each parameter can contain the following:
     * `key` - (Required) The key for the parameter.
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
-    * `isValueSecret` - (Optional) Specified whether the value is secret.
+    * `is_value_secret` - (Optional) Specified whether the value is secret.
 
 * `header` - (Optional) Contains additional header parameters for the connection. You can include up to 100 additional body string parameters per request. Each additional parameter counts towards the event payload size, which cannot exceed 64 KB. Each parameter can contain the following:
     * `key` - (Required) The key for the parameter.
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
-    * `isValueSecret` - (Optional) Specified whether the value is secret.
+    * `is_value_secret` - (Optional) Specified whether the value is secret.
 
 * `queryString` - (Optional) Contains additional query string parameters for the connection. You can include up to 100 additional body string parameters per request. Each additional parameter counts towards the event payload size, which cannot exceed 64 KB. Each parameter can contain the following:
     * `key` - (Required) The key for the parameter.
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
-    * `isValueSecret` - (Optional) Specified whether the value is secret.
+    * `is_value_secret` - (Optional) Specified whether the value is secret.
 
 ## Attribute Reference
 
@@ -270,4 +270,4 @@ Using `terraform import`, import EventBridge EventBridge connection using the `n
 % terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4759efe6af4674649e56020fa0ba96724fe1874dd8ece605bca5846e4d11241e -->
+<!-- cache-key: cdktf-0.19.0 input-6a64e18f1cbb83509a228aa3d7c17d6e961eec87beb305f9c6ec8edf596253a7 -->

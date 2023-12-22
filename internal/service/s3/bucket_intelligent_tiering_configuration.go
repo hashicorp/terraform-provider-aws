@@ -123,6 +123,10 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		return conn.PutBucketIntelligentTieringConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "IntelligentTieringConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Intelligent-Tiering Configuration (%s): %s", bucket, name, err)
 	}
@@ -316,7 +320,7 @@ func expandTiering(tfMap map[string]interface{}) *types.Tiering {
 	}
 
 	if v, ok := tfMap["days"].(int); ok && v != 0 {
-		apiObject.Days = int32(v)
+		apiObject.Days = aws.Int32(int32(v))
 	}
 
 	return apiObject

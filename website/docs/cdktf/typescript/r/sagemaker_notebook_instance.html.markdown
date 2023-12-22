@@ -84,20 +84,20 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `roleArn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.
 * `instanceType` - (Required) The name of ML compute instance type.
-* `platformIdentifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebookAl1V1`, `notebookAl2V1`, or  `notebookAl2V2`, depending on which version of Amazon Linux you require.
+* `platformIdentifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1`, `notebook-al2-v1`, or  `notebook-al2-v2`, depending on which version of Amazon Linux you require.
 * `volumeSize` - (Optional) The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
 * `subnetId` - (Optional) The VPC subnet ID.
 * `securityGroups` - (Optional) The associated security groups.
-* `acceleratorTypes` - (Optional) A list of Elastic Inference (EI) instance types to associate with this notebook instance. See [Elastic Inference Accelerator](https://docs.aws.amazon.com/sagemaker/latest/dg/ei.html) for more details. Valid values: `mlEia1Medium`, `mlEia1Large`, `mlEia1Xlarge`, `mlEia2Medium`, `mlEia2Large`, `mlEia2Xlarge`.
+* `acceleratorTypes` - (Optional) A list of Elastic Inference (EI) instance types to associate with this notebook instance. See [Elastic Inference Accelerator](https://docs.aws.amazon.com/sagemaker/latest/dg/ei.html) for more details. Valid values: `ml.eia1.medium`, `ml.eia1.large`, `ml.eia1.xlarge`, `ml.eia2.medium`, `ml.eia2.large`, `ml.eia2.xlarge`.
 * `additionalCodeRepositories` - (Optional) An array of up to three Git repositories to associate with the notebook instance.
  These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance.
 * `defaultCodeRepository` - (Optional) The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) or in any other Git repository.
-* `directInternetAccess` - (Optional) Set to `disabled` to disable internet access to notebook. Requires `securityGroups` and `subnetId` to be set. Supported values: `enabled` (Default) or `disabled`. If set to `disabled`, the notebook instance will be able to access resources only in your VPC, and will not be able to connect to Amazon SageMaker training and endpoint services unless your configure a NAT Gateway in your VPC.
-* `instanceMetadataServiceConfiguration` - (Optional) Information on the IMDS configuration of the notebook instance. Conflicts with `instanceMetadataServiceConfiguration`. see details below.
+* `directInternetAccess` - (Optional) Set to `Disabled` to disable internet access to notebook. Requires `security_groups` and `subnet_id` to be set. Supported values: `Enabled` (Default) or `Disabled`. If set to `Disabled`, the notebook instance will be able to access resources only in your VPC, and will not be able to connect to Amazon SageMaker training and endpoint services unless your configure a NAT Gateway in your VPC.
+* `instanceMetadataServiceConfiguration` - (Optional) Information on the IMDS configuration of the notebook instance. Conflicts with `instance_metadata_service_configuration`. see details below.
 * `kmsKeyId` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 * `lifecycleConfigName` - (Optional) The name of a lifecycle configuration to associate with the notebook instance.
-* `rootAccess` - (Optional) Whether root access is `enabled` or `disabled` for users of the notebook instance. The default value is `enabled`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `rootAccess` - (Optional) Whether root access is `Enabled` or `Disabled` for users of the notebook instance. The default value is `Enabled`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### instance_metadata_service_configuration
 
@@ -110,8 +110,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the notebook instance.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this notebook instance.
 * `url` - The URL that you use to connect to the Jupyter notebook that is running in your notebook instance.
-* `networkInterfaceId` - The network interface ID that Amazon SageMaker created at the time of creating the instance. Only available when setting `subnetId`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `networkInterfaceId` - The network interface ID that Amazon SageMaker created at the time of creating the instance. Only available when setting `subnet_id`.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import SageMaker Notebook Instances using the `name`. 
 % terraform import aws_sagemaker_notebook_instance.test_notebook_instance my-notebook-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5e252144d6a5568e5371adc34a319d772ad3c8b4f238312ded06d5c31a1b0f15 -->
+<!-- cache-key: cdktf-0.19.0 input-5e252144d6a5568e5371adc34a319d772ad3c8b4f238312ded06d5c31a1b0f15 -->

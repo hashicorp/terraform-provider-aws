@@ -44,7 +44,7 @@ This resource supports the following arguments:
 * `spaceName` - (Required) The name of the space.
 * `domainId` - (Required) The ID of the associated Domain.
 * `spaceSettings` - (Required) A collection of space settings. See [Space Settings](#space-settings) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Space Settings
 
@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The space's Amazon Resource Name (ARN).
 * `arn` - The space's Amazon Resource Name (ARN).
 * `homeEfsFileSystemUid` - The ID of the space's profile in the Amazon Elastic File System volume.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -111,4 +111,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8d8bef8d2f394c96f9e18caac696a38bb4da69984c3c443105f8620c1e13b1be -->
+<!-- cache-key: cdktf-0.19.0 input-8d8bef8d2f394c96f9e18caac696a38bb4da69984c3c443105f8620c1e13b1be -->

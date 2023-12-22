@@ -43,7 +43,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cells` - (Optional) List of cell arns to add as nested fault domains within this cell.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -51,13 +51,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the cell
 * `parentReadinessScopes` - List of readiness scopes (recovery groups or cells) that contain this cell.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `5M`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import Route53 Recovery Readiness cells using the cell
 % terraform import aws_route53recoveryreadiness_cell.us-west-2-failover-cell us-west-2-failover-cell
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d2ac826652336fbe8c626518574803e2477f46155743addd2076ff30e66c3364 -->
+<!-- cache-key: cdktf-0.19.0 input-d2ac826652336fbe8c626518574803e2477f46155743addd2076ff30e66c3364 -->

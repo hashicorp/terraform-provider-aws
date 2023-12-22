@@ -48,16 +48,16 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `reportName` - (Required) Unique name for the report. Must start with a number/letter and is case sensitive. Limited to 256 characters.
-* `timeUnit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `daily`, `hourly`, `monthly`.
-* `format` - (Required) Format for report. Valid values are: `textORcsv`, `parquet`. If `parquet` is used, then Compression must also be `parquet`.
-* `compression` - (Required) Compression format for report. Valid values are: `gzip`, `zip`, `parquet`. If `parquet` is used, then format must also be `parquet`.
-* `additionalSchemaElements` - (Required) A list of schema elements. Valid values are: `resources`, `splitCostAllocationData`.
+* `timeUnit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `DAILY`, `HOURLY`, `MONTHLY`.
+* `format` - (Required) Format for report. Valid values are: `textORcsv`, `Parquet`. If `Parquet` is used, then Compression must also be `Parquet`.
+* `compression` - (Required) Compression format for report. Valid values are: `GZIP`, `ZIP`, `Parquet`. If `Parquet` is used, then format must also be `Parquet`.
+* `additionalSchemaElements` - (Required) A list of schema elements. Valid values are: `RESOURCES`, `SPLIT_COST_ALLOCATION_DATA`.
 * `s3Bucket` - (Required) Name of the existing S3 bucket to hold generated reports.
 * `s3Prefix` - (Optional) Report path prefix. Limited to 256 characters.
 * `s3Region` - (Required) Region of the existing S3 bucket to hold generated reports.
-* `additionalArtifacts` - (Required) A list of additional artifacts. Valid values are: `redshift`, `quicksight`, `athena`. When ATHENA exists within additional_artifacts, no other artifact type can be declared and report_versioning must be `overwriteReport`.
+* `additionalArtifacts` - (Required) A list of additional artifacts. Valid values are: `REDSHIFT`, `QUICKSIGHT`, `ATHENA`. When ATHENA exists within additional_artifacts, no other artifact type can be declared and report_versioning must be `OVERWRITE_REPORT`.
 * `refreshClosedReports` - (Optional) Set to true to update your reports after they have been finalized if AWS detects charges related to previous months.
-* `reportVersioning` - (Optional) Overwrite the previous version of each report or to deliver the report in addition to the previous versions. Valid values are: `createNewReport` and `overwriteReport`.
+* `reportVersioning` - (Optional) Overwrite the previous version of each report or to deliver the report in addition to the previous versions. Valid values are: `CREATE_NEW_REPORT` and `OVERWRITE_REPORT`.
 
 ## Attribute Reference
 
@@ -87,4 +87,4 @@ Using `terraform import`, import Report Definitions using the `reportName`. For 
 % terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-067985956199063abed34d5456679d542c82c7fd1e66853cbcc4c311a08d07b2 -->
+<!-- cache-key: cdktf-0.19.0 input-067985956199063abed34d5456679d542c82c7fd1e66853cbcc4c311a08d07b2 -->

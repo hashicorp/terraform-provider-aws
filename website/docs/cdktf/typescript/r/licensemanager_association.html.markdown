@@ -103,4 +103,4 @@ Using `terraform import`, import license configurations using `resourceArn,licen
 % terraform import aws_licensemanager_association.example arn:aws:ec2:eu-west-1:123456789012:image/ami-123456789abcdef01,arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8b8e9ddcd676f43167920f5782ed96b9679e5a610aa31170c5d53aa2d9e1453d -->
+<!-- cache-key: cdktf-0.19.0 input-8b8e9ddcd676f43167920f5782ed96b9679e5a610aa31170c5d53aa2d9e1453d -->

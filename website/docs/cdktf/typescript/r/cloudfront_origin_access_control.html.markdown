@@ -49,7 +49,7 @@ The following arguments are required:
 * `name` - (Required) A name that identifies the Origin Access Control.
 * `description` - (Optional) The description of the Origin Access Control. Defaults to "Managed by Terraform" if omitted.
 * `originAccessControlOriginType` - (Required) The type of origin that this Origin Access Control is for. Valid values are `s3`, and `mediastore`.
-* `signingBehavior` - (Required) Specifies which requests CloudFront signs. Specify `always` for the most common use case. Allowed values: `always`, `never`, and `noOverride`.
+* `signingBehavior` - (Required) Specifies which requests CloudFront signs. Specify `always` for the most common use case. Allowed values: `always`, `never`, and `no-override`.
 * `signingProtocol` - (Required) Determines how CloudFront signs (authenticates) requests. The only valid value is `sigv4`.
 
 ## Attribute Reference
@@ -81,4 +81,4 @@ Using `terraform import`, import CloudFront Origin Access Control using the `id`
 % terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ebc51b864ba0cfb9ad22453d6e45a68aee5f617744805baea102f871af18ab56 -->
+<!-- cache-key: cdktf-0.19.0 input-ebc51b864ba0cfb9ad22453d6e45a68aee5f617744805baea102f871af18ab56 -->

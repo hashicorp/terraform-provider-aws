@@ -59,7 +59,7 @@ This resource supports the following arguments:
 
 * `type` - (Required) The type of geographical area you want AWS WAF to search for. Currently Country is the only valid value.
 * `value` - (Required) The country that you want AWS WAF to search for.
-  This is the two-letter country code, e.g., `us`, `ca`, `ru`, `cn`, etc.
+  This is the two-letter country code, e.g., `US`, `CA`, `RU`, `CN`, etc.
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchConstraint.html) for all supported values.
 
 ## Remarks
@@ -93,4 +93,4 @@ Using `terraform import`, import WAF Geo Match Set using their ID. For example:
 % terraform import aws_waf_geo_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c1ffab5d5b03d4b8b05b08bb866e76580c89d0afb01bede81ffc61a97685962b -->
+<!-- cache-key: cdktf-0.19.0 input-c1ffab5d5b03d4b8b05b08bb866e76580c89d0afb01bede81ffc61a97685962b -->

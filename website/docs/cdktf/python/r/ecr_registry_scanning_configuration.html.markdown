@@ -114,4 +114,4 @@ Using `terraform import`, import ECR Scanning Configurations using the `registry
 % terraform import aws_ecr_registry_scanning_configuration.example 012345678901
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-878f43063e7870789fdafbc4e35da8eca405013c513258165088a92488bbfa61 -->
+<!-- cache-key: cdktf-0.19.0 input-878f43063e7870789fdafbc4e35da8eca405013c513258165088a92488bbfa61 -->

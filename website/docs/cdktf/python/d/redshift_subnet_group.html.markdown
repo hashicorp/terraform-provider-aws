@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnet_ids` - An array of VPC subnet IDs.
 * `tags` - Tags associated to the Subnet Group
 
-<!-- cache-key: cdktf-0.18.0 input-1814cef40fea2151683ed9925569f34cf19ac6b05b2de4b553e90c473dc2df91 -->
+<!-- cache-key: cdktf-0.19.0 input-1814cef40fea2151683ed9925569f34cf19ac6b05b2de4b553e90c473dc2df91 -->

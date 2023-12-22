@@ -73,4 +73,4 @@ Using `terraform import`, import API Gateway Keys using the `id`. For example:
 % terraform import aws_api_gateway_api_key.example 8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-22b69fb8534ef570b5d1e520c78e2afd9a75df34ce74287081d34950badd6ce6 -->
+<!-- cache-key: cdktf-0.19.0 input-22b69fb8534ef570b5d1e520c78e2afd9a75df34ce74287081d34950badd6ce6 -->

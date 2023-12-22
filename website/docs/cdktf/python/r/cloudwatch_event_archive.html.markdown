@@ -107,4 +107,4 @@ Using `terraform import`, import an EventBridge archive using the `name`. For ex
 % terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-230aef7101e3a99451d3a96541a344389622f8e93208093246611e6e08ee12b5 -->
+<!-- cache-key: cdktf-0.19.0 input-230aef7101e3a99451d3a96541a344389622f8e93208093246611e6e08ee12b5 -->

@@ -113,4 +113,4 @@ This data source exports the following attributes in addition to the arguments a
 * `update_token` - String token used when updating a firewall.
 * `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.18.0 input-24e5c2406618e6513cfbf45303a085d913cb2cabcf2e44e12fc1f263b2a91298 -->
+<!-- cache-key: cdktf-0.19.0 input-24e5c2406618e6513cfbf45303a085d913cb2cabcf2e44e12fc1f263b2a91298 -->

@@ -256,7 +256,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)
 	}
 
 	d.SetId(name)
@@ -276,7 +276,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)
 	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
@@ -322,11 +322,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.DeleteConfigRuleWithContext(ctx, input)
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id()); err != nil {
-		return append(diags, create.DiagError(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)
 	}
 
 	return diags

@@ -80,4 +80,4 @@ Using `terraform import`, import S3 Control Bucket Policies using the Amazon Res
 % terraform import aws_s3control_bucket_policy.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-476caf1030f6a6d008cc6514d741ddf15b7e806dd275bf24bf545b7689e2f554 -->
+<!-- cache-key: cdktf-0.19.0 input-476caf1030f6a6d008cc6514d741ddf15b7e806dd275bf24bf545b7689e2f554 -->

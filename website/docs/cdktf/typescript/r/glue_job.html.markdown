@@ -184,13 +184,13 @@ This resource supports the following arguments:
 * `description` – (Optional) Description of the job.
 * `executionProperty` – (Optional) Execution property of the job. Defined below.
 * `glueVersion` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `executionClass` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `flex`, `standard`.
-* `maxCapacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `required` when `pythonshell` is set, accept either `00625` or `10`. Use `numberOfWorkers` and `workerType` arguments instead with `glueVersion` `20` and above.
+* `executionClass` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
+* `maxCapacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
 * `maxRetries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `notificationProperty` - (Optional) Notification property of the job. Defined below.
 * `roleArn` – (Required) The ARN of the IAM role associated with this job.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
 * `securityConfiguration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `workerType` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, G.2X, or G.025X for Spark jobs. Accepts the value Z.2X for Ray jobs.
@@ -203,7 +203,7 @@ This resource supports the following arguments:
 
 ### command Argument Reference
 
-* `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `glueray` for Ray Job Type, or `gluestreaming` for Streaming Job Type. `maxCapacity` needs to be set if `pythonshell` is chosen.
+* `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `glueray` for Ray Job Type, or `gluestreaming` for Streaming Job Type. `max_capacity` needs to be set if `pythonshell` is chosen.
 * `scriptLocation` - (Required) Specifies the S3 path to a script that executes a job.
 * `pythonVersion` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2, 3 or 3.9. Version 3 refers to Python 3.6.
 * `runtime` - (Optional) In Ray jobs, runtime is used to specify the versions of Ray, Python and additional libraries available in your environment. This field is not used in other job types. For supported runtime environment values, see [Working with Ray jobs](https://docs.aws.amazon.com/glue/latest/dg/ray-jobs-section.html#author-job-ray-runtimes) in the Glue Developer Guide.
@@ -222,7 +222,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of Glue Job
 * `id` - Job name
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -246,4 +246,4 @@ Using `terraform import`, import Glue Jobs using `name`. For example:
 % terraform import aws_glue_job.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ac5c52bfdcb19605598f998f548ee765f8ef650d5dfdb2f5a9674b5f4c2f9ae2 -->
+<!-- cache-key: cdktf-0.19.0 input-ac5c52bfdcb19605598f998f548ee765f8ef650d5dfdb2f5a9674b5f4c2f9ae2 -->

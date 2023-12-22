@@ -107,16 +107,16 @@ This resource supports the following arguments:
 * `apiKeyRequired` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`. Supported only for WebSocket APIs.
 * `authorizationScopes` - (Optional) Authorization scopes supported by this route. The scopes are used with a JWT authorizer to authorize the method invocation.
 * `authorizationType` - (Optional) Authorization type for the route.
-For WebSocket APIs, valid values are `none` for open access, `awsIam` for using AWS IAM permissions, and `custom` for using a Lambda authorizer.
-For HTTP APIs, valid values are `none` for open access, `jwt` for using JSON Web Tokens, `awsIam` for using AWS IAM permissions, and `custom` for using a Lambda authorizer.
-Defaults to `none`.
-* `authorizerId` - (Optional) Identifier of the [`awsApigatewayv2Authorizer`](apigatewayv2_authorizer.html) resource to be associated with this route.
+For WebSocket APIs, valid values are `NONE` for open access, `AWS_IAM` for using AWS IAM permissions, and `CUSTOM` for using a Lambda authorizer.
+For HTTP APIs, valid values are `NONE` for open access, `JWT` for using JSON Web Tokens, `AWS_IAM` for using AWS IAM permissions, and `CUSTOM` for using a Lambda authorizer.
+Defaults to `NONE`.
+* `authorizerId` - (Optional) Identifier of the [`aws_apigatewayv2_authorizer`](apigatewayv2_authorizer.html) resource to be associated with this route.
 * `modelSelectionExpression` - (Optional) The [model selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-model-selection-expressions) for the route. Supported only for WebSocket APIs.
 * `operationName` - (Optional) Operation name for the route. Must be between 1 and 64 characters in length.
 * `requestModels` - (Optional) Request models for the route. Supported only for WebSocket APIs.
 * `requestParameter` - (Optional) Request parameters for the route. Supported only for WebSocket APIs.
 * `routeResponseSelectionExpression` - (Optional) The [route response selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-response-selection-expressions) for the route. Supported only for WebSocket APIs.
-* `target` - (Optional) Target for the route, of the form `integrations/`*`integrationId`*, where *`integrationId`* is the identifier of an [`awsApigatewayv2Integration`](apigatewayv2_integration.html) resource.
+* `target` - (Optional) Target for the route, of the form `integrations/`*`IntegrationID`*, where *`IntegrationID`* is the identifier of an [`aws_apigatewayv2_integration`](apigatewayv2_integration.html) resource.
 
 The `requestParameter` object supports the following:
 
@@ -153,4 +153,4 @@ Using `terraform import`, import `awsApigatewayv2Route` using the API identifier
 
 -> **Note:** The API Gateway managed route created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-b9d6c42d850f8d41e68e09883583bfd0059174ab6d5527af47ec51f177c33a41 -->
+<!-- cache-key: cdktf-0.19.0 input-b9d6c42d850f8d41e68e09883583bfd0059174ab6d5527af47ec51f177c33a41 -->

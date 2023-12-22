@@ -77,16 +77,16 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Quick Connect.
 * `description` - Description of the Quick Connect.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Quick Connect separated by a colon (`:`).
-* `quickConnectConfig` - A block that defines the configuration information for the Quick Connect: `quickConnectType` and one of `phoneConfig`, `queueConfig`, `userConfig` . The Quick Connect Config block is documented below.
+* `quickConnectConfig` - A block that defines the configuration information for the Quick Connect: `quick_connect_type` and one of `phone_config`, `queue_config`, `user_config` . The Quick Connect Config block is documented below.
 * `quickConnectId` - Identifier for the Quick Connect.
 * `tags` - Map of tags to assign to the Quick Connect.
 
 A `quickConnectConfig` block contains the following arguments:
 
-* `quickConnectType` - Configuration type of the Quick Connect. Valid values are `phoneNumber`, `queue`, `user`.
-* `phoneConfig` - Phone configuration of the Quick Connect. This is returned only if `quickConnectType` is `phoneNumber`. The `phoneConfig` block is documented below.
-* `queueConfig` - Queue configuration of the Quick Connect. This is returned only if `quickConnectType` is `queue`. The `queueConfig` block is documented below.
-* `userConfig` - User configuration of the Quick Connect. This is returned only if `quickConnectType` is `user`. The `userConfig` block is documented below.
+* `quickConnectType` - Configuration type of the Quick Connect. Valid values are `PHONE_NUMBER`, `QUEUE`, `USER`.
+* `phoneConfig` - Phone configuration of the Quick Connect. This is returned only if `quick_connect_type` is `PHONE_NUMBER`. The `phone_config` block is documented below.
+* `queueConfig` - Queue configuration of the Quick Connect. This is returned only if `quick_connect_type` is `QUEUE`. The `queue_config` block is documented below.
+* `userConfig` - User configuration of the Quick Connect. This is returned only if `quick_connect_type` is `USER`. The `user_config` block is documented below.
 
 A `phoneConfig` block contains the following arguments:
 
@@ -102,4 +102,4 @@ A `userConfig` block contains the following arguments:
 * `contactFlowId` - Identifier of the contact flow.
 * `userId` - Identifier for the user.
 
-<!-- cache-key: cdktf-0.18.0 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->
+<!-- cache-key: cdktf-0.19.0 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->

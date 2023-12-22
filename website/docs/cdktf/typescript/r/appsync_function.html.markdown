@@ -107,22 +107,22 @@ This resource supports the following arguments:
 * `description` - (Optional) Function description.
 * `runtime` - (Optional) Describes a runtime used by an AWS AppSync pipeline resolver or AWS AppSync function. Specifies the name and version of the runtime to use. Note that if a runtime is specified, code must also be specified. See [Runtime](#runtime).
 * `syncConfig` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
-* `functionVersion` - (Optional) Version of the request mapping template. Currently the supported value is `20180529`. Does not apply when specifying `code`.
+* `functionVersion` - (Optional) Version of the request mapping template. Currently the supported value is `2018-05-29`. Does not apply when specifying `code`.
 
 ### Runtime
 
 This argument supports the following arguments:
 
-* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `appsyncJs`.
-* `runtimeVersion` - (Optional) The version of the runtime to use. Currently, the only allowed version is `100`.
+* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtimeVersion` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ### Sync Config
 
 This argument supports the following arguments:
 
-* `conflictDetection` - (Optional) Conflict Detection strategy to use. Valid values are `none` and `version`.
-* `conflictHandler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `none`, `optimisticConcurrency`, `automerge`, and `lambda`.
-* `lambdaConflictHandlerConfig` - (Optional) Lambda Conflict Handler Config when configuring `lambda` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+* `conflictDetection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
+* `conflictHandler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
+* `lambdaConflictHandlerConfig` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
 
 #### Lambda Conflict Handler Config
 
@@ -160,4 +160,4 @@ Using `terraform import`, import `awsAppsyncFunction` using the AppSync API ID a
 % terraform import aws_appsync_function.example xxxxx-yyyyy
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fd5bccadc3a9b3adcc9e953b3f3b963bdbabce78f3f8569cb3998c93b4620955 -->
+<!-- cache-key: cdktf-0.19.0 input-fd5bccadc3a9b3adcc9e953b3f3b963bdbabce78f3f8569cb3998c93b4620955 -->

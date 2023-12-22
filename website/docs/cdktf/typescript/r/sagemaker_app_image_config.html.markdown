@@ -75,7 +75,7 @@ This resource supports the following arguments:
 
 * `appImageConfigName` - (Required) The name of the App Image Config.
 * `kernelGatewayImageConfig` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Kernel Gateway Image Config
 
@@ -86,7 +86,7 @@ This resource supports the following arguments:
 
 * `defaultGid` - (Optional) The default POSIX group ID (GID). If not specified, defaults to `100`. Valid values are `0` and `100`.
 * `defaultUid` - (Optional) The default POSIX user ID (UID). If not specified, defaults to `1000`. Valid values are `0` and `1000`.
-* `mountPath` - (Optional) The path within the image to mount the user's EFS home directory. The directory should be empty. If not specified, defaults to `/home/sagemakerUser`.
+* `mountPath` - (Optional) The path within the image to mount the user's EFS home directory. The directory should be empty. If not specified, defaults to `/home/sagemaker-user`.
 
 ~> **Note:** When specifying `defaultGid` and `defaultUid`, Valid value pairs are [`0`, `0`] and [`100`, `1000`].
 
@@ -101,7 +101,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the App Image Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this App Image Config.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -125,4 +125,4 @@ Using `terraform import`, import SageMaker App Image Configs using the `name`. F
 % terraform import aws_sagemaker_app_image_config.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-14b8c3e01271c34e8ad48f2ba367733e64aa64d95172742acd5b077fbda38cb8 -->
+<!-- cache-key: cdktf-0.19.0 input-14b8c3e01271c34e8ad48f2ba367733e64aa64d95172742acd5b077fbda38cb8 -->

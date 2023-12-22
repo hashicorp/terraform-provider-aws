@@ -123,22 +123,22 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the webhook.
-* `authentication` - (Required) The type of authentication  to use. One of `ip`, `githubHmac`, or `unauthenticated`.
-* `authenticationConfiguration` - (Optional) An `auth` block. Required for `ip` and `githubHmac`. Auth blocks are documented below.
+* `authentication` - (Required) The type of authentication  to use. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
+* `authenticationConfiguration` - (Optional) An `auth` block. Required for `IP` and `GITHUB_HMAC`. Auth blocks are documented below.
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
 * `targetAction` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
 * `targetPipeline` - (Required) The name of the pipeline.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 An `authenticationConfiguration` block supports the following arguments:
 
-* `secretToken` - (Optional) The shared secret for the GitHub repository webhook. Set this as `secret` in your `githubRepositoryWebhook`'s `configuration` block. Required for `githubHmac`.
-* `allowedIpRange` - (Optional) A valid CIDR block for `ip` filtering. Required for `ip`.
+* `secretToken` - (Optional) The shared secret for the GitHub repository webhook. Set this as `secret` in your `github_repository_webhook`'s `configuration` block. Required for `GITHUB_HMAC`.
+* `allowedIpRange` - (Optional) A valid CIDR block for `IP` filtering. Required for `IP`.
 
 A `filter` block supports the following arguments:
 
 * `jsonPath` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
-* `matchEquals` - (Required) The value to match on (e.g., `refs/heads/{branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
+* `matchEquals` - (Required) The value to match on (e.g., `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
 ## Attribute Reference
 
@@ -146,7 +146,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The CodePipeline webhook's ARN.
 * `id` - The CodePipeline webhook's ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.
 
 ## Import
@@ -171,4 +171,4 @@ Using `terraform import`, import CodePipeline Webhooks using their ARN. For exam
 % terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-12eddb2b0e3d8862aa33cfaab94c4516ce51690b35cba10b34567326ccde28ed -->
+<!-- cache-key: cdktf-0.19.0 input-12eddb2b0e3d8862aa33cfaab94c4516ce51690b35cba10b34567326ccde28ed -->

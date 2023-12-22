@@ -86,4 +86,4 @@ Using `terraform import`, import a ChimeSDKVoice SIP Rule using the `id`. For ex
 % terraform import aws_chimesdkvoice_sip_rule.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3475b0a57a4be526a5e2626982a1ad5155fe2cd8afc53724a14c23471b5a6ff8 -->
+<!-- cache-key: cdktf-0.19.0 input-3475b0a57a4be526a5e2626982a1ad5155fe2cd8afc53724a14c23471b5a6ff8 -->

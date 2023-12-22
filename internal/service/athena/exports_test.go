@@ -5,14 +5,16 @@ package athena
 
 // Exports for use in tests only.
 var (
-	FindDataCatalogByName = findDataCatalogByName
-	FindDatabaseByName    = findDatabaseByName
-	FindNamedQueryByID    = findNamedQueryByID
-	FindWorkGroupByName   = findWorkGroupByName
-	QueryExecutionResult  = queryExecutionResult
+	FindDataCatalogByName             = findDataCatalogByName
+	FindDatabaseByName                = findDatabaseByName
+	FindNamedQueryByID                = findNamedQueryByID
+	FindPreparedStatementByTwoPartKey = findPreparedStatementByTwoPartKey
+	FindWorkGroupByName               = findWorkGroupByName
+	QueryExecutionResult              = queryExecutionResult
 
-	ResourceDataCatalog = resourceDataCatalog
-	ResourceDatabase    = resourceDatabase
-	ResourceNamedQuery  = resourceNamedQuery
-	ResourceWorkGroup   = resourceWorkGroup
+	ResourceDataCatalog       = resourceDataCatalog
+	ResourceDatabase          = resourceDatabase
+	ResourceNamedQuery        = resourceNamedQuery
+	ResourcePreparedStatement = resourcePreparedStatement
+	ResourceWorkGroup         = resourceWorkGroup
 )

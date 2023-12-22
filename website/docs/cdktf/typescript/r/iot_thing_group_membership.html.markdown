@@ -70,4 +70,4 @@ Using `terraform import`, import IoT Thing Group Membership using the thing grou
 % terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ad3a10105917dc5ba26af081c3974b83c7083d781b1a90314ae4c28a7e5779f5 -->
+<!-- cache-key: cdktf-0.19.0 input-ad3a10105917dc5ba26af081c3974b83c7083d781b1a90314ae4c28a7e5779f5 -->

@@ -64,7 +64,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique ID of the appstream stack fleet association, composed of the `fleetName` and `stackName` separated by a slash (`/`).
+* `id` - Unique ID of the appstream stack fleet association, composed of the `fleet_name` and `stack_name` separated by a slash (`/`).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import AppStream Stack Fleet Association using the `fl
 % terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d02e772e58ab8d188d62ad200741c9e10f12ac34ac4daa8c08f2dbd2bfc87b0a -->
+<!-- cache-key: cdktf-0.19.0 input-d02e772e58ab8d188d62ad200741c9e10f12ac34ac4daa8c08f2dbd2bfc87b0a -->

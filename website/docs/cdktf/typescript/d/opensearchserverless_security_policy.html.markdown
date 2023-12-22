@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - The JSON policy document without any whitespaces.
 * `policyVersion` - Version of the policy.
 
-<!-- cache-key: cdktf-0.18.0 input-ad99e2a9f8c79ed6569c0fb0eb9b7ab2fea24fd51596cfcf3c67bf8b48f6cd78 -->
+<!-- cache-key: cdktf-0.19.0 input-ad99e2a9f8c79ed6569c0fb0eb9b7ab2fea24fd51596cfcf3c67bf8b48f6cd78 -->

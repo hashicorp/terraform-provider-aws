@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 * `enableCachingForHttp`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.
 * `signingDisabled` - (Optional) Specifies whether AWS IoT validates the token signature in an authorization request. Default: `false`.
-* `status` - (Optional) The status of Authorizer request at creation. Valid values: `active`, `inactive`. Default: `active`.
+* `status` - (Optional) The status of Authorizer request at creation. Valid values: `ACTIVE`, `INACTIVE`. Default: `ACTIVE`.
 * `tokenKeyName` - (Optional) The name of the token key used to extract the token from the HTTP headers. This value is required if signing is enabled in your authorizer.
 * `tokenSigningPublicKeys` - (Optional) The public keys used to verify the digital signature returned by your custom authentication service. This value is required if signing is enabled in your authorizer.
 
@@ -81,4 +81,4 @@ Using `terraform import`, import IOT Authorizers using the name. For example:
 % terraform import aws_iot_authorizer.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cf8f96f38c8639fbcddf19f56615da17a9607ba975bea77bb2b1ea3d089fe7c3 -->
+<!-- cache-key: cdktf-0.19.0 input-cf8f96f38c8639fbcddf19f56615da17a9607ba975bea77bb2b1ea3d089fe7c3 -->

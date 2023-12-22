@@ -43,13 +43,13 @@ This data source supports the following arguments:
 
 * `associationId` - (Required) The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
-* `resourceType` - (Required) A valid resource type. Valid Values: `agentEvents` | `attachments` | `callRecordings` | `chatTranscripts` | `contactEvaluations` | `contactTraceRecords` | `mediaStreams` | `realTimeContactAnalysisSegments` | `scheduledReports` |  `screenRecordings`.
+* `resourceType` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS` |  `SCREEN_RECORDINGS`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The identifier of the hosting Amazon Connect Instance, `associationId`, and `resourceType` separated by a colon (`:`).
+* `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
 * `storageConfig` - Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
 
 ### `storageConfig`
@@ -60,7 +60,7 @@ The `storageConfig` configuration block supports the following arguments:
 * `kinesisStreamConfig` - A block that specifies the configuration of the Kinesis data stream. [Documented below](#kinesis_stream_config).
 * `kinesisVideoStreamConfig` - A block that specifies the configuration of the Kinesis video stream. [Documented below](#kinesis_video_stream_config).
 * `s3Config` - A block that specifies the configuration of S3 Bucket. [Documented below](#s3_config).
-* `storageType` - A valid storage type. Valid Values: `s3` | `kinesisVideoStream` | `kinesisStream` | `kinesisFirehose`.
+* `storageType` - A valid storage type. Valid Values: `S3` | `KINESIS_VIDEO_STREAM` | `KINESIS_STREAM` | `KINESIS_FIREHOSE`.
 
 #### `kinesisFirehoseConfig`
 
@@ -79,7 +79,7 @@ The `kinesisStreamConfig` configuration block supports the following arguments:
 The `kinesisVideoStreamConfig` configuration block supports the following arguments:
 
 * `encryptionConfig` - The encryption configuration. [Documented below](#encryption_config).
-* `prefix` - The prefix of the video stream. Minimum length of `1`. Maximum length of `128`. When read from the state, the value returned is `<prefix>Connect-<connectInstanceAlias>Contact` since the API appends additional details to the `prefix`.
+* `prefix` - The prefix of the video stream. Minimum length of `1`. Maximum length of `128`. When read from the state, the value returned is `<prefix>-connect-<connect_instance_alias>-contact-` since the API appends additional details to the `prefix`.
 * `retentionPeriodHours` - The number of hours to retain the data in a data store associated with the stream. Minimum value of `0`. Maximum value of `87600`. A value of `0` indicates that the stream does not persist data.
 
 #### `s3Config`
@@ -94,7 +94,7 @@ The `s3Config` configuration block supports the following arguments:
 
 The `encryptionConfig` configuration block supports the following arguments:
 
-* `encryptionType` - The type of encryption. Valid Values: `kms`.
+* `encryptionType` - The type of encryption. Valid Values: `KMS`.
 * `keyId` - The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-<!-- cache-key: cdktf-0.18.0 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->
+<!-- cache-key: cdktf-0.19.0 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->

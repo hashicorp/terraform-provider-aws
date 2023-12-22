@@ -80,4 +80,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 
-<!-- cache-key: cdktf-0.18.0 input-c41ce615eb693afa2fd19a1947549ef7ba89f9ef8c5826b9d872e80f1d738e7f -->
+<!-- cache-key: cdktf-0.19.0 input-c41ce615eb693afa2fd19a1947549ef7ba89f9ef8c5826b9d872e80f1d738e7f -->

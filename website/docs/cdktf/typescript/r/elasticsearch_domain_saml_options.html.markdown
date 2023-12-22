@@ -78,7 +78,7 @@ The following arguments are optional:
 * `masterUserName` - (Optional) This username from the SAML IdP receives full permissions to the cluster, equivalent to a new master user.
 * `rolesKey` - (Optional) Element of the SAML assertion to use for backend roles. Default is roles.
 * `sessionTimeoutMinutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
-* `subjectKey` - (Optional) Custom SAML attribute to use for user names. Default is an empty string - `""`. This will cause Elasticsearch to use the `nameId` element of the `subject`, which is the default location for name identifiers in the SAML specification.
+* `subjectKey` - (Optional) Custom SAML attribute to use for user names. Default is an empty string - `""`. This will cause Elasticsearch to use the `NameID` element of the `Subject`, which is the default location for name identifiers in the SAML specification.
 
 #### idp
 
@@ -113,4 +113,4 @@ Using `terraform import`, import Elasticsearch domains using the `domainName`. F
 % terraform import aws_elasticsearch_domain_saml_options.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65d51b7512d651dc02ab5c3e4dec870cf5f9710ffdd2fa0237566b35396e143c -->
+<!-- cache-key: cdktf-0.19.0 input-65d51b7512d651dc02ab5c3e4dec870cf5f9710ffdd2fa0237566b35396e143c -->

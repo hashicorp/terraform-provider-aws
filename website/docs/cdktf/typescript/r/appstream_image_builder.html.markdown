@@ -61,10 +61,10 @@ The following arguments are optional:
 * `domainJoinInfo` - (Optional) Configuration block for the name of the directory and organizational unit (OU) to use to join the image builder to a Microsoft Active Directory domain. See below.
 * `enableDefaultInternetAccess` - (Optional) Enables or disables default internet access for the image builder.
 * `iamRoleArn` - (Optional) ARN of the IAM role to apply to the image builder.
-* `imageArn` - (Optional, Required if `imageName` not provided) ARN of the public, private, or shared image to use.
-* `imageName` - (Optional, Required if `imageArn` not provided) Name of the image used to create the image builder.
+* `imageArn` - (Optional, Required if `image_name` not provided) ARN of the public, private, or shared image to use.
+* `imageName` - (Optional, Required if `image_arn` not provided) Name of the image used to create the image builder.
 * `vpcConfig` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
-* `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `accessEndpoint`
 
@@ -94,8 +94,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the appstream image builder.
 * `createdTime` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
 * `id` - Name of the image builder.
-* `state` - State of the image builder. Can be: `pending`, `updatingAgent`, `running`, `stopping`, `stopped`, `rebooting`, `snapshotting`, `deleting`, `failed`, `updating`, `pendingQualification`
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -119,4 +119,4 @@ Using `terraform import`, import `awsAppstreamImageBuilder` using the `name`. Fo
 % terraform import aws_appstream_image_builder.example imageBuilderExample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4adcf125fe94b0f705d78c11c3a6d984d8e9dbc720fe7e15affd7d0a48348dcb -->
+<!-- cache-key: cdktf-0.19.0 input-e224096195102b3c0af9044d63f0d830019264e7ca702c4ea0f8e3d678b94b3a -->

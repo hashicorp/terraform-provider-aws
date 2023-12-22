@@ -42,35 +42,35 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `deploymentType` - (Required) - The filesystem deployment type. Valid values: `singleAz1`, `singleAz2` and `multiAz1`.
+* `deploymentType` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
 * `storageCapacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
 * `subnetIds` - (Required) A list of IDs for the subnets that the file system will be accessible from.
-* `throughputCapacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deploymentType`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `singleAz1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `singleAz2`.
+* `throughputCapacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deployment_type`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.
 * `automaticBackupRetentionDays` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backupId` - (Optional) The ID of the source backup to create the filesystem from.
 * `copyTagsToBackups` - (Optional) A boolean flag indicating whether tags for the file system should be copied to backups. The default value is false.
 * `copyTagsToVolumes` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
-* `dailyAutomaticBackupStartTime` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automaticBackupRetentionDays` to be set.
+* `dailyAutomaticBackupStartTime` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
 * `diskIopsConfiguration` - (Optional) The SSD IOPS configuration for the Amazon FSx for OpenZFS file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
 * `endpointIpAddressRange` - (Optional) (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system will be created.
 * `kmsKeyId` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
-* `preferredSubnetId` - (Optional) (Multi-AZ only) Required when `deploymentType` is set to `multiAz1`. This specifies the subnet in which you want the preferred file server to be located.
+* `preferredSubnetId` - (Optional) (Multi-AZ only) Required when `deployment_type` is set to `MULTI_AZ_1`. This specifies the subnet in which you want the preferred file server to be located.
 * `rootVolumeConfiguration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) below.
 * `routeTableIds` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all virtual private cloud (VPC) route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `securityGroupIds` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
-* `storageType` - (Optional) The filesystem storage type. Only `ssd` is supported.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:hh:mm` format) to perform weekly maintenance, in the UTC time zone.
+* `storageType` - (Optional) The filesystem storage type. Only `SSD` is supported.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
 ### Disk Iops Configuration
 
 * `iops` - (Optional) - The total number of SSD IOPS provisioned for the file system.
-* `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `automatic` and `userProvisioned`. Default value is `automatic`.
+* `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `AUTOMATIC` and `USER_PROVISIONED`. Default value is `AUTOMATIC`.
 
 ### Root Volume Configuration
 
 * `copyTagsToSnapshots` - (Optional) - A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
-* `dataCompressionType` - (Optional) - Method used to compress the data on the volume. Valid values are `lz4`, `none` or `zstd`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
+* `dataCompressionType` - (Optional) - Method used to compress the data on the volume. Valid values are `LZ4`, `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
 * `nfsExports` - (Optional) - NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
 * `readOnly` - (Optional) - specifies whether the volume is read-only. Default is false.
 * `recordSizeKib` - (Optional) - Specifies the record size of an OpenZFS root volume, in kibibytes (KiB). Valid values are `4`, `8`, `16`, `32`, `64`, `128`, `256`, `512`, or `1024` KiB. The default is `128` KiB.
@@ -89,28 +89,28 @@ This resource supports the following arguments:
 
 * `id` - (Required) - The ID of the user or group. Valid values between `0` and `2147483647`
 * `storageCapacityQuotaGib` - (Required) - The amount of storage that the user or group can use in gibibytes (GiB). Valid values between `0` and `2147483647`
-* `type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `user` or `group`.
+* `type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
-* `dnsName` - DNS name for the file system, e.g., `fs12345678FsxUsWest2AmazonawsCom`
-* `id` - Identifier of the file system, e.g., `fs12345678`
+* `dnsName` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
+* `id` - Identifier of the file system, e.g., `fs-12345678`
 * `networkInterfaceIds` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
-* `rootVolumeId` - Identifier of the root volume, e.g., `fsvol12345678`
+* `rootVolumeId` - Identifier of the root volume, e.g., `fsvol-12345678`
 * `ownerId` - AWS account identifier that created the file system.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - Identifier of the Virtual Private Cloud for the file system.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `60M`)
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 
@@ -167,4 +167,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-747caeeb6ae73c2beade6eba7cdec24bd727587f1c4cbe894ef193c84d502d2e -->
+<!-- cache-key: cdktf-0.19.0 input-747caeeb6ae73c2beade6eba7cdec24bd727587f1c4cbe894ef193c84d502d2e -->

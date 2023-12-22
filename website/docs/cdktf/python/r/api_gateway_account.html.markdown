@@ -108,4 +108,4 @@ Using `terraform import`, import API Gateway Accounts using the word `api-gatewa
 % terraform import aws_api_gateway_account.demo api-gateway-account
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2c3031685ea1cacb5723c6c52399155d732bc5bb2d7fcfa71a3cc55a2bf24db5 -->
+<!-- cache-key: cdktf-0.19.0 input-2c3031685ea1cacb5723c6c52399155d732bc5bb2d7fcfa71a3cc55a2bf24db5 -->

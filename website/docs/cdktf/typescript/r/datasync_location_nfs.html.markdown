@@ -48,13 +48,13 @@ This resource supports the following arguments:
 * `onPremConfig` - (Required) Configuration block containing information for connecting to the NFS File System.
 * `serverHostname` - (Required) Specifies the IP address or DNS name of the NFS server. The DataSync Agent(s) use this to mount the NFS server.
 * `subdirectory` - (Required) Subdirectory to perform actions as source or destination. Should be exported by the NFS server.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### mount_options Argument Reference
 
 The `mountOptions` configuration block supports the following arguments:
 
-* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `automatic`, `nfs3`, `nfs40` and `nfs41`. Default: `automatic`
+* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
 
 ### on_prem_config Argument Reference
 
@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import `awsDatasyncLocationNfs` using the DataSync Tas
 % terraform import aws_datasync_location_nfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cb00fc82fb27ed23545aa2a14e593899a6887ce57ca2c5b408cf2933841b79e3 -->
+<!-- cache-key: cdktf-0.19.0 input-cb00fc82fb27ed23545aa2a14e593899a6887ce57ca2c5b408cf2933841b79e3 -->

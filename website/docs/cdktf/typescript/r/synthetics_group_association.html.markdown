@@ -73,4 +73,4 @@ Using `terraform import`, import CloudWatch Synthetics Group Association using t
 % terraform import aws_synthetics_group_association.example arn:aws:synthetics:us-west-2:123456789012:canary:tf-acc-test-abcd1234,examplename
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-586109c93710a862721820ba7c1a1a3dc69aaa17f27c7d2609f2031c6672b318 -->
+<!-- cache-key: cdktf-0.19.0 input-586109c93710a862721820ba7c1a1a3dc69aaa17f27c7d2609f2031c6672b318 -->

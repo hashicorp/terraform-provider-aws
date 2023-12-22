@@ -106,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `architecture` – (Optional) The CPU architecture of an application. Valid values are `arm64` or `x8664`. Default value is `x8664`.
+* `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `autoStartConfiguration` – (Optional) The configuration for an application to automatically start on job submission.
 * `autoStopConfiguration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
 * `imageConfiguration` – (Optional) The image configuration applied to all worker types.
@@ -116,7 +116,7 @@ The following arguments are required:
 * `networkConfiguration` – (Optional) The network configuration for customer VPC connectivity.
 * `releaseLabel` – (Required) The EMR release version associated with the application.
 * `type` – (Required) The type of application you want to start, such as `spark` or `hive`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### auto_start_configuration Arguments
 
@@ -130,7 +130,7 @@ The following arguments are required:
 ### initial_capacity Arguments
 
 * `initialCapacityConfig` - (Optional) The initial capacity configuration per worker.
-* `initialCapacityType` - (Required) The worker type for an analytics framework. For Spark applications, the key can either be set to `driver` or `executor`. For Hive applications, it can be set to `hiveDriver` or `tezTask`.
+* `initialCapacityType` - (Required) The worker type for an analytics framework. For Spark applications, the key can either be set to `Driver` or `Executor`. For Hive applications, it can be set to `HiveDriver` or `TezTask`.
 
 ### maximum_capacity Arguments
 
@@ -164,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the cluster.
 * `id` - The ID of the cluster.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -188,4 +188,4 @@ Using `terraform import`, import EMR Severless applications using the `id`. For 
 % terraform import aws_emrserverless_application.example id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e44c01cb3d0245a04c0ae76333390d6e8ad9c201d82a7409ec4c28eab63c55d0 -->
+<!-- cache-key: cdktf-0.19.0 input-e44c01cb3d0245a04c0ae76333390d6e8ad9c201d82a7409ec4c28eab63c55d0 -->

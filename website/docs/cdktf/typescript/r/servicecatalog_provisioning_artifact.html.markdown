@@ -55,8 +55,8 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `productId` - (Required) Identifier of the product.
-* `templatePhysicalId` - (Required if `templateUrl` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
-* `templateUrl` - (Required if `templatePhysicalId` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
+* `templatePhysicalId` - (Required if `template_url` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
+* `templateUrl` - (Required if `template_physical_id` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
 
 The following arguments are optional:
 
@@ -64,8 +64,8 @@ The following arguments are optional:
 * `active` - (Optional) Whether the product version is active. Inactive provisioning artifacts are invisible to end users. End users cannot launch or update a provisioned product from an inactive provisioning artifact. Default is `true`.
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disableTemplateValidation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
-* `guidance` - (Optional) Information set by the administrator to provide guidance to end users about which provisioning artifacts to use. Valid values are `default` and `deprecated`. The default is `default`. Users are able to make updates to a provisioned product of a deprecated version but cannot launch new provisioned products using a deprecated version.
-* `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2Beta`). No spaces are allowed.
+* `guidance` - (Optional) Information set by the administrator to provide guidance to end users about which provisioning artifacts to use. Valid values are `DEFAULT` and `DEPRECATED`. The default is `DEFAULT`. Users are able to make updates to a provisioned product of a deprecated version but cannot launch new provisioned products using a deprecated version.
+* `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2beta`). No spaces are allowed.
 * `type` - (Optional) Type of provisioning artifact. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html) for valid list of values.
 
 ## Attribute Reference
@@ -81,10 +81,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `update` - (Default `3M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import `awsServicecatalogProvisioningArtifact` using t
 % terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec:prod-el3an0rma3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a7d327a6dfcafe1faac099b2d4490b5d1603912ff87a7717d27d809de4e883f3 -->
+<!-- cache-key: cdktf-0.19.0 input-a7d327a6dfcafe1faac099b2d4490b5d1603912ff87a7717d27d809de4e883f3 -->

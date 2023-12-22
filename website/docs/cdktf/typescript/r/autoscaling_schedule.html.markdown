@@ -66,13 +66,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `desiredCapacity` - (Optional) The initial capacity of the Auto Scaling group after the scheduled action runs and the capacity it attempts to maintain. Set to `1` if you don't want to change the desired capacity at the scheduled time. Defaults to `0`.
-* `endTime` - (Optional) The date and time for the recurring schedule to end, in UTC with the format `"yyyyMmDdThh:mm:ssZ"` (e.g. `"20210601T00:00:00Z"`).
-* `maxSize` - (Optional) The maximum size of the Auto Scaling group. Set to `1` if you don't want to change the maximum size at the scheduled time. Defaults to `0`.
-* `minSize` - (Optional) The minimum size of the Auto Scaling group. Set to `1` if you don't want to change the minimum size at the scheduled time. Defaults to `0`.
+* `desiredCapacity` - (Optional) The initial capacity of the Auto Scaling group after the scheduled action runs and the capacity it attempts to maintain. Set to `-1` if you don't want to change the desired capacity at the scheduled time. Defaults to `0`.
+* `endTime` - (Optional) The date and time for the recurring schedule to end, in UTC with the format `"YYYY-MM-DDThh:mm:ssZ"` (e.g. `"2021-06-01T00:00:00Z"`).
+* `maxSize` - (Optional) The maximum size of the Auto Scaling group. Set to `-1` if you don't want to change the maximum size at the scheduled time. Defaults to `0`.
+* `minSize` - (Optional) The minimum size of the Auto Scaling group. Set to `-1` if you don't want to change the minimum size at the scheduled time. Defaults to `0`.
 * `recurrence` - (Optional) The recurring schedule for this action specified using the Unix cron syntax format.
-* `startTime` - (Optional) The date and time for the recurring schedule to start, in UTC with the format `"yyyyMmDdThh:mm:ssZ"` (e.g. `"20210601T00:00:00Z"`).
-* `timeZone` - (Optional)  Specifies the time zone for a cron expression. Valid values are the canonical names of the IANA time zones (such as `etc/gmt+9` or `pacific/tahiti`).
+* `startTime` - (Optional) The date and time for the recurring schedule to start, in UTC with the format `"YYYY-MM-DDThh:mm:ssZ"` (e.g. `"2021-06-01T00:00:00Z"`).
+* `timeZone` - (Optional)  Specifies the time zone for a cron expression. Valid values are the canonical names of the IANA time zones (such as `Etc/GMT+9` or `Pacific/Tahiti`).
 
 ~> **NOTE:** When `startTime` and `endTime` are specified with `recurrence` , they form the boundaries of when the recurring action will start and stop.
 
@@ -104,4 +104,4 @@ Using `terraform import`, import AutoScaling ScheduledAction using the `autoScal
 % terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5be402701834f8814cc05c38173674caf079493d6dfbaad45363725e999d42d0 -->
+<!-- cache-key: cdktf-0.19.0 input-5be402701834f8814cc05c38173674caf079493d6dfbaad45363725e999d42d0 -->

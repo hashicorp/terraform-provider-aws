@@ -122,7 +122,7 @@ This resource supports the following arguments:
 * `description` - (Optional) The description of the repository.
 * `upstream` - (Optional) A list of upstream repositories to associate with the repository. The order of the upstream repositories in the list determines their priority order when AWS CodeArtifact looks for a requested package version. see [Upstream](#upstream)
 * `externalConnections` - An array of external connections associated with the repository. Only one external connection can be set per repository. see [External Connections](#external-connections).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Upstream
 
@@ -139,7 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of the repository.
 * `arn` - The ARN of the repository.
 * `administratorAccount` - The account number of the AWS account that manages the repository.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -163,4 +163,4 @@ Using `terraform import`, import CodeArtifact Repository using the CodeArtifact 
 % terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca58cfb42dd4c4e2a87c170764549f39f2f66f3383a2b20872f8e68bcce2c980 -->
+<!-- cache-key: cdktf-0.19.0 input-ca58cfb42dd4c4e2a87c170764549f39f2f66f3383a2b20872f8e68bcce2c980 -->

@@ -62,4 +62,4 @@ SAML options for the security configuration.
 * `sessionTimeout` - Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 * `userAttribute` - User attribute for this SAML integration.
 
-<!-- cache-key: cdktf-0.18.0 input-8187974261e12b138d3a7e197de7ca26b20f843eafab8ec86b4f5a9e972ddaa6 -->
+<!-- cache-key: cdktf-0.19.0 input-8187974261e12b138d3a7e197de7ca26b20f843eafab8ec86b4f5a9e972ddaa6 -->

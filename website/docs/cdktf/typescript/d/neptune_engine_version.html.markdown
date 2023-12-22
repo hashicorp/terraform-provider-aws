@@ -40,8 +40,8 @@ This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `neptune`)
 * `parameterGroupFamily` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `neptune1`.
-* `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
-* `version` - (Optional) Version of the DB engine. For example, `1010`, `1022`, and `1030`. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
+* `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferred_versions` arguments are not configured, the data source will return the default version for the engine.
+* `version` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.2.2`, and `1.0.3.0`. If both the `version` and `preferred_versions` arguments are not configured, the data source will return the default version for the engine.
 
 ## Attribute Reference
 
@@ -50,9 +50,9 @@ This data source exports the following attributes in addition to the arguments a
 * `engineDescription` - Description of the database engine.
 * `exportableLogTypes` - Set of log types that the database engine has available for export to CloudWatch Logs.
 * `supportedTimezones` - Set of the time zones supported by this engine.
-* `supportsLogExportsToCloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportableLogTypes` to CloudWatch Logs.
+* `supportsLogExportsToCloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
 * `supportsReadReplica` - Indicates whether the database engine version supports read replicas.
 * `validUpgradeTargets` - Set of engine versions that this database engine version can be upgraded to.
 * `versionDescription` - Description of the database engine version.
 
-<!-- cache-key: cdktf-0.18.0 input-95a44d0ef7849262a188ffdb9a5ba6d99336bcbafcda87d6d4674964f3cbe7d9 -->
+<!-- cache-key: cdktf-0.19.0 input-95a44d0ef7849262a188ffdb9a5ba6d99336bcbafcda87d6d4674964f3cbe7d9 -->

@@ -88,8 +88,8 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Default `20M`)
-* `delete` - (Default `20M`)
+* `update` - (Default `20m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -113,4 +113,4 @@ Using `terraform import`, import CloudSearch domain service access policies usin
 % terraform import aws_cloudsearch_domain_service_access_policy.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c2ebea6afae4e24a2fd5837f7a4fbdb9c6667ec6f7293e498314a0c3b1c43e87 -->
+<!-- cache-key: cdktf-0.19.0 input-c2ebea6afae4e24a2fd5837f7a4fbdb9c6667ec6f7293e498314a0c3b1c43e87 -->

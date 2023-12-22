@@ -58,7 +58,7 @@ This resource supports the following arguments:
 * `path` - (Optional, default "/") Path in which to create the policy.
   See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
-* `tags` - (Optional) Map of resource tags for the IAM Policy. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags for the IAM Policy. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `path` - The path of the policy in IAM.
 * `policy` - The policy document.
 * `policyId` - The policy's ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import IAM Policies using the `arn`. For example:
 % terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2bcb7f3dcfa6d83ce1cbd25d9b62a51db1f0fa11161d9093fc0a960b5e42ffec -->
+<!-- cache-key: cdktf-0.19.0 input-2bcb7f3dcfa6d83ce1cbd25d9b62a51db1f0fa11161d9093fc0a960b5e42ffec -->

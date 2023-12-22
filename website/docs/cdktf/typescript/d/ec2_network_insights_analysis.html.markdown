@@ -49,7 +49,7 @@ whose data will be exported as attributes.
 
 The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`describeNetworkInsightsAnalyses`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInsightsAnalyses.html) API Reference.
+* `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeNetworkInsightsAnalyses`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInsightsAnalyses.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
@@ -65,8 +65,8 @@ This data source exports the following attributes in addition to the arguments a
 * `pathFound` - Set to `true` if the destination was reachable.
 * `returnPathComponents` - The components in the path from destination to source.
 * `startDate` - Date/time the analysis was started.
-* `status` - Status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `pathFound`.
+* `status` - Status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `path_found`.
 * `statusMessage` - Message to provide more context when the `status` is `failed`.
 * `warningMessage` - Warning message.
 
-<!-- cache-key: cdktf-0.18.0 input-d7f40f52a0f576e9ad55308a3c0b7c20a1611a5a4641eb6f08ff3a89153793e8 -->
+<!-- cache-key: cdktf-0.19.0 input-d7f40f52a0f576e9ad55308a3c0b7c20a1611a5a4641eb6f08ff3a89153793e8 -->

@@ -68,4 +68,4 @@ Using `terraform import`, import SimpleDB Domains using the `name`. For example:
 % terraform import aws_simpledb_domain.users users
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1ecaa39696110cd8e92af5219414c477bbcb42224f0ea02ced4ca49a594cc2e2 -->
+<!-- cache-key: cdktf-0.19.0 input-1ecaa39696110cd8e92af5219414c477bbcb42224f0ea02ced4ca49a594cc2e2 -->

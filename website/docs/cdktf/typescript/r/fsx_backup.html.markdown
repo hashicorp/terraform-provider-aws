@@ -147,7 +147,7 @@ This resource supports the following arguments:
 Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP.
 
 * `fileSystemId` - (Optional) The ID of the file system to back up. Required if backing up Lustre or Windows file systems.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copyTagsToBackups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `volumeId` - (Optional) The ID of the volume to back up. Required if backing up a ONTAP Volume.
 
 ## Attribute Reference
@@ -155,18 +155,18 @@ Note - Only file_system_id or volume_id can be specified. file_system_id is used
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the backup.
-* `id` - Identifier of the backup, e.g., `fs12345678`
+* `id` - Identifier of the backup, e.g., `fs-12345678`
 * `kmsKeyId` -  The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the backup of the Amazon FSx file system's data at rest.
 * `ownerId` - AWS account identifier that created the file system.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the file system backup.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -190,4 +190,4 @@ Using `terraform import`, import FSx Backups using the `id`. For example:
 % terraform import aws_fsx_backup.example fs-543ab12b1ca672f33
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0ec17c1115f996a3a9d6f257bcf0f3b19a4abf6354a302a0d56b57c97b46ab01 -->
+<!-- cache-key: cdktf-0.19.0 input-0ec17c1115f996a3a9d6f257bcf0f3b19a4abf6354a302a0d56b57c97b46ab01 -->

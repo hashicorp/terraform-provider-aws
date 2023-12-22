@@ -116,4 +116,4 @@ Using `terraform import`, import `aws_apigatewayv2_deployment` using the API ide
 
 The `triggers` argument cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-6f168dfabc70a225ecc775cc6a4b2adaf3369f7cedadbfe8329709220731be58 -->
+<!-- cache-key: cdktf-0.19.0 input-6f168dfabc70a225ecc775cc6a4b2adaf3369f7cedadbfe8329709220731be58 -->

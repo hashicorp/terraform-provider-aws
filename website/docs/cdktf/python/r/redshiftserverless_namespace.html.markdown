@@ -73,4 +73,4 @@ Using `terraform import`, import Redshift Serverless Namespaces using the `names
 % terraform import aws_redshiftserverless_namespace.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3fa05a19a9755fb51145df09f985b4240171d15c6da3e7aaeeaa933a19f41ff3 -->
+<!-- cache-key: cdktf-0.19.0 input-3fa05a19a9755fb51145df09f985b4240171d15c6da3e7aaeeaa933a19f41ff3 -->

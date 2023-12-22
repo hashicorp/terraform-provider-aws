@@ -62,9 +62,9 @@ Determines if a new slot type version is created when the initial resource is cr
 update. Defaults to `false`.
 * `description` - (Optional) A description of the slot type. Must be less than or equal to 200 characters in length.
 * `valueSelectionStrategy` - (Optional) Determines the slot resolution strategy that Amazon Lex
-uses to return slot type values. `originalValue` returns the value entered by the user if the user
-value is similar to the slot value. `topResolution` returns the first value in the resolution list
-if there is a resolution list for the slot, otherwise null is returned. Defaults to `originalValue`.
+uses to return slot type values. `ORIGINAL_VALUE` returns the value entered by the user if the user
+value is similar to the slot value. `TOP_RESOLUTION` returns the first value in the resolution list
+if there is a resolution list for the slot, otherwise null is returned. Defaults to `ORIGINAL_VALUE`.
 
 ### enumeration_value
 
@@ -81,9 +81,9 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
-* `update` - (Default `1M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Attribute Reference
 
@@ -92,7 +92,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `checksum` - Checksum identifying the version of the slot type that was created. The checksum is
 not included as an argument because the resource will add it automatically when updating the slot type.
 * `createdDate` - The date when the slot type version was created.
-* `lastUpdatedDate` - The date when the `$latest` version of this slot type was updated.
+* `lastUpdatedDate` - The date when the `$LATEST` version of this slot type was updated.
 * `version` - The version of the slot type.
 
 ## Import
@@ -117,4 +117,4 @@ Using `terraform import`, import slot types using their name. For example:
 % terraform import aws_lex_slot_type.flower_types FlowerTypes
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-58681a55cb640f1116beebb5be5c7d0038c7e9b4981ccd70f4a9d065bd1b8d17 -->
+<!-- cache-key: cdktf-0.19.0 input-58681a55cb640f1116beebb5be5c7d0038c7e9b4981ccd70f4a9d065bd1b8d17 -->

@@ -45,7 +45,7 @@ This resource supports the following arguments:
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.
 * `displayName` - (Optional) The display name of the image. When the image is added to a domain (must be unique to the domain).
 * `description` - (Optional) The description of the image.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the Image.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Image.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -77,4 +77,4 @@ Using `terraform import`, import SageMaker Code Images using the `name`. For exa
 % terraform import aws_sagemaker_image.test_image my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-472a9b03f1ba8f793494df35ff1917699a39c258036a86d840cd026d9a0bfc60 -->
+<!-- cache-key: cdktf-0.19.0 input-472a9b03f1ba8f793494df35ff1917699a39c258036a86d840cd026d9a0bfc60 -->

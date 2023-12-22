@@ -72,4 +72,4 @@ Using `terraform import`, import Media Package Channels using the channel ID. Fo
 % terraform import aws_media_package_channel.kittens kittens-channel
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-749270ff3fa0c6f15341b2b41f6c3363f04071edc7478cee4ebbc36cb5e14a07 -->
+<!-- cache-key: cdktf-0.19.0 input-749270ff3fa0c6f15341b2b41f6c3363f04071edc7478cee4ebbc36cb5e14a07 -->

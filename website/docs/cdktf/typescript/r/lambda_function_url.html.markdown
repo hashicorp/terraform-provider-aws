@@ -52,11 +52,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `authorizationType` - (Required) The type of authentication that the function URL uses. Set to `"awsIam"` to restrict access to authenticated IAM users only. Set to `"none"` to bypass IAM authentication and create a public endpoint. See the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html) for more details.
+* `authorizationType` - (Required) The type of authentication that the function URL uses. Set to `"AWS_IAM"` to restrict access to authenticated IAM users only. Set to `"NONE"` to bypass IAM authentication and create a public endpoint. See the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html) for more details.
 * `cors` - (Optional) The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. Documented below.
 * `functionName` - (Required) The name (or ARN) of the Lambda function.
-* `invokeMode` - (Optional) Determines how the Lambda function responds to an invocation. Valid values are `buffered` (default) and `responseStream`. See more in [Configuring a Lambda function to stream responses](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html).
-* `qualifier` - (Optional) The alias name or `"$latest"`.
+* `invokeMode` - (Optional) Determines how the Lambda function responds to an invocation. Valid values are `BUFFERED` (default) and `RESPONSE_STREAM`. See more in [Configuring a Lambda function to stream responses](https://docs.aws.amazon.com/lambda/latest/dg/configuration-response-streaming.html).
+* `qualifier` - (Optional) The alias name or `"$LATEST"`.
 
 ### cors
 
@@ -74,7 +74,7 @@ This configuration block supports the following attributes:
 This resource exports the following attributes in addition to the arguments above:
 
 * `functionArn` - The Amazon Resource Name (ARN) of the function.
-* `functionUrl` - The HTTP URL endpoint for the function in the format `https://<urlId>LambdaUrl.<region>OnAws`.
+* `functionUrl` - The HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws`.
 * `urlId` - A generated ID for the endpoint.
 
 ## Import
@@ -99,4 +99,4 @@ Using `terraform import`, import Lambda function URLs using the `functionName` o
 % terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-109acf5fac25dcc5daf91ea88836c775555057c7e2ea1a59edfd11a98e567940 -->
+<!-- cache-key: cdktf-0.19.0 input-109acf5fac25dcc5daf91ea88836c775555057c7e2ea1a59edfd11a98e567940 -->

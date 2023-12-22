@@ -123,4 +123,4 @@ If the account is the master account or a delegated administrator for the organi
         * `name` - The name of the policy type
         * `status` - The status of the policy type as it relates to the associated root
 
-<!-- cache-key: cdktf-0.18.0 input-4e6e30bcec5e05a330427cb7ef2a21c714b5908caa1af760eadc9537632c8f92 -->
+<!-- cache-key: cdktf-0.19.0 input-4e6e30bcec5e05a330427cb7ef2a21c714b5908caa1af760eadc9537632c8f92 -->

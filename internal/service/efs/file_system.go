@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -156,6 +157,8 @@ func ResourceFileSystem() *schema.Resource {
 }
 
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	var creationToken string
@@ -195,19 +198,19 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if encrypted == false && hasKmsKeyId {
-		return diag.FromErr(errors.New("encrypted must be set to true when kms_key_id is specified"))
+		return sdkdiag.AppendFromErr(diags, errors.New("encrypted must be set to true when kms_key_id is specified"))
 	}
 
 	output, err := conn.CreateFileSystemWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EFS file system: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EFS file system: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.FileSystemId))
 
 	if _, err := waitFileSystemAvailable(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for EFS file system (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EFS file system (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
@@ -217,14 +220,16 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		})
 
 		if err != nil {
-			return diag.Errorf("putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFileSystemRead(ctx, d, meta)
+	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fs, err := FindFileSystemByID(ctx, conn, d.Id())
@@ -232,11 +237,11 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS file system (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EFS file system (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS file system (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", fs.FileSystemArn)
@@ -252,7 +257,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("performance_mode", fs.PerformanceMode)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
-		return diag.Errorf("setting size_in_bytes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting size_in_bytes: %s", err)
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
 
@@ -263,17 +268,19 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("reading EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
 	}
 
 	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(output.LifecyclePolicies)); err != nil {
-		return diag.Errorf("setting lifecycle_policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
@@ -290,11 +297,11 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EFS file system (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitFileSystemAvailable(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for EFS file system (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EFS file system (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -314,14 +321,16 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.PutLifecycleConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFileSystemRead(ctx, d, meta)
+	return append(diags, resourceFileSystemRead(ctx, d, meta)...)
 }
 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
@@ -330,18 +339,18 @@ func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EFS file system (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EFS file system (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFileSystemDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for EFS file system (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EFS file system (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findFileSystem(ctx context.Context, conn *efs.EFS, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*efs.FileSystemDescription]) (*efs.FileSystemDescription, error) {

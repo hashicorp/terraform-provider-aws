@@ -46,7 +46,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 This resource supports the following arguments:
 
 * `transitGatewayAttachmentId` - (Required) The ID of the EC2 Transit Gateway Peering Attachment to manage.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `transitGatewayId` - Identifier of EC2 Transit Gateway.
 * `peerTransitGatewayId` - Identifier of EC2 Transit Gateway to peer with.
 * `peerAccountId` - Identifier of the AWS account that owns the EC2 TGW peering.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -80,4 +80,4 @@ Using `terraform import`, import `awsEc2TransitGatewayPeeringAttachmentAccepter`
 % terraform import aws_ec2_transit_gateway_peering_attachment_accepter.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f990861cdea5515b1adb7416bea698b8254af1069c30ac70cdb56d2891f29e4 -->
+<!-- cache-key: cdktf-0.19.0 input-6f990861cdea5515b1adb7416bea698b8254af1069c30ac70cdb56d2891f29e4 -->

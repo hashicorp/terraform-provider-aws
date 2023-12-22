@@ -74,6 +74,6 @@ This data source exports the following attributes in addition to the arguments a
 * `keys` - List of strings representing object keys
 * `commonPrefixes` - List of any keys between `prefix` and the next occurrence of `delimiter` (i.e., similar to subdirectories of the `prefix` "directory"); the list is only returned when you specify `delimiter`
 * `id` - S3 Bucket.
-* `owners` - List of strings representing object owner IDs (see `fetchOwner` above)
+* `owners` - List of strings representing object owner IDs (see `fetch_owner` above)
 
-<!-- cache-key: cdktf-0.18.0 input-a76b73c82fad499d443cf61f0e3f0ceae10818b46525e36001df4ca1d2096e1a -->
+<!-- cache-key: cdktf-0.19.0 input-a76b73c82fad499d443cf61f0e3f0ceae10818b46525e36001df4ca1d2096e1a -->

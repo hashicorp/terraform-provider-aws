@@ -127,4 +127,4 @@ Using `terraform import`, import endpoints using the `name`. For example:
 % terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f77eb68ca400c61f27b4fe0845a1a77a41772c28e3c6f22dc1c8cd4be29cc30 -->
+<!-- cache-key: cdktf-0.19.0 input-6f77eb68ca400c61f27b4fe0845a1a77a41772c28e3c6f22dc1c8cd4be29cc30 -->

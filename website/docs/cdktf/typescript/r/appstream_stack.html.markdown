@@ -89,26 +89,26 @@ The following arguments are required:
 The following arguments are optional:
 
 * `accessEndpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints.
-  See [`accessEndpoints`](#access_endpoints) below.
+  See [`access_endpoints`](#access_endpoints) below.
 * `applicationSettings` - (Optional) Settings for application settings persistence.
-  See [`applicationSettings`](#application_settings) below.
+  See [`application_settings`](#application_settings) below.
 * `description` - (Optional) Description for the AppStream stack.
 * `displayName` - (Optional) Stack name to display.
 * `embedHostDomains` - (Optional) Domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.
 * `feedbackUrl` - (Optional) URL that users are redirected to after they click the Send Feedback link. If no URL is specified, no Send Feedback link is displayed. .
 * `redirectUrl` - (Optional) URL that users are redirected to after their streaming session ends.
 * `storageConnectors` - (Optional) Configuration block for the storage connectors to enable.
-  See [`storageConnectors`](#storage_connectors) below.
+  See [`storage_connectors`](#storage_connectors) below.
 * `userSettings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action.
-  See [`userSettings`](#user_settings) below.
+  See [`user_settings`](#user_settings) below.
 * `streamingExperienceSettings` - (Optional) The streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client.
-  See [`streamingExperienceSettings`](#streaming_experience_settings) below.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  See [`streaming_experience_settings`](#streaming_experience_settings) below.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `accessEndpoints`
 
 * `endpointType` - (Required) Type of the interface endpoint.
-  See the [`accessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
+  See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
 * `vpceId` - (Optional) ID of the VPC in which the interface endpoint is used.
 
 ### `applicationSettings`
@@ -121,21 +121,21 @@ The following arguments are optional:
 ### `storageConnectors`
 
 * `connectorType` - (Required) Type of storage connector.
-  Valid values are `homefolders`, `googleDrive`, or `oneDrive`.
+  Valid values are `HOMEFOLDERS`, `GOOGLE_DRIVE`, or `ONE_DRIVE`.
 * `domains` - (Optional) Names of the domains for the account.
 * `resourceIdentifier` - (Optional) ARN of the storage connector.
 
 ### `userSettings`
 
 * `action` - (Required) Action that is enabled or disabled.
-  Valid values are `clipboardCopyFromLocalDevice`,  `clipboardCopyToLocalDevice`, `fileUpload`, `fileDownload`, `printingToLocalDevice`, `domainPasswordSignin`, or `domainSmartCardSignin`.
+  Valid values are `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, or `DOMAIN_SMART_CARD_SIGNIN`.
 * `permission` - (Required) Whether the action is enabled or disabled.
-  Valid values are `enabled` or `disabled`.
+  Valid values are `ENABLED` or `DISABLED`.
 
 ### `streamingExperienceSettings`
 
 * `preferredProtocol` - (Optional) The preferred protocol that you want to use while streaming your application.
-  Valid values are `tcp` and `udp`.
+  Valid values are `TCP` and `UDP`.
 
 ## Attribute Reference
 
@@ -167,4 +167,4 @@ Using `terraform import`, import `awsAppstreamStack` using the id. For example:
 % terraform import aws_appstream_stack.example stackID
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-47da4616e548607a748b0c74b6e276c2936292671693468cbdab004d2cb5d071 -->
+<!-- cache-key: cdktf-0.19.0 input-47da4616e548607a748b0c74b6e276c2936292671693468cbdab004d2cb5d071 -->

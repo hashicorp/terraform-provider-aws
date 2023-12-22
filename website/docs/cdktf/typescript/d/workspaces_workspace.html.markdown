@@ -64,20 +64,20 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `bundleId` - (Optional) ID of the bundle for the WorkSpace.
-* `directoryId` - (Optional) ID of the directory for the WorkSpace. You have to specify `userName` along with `directoryId`. You cannot combine this parameter with `workspaceId`.
+* `directoryId` - (Optional) ID of the directory for the WorkSpace. You have to specify `user_name` along with `directory_id`. You cannot combine this parameter with `workspace_id`.
 * `rootVolumeEncryptionEnabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
 * `tags` - (Optional) Tags for the WorkSpace.
-* `userName` – (Optional) User name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace. You cannot combine this parameter with `workspaceId`.
+* `userName` – (Optional) User name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace. You cannot combine this parameter with `workspace_id`.
 * `userVolumeEncryptionEnabled` – (Optional) Indicates whether the data stored on the user volume is encrypted.
 * `volumeEncryptionKey` – (Optional) Symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
-* `workspaceId` - (Optional) ID of the WorkSpace. You cannot combine this parameter with `directoryId`.
+* `workspaceId` - (Optional) ID of the WorkSpace. You cannot combine this parameter with `directory_id`.
 * `workspaceProperties` – (Optional) WorkSpace properties.
 
 `workspaceProperties` supports the following:
 
-* `computeTypeName` – (Optional) Compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `value`, `standard`, `performance`, `power`, `graphics`, `powerpro` and `graphicspro`.
+* `computeTypeName` – (Optional) Compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO` and `GRAPHICSPRO`.
 * `rootVolumeSizeGib` – (Optional) Size of the root volume.
-* `runningMode` – (Optional) Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `autoStop` and `alwaysOn`.
+* `runningMode` – (Optional) Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `runningModeAutoStopTimeoutInMinutes` – (Optional) Time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `userVolumeSizeGib` – (Optional) Size of the user storage.
 
@@ -90,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 * `computerName` - Name of the WorkSpace, as seen by the operating system.
 * `state` - Operational state of the WorkSpace.
 
-<!-- cache-key: cdktf-0.18.0 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->
+<!-- cache-key: cdktf-0.19.0 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->

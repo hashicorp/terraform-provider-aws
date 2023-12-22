@@ -43,20 +43,20 @@ The following arguments are required:
 The following argument are optional:
 
 * `cells` - (Optional) List of cell arns to add as nested fault domains within this recovery group
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the recovery group
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `5M`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -80,4 +80,4 @@ Using `terraform import`, import Route53 Recovery Readiness recovery groups usin
 % terraform import aws_route53recoveryreadiness_recovery_group.my-high-availability-app my-high-availability-app
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8dde4cc1d205a94cf5f5ad34c54ed11d8cdcf8e43195fafdf486d08bbe56f97b -->
+<!-- cache-key: cdktf-0.19.0 input-8dde4cc1d205a94cf5f5ad34c54ed11d8cdcf8e43195fafdf486d08bbe56f97b -->

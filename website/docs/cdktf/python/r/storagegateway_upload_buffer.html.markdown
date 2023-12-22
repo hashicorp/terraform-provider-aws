@@ -101,4 +101,4 @@ Using `terraform import`, import `aws_storagegateway_upload_buffer` using the ga
 % terraform import aws_storagegateway_upload_buffer.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ae944e6e1a1a59199a21cc4f4ff9f7913523ee122e7485caccc7b645c0699488 -->
+<!-- cache-key: cdktf-0.19.0 input-ae944e6e1a1a59199a21cc4f4ff9f7913523ee122e7485caccc7b645c0699488 -->

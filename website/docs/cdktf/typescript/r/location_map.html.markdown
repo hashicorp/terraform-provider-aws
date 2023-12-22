@@ -47,7 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) An optional description for the map resource.
-* `tags` - (Optional) Key-value tags for the map. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the map. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### configuration
 
@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `createTime` - The timestamp for when the map resource was created in ISO 8601 format.
 * `mapArn` - The Amazon Resource Name (ARN) for the map resource. Used to specify a resource across all AWS.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updateTime` - The timestamp for when the map resource was last updated in ISO 8601 format.
 
 ## Import
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsLocationMap` resources using the map name. 
 % terraform import aws_location_map.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5dad74dad6d91da85c3886e29aba5949de61bde3e481fa21d1494017c8c095a9 -->
+<!-- cache-key: cdktf-0.19.0 input-5dad74dad6d91da85c3886e29aba5949de61bde3e481fa21d1494017c8c095a9 -->

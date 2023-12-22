@@ -97,4 +97,4 @@ Using `terraform import`, import resource share accepters using the resource sha
 % terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-20035f07d897cc355e9d9455de1abcd873b5f6ec8141f34f4260f32e299d71a7 -->
+<!-- cache-key: cdktf-0.19.0 input-20035f07d897cc355e9d9455de1abcd873b5f6ec8141f34f4260f32e299d71a7 -->

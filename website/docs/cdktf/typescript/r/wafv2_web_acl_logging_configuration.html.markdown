@@ -195,25 +195,25 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `logDestinationConfigs` - (Required) Configuration block that allows you to associate Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) with the web ACL. **Note:** data firehose, log group, or bucket name **must** be prefixed with `awsWafLogs`, e.g. `awsWafLogsExampleFirehose`, `awsWafLogsExampleLogGroup`, or `awsWafLogsExampleBucket`.
+* `logDestinationConfigs` - (Required) Configuration block that allows you to associate Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) with the web ACL. **Note:** data firehose, log group, or bucket name **must** be prefixed with `aws-waf-logs-`, e.g. `aws-waf-logs-example-firehose`, `aws-waf-logs-example-log-group`, or `aws-waf-logs-example-bucket`.
 * `loggingFilter` - (Optional) Configuration block that specifies which web requests are kept in the logs and which are dropped. It allows filtering based on the rule action and the web request labels applied by matching rules during web ACL evaluation. For more details, refer to the [Logging Filter](#logging-filter) section below.
-* `redactedFields` - (Optional) Configuration for parts of the request that you want to keep out of the logs. Up to 100 `redactedFields` blocks are supported. See [Redacted Fields](#redacted-fields) below for more details.
-* `resourceArn` - (Required) Amazon Resource Name (ARN) of the web ACL that you want to associate with `logDestinationConfigs`.
+* `redactedFields` - (Optional) Configuration for parts of the request that you want to keep out of the logs. Up to 100 `redacted_fields` blocks are supported. See [Redacted Fields](#redacted-fields) below for more details.
+* `resourceArn` - (Required) Amazon Resource Name (ARN) of the web ACL that you want to associate with `log_destination_configs`.
 
 ### Logging Filter
 
 The `loggingFilter` block supports the following arguments:
 
-* `defaultBehavior` - (Required) Default handling for logs that don't match any of the specified filtering conditions. Valid values for `defaultBehavior` are `keep` or `drop`.
+* `defaultBehavior` - (Required) Default handling for logs that don't match any of the specified filtering conditions. Valid values for `default_behavior` are `KEEP` or `DROP`.
 * `filter` - (Required) Filter(s) that you want to apply to the logs. See [Filter](#filter) below for more details.
 
 ### Filter
 
 The `filter` block supports the following arguments:
 
-* `behavior` - (Required) Parameter that determines how to handle logs that meet the conditions and requirements of the filter. The valid values for `behavior` are `keep` or `drop`.
+* `behavior` - (Required) Parameter that determines how to handle logs that meet the conditions and requirements of the filter. The valid values for `behavior` are `KEEP` or `DROP`.
 * `condition` - (Required) Match condition(s) for the filter. See [Condition](#condition) below for more details.
-* `requirement` - (Required) Logic to apply to the filtering conditions. You can specify that a log must match all conditions or at least one condition in order to satisfy the filter. Valid values for `requirement` are `meetsAll` or `meetsAny`.
+* `requirement` - (Required) Logic to apply to the filtering conditions. You can specify that a log must match all conditions or at least one condition in order to satisfy the filter. Valid values for `requirement` are `MEETS_ALL` or `MEETS_ANY`.
 
 ### Condition
 
@@ -228,7 +228,7 @@ The `condition` block supports the following arguments:
 
 The `actionCondition` block supports the following argument:
 
-* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `allow`, `block`, and `count`.
+* `action` - (Required) Action setting that a log record must contain in order to meet the condition. Valid values for `action` are `ALLOW`, `BLOCK`, and `COUNT`.
 
 ### Label Name Condition
 
@@ -245,7 +245,7 @@ The `redactedFields` block supports the following arguments:
 * `method` - (Optional) HTTP method to be redacted. It must be specified as an empty configuration block `{}`. The method indicates the type of operation that the request is asking the origin to perform.
 * `queryString` - (Optional) Whether to redact the query string. It must be specified as an empty configuration block `{}`. The query string is the part of a URL that appears after a `?` character, if any.
 * `singleHeader` - (Optional) "single_header" refers to the redaction of a single header. For more information, please see the details below under [Single Header](#single-header).
-* `uriPath` - (Optional) Configuration block that redacts the request URI path. It should be specified as an empty configuration block `{}`. The URI path is the part of a web request that identifies a resource, such as `/images/dailyAdJpg`.
+* `uriPath` - (Optional) Configuration block that redacts the request URI path. It should be specified as an empty configuration block `{}`. The URI path is the part of a web request that identifies a resource, such as `/images/daily-ad.jpg`.
 
 ### Single Header
 
@@ -283,4 +283,4 @@ Using `terraform import`, import WAFv2 Web ACL Logging Configurations using the 
 % terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-25f3c0d8db1fe2e19c84f4ebb5edd1ab40bd0204a16eb4042e8db839d72d6f44 -->
+<!-- cache-key: cdktf-0.19.0 input-25f3c0d8db1fe2e19c84f4ebb5edd1ab40bd0204a16eb4042e8db839d72d6f44 -->

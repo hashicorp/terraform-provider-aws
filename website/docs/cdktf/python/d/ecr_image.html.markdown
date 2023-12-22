@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `image_size_in_bytes` - Size, in bytes, of the image in the repository.
 * `image_tags` - List of tags associated with this image.
 
-<!-- cache-key: cdktf-0.18.0 input-eb75c0a7672b4cf7c02f9b64096974ed3f209abe2c9c03438c3aa07107bc2b28 -->
+<!-- cache-key: cdktf-0.19.0 input-eb75c0a7672b4cf7c02f9b64096974ed3f209abe2c9c03438c3aa07107bc2b28 -->

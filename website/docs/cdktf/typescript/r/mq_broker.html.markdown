@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
         revision: test.latestRevision,
       },
       engineType: "ActiveMQ",
-      engineVersion: "5.15.9",
+      engineVersion: "5.17.6",
       hostInstanceType: "mq.t2.micro",
       securityGroups: [Token.asString(awsSecurityGroupTest.id)],
       user: [
@@ -81,7 +81,7 @@ class MyConvertedCode extends TerraformStack {
         revision: test.latestRevision,
       },
       engineType: "ActiveMQ",
-      engineVersion: "5.15.9",
+      engineVersion: "5.17.6",
       hostInstanceType: "mq.m5.large",
       securityGroups: [Token.asString(awsSecurityGroupTest.id)],
       storageType: "ebs",
@@ -102,27 +102,27 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `brokerName` - (Required) Name of the broker.
-* `engineType` - (Required) Type of broker engine. Valid values are `activeMq` and `rabbitMq`.
-* `engineVersion` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5150`.
-* `hostInstanceType` - (Required) Broker's instance type. For example, `mqT3Micro`, `mqM5Large`.
-* `user` - (Required) Configuration block for broker users. For `engineType` of `rabbitMq`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
+* `engineType` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
+* `engineVersion` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.17.6`.
+* `hostInstanceType` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
+* `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
 The following arguments are optional:
 
 * `applyImmediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `authenticationStrategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engineType` `rabbitMq`.
+* `authenticationStrategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `autoMinorVersionUpgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
-* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engineType` of `activeMq` and `rabbitMq` only. Detailed below.
-* `deploymentMode` - (Optional) Deployment mode of the broker. Valid values are `singleInstance`, `activeStandbyMultiAz`, and `clusterMultiAz`. Default is `singleInstance`.
+* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` and `RabbitMQ` only. Detailed below.
+* `deploymentMode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryptionOptions` - (Optional) Configuration block containing encryption options. Detailed below.
-* `ldapServerMetadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engineType` `rabbitMq`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
+* `ldapServerMetadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
 * `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
 * `maintenanceWindowStartTime` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publiclyAccessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `securityGroups` - (Optional) List of security group IDs assigned to the broker.
-* `storageType` - (Optional) Storage type of the broker. For `engineType` `activeMq`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engineType` `rabbitMq`, only `ebs` is supported. When using `ebs`, only the `mqM5` broker instance type family is supported.
-* `subnetIds` - (Optional) List of subnet IDs in which to launch the broker. A `singleInstance` deployment requires one subnet. An `activeStandbyMultiAz` deployment requires multiple subnets.
-* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `storageType` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
+* `subnetIds` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
+* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### configuration
 
@@ -135,8 +135,8 @@ The following arguments are optional:
 
 The following arguments are optional:
 
-* `kmsKeyId` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `useAwsOwnedKey` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
-* `useAwsOwnedKey` - (Optional) Whether to enable an AWS-owned KMS CMK that is not in your account. Defaults to `true`. Setting to `false` without configuring `kmsKeyId` will create an AWS-managed CMK aliased to `aws/mq` in your account.
+* `kmsKeyId` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
+* `useAwsOwnedKey` - (Optional) Whether to enable an AWS-owned KMS CMK that is not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` will create an AWS-managed CMK aliased to `aws/mq` in your account.
 
 ### ldap_server_metadata
 
@@ -158,21 +158,21 @@ The following arguments are optional:
 
 The following arguments are optional:
 
-* `audit` - (Optional) Enables audit logging. Auditing is only possible for `engineType` of `activeMq`. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
+* `audit` - (Optional) Enables audit logging. Auditing is only possible for `engine_type` of `ActiveMQ`. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
 * `general` - (Optional) Enables general logging via CloudWatch. Defaults to `false`.
 
 ### maintenance_window_start_time
 
 The following arguments are required:
 
-* `dayOfWeek` - (Required) Day of the week, e.g., `monday`, `tuesday`, or `wednesday`.
+* `dayOfWeek` - (Required) Day of the week, e.g., `MONDAY`, `TUESDAY`, or `WEDNESDAY`.
 * `timeOfDay` - (Required) Time, in 24-hour format, e.g., `02:00`.
-* `timeZone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g., `cet`.
+* `timeZone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g., `CET`.
 
 ### user
 
-* `consoleAccess` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engineType` of `activeMq` only.
-* `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engineType` of `activeMq` only.
+* `consoleAccess` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
+* `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ActiveMQ` only.
 * `password` - (Required) Password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
 * `replicationUser` - (Optional) Whether to set set replication user. Defaults to `false`.
 * `username` - (Required) Username of the user.
@@ -186,26 +186,26 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the broker.
 * `id` - Unique ID that Amazon MQ generates for the broker.
 * `instances` - List of information about allocated brokers (both active & standby).
-    * `instances0ConsoleUrl` - The URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engineType`.
-    * `instances0IpAddress` - IP Address of the broker.
-    * `instances0Endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances0Endpoints0` (SSL):
-        * For `activeMq`:
-            * `ssl://brokerIdMqUsWest2AmazonawsCom:61617`
-            * `amqp+ssl://brokerIdMqUsWest2AmazonawsCom:5671`
-            * `stomp+ssl://brokerIdMqUsWest2AmazonawsCom:61614`
-            * `mqtt+ssl://brokerIdMqUsWest2AmazonawsCom:8883`
-            * `wss://brokerIdMqUsWest2AmazonawsCom:61619`
-        * For `rabbitMq`:
-            * `amqps://brokerIdMqUsWest2AmazonawsCom:5671`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+    * `instances.0.console_url` - The URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
+    * `instances.0.ip_address` - IP Address of the broker.
+    * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances.0.endpoints.0` (SSL):
+        * For `ActiveMQ`:
+            * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
+            * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
+            * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
+            * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
+        * For `RabbitMQ`:
+            * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -229,4 +229,4 @@ Using `terraform import`, import MQ Brokers using their broker id. For example:
 % terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e4ac8cdba2a86a52d15d44c9fa76955d14e86f7fe0c194e7077682ba082c4e20 -->
+<!-- cache-key: cdktf-0.19.0 input-d85029fe617087d37abc0e8005a439a956c3a95b4c6454674dc44a09e08d0bcd -->

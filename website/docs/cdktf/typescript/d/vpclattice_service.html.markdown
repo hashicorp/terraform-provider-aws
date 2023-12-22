@@ -49,7 +49,7 @@ The given filters must match exactly one VPC lattice service whose data will be 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service.
-* `authType` - Type of IAM policy. Either `none` or `awsIam`.
+* `authType` - Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificateArn` - Amazon Resource Name (ARN) of the certificate.
 * `customDomainName` - Custom domain name of the service.
 * `dnsEntry` - DNS name of the service.
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.18.0 input-7b6870621548d47b2268852ea64bf86123c019e6fafbc3bb70238634ddfbd625 -->
+<!-- cache-key: cdktf-0.19.0 input-7b6870621548d47b2268852ea64bf86123c019e6fafbc3bb70238634ddfbd625 -->

@@ -54,9 +54,9 @@ This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the regular expression pattern set.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `cloudfront` or `regional`. To work with CloudFront, you must also specify the region `usEast1` (N. Virginia) on the AWS provider.
-* `regularExpression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `b[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details. A maximum of 10 `regularExpression` blocks may be specified.
-* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
+* `regularExpression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details. A maximum of 10 `regular_expression` blocks may be specified.
+* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Regular Expression
 
@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A unique identifier for the set.
 * `arn` - The Amazon Resource Name (ARN) that identifies the cluster.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import WAFv2 Regex Pattern Sets using `id/name/scope`.
 % terraform import aws_wafv2_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-eed21a5d34f7cebe366e9c7f2f0e99fea6caa3cbfe03c93ecf2ee8118271fa64 -->
+<!-- cache-key: cdktf-0.19.0 input-eed21a5d34f7cebe366e9c7f2f0e99fea6caa3cbfe03c93ecf2ee8118271fa64 -->

@@ -75,17 +75,17 @@ This resource supports the following arguments:
 
 ##### action
 
-* `eventAction` - (Required) The action to take in response to the account takeover action. Valid values are `block`, `mfaIfConfigured`, `mfaRequired` and `noAction`.
+* `eventAction` - (Required) The action to take in response to the account takeover action. Valid values are `BLOCK`, `MFA_IF_CONFIGURED`, `MFA_REQUIRED` and `NO_ACTION`.
 * `notify` - (Required) Whether to send a notification.
 
 ### compromised_credentials_risk_configuration
 
-* `eventFilter` - (Optional) Perform the action for these events. The default is to perform all events if no event filter is specified. Valid values are `signIn`, `passwordChange`, and `signUp`.
+* `eventFilter` - (Optional) Perform the action for these events. The default is to perform all events if no event filter is specified. Valid values are `SIGN_IN`, `PASSWORD_CHANGE`, and `SIGN_UP`.
 * `actions` - (Required) The compromised credentials risk configuration actions. See details below.
 
 #### actions
 
-* `eventAction` - (Optional) The event action. Valid values are `block` or `noAction`.
+* `eventAction` - (Optional) The event action. Valid values are `BLOCK` or `NO_ACTION`.
 
 ### risk_exception_configuration
 
@@ -148,4 +148,4 @@ Import using the user pool ID and Client ID separated by a `:`:
 % terraform import aws_cognito_risk_configuration.main example:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b75593cc575d1cd95ecde1a9b1a8a4e0bd77767201715d4f626c2fa0398eed4b -->
+<!-- cache-key: cdktf-0.19.0 input-b75593cc575d1cd95ecde1a9b1a8a4e0bd77767201715d4f626c2fa0398eed4b -->

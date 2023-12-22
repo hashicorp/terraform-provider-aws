@@ -70,8 +70,8 @@ The following arguments are optional:
 
 The `configuration` configuration block supports the following arguments:
 
-* `contentSourceConfiguration` - (Optional, Required if `userIdentityConfiguration` not provided) The identifiers of your data sources and FAQs. Or, you can specify that you want to use documents indexed via the `BatchPutDocument API`. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#content_source_configuration).
-* `userIdentityConfiguration` - (Optional, Required if `contentSourceConfiguration` not provided) The AWS SSO field name that contains the identifiers of your users, such as their emails. [Detailed below](#user_identity_configuration).
+* `contentSourceConfiguration` - (Optional, Required if `user_identity_configuration` not provided) The identifiers of your data sources and FAQs. Or, you can specify that you want to use documents indexed via the `BatchPutDocument API`. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#content_source_configuration).
+* `userIdentityConfiguration` - (Optional, Required if `content_source_configuration` not provided) The AWS SSO field name that contains the identifiers of your users, such as their emails. [Detailed below](#user_identity_configuration).
 
 ### `contentSourceConfiguration`
 
@@ -95,7 +95,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Experience.
 * `endpoints` - Shows the endpoint URLs for your Amazon Kendra experiences. The URLs are unique and fully hosted by AWS.
     * `endpoint` - The endpoint of your Amazon Kendra experience.
-    * `endpointType` - The type of endpoint for your Amazon Kendra experience.
+    * `endpoint_type` - The type of endpoint for your Amazon Kendra experience.
 * `experienceId` - The unique identifier of the experience.
 * `status` - The current processing status of your Amazon Kendra experience.
 
@@ -103,9 +103,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -129,4 +129,4 @@ Using `terraform import`, import Kendra Experience using the unique identifiers 
 % terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-477863d25f90cf21db701a32b4767e8783661101976bd8e3bf55b7323f3e6452 -->
+<!-- cache-key: cdktf-0.19.0 input-477863d25f90cf21db701a32b4767e8783661101976bd8e3bf55b7323f3e6452 -->

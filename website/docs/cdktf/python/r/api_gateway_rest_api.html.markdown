@@ -300,4 +300,4 @@ Using `terraform import`, import `aws_api_gateway_rest_api` using the REST API I
 
 ~> **NOTE:** Resource import does not currently support the `body` attribute.
 
-<!-- cache-key: cdktf-0.18.0 input-e489f1763b2359237f3dddc078f272955078eab93aabf7213398c9c17e24c7ea -->
+<!-- cache-key: cdktf-0.19.0 input-e489f1763b2359237f3dddc078f272955078eab93aabf7213398c9c17e24c7ea -->

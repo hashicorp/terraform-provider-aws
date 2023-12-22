@@ -99,7 +99,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the Snapshot. You can use a maximum of 203 alphanumeric characters plus either _ or -  or : or . for the name.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copyTagsToBackups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `volumeId` - (Optional) The ID of the volume to snapshot. This can be the root volume or a child volume.
 
 ## Attribute Reference
@@ -107,16 +107,16 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the snapshot.
-* `id` - Identifier of the snapshot, e.g., `fsvolsnap12345678`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Identifier of the snapshot, e.g., `fsvolsnap-12345678`
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `delete` - (Default `30M`)
-* `update` - (Default `30M`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -140,4 +140,4 @@ Using `terraform import`, import FSx OpenZFS snapshot using the `id`. For exampl
 % terraform import aws_fsx_openzfs_snapshot.example fs-543ab12b1ca672f33
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f33ba26e8f39726647995a0b6dacb8d0a5084b4411c18471d481f35f094019e6 -->
+<!-- cache-key: cdktf-0.19.0 input-f33ba26e8f39726647995a0b6dacb8d0a5084b4411c18471d481f35f094019e6 -->

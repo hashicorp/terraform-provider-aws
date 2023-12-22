@@ -78,7 +78,7 @@ This resource supports the following arguments:
 * `peerAccountId` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peerRegion` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peerTransitGatewayId` - (Required) Identifier of EC2 Transit Gateway to peer with.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayId` - (Required) Identifier of EC2 Transit Gateway.
 
 ## Attribute Reference
@@ -86,7 +86,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -112,4 +112,4 @@ Using `terraform import`, import `awsEc2TransitGatewayPeeringAttachment` using t
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-58f6c9437a7c95b8df5161dbac8476475147b7788b6b5351cb7f1a812d59aa51 -->
+<!-- cache-key: cdktf-0.19.0 input-58f6c9437a7c95b8df5161dbac8476475147b7788b6b5351cb7f1a812d59aa51 -->

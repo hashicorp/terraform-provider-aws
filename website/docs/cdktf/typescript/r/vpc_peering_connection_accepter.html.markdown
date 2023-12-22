@@ -98,7 +98,7 @@ This resource supports the following arguments:
 
 * `vpcPeeringConnectionId` - (Required) The VPC Peering Connection ID to manage.
 * `autoAccept` - (Optional) Whether or not to accept the peering request. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Removing `awsVpcPeeringConnectionAccepter` from your configuration
 
@@ -122,7 +122,7 @@ This resource exports the following attributes in addition to the arguments abov
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
 * `requester` - A configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 #### Accepter and Requester Attribute Reference
 
@@ -179,4 +179,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-dbb400c8499f3d1bd1cf4007a705760a09da1d8679355ddec9917b7f40b9f101 -->
+<!-- cache-key: cdktf-0.19.0 input-dbb400c8499f3d1bd1cf4007a705760a09da1d8679355ddec9917b7f40b9f101 -->

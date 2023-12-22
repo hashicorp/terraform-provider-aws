@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the activity to create.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Amazon Resource Name (ARN) that identifies the created activity.
 * `name` - The name of the activity.
 * `creationDate` - The date the activity was created.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -72,4 +72,4 @@ Using `terraform import`, import activities using the `arn`. For example:
 % terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b746a508f0ba70e5e33d2b67354b7a5e7df87f2c17e0b40685ebc5ce6df1ca33 -->
+<!-- cache-key: cdktf-0.19.0 input-b746a508f0ba70e5e33d2b67354b7a5e7df87f2c17e0b40685ebc5ce6df1ca33 -->

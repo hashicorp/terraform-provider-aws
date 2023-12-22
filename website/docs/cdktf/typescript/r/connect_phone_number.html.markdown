@@ -99,9 +99,9 @@ This resource supports the following arguments:
 * `countryCode` - (Required, Forces new resource) The ISO country code. For a list of Valid values, refer to [PhoneNumberCountryCode](https://docs.aws.amazon.com/connect/latest/APIReference/API_SearchAvailablePhoneNumbers.html#connect-SearchAvailablePhoneNumbers-request-PhoneNumberCountryCode).
 * `description` - (Optional, Forces new resource) The description of the phone number.
 * `prefix` - (Optional, Forces new resource) The prefix of the phone number that is used to filter available phone numbers. If provided, it must contain `+` as part of the country code. Do not specify this argument when importing the resource.
-* `tags` - (Optional) Tags to apply to the Phone Number. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Phone Number. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `targetArn` - (Required) The Amazon Resource Name (ARN) for Amazon Connect instances that phone numbers are claimed to.
-* `type` - (Required, Forces new resource) The type of phone number. Valid Values: `tollFree` | `did`.
+* `type` - (Required, Forces new resource) The type of phone number. Valid Values: `TOLL_FREE` | `DID`.
 
 ## Attribute Reference
 
@@ -111,22 +111,22 @@ This resource exports the following attributes in addition to the arguments abov
 * `phoneNumber` - The phone number. Phone numbers are formatted `[+] [country code] [subscriber number including area code]`.
 * `id` - The identifier of the phone number.
 * `status` - A block that specifies status of the phone number. [Documented below](#status).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `status`
 
 The `status` configuration block supports the following attributes:
 
 * `message` - The status message.
-* `status` - The status of the phone number. Valid Values: `claimed` | `inProgress` | `failed`.
+* `status` - The status of the phone number. Valid Values: `CLAIMED` | `IN_PROGRESS` | `FAILED`.
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `2M`)
-* `update` - (Default `2M`)
-* `delete` - (Default `2M`)
+* `create` - (Default `2m`)
+* `update` - (Default `2m`)
+* `delete` - (Default `2m`)
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import Amazon Connect Phone Numbers using its `id`. Fo
 % terraform import aws_connect_phone_number.example 12345678-abcd-1234-efgh-9876543210ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3709bbd75b47ca64869527df48be54e1acf135a3093efdda6d797cfbc24ebba1 -->
+<!-- cache-key: cdktf-0.19.0 input-3709bbd75b47ca64869527df48be54e1acf135a3093efdda6d797cfbc24ebba1 -->

@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags` - Map of tags assigned to the resolver rule.
 
-<!-- cache-key: cdktf-0.18.0 input-18fb35f097987b8d14e261d381f5a10359f2716b6cb0f20fc2d80f0c0da22650 -->
+<!-- cache-key: cdktf-0.19.0 input-18fb35f097987b8d14e261d381f5a10359f2716b6cb0f20fc2d80f0c0da22650 -->

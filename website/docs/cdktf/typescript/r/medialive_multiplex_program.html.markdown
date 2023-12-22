@@ -89,7 +89,7 @@ The following arguments are optional:
 ### Multiple Program Settings
 
 * `programNumber` - (Required) Unique program number.
-* `preferredChannelPipeline` - (Required) Enum for preferred channel pipeline. Options are `currentlyActive`, `pipeline0`, or `pipeline1`.
+* `preferredChannelPipeline` - (Required) Enum for preferred channel pipeline. Options are `CURRENTLY_ACTIVE`, `PIPELINE_0`, or `PIPELINE_1`.
 * `serviceDescriptor` - (Optional) Service Descriptor. See [Service Descriptor](#service-descriptor) for more details.
 * `videoSettings` - (Optional) Video settings. See [Video Settings](#video-settings) for more details.
 
@@ -138,4 +138,4 @@ Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a
 % terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d0f4d6ecf5fbb8e34c4bfcc4ff4baddff29c0893a211fa29af99ff4cfade72b1 -->
+<!-- cache-key: cdktf-0.19.0 input-d0f4d6ecf5fbb8e34c4bfcc4ff4baddff29c0893a211fa29af99ff4cfade72b1 -->

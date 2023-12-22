@@ -67,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the add-on
 * `version` - Version of the EKS add-on.
 
-<!-- cache-key: cdktf-0.18.0 input-6bea559fed867c091f7f8ce8ca24a017cb6af1e256023fe4160201c7d3a8800c -->
+<!-- cache-key: cdktf-0.19.0 input-6bea559fed867c091f7f8ce8ca24a017cb6af1e256023fe4160201c7d3a8800c -->

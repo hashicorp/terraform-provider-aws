@@ -79,4 +79,4 @@ Using `terraform import`, import Transcribe VocabularyFilter using the `vocabula
 % terraform import aws_transcribe_vocabulary_filter.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-16b5be2fa7e21b3d5f8eb7e880ca04a14415ca27a321bb6d553621e84cea648d -->
+<!-- cache-key: cdktf-0.19.0 input-16b5be2fa7e21b3d5f8eb7e880ca04a14415ca27a321bb6d553621e84cea648d -->

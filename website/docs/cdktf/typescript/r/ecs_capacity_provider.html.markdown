@@ -70,20 +70,20 @@ This resource supports the following arguments:
 
 * `autoScalingGroupProvider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `autoScalingGroupProvider`
 
 * `autoScalingGroupArn` - (Required) - ARN of the associated auto scaling group.
 * `managedScaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
-* `managedTerminationProtection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `enabled` and `disabled`.
+* `managedTerminationProtection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
 ### `managedScaling`
 
 * `instanceWarmupPeriod` - (Optional) Period of time, in seconds, after a newly launched Amazon EC2 instance can contribute to CloudWatch metrics for Auto Scaling group. If this parameter is omitted, the default value of 300 seconds is used.
 * `maximumScalingStepSize` - (Optional) Maximum step adjustment size. A number between 1 and 10,000.
 * `minimumScalingStepSize` - (Optional) Minimum step adjustment size. A number between 1 and 10,000.
-* `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `enabled` and `disabled`.
+* `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
 * `targetCapacity` - (Optional) Target utilization for the capacity provider. A number between 1 and 100.
 
 ## Attribute Reference
@@ -92,7 +92,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN that identifies the capacity provider.
 * `id` - ARN that identifies the capacity provider.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -116,4 +116,4 @@ Using `terraform import`, import ECS Capacity Providers using the `name`. For ex
 % terraform import aws_ecs_capacity_provider.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-085876568cc2c4593afd22394b677657c0db3a438e0613974a494910237cb352 -->
+<!-- cache-key: cdktf-0.19.0 input-085876568cc2c4593afd22394b677657c0db3a438e0613974a494910237cb352 -->

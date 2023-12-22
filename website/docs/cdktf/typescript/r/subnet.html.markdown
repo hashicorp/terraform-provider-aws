@@ -85,9 +85,9 @@ This resource supports the following arguments:
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`
 * `availabilityZone` - (Optional) AZ for the subnet.
-* `availabilityZoneId` - (Optional) AZ ID of the subnet. This argument is not supported in all regions or partitions. If necessary, use `availabilityZone` instead.
+* `availabilityZoneId` - (Optional) AZ ID of the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
 * `cidrBlock` - (Optional) The IPv4 CIDR block for the subnet.
-* `customerOwnedIpv4Pool` - (Optional) The customer owned IPv4 address pool. Typically used with the `mapCustomerOwnedIpOnLaunch` argument. The `outpostArn` argument must be specified when configured.
+* `customerOwnedIpv4Pool` - (Optional) The customer owned IPv4 address pool. Typically used with the `map_customer_owned_ip_on_launch` argument. The `outpost_arn` argument must be specified when configured.
 * `enableDns64` - (Optional) Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default: `false`.
 * `enableLniAtDeviceIndex` - (Optional) Indicates the device position for local network interfaces in this subnet. For example, 1 indicates local network interfaces in this subnet are the secondary network interface (eth1). A local network interface cannot be the primary network interface (eth0).
 * `enableResourceNameDnsAaaaRecordOnLaunch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `false`.
@@ -95,14 +95,14 @@ This resource supports the following arguments:
 * `ipv6CidrBlock` - (Optional) The IPv6 network range for the subnet,
     in CIDR notation. The subnet size must use a /64 prefix length.
 * `ipv6Native` - (Optional) Indicates whether to create an IPv6-only subnet. Default: `false`.
-* `mapCustomerOwnedIpOnLaunch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customerOwnedIpv4Pool` and `outpostArn` arguments must be specified when set to `true`. Default is `false`.
+* `mapCustomerOwnedIpOnLaunch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
 * `mapPublicIpOnLaunch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned
     a public IP address. Default is `false`.
 * `outpostArn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
-* `privateDnsHostnameTypeOnLaunch` - (Optional) The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ipName`, `resourceName`.
+* `privateDnsHostnameTypeOnLaunch` - (Optional) The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`.
 * `vpcId` - (Required) The VPC ID.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -112,14 +112,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the subnet.
 * `ipv6CidrBlockAssociationId` - The association ID for the IPv6 CIDR block.
 * `ownerId` - The ID of the AWS account that owns the subnet.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `20M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
@@ -143,4 +143,4 @@ Using `terraform import`, import subnets using the subnet `id`. For example:
 % terraform import aws_subnet.public_subnet subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-800b4894a44d3fb10c7ed4e02828a98cc6bb1ba25ee4607e803d5cddf8afc2ed -->
+<!-- cache-key: cdktf-0.19.0 input-800b4894a44d3fb10c7ed4e02828a98cc6bb1ba25ee4607e803d5cddf8afc2ed -->

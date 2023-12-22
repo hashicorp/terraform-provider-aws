@@ -96,4 +96,4 @@ Using `terraform import`, import S3 Control Bucket Lifecycle Configurations usin
 % terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-edd708f39cae61085d23015d0a484630286f25fd5088717d8cc3d17bdb735870 -->
+<!-- cache-key: cdktf-0.19.0 input-edd708f39cae61085d23015d0a484630286f25fd5088717d8cc3d17bdb735870 -->

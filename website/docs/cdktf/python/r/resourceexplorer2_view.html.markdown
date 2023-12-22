@@ -94,4 +94,4 @@ Using `terraform import`, import Resource Explorer views using the `arn`. For ex
 % terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9a55ae10af14ad8a58159e050eea5de7e647cddfd344de98c968a90f50d26575 -->
+<!-- cache-key: cdktf-0.19.0 input-9a55ae10af14ad8a58159e050eea5de7e647cddfd344de98c968a90f50d26575 -->

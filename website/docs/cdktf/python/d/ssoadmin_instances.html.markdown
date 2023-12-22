@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `identity_store_ids` - Set of identifiers of the identity stores connected to the SSO Instances.
 
-<!-- cache-key: cdktf-0.18.0 input-f56f54131de38dcbeec3f2e88e1cd501245218eff2e9ca53862dc82398c4d12b -->
+<!-- cache-key: cdktf-0.19.0 input-f56f54131de38dcbeec3f2e88e1cd501245218eff2e9ca53862dc82398c4d12b -->

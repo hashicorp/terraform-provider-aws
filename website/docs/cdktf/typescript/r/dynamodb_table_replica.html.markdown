@@ -88,24 +88,24 @@ Optional arguments:
 
 * `kmsKeyArn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
 * `pointInTimeRecovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
-* `tableClassOverride` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `standard` and `standardInfrequentAccess`. If not used, the table replica will use the same class as the global table.
-* `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tableClassOverride` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
+* `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table replica.
-* `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `tableName:usEast1`).
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `TableName:us-east-1`).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -133,4 +133,4 @@ Using `terraform import`, import DynamoDB table replicas using the `tableName:ma
 % terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-825c94d582679fcb249521e58e00123dba670a7f2f1b962c70bbd04b4762d01d -->
+<!-- cache-key: cdktf-0.19.0 input-825c94d582679fcb249521e58e00123dba670a7f2f1b962c70bbd04b4762d01d -->

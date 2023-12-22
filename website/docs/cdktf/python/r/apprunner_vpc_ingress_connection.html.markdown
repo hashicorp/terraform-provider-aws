@@ -83,4 +83,4 @@ Using `terraform import`, import App Runner VPC Ingress Connection using the `ar
 % terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5ca4eb20c816b4fc2b57f0cfd6bbd31dc7537e74b1368f2c8074afd614895b23 -->
+<!-- cache-key: cdktf-0.19.0 input-5ca4eb20c816b4fc2b57f0cfd6bbd31dc7537e74b1368f2c8074afd614895b23 -->

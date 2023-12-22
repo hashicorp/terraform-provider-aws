@@ -47,7 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
-* `principalType` - (Optional) Principal type. Setting this argument empty (e.g., `principal_type = ""`) will result in an error. Valid values are `iam` and `iamPattern`. Default is `iam`.
+* `principalType` - (Optional) Principal type. Setting this argument empty (e.g., `principal_type = ""`) will result in an error. Valid values are `IAM` and `IAM_PATTERN`. Default is `IAM`.
 
 ## Attribute Reference
 
@@ -59,9 +59,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import `awsServicecatalogPrincipalPortfolioAssociation
 % terraform import aws_servicecatalog_principal_portfolio_association.example en,arn:aws:iam::123456789012:user/Eleanor,port-68656c6c6f,IAM
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e6d6f9fdac81517f3102dae36363cdc0c25088bd03ba2f1ace568fed9c2cef49 -->
+<!-- cache-key: cdktf-0.19.0 input-e6d6f9fdac81517f3102dae36363cdc0c25088bd03ba2f1ace568fed9c2cef49 -->

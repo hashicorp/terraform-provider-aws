@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnetIds` - List of at least 2 EC2 subnet IDs for the subnet group. The subnets must cover at least 2 availability zones.
 * `vpcId` - The ID of the VPC the subnet group is in.
 
-<!-- cache-key: cdktf-0.18.0 input-5a351e6983e13ca8ab53ae0b1934dd0149e708010440ee07aeef9d923642a6da -->
+<!-- cache-key: cdktf-0.19.0 input-5a351e6983e13ca8ab53ae0b1934dd0149e708010440ee07aeef9d923642a6da -->

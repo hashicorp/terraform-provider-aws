@@ -78,4 +78,4 @@ Using `terraform import`, import Glue Registries using `arn`. For example:
 % terraform import aws_glue_schema.example arn:aws:glue:us-west-2:123456789012:schema/example/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-07d8be72b0ef5ec7a36f90bf89a090da4b36963b4802cf618422290e600eac94 -->
+<!-- cache-key: cdktf-0.19.0 input-07d8be72b0ef5ec7a36f90bf89a090da4b36963b4802cf618422290e600eac94 -->

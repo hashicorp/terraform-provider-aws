@@ -73,4 +73,4 @@ Using `terraform import`, import Inspector Delegated Admin Account using the `ac
 % terraform import aws_inspector2_delegated_admin_account.example 012345678901
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5828f02fcb3f6e66bfb0cfe7ea840e097f0fe9fe69f8bc3e6a28d81ab8a5ab11 -->
+<!-- cache-key: cdktf-0.19.0 input-5828f02fcb3f6e66bfb0cfe7ea840e097f0fe9fe69f8bc3e6a28d81ab8a5ab11 -->

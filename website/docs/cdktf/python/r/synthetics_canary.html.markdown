@@ -137,4 +137,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7a9e3e1413440a0151e0d113031ae787861be1f778da70a162639b9434cfd1fb -->
+<!-- cache-key: cdktf-0.19.0 input-7a9e3e1413440a0151e0d113031ae787861be1f778da70a162639b9434cfd1fb -->

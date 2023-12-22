@@ -89,4 +89,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN assigned by AWS for this Elastic Beanstalk Application.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.18.0 input-751fb6889b75c7692aeacfbc770bb96d2cd80c1b9203d93fbf9daa51aef09d4a -->
+<!-- cache-key: cdktf-0.19.0 input-751fb6889b75c7692aeacfbc770bb96d2cd80c1b9203d93fbf9daa51aef09d4a -->

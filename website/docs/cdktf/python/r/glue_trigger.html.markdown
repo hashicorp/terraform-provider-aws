@@ -242,4 +242,4 @@ Using `terraform import`, import Glue Triggers using `name`. For example:
 % terraform import aws_glue_trigger.MyTrigger MyTrigger
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-74dac647f2910891d6faab60e44decc3077a16fcd9bc0bb5252ee16bfc7e2cb5 -->
+<!-- cache-key: cdktf-0.19.0 input-74dac647f2910891d6faab60e44decc3077a16fcd9bc0bb5252ee16bfc7e2cb5 -->

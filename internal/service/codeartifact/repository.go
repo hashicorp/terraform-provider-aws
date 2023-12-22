@@ -161,7 +161,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 	sm, err := conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
 		Repository:  aws.String(repo),
@@ -175,7 +175,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Repository.Arn)

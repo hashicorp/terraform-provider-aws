@@ -82,4 +82,4 @@ Using `terraform import`, import DeviceFarm Network Profiles using their ARN. Fo
 % terraform import aws_devicefarm_network_profile.example arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-82616cb48039f8368ead9b616e986d34cc6658f5bc299c003c202bc94e665131 -->
+<!-- cache-key: cdktf-0.19.0 input-82616cb48039f8368ead9b616e986d34cc6658f5bc299c003c202bc94e665131 -->

@@ -43,7 +43,7 @@ This resource supports the following arguments:
 
 * `namespaceName` - (Required) The namespace to create a snapshot for.
 * `snapshotName` - (Required) The name of the snapshot.
-* `retentionPeriod` - (Optional) How long to retain the created snapshot. Default value is `1`.
+* `retentionPeriod` - (Optional) How long to retain the created snapshot. Default value is `-1`.
 
 ## Attribute Reference
 
@@ -80,4 +80,4 @@ Using `terraform import`, import Redshift Serverless Snapshots using the `snapsh
 % terraform import aws_redshiftserverless_snapshot.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8cdad9004cc5bbc08f27efbdc59cce26713d56ad09ff5203e21e04db05d9916b -->
+<!-- cache-key: cdktf-0.19.0 input-8cdad9004cc5bbc08f27efbdc59cce26713d56ad09ff5203e21e04db05d9916b -->

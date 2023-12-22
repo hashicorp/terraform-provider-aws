@@ -70,4 +70,4 @@ Using `terraform import`, import `awsAppsyncDomainNameApiAssociation` using the 
 % terraform import aws_appsync_domain_name_api_association.example example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-20f8e537078df27312c2183f4ab0c0158ba5ec522ac3da6fb70fd599dad00b8f -->
+<!-- cache-key: cdktf-0.19.0 input-20f8e537078df27312c2183f4ab0c0158ba5ec522ac3da6fb70fd599dad00b8f -->

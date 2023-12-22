@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the Lightsail load balancer.
 * `instancePort` - (Required) The instance port the load balancer will connect.
 * `healthCheckPath` - (Optional) The health check path of the load balancer. Default value "/".
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `defaultTags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `protocol` - The protocol of the load balancer.
 * `publicPorts` - The public ports of the load balancer.
 * `supportCode` - The support code for the database. Include this code in your email to support when you have questions about a database in Lightsail. This code enables our support team to look up your Lightsail information more easily.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import `awsLightsailLb` using the name attribute. For 
 % terraform import aws_lightsail_lb.test example-load-balancer
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-557398008915861f1ead6c5648ac53e7bb70a90ed6370793a6f6d0800c69290d -->
+<!-- cache-key: cdktf-0.19.0 input-557398008915861f1ead6c5648ac53e7bb70a90ed6370793a6f6d0800c69290d -->

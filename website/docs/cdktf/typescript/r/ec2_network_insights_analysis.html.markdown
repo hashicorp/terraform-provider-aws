@@ -50,7 +50,7 @@ The following arguments are optional:
 
 * `filterInArns` - (Optional) A list of ARNs for resources the path must traverse.
 * `waitForCompletion` - (Optional) If enabled, the resource will wait for the Network Insights Analysis status to change to `succeeded` or `failed`. Setting this to `false` will skip the process. Default: `true`.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -64,9 +64,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `pathFound` - Set to `true` if the destination was reachable.
 * `returnPathComponents` - The components in the path from destination to source. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_PathComponent.html) for details.
 * `startDate` - The date/time the analysis was started.
-* `status` - The status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `pathFound`.
+* `status` - The status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `path_found`.
 * `statusMessage` - A message to provide more context when the `status` is `failed`.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `warningMessage` - The warning message.
 
 The `alternatePathHints` object supports the following:
@@ -96,4 +96,4 @@ Using `terraform import`, import Network Insights Analyses using the `id`. For e
 % terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d364ed056c8c7e9f437f7a613d16d15bd1837a75ee3566f79b85669e4eb1f0d1 -->
+<!-- cache-key: cdktf-0.19.0 input-d364ed056c8c7e9f437f7a613d16d15bd1837a75ee3566f79b85669e4eb1f0d1 -->

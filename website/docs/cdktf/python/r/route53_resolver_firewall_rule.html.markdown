@@ -95,4 +95,4 @@ Using `terraform import`, import  Route 53 Resolver DNS Firewall rules using the
 % terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-91abb2b9b51d1173006c0a1458d5a94bbfd790f314498d4abce090eaa02a7e45 -->
+<!-- cache-key: cdktf-0.19.0 input-91abb2b9b51d1173006c0a1458d5a94bbfd790f314498d4abce090eaa02a7e45 -->

@@ -46,19 +46,19 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `action` - (Required) Action, which will be allowed. `lambda:getLayerVersion` value is suggested by AWS documantation.
+* `action` - (Required) Action, which will be allowed. `lambda:GetLayerVersion` value is suggested by AWS documantation.
 * `layerName` (Required) The name or ARN of the Lambda Layer, which you want to grant access to.
-* `organizationId` - (Optional) An identifier of AWS Organization, which should be able to use your Lambda Layer. `principal` should be equal to `*` if `organizationId` provided.
+* `organizationId` - (Optional) An identifier of AWS Organization, which should be able to use your Lambda Layer. `principal` should be equal to `*` if `organization_id` provided.
 * `principal` - (Required) AWS account ID which should be able to use your Lambda Layer. `*` can be used here, if you want to share your Lambda Layer widely.
-* `statementId` - (Required) The name of Lambda Layer Permission, for example `devAccount` - human readable note about what is this permission for.
+* `statementId` - (Required) The name of Lambda Layer Permission, for example `dev-account` - human readable note about what is this permission for.
 * `versionNumber` (Required) Version of Lambda Layer, which you want to grant access to. Note: permissions only apply to a single version of a layer.
-* `skipDestroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatibleArchitectures`, `compatibleRuntimes`, `description`, `filename`, `layerName`, `licenseInfo`, `s3Bucket`, `s3Key`, `s3ObjectVersion`, or `sourceCodeHash` forces deletion of the existing layer version and creation of a new layer version.
+* `skipDestroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatible_architectures`, `compatible_runtimes`, `description`, `filename`, `layer_name`, `license_info`, `s3_bucket`, `s3_key`, `s3_object_version`, or `source_code_hash` forces deletion of the existing layer version and creation of a new layer version.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `layerName` and `versionNumber`, separated by a comma (`,`).
+* `id` - The `layer_name` and `version_number`, separated by a comma (`,`).
 * `revisionId` - A unique identifier for the current revision of the policy.
 * `policy` - Full Lambda Layer Permission policy.
 
@@ -86,4 +86,4 @@ Using `terraform import`, import Lambda Layer Permissions using `layerName` and 
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html#permissions-resource-xaccountlayer
 
-<!-- cache-key: cdktf-0.18.0 input-fd22d59f7bda2ed8703c3b1fd6d5f0d467df5adf1b1fd76c0fa824d35f034051 -->
+<!-- cache-key: cdktf-0.19.0 input-fd22d59f7bda2ed8703c3b1fd6d5f0d467df5adf1b1fd76c0fa824d35f034051 -->

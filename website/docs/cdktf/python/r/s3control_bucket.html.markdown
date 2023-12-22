@@ -71,4 +71,4 @@ Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (
 % terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2e4677b75d6cbb099b0dd2b2385879475c02ebb3643475b93a119fd3833d7929 -->
+<!-- cache-key: cdktf-0.19.0 input-2e4677b75d6cbb099b0dd2b2385879475c02ebb3643475b93a119fd3833d7929 -->

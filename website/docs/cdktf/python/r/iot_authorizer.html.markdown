@@ -74,4 +74,4 @@ Using `terraform import`, import IOT Authorizers using the name. For example:
 % terraform import aws_iot_authorizer.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cf8f96f38c8639fbcddf19f56615da17a9607ba975bea77bb2b1ea3d089fe7c3 -->
+<!-- cache-key: cdktf-0.19.0 input-cf8f96f38c8639fbcddf19f56615da17a9607ba975bea77bb2b1ea3d089fe7c3 -->

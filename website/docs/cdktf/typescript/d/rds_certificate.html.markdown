@@ -38,19 +38,19 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `id` - (Optional) Certificate identifier. For example, `rdsCa2019`.
-* `latestValidTill` - (Optional) When enabled, returns the certificate with the latest `validTill`.
+* `id` - (Optional) Certificate identifier. For example, `rds-ca-2019`.
+* `latestValidTill` - (Optional) When enabled, returns the certificate with the latest `ValidTill`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the certificate.
-* `certificateType` - Type of certificate. For example, `ca`.
+* `certificateType` - Type of certificate. For example, `CA`.
 * `customerOverride` - Boolean whether there is an override for the default certificate identifier.
 * `customerOverrideValidTill` - If there is an override for the default certificate identifier, when the override expires.
 * `thumbprint` - Thumbprint of the certificate.
 * `validFrom` - [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of certificate starting validity date.
 * `validTill` - [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of certificate ending validity date.
 
-<!-- cache-key: cdktf-0.18.0 input-11fac79b0d201c3f0e3fe5f7ce9e1273fd98f100c84dc2f6a4a3f5286bb6b1dd -->
+<!-- cache-key: cdktf-0.19.0 input-11fac79b0d201c3f0e3fe5f7ce9e1273fd98f100c84dc2f6a4a3f5286bb6b1dd -->

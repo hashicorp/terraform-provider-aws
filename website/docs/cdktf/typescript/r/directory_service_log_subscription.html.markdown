@@ -105,4 +105,4 @@ Using `terraform import`, import Directory Service Log Subscriptions using the d
 % terraform import aws_directory_service_log_subscription.msad d-1234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4c454e09cdbbcc5b15311701235bc1776950d5a3aac1b39f531b202fbb8a7072 -->
+<!-- cache-key: cdktf-0.19.0 input-4c454e09cdbbcc5b15311701235bc1776950d5a3aac1b39f531b202fbb8a7072 -->

@@ -66,4 +66,4 @@ Using `terraform import`, import `aws_storagegateway_working_storage` using the 
 % terraform import aws_storagegateway_working_storage.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-70cd2153af665dbf7aff736700a2d421553e7a7e40d49fdf71a96c7ff2a5aa9d -->
+<!-- cache-key: cdktf-0.19.0 input-70cd2153af665dbf7aff736700a2d421553e7a7e40d49fdf71a96c7ff2a5aa9d -->

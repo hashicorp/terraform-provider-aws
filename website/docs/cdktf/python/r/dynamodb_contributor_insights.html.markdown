@@ -61,4 +61,4 @@ Using `terraform import`, import `aws_dynamodb_contributor_insights` using the f
 % terraform import aws_dynamodb_contributor_insights.test name:ExampleTableName/index:ExampleIndexName/123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d4f805846bc4797dd113a929cf5b487a41e12a9aff6d1f926f1a2fb7c8b04f60 -->
+<!-- cache-key: cdktf-0.19.0 input-d4f805846bc4797dd113a929cf5b487a41e12a9aff6d1f926f1a2fb7c8b04f60 -->

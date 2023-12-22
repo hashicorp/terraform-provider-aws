@@ -55,15 +55,15 @@ This resource supports the following arguments:
 * `description` - (Optional) Specifies the description of the Quick Connect.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Quick Connect.
-* `quickConnectConfig` - (Required) A block that defines the configuration information for the Quick Connect: `quickConnectType` and one of `phoneConfig`, `queueConfig`, `userConfig` . The Quick Connect Config block is documented below.
-* `tags` - (Optional) Tags to apply to the Quick Connect. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `quickConnectConfig` - (Required) A block that defines the configuration information for the Quick Connect: `quick_connect_type` and one of `phone_config`, `queue_config`, `user_config` . The Quick Connect Config block is documented below.
+* `tags` - (Optional) Tags to apply to the Quick Connect. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `quickConnectConfig` block supports the following arguments:
 
-* `quickConnectType` - (Required) Specifies the configuration type of the quick connect. valid values are `phoneNumber`, `queue`, `user`.
-* `phoneConfig` - (Optional) Specifies the phone configuration of the Quick Connect. This is required only if `quickConnectType` is `phoneNumber`. The `phoneConfig` block is documented below.
-* `queueConfig` - (Optional) Specifies the queue configuration of the Quick Connect. This is required only if `quickConnectType` is `queue`. The `queueConfig` block is documented below.
-* `userConfig` - (Optional) Specifies the user configuration of the Quick Connect. This is required only if `quickConnectType` is `user`. The `userConfig` block is documented below.
+* `quickConnectType` - (Required) Specifies the configuration type of the quick connect. valid values are `PHONE_NUMBER`, `QUEUE`, `USER`.
+* `phoneConfig` - (Optional) Specifies the phone configuration of the Quick Connect. This is required only if `quick_connect_type` is `PHONE_NUMBER`. The `phone_config` block is documented below.
+* `queueConfig` - (Optional) Specifies the queue configuration of the Quick Connect. This is required only if `quick_connect_type` is `QUEUE`. The `queue_config` block is documented below.
+* `userConfig` - (Optional) Specifies the user configuration of the Quick Connect. This is required only if `quick_connect_type` is `USER`. The `user_config` block is documented below.
 
 A `phoneConfig` block supports the following arguments:
 
@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the Quick Connect.
 * `quickConnectId` - The identifier for the Quick Connect.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Quick Connect separated by a colon (`:`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -110,4 +110,4 @@ Using `terraform import`, import Amazon Connect Quick Connects using the `instan
 % terraform import aws_connect_quick_connect.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-01f9e092c1240fc60d8e6329e1e37cd1a809022b9cf4800e0a25c88837374218 -->
+<!-- cache-key: cdktf-0.19.0 input-01f9e092c1240fc60d8e6329e1e37cd1a809022b9cf4800e0a25c88837374218 -->

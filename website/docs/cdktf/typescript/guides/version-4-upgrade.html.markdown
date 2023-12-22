@@ -34,19 +34,19 @@ Upgrade topics:
 - [New Provider Arguments](#new-provider-arguments)
 - [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection) (**Applicable to v4.9.0 and later of the AWS Provider**)
 - [S3 Bucket Refactor](#s3-bucket-refactor) (**Only applicable to v4.0.0 through v4.8.0 of the AWS Provider**)
-    - [`accelerationStatus` Argument](#acceleration_status-argument)
+    - [`acceleration_status` Argument](#acceleration_status-argument)
     - [`acl` Argument](#acl-argument)
-    - [`corsRule` Argument](#cors_rule-argument)
+    - [`cors_rule` Argument](#cors_rule-argument)
     - [`grant` Argument](#grant-argument)
-    - [`lifecycleRule` Argument](#lifecycle_rule-argument)
+    - [`lifecycle_rule` Argument](#lifecycle_rule-argument)
     - [`logging` Argument](#logging-argument)
-    - [`objectLockConfiguration` `rule` Argument](#object_lock_configuration-rule-argument)
+    - [`object_lock_configuration` `rule` Argument](#object_lock_configuration-rule-argument)
     - [`policy` Argument](#policy-argument)
-    - [`replicationConfiguration` Argument](#replication_configuration-argument)
-    - [`requestPayer` Argument](#request_payer-argument)
-    - [`serverSideEncryptionConfiguration` Argument](#server_side_encryption_configuration-argument)
+    - [`replication_configuration` Argument](#replication_configuration-argument)
+    - [`request_payer` Argument](#request_payer-argument)
+    - [`server_side_encryption_configuration` Argument](#server_side_encryption_configuration-argument)
     - [`versioning` Argument](#versioning-argument)
-    - [`website`, `websiteDomain`, and `websiteEndpoint` Arguments](#website-website_domain-and-website_endpoint-arguments)
+    - [`website`, `website_domain`, and `website_endpoint` Arguments](#website-website_domain-and-website_endpoint-arguments)
 - [Full Resource Lifecycle of Default Resources](#full-resource-lifecycle-of-default-resources)
     - [Resource: aws_default_subnet](#resource-aws_default_subnet)
     - [Resource: aws_default_vpc](#resource-aws_default_vpc)
@@ -142,7 +142,7 @@ Precedence for authentication settings is as follows:
 
 * `provider` configuration
 * Environment variables
-* Shared credentials and configuration files (_e.g._, `~/Aws/credentials` and `~/Aws/config`)
+* Shared credentials and configuration files (_e.g._, `~/Aws/credentials` and `~/.aws/config`)
 
 In previous versions of the provider, you could explicitly set `profile` in the `provider`, and if the profile did not correspond to valid credentials, the provider would use credentials from environment variables. Starting in v4.0, the Terraform AWS provider enforces the precedence shown above, similarly to how the AWS SDK and AWS CLI behave.
 
@@ -180,16 +180,16 @@ class MyConvertedCode extends TerraformStack {
 
 Version 4.x adds these new `provider` arguments:
 
-* `assumeRoleDuration` - Assume role duration as a string, _e.g._, `"1H"` or `"1H30S"`. Terraform AWS Provider v4.0.0 deprecates `assumeRoleDurationSeconds` and a future version will remove it.
-* `customCaBundle` - File containing custom root and intermediate certificates. Can also be configured using the `awsCaBundle` environment variable. (Setting `caBundle` in the shared config file is not supported.)
-* `ec2MetadataServiceEndpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `awsEc2MetadataServiceEndpoint` environment variable.
-* `ec2MetadataServiceEndpointMode` - Mode to use in communicating with the metadata service. Valid values are `iPv4` and `iPv6`. Can also be set with the `awsEc2MetadataServiceEndpointMode` environment variable.
-* `s3UsePathStyle` - Replaces `s3ForcePathStyle`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
-* `sharedConfigFiles` - List of paths to AWS shared config files. If not set, the default is `[~/Aws/config]`. A single value can also be set with the `awsConfigFile` environment variable.
-* `sharedCredentialsFiles` - List of paths to the shared credentials file. If not set, the default  is `[~/Aws/credentials]`. A single value can also be set with the `awsSharedCredentialsFile` environment variable. Replaces `sharedCredentialsFile`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
-* `stsRegion` - Region where AWS STS operations will take place. For example, `usEast1` and `usWest2`.
-* `useDualstackEndpoint` - Force the provider to resolve endpoints with DualStack capability. Can also be set with the `awsUseDualstackEndpoint` environment variable or in a shared config file (`useDualstackEndpoint`).
-* `useFipsEndpoint` - Force the provider to resolve endpoints with FIPS capability. Can also be set with the `awsUseFipsEndpoint` environment variable or in a shared config file (`useFipsEndpoint`).
+* `assumeRoleDuration` - Assume role duration as a string, _e.g._, `"1h"` or `"1h30s"`. Terraform AWS Provider v4.0.0 deprecates `assume_role.duration_seconds` and a future version will remove it.
+* `customCaBundle` - File containing custom root and intermediate certificates. Can also be configured using the `AWS_CA_BUNDLE` environment variable. (Setting `ca_bundle` in the shared config file is not supported.)
+* `ec2MetadataServiceEndpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
+* `ec2MetadataServiceEndpointMode` - Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
+* `s3UsePathStyle` - Replaces `s3_force_path_style`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
+* `sharedConfigFiles` - List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
+* `sharedCredentialsFiles` - List of paths to the shared credentials file. If not set, the default  is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable. Replaces `shared_credentials_file`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
+* `stsRegion` - Region where AWS STS operations will take place. For example, `us-east-1` and `us-west-2`.
+* `useDualstackEndpoint` - Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
+* `useFipsEndpoint` - Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
 
 ~> **NOTE:** Using the `awsMetadataUrl` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `awsMetadataUrl` to instead use `awsEc2MetadataServiceEndpoint`.
 
@@ -1616,12 +1616,12 @@ in your `awsS3Bucket` resource will differ and thus the migration to the `awsS3B
 
 If you are migrating from the Terraform AWS Provider `v3700` or later:
 
-* For new S3 buckets, `enabled = false` is synonymous to `disabled`.
-* For existing S3 buckets, `enabled = false` is synonymous to `suspended`.
+* For new S3 buckets, `enabled = false` is synonymous to `Disabled`.
+* For existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
 
 If you are migrating from an earlier version of the Terraform AWS Provider:
 
-* For both new and existing S3 buckets, `enabled = false` is synonymous to `suspended`.
+* For both new and existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
 
 Given this previous configuration:
 
@@ -3584,12 +3584,12 @@ in your `awsS3Bucket` resource will differ and thus the migration to the `awsS3B
 
 If you are migrating from the Terraform AWS Provider `v3700` or later:
 
-* For new S3 buckets, `enabled = false` is synonymous to `disabled`.
-* For existing S3 buckets, `enabled = false` is synonymous to `suspended`.
+* For new S3 buckets, `enabled = false` is synonymous to `Disabled`.
+* For existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
 
 If you are migrating from an earlier version of the Terraform AWS Provider:
 
-* For both new and existing S3 buckets, `enabled = false` is synonymous to `suspended`.
+* For both new and existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
 
 Given this previous configuration :
 
@@ -5273,4 +5273,4 @@ These resources should be considered deprecated and will be removed in version 5
 * Macie Member Account Association
 * Macie S3 Bucket Association
 
-<!-- cache-key: cdktf-0.18.0 input-3ef88020b37e35d78babc46d26306cbef9b0d542745d0afa1cec66e81ef43304 -->
+<!-- cache-key: cdktf-0.19.0 input-3ef88020b37e35d78babc46d26306cbef9b0d542745d0afa1cec66e81ef43304 -->

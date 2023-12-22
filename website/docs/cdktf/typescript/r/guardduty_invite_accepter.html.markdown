@@ -84,7 +84,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1M`)
+- `create` - (Default `1m`)
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import `awsGuarddutyInviteAccepter` using the member G
 % terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b368eea7537bdd5e2ab4ccd975cb44eb377f3627dcb046e902234d27ed097808 -->
+<!-- cache-key: cdktf-0.19.0 input-b368eea7537bdd5e2ab4ccd975cb44eb377f3627dcb046e902234d27ed097808 -->

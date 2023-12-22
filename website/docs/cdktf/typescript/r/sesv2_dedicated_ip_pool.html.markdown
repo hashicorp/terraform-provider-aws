@@ -67,8 +67,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `scalingMode` - (Optional) IP pool scaling mode. Valid values: `standard`, `managed`. If omitted, the AWS API will default to a standard pool.
-* `tags` - (Optional) A map of tags to assign to the pool. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `scalingMode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`. If omitted, the AWS API will default to a standard pool.
+* `tags` - (Optional) A map of tags to assign to the pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -80,9 +80,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -106,4 +106,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Pool using
 % terraform import aws_sesv2_dedicated_ip_pool.example my-pool
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0803493a6210a46636d12167a1f3177b733cfc4fbdc40d4043f26a173d0508db -->
+<!-- cache-key: cdktf-0.19.0 input-0803493a6210a46636d12167a1f3177b733cfc4fbdc40d4043f26a173d0508db -->

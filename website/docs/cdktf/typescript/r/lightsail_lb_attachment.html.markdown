@@ -80,7 +80,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `lbName`,`instanceName`
+* `id` - A combination of attributes to create a unique id: `lb_name`,`instance_name`
 
 ## Import
 
@@ -104,4 +104,4 @@ Using `terraform import`, import `awsLightsailLbAttachment` using the name attri
 % terraform import aws_lightsail_lb_attachment.test example-load-balancer,example-instance
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1f5a78fef900db643827102ff8c8ece3850d79f4a93a4cdfb83fba4a5ff25956 -->
+<!-- cache-key: cdktf-0.19.0 input-1f5a78fef900db643827102ff8c8ece3850d79f4a93a4cdfb83fba4a5ff25956 -->

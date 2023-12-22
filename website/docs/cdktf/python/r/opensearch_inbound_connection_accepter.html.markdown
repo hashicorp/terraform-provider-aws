@@ -95,4 +95,4 @@ Using `terraform import`, import AWS Opensearch Inbound Connection Accepters usi
 % terraform import aws_opensearch_inbound_connection_accepter.foo connection-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-55e95b97c434786498b87477ae28b40538814eb9c17d405e3c6f2aa8f4d59ff6 -->
+<!-- cache-key: cdktf-0.19.0 input-55e95b97c434786498b87477ae28b40538814eb9c17d405e3c6f2aa8f4d59ff6 -->

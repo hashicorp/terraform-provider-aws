@@ -59,9 +59,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import CodeCatalyst Project using the `exampleIdArg`. 
 % terraform import aws_codecatalyst_project.example project-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-458059ba4aa1ab978fd9d595f17ad727e6f517ced23cac7527a27f8c131037e1 -->
+<!-- cache-key: cdktf-0.19.0 input-458059ba4aa1ab978fd9d595f17ad727e6f517ced23cac7527a27f8c131037e1 -->

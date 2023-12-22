@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `appMonitorName` - (Required) The name of the CloudWatch RUM app monitor that will send the metrics.
-* `destination` - (Required)  Defines the destination to send the metrics to. Valid values are `cloudWatch` and `evidently`. If you specify `evidently`, you must also specify the ARN of the CloudWatchEvidently experiment that is to be the destination and an IAM role that has permission to write to the experiment.
+* `destination` - (Required)  Defines the destination to send the metrics to. Valid values are `CloudWatch` and `Evidently`. If you specify `Evidently`, you must also specify the ARN of the CloudWatchEvidently experiment that is to be the destination and an IAM role that has permission to write to the experiment.
 * `destinationArn` - (Optional) Use this parameter only if Destination is Evidently. This parameter specifies the ARN of the Evidently experiment that will receive the extended metrics.
 * `iamRoleArn` - (Optional) This parameter is required if Destination is Evidently. If Destination is CloudWatch, do not use this parameter.
 
@@ -72,4 +72,4 @@ Using `terraform import`, import Cloudwatch RUM Metrics Destination using the `i
 % terraform import aws_rum_metrics_destination.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b0a8bc87eed073c64dab3eea6177045d7d17087af1a9092e3e8b592be02eb910 -->
+<!-- cache-key: cdktf-0.19.0 input-b0a8bc87eed073c64dab3eea6177045d7d17087af1a9092e3e8b592be02eb910 -->

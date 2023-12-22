@@ -64,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ids` - Set of ids of the matched origin access identities.
 * `s3_canonical_user_ids` - Set of S3 canonical user IDs of the matched origin access identities.
 
-<!-- cache-key: cdktf-0.18.0 input-34f1ec8ef8003291bf6fbe0ad774299d58060f6ff187f903aecfd73ee7ad4efc -->
+<!-- cache-key: cdktf-0.19.0 input-34f1ec8ef8003291bf6fbe0ad774299d58060f6ff187f903aecfd73ee7ad4efc -->

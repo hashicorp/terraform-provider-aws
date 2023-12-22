@@ -51,7 +51,7 @@ This resource supports the following arguments:
 * `ipAddress` - (Optional) The IPv4 address for the customer gateway device's outside interface.
 * `type` - (Required) The type of customer gateway. The only type AWS
   supports at this time is "ipsec.1".
-* `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The amazon-assigned ID of the gateway.
 * `arn` - The ARN of the customer gateway.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import Customer Gateways using the `id`. For example:
 % terraform import aws_customer_gateway.main cgw-b4dc3961
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-88fc55069a35af7318bebf35b35547af61fdd41a1afa9f74484f765b22315549 -->
+<!-- cache-key: cdktf-0.19.0 input-88fc55069a35af7318bebf35b35547af61fdd41a1afa9f74484f765b22315549 -->

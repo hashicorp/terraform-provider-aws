@@ -60,4 +60,4 @@ Using `terraform import`, import the resource using the current AWS account ID. 
 % terraform import aws_ram_sharing_with_organization.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0c4fa7fe1ef6a2bea6e88c0be32053d41d723ebfb97b9b5e06eddaaf8a239ae7 -->
+<!-- cache-key: cdktf-0.19.0 input-0c4fa7fe1ef6a2bea6e88c0be32053d41d723ebfb97b9b5e06eddaaf8a239ae7 -->

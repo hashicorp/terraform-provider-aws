@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `authenticationType` - (Required) Authentication type for the user. You must specify USERPOOL. Valid values: `api`, `saml`, `userpool`
+* `authenticationType` - (Required) Authentication type for the user. You must specify USERPOOL. Valid values: `API`, `SAML`, `USERPOOL`
 * `userName` - (Required) Email address of the user.
 
 The following arguments are optional:
@@ -82,4 +82,4 @@ Using `terraform import`, import `awsAppstreamUser` using the `userName` and `au
 % terraform import aws_appstream_user.example UserName/AuthenticationType
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0ae35608b7c30b00bd83bdb13090e3e240414ae668bedb32d7e62c4aff37c502 -->
+<!-- cache-key: cdktf-0.19.0 input-0ae35608b7c30b00bd83bdb13090e3e240414ae668bedb32d7e62c4aff37c502 -->

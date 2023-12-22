@@ -121,4 +121,4 @@ Using `terraform import`, import Batch Job Queue using the `arn`. For example:
 % terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-11a6c4c8622e2192aee9e7e7cc4d490a2dcbd3674d74501dcd201fc0b34547ee -->
+<!-- cache-key: cdktf-0.19.0 input-11a6c4c8622e2192aee9e7e7cc4d490a2dcbd3674d74501dcd201fc0b34547ee -->

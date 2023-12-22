@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `endpointConfigName` - (Required) The name of the endpoint configuration to use.
 * `deploymentConfig` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Deployment Config
 
@@ -58,7 +58,7 @@ This resource supports the following arguments:
 #### Blue Green Update Config
 
 * `trafficRoutingConfiguration` - (Required) Defines the traffic routing strategy to shift traffic from the old fleet to the new fleet during an endpoint deployment. See [Traffic Routing Configuration](#traffic-routing-configuration).
-* `maximumExecutionTimeoutInSeconds` - (Optional) Maximum execution timeout for the deployment. Note that the timeout value should be larger than the total waiting time specified in `terminationWaitInSeconds` and `waitIntervalInSeconds`. Valid values are between `600` and `14400`.
+* `maximumExecutionTimeoutInSeconds` - (Optional) Maximum execution timeout for the deployment. Note that the timeout value should be larger than the total waiting time specified in `termination_wait_in_seconds` and `wait_interval_in_seconds`. Valid values are between `600` and `14400`.
 * `terminationWaitInSeconds` - (Optional) Additional waiting time in seconds after the completion of an endpoint deployment before terminating the old endpoint fleet. Default is `0`. Valid values are between `0` and `3600`.
 
 #### Rolling Update Policy
@@ -70,29 +70,29 @@ This resource supports the following arguments:
 
 ##### Traffic Routing Configuration
 
-* `type` - (Required) Traffic routing strategy type. Valid values are: `allAtOnce`, `canary`, and `linear`.
+* `type` - (Required) Traffic routing strategy type. Valid values are: `ALL_AT_ONCE`, `CANARY`, and `LINEAR`.
 * `waitIntervalInSeconds` - (Required) The waiting time (in seconds) between incremental steps to turn on traffic on the new endpoint fleet. Valid values are between `0` and `3600`.
 * `canarySize` - (Optional) Batch size for the first step to turn on traffic on the new endpoint fleet. Value must be less than or equal to 50% of the variant's total instance count. See [Canary Size](#canary-size).
 * `linearStepSize` - (Optional) Batch size for each step to turn on traffic on the new endpoint fleet. Value must be 10-50% of the variant's total instance count. See [Linear Step Size](#linear-step-size).
 
 ###### Maximum Batch Size
 
-* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `instanceCount`, or `capacityPercent`.
+* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
 ###### Rollback Maximum Batch Size
 
-* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `instanceCount`, or `capacityPercent`.
+* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
 ###### Canary Size
 
-* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `instanceCount`, or `capacityPercent`.
+* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
 ###### Linear Step Size
 
-* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `instanceCount`, or `capacityPercent`.
+* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
 #### Auto Rollback Configuration
@@ -109,7 +109,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
 * `name` - The name of the endpoint.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -133,4 +133,4 @@ Using `terraform import`, import endpoints using the `name`. For example:
 % terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f77eb68ca400c61f27b4fe0845a1a77a41772c28e3c6f22dc1c8cd4be29cc30 -->
+<!-- cache-key: cdktf-0.19.0 input-6f77eb68ca400c61f27b4fe0845a1a77a41772c28e3c6f22dc1c8cd4be29cc30 -->

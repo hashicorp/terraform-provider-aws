@@ -749,7 +749,7 @@ resource "aws_apigatewayv2_route" "test" {
 
 // Simple attributes - No authorization, models or targets.
 func testAccRouteConfig_simpleAttributes(rName string) string {
-	return testAccRouteConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccRouteConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = aws_apigatewayv2_api.test.id
   route_key = "$default"
@@ -758,16 +758,16 @@ resource "aws_apigatewayv2_route" "test" {
   operation_name                      = "GET"
   route_response_selection_expression = "$default"
 }
-`
+`)
 }
 
 func testAccRouteConfig_target(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_route" "test" {
   api_id    = aws_apigatewayv2_api.test.id
   route_key = "$default"
 
   target = "integrations/${aws_apigatewayv2_integration.test.id}"
 }
-`
+`)
 }

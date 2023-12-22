@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20M`)
+* `create` - (Default `20m`)
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import `awsDocdbClusterSnapshot` using the cluster sna
 % terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8dd2ea6e382c4e0856668c83fa43a1a39b2e7be56350a64cc442fe4366d3e1c4 -->
+<!-- cache-key: cdktf-0.19.0 input-8dd2ea6e382c4e0856668c83fa43a1a39b2e7be56350a64cc442fe4366d3e1c4 -->

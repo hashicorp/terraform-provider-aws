@@ -68,7 +68,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the Systems Manager document.
-* `documentFormat` - (Optional) Returns the document in the specified format. The document format can be either `json`, `yaml` and `text`. JSON is the default format.
+* `documentFormat` - (Optional) Returns the document in the specified format. The document format can be either `JSON`, `YAML` and `TEXT`. JSON is the default format.
 * `documentVersion` - (Optional) Document version for which you want information.
 
 ## Attribute Reference
@@ -79,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content` - Contents of the document.
 * `documentType` - Type of the document.
 
-<!-- cache-key: cdktf-0.18.0 input-9343adb58c9912030cbf5122132a6b4bd27fc637380c9a974b20e323246d88d8 -->
+<!-- cache-key: cdktf-0.19.0 input-9343adb58c9912030cbf5122132a6b4bd27fc637380c9a974b20e323246d88d8 -->

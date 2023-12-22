@@ -110,16 +110,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Route identifier computed from the routing table identifier and route destination.
 * `instanceId` - Identifier of an EC2 instance.
 * `instanceOwnerId` - The AWS account ID of the owner of the EC2 instance.
-* `origin` - How the route was created - `createRouteTable`, `createRoute` or `enableVgwRoutePropagation`.
+* `origin` - How the route was created - `CreateRouteTable`, `CreateRoute` or `EnableVgwRoutePropagation`.
 * `state` - The state of the route - `active` or `blackhole`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `2M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -187,4 +187,4 @@ Import a route in route table `rtb656C65616E6F72` with a managed prefix list des
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-53c7f6fd35f56da19c62820b7371f087d7dfdcf3dc6ba0a873a118f63167b0a4 -->
+<!-- cache-key: cdktf-0.19.0 input-53c7f6fd35f56da19c62820b7371f087d7dfdcf3dc6ba0a873a118f63167b0a4 -->

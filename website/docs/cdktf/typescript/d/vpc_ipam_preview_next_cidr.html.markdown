@@ -73,6 +73,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-dd816317496f53d47089ea622a6d2495e074267b1372edce322e33a4007d026b -->
+<!-- cache-key: cdktf-0.19.0 input-dd816317496f53d47089ea622a6d2495e074267b1372edce322e33a4007d026b -->

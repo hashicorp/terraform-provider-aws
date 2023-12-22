@@ -53,13 +53,13 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `direction` - (Required) The direction of DNS queries to or from the Route 53 Resolver endpoint.
-Valid values are `inbound` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
-or `outbound` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
+Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
+or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
 * `ipAddress` - (Required) The subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
 * `securityGroupIds` - (Required) The ID of one or more security groups that you want to use to control access to this VPC.
 * `name` - (Optional) The friendly name of the Route 53 Resolver endpoint.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ipAddress` object supports the following:
 
@@ -73,15 +73,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the Route 53 Resolver endpoint.
 * `arn` - The ARN of the Route 53 Resolver endpoint.
 * `hostVpcId` - The ID of the VPC that you want to create the resolver endpoint in.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -105,4 +105,4 @@ Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53
 % terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-17a9ce982f1bbb8ea75dad88b3aa989a8f0aad667032d40125014dcc640c486e -->
+<!-- cache-key: cdktf-0.19.0 input-17a9ce982f1bbb8ea75dad88b3aa989a8f0aad667032d40125014dcc640c486e -->

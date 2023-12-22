@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
 
-<!-- cache-key: cdktf-0.18.0 input-482a972e99b29826e09a6b01244884263ba57e5574eae706e0c8646f0c88959b -->
+<!-- cache-key: cdktf-0.19.0 input-482a972e99b29826e09a6b01244884263ba57e5574eae706e0c8646f0c88959b -->

@@ -103,7 +103,7 @@ This resource supports the following arguments:
 The `endpoint` object supports the following:
 
 * `kinesisStreamConfig` - (Required) The Amazon Kinesis data stream configuration.
-* `streamType` - (Required) The type of data stream where real-time log data is sent. The only valid value is `kinesis`.
+* `streamType` - (Required) The type of data stream where real-time log data is sent. The only valid value is `Kinesis`.
 
 The `kinesisStreamConfig` object supports the following:
 
@@ -140,4 +140,4 @@ Using `terraform import`, import CloudFront real-time log configurations using t
 % terraform import aws_cloudfront_realtime_log_config.example arn:aws:cloudfront::111122223333:realtime-log-config/ExampleNameForRealtimeLogConfig
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-be02677fb3ad25ac1055ce131b85e8c78a124b0a2ec359c977c007200fc38e11 -->
+<!-- cache-key: cdktf-0.19.0 input-be02677fb3ad25ac1055ce131b85e8c78a124b0a2ec359c977c007200fc38e11 -->

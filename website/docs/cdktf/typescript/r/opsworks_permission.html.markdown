@@ -45,7 +45,7 @@ This resource supports the following arguments:
 * `allowSsh` - (Optional) Whether the user is allowed to use SSH to communicate with the instance
 * `allowSudo` - (Optional) Whether the user is allowed to use sudo to elevate privileges
 * `userArn` - (Required) The user's IAM ARN to set permissions for
-* `level` - (Optional) The users permission level. Mus be one of `deny`, `show`, `deploy`, `manage`, `iamOnly`
+* `level` - (Optional) The users permission level. Mus be one of `deny`, `show`, `deploy`, `manage`, `iam_only`
 * `stackId` - (Required) The stack to set the permissions for
 
 ## Attribute Reference
@@ -54,4 +54,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The computed id of the permission. Please note that this is only used internally to identify the permission. This value is not used in aws.
 
-<!-- cache-key: cdktf-0.18.0 input-97b4069bc5171903caa09804dda516e141af05be716dec07a132aa54f9470e02 -->
+<!-- cache-key: cdktf-0.19.0 input-97b4069bc5171903caa09804dda516e141af05be716dec07a132aa54f9470e02 -->

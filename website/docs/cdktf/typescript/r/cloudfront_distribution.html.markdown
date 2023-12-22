@@ -281,25 +281,25 @@ The CloudFront distribution argument layout is a complex structure composed of s
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
-* `continuousDeploymentPolicyId` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`awsCloudfrontContinuousDeploymentPolicy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
+* `continuousDeploymentPolicyId` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `customErrorResponse` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
-* `defaultCacheBehavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cachePolicyId` (preferred) or `forwardedValues` (deprecated) be set.
+* `defaultCacheBehavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
 * `defaultRootObject` (Optional) - Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
 * `isIpv6Enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
-* `httpVersion` (Optional) - Maximum HTTP version to support on the distribution. Allowed values are `http11`, `http2`, `http2And3` and `http3`. The default is `http2`.
+* `httpVersion` (Optional) - Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is `http2`.
 * `loggingConfig` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one).
 * `orderedCacheBehavior` (Optional) - Ordered list of [cache behaviors](#cache-behavior-arguments) resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
 * `origin` (Required) - One or more [origins](#origin-arguments) for this distribution (multiples allowed).
 * `originGroup` (Optional) - One or more [origin_group](#origin-group-arguments) for this distribution (multiples allowed).
-* `priceClass` (Optional) - Price class for this distribution. One of `priceClassAll`, `priceClass200`, `priceClass100`.
+* `priceClass` (Optional) - Price class for this distribution. One of `PriceClass_All`, `PriceClass_200`, `PriceClass_100`.
 * `restrictions` (Required) - The [restriction configuration](#restrictions-arguments) for this distribution (maximum one).
 * `staging` (Optional) - A Boolean that indicates whether this is a staging distribution. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `viewerCertificate` (Required) - The [SSL configuration](#viewer-certificate-arguments) for this distribution (maximum one).
-* `webAclId` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `awsWafv2WebAclExampleArn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `awsWafWebAclExampleId`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:getWebAcl` permissions assigned.
+* `webAclId` (Optional) - Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example `aws_wafv2_web_acl.example.arn`. To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`. The WAF Web ACL must exist in the WAF Global (CloudFront) region and the credentials configuring this argument must have `waf:GetWebACL` permissions assigned.
 * `retainOnDelete` (Optional) - Disables the distribution instead of deleting it when destroying the resource through Terraform. If this is set, the distribution needs to be deleted manually afterwards. Default: `false`.
-* `waitForDeployment` (Optional) - If enabled, the resource will wait for the distribution status to change from `inProgress` to `deployed`. Setting this to`false` will skip the process. Default: `true`.
+* `waitForDeployment` (Optional) - If enabled, the resource will wait for the distribution status to change from `InProgress` to `Deployed`. Setting this to`false` will skip the process. Default: `true`.
 
 #### Cache Behavior Arguments
 
@@ -307,31 +307,31 @@ The CloudFront distribution argument layout is a complex structure composed of s
 
 * `allowedMethods` (Required) - Controls which HTTP methods CloudFront processes and forwards to your Amazon S3 bucket or your custom origin.
 * `cachedMethods` (Required) - Controls whether CloudFront caches the response to requests using the specified HTTP methods.
-* `cachePolicyId` (Optional) - Unique identifier of the cache policy that is attached to the cache behavior. If configuring the `defaultCacheBehavior` either `cachePolicyId` or `forwardedValues` must be set.
+* `cachePolicyId` (Optional) - Unique identifier of the cache policy that is attached to the cache behavior. If configuring the `default_cache_behavior` either `cache_policy_id` or `forwarded_values` must be set.
 * `compress` (Optional) - Whether you want CloudFront to automatically compress content for web requests that include `Accept-Encoding: gzip` in the request header (default: `false`).
-* `defaultTtl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `expires` header.
+* `defaultTtl` (Optional) - Default amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request in the absence of an `Cache-Control max-age` or `Expires` header.
 * `fieldLevelEncryptionId` (Optional) - Field level encryption configuration ID.
-* `forwardedValues` (Optional, **Deprecated** use `cachePolicyId` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront handles query strings, cookies and headers (maximum one).
+* `forwardedValues` (Optional, **Deprecated** use `cache_policy_id` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront handles query strings, cookies and headers (maximum one).
 * `lambdaFunctionAssociation` (Optional) - A [config block](#lambda-function-association) that triggers a lambda function with specific actions (maximum 4).
 * `functionAssociation` (Optional) - A [config block](#function-association) that triggers a cloudfront function with specific actions (maximum 2).
-* `maxTtl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `expires` headers.
+* `maxTtl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers.
 * `minTtl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds.
 * `originRequestPolicyId` (Optional) - Unique identifier of the origin request policy that is attached to the behavior.
-* `pathPattern` (Required) - Pattern (for example, `images/*Jpg`) that specifies which requests you want this cache behavior to apply to.
+* `pathPattern` (Required) - Pattern (for example, `images/*.jpg`) that specifies which requests you want this cache behavior to apply to.
 * `realtimeLogConfigArn` (Optional) - ARN of the [real-time log configuration](cloudfront_realtime_log_config.html) that is attached to this cache behavior.
 * `responseHeadersPolicyId` (Optional) - Identifier for a response headers policy.
 * `smoothStreaming` (Optional) - Indicates whether you want to distribute media files in Microsoft Smooth Streaming format using the origin that is associated with this cache behavior.
 * `targetOriginId` (Required) - Value of ID for the origin that you want CloudFront to route requests to when a request matches the path pattern either for a cache behavior or for the default cache behavior.
 * `trustedKeyGroups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `trustedSigners` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
-* `viewerProtocolPolicy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allowAll`, `httpsOnly`, or `redirectToHttps`.
+* `viewerProtocolPolicy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
 
 ##### Forwarded Values Arguments
 
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments) that specifies how CloudFront handles cookies (maximum one).
 * `headers` (Optional) - Headers, if any, that you want CloudFront to vary upon for this cache behavior. Specify `*` to include all headers.
 * `queryString` (Required) - Indicates whether you want CloudFront to forward query strings to the origin that is associated with this cache behavior.
-* `queryStringCacheKeys` (Optional) - When specified, along with a value of `true` for `queryString`, all query strings are forwarded, however only the query string keys listed in this argument are cached. When omitted with a value of `true` for `queryString`, all query string keys are cached.
+* `queryStringCacheKeys` (Optional) - When specified, along with a value of `true` for `query_string`, all query strings are forwarded, however only the query string keys listed in this argument are cached. When omitted with a value of `true` for `query_string`, all query string keys are cached.
 
 ##### Lambda Function Association
 
@@ -394,7 +394,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-* `eventType` (Required) - Specific event to trigger this function. Valid values: `viewerRequest`, `originRequest`, `viewerResponse`, `originResponse`.
+* `eventType` (Required) - Specific event to trigger this function. Valid values: `viewer-request`, `origin-request`, `viewer-response`, `origin-response`.
 * `lambdaArn` (Required) - ARN of the Lambda function.
 * `includeBody` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
 
@@ -456,12 +456,12 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-* `eventType` (Required) - Specific event to trigger this function. Valid values: `viewerRequest` or `viewerResponse`.
+* `eventType` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
 * `functionArn` (Required) - ARN of the CloudFront function.
 
 ##### Cookies Arguments
 
-* `forward` (Required) - Whether you want CloudFront to forward cookies to the origin that is associated with this cache behavior. You can specify `all`, `none` or `whitelist`. If `whitelist`, you must include the subsequent `whitelistedNames`.
+* `forward` (Required) - Whether you want CloudFront to forward cookies to the origin that is associated with this cache behavior. You can specify `all`, `none` or `whitelist`. If `whitelist`, you must include the subsequent `whitelisted_names`.
 * `whitelistedNames` (Optional) - If you have specified `whitelist` to `forward`, the whitelisted cookies that you want CloudFront to forward to your origin.
 
 #### Custom Error Response Arguments
@@ -469,7 +469,7 @@ class MyConvertedCode extends TerraformStack {
 * `errorCachingMinTtl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `errorCode` (Required) - 4xx or 5xx HTTP status code that you want to customize.
 * `responseCode` (Optional) - HTTP status code that you want CloudFront to return with the custom error page to the viewer.
-* `responsePagePath` (Optional) - Path of the custom error page (for example, `/custom404Html`).
+* `responsePagePath` (Optional) - Path of the custom error page (for example, `/custom_404.html`).
 
 #### Default Cache Behavior Arguments
 
@@ -479,7 +479,7 @@ argument should not be specified.
 
 #### Logging Config Arguments
 
-* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucketS3AmazonawsCom`.
+* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`.
 * `includeCookies` (Optional) - Whether to include cookies in access logs (default: `false`).
 * `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
 
@@ -487,28 +487,28 @@ argument should not be specified.
 
 * `connectionAttempts` (Optional) - Number of times that CloudFront attempts to connect to the origin. Must be between 1-3. Defaults to 3.
 * `connectionTimeout` (Optional) - Number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
-* `customOriginConfig` - The [CloudFront custom origin](#custom-origin-config-arguments) configuration information. If an S3 origin is required, use `originAccessControlId` or `s3OriginConfig` instead.
+* `customOriginConfig` - The [CloudFront custom origin](#custom-origin-config-arguments) configuration information. If an S3 origin is required, use `origin_access_control_id` or `s3_origin_config` instead.
 * `domainName` (Required) - DNS domain name of either the S3 bucket, or web site of your custom origin.
 * `customHeader` (Optional) - One or more sub-resources with `name` and `value` parameters that specify header data that will be sent to the origin (multiples allowed).
 * `originAccessControlId` (Optional) - Unique identifier of a [CloudFront origin access control][8] for this origin.
 * `originId` (Required) - Unique identifier for the origin.
 * `originPath` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `originShield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
-* `s3OriginConfig` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `customOriginConfig` instead.
+* `s3OriginConfig` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
 
 ##### Custom Origin Config Arguments
 
 * `httpPort` (Required) - HTTP port the custom origin listens on.
 * `httpsPort` (Required) - HTTPS port the custom origin listens on.
-* `originProtocolPolicy` (Required) - Origin protocol policy to apply to your origin. One of `httpOnly`, `httpsOnly`, or `matchViewer`.
-* `originSslProtocols` (Required) - SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS. A list of one or more of `ssLv3`, `tlSv1`, `tlSv11`, and `tlSv12`.
+* `originProtocolPolicy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
+* `originSslProtocols` (Required) - SSL/TLS protocols that you want CloudFront to use when communicating with your origin over HTTPS. A list of one or more of `SSLv3`, `TLSv1`, `TLSv1.1`, and `TLSv1.2`.
 * `originKeepaliveTimeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
 * `originReadTimeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `30`.
 
 ##### Origin Shield Arguments
 
 * `enabled` (Required) - Whether Origin Shield is enabled.
-* `originShieldRegion` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `usEast2`.
+* `originShieldRegion` (Optional) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as `us-east-2`.
 
 ##### S3 Origin Config Arguments
 
@@ -539,36 +539,36 @@ The arguments of `geoRestriction` are:
 
 #### Viewer Certificate Arguments
 
-* `acmCertificateArn` - ARN of the [AWS Certificate Manager][6] certificate that you wish to use with this distribution. Specify this, `cloudfrontDefaultCertificate`, or `iamCertificateId`.  The ACM certificate must be in  US-EAST-1.
-* `cloudfrontDefaultCertificate` - `true` if you want viewers to use HTTPS to request your objects and you're using the CloudFront domain name for your distribution. Specify this, `acmCertificateArn`, or `iamCertificateId`.
-* `iamCertificateId` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acmCertificateArn`, or `cloudfrontDefaultCertificate`.
-* `minimumProtocolVersion` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `tlSv122019` and `tlSv122021`. Default: `tlSv1`. **NOTE**: If you are using a custom certificate (specified with `acmCertificateArn` or `iamCertificateId`), and have specified `sniOnly` in `sslSupportMethod`, `tlSv1` or later must be specified. If you have specified `vip` in `sslSupportMethod`, only `ssLv3` or `tlSv1` can be specified. If you have specified `cloudfrontDefaultCertificate`, `tlSv1` must be specified.
-* `sslSupportMethod` - How you want CloudFront to serve HTTPS requests. One of `vip` or `sniOnly`. Required if you specify `acmCertificateArn` or `iamCertificateId`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+* `acmCertificateArn` - ARN of the [AWS Certificate Manager][6] certificate that you wish to use with this distribution. Specify this, `cloudfront_default_certificate`, or `iam_certificate_id`.  The ACM certificate must be in  US-EAST-1.
+* `cloudfrontDefaultCertificate` - `true` if you want viewers to use HTTPS to request your objects and you're using the CloudFront domain name for your distribution. Specify this, `acm_certificate_arn`, or `iam_certificate_id`.
+* `iamCertificateId` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
+* `minimumProtocolVersion` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
+* `sslSupportMethod` - How you want CloudFront to serve HTTPS requests. One of `vip` or `sni-only`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier for the distribution. For example: `edfdvbd632Bhds5`.
-* `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/edfdvbd632Bhds5`, where `123456789012` is your AWS account ID.
+* `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+* `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
 * `callerReference` - Internal value used by CloudFront to allow future updates to the distribution configuration.
-* `status` - Current status of the distribution. `deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trustedKeyGroups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs.
     * `enabled` - `true` if any of the key groups have public keys that CloudFront can use to verify the signatures of signed URLs and signed cookies.
     * `items` - List of nested attributes for each key group.
-        * `keyGroupId` - ID of the key group that contains the public keys.
-        * `keyPairIds` - Set of CloudFront key pair IDs.
+        * `key_group_id` - ID of the key group that contains the public keys.
+        * `key_pair_ids` - Set of CloudFront key pair IDs.
 * `trustedSigners` - List of nested attributes for active trusted signers, if the distribution is set up to serve private content with signed URLs.
     * `enabled` - `true` if any of the AWS accounts listed as trusted signers have active CloudFront key pairs
     * `items` - List of nested attributes for each trusted signer
-        * `awsAccountNumber` - AWS account ID or `self`
-        * `keyPairIds` - Set of active CloudFront key pairs associated with the signer account
-* `domainName` - Domain name corresponding to the distribution. For example: `d604721Fxaaqy9CloudfrontNet`.
+        * `aws_account_number` - AWS account ID or `self`
+        * `key_pair_ids` - Set of active CloudFront key pairs associated with the signer account
+* `domainName` - Domain name corresponding to the distribution. For example: `d604721fxaaqy9.cloudfront.net`.
 * `lastModifiedTime` - Date and time the distribution was last modified.
 * `inProgressValidationBatches` - Number of invalidation batches currently in progress.
-* `etag` - Current version of the distribution's information. For example: `e2Qwruhapomqzl`.
-* `hostedZoneId` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set][7] to. This attribute is simply an alias for the zone ID `z2Fdtndataqyw2`.
+* `etag` - Current version of the distribution's information. For example: `E2QWRUHAPOMQZL`.
+* `hostedZoneId` - CloudFront Route 53 zone ID that can be used to route an [Alias Resource Record Set][7] to. This attribute is simply an alias for the zone ID `Z2FDTNDATAQYW2`.
 
 [1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
 [2]: https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistribution.html
@@ -601,4 +601,4 @@ Using `terraform import`, import CloudFront Distributions using the `id`. For ex
 % terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0b6496126422015df51ee5b7114c332b4222965bc778c7ff2aecedac14a3a375 -->
+<!-- cache-key: cdktf-0.19.0 input-0b6496126422015df51ee5b7114c332b4222965bc778c7ff2aecedac14a3a375 -->

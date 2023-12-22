@@ -250,17 +250,17 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateReplicator(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.ReplicatorArn))
 
 	if _, err := waitReplicatorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForCreation, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForCreation, ResNameReplicator, d.Id(), err)
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
@@ -280,7 +280,7 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)
 	}
 
 	sourceAlias := out.ReplicationInfoList[0].SourceKafkaClusterAlias
@@ -342,11 +342,11 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		out, err := conn.UpdateReplicationInfo(ctx, in)
 
 		if err != nil {
-			return append(diags, create.DiagError(names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)
 		}
 
 		if _, err := waitReplicatorUpdated(ctx, conn, aws.ToString(out.ReplicatorArn), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)
 		}
 	}
 
@@ -367,11 +367,11 @@ func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionDeleting, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionDeleting, ResNameReplicator, d.Id(), err)
 	}
 
 	if _, err := waitReplicatorDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForDeletion, ResNameReplicator, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForDeletion, ResNameReplicator, d.Id(), err)
 	}
 
 	return diags

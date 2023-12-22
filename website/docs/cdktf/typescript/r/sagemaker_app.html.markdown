@@ -46,12 +46,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `appName` - (Required) The name of the app.
-* `appType` - (Required) The type of app. Valid values are `jupyterServer`, `kernelGateway`, `rStudioServerPro`, `rSessionGateway` and `tensorBoard`.
+* `appType` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway` and `TensorBoard`.
 * `domainId` - (Required) The domain ID.
-* `userProfileName` - (Optional) The user profile name. At least one of `userProfileName` or `spaceName` required.
+* `userProfileName` - (Optional) The user profile name. At least one of `user_profile_name` or `space_name` required.
 * `resourceSpec` - (Optional) The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.See [Resource Spec](#resource-spec) below.
-* `spaceName` - (Optional) The name of the space. At least one of `userProfileName` or `spaceName` required.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `spaceName` - (Optional) The name of the space. At least one of `user_profile_name` or `space_name` required.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Resource Spec
 
@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Amazon Resource Name (ARN) of the app.
 * `arn` - The Amazon Resource Name (ARN) of the app.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -90,4 +90,4 @@ Using `terraform import`, import SageMaker Apps using the `id`. For example:
 % terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4688869d2d0264f189f117e28cdcaf279c2dff5e6217ac2d39772da0562dc585 -->
+<!-- cache-key: cdktf-0.19.0 input-4688869d2d0264f189f117e28cdcaf279c2dff5e6217ac2d39772da0562dc585 -->

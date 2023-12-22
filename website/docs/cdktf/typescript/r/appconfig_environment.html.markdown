@@ -67,14 +67,14 @@ This resource supports the following arguments:
 * `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
 * `description` - (Optional) Description of the environment. Can be at most 1024 characters.
 * `monitor` - (Optional) Set of Amazon CloudWatch alarms to monitor during the deployment process. Maximum of 5. See [Monitor](#monitor) below for more details.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Monitor
 
 The `monitor` block supports the following:
 
 * `alarmArn` - (Required) ARN of the Amazon CloudWatch alarm.
-* `alarmRoleArn` - (Optional) ARN of an IAM role for AWS AppConfig to monitor `alarmArn`.
+* `alarmRoleArn` - (Optional) ARN of an IAM role for AWS AppConfig to monitor `alarm_arn`.
 
 ## Attribute Reference
 
@@ -83,9 +83,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the AppConfig Environment.
 * `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).
 * `environmentId` - AppConfig environment ID.
-* `state` - State of the environment. Possible values are `readyForDeployment`, `deploying`, `rollingBack`
-  or `rolledBack`.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
+  or `ROLLED_BACK`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -109,4 +109,4 @@ Using `terraform import`, import AppConfig Environments using the environment ID
 % terraform import aws_appconfig_environment.example 71abcde:11xxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fbf604e2e551d298f98ef374aae241f630d53aa562269a500dee31fdf26530c5 -->
+<!-- cache-key: cdktf-0.19.0 input-fbf604e2e551d298f98ef374aae241f630d53aa562269a500dee31fdf26530c5 -->

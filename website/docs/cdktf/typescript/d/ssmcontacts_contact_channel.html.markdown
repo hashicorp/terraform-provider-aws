@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `type` - Type of the contact channel.
 
-<!-- cache-key: cdktf-0.18.0 input-9f531cedbf6139b19742dde2e104f65f9b8b5e9b437541c3b2cb7082c8b98b4f -->
+<!-- cache-key: cdktf-0.19.0 input-9f531cedbf6139b19742dde2e104f65f9b8b5e9b437541c3b2cb7082c8b98b4f -->

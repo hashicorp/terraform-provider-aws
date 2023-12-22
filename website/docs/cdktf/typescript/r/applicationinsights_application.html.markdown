@@ -65,10 +65,10 @@ The following arguments are optional:
 * `autoConfigEnabled` - (Optional)  Indicates whether Application Insights automatically configures unmonitored resources in the resource group.
 * `autoCreate` - (Optional) Configures all of the resources in the resource group by applying the recommended configurations.
 * `cweMonitorEnabled` - (Optional)  Indicates whether Application Insights can listen to CloudWatch events for the application resources, such as instance terminated, failed deployment, and others.
-* `groupingType` - (Optional) Application Insights can create applications based on a resource group or on an account. To create an account-based application using all of the resources in the account, set this parameter to `accountBased`.
+* `groupingType` - (Optional) Application Insights can create applications based on a resource group or on an account. To create an account-based application using all of the resources in the account, set this parameter to `ACCOUNT_BASED`.
 * `opsCenterEnabled` - (Optional) When set to `true`, creates opsItems for any problems detected on an application.
 * `opsItemSnsTopicArn` - (Optional) SNS topic provided to Application Insights that is associated to the created opsItem. Allows you to receive notifications for updates to the opsItem.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Application.
 * `id` - Name of the resource group.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -100,4 +100,4 @@ Using `terraform import`, import ApplicationInsights Applications using the `res
 % terraform import aws_applicationinsights_application.some some-application
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-30b40f9adb8f133c3e275766d86e95f547219ce5038fa7751ad75a6d3c0db957 -->
+<!-- cache-key: cdktf-0.19.0 input-30b40f9adb8f133c3e275766d86e95f547219ce5038fa7751ad75a6d3c0db957 -->

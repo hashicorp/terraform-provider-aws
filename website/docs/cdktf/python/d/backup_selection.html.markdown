@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `iam_role_arn` - ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `resources` - An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan..
 
-<!-- cache-key: cdktf-0.18.0 input-534dba699166fbe14df06754eebf249c7a81db83aae51d2b3269662e6cd9a9bd -->
+<!-- cache-key: cdktf-0.19.0 input-534dba699166fbe14df06754eebf249c7a81db83aae51d2b3269662e6cd9a9bd -->

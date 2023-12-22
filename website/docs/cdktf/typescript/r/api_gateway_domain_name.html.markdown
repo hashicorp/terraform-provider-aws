@@ -223,30 +223,30 @@ This resource supports the following arguments:
 * `domainName` - (Required) Fully-qualified domain name to register.
 * `endpointConfiguration` - (Optional) Configuration block defining API endpoint information including type. See below.
 * `mutualTlsAuthentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
-* `ownershipVerificationCertificateArn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificateArn` is issued via an ACM Private CA or `mutualTlsAuthentication` is configured with an ACM-imported certificate.)
-* `securityPolicy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `tls10` and `tls12`. Must be configured to perform drift detection.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `ownershipVerificationCertificateArn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
+* `securityPolicy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
 
-* `certificateArn` - (Optional) ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when an edge-optimized domain name is desired. Conflicts with `certificateName`, `certificateBody`, `certificateChain`, `certificatePrivateKey`, `regionalCertificateArn`, and `regionalCertificateName`.
-* `regionalCertificateArn` - (Optional) ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when a regional domain name is desired. Conflicts with `certificateArn`, `certificateName`, `certificateBody`, `certificateChain`, and `certificatePrivateKey`.
+* `certificateArn` - (Optional) ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when an edge-optimized domain name is desired. Conflicts with `certificate_name`, `certificate_body`, `certificate_chain`, `certificate_private_key`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `regionalCertificateArn` - (Optional) ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when a regional domain name is desired. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and `certificate_private_key`.
 
 When uploading a certificate, the following arguments are supported:
 
-* `certificateBody` - (Optional) Certificate issued for the domain name being registered, in PEM format. Only valid for `edge` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
-* `certificateChain` - (Optional) Certificate for the CA that issued the certificate, along with any intermediate CA certificates required to create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `edge` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
-* `certificateName` - (Optional) Unique name to use when registering this certificate as an IAM server certificate. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`. Required if `certificateArn` is not set.
-* `certificatePrivateKey` - (Optional) Private key associated with the domain certificate given in `certificateBody`. Only valid for `edge` endpoint configuration type. Conflicts with `certificateArn`, `regionalCertificateArn`, and `regionalCertificateName`.
-* `regionalCertificateName` - (Optional) User-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificateArn`, `certificateName`, `certificateBody`, `certificateChain`, and `certificatePrivateKey`.
+* `certificateBody` - (Optional) Certificate issued for the domain name being registered, in PEM format. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `certificateChain` - (Optional) Certificate for the CA that issued the certificate, along with any intermediate CA certificates required to create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `certificateName` - (Optional) Unique name to use when registering this certificate as an IAM server certificate. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`. Required if `certificate_arn` is not set.
+* `certificatePrivateKey` - (Optional) Private key associated with the domain certificate given in `certificate_body`. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `regionalCertificateName` - (Optional) User-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and `certificate_private_key`.
 
 ### endpoint_configuration
 
-* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `edge` or `regional`. If unspecified, defaults to `edge`. Must be declared as `regional` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
 
 ### mutual_tls_authentication
 
-* `truststoreUri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucketName/keyName`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
+* `truststoreUri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
 * `truststoreVersion` - (Optional) Version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
 
 ## Attribute Reference
@@ -256,11 +256,11 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of domain name.
 * `certificateUploadDate` - Upload date associated with the domain certificate.
 * `cloudfrontDomainName` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
-* `cloudfrontZoneId` - For convenience, the hosted zone ID (`z2Fdtndataqyw2`) that can be used to create a Route53 alias record for the distribution.
+* `cloudfrontZoneId` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `id` - Internal identifier assigned to this domain name by API Gateway.
 * `regionalDomainName` - Hostname for the custom domain's regional endpoint.
 * `regionalZoneId` - Hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -284,4 +284,4 @@ Using `terraform import`, import API Gateway domain names using their `name`. Fo
 % terraform import aws_api_gateway_domain_name.example dev.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-94b48fa1d23d0d114bb8d9f31a16923c5bf9db107914287c83b704a97489f072 -->
+<!-- cache-key: cdktf-0.19.0 input-94b48fa1d23d0d114bb8d9f31a16923c5bf9db107914287c83b704a97489f072 -->

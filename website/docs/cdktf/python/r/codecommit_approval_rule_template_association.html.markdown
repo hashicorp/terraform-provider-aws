@@ -64,4 +64,4 @@ Using `terraform import`, import CodeCommit approval rule template associations 
 % terraform import aws_codecommit_approval_rule_template_association.example approver-rule-for-example,MyExampleRepo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-800a49692194ca7d70016b5efe848036ee2107aa5291a82d90a63cd527264967 -->
+<!-- cache-key: cdktf-0.19.0 input-800a49692194ca7d70016b5efe848036ee2107aa5291a82d90a63cd527264967 -->

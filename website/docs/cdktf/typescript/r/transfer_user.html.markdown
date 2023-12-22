@@ -102,15 +102,15 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `serverId` - (Required) The Server ID of the Transfer Server (e.g., `s12345678`)
+* `serverId` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `userName` - (Required) The name used for log in to your SFTP server.
-* `homeDirectory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${transfer:homeBucket}` in the policy) and the rest is the home directory (accessible as `${transfer:homeDirectory}` in the policy). For example, `/exampleBucket1234/username` would set the home bucket to `exampleBucket1234` and the home directory to `username`.
+* `homeDirectory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
 * `homeDirectoryMappings` - (Optional) Logical directory mappings that specify what S3 paths and keys should be visible to your user and how you want to make them visible. See [Home Directory Mappings](#home-directory-mappings) below.
-* `homeDirectoryType` - (Optional) The type of landing directory (folder) you mapped for your users' home directory. Valid values are `path` and `logical`.
-* `policy` - (Optional) An IAM JSON policy document that scopes down user access to portions of their Amazon S3 bucket. IAM variables you can use inside this policy include `${transfer:userName}`, `${transfer:homeDirectory}`, and `${transfer:homeBucket}`. Since the IAM variable syntax matches Terraform's interpolation syntax, they must be escaped inside Terraform configuration strings (`$${transfer:userName}`).  These are evaluated on-the-fly when navigating the bucket.
+* `homeDirectoryType` - (Optional) The type of landing directory (folder) you mapped for your users' home directory. Valid values are `PATH` and `LOGICAL`.
+* `policy` - (Optional) An IAM JSON policy document that scopes down user access to portions of their Amazon S3 bucket. IAM variables you can use inside this policy include `${Transfer:UserName}`, `${Transfer:HomeDirectory}`, and `${Transfer:HomeBucket}`. Since the IAM variable syntax matches Terraform's interpolation syntax, they must be escaped inside Terraform configuration strings (`$${Transfer:UserName}`).  These are evaluated on-the-fly when navigating the bucket.
 * `posixProfile` - (Optional) Specifies the full POSIX identity, including user ID (Uid), group ID (Gid), and any secondary groups IDs (SecondaryGids), that controls your users' access to your Amazon EFS file systems. See [Posix Profile](#posix-profile) below.
 * `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to control your user’s access to your Amazon S3 bucket.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Home Directory Mappings
 
@@ -142,13 +142,13 @@ class MyConvertedCode extends TerraformStack {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer User
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `delete` - (Default `10M`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -172,4 +172,4 @@ Using `terraform import`, import Transfer Users using the `serverId` and `userNa
 % terraform import aws_transfer_user.bar s-12345678/test-username
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-20283ed3a3e6abff667008f255442da0f4606486f3db71039d382ec9cd99e4b2 -->
+<!-- cache-key: cdktf-0.19.0 input-20283ed3a3e6abff667008f255442da0f4606486f3db71039d382ec9cd99e4b2 -->

@@ -59,14 +59,14 @@ The following arguments are optional:
 * `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. Currently, only credentials based on user name and password are supported. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
 * `sslProperties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcConnectionProperties`- (Optional) Use this parameter only when you want Amazon QuickSight to use a VPC connection when connecting to your underlying source. See [VPC Connection Properties](#vpc_connection_properties-argument-reference) below for more details.
 
 ### credentials Argument Reference
 
-* `copySourceArn` (Optional, Conflicts with `credentialPair`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
-When the value is not null, the `credentialPair` from the data source in the ARN is used.
-* `credentialPair` (Optional, Conflicts with `copySourceArn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
+* `copySourceArn` (Optional, Conflicts with `credential_pair`) - The Amazon Resource Name (ARN) of a data source that has the credential pair that you want to use.
+When the value is not null, the `credential_pair` from the data source in the ARN is used.
+* `credentialPair` (Optional, Conflicts with `copy_source_arn`) - Credential pair. See [Credential Pair](#credential_pair-argument-reference) below for more details.
 
 ### credential_pair Argument Reference
 
@@ -178,8 +178,8 @@ To specify data source connection parameters, exactly one of the following sub-o
 
 * `clusterId` - (Optional, Required if `host` and `port` are not provided) The ID of the cluster to which to connect.
 * `database` - (Required) The database to which to connect.
-* `host` - (Optional, Required if `clusterId` is not provided) The host to which to connect.
-* `port` - (Optional, Required if `clusterId` is not provided) The port to which to connect.
+* `host` - (Optional, Required if `cluster_id` is not provided) The host to which to connect.
+* `port` - (Optional, Required if `cluster_id` is not provided) The port to which to connect.
 
 ### s3 Argument Reference
 
@@ -227,7 +227,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the data source
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -251,4 +251,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2de42ab036dbf7d192e1e61ccf217d0b3cc58fb437a7906bb08bf538070833e7 -->
+<!-- cache-key: cdktf-0.19.0 input-2de42ab036dbf7d192e1e61ccf217d0b3cc58fb437a7906bb08bf538070833e7 -->

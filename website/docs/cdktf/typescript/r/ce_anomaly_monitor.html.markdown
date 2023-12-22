@@ -82,10 +82,10 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `name` - (Required) The name of the monitor.
-* `monitorType` - (Required) The possible type values. Valid values: `dimensional` | `custom`.
-* `monitorDimension` - (Required, if `monitorType` is `dimensional`) The dimensions to evaluate. Valid values: `service`.
-* `monitorSpecification` - (Required, if `monitorType` is `custom`) A valid JSON representation for the [Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html) object.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `monitorType` - (Required) The possible type values. Valid values: `DIMENSIONAL` | `CUSTOM`.
+* `monitorDimension` - (Required, if `monitor_type` is `DIMENSIONAL`) The dimensions to evaluate. Valid values: `SERVICE`.
+* `monitorSpecification` - (Required, if `monitor_type` is `CUSTOM`) A valid JSON representation for the [Expression](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_Expression.html) object.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the anomaly monitor.
 * `id` - Unique ID of the anomaly monitor. Same as `arn`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -117,4 +117,4 @@ Using `terraform import`, import `awsCeAnomalyMonitor` using the `id`. For examp
 % terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1578f36961ed88a11a17f0c1c8745d16387472eae9e80de6c376da2f0ebcc68e -->
+<!-- cache-key: cdktf-0.19.0 input-1578f36961ed88a11a17f0c1c8745d16387472eae9e80de6c376da2f0ebcc68e -->

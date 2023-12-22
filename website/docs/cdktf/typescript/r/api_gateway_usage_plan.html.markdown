@@ -103,7 +103,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 * `quotaSettings` - (Optional) The [quota settings](#quota-settings-arguments) of the usage plan.
 * `throttleSettings` - (Optional) The [throttling limits](#throttling-settings-arguments) of the usage plan.
 * `productCode` - (Optional) AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Api Stages arguments
 
@@ -113,7 +113,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 ##### Throttle
 
-* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/get`.
+* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
 * `burstLimit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
 * `rateLimit` (Optional) - The API request steady-state rate limit.
 
@@ -140,7 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `throttleSettings` - Throttling limits of the usage plan.
 * `productCode` - AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
 * `arn` - ARN
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -164,4 +164,4 @@ Using `terraform import`, import AWS API Gateway Usage Plan using the `id`. For 
 % terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-24116054635474bb919fe95d52d6e98ba1ea28094c03b0bd8fe0eab47156f843 -->
+<!-- cache-key: cdktf-0.19.0 input-24116054635474bb919fe95d52d6e98ba1ea28094c03b0bd8fe0eab47156f843 -->

@@ -45,7 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `filter` - (Optional) Configuration block for the `expression` object used to categorize costs. See below.
+* `filter` - (Optional) Configuration block for the `Expression` object used to categorize costs. See below.
 * `searchString` - (Optional) Value that you want to search for.
 * `sortBy` - (Optional) Configuration block for the value by which you want to sort the data. See below.
 * `tagKey` - (Optional) Key of the tag that you want to return values for.
@@ -57,35 +57,35 @@ The following arguments are optional:
 
 ### `filter`
 
-* `and` - (Optional) Return results that match both `dimension` objects.
-* `costCategory` - (Optional) Configuration block for the filter that's based on `costCategory` values. See below.
-* `dimension` - (Optional) Configuration block for the specific `dimension` to use for `expression`. See below.
-* `not` - (Optional) Return results that match both `dimension` object.
-* `or` - (Optional) Return results that match both `dimension` object.
-* `tag` - (Optional) Configuration block for the specific `tag` to use for `expression`. See below.
+* `and` - (Optional) Return results that match both `Dimension` objects.
+* `costCategory` - (Optional) Configuration block for the filter that's based on `CostCategory` values. See below.
+* `dimension` - (Optional) Configuration block for the specific `Dimension` to use for `Expression`. See below.
+* `not` - (Optional) Return results that match both `Dimension` object.
+* `or` - (Optional) Return results that match both `Dimension` object.
+* `tag` - (Optional) Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `costCategory`
 
 * `key` - (Optional) Unique name of the Cost Category.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### `dimension`
 
 * `key` - (Optional) Unique name of the Cost Category.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### `tag`
 
 * `key` - (Optional) Key for the tag.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### `sortBy`
 
-* `key` - (Required) key that's used to sort the data. Valid values are: `blendedCost`,  `unblendedCost`, `amortizedCost`, `netAmortizedCost`, `netUnblendedCost`, `usageQuantity`, `normalizedUsageAmount`.
-* `sortOrder` - (Optional) order that's used to sort the data. Valid values are: `ascending`,  `descending`.
+* `key` - (Required) key that's used to sort the data. Valid values are: `BlendedCost`,  `UnblendedCost`, `AmortizedCost`, `NetAmortizedCost`, `NetUnblendedCost`, `UsageQuantity`, `NormalizedUsageAmount`.
+* `sortOrder` - (Optional) order that's used to sort the data. Valid values are: `ASCENDING`,  `DESCENDING`.
 
 ## Attribute Reference
 
@@ -94,4 +94,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Unique ID of the tag.
 * `tags` - Tags that match your request.
 
-<!-- cache-key: cdktf-0.18.0 input-9527a8a7806958858a1fefa9886293028fd6d96e84f71de91cdd7a28d03de47b -->
+<!-- cache-key: cdktf-0.19.0 input-9527a8a7806958858a1fefa9886293028fd6d96e84f71de91cdd7a28d03de47b -->

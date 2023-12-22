@@ -97,7 +97,7 @@ This resource supports the following arguments:
 
 * `codeRepositoryName` - (Required) The name of the Code Repository (must be unique).
 * `gitConfig` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Git Config
 
@@ -111,7 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the Code Repository.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Code Repository.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import SageMaker Code Repositories using the `name`. F
 % terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f41c8a9771692edb44a7045ff9315ec42a11e03a25966ecdac6ca144a79c5a90 -->
+<!-- cache-key: cdktf-0.19.0 input-f41c8a9771692edb44a7045ff9315ec42a11e03a25966ecdac6ca144a79c5a90 -->

@@ -141,10 +141,10 @@ The following arguments are required:
 The following arguments are optional:
 
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
-* `definition` - (Optional) A detailed template definition. Only one of `definition` or `sourceEntity` should be configured. See [definition](#definition).
+* `definition` - (Optional) A detailed template definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `permissions` - (Optional) A set of resource permissions on the template. Maximum of 64 items. See [permissions](#permissions).
-* `sourceEntity` - (Optional) The entity that you are using as a source when you create the template (analysis or template). Only one of `definition` or `sourceEntity` should be configured. See [source_entity](#source_entity).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `sourceEntity` - (Optional) The entity that you are using as a source when you create the template (analysis or template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### permissions
 
@@ -153,8 +153,8 @@ The following arguments are optional:
 
 ### source_entity
 
-* `sourceAnalysis` - (Optional) The source analysis, if it is based on an analysis.. Only one of `sourceAnalysis` or `sourceTemplate` should be configured. See [source_analysis](#source_analysis).
-* `sourceTemplate` - (Optional) The source template, if it is based on an template.. Only one of `sourceAnalysis` or `sourceTemplate` should be configured. See [source_template](#source_template).
+* `sourceAnalysis` - (Optional) The source analysis, if it is based on an analysis.. Only one of `source_analysis` or `source_template` should be configured. See [source_analysis](#source_analysis).
+* `sourceTemplate` - (Optional) The source template, if it is based on an template.. Only one of `source_analysis` or `source_template` should be configured. See [source_template](#source_template).
 
 ### source_analysis
 
@@ -190,16 +190,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `lastUpdatedTime` - The time that the template was last updated.
 * `sourceEntityArn` - Amazon Resource Name (ARN) of an analysis or template that was used to create this template.
 * `status` - The template creation status.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `versionNumber` - The version number of the template version.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -223,4 +223,4 @@ Using `terraform import`, import a QuickSight Template using the AWS account ID 
 % terraform import aws_quicksight_template.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-684fee6425d01e2059464d789630cbb0f5fd11eece6c679b299e9511a988d107 -->
+<!-- cache-key: cdktf-0.19.0 input-684fee6425d01e2059464d789630cbb0f5fd11eece6c679b299e9511a988d107 -->

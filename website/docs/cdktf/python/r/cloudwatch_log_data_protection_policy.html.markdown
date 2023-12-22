@@ -105,4 +105,4 @@ Using `terraform import`, import this resource using the `log_group_name`. For e
 % terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5d0eb45bdebf63544029d216f663f1fa8e735ed48c73f741006440431b616666 -->
+<!-- cache-key: cdktf-0.19.0 input-5d0eb45bdebf63544029d216f663f1fa8e735ed48c73f741006440431b616666 -->

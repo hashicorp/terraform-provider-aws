@@ -65,4 +65,4 @@ Using `terraform import`, import AWS SSM Service Setting using the `setting_id`.
 % terraform import aws_ssm_service_setting.example arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-489362aa670f8e29ed8ee958af1a046523f1410820fe12b9bf0f827690afb34c -->
+<!-- cache-key: cdktf-0.19.0 input-489362aa670f8e29ed8ee958af1a046523f1410820fe12b9bf0f827690afb34c -->

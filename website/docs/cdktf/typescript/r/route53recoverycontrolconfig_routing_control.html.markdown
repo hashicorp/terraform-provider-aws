@@ -76,7 +76,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the routing control.
-* `status` - Status of routing control. `pending` when it is being created/updated, `pendingDeletion` when it is being deleted, and `deployed` otherwise.
+* `status` - Status of routing control. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 
@@ -100,4 +100,4 @@ Using `terraform import`, import Route53 Recovery Control Config Routing Control
 % terraform import aws_route53recoverycontrolconfig_routing_control.mycontrol arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8/routingcontrol/d5d90e587870494b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-44029090e1d737aa2993a65bdf6f51189fa5530e97833ff3676aa4c17b194564 -->
+<!-- cache-key: cdktf-0.19.0 input-44029090e1d737aa2993a65bdf6f51189fa5530e97833ff3676aa4c17b194564 -->

@@ -75,7 +75,7 @@ This argument supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the hierarchy group.
-* `hierarchyPath` - Block that contains information about the levels in the hierarchy group. The `hierarchyPath` block is documented below.
+* `hierarchyPath` - Block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
 * `levelId` - Identifier of the level in the hierarchy group.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group separated by a colon (`:`).
 * `tags` - Map of tags to assign to the hierarchy group.
@@ -94,4 +94,4 @@ A level block supports the following attributes:
 * `id` -  The identifier of the hierarchy group.
 * `name` - Name of the hierarchy group.
 
-<!-- cache-key: cdktf-0.18.0 input-4a65e86f5180790b93c832a3ed14333f7e6e9c245f4c8eef60843f34eedef36c -->
+<!-- cache-key: cdktf-0.19.0 input-4a65e86f5180790b93c832a3ed14333f7e6e9c245f4c8eef60843f34eedef36c -->

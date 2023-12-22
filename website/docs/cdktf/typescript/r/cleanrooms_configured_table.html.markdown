@@ -52,7 +52,7 @@ This resource supports the following arguments:
 
 * `name` - (Required) - The name of the configured table.
 * `description` - (Optional) - A description for the configured table.
-* `analysisMethod` - (Required) - The analysis method for the configured table. The only valid value is currently `directQuery`.
+* `analysisMethod` - (Required) - The analysis method for the configured table. The only valid value is currently `DIRECT_QUERY`.
 * `allowedColumns` - (Required - Forces new resource) - The columns of the references table which will be included in the configured table.
 * `tableReference` - (Required - Forces new resource) - A reference to the AWS Glue table which will be used to create the configured table.
 * `tableReferenceDatabaseName` - (Required - Forces new resource) - The name of the AWS Glue database which contains the table.
@@ -72,9 +72,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1M`)
-- `update` - (Default `1M`)
-- `delete` - (Default `1M`)
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 
@@ -98,4 +98,4 @@ Using `terraform import`, import `awsCleanroomsConfiguredTable` using the `id`. 
 % terraform import aws_cleanrooms_configured_table.table 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-453a78d0a031324d090ad2bc765ccc4d2f1ec41c65c0d162ac12a0a01d1fb07d -->
+<!-- cache-key: cdktf-0.19.0 input-453a78d0a031324d090ad2bc765ccc4d2f1ec41c65c0d162ac12a0a01d1fb07d -->

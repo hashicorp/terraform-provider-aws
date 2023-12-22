@@ -148,4 +148,4 @@ Using `terraform import`, import `awsNetworkmanagerCustomerGatewayAssociation` u
 % terraform import aws_networkmanager_customer_gateway_association.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:customer-gateway/cgw-123abc05e04123abc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cd1a421b3c65ae404d64a476a24edb9bade1479a58410f9962263fcdb24c17e1 -->
+<!-- cache-key: cdktf-0.19.0 input-cd1a421b3c65ae404d64a476a24edb9bade1479a58410f9962263fcdb24c17e1 -->

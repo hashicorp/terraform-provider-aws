@@ -69,4 +69,4 @@ Using `terraform import`, import EMR studio session mappings using `studio-id:id
 % terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6be21ee08f5326f461796bd38e16a942ea254529c5e303950bf2b3a3f049afa4 -->
+<!-- cache-key: cdktf-0.19.0 input-6be21ee08f5326f461796bd38e16a942ea254529c5e303950bf2b3a3f049afa4 -->

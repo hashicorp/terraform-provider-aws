@@ -102,7 +102,7 @@ This resource supports the following arguments:
 * `completeLock` - (Required) Boolean whether to permanently apply this Glacier Lock Policy. Once completed, this cannot be undone. If set to `false`, the Glacier Lock Policy remains in a testing mode for 24 hours. After that time, the Glacier Lock Policy is automatically removed by Glacier and the Terraform resource will show as needing recreation. Changing this from `false` to `true` will show as resource recreation, which is expected. Changing this from `true` to `false` is not possible unless the Glacier Vault is recreated at the same time.
 * `policy` - (Required) JSON string containing the IAM policy to apply as the Glacier Vault Lock policy.
 * `vaultName` - (Required) The name of the Glacier Vault.
-* `ignoreDeletionError` - (Optional) Allow Terraform to ignore the error returned when attempting to delete the Glacier Lock Policy. This can be used to delete or recreate the Glacier Vault via Terraform, for example, if the Glacier Vault Lock policy permits that action. This should only be used in conjunction with `completeLock` being set to `true`.
+* `ignoreDeletionError` - (Optional) Allow Terraform to ignore the error returned when attempting to delete the Glacier Lock Policy. This can be used to delete or recreate the Glacier Vault via Terraform, for example, if the Glacier Vault Lock policy permits that action. This should only be used in conjunction with `complete_lock` being set to `true`.
 
 ## Attribute Reference
 
@@ -132,4 +132,4 @@ Using `terraform import`, import Glacier Vault Locks using the Glacier Vault nam
 % terraform import aws_glacier_vault_lock.example example-vault
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-518c16374c45cebffee79cb05e96dd966379682d9c133b507d51448663341de4 -->
+<!-- cache-key: cdktf-0.19.0 input-518c16374c45cebffee79cb05e96dd966379682d9c133b507d51448663341de4 -->

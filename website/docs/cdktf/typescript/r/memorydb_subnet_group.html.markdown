@@ -63,10 +63,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `name` - (Optional, Forces new resource) Name of the subnet group. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` - (Optional, Forces new resource) Name of the subnet group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) Description for the subnet group. Defaults to `"Managed by Terraform"`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the subnet group.
 * `arn` - The ARN of the subnet group.
 * `vpcId` - The VPC in which the subnet group exists.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -99,4 +99,4 @@ Using `terraform import`, import a subnet group using its `name`. For example:
 % terraform import aws_memorydb_subnet_group.example my-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d868401aa8e04d4973ff0ffe4eb6c8770dd89bad3180e6917e7e0015e53618af -->
+<!-- cache-key: cdktf-0.19.0 input-d868401aa8e04d4973ff0ffe4eb6c8770dd89bad3180e6917e7e0015e53618af -->

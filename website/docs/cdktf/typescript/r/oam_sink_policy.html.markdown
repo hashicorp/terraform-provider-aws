@@ -83,8 +83,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
-* `update` - (Default `1M`)
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink Po
 % terraform import aws_oam_sink_policy.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-037a8f8dc069aa1440effe505f18867c58c5234b21b04bc16839e7f70855a4b1 -->
+<!-- cache-key: cdktf-0.19.0 input-037a8f8dc069aa1440effe505f18867c58c5234b21b04bc16839e7f70855a4b1 -->

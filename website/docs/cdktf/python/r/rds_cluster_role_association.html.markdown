@@ -76,4 +76,4 @@ Using `terraform import`, import `aws_rds_cluster_role_association` using the DB
 % terraform import aws_rds_cluster_role_association.example my-db-cluster,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f164c7c9d93e5509da4cca9e9ef20bfa3b9c5d4d57057579c41a0162d8f04659 -->
+<!-- cache-key: cdktf-0.19.0 input-f164c7c9d93e5509da4cca9e9ef20bfa3b9c5d4d57057579c41a0162d8f04659 -->

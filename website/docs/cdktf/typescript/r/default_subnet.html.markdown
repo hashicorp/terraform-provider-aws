@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 The arguments of an `awsDefaultSubnet` differ slightly from those of [`awsSubnet`](subnet.html):
 
 * `availabilityZone` is required
-* The `availabilityZoneId`, `cidrBlock` and `vpcId` arguments become computed attributes
+* The `availabilityZoneId`, `cidr_block` and `vpc_id` arguments become computed attributes
 * The default value for `mapPublicIpOnLaunch` is `true`
 
 This resource supports the following additional arguments:
@@ -86,4 +86,4 @@ Using `terraform import`, import subnets using the subnet `id`. For example:
 % terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-946ded19323b4288f4f2e72461cc5948a23ea35404090c8cf1614d4381c9ce49 -->
+<!-- cache-key: cdktf-0.19.0 input-946ded19323b4288f4f2e72461cc5948a23ea35404090c8cf1614d4381c9ce49 -->

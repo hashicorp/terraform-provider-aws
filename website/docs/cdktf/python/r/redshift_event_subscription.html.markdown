@@ -95,4 +95,4 @@ Using `terraform import`, import Redshift Event Subscriptions using the `name`. 
 % terraform import aws_redshift_event_subscription.default redshift-event-sub
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-15f307fc07a5350a90201b05a1ab1284198872ef394e5f0b141e17d35b730070 -->
+<!-- cache-key: cdktf-0.19.0 input-15f307fc07a5350a90201b05a1ab1284198872ef394e5f0b141e17d35b730070 -->

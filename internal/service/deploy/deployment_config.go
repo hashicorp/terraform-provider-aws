@@ -7,45 +7,47 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_codedeploy_deployment_config")
-func ResourceDeploymentConfig() *schema.Resource {
+// @SDKResource("aws_codedeploy_deployment_config", name="Deployment Config")
+func resourceDeploymentConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentConfigCreate,
 		ReadWithoutTimeout:   resourceDeploymentConfigRead,
 		DeleteWithoutTimeout: resourceDeploymentConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"compute_platform": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.ComputePlatformServer,
+				ValidateDiagFunc: enum.Validate[types.ComputePlatform](),
+			},
+			"deployment_config_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"deployment_config_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"compute_platform": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codedeploy.ComputePlatformServer,
-					codedeploy.ComputePlatformLambda,
-					codedeploy.ComputePlatformEcs,
-				}, false),
-				Default: codedeploy.ComputePlatformServer,
-			},
-
 			"minimum_healthy_hosts": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,13 +56,10 @@ func ResourceDeploymentConfig() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codedeploy.MinimumHealthyHostsTypeHostCount,
-								codedeploy.MinimumHealthyHostsTypeFleetPercent,
-							}, false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
 						},
 						"value": {
 							Type:     schema.TypeInt,
@@ -70,7 +69,6 @@ func ResourceDeploymentConfig() *schema.Resource {
 					},
 				},
 			},
-
 			"traffic_routing_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -78,24 +76,12 @@ func ResourceDeploymentConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codedeploy.TrafficRoutingTypeAllAtOnce,
-								codedeploy.TrafficRoutingTypeTimeBasedCanary,
-								codedeploy.TrafficRoutingTypeTimeBasedLinear,
-							}, false),
-							Default: codedeploy.TrafficRoutingTypeAllAtOnce,
-						},
-
 						"time_based_canary": {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
 							MaxItems:      1,
+							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"interval": {
@@ -111,13 +97,12 @@ func ResourceDeploymentConfig() *schema.Resource {
 								},
 							},
 						},
-
 						"time_based_linear": {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
 							MaxItems:      1,
+							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"interval": {
@@ -133,13 +118,15 @@ func ResourceDeploymentConfig() *schema.Resource {
 								},
 							},
 						},
+						"type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          types.TrafficRoutingTypeAllAtOnce,
+							ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+						},
 					},
 				},
-			},
-
-			"deployment_config_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -147,36 +134,34 @@ func ResourceDeploymentConfig() *schema.Resource {
 
 func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
+	name := d.Get("deployment_config_name").(string)
 	input := &codedeploy.CreateDeploymentConfigInput{
-		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
-		ComputePlatform:      aws.String(d.Get("compute_platform").(string)),
-		MinimumHealthyHosts:  expandMinimumHealthHostsConfig(d),
+		ComputePlatform:      types.ComputePlatform(d.Get("compute_platform").(string)),
+		DeploymentConfigName: aws.String(name),
+		MinimumHealthyHosts:  expandMinimumHealthyHosts(d),
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
 	}
 
-	_, err := conn.CreateDeploymentConfigWithContext(ctx, input)
+	_, err := conn.CreateDeploymentConfig(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Config (%s): %s", d.Get("deployment_config_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Config (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("deployment_config_name").(string))
+	d.SetId(name)
 
 	return append(diags, resourceDeploymentConfigRead(ctx, d, meta)...)
 }
 
 func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	input := &codedeploy.GetDeploymentConfigInput{
-		DeploymentConfigName: aws.String(d.Id()),
-	}
+	deploymentConfig, err := findDeploymentConfigByName(ctx, conn, d.Id())
 
-	resp, err := conn.GetDeploymentConfigWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,100 +171,121 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
 
-	if resp.DeploymentConfigInfo == nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): empty result", d.Id())
+	d.Set("compute_platform", deploymentConfig.ComputePlatform)
+	d.Set("deployment_config_id", deploymentConfig.DeploymentConfigId)
+	d.Set("deployment_config_name", deploymentConfig.DeploymentConfigName)
+	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHosts(deploymentConfig.MinimumHealthyHosts)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting minimum_healthy_hosts: %s", err)
 	}
-
-	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
+	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(deploymentConfig.TrafficRoutingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting traffic_routing_config: %s", err)
 	}
-
-	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(resp.DeploymentConfigInfo.TrafficRoutingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
-	}
-
-	d.Set("deployment_config_id", resp.DeploymentConfigInfo.DeploymentConfigId)
-	d.Set("deployment_config_name", resp.DeploymentConfigInfo.DeploymentConfigName)
-	d.Set("compute_platform", resp.DeploymentConfigInfo.ComputePlatform)
 
 	return diags
 }
 
 func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn(ctx)
+	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	input := &codedeploy.DeleteDeploymentConfigInput{
+	log.Printf("[INFO] Deleting CodeDeploy Deployment Config: %s", d.Id())
+	_, err := conn.DeleteDeploymentConfig(ctx, &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
-	}
+	})
 
-	if _, err := conn.DeleteDeploymentConfigWithContext(ctx, input); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-func expandMinimumHealthHostsConfig(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {
+func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, name string) (*types.DeploymentConfigInfo, error) {
+	input := &codedeploy.GetDeploymentConfigInput{
+		DeploymentConfigName: aws.String(name),
+	}
+
+	output, err := conn.GetDeploymentConfig(ctx, input)
+
+	if errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DeploymentConfigInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DeploymentConfigInfo, nil
+}
+
+func expandMinimumHealthyHosts(d *schema.ResourceData) *types.MinimumHealthyHosts {
 	hosts, ok := d.GetOk("minimum_healthy_hosts")
 	if !ok {
 		return nil
 	}
 	host := hosts.([]interface{})[0].(map[string]interface{})
 
-	minimumHealthyHost := codedeploy.MinimumHealthyHosts{
-		Type:  aws.String(host["type"].(string)),
-		Value: aws.Int64(int64(host["value"].(int))),
+	minimumHealthyHost := types.MinimumHealthyHosts{
+		Type:  types.MinimumHealthyHostsType(host["type"].(string)),
+		Value: int32(host["value"].(int)),
 	}
 
 	return &minimumHealthyHost
 }
 
-func expandTrafficRoutingConfig(d *schema.ResourceData) *codedeploy.TrafficRoutingConfig {
+func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingConfig {
 	block, ok := d.GetOk("traffic_routing_config")
 	if !ok {
 		return nil
 	}
 	config := block.([]interface{})[0].(map[string]interface{})
-	trafficRoutingConfig := codedeploy.TrafficRoutingConfig{}
+	trafficRoutingConfig := types.TrafficRoutingConfig{}
 
 	if trafficType, ok := config["type"]; ok {
-		trafficRoutingConfig.Type = aws.String(trafficType.(string))
+		trafficRoutingConfig.Type = types.TrafficRoutingType(trafficType.(string))
 	}
 	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
 		canaryConfig := canary.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedCanary = expandTrafficTimeBasedCanaryConfig(canaryConfig)
+		trafficRoutingConfig.TimeBasedCanary = expandTimeBasedCanary(canaryConfig)
 	}
 	if linear, ok := config["time_based_linear"]; ok && len(linear.([]interface{})) > 0 {
 		linearConfig := linear.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedLinear = expandTrafficTimeBasedLinearConfig(linearConfig)
+		trafficRoutingConfig.TimeBasedLinear = expandTimeBasedLinear(linearConfig)
 	}
 
 	return &trafficRoutingConfig
 }
 
-func expandTrafficTimeBasedCanaryConfig(config map[string]interface{}) *codedeploy.TimeBasedCanary {
-	canary := codedeploy.TimeBasedCanary{}
+func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary {
+	canary := types.TimeBasedCanary{}
 	if interval, ok := config["interval"]; ok {
-		canary.CanaryInterval = aws.Int64(int64(interval.(int)))
+		canary.CanaryInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
-		canary.CanaryPercentage = aws.Int64(int64(percentage.(int)))
+		canary.CanaryPercentage = int32(percentage.(int))
 	}
 	return &canary
 }
 
-func expandTrafficTimeBasedLinearConfig(config map[string]interface{}) *codedeploy.TimeBasedLinear {
-	linear := codedeploy.TimeBasedLinear{}
+func expandTimeBasedLinear(config map[string]interface{}) *types.TimeBasedLinear {
+	linear := types.TimeBasedLinear{}
 	if interval, ok := config["interval"]; ok {
-		linear.LinearInterval = aws.Int64(int64(interval.(int)))
+		linear.LinearInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
-		linear.LinearPercentage = aws.Int64(int64(percentage.(int)))
+		linear.LinearPercentage = int32(percentage.(int))
 	}
 	return &linear
 }
 
-func flattenMinimumHealthHostsConfig(hosts *codedeploy.MinimumHealthyHosts) []map[string]interface{} {
+func flattenMinimumHealthHosts(hosts *types.MinimumHealthyHosts) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if hosts == nil {
 		return result
@@ -287,13 +293,13 @@ func flattenMinimumHealthHostsConfig(hosts *codedeploy.MinimumHealthyHosts) []ma
 
 	item := make(map[string]interface{})
 
-	item["type"] = aws.StringValue(hosts.Type)
-	item["value"] = aws.Int64Value(hosts.Value)
+	item["type"] = string(hosts.Type)
+	item["value"] = hosts.Value
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingConfig(config *codedeploy.TrafficRoutingConfig) []map[string]interface{} {
+func flattenTrafficRoutingConfig(config *types.TrafficRoutingConfig) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if config == nil {
 		return result
@@ -301,35 +307,35 @@ func flattenTrafficRoutingConfig(config *codedeploy.TrafficRoutingConfig) []map[
 
 	item := make(map[string]interface{})
 
-	item["type"] = aws.StringValue(config.Type)
-	item["time_based_canary"] = flattenTrafficRoutingCanaryConfig(config.TimeBasedCanary)
-	item["time_based_linear"] = flattenTrafficRoutingLinearConfig(config.TimeBasedLinear)
+	item["type"] = string(config.Type)
+	item["time_based_canary"] = flattenTimeBasedCanary(config.TimeBasedCanary)
+	item["time_based_linear"] = flattenTimeBasedLinear(config.TimeBasedLinear)
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingCanaryConfig(canary *codedeploy.TimeBasedCanary) []map[string]interface{} {
+func flattenTimeBasedCanary(canary *types.TimeBasedCanary) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if canary == nil {
 		return result
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = aws.Int64Value(canary.CanaryInterval)
-	item["percentage"] = aws.Int64Value(canary.CanaryPercentage)
+	item["interval"] = canary.CanaryInterval
+	item["percentage"] = canary.CanaryPercentage
 
 	return append(result, item)
 }
 
-func flattenTrafficRoutingLinearConfig(linear *codedeploy.TimeBasedLinear) []map[string]interface{} {
+func flattenTimeBasedLinear(linear *types.TimeBasedLinear) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if linear == nil {
 		return result
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = aws.Int64Value(linear.LinearInterval)
-	item["percentage"] = aws.Int64Value(linear.LinearPercentage)
+	item["interval"] = linear.LinearInterval
+	item["percentage"] = linear.LinearPercentage
 
 	return append(result, item)
 }

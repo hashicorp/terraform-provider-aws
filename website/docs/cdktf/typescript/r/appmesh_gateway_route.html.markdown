@@ -64,7 +64,7 @@ This resource supports the following arguments:
 * `virtualGatewayName` - (Required) Name of the [virtual gateway](/docs/providers/aws/r/appmesh_virtual_gateway.html) to associate the gateway route with. Must be between 1 and 255 characters in length.
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) Gateway route specification to apply.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -103,7 +103,7 @@ The `rewrite` object supports the following:
 
 The `hostname` object supports the following:
 
-* `defaultTargetHostname` - (Required) Default target host name to write to. Valid values: `enabled`, `disabled`.
+* `defaultTargetHostname` - (Required) Default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
 
 The `path` object supports the following:
 
@@ -111,7 +111,7 @@ The `path` object supports the following:
 
 The `prefix` object supports the following:
 
-* `defaultPrefix` - (Optional) Default prefix used to replace the incoming route prefix when rewritten. Valid values: `enabled`, `disabled`.
+* `defaultPrefix` - (Optional) Default prefix used to replace the incoming route prefix when rewritten. Valid values: `ENABLED`, `DISABLED`.
 * `value` - (Optional) Value used to replace the incoming route prefix when rewritten.
 
 The `grpcRoute`'s `match` object supports the following:
@@ -176,7 +176,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDate` - Creation date of the gateway route.
 * `lastUpdatedDate` - Last update date of the gateway route.
 * `resourceOwner` - Resource owner's AWS account ID.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -202,4 +202,4 @@ Using `terraform import`, import App Mesh gateway routes using `meshName` and `v
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-c4b969b72d8a7fa97ad9813ee47129d1f3ecfc1dcc5979566a12522b5042594d -->
+<!-- cache-key: cdktf-0.19.0 input-c4b969b72d8a7fa97ad9813ee47129d1f3ecfc1dcc5979566a12522b5042594d -->

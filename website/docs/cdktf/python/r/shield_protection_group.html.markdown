@@ -139,4 +139,4 @@ Using `terraform import`, import Shield protection group resources using their p
 % terraform import aws_shield_protection_group.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9103f77296ecb9a47e4f678129df33c848d457b7cd5625270622bbbb051fbbf4 -->
+<!-- cache-key: cdktf-0.19.0 input-9103f77296ecb9a47e4f678129df33c848d457b7cd5625270622bbbb051fbbf4 -->

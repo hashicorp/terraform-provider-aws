@@ -45,8 +45,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `awsAccountId` - (Optional) AWS account ID.
-* `identityStore` - (Optional) User identity directory type. Defaults to `quicksight`, the only current valid value.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `identityStore` - (Optional) User identity directory type. Defaults to `QUICKSIGHT`, the only current valid value.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -56,14 +56,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `capacityRegion` - Namespace AWS Region.
 * `creationStatus` - Creation status of the namespace.
 * `id` - A comma-delimited string joining AWS account ID and namespace.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `2M`)
-* `delete` - (Default `2M`)
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import QuickSight Namespace using the AWS account ID a
 % terraform import aws_quicksight_namespace.example 123456789012,example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-beca84265f5d628caa51b3d90e20696177b38adfc69e699a485ae67302774c9f -->
+<!-- cache-key: cdktf-0.19.0 input-beca84265f5d628caa51b3d90e20696177b38adfc69e699a485ae67302774c9f -->

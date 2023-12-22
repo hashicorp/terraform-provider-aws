@@ -103,4 +103,4 @@ Using `terraform import`, import Amazon Connect Quick Connects using the `instan
 % terraform import aws_connect_quick_connect.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-01f9e092c1240fc60d8e6329e1e37cd1a809022b9cf4800e0a25c88837374218 -->
+<!-- cache-key: cdktf-0.19.0 input-01f9e092c1240fc60d8e6329e1e37cd1a809022b9cf4800e0a25c88837374218 -->

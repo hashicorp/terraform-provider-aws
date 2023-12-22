@@ -91,4 +91,4 @@ Using `terraform import`, import Glue User Defined Functions using the `catalog_
 % terraform import aws_glue_user_defined_function.func 123456789012:my_database:my_func
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-194cac21dea8d6e573aab71efbb8346e096eb5b0106430a43511971b8c50376b -->
+<!-- cache-key: cdktf-0.19.0 input-194cac21dea8d6e573aab71efbb8346e096eb5b0106430a43511971b8c50376b -->

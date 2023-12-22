@@ -115,8 +115,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `15M`)
-* `update` - (Default `15M`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
 
 ## Import
 
@@ -140,4 +140,4 @@ Using `terraform import`, import Multi-Region Access Point Policies using the `a
 % terraform import aws_s3control_multi_region_access_point_policy.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d84687c8ce8ec13e291535641985a9d28347a18d016dfb47e30527efbd4dfec -->
+<!-- cache-key: cdktf-0.19.0 input-6d84687c8ce8ec13e291535641985a9d28347a18d016dfb47e30527efbd4dfec -->

@@ -247,7 +247,7 @@ for details about valid values.
 This argument supports the following arguments:
 
 * `alarmName` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
-* `comparisonOperator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `greaterThanOrEqualToThreshold`, `greaterThanThreshold`, `lessThanThreshold`, `lessThanOrEqualToThreshold`. Additionally, the values  `lessThanLowerOrGreaterThanUpperThreshold`, `lessThanLowerThreshold`, and `greaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
+* `comparisonOperator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
 * `evaluationPeriods` - (Required) The number of periods over which data is compared to the specified threshold.
 * `metricName` - (Optional) The name for the alarm's associated metric.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
@@ -256,7 +256,7 @@ This argument supports the following arguments:
 * `period` - (Optional) The period in seconds over which the specified `statistic` is applied.
   Valid values are `10`, `30`, or any multiple of `60`.
 * `statistic` - (Optional) The statistic to apply to the alarm's associated metric.
-   Either of the following is supported: `sampleCount`, `average`, `sum`, `minimum`, `maximum`
+   Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
 * `thresholdMetricId` - (Optional) If this is an alarm based on an anomaly detection model, make this value match the ID of the ANOMALY_DETECTION_BAND function.
 * `actionsEnabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
@@ -274,7 +274,7 @@ This argument supports the following arguments:
   If you specify `evaluate` or omit this parameter, the alarm will always be evaluated and possibly change state no matter how many data points are available.
 The following values are supported: `ignore`, and `evaluate`.
 * `metricQuery` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **NOTE:**  If you specify at least one `metricQuery`, you may not specify a `metricName`, `namespace`, `period` or `statistic`. If you do not specify a `metricQuery`, you must specify each of these (although you may use `extendedStatistic` instead of `statistic`).
 
@@ -290,7 +290,7 @@ The following values are supported: `ignore`, and `evaluate`.
 * `period` - (Optional) Granularity in seconds of returned data points.
   For metrics with regular resolution, valid values are any multiple of `60`.
   For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
-* `returnData` - (Optional) Specify exactly one `metricQuery` to be `true` to use that `metricQuery` result as the alarm.
+* `returnData` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
 
@@ -314,7 +314,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the CloudWatch Metric Alarm.
 * `id` - The ID of the health check.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -338,4 +338,4 @@ Using `terraform import`, import CloudWatch Metric Alarm using the `alarmName`. 
 % terraform import aws_cloudwatch_metric_alarm.test alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-35c84ffb25db36c6ca1bc5ffe04bb308aa8f69f6412b0c58319d41a28b5c21f7 -->
+<!-- cache-key: cdktf-0.19.0 input-35c84ffb25db36c6ca1bc5ffe04bb308aa8f69f6412b0c58319d41a28b5c21f7 -->

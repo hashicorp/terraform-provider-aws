@@ -50,16 +50,16 @@ This data source exports the following attributes in addition to the arguments a
 * `imageScanningConfiguration` - Configuration block that defines image scanning configuration for the repository. See [Image Scanning Configuration](#image-scanning-configuration) below.
 * `imageTagMutability` - The tag mutability setting for the repository.
 * `mostRecentImageTags` - List of image tags associated with the most recently pushed image in the repository.
-* `repositoryUrl` - URL of the repository (in the form `awsAccountIdDkrEcrRegionAmazonawsCom/repositoryName`).
+* `repositoryUrl` - URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
 * `tags` - Map of tags assigned to the resource.
 
 ### Encryption Configuration
 
-* `encryptionType` - Encryption type to use for the repository, either `aes256` or `kms`.
-* `kmsKey` - If `encryptionType` is `kms`, the ARN of the KMS key used.
+* `encryptionType` - Encryption type to use for the repository, either `AES256` or `KMS`.
+* `kmsKey` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
 
 ### Image Scanning Configuration
 
 * `scanOnPush` - Whether images are scanned after being pushed to the repository.
 
-<!-- cache-key: cdktf-0.18.0 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->
+<!-- cache-key: cdktf-0.19.0 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->

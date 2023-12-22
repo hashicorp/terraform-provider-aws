@@ -74,14 +74,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `domainName` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `targetIp`.
-* `ruleType` - (Required) The rule type. Valid values are `forward`, `system` and `recursive`.
+* `domainName` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `target_ip`.
+* `ruleType` - (Required) The rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `name` - (Optional) A friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
-* `resolverEndpointId` (Optional) The ID of the outbound resolver endpoint that you want to use to route DNS queries to the IP addresses that you specify using `targetIp`.
-This argument should only be specified for `forward` type rules.
+* `resolverEndpointId` (Optional) The ID of the outbound resolver endpoint that you want to use to route DNS queries to the IP addresses that you specify using `target_ip`.
+This argument should only be specified for `FORWARD` type rules.
 * `targetIp` - (Optional) Configuration block(s) indicating the IPs that you want Resolver to forward DNS queries to (documented below).
-This argument should only be specified for `forward` type rules.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+This argument should only be specified for `FORWARD` type rules.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `targetIp` object supports the following:
 
@@ -96,8 +96,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN (Amazon Resource Name) for the resolver rule.
 * `ownerId` - When a rule is shared with another AWS account, the account ID of the account that the rule is shared with.
 * `shareStatus` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
-Values are `notShared`, `sharedByMe` or `sharedWithMe`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -121,4 +121,4 @@ Using `terraform import`, import Route53 Resolver rules using the `id`. For exam
 % terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e232908c083dc3536781f9aa9a4349eb098e85ae4ceb668269e5774249391222 -->
+<!-- cache-key: cdktf-0.19.0 input-e232908c083dc3536781f9aa9a4349eb098e85ae4ceb668269e5774249391222 -->

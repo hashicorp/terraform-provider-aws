@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `assignmentName` - (Required) Name of the assignment.
-* `assignmentStatus` - (Required) Status of the assignment. Valid values are `enabled`, `disabled`, and `draft`.
+* `assignmentStatus` - (Required) Status of the assignment. Valid values are `ENABLED`, `DISABLED`, and `DRAFT`.
 
 The following arguments are optional:
 
@@ -91,4 +91,4 @@ Using `terraform import`, import QuickSight IAM Policy Assignment using the AWS 
 % terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ef52d922a126d93b554f19d053cc37acca38aa991f703b223e6f2532c3d630d9 -->
+<!-- cache-key: cdktf-0.19.0 input-ef52d922a126d93b554f19d053cc37acca38aa991f703b223e6f2532c3d630d9 -->
