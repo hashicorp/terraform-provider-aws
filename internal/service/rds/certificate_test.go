@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccCertificate_Basic(t *testing.T) {
+func TestAccRDSCertificate_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_rds_certificate.test"
 
