@@ -24,7 +24,6 @@ func TestAccMQEngineVersionsDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionsDataSourceConfig_basic("ACTIVEMQ"),
@@ -40,9 +39,7 @@ func TestAccMQEngineVersionsDataSource_basic(t *testing.T) {
 func testAccEngineVersionsDataSourceConfig_basic(engineType string) string {
 	return fmt.Sprintf(`
 data "aws_mq_engine_versions" "test" {
-  filters {
-    engine_type = %[1]q
-  }
+  engine_type = %[1]q
 }
 `, engineType)
 }

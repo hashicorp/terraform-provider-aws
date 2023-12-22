@@ -12,10 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
@@ -23,21 +22,8 @@ import (
 func DataSourceEngineVersions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionsRead,
+
 		Schema: map[string]*schema.Schema{
-			"filters": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"engine_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{"ACTIVEMQ", "RABBITMQ"}, false),
-						},
-					},
-				},
-			},
 			"broker_engine_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -62,46 +48,46 @@ func DataSourceEngineVersions() *schema.Resource {
 					},
 				},
 			},
+			"engine_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateDiagFunc: enum.Validate[types.EngineType](),
+			},
 		},
 	}
 }
-
-const (
-	DSNameEngineVersions = "Engine Versions Data Source"
-)
 
 func dataSourceEngineVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).MQClient(ctx)
 
 	input := &mq.DescribeBrokerEngineTypesInput{}
-	if v, ok := d.GetOk("filters"); ok {
-		filters := v.(*schema.Set).List()
-		for _, filter := range filters {
-			f := filter.(map[string]interface{})
-			if v, ok := f["engine_type"]; ok {
-				input.EngineType = aws.String(v.(string))
-			}
-		}
+
+	if v, ok := d.GetOk("engine_type"); ok {
+		input.EngineType = aws.String(v.(string))
 	}
-	d.SetId(id.UniqueId())
 
 	var engineTypes []types.BrokerEngineType
 	for {
-		out, err := client.DescribeBrokerEngineTypes(ctx, input)
+		output, err := client.DescribeBrokerEngineTypes(ctx, input)
+
 		if err != nil {
-			return append(diags, create.DiagError(names.MQ, create.ErrActionReading, DSNameEngineVersions, "", err)...)
+			return sdkdiag.AppendErrorf(diags, "reading MQ Broker Engine Types: %s", err)
 		}
 
-		engineTypes = append(engineTypes, out.BrokerEngineTypes...)
-		if out.NextToken == nil {
+		engineTypes = append(engineTypes, output.BrokerEngineTypes...)
+
+		if output.NextToken == nil {
 			break
 		}
-		input.NextToken = out.NextToken
+
+		input.NextToken = output.NextToken
 	}
 
+	d.SetId(id.UniqueId())
+
 	if err := d.Set("broker_engine_types", flattenBrokerList(engineTypes)); err != nil {
-		return append(diags, create.DiagError(names.MQ, create.ErrActionSetting, DSNameEngineVersions, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "setting broker_engine_types: %s", err)
 	}
 
 	return diags

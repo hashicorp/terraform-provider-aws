@@ -16,21 +16,13 @@ Terraform data source for managing an AWS MQ Engine Versions.
 
 ```terraform
 data "aws_mq_engine_versions" "example" {
-  filters {
-    engine_type = "ACTIVEMQ"
-  }
+  engine_type = "ACTIVEMQ"
 }
 ```
 
 ## Argument Reference
 
-* `filters` - Filters the results of the request. See [Filters](#filters).
-
-### filters
-
-The following filters are optional.
-
-* `engine_type` - (Optional) The database engine to return version details for.
+* `engine_type` - (Optional) The MQ engine type to return version details for.
 
 ## Attribute Reference
 
