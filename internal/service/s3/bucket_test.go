@@ -2415,15 +2415,15 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}{
 		{
 			LocationConstraint: "",
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", names.USEast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", names.USEast1RegionID), //lintignore:AWSR001
 		},
 		{
 			LocationConstraint: names.USEast2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USEast2RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USEast2RegionID), //lintignore:AWSR001
 		},
 		{
 			LocationConstraint: names.USGovEast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USGovEast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USGovEast1RegionID), //lintignore:AWSR001
 		},
 		{
 			LocationConstraint: names.USISOEast1RegionID,
