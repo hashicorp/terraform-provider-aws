@@ -199,6 +199,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceCertificate,
+			TypeName: "aws_rds_certificate",
+		},
+		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",
@@ -217,10 +221,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
-		},
-		{
-			Factory:  ResourceCertificate,
-			TypeName: "aws_rds_certificate",
 		},
 		{
 			Factory:  ResourceClusterInstance,
