@@ -1615,7 +1615,7 @@ func TestAccS3Bucket_Replication_expectVersioningValidationError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_replicationNoVersioning(bucketName),
-				ExpectError: regexache.MustCompile(`versioning must be enabled to allow S3 bucket replication`),
+				ExpectError: regexache.MustCompile(`versioning must be enabled on S3 Bucket \(.*\) to allow replication`),
 			},
 		},
 	})
