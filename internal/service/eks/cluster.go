@@ -58,6 +58,26 @@ func resourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				MinItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AuthenticationMode](),
+						},
+						"bootstrap_cluster_creator_admin_permissions": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -308,6 +328,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:               getTagsIn(ctx),
 	}
 
+	if _, ok := d.GetOk("access_config"); ok {
+		input.AccessConfig = expandAccessConfigForCreate(d.Get("access_config").([]interface{}))
+	}
+
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
 		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
 	}
@@ -367,8 +391,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
@@ -376,16 +398,25 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EKS Cluster (%s): %s", d.Id(), err)
 	}
+
+	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig)); err != nil {
+		return diag.Errorf("setting access_config: %s", err)
+	}
+	/*
+		if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig)); err != nil {
+			return diag.Errorf("setting access_config: %s", err)
+		}
+	*/
 
 	d.Set("arn", cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
+		return diag.Errorf("setting certificate_authority: %s", err)
 	}
 	// cluster_id is only relevant for clusters on Outposts.
 	if cluster.OutpostConfig != nil {
@@ -393,33 +424,33 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("created_at", aws.ToTime(cluster.CreatedAt).String())
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
+		return diag.Errorf("setting enabled_cluster_log_types: %s", err)
 	}
 	if err := d.Set("encryption_config", flattenEncryptionConfig(cluster.EncryptionConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
+		return diag.Errorf("setting encryption_config: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
+		return diag.Errorf("setting identity: %s", err)
 	}
 	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
+		return diag.Errorf("setting kubernetes_network_config: %s", err)
 	}
 	d.Set("name", cluster.Name)
 	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
+		return diag.Errorf("setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -443,7 +474,28 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+			return diag.Errorf("waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("access_config") {
+
+		input := &eks.UpdateClusterConfigInput{
+			AccessConfig: expandAccessConfigForUpdate(d.Get("access_config").([]interface{})),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating EKS Cluster (%s) Access config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return diag.Errorf("waiting for EKS Cluster (%s) Access config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -744,6 +796,39 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 	return nil, err
 }
 
+func expandAccessConfigForCreate(l []interface{}) *types.CreateAccessConfigRequest {
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	accessConfigRequest := &types.CreateAccessConfigRequest{}
+
+	if v, ok := tfMap["authentication_mode"].(string); ok && v != "" {
+		accessConfigRequest.AuthenticationMode = types.AuthenticationMode(*aws.String(v))
+	}
+
+	if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
+		//accessConfigRequest.BootstrapClusterCreatorAdminPermissions = aws.Bool(tfMap["bootstrap_cluster_creator_admin_permissions"].(bool))
+		accessConfigRequest.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
+	}
+	return accessConfigRequest
+}
+
+func expandAccessConfigForUpdate(l []interface{}) *types.UpdateAccessConfigRequest {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	accessConfigRequest := &types.UpdateAccessConfigRequest{
+		AuthenticationMode: types.AuthenticationMode(*aws.String(m["authentication_mode"].(string))),
+	}
+
+	return accessConfigRequest
+}
+
 func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 	if len(tfList) == 0 {
 		return nil
@@ -925,6 +1010,20 @@ func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"authentication_mode": apiObject.AuthenticationMode,
+	}
+
+	print(aws.ToBool(apiObject.BootstrapClusterCreatorAdminPermissions))
+
+	return []interface{}{tfMap}
 }
 
 func flattenEncryptionConfig(apiObjects []types.EncryptionConfig) []interface{} {

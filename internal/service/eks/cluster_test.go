@@ -79,6 +79,35 @@ func TestAccEKSCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_AccessConfig_create(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_accessConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					//resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$`)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
@@ -862,6 +891,26 @@ resource "aws_subnet" "test" {
 `, rName))
 }
 
+func testAccClusterConfig_accessConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  access_config {
+    bootstrap_cluster_creator_admin_permissions = true
+	authentication_mode                         = "CONFIG_MAP"
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName))
+}
+
 func testAccClusterConfig_required(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
@@ -902,6 +951,10 @@ resource "aws_eks_cluster" "test" {
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
+  }
+
+  access_config {
+	authentication_mode = "CONFIG_MAP"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
