@@ -1137,9 +1137,6 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
-	} else {
-		d.Set("website_domain", nil)
-		d.Set("website_endpoint", nil)
 	}
 
 	//
