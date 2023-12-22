@@ -2441,15 +2441,15 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}{
 		{
 			LocationConstraint: "",
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", names.USEast1RegionID), //lintignore:AWSR001
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", names.USEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			LocationConstraint: names.USEast2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USEast2RegionID), //lintignore:AWSR001
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USEast2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			LocationConstraint: names.USGovEast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", names.USGovEast1RegionID), //lintignore:AWSR001
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USGovEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			LocationConstraint: names.USISOEast1RegionID,
