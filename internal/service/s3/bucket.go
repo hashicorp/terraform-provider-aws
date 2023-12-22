@@ -37,7 +37,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
@@ -1925,7 +1924,7 @@ func expandBucketVersioningConfigurationCreate(l []interface{}) *types.Versionin
 		apiObject.MFADelete = types.MFADeleteEnabled
 	}
 
-	if itypes.IsZero(&apiObject) {
+	if apiObject.MFADelete == "" && apiObject.Status == "" {
 		return nil
 	}
 
