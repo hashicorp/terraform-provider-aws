@@ -251,7 +251,7 @@ mobile,mobile,mobile,mobile,,mobile,,,Mobile,Mobile,,1,,,aws_mobile_,,mobile_,Mo
 ,,,,,,,,,,,,,,,,,Mobile SDK for Unity,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Mobile SDK for Xamarin,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Monitron,Amazon,x,,,,,,No SDK support
-mq,mq,mq,mq,,mq,,,MQ,MQ,,1,,,aws_mq_,,mq_,MQ,Amazon,,,,,,,
+mq,mq,mq,mq,,mq,,,MQ,MQ,,1,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,
 mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,1,,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,
