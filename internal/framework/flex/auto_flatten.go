@@ -741,7 +741,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 			return diags
 		}
 
-		d = blockKeyMapSet(target, key.String())
+		d = blockKeyMapSet(target, key)
 		diags.Append(d...)
 
 		t.Index(i).Set(reflect.ValueOf(target))
@@ -758,67 +758,6 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 
 	return diags
 }
-
-/*
-func (flattener autoFlattener) structMapToObjectSet(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if vFrom.IsNil() {
-		val, d := tTo.NullValue(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		vTo.Set(reflect.ValueOf(val))
-		return diags
-	}
-
-	n := vFrom.Len()
-	to, d := tTo.NewObjectSlice(ctx, n, n)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	t := reflect.ValueOf(to)
-
-	i := 0
-	for _, key := range vFrom.MapKeys() {
-		target, d := tTo.NewObjectPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		fromInterface := vFrom.MapIndex(key).Interface()
-		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
-			fromInterface = vFrom.MapIndex(key).Elem().Interface()
-		}
-
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target, flattener)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		d = blockKeyMapSet(target, key.String())
-		diags.Append(d...)
-
-		t.Index(i).Set(reflect.ValueOf(target))
-		i++
-	}
-
-	val, d := tTo.ValueFromObjectSlice(ctx, to)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	vTo.Set(reflect.ValueOf(val))
-
-	return diags
-}
-*/
 
 // structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
 func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
@@ -909,7 +848,7 @@ func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vF
 }
 
 // blockKeyMapSet takes a struct and assigns the value of the `key`
-func blockKeyMapSet(to any, key string) diag.Diagnostics {
+func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo := reflect.ValueOf(to)
@@ -933,8 +872,18 @@ func blockKeyMapSet(to any, key string) diag.Diagnostics {
 		}
 
 		if _, ok := valTo.Field(i).Interface().(basetypes.StringValue); ok {
-			valTo.Field(i).Set(reflect.ValueOf(basetypes.NewStringValue(key)))
+			valTo.Field(i).Set(reflect.ValueOf(basetypes.NewStringValue(key.String())))
 			return diags
+		}
+
+		fieldType := valTo.Field(i).Type()
+
+		method, found := fieldType.MethodByName("StringEnumValue")
+		if found {
+			result := fieldType.Method(method.Index).Func.Call([]reflect.Value{valTo.Field(i), key})
+			if len(result) > 0 {
+				valTo.Field(i).Set(result[0])
+			}
 		}
 
 		return diags

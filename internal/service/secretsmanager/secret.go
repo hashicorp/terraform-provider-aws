@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -142,6 +143,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	secretName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
+		ClientRequestToken:          aws.String(id.UniqueId()), // Needed because we're handling our own retries
 		Description:                 aws.String(d.Get("description").(string)),
 		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
 		Name:                        aws.String(secretName),
@@ -313,8 +315,9 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChanges("description", "kms_key_id") {
 		input := &secretsmanager.UpdateSecretInput{
-			Description: aws.String(d.Get("description").(string)),
-			SecretId:    aws.String(d.Id()),
+			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			Description:        aws.String(d.Get("description").(string)),
+			SecretId:           aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("kms_key_id"); ok {

@@ -2,9 +2,9 @@
 
 Package `names` provides AWS service-name information that is critical to the Terraform AWS Provider working correctly. If you are unsure about a change you are making, please do not hesitate to ask!
 
-**NOTE:** The information in `names_data.csv` affects the provider, generators, documentation, website navigation, etc. working correctly. _Please do not make any changes until you understand the table below._
+**NOTE:** The information in `data/names_data.csv` affects the provider, generators, documentation, website navigation, etc. working correctly. _Please do not make any changes until you understand the table below._
 
-The core of the `names` package is `names_data.csv`, which contains raw, comma-separated data about naming in the AWS Provider, AWS Go SDKs v1 and v2, and AWS CLI. The file is dynamically embedded at build time in the AWS Provider and referenced by generators when generating code. _The information it contains must be correct._ Please double-check any changes.
+The core of the `names` package is `data/names_data.csv`, which contains raw, comma-separated data about naming in the AWS Provider, AWS Go SDKs v1 and v2, and AWS CLI. The file is dynamically embedded at build time in the AWS Provider and referenced by generators when generating code. _The information it contains must be correct._ Please double-check any changes.
 
 Consumers of `names` include:
 
@@ -13,9 +13,9 @@ Consumers of `names` include:
 * AWS Provider generators
 * `skaff` tool
 
-After any edits to `names_data.csv`, run `make gen`. Doing so regenerates code and performs checks on `names_data.csv`.
+After any edits to `data/names_data.csv`, run `make gen`. Doing so regenerates code and performs checks on `data/names_data.csv`.
 
-The columns of `names_data.csv` are as follows:
+The columns of `data/names_data.csv` are as follows:
 
 | Index | Name | Use | Description |
 | --- | --- | --- | --- |
@@ -42,8 +42,8 @@ The columns of `names_data.csv` are as follows:
 | 20 | **NotImplemented** | Code | Whether the service is implemented by the provider |
 | 21 | **EndpointOnly** | Code | If **NotImplemented** is non-blank, whether the service endpoint should be included in the provider `endpoints` configuration |
 | 22 | **AllowedSubcategory** | Code | If **Exclude** is non-blank, whether to include **HumanFriendly** in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides **Exclude** in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if **Exclude** is non-blank. |
-| 23 | **DeprecatedEnvVar** | Code | Deprecated environment variable name |
-| 24 | **EnvVar** | Code | Current environment variable associated with service |
+| 23 | **DeprecatedEnvVar** | Code | Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services |
+| 24 | **TfAwsEnvVar** | Code | `TF_AWS_<service>_ENDPOINT` envvar defined for some services |
 | 25 | **Note** | Reference | Very brief note usually to explain why excluded |
 
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).

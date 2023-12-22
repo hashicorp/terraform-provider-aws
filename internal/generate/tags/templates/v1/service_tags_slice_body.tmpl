@@ -241,13 +241,13 @@ func {{ .GetTagsInFunc }}(ctx context.Context) []*{{ .TagPackage }}.{{ .TagType 
 {{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
 func {{ .SetTagsOutFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some({{ .KeyValueTagsFunc }}(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}))
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}))
 	}
 }
 {{- else }}
 func {{ .SetTagsOutFunc }}(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some({{ .KeyValueTagsFunc }}(ctx, tags))
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags))
 	}
 }
 {{- end }}

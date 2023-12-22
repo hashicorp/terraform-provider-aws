@@ -21,7 +21,7 @@ import (
 
 func TestAccMemoryDBCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
@@ -83,7 +83,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 
 func TestAccMemoryDBCluster_defaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,7 +111,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
@@ -133,7 +133,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 
 func TestAccMemoryDBCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -156,7 +156,7 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 
 func TestAccMemoryDBCluster_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,7 +179,7 @@ func TestAccMemoryDBCluster_nameGenerated(t *testing.T) {
 
 func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +204,7 @@ func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -231,7 +231,7 @@ func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 
 func TestAccMemoryDBCluster_create_withDataTiering(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -258,7 +258,7 @@ func TestAccMemoryDBCluster_create_withDataTiering(t *testing.T) {
 
 func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -285,7 +285,7 @@ func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 
 func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -313,8 +313,8 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 
 func TestAccMemoryDBCluster_create_fromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := "tf-test-" + sdkacctest.RandString(8)
-	rName2 := "tf-test-" + sdkacctest.RandString(8)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
@@ -335,7 +335,7 @@ func TestAccMemoryDBCluster_create_fromSnapshot(t *testing.T) {
 
 func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -382,7 +382,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_aclName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -421,7 +421,7 @@ func TestAccMemoryDBCluster_Update_aclName(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -478,7 +478,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -491,7 +491,7 @@ func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersionNull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 				),
 			},
 			{
@@ -500,10 +500,10 @@ func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "6.2"),
+				Config: testAccClusterConfig_engineVersion(rName, "7.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "7.1"),
 				),
 			},
 			{
@@ -517,7 +517,7 @@ func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_maintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -556,7 +556,7 @@ func TestAccMemoryDBCluster_Update_maintenanceWindow(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -598,7 +598,7 @@ func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -635,7 +635,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -672,7 +672,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -709,7 +709,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -743,7 +743,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -753,10 +753,10 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis6"),
+				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis7"),
 				),
 			},
 			{
@@ -772,10 +772,10 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis6"),
+				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis7"),
 				),
 			},
 			{
@@ -789,7 +789,7 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -848,7 +848,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -899,7 +899,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_snapshotWindow(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -938,7 +938,7 @@ func TestAccMemoryDBCluster_Update_snapshotWindow(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -989,7 +989,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 
 func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1424,7 +1424,7 @@ func testAccClusterConfig_parameterGroup(rName, parameterGroup string) string {
 		fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
-  family = "memorydb_redis6"
+  family = "memorydb_redis7"
 
   parameter {
     name  = "active-defrag-cycle-max"

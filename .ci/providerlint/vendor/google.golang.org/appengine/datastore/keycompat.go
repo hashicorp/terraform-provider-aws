@@ -5,9 +5,8 @@
 package datastore
 
 import (
+	"context"
 	"sync"
-
-	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/datastore/internal/cloudkey"
 	"google.golang.org/appengine/internal"

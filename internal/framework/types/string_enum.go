@@ -174,3 +174,9 @@ func (v StringEnum[T]) Type(context.Context) attr.Type {
 func (v StringEnum[T]) ValueEnum() T {
 	return T(v.ValueString())
 }
+
+// StringEnumValue is useful if you have a zero value StringEnum but need a
+// way to get a non-zero value such as when flattening.
+func (v StringEnum[T]) StringEnumValue(value string) StringEnum[T] {
+	return StringEnum[T]{StringValue: basetypes.NewStringValue(value)}
+}

@@ -1,9 +1,9 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-// Terraform Plugin RPC protocol version 6.4
+// Terraform Plugin RPC protocol version 6.5
 //
-// This file defines version 6.4 of the RPC protocol. To implement a plugin
+// This file defines version 6.5 of the RPC protocol. To implement a plugin
 // against this protocol, copy this definition into your own codebase and
 // use protoc to generate stubs for your target language.
 //
@@ -53,6 +53,8 @@ const (
 	Provider_ApplyResourceChange_FullMethodName        = "/tfplugin6.Provider/ApplyResourceChange"
 	Provider_ImportResourceState_FullMethodName        = "/tfplugin6.Provider/ImportResourceState"
 	Provider_ReadDataSource_FullMethodName             = "/tfplugin6.Provider/ReadDataSource"
+	Provider_GetFunctions_FullMethodName               = "/tfplugin6.Provider/GetFunctions"
+	Provider_CallFunction_FullMethodName               = "/tfplugin6.Provider/CallFunction"
 	Provider_StopProvider_FullMethodName               = "/tfplugin6.Provider/StopProvider"
 )
 
@@ -81,6 +83,11 @@ type ProviderClient interface {
 	ApplyResourceChange(ctx context.Context, in *ApplyResourceChange_Request, opts ...grpc.CallOption) (*ApplyResourceChange_Response, error)
 	ImportResourceState(ctx context.Context, in *ImportResourceState_Request, opts ...grpc.CallOption) (*ImportResourceState_Response, error)
 	ReadDataSource(ctx context.Context, in *ReadDataSource_Request, opts ...grpc.CallOption) (*ReadDataSource_Response, error)
+	// GetFunctions returns the definitions of all functions.
+	GetFunctions(ctx context.Context, in *GetFunctions_Request, opts ...grpc.CallOption) (*GetFunctions_Response, error)
+	// CallFunction runs the provider-defined function logic and returns
+	// the result with any diagnostics.
+	CallFunction(ctx context.Context, in *CallFunction_Request, opts ...grpc.CallOption) (*CallFunction_Response, error)
 	// ////// Graceful Shutdown
 	StopProvider(ctx context.Context, in *StopProvider_Request, opts ...grpc.CallOption) (*StopProvider_Response, error)
 }
@@ -201,6 +208,24 @@ func (c *providerClient) ReadDataSource(ctx context.Context, in *ReadDataSource_
 	return out, nil
 }
 
+func (c *providerClient) GetFunctions(ctx context.Context, in *GetFunctions_Request, opts ...grpc.CallOption) (*GetFunctions_Response, error) {
+	out := new(GetFunctions_Response)
+	err := c.cc.Invoke(ctx, Provider_GetFunctions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *providerClient) CallFunction(ctx context.Context, in *CallFunction_Request, opts ...grpc.CallOption) (*CallFunction_Response, error) {
+	out := new(CallFunction_Response)
+	err := c.cc.Invoke(ctx, Provider_CallFunction_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *providerClient) StopProvider(ctx context.Context, in *StopProvider_Request, opts ...grpc.CallOption) (*StopProvider_Response, error) {
 	out := new(StopProvider_Response)
 	err := c.cc.Invoke(ctx, Provider_StopProvider_FullMethodName, in, out, opts...)
@@ -235,6 +260,11 @@ type ProviderServer interface {
 	ApplyResourceChange(context.Context, *ApplyResourceChange_Request) (*ApplyResourceChange_Response, error)
 	ImportResourceState(context.Context, *ImportResourceState_Request) (*ImportResourceState_Response, error)
 	ReadDataSource(context.Context, *ReadDataSource_Request) (*ReadDataSource_Response, error)
+	// GetFunctions returns the definitions of all functions.
+	GetFunctions(context.Context, *GetFunctions_Request) (*GetFunctions_Response, error)
+	// CallFunction runs the provider-defined function logic and returns
+	// the result with any diagnostics.
+	CallFunction(context.Context, *CallFunction_Request) (*CallFunction_Response, error)
 	// ////// Graceful Shutdown
 	StopProvider(context.Context, *StopProvider_Request) (*StopProvider_Response, error)
 	mustEmbedUnimplementedProviderServer()
@@ -279,6 +309,12 @@ func (UnimplementedProviderServer) ImportResourceState(context.Context, *ImportR
 }
 func (UnimplementedProviderServer) ReadDataSource(context.Context, *ReadDataSource_Request) (*ReadDataSource_Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadDataSource not implemented")
+}
+func (UnimplementedProviderServer) GetFunctions(context.Context, *GetFunctions_Request) (*GetFunctions_Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFunctions not implemented")
+}
+func (UnimplementedProviderServer) CallFunction(context.Context, *CallFunction_Request) (*CallFunction_Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CallFunction not implemented")
 }
 func (UnimplementedProviderServer) StopProvider(context.Context, *StopProvider_Request) (*StopProvider_Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StopProvider not implemented")
@@ -512,6 +548,42 @@ func _Provider_ReadDataSource_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Provider_GetFunctions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFunctions_Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderServer).GetFunctions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Provider_GetFunctions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderServer).GetFunctions(ctx, req.(*GetFunctions_Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Provider_CallFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallFunction_Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderServer).CallFunction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Provider_CallFunction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderServer).CallFunction(ctx, req.(*CallFunction_Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Provider_StopProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StopProvider_Request)
 	if err := dec(in); err != nil {
@@ -584,6 +656,14 @@ var Provider_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReadDataSource",
 			Handler:    _Provider_ReadDataSource_Handler,
+		},
+		{
+			MethodName: "GetFunctions",
+			Handler:    _Provider_GetFunctions_Handler,
+		},
+		{
+			MethodName: "CallFunction",
+			Handler:    _Provider_CallFunction_Handler,
 		},
 		{
 			MethodName: "StopProvider",

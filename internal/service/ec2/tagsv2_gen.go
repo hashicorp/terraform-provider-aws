@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,7 +59,7 @@ func getTagsInV2(ctx context.Context) []awstypes.Tag {
 // setTagsOutV2 sets ec2 service tags in Context.
 func setTagsOutV2(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(keyValueTagsV2(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTagsV2(ctx, tags))
 	}
 }
 

@@ -903,7 +903,7 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 			continue
 		}
 
-		envVar := names.EnvVar(pkg)
+		envVar := names.TfAwsEnvVar(pkg)
 		if envVar != "" {
 			if v := os.Getenv(envVar); v != "" {
 				endpoints[pkg] = v

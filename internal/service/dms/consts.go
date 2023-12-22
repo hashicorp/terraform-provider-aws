@@ -24,6 +24,7 @@ const (
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
 	replicationTaskStatusModifying = "modifying"
+	replicationTaskStatusMoving    = "moving"
 	replicationTaskStatusReady     = "ready"
 	replicationTaskStatusStopped   = "stopped"
 	replicationTaskStatusStopping  = "stopping"

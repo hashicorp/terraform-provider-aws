@@ -16,6 +16,7 @@ go test \
     ./internal/flex/... \
     ./internal/framework/... \
     ./internal/generate/... \
+    ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
     ./internal/provider/... \
@@ -26,7 +27,6 @@ go test \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
-    ./internal/ujson/... \
     ./internal/vault/... \
     ./internal/verify/... \
     -json

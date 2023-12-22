@@ -6,10 +6,12 @@ package finspace
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -140,12 +142,15 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	idParts := []string{
-		d.Get("environment_id").(string),
-		d.Get("database_name").(string),
-		d.Get("name").(string),
-	}
+	environmentID := d.Get("environment_id").(string)
+	databaseName := d.Get("database_name").(string)
+	name := d.Get("name").(string)
 
+	idParts := []string{
+		environmentID,
+		databaseName,
+		name,
+	}
 	rId, err := flex.FlattenResourceId(idParts, kxDataviewIdPartCount, false)
 	if err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxDataview, d.Get("name").(string), err)
@@ -153,9 +158,9 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(rId)
 
 	in := &finspace.CreateKxDataviewInput{
-		DatabaseName:  aws.String(d.Get("database_name").(string)),
-		DataviewName:  aws.String(d.Get("name").(string)),
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
+		DatabaseName:  aws.String(databaseName),
+		DataviewName:  aws.String(name),
+		EnvironmentId: aws.String(environmentID),
 		AutoUpdate:    d.Get("auto_update").(bool),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
 		ClientToken:   aws.String(id.UniqueId()),
@@ -185,6 +190,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if out == nil || out.DataviewName == nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), errors.New("empty output"))
 	}
+
 	if _, err := waitKxDataviewCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxDataview, d.Get("name").(string), err)
 	}
@@ -220,6 +226,19 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("segment_configurations", flattenSegmentConfigurations(out.SegmentConfigurations)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)
 	}
+
+	// Manually construct the dataview ARN, which is not returned from the
+	// Create or Describe APIs.
+	//
+	// Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonfinspace.html#amazonfinspace-resources-for-iam-policies
+	dataviewARN := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		Service:   names.FinSpace,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("kxEnvironment/%s/kxDatabase/%s/kxDataview/%s", aws.ToString(out.EnvironmentId), aws.ToString(out.DatabaseName), aws.ToString(out.DataviewName)),
+	}.String()
+	d.Set("arn", dataviewARN)
 
 	return diags
 }

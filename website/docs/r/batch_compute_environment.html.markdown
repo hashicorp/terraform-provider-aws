@@ -155,6 +155,36 @@ resource "aws_batch_compute_environment" "sample" {
 }
 ```
 
+### Setting Update Policy
+
+```hcl
+resource "aws_batch_compute_environment" "sample" {
+  compute_environment_name = "sample"
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.sample.id
+    ]
+    subnets = [
+      aws_subnet.sample.id
+    ]
+    type = "EC2"
+  }
+
+  update_policy {
+    job_execution_timeout_minutes = 30
+    terminate_jobs_on_update      = false
+  }
+
+  type = "MANAGED"
+}
+```
+
 ## Argument Reference
 
 * `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
@@ -165,6 +195,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Required) The type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
+* `update_policy` - (Optional) Specifies the infrastructure update policy for the compute environment. See details below.
 
 ### compute_resources
 
@@ -207,6 +238,13 @@ resource "aws_batch_compute_environment" "sample" {
 
 * `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EKS cluster.
 * `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
+
+### update_policy
+
+`update_policy` supports the following:
+
+* `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the computer environment infrastructure is updated.
 
 ## Attribute Reference
 
