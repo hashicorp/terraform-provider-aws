@@ -2779,25 +2779,36 @@ func flattenBucketSSEKMSEncryptedObjects(objects *types.SseKmsEncryptedObjects) 
 //
 
 func expandBucketServerSideEncryptionRules(l []interface{}) []types.ServerSideEncryptionRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
 	var rules []types.ServerSideEncryptionRule
 
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
+	if l, ok := tfMap["rule"].([]interface{}); ok && len(l) > 0 {
+		for _, tfMapRaw := range l {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			rule := types.ServerSideEncryptionRule{}
+
+			if v, ok := tfMap["apply_server_side_encryption_by_default"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				rule.ApplyServerSideEncryptionByDefault = expandBucketServerSideEncryptionByDefault(v)
+			}
+
+			if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
+				rule.BucketKeyEnabled = aws.Bool(v)
+			}
+
+			rules = append(rules, rule)
 		}
-
-		rule := types.ServerSideEncryptionRule{}
-
-		if v, ok := tfMap["apply_server_side_encryption_by_default"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.ApplyServerSideEncryptionByDefault = expandBucketServerSideEncryptionByDefault(v)
-		}
-
-		if v, ok := tfMap["bucket_key_enabled"].(bool); ok {
-			rule.BucketKeyEnabled = aws.Bool(v)
-		}
-
-		rules = append(rules, rule)
 	}
 
 	return rules
