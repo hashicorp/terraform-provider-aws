@@ -2686,7 +2686,7 @@ func flattenBucketDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.Account != nil {
-		m["account"] = aws.ToString(dest.Account)
+		m["account_id"] = aws.ToString(dest.Account)
 	}
 
 	if dest.Bucket != nil {
