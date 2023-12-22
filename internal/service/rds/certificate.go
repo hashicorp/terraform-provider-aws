@@ -46,7 +46,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(*(*output).Certificate.CertificateIdentifier)
+	d.SetId(aws.ToString((*output).Certificate.CertificateIdentifier))
 
 	return diags
 }
@@ -63,7 +63,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Reading the system-default SSL/TLS certificate: %s", err)
 	}
-	d.Set("certificate_identifier", *(*output).DefaultCertificateForNewLaunches)
+	d.Set("certificate_identifier", aws.ToString((*output).DefaultCertificateForNewLaunches))
 
 	return diags
 }
