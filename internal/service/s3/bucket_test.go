@@ -2488,7 +2488,7 @@ func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestChec
 
 			// S3 seems to be highly eventually consistent. Even if one connection reports that the queue is gone,
 			// another connection may still report it as present.
-			_, err := tfresource.RetryUntilNotFound(ctx, tfs3.S3BucketPropagationTimeout, func() (interface{}, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, tfs3.BucketPropagationTimeout, func() (interface{}, error) {
 				return nil, tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 			})
 

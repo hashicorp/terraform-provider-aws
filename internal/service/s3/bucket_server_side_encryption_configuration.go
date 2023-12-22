@@ -95,7 +95,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketEncryption(ctx, input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
@@ -109,7 +109,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -167,7 +167,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketEncryption(ctx, input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 

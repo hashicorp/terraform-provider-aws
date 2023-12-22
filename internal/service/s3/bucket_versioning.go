@@ -123,7 +123,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 			input.MFA = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return conn.PutBucketVersioning(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -343,7 +343,7 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket,
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
 		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
-		Timeout:                   s3BucketPropagationTimeout,
+		Timeout:                   bucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,
 		Delay:                     1 * time.Second,

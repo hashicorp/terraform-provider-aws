@@ -84,7 +84,7 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findOwnershipControls(ctx, conn, d.Id())
 	})
 
@@ -158,7 +158,7 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Ownership Controls (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findOwnershipControls(ctx, conn, d.Id())
 	})
 

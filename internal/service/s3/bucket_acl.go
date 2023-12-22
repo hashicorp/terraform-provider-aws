@@ -155,7 +155,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.AccessControlPolicy = expandAccessControlPolicy(v.([]interface{}))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAcl(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -169,7 +169,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketACL(ctx, conn, bucket, expectedBucketOwner)
 	})
 

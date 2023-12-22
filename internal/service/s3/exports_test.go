@@ -37,10 +37,10 @@ var (
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 	ValidBucketName                       = validBucketName
 
+	BucketPropagationTimeout       = bucketPropagationTimeout
 	ErrCodeBucketAlreadyExists     = errCodeBucketAlreadyExists
 	ErrCodeBucketAlreadyOwnedByYou = errCodeBucketAlreadyOwnedByYou
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
-	S3BucketPropagationTimeout     = s3BucketPropagationTimeout
 )

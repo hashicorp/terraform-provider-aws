@@ -162,7 +162,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLogging(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -176,7 +176,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 	})
 

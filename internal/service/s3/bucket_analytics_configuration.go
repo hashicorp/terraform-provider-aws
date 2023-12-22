@@ -154,7 +154,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAnalyticsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -169,7 +169,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findAnalyticsConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -237,7 +237,7 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findAnalyticsConfiguration(ctx, conn, bucket, name)
 	})
 

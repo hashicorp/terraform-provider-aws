@@ -122,7 +122,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 		input.Token = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutObjectLockConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -136,7 +136,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 

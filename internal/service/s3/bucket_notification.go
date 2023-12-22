@@ -300,7 +300,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		NotificationConfiguration: notificationConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketNotificationConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -315,7 +315,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
 		})
 
