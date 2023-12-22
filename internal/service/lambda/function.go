@@ -1458,10 +1458,10 @@ func flattenLoggingConfig(apiObject *types.LoggingConfig) []map[string]interface
 		return nil
 	}
 	m := map[string]interface{}{
-		"application_log_level": string(apiObject.ApplicationLogLevel),
-		"log_format":            string(apiObject.LogFormat),
-		"log_group":             *apiObject.LogGroup,
-		"system_log_level":      string(apiObject.SystemLogLevel),
+		"application_log_level": apiObject.ApplicationLogLevel,
+		"log_format":            apiObject.LogFormat,
+		"log_group":             aws.ToString(apiObject.LogGroup),
+		"system_log_level":      apiObject.SystemLogLevel,
 	}
 
 	return []map[string]interface{}{m}
