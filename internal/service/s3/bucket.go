@@ -1283,17 +1283,19 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			versioningConfig = expandBucketVersioningConfigurationUpdate(v)
 		}
 
-		input := &s3.PutBucketVersioningInput{
-			Bucket:                  aws.String(d.Id()),
-			VersioningConfiguration: versioningConfig,
-		}
+		if versioningConfig != nil {
+			input := &s3.PutBucketVersioningInput{
+				Bucket:                  aws.String(d.Id()),
+				VersioningConfiguration: versioningConfig,
+			}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.PutBucketVersioning(ctx, input)
-		}, errCodeNoSuchBucket)
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.PutBucketVersioning(ctx, input)
+			}, errCodeNoSuchBucket)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) versioning: %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) versioning: %s", d.Id(), err)
+			}
 		}
 	}
 
