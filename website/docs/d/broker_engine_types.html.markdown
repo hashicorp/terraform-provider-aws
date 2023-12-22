@@ -1,21 +1,21 @@
 ---
 subcategory: "MQ"
 layout: "aws"
-page_title: "AWS: aws_mq_engine_versions"
+page_title: "AWS: aws_mq_broker_engine_types"
 description: |-
-  Terraform data source for managing an AWS MQ Engine Versions.
+  Retrieve information about available broker engines.
 ---
 
-# Data Source: aws_mq_engine_versions
+# Data Source: aws_mq_broker_engine_types
 
-Terraform data source for managing an AWS MQ Engine Versions.
+Retrieve information about available broker engines.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_mq_engine_versions" "example" {
+data "aws_mq_broker_engine_types" "example" {
   engine_type = "ACTIVEMQ"
 }
 ```

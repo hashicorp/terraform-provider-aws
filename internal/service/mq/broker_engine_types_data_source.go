@@ -17,11 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @SDKDataSource("aws_mq_engine_versions", name="Engine Versions")
-func DataSourceEngineVersions() *schema.Resource {
+// @SDKDataSource("aws_mq_broker_engine_types", name="Broker Engine Types")
+func DataSourceBrokerEngineTypes() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceEngineVersionsRead,
+		ReadWithoutTimeout: dataSourceBrokerEngineTypesRead,
 
 		Schema: map[string]*schema.Schema{
 			"broker_engine_types": {
@@ -49,15 +48,15 @@ func DataSourceEngineVersions() *schema.Resource {
 				},
 			},
 			"engine_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:             schema.TypeString,
+				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.EngineType](),
 			},
 		},
 	}
 }
 
-func dataSourceEngineVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).MQClient(ctx)
 

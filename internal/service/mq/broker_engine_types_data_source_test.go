@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccMQEngineVersionsDataSource_basic(t *testing.T) {
+func TestAccMQBrokerEngineTypesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_mq_engine_versions.test"
+	dataSourceName := "data.aws_mq_broker_engine_types.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -26,7 +26,7 @@ func TestAccMQEngineVersionsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionsDataSourceConfig_basic("ACTIVEMQ"),
+				Config: testAccBrokerEngineTypesDataSourceConfig_basic("ACTIVEMQ"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.0.engine_type", "ACTIVEMQ"),
@@ -36,9 +36,9 @@ func TestAccMQEngineVersionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEngineVersionsDataSourceConfig_basic(engineType string) string {
+func testAccBrokerEngineTypesDataSourceConfig_basic(engineType string) string {
 	return fmt.Sprintf(`
-data "aws_mq_engine_versions" "test" {
+data "aws_mq_broker_engine_types" "test" {
   engine_type = %[1]q
 }
 `, engineType)
