@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccRDSCertificate_Basic(t *testing.T) {
+func TestAccCertificate_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_rds_certificate.test"
 
@@ -24,12 +24,12 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds_sdkv1.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRDSCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSCertificateConfig_Basic("rds-ca-rsa4096-g1"),
+				Config: testAccCertificateConfig_Basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
+					testAccCheckCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -39,9 +39,9 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRDSCertificateConfig_Basic("rds-ca-rsa4096-g1"),
+				Config: testAccCertificateConfig_Basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
+					testAccCheckCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckRDSCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
@@ -68,7 +68,7 @@ func testAccCheckRDSCertificateDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckRDSCertificate(ctx context.Context, n string, certificate_identifier string) resource.TestCheckFunc {
+func testAccCheckCertificate(ctx context.Context, n string, certificate_identifier string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -94,7 +94,7 @@ func testAccCheckRDSCertificate(ctx context.Context, n string, certificate_ident
 	}
 }
 
-func testAccRDSCertificateConfig_Basic(certificate_identifier string) string {
+func testAccCertificateConfig_Basic(certificate_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_certificate" "test" {
   certificate_identifier = %s
