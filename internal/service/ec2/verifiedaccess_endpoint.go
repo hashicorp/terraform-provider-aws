@@ -328,8 +328,8 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	if d.HasChange("policy_document") {
 		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
 			PolicyDocument:           aws.String(d.Get("policy_document").(string)),
-			VerifiedAccessEndpointId: aws.String(d.Id()),
 			PolicyEnabled:            aws.Bool(true),
+			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
 
 		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
