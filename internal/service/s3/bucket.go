@@ -1509,7 +1509,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Bucket Server-side Encryption Configuration.
 	//
 	if d.HasChange("server_side_encryption_configuration") {
-		if v, ok := d.GetOk("replication_configuration"); !ok || len(v.([]interface{})) == 0 {
+		if v, ok := d.GetOk("server_side_encryption_configuration"); !ok || len(v.([]interface{})) == 0 {
 			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 				return conn.DeleteBucketEncryption(ctx, &s3.DeleteBucketEncryptionInput{
 					Bucket: aws.String(d.Id()),
