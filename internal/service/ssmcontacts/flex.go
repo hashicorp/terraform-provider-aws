@@ -218,37 +218,37 @@ func flattenHandOffTime(handOffTime *types.HandOffTime) string {
 	return fmt.Sprintf("%02d:%02d", handOffTime.HourOfDay, handOffTime.MinuteOfHour)
 }
 
-func expandRecurrence(recurrence []interface{}, ctx context.Context) *types.RecurrenceSettings {
-	c := &types.RecurrenceSettings{}
-
-	recurrenceSettings := recurrence[0].(map[string]interface{})
-
-	if v, ok := recurrenceSettings["daily_settings"].([]interface{}); ok && v != nil {
-		c.DailySettings = expandDailySettings(v)
-	}
-
-	if v, ok := recurrenceSettings["monthly_settings"].([]interface{}); ok && v != nil {
-		c.MonthlySettings = expandMonthlySettings(v)
-	}
-
-	if v, ok := recurrenceSettings["number_of_on_calls"].(int); ok {
-		c.NumberOfOnCalls = aws.Int32(int32(v))
-	}
-
-	if v, ok := recurrenceSettings["recurrence_multiplier"].(int); ok {
-		c.RecurrenceMultiplier = aws.Int32(int32(v))
-	}
-
-	if v, ok := recurrenceSettings["shift_coverages"].([]interface{}); ok && v != nil {
-		c.ShiftCoverages = expandShiftCoverages(v)
-	}
-
-	if v, ok := recurrenceSettings["weekly_settings"].([]interface{}); ok && v != nil {
-		c.WeeklySettings = expandWeeklySettings(v)
-	}
-
-	return c
-}
+//func expandRecurrence(recurrence []interface{}, ctx context.Context) *types.RecurrenceSettings {
+//	c := &types.RecurrenceSettings{}
+//
+//	recurrenceSettings := recurrence[0].(map[string]interface{})
+//
+//	if v, ok := recurrenceSettings["daily_settings"].([]interface{}); ok && v != nil {
+//		c.DailySettings = expandDailySettings(v)
+//	}
+//
+//	if v, ok := recurrenceSettings["monthly_settings"].([]interface{}); ok && v != nil {
+//		c.MonthlySettings = expandMonthlySettings(v)
+//	}
+//
+//	if v, ok := recurrenceSettings["number_of_on_calls"].(int); ok {
+//		c.NumberOfOnCalls = aws.Int32(int32(v))
+//	}
+//
+//	if v, ok := recurrenceSettings["recurrence_multiplier"].(int); ok {
+//		c.RecurrenceMultiplier = aws.Int32(int32(v))
+//	}
+//
+//	if v, ok := recurrenceSettings["shift_coverages"].([]interface{}); ok && v != nil {
+//		c.ShiftCoverages = expandShiftCoverages(v)
+//	}
+//
+//	if v, ok := recurrenceSettings["weekly_settings"].([]interface{}); ok && v != nil {
+//		c.WeeklySettings = expandWeeklySettings(v)
+//	}
+//
+//	return c
+//}
 
 func flattenRecurrence(recurrence *types.RecurrenceSettings, ctx context.Context) []interface{} {
 	var result []interface{}
@@ -357,24 +357,24 @@ func flattenMonthlySettings(monthlySettings []types.MonthlySetting) []interface{
 	return result
 }
 
-func expandShiftCoverages(shiftCoverages []interface{}) map[string][]types.CoverageTime {
-	if len(shiftCoverages) == 0 {
-		return nil
-	}
-
-	result := make(map[string][]types.CoverageTime)
-
-	for _, shiftCoverage := range shiftCoverages {
-		shiftCoverageData := shiftCoverage.(map[string]interface{})
-
-		dayOfWeek := shiftCoverageData["day_of_week"].(string)
-		coverageTimes := expandCoverageTimes(shiftCoverageData["coverage_times"].([]interface{}))
-
-		result[dayOfWeek] = coverageTimes
-	}
-
-	return result
-}
+//func expandShiftCoverages(shiftCoverages []interface{}) map[string][]types.CoverageTime {
+//	if len(shiftCoverages) == 0 {
+//		return nil
+//	}
+//
+//	result := make(map[string][]types.CoverageTime)
+//
+//	for _, shiftCoverage := range shiftCoverages {
+//		shiftCoverageData := shiftCoverage.(map[string]interface{})
+//
+//		dayOfWeek := shiftCoverageData["day_of_week"].(string)
+//		coverageTimes := expandCoverageTimes(shiftCoverageData["coverage_times"].([]interface{}))
+//
+//		result[dayOfWeek] = coverageTimes
+//	}
+//
+//	return result
+//}
 
 func flattenShiftCoverages(shiftCoverages map[string][]types.CoverageTime) []interface{} {
 	if len(shiftCoverages) == 0 {

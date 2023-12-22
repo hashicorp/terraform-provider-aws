@@ -3,14 +3,15 @@ package ssmcontacts
 import (
 	"context"
 	"errors"
+	"log"
+	"regexp"
+	"time"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"log"
-	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
@@ -25,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssmcontacts_rotation")
 func ResourceRotation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRotationCreate,
@@ -187,9 +187,9 @@ func ResourceRotation() *schema.Resource {
 	}
 }
 
-const (
-	ResNameRotation = "Rotation"
-)
+//const (
+//	ResNameRotation = "Rotation"
+//)
 
 var handOffTimeValidator = validation.StringMatch(regexp.MustCompile(`^\d\d:\d\d$`), "Time must be in 24-hour time format, e.g. \"01:00\"")
 
@@ -199,7 +199,7 @@ func resourceRotationCreate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &ssmcontacts.CreateRotationInput{
 		ContactIds: flex.ExpandStringValueList(d.Get("contact_ids").([]interface{})),
 		Name:       aws.String(d.Get("name").(string)),
-		Recurrence: expandRecurrence(d.Get("recurrence").([]interface{}), ctx),
+		// Recurrence: expandRecurrence(d.Get("recurrence").([]interface{}), ctx),
 		Tags:       getTagsIn(ctx),
 		TimeZoneId: aws.String(d.Get("time_zone_id").(string)),
 	}
@@ -269,7 +269,7 @@ func resourceRotationUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Recurrence is a required field, but we don't want to force an update every time if no changes
-	in.Recurrence = expandRecurrence(d.Get("recurrence").([]interface{}), ctx)
+	//in.Recurrence = expandRecurrence(d.Get("recurrence").([]interface{}), ctx)
 	if d.HasChanges("recurrence") {
 		update = true
 	}

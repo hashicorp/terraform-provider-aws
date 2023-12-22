@@ -67,3 +67,13 @@ func Int32FromFramework(ctx context.Context, v types.Int64) *int32 {
 
 	return output
 }
+
+// Int32ValueFromFramework coverts a Framework Int64 value to an int32 pointer.
+// A null Int64 is converted to a nil int32 pointer.
+func Int32ValueFromFramework(ctx context.Context, v types.Int64) int32 {
+	var output int32
+
+	panicOnError(Expand(ctx, v, &output))
+
+	return output
+}
