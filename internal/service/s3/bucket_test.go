@@ -2557,6 +2557,7 @@ func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, ke
 		for _, key := range keys {
 			_, err := conn.PutObject(ctx, &s3.PutObjectInput{
 				Bucket:                    aws.String(rs.Primary.ID),
+				ChecksumAlgorithm:         types.ChecksumAlgorithmCrc32,
 				Key:                       aws.String(key),
 				ObjectLockLegalHoldStatus: types.ObjectLockLegalHoldStatusOn,
 			})
