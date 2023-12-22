@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `networkInterfaceId` - (Optional, Forces new) The network interface ID that is associated with the target.
 * `networkLoadBalancerArn` - (Optional, Forces new) The Amazon Resource Name (ARN) of the Network Load Balancer that is associated with the target.
 * `gatewayLoadBalancerEndpointId` - (Optional, Forces new) The VPC Endpoint Id of the Gateway Load Balancer that is associated with the target.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **NOTE:** Either `networkInterfaceId` or `networkLoadBalancerArn` should be specified and both should not be specified together
 
@@ -63,7 +63,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Traffic Mirror target.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `arn` - The ARN of the traffic mirror target.
 * `ownerId` - The ID of the AWS account that owns the traffic mirror target.
 
@@ -89,4 +89,4 @@ Using `terraform import`, import traffic mirror targets using the `id`. For exam
 % terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0dcea120206f78ae4bab492b768957fc04e77c30670fd1496757b5d3a63f1ae0 -->
+<!-- cache-key: cdktf-0.19.0 input-0dcea120206f78ae4bab492b768957fc04e77c30670fd1496757b5d3a63f1ae0 -->

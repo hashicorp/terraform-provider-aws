@@ -78,7 +78,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name used for this load balancer (matches `lbName`).
+* `id` - The name used for this load balancer (matches `lb_name`).
 
 ## Import
 
@@ -102,4 +102,4 @@ Using `terraform import`, import `awsLightsailLbHttpsRedirectionPolicy` using th
 % terraform import aws_lightsail_lb_https_redirection_policy.test example-load-balancer
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-096d2aad822770675cf0db37d9363ce16e54bc7144846d6f81441f5de8d7d74a -->
+<!-- cache-key: cdktf-0.19.0 input-096d2aad822770675cf0db37d9363ce16e54bc7144846d6f81441f5de8d7d74a -->

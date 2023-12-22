@@ -125,7 +125,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 action (`action`) supports the following:
 
@@ -180,15 +180,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN for the listener rule.
 * `ruleId` - Unique identifier for the listener rule.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -212,4 +212,4 @@ Using `terraform import`, import VPC Lattice Listener Rule using the `exampleIdA
 % terraform import aws_vpclattice_listener_rule.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-18c4d701108689bcdef68a561bb727fff88960c4bf3c3a870cba068fc4e67f93 -->
+<!-- cache-key: cdktf-0.19.0 input-18c4d701108689bcdef68a561bb727fff88960c4bf3c3a870cba068fc4e67f93 -->

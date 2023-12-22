@@ -50,10 +50,10 @@ class MyConvertedCode extends TerraformStack {
 
 * `domain` - (Required) Domain of the certificate to look up. If no certificate is found with this name, an error will be returned.
 * `keyTypes` - (Optional) List of key algorithms to filter certificates. By default, ACM does not return all certificate types when searching. See the [ACM API Reference](https://docs.aws.amazon.com/acm/latest/APIReference/API_CertificateDetail.html#ACM-Type-CertificateDetail-KeyAlgorithm) for supported key algorithms.
-* `statuses` - (Optional) List of statuses on which to filter the returned list. Valid values are `pendingValidation`, `issued`,
-   `inactive`, `expired`, `validationTimedOut`, `revoked` and `failed`. If no value is specified, only certificates in the `issued` state
+* `statuses` - (Optional) List of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
+   `INACTIVE`, `EXPIRED`, `VALIDATION_TIMED_OUT`, `REVOKED` and `FAILED`. If no value is specified, only certificates in the `ISSUED` state
    are returned.
-* `types` - (Optional) List of types on which to filter the returned list. Valid values are `amazonIssued`, `private`, and `imported`.
+* `types` - (Optional) List of types on which to filter the returned list. Valid values are `AMAZON_ISSUED`, `PRIVATE`, and `IMPORTED`.
 * `mostRecent` - (Optional) If set to true, it sorts the certificates matched by previous criteria by the NotBefore field, returning only the most recent one. If set to false, it returns an error if more than one certificate is found. Defaults to false.
 
 ## Attribute Reference
@@ -67,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `certificateChain` - Certificates forming the requested ACM-issued certificate's chain of trust. The chain consists of the certificate of the issuing CA and the intermediate certificates of any other subordinate CAs.
 * `tags` - Mapping of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-0827f19734f2b9d26e0cb7f069a9c6094d49e933890f68cd0c6364c65af42e86 -->
+<!-- cache-key: cdktf-0.19.0 input-0827f19734f2b9d26e0cb7f069a9c6094d49e933890f68cd0c6364c65af42e86 -->

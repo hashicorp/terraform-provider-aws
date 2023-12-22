@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -180,6 +181,8 @@ func ResourceEventDataStore() *schema.Resource {
 }
 
 func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	name := d.Get("name").(string)
@@ -203,19 +206,21 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateEventDataStoreWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudTrail Event Data Store (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.EventDataStoreArn))
 
 	if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for CloudTrail Event Data Store (%s) create: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) create: %s", name, err)
 	}
 
-	return resourceEventDataStoreRead(ctx, d, meta)
+	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
 func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	eventDataStore, err := FindEventDataStoreByARN(ctx, conn, d.Id())
@@ -223,15 +228,15 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudTrail Event Data Store (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors)); err != nil {
-		return diag.Errorf("setting advanced_event_selector: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting advanced_event_selector: %s", err)
 	}
 	d.Set("arn", eventDataStore.EventDataStoreArn)
 	d.Set("kms_key_id", eventDataStore.KmsKeyId)
@@ -241,10 +246,12 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
 
-	return nil
+	return diags
 }
 
 func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -279,18 +286,20 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := conn.UpdateEventDataStoreWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudTrail Event Data Store (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Event Data Store (%s): %s", d.Id(), err)
 		}
 
 		if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for CloudTrail Event Data Store (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEventDataStoreRead(ctx, d, meta)
+	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
 func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: %s", d.Id())
@@ -299,18 +308,18 @@ func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeEventDataStoreNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudTrail Event Data Store (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
 	if err := waitEventDataStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for CloudTrail Event Data Store (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindEventDataStoreByARN(ctx context.Context, conn *cloudtrail.CloudTrail, arn string) (*cloudtrail.GetEventDataStoreOutput, error) {

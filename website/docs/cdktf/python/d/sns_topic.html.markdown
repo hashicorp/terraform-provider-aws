@@ -44,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
 * `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
 
-<!-- cache-key: cdktf-0.18.0 input-a8e2c249a5626888f1285a9f19fb2d9d401d550cc75845a638d912a441614449 -->
+<!-- cache-key: cdktf-0.19.0 input-a8e2c249a5626888f1285a9f19fb2d9d401d550cc75845a638d912a441614449 -->

@@ -63,14 +63,14 @@ This resource supports the following arguments:
 * `name` - (Required) Name used to label and identify the VPC link.
 * `description` - (Optional) Description of the VPC link.
 * `targetArns` - (Required, ForceNew) List of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the VpcLink.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import API Gateway VPC Link using the `id`. For exampl
 % terraform import aws_api_gateway_vpc_link.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-67ae655f1b594d4a56352e7b95e9f98e0a7e757e376024aa97ec46526256091e -->
+<!-- cache-key: cdktf-0.19.0 input-67ae655f1b594d4a56352e7b95e9f98e0a7e757e376024aa97ec46526256091e -->

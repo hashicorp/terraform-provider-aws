@@ -48,8 +48,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `30m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -73,4 +73,4 @@ Using `terraform import`, import Firewall Manager administrator account associat
 % terraform import aws_fms_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9887cf15245a4b734a6b9de0582fbcd635a6b8d70933e7656427281a76b59b6c -->
+<!-- cache-key: cdktf-0.19.0 input-9887cf15245a4b734a6b9de0582fbcd635a6b8d70933e7656427281a76b59b6c -->

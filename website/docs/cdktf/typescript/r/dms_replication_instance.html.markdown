@@ -132,13 +132,13 @@ This resource supports the following arguments:
 * `autoMinorVersionUpgrade` - (Optional, Default: false) Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availabilityZone` - (Optional) The EC2 Availability Zone that the replication instance will be created in.
 * `engineVersion` - (Optional) The engine version number of the replication instance.
-* `kmsKeyArn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kmsKeyArn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
-* `multiAz` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availabilityZone` parameter if the `multiAz` parameter is set to `true`.
-* `networkType` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `ipv4`, `dual`.
+* `kmsKeyArn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
+* `multiAz` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
+* `networkType` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `IPV4`, `DUAL`.
 * `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
     - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
-    - Format: `ddd:hh24:miDdd:hh24:mi`
+    - Format: `ddd:hh24:mi-ddd:hh24:mi`
     - Valid Days: `mon, tue, wed, thu, fri, sat, sun`
     - Constraints: Minimum 30-minute window.
 
@@ -152,7 +152,7 @@ This resource supports the following arguments:
     - Cannot contain two consecutive hyphens.
 
 * `replicationSubnetGroupId` - (Optional) A subnet group to associate with the replication instance.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
 ## Attribute Reference
@@ -162,15 +162,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `replicationInstanceArn` - The Amazon Resource Name (ARN) of the replication instance.
 * `replicationInstancePrivateIps` -  A list of the private IP addresses of the replication instance.
 * `replicationInstancePublicIps` - A list of the public IP addresses of the replication instance.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `40M`)
-- `update` - (Default `30M`)
-- `delete` - (Default `30M`)
+- `create` - (Default `40m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -194,4 +194,4 @@ Using `terraform import`, import replication instances using the `replicationIns
 % terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2a8ab503ceaef9d74fa0c9b95408ac59f3a841f451a3553fdde42db11c32ef45 -->
+<!-- cache-key: cdktf-0.19.0 input-2a8ab503ceaef9d74fa0c9b95408ac59f3a841f451a3553fdde42db11c32ef45 -->

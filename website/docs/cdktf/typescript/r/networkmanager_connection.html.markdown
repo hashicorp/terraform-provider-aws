@@ -47,14 +47,14 @@ This resource supports the following arguments:
 * `deviceId` - (Required) The ID of the first device in the connection.
 * `globalNetworkId` - (Required) The ID of the global network.
 * `linkId` - (Optional) The ID of the link for the first device.
-* `tags` - (Optional) Key-value tags for the connection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connection.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import `awsNetworkmanagerConnection` using the connect
 % terraform import aws_networkmanager_connection.example arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/connection-07f6fd08867abc123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-950e6f1e6e30f9c05d70308c91abfbf81e3cb619be3e1bdef3b486654d0ee394 -->
+<!-- cache-key: cdktf-0.19.0 input-950e6f1e6e30f9c05d70308c91abfbf81e3cb619be3e1bdef3b486654d0ee394 -->

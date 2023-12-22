@@ -62,7 +62,7 @@ This argument supports the following arguments:
 * `nameServer` - (Optional) The list of nameservers for the domain.
 * `registrantContact` - (Optional) Details about the domain registrant.
 * `registrantPrivacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `techContact` - (Optional) Details about the domain technical contact.
 * `techPrivacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transferLock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
@@ -79,7 +79,7 @@ The `adminContact`, `registrantContact` and `techContact` objects support the fo
 * `fax` - (Optional) Fax number of the contact. Phone number must be specified in the format "+[country dialing code].[number including any area code]".
 * `firstName` - (Optional) First name of contact.
 * `lastName` - (Optional) Last name of contact.
-* `organizationName` - (Optional) Name of the organization for contact types other than `person`.
+* `organizationName` - (Optional) Name of the organization for contact types other than `PERSON`.
 * `phoneNumber` - (Optional) The phone number of the contact. Phone number must be specified in the format "+[country dialing code].[number including any area code]".
 * `state` - (Optional) The state or province of the contact's city.
 * `zipCode` - (Optional) The zip or postal code of the contact's address.
@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `registrarUrl` - Web address of the registrar.
 * `reseller` - Reseller of the domain.
 * `statusList` - List of [domain name status codes](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updatedDate` - The last updated date of the domain as found in the response to a WHOIS query.
 * `whoisServer` - The fully qualified name of the WHOIS server that can answer the WHOIS query for the domain.
 
@@ -110,7 +110,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `30M`)
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
 
-<!-- cache-key: cdktf-0.18.0 input-98a8952abfb9875700e225d9486f8339896363be535628d57f8d8ab898718bdc -->
+<!-- cache-key: cdktf-0.19.0 input-98a8952abfb9875700e225d9486f8339896363be535628d57f8d8ab898718bdc -->

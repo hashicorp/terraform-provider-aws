@@ -521,4 +521,4 @@ Using `terraform import`, import `aws_networkmanager_core_network` using the cor
 % terraform import aws_networkmanager_core_network.example core-network-0d47f6t230mz46dy4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65bc1bb6eff4f779705d87b8ae3f33739b14d06acb55ff16a01c2f5413f72a00 -->
+<!-- cache-key: cdktf-0.19.0 input-65bc1bb6eff4f779705d87b8ae3f33739b14d06acb55ff16a01c2f5413f72a00 -->

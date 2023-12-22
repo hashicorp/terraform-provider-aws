@@ -47,7 +47,7 @@ whose data will be exported as attributes.
 
 The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`describeSecurityGroupRules`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html) API Reference.
+* `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeSecurityGroupRules`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
@@ -60,11 +60,11 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - The security group rule description.
 * `fromPort` - The start of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 type.
 * `isEgress` - Indicates whether the security group rule is an outbound rule.
-* `ipProtocol` - The IP protocol name or number. Use `1` to specify all protocols.
+* `ipProtocol` - The IP protocol name or number. Use `-1` to specify all protocols.
 * `prefixListId` - The ID of the destination prefix list.
 * `referencedSecurityGroupId` - The destination security group that is referenced in the rule.
 * `securityGroupId` - The ID of the security group.
 * `tags` - A map of tags assigned to the resource.
 * `toPort` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
-<!-- cache-key: cdktf-0.18.0 input-60bbadf919e19a6b86244afce1efa5865475dc66aa0bf2f6b2d6643a6824df84 -->
+<!-- cache-key: cdktf-0.19.0 input-60bbadf919e19a6b86244afce1efa5865475dc66aa0bf2f6b2d6643a6824df84 -->

@@ -150,8 +150,8 @@ class MyConvertedCode extends TerraformStack {
 
 The `region` configuration block is required and supports the following arguments:
 
-* `name` - (Required) The name of the Region, such as `apSoutheast2`.
-* `kmsKeyArn` - (Optional) The Amazon Resource name (ARN) of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `defaultKey`.
+* `name` - (Required) The name of the Region, such as `ap-southeast-2`.
+* `kmsKeyArn` - (Optional) The Amazon Resource name (ARN) of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
 
 The following arguments are optional:
 
@@ -164,19 +164,19 @@ For information about the maximum allowed number of Regions and tag value constr
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the replication set.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `createdBy` - The ARN of the user who created the replication set.
 * `createdTime` - A timestamp showing when the replication set was created.
 * `deletionProtected` - If `true`, the last region in a replication set cannot be deleted.
 * `lastModifiedBy` - A timestamp showing when the replication set was last modified.
 * `lastModifiedTime` - When the replication set was last modified
 * `status` - The overall status of a replication set.
-    * Valid Values: `active` | `creating` | `updating` | `deleting` | `failed`
+    * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 
 In addition to the preceding arguments, the `region` configuration block exports the following attributes for each Region:
 
 * `status` - The current status of the Region.
-    * Valid Values: `active` | `creating` | `updating` | `deleting` | `failed`
+    * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 * `statusUpdateTime` - A timestamp showing when the Region status was last updated.
 * `statusMessage` - More information about the status of a Region.
 
@@ -188,9 +188,9 @@ In addition to the preceding arguments, the `region` configuration block exports
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `120M`)
-* `update` - (Default `120M`)
-* `delete` - (Default `120M`)
+* `create` - (Default `120m`)
+* `update` - (Default `120m`)
+* `delete` - (Default `120m`)
 
 ## Import
 
@@ -214,4 +214,4 @@ Using `terraform import`, import an Incident Manager replication. For example:
 % terraform import aws_ssmincidents_replication_set.replicationSetName import
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-db40342720668c450b5bd2187447758810506f9aa388358f6b3d9c52cf3d9ebf -->
+<!-- cache-key: cdktf-0.19.0 input-db40342720668c450b5bd2187447758810506f9aa388358f6b3d9c52cf3d9ebf -->

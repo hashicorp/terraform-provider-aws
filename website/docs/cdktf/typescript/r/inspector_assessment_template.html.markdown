@@ -57,13 +57,13 @@ This resource supports the following arguments:
 * `duration` - (Required) The duration of the inspector run.
 * `rulesPackageArns` - (Required) The rules to be used during the run.
 * `eventSubscription` - (Optional) A block that enables sending notifications about a specified assessment template event to a designated SNS topic. See [Event Subscriptions](#event-subscriptions) for details.
-* `tags` - (Optional) Key-value map of tags for the Inspector assessment template. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of tags for the Inspector assessment template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Event Subscriptions
 
 The event subscription configuration block supports the following arguments:
 
-* `event` - (Required) The event for which you want to receive SNS notifications. Valid values are `assessmentRunStarted`, `assessmentRunCompleted`, `assessmentRunStateChanged`, and `findingReported`.
+* `event` - (Required) The event for which you want to receive SNS notifications. Valid values are `ASSESSMENT_RUN_STARTED`, `ASSESSMENT_RUN_COMPLETED`, `ASSESSMENT_RUN_STATE_CHANGED`, and `FINDING_REPORTED`.
 * `topicArn` - (Required) The ARN of the SNS topic to which notifications are sent.
 
 ## Attribute Reference
@@ -71,7 +71,7 @@ The event subscription configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The template assessment ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import `awsInspectorAssessmentTemplate` using the temp
 % terraform import aws_inspector_assessment_template.example arn:aws:inspector:us-west-2:123456789012:target/0-9IaAzhGR/template/0-WEcjR8CH
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8ab910475a5ea18490628aba73cd2f6da8ce0d1a11648cd0f2169486753e2383 -->
+<!-- cache-key: cdktf-0.19.0 input-8ab910475a5ea18490628aba73cd2f6da8ce0d1a11648cd0f2169486753e2383 -->

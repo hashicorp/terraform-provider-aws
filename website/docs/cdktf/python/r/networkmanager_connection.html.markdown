@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_networkmanager_connection` using the conne
 % terraform import aws_networkmanager_connection.example arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/connection-07f6fd08867abc123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-950e6f1e6e30f9c05d70308c91abfbf81e3cb619be3e1bdef3b486654d0ee394 -->
+<!-- cache-key: cdktf-0.19.0 input-950e6f1e6e30f9c05d70308c91abfbf81e3cb619be3e1bdef3b486654d0ee394 -->

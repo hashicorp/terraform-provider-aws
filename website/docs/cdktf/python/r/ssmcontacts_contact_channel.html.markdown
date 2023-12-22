@@ -112,4 +112,4 @@ Using `terraform import`, import SSM Contact Channel using the `ARN`. For exampl
 % terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-875a737831eeadb1d936d18c2cf26aad7a60fef9a50f2c0c60f64676b0763b4f -->
+<!-- cache-key: cdktf-0.19.0 input-875a737831eeadb1d936d18c2cf26aad7a60fef9a50f2c0c60f64676b0763b4f -->

@@ -86,8 +86,8 @@ This data source exports the following attributes in addition to the arguments a
 A `config` block supports the following arguments:
 
 * `day` - Day that the hours of operation applies to.
-* `endTime` - End time block specifies the time that your contact center closes. The `endTime` is documented below.
-* `startTime` - Start time block specifies the time that your contact center opens. The `startTime` is documented below.
+* `endTime` - End time block specifies the time that your contact center closes. The `end_time` is documented below.
+* `startTime` - Start time block specifies the time that your contact center opens. The `start_time` is documented below.
 
 A `endTime` block supports the following arguments:
 
@@ -99,4 +99,4 @@ A `startTime` block supports the following arguments:
 * `hours` - Hour of opening.
 * `minutes` - Minute of opening.
 
-<!-- cache-key: cdktf-0.18.0 input-69f2eddaf1ae71ae8b2382f108eed67e1baf19a25a016f4a6cd6db210fa55e83 -->
+<!-- cache-key: cdktf-0.19.0 input-69f2eddaf1ae71ae8b2382f108eed67e1baf19a25a016f4a6cd6db210fa55e83 -->

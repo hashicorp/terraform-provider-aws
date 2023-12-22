@@ -49,12 +49,12 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the pool, if any.
 * `networkBorderGroup` - Name of the location from which the address pool is advertised.
 * pool_address_ranges` - List of Address Ranges in the Pool; each address range record contains:
-    * `addressCount` - Number of addresses in the range.
-    * `availableAddressCount` - Number of available addresses in the range.
-    * `firstAddress` - First address in the range.
-    * `lastAddress` - Last address in the range.
+    * `address_count` - Number of addresses in the range.
+    * `available_address_count` - Number of available addresses in the range.
+    * `first_address` - First address in the range.
+    * `last_address` - Last address in the range.
 * `tags` - Any tags for the address pool.
 * `totalAddressCount` - Total number of addresses in the pool.
 * `totalAvailableAddressCount` - Total number of available addresses in the pool.
 
-<!-- cache-key: cdktf-0.18.0 input-48bacd43b83d45d6042e5adf0821e82fae16e4191784bc09d4af47b05ff7cf8b -->
+<!-- cache-key: cdktf-0.19.0 input-48bacd43b83d45d6042e5adf0821e82fae16e4191784bc09d4af47b05ff7cf8b -->

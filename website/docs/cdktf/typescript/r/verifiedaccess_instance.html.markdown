@@ -67,7 +67,7 @@ The following arguments are optional:
 
 * `description` - (Optional) A description for the AWS Verified Access Instance.
 * `fipsEnabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -110,4 +110,4 @@ Using `terraform import`, import Verified Access Instances using the  `id`. For 
 % terraform import aws_verifiedaccess_instance.example vai-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c933a4a83a27d8a7c453603ace502b409683c5a0ec3444abd304067d056ba8ad -->
+<!-- cache-key: cdktf-0.19.0 input-c933a4a83a27d8a7c453603ace502b409683c5a0ec3444abd304067d056ba8ad -->

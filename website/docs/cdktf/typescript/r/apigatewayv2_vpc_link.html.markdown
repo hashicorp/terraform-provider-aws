@@ -49,7 +49,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the VPC Link. Must be between 1 and 128 characters in length.
 * `securityGroupIds` - (Required) Security group IDs for the VPC Link.
 * `subnetIds` - (Required) Subnet IDs for the VPC Link.
-* `tags` - (Optional) Map of tags to assign to the VPC Link. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the VPC Link. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - VPC Link identifier.
 * `arn` - VPC Link ARN.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import `awsApigatewayv2VpcLink` using the VPC Link ide
 % terraform import aws_apigatewayv2_vpc_link.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7f7266061a30dbdd15dacececebef105a6b52be6446a7f4871237c0ef1b7c4b6 -->
+<!-- cache-key: cdktf-0.19.0 input-7f7266061a30dbdd15dacececebef105a6b52be6446a7f4871237c0ef1b7c4b6 -->

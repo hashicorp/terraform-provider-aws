@@ -76,7 +76,7 @@ This resource supports the following arguments:
 * `requireInstanceProperties` - (Optional) Specifies whether instance properties are required in [CreateSession](https://docs.aws.amazon.com/rolesanywhere/latest/APIReference/API_CreateSession.html) requests with this profile.
 * `roleArns` - (Required) A list of IAM roles that this profile can assume
 * `sessionPolicy` - (Optional) A session policy that applies to the trust boundary of the vended session credentials.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -84,7 +84,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the Profile
 * `id` - The Profile ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -108,4 +108,4 @@ Using `terraform import`, import `awsRolesanywhereProfile` using its `id`. For e
 % terraform import aws_rolesanywhere_profile.example db138a85-8925-4f9f-a409-08231233cacf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6014aa495fc385a2acfb6b7b4cb2e96800954c65d55817afa8439b60e41c2538 -->
+<!-- cache-key: cdktf-0.19.0 input-6014aa495fc385a2acfb6b7b4cb2e96800954c65d55817afa8439b60e41c2538 -->

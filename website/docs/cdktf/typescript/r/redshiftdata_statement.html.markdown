@@ -111,4 +111,4 @@ Using `terraform import`, import Redshift Data Statements using the `id`. For ex
 % terraform import aws_redshiftdata_statement.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-890483d136320a7936958ee447618d785135e348982c003fa40f68a3e28cefbc -->
+<!-- cache-key: cdktf-0.19.0 input-890483d136320a7936958ee447618d785135e348982c003fa40f68a3e28cefbc -->

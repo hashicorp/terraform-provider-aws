@@ -53,7 +53,7 @@ This resource supports the following arguments:
 * `name` - (Required) The unique name of the report plan. The name must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.
 * `reportDeliveryChannel` - (Required) An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
 * `reportSetting` - (Required) An object that identifies the report template for the report. Reports are built using a report template. Detailed below.
-* `tags` - (Optional) Metadata that you can assign to help organize the report plans you create. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Metadata that you can assign to help organize the report plans you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Report Delivery Channel Arguments
 
@@ -72,7 +72,7 @@ This resource supports the following arguments:
 * `numberOfFrameworks` - (Optional) Specifies the number of frameworks a report covers.
 * `organizationUnits` - (Optional) Specifies the list of Organizational Units a report covers.
 * `regions` - (Optional) Specifies the list of regions a report covers.
-* `reportTemplate` - (Required) Identifies the report template for the report. Reports are built using a report template. The report templates are: `resourceComplianceReport` | `controlComplianceReport` | `backupJobReport` | `copyJobReport` | `restoreJobReport`.
+* `reportTemplate` - (Required) Identifies the report template for the report. Reports are built using a report template. The report templates are: `RESOURCE_COMPLIANCE_REPORT` | `CONTROL_COMPLIANCE_REPORT` | `BACKUP_JOB_REPORT` | `COPY_JOB_REPORT` | `RESTORE_JOB_REPORT`.
 
 ## Attribute Reference
 
@@ -80,9 +80,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the backup report plan.
 * `creationTime` - The date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
-* `deploymentStatus` - The deployment status of a report plan. The statuses are: `createInProgress` | `updateInProgress` | `deleteInProgress` | `completed`.
+* `deploymentStatus` - The deployment status of a report plan. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`.
 * `id` - The id of the backup report plan.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -106,4 +106,4 @@ Using `terraform import`, import Backup Report Plan using the `id` which corresp
 % terraform import aws_backup_report_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd959edfce1b301196f86382fc18f07f59bfcba90604113c6790f12cd75715da -->
+<!-- cache-key: cdktf-0.19.0 input-bd959edfce1b301196f86382fc18f07f59bfcba90604113c6790f12cd75715da -->

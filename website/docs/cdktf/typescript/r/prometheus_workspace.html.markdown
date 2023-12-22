@@ -77,7 +77,7 @@ This resource supports the following arguments:
 
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
 * `loggingConfiguration` - (Optional) Logging configuration for the workspace. See [Logging Configuration](#logging-configuration) below for details.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Logging Configuration
 
@@ -92,7 +92,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the workspace.
 * `id` - Identifier of the workspace
 * `prometheusEndpoint` - Prometheus endpoint available for this workspace.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -116,4 +116,4 @@ Using `terraform import`, import AMP Workspaces using the identifier. For exampl
 % terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-94364fd09dc8c162f82df7a4b9553955564416fc93204755b5fec4873553516a -->
+<!-- cache-key: cdktf-0.19.0 input-94364fd09dc8c162f82df7a4b9553955564416fc93204755b5fec4873553516a -->

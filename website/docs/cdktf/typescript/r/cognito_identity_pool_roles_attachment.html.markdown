@@ -130,14 +130,14 @@ class MyConvertedCode extends TerraformStack {
 
 The Cognito Identity Pool Roles Attachment argument layout is a structure composed of several sub-resources - these resources are laid out below.
 
-* `identityPoolId` (Required) - An identity pool ID in the format `regionGuid`.
+* `identityPoolId` (Required) - An identity pool ID in the format `REGION_GUID`.
 * `roleMapping` (Optional) - A List of [Role Mapping](#role-mappings).
 * `roles` (Required) - The map of roles associated with this pool. For a given role, the key will be either "authenticated" or "unauthenticated" and the value will be the Role ARN.
 
 #### Role Mappings
 
-* `identityProvider` (Required) - A string identifying the identity provider, for example, "graph.facebook.com" or "cognito-idp.us-east-1.amazonaws.com/us-east-1_abcdefghi:app_client_id". Depends on `cognitoIdentityProviders` set on `awsCognitoIdentityPool` resource or a `awsCognitoIdentityProvider` resource.
-* `ambiguousRoleResolution` (Optional) - Specifies the action to be taken if either no rules match the claim value for the Rules type, or there is no cognito:preferred_role claim and there are multiple cognito:roles matches for the Token type. `required` if you specify Token or Rules as the Type.
+* `identityProvider` (Required) - A string identifying the identity provider, for example, "graph.facebook.com" or "cognito-idp.us-east-1.amazonaws.com/us-east-1_abcdefghi:app_client_id". Depends on `cognito_identity_providers` set on `aws_cognito_identity_pool` resource or a `aws_cognito_identity_provider` resource.
+* `ambiguousRoleResolution` (Optional) - Specifies the action to be taken if either no rules match the claim value for the Rules type, or there is no cognito:preferred_role claim and there are multiple cognito:roles matches for the Token type. `Required` if you specify Token or Rules as the Type.
 * `mappingRule` (Optional) - The [Rules Configuration](#rules-configuration) to be used for mapping users to roles. You can specify up to 25 rules per identity provider. Rules are evaluated in order. The first one to match specifies the role.
 * `type` (Required) - The role mapping type.
 
@@ -176,4 +176,4 @@ Using `terraform import`, import Cognito Identity Pool Roles Attachment using th
 % terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-74c6734db32e60310fb7b71d1ef7e57fff3eb57e2065822e5e2535d8f77e6646 -->
+<!-- cache-key: cdktf-0.19.0 input-74c6734db32e60310fb7b71d1ef7e57fff3eb57e2065822e5e2535d8f77e6646 -->

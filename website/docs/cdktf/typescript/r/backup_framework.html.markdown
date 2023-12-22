@@ -119,7 +119,7 @@ This resource supports the following arguments:
 * `control` - (Required) One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
 * `description` - (Optional) The description of the framework with a maximum of 1,024 characters
 * `name` - (Required) The unique name of the framework. The name must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.
-* `tags` - (Optional) Metadata that you can assign to help organize the frameworks you create. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Metadata that you can assign to help organize the frameworks you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Control Arguments
 
@@ -150,18 +150,18 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the backup framework.
 * `creationTime` - The date and time that a framework is created, in Unix format and Coordinated Universal Time (UTC).
-* `deploymentStatus` - The deployment status of a framework. The statuses are: `createInProgress` | `updateInProgress` | `deleteInProgress` | `completed` | `failed`.
+* `deploymentStatus` - The deployment status of a framework. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED` | `FAILED`.
 * `id` - The id of the backup framework.
 * `status` - A framework consists of one or more controls. Each control governs a resource, such as backup plans, backup selections, backup vaults, or recovery points. You can also turn AWS Config recording on or off for each resource. For more information refer to the [AWS documentation for Framework Status](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DescribeFramework.html#Backup-DescribeFramework-response-FrameworkStatus)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `2M`)
-* `update` - (Default `2M`)
-* `delete` - (Default `2M`)
+* `create` - (Default `2m`)
+* `update` - (Default `2m`)
+* `delete` - (Default `2m`)
 
 ## Import
 
@@ -185,4 +185,4 @@ Using `terraform import`, import Backup Framework using the `id` which correspon
 % terraform import aws_backup_framework.test <id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4cb34459561740182d4b24333fe8df9142bdd3e691f64f140504aa521fe31ef8 -->
+<!-- cache-key: cdktf-0.19.0 input-4cb34459561740182d4b24333fe8df9142bdd3e691f64f140504aa521fe31ef8 -->

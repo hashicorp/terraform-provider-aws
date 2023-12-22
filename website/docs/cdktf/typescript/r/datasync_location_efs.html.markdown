@@ -48,9 +48,9 @@ This resource supports the following arguments:
 * `ec2Config` - (Required) Configuration block containing EC2 configurations for connecting to the EFS File System.
 * `efsFileSystemArn` - (Required) Amazon Resource Name (ARN) of EFS File System.
 * `fileSystemAccessRoleArn` - (Optional)  Specifies an Identity and Access Management (IAM) role that DataSync assumes when mounting the Amazon EFS file system.
-* `inTransitEncryption` - (Optional) Specifies whether you want DataSync to use TLS encryption when transferring data to or from your Amazon EFS file system. Valid values are `none` and `tls12`.
+* `inTransitEncryption` - (Optional) Specifies whether you want DataSync to use TLS encryption when transferring data to or from your Amazon EFS file system. Valid values are `NONE` and `TLS1_2`.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Default `/`.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### ec2_config Argument Reference
 
@@ -65,7 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -89,4 +89,4 @@ Using `terraform import`, import `awsDatasyncLocationEfs` using the DataSync Tas
 % terraform import aws_datasync_location_efs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fd6bfd5001bb7a9ddd15cbeb18b63b36796ee1633c2d3e03d32a2391d872d1d1 -->
+<!-- cache-key: cdktf-0.19.0 input-fd6bfd5001bb7a9ddd15cbeb18b63b36796ee1633c2d3e03d32a2391d872d1d1 -->

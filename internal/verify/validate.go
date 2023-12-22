@@ -460,6 +460,23 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
+func StringHasPrefix(prefix string) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (warnings []string, errors []error) {
+		s, ok := v.(string)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return
+		}
+
+		if !strings.HasPrefix(s, prefix) {
+			errors = append(errors, fmt.Errorf("expected %s to have prefix %s, got %s", k, prefix, s))
+			return
+		}
+
+		return warnings, errors
+	}
+}
+
 func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -476,6 +493,20 @@ func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error
 
 func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
+}
+
+func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		for k := range v.(map[string]interface{}) {
+			for _, keyValidator := range keyValidators {
+				diags = append(diags, keyValidator(k, path.IndexString(k))...)
+			}
+		}
+
+		return diags
+	}
 }
 
 func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {

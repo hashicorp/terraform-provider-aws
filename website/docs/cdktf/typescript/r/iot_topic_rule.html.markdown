@@ -111,8 +111,8 @@ class MyConvertedCode extends TerraformStack {
 * `enabled` - (Required) Specifies whether the rule is enabled.
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sqlVersion` - (Required) The version of the SQL rules engine to use when evaluating the rule.
-* `errorAction` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatchAlarm`, `cloudwatchLogs`, `cloudwatchMetric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `http`, `iotAnalytics`, `iotEvents`, `kafka`, `kinesis`, `lambda`, `republish`, `s3`, `sns`, `sqs`, `stepFunctions`, `timestream` configuration blocks for further configuration details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `errorAction` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `http`, `iot_analytics`, `iot_events`, `kafka`, `kinesis`, `lambda`, `republish`, `s3`, `sns`, `sqs`, `step_functions`, `timestream` configuration blocks for further configuration details.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `cloudwatchAlarm` object takes the following arguments:
 
@@ -151,7 +151,7 @@ The `dynamodb` object takes the following arguments:
 The `dynamodbv2` object takes the following arguments:
 
 * `putItem` - (Required) Configuration block with DynamoDB Table to which the message will be written. Nested arguments below.
-    * `tableName` - (Required) The name of the DynamoDB table.
+    * `table_name` - (Required) The name of the DynamoDB table.
 * `roleArn` - (Required) The ARN of the IAM role that grants access to the DynamoDB table.
 
 The `elasticsearch` object takes the following arguments:
@@ -196,7 +196,10 @@ The `iotEvents` object takes the following arguments:
 The `kafka` object takes the following arguments:
 
 * `clientProperties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
-* `destinationArn` - (Required) The ARN of Kafka action's VPC [`awsIotTopicRuleDestination`](iot_topic_rule_destination.html) .
+* `destinationArn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html).
+* `header` - (Optional) The list of Kafka headers that you specify. Nested arguments below.
+    * `key` - (Required) The key of the Kafka header.
+    * `value` - (Required) The value of the Kafka header.
 * `key` - (Optional) The Kafka message key.
 * `partition` - (Optional) The Kafka message partition.
 * `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.
@@ -251,7 +254,7 @@ The `timestream` object takes the following arguments:
 * `roleArn` - (Required) The ARN of the role that grants permission to write to the Amazon Timestream database table.
 * `tableName` - (Required) The name of the database table into which to write the measure records.
 * `timestamp` - (Optional) Configuration block specifying an application-defined value to replace the default value assigned to the Timestream record's timestamp in the time column. Nested arguments below.
-    * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `seconds`, `milliseconds`, `microseconds`, `nanoseconds`.
+    * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
     * `value` - (Required) An expression that returns a long epoch time value.
 
 ## Attribute Reference
@@ -260,7 +263,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the topic rule
 * `arn` - The ARN of the topic rule
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -284,4 +287,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4cb4989a57838eace08bc0e308834fdac933e38cc0625a3b13f328889b9cc2ff -->
+<!-- cache-key: cdktf-0.19.0 input-0a44794d64de9f42c129b62a7a3b74ae18a4fc39b0e3587d1eb7e365023e470b -->

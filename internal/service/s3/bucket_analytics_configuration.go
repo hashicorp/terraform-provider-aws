@@ -158,6 +158,10 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		return conn.PutBucketAnalyticsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AnalyticsConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Analytics Configuration (%s): %s", bucket, name, err)
 	}

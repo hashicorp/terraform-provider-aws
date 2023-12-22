@@ -95,4 +95,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `start_on` - The date in UTC format that the MAC Security (MACsec) secret key takes effect.
 * `state` -  The state of the MAC Security (MACsec) secret key. The possible values are: associating, associated, disassociating, disassociated. See [MacSecKey](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_MacSecKey.html#DX-Type-MacSecKey-state) for descriptions of each state.
 
-<!-- cache-key: cdktf-0.18.0 input-50e631d31892cfa79cc6641d788fa0436c1b909e5a7fa4536b04ed0e3acb3b04 -->
+<!-- cache-key: cdktf-0.19.0 input-50e631d31892cfa79cc6641d788fa0436c1b909e5a7fa4536b04ed0e3acb3b04 -->

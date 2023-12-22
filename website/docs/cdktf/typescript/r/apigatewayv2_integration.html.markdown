@@ -168,22 +168,22 @@ This resource supports the following arguments:
 
 * `apiId` - (Required) API identifier.
 * `integrationType` - (Required) Integration type of an integration.
-Valid values: `aws` (supported only for WebSocket APIs), `awsProxy`, `http` (supported only for WebSocket APIs), `httpProxy`, `mock` (supported only for WebSocket APIs). For an HTTP API private integration, use `httpProxy`.
+Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (supported only for WebSocket APIs), `HTTP_PROXY`, `MOCK` (supported only for WebSocket APIs). For an HTTP API private integration, use `HTTP_PROXY`.
 * `connectionId` - (Optional) ID of the [VPC link](apigatewayv2_vpc_link.html) for a private integration. Supported only for HTTP APIs. Must be between 1 and 1024 characters in length.
-* `connectionType` - (Optional) Type of the network connection to the integration endpoint. Valid values: `internet`, `vpcLink`. Default is `internet`.
-* `contentHandlingStrategy` - (Optional) How to handle response payload content type conversions. Valid values: `convertToBinary`, `convertToText`. Supported only for WebSocket APIs.
+* `connectionType` - (Optional) Type of the network connection to the integration endpoint. Valid values: `INTERNET`, `VPC_LINK`. Default is `INTERNET`.
+* `contentHandlingStrategy` - (Optional) How to handle response payload content type conversions. Valid values: `CONVERT_TO_BINARY`, `CONVERT_TO_TEXT`. Supported only for WebSocket APIs.
 * `credentialsArn` - (Optional) Credentials required for the integration, if any.
 * `description` - (Optional) Description of the integration.
-* `integrationMethod` - (Optional) Integration's HTTP method. Must be specified if `integrationType` is not `mock`.
-* `integrationSubtype` - (Optional) AWS service action to invoke. Supported only for HTTP APIs when `integrationType` is `awsProxy`. See the [AWS service integration reference](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html) documentation for supported values. Must be between 1 and 128 characters in length.
-* `integrationUri` - (Optional) URI of the Lambda function for a Lambda proxy integration, when `integrationType` is `awsProxy`.
-For an `http` integration, specify a fully-qualified URL. For an HTTP API private integration, specify the ARN of an Application Load Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
-* `passthroughBehavior` - (Optional) Pass-through behavior for incoming requests based on the Content-Type header in the request, and the available mapping templates specified as the `requestTemplates` attribute.
-Valid values: `whenNoMatch`, `whenNoTemplates`, `never`. Default is `whenNoMatch`. Supported only for WebSocket APIs.
-* `payloadFormatVersion` - (Optional) The [format of the payload](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) sent to an integration. Valid values: `10`, `20`. Default is `10`.
+* `integrationMethod` - (Optional) Integration's HTTP method. Must be specified if `integration_type` is not `MOCK`.
+* `integrationSubtype` - (Optional) AWS service action to invoke. Supported only for HTTP APIs when `integration_type` is `AWS_PROXY`. See the [AWS service integration reference](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html) documentation for supported values. Must be between 1 and 128 characters in length.
+* `integrationUri` - (Optional) URI of the Lambda function for a Lambda proxy integration, when `integration_type` is `AWS_PROXY`.
+For an `HTTP` integration, specify a fully-qualified URL. For an HTTP API private integration, specify the ARN of an Application Load Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
+* `passthroughBehavior` - (Optional) Pass-through behavior for incoming requests based on the Content-Type header in the request, and the available mapping templates specified as the `request_templates` attribute.
+Valid values: `WHEN_NO_MATCH`, `WHEN_NO_TEMPLATES`, `NEVER`. Default is `WHEN_NO_MATCH`. Supported only for WebSocket APIs.
+* `payloadFormatVersion` - (Optional) The [format of the payload](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format) sent to an integration. Valid values: `1.0`, `2.0`. Default is `1.0`.
 * `requestParameters` - (Optional) For WebSocket APIs, a key-value map specifying request parameters that are passed from the method request to the backend.
-For HTTP APIs with a specified `integrationSubtype`, a key-value map specifying parameters that are passed to `awsProxy` integrations.
-For HTTP APIs without a specified `integrationSubtype`, a key-value map specifying how to transform HTTP requests before sending them to the backend.
+For HTTP APIs with a specified `integration_subtype`, a key-value map specifying parameters that are passed to `AWS_PROXY` integrations.
+For HTTP APIs without a specified `integration_subtype`, a key-value map specifying how to transform HTTP requests before sending them to the backend.
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-parameter-mapping.html) for details.
 * `requestTemplates` - (Optional) Map of [Velocity](https://velocity.apache.org/) templates that are applied on the request payload based on the value of the Content-Type header sent by the client. Supported only for WebSocket APIs.
 * `responseParameters` - (Optional) Mappings to transform the HTTP response from a backend integration before returning the response to clients. Supported only for HTTP APIs.
@@ -234,4 +234,4 @@ Using `terraform import`, import `awsApigatewayv2Integration` using the API iden
 
 -> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-bd3868bb1d19101e5d7a5a40cefadf4031666c5772ea0394fa37f1396d869e4c -->
+<!-- cache-key: cdktf-0.19.0 input-bd3868bb1d19101e5d7a5a40cefadf4031666c5772ea0394fa37f1396d869e4c -->

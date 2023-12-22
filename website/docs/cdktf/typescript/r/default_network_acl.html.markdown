@@ -180,14 +180,14 @@ Each AWS VPC comes with a Default Network ACL that cannot be deleted. The `awsDe
 
 The following arguments are required:
 
-* `defaultNetworkAclId` - (Required) Network ACL ID to manage. This attribute is exported from `awsVpc`, or manually found via the AWS Console.
+* `defaultNetworkAclId` - (Required) Network ACL ID to manage. This attribute is exported from `aws_vpc`, or manually found via the AWS Console.
 
 The following arguments are optional:
 
 * `egress` - (Optional) Configuration block for an egress rule. Detailed below.
 * `ingress` - (Optional) Configuration block for an ingress rule. Detailed below.
 * `subnetIds` - (Optional) List of Subnet IDs to apply the ACL to. See the notes above on Managing Subnets in the Default Network ACL
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### egress and ingress
 
@@ -217,7 +217,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Default Network ACL
 * `id` - ID of the Default Network ACL
 * `ownerId` - ID of the AWS account that owns the Default Network ACL
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` -  ID of the associated VPC
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html
@@ -244,4 +244,4 @@ Using `terraform import`, import Default Network ACLs using the `id`. For exampl
 % terraform import aws_default_network_acl.sample acl-7aaabd18
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1ee0cdf2a65fb9b81bf170ed16e018fb9c51a76e5efe0185e333f268f198ed71 -->
+<!-- cache-key: cdktf-0.19.0 input-1ee0cdf2a65fb9b81bf170ed16e018fb9c51a76e5efe0185e333f268f198ed71 -->

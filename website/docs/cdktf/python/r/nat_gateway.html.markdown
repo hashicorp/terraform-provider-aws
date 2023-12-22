@@ -151,4 +151,4 @@ Using `terraform import`, import NAT Gateways using the `id`. For example:
 % terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->
+<!-- cache-key: cdktf-0.19.0 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->

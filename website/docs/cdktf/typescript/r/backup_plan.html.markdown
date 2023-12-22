@@ -59,7 +59,7 @@ This resource supports the following arguments:
 * `name` - (Required) The display name of a backup plan.
 * `rule` - (Required) A rule object that specifies a scheduled task that is used to back up a selection of resources.
 * `advancedBackupSetting` - (Optional) An object that specifies backup options for each resource type.
-* `tags` - (Optional) Metadata that you can assign to help organize the plans you create. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Metadata that you can assign to help organize the plans you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Rule Arguments
 
@@ -80,7 +80,7 @@ This resource supports the following arguments:
 `lifecycle` supports the following attributes:
 
 * `coldStorageAfter` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
-* `deleteAfter` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `coldStorageAfter`.
+* `deleteAfter` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 
 ### Copy Action Arguments
 
@@ -94,7 +94,7 @@ This resource supports the following arguments:
 `advancedBackupSetting` supports the following arguments:
 
 * `backupOptions` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
-* `resourceType` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `ec2`.
+* `resourceType` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
 
 ## Attribute Reference
 
@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The id of the backup plan.
 * `arn` - The ARN of the backup plan.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.
 
 ## Import
@@ -127,4 +127,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e41e73e041e50613fcaa9cb0889a0177d0b33c0a30b6e8469e4e706a67a8b35d -->
+<!-- cache-key: cdktf-0.19.0 input-e41e73e041e50613fcaa9cb0889a0177d0b33c0a30b6e8469e4e706a67a8b35d -->

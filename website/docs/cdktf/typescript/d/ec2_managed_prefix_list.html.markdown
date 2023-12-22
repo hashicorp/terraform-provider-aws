@@ -91,8 +91,8 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the selected prefix list.
 * `name` - Name of the selected prefix list.
 * `entries` - Set of entries in this prefix list. Each entry is an object with `cidr` and `description`.
-* `ownerId` - Account ID of the owner of a customer-managed prefix list, or `aws` otherwise.
-* `addressFamily` - Address family of the prefix list. Valid values are `iPv4` and `iPv6`.
+* `ownerId` - Account ID of the owner of a customer-managed prefix list, or `AWS` otherwise.
+* `addressFamily` - Address family of the prefix list. Valid values are `IPv4` and `IPv6`.
 * `maxEntries` - When then prefix list is managed, the maximum number of entries it supports, or null otherwise.
 * `tags` - Map of tags assigned to the resource.
 
@@ -100,6 +100,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-cdbf4a9d93a044622eb9a1f8a3e9a7b0a043366fdd2b0bae53faf5879d45c641 -->
+<!-- cache-key: cdktf-0.19.0 input-cdbf4a9d93a044622eb9a1f8a3e9a7b0a043366fdd2b0bae53faf5879d45c641 -->

@@ -74,19 +74,19 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `detailType` - (Required) The level of detail to include in the notifications for this resource. Possible values are `basic` and `full`.
+* `detailType` - (Required) The level of detail to include in the notifications for this resource. Possible values are `BASIC` and `FULL`.
 * `eventTypeIds` - (Required) A list of event types associated with this notification rule.
   For list of allowed events see [here](https://docs.aws.amazon.com/codestar-notifications/latest/userguide/concepts.html#concepts-api).
 * `name` - (Required) The name of notification rule.
 * `resource` - (Required) The ARN of the resource to associate with the notification rule.
-* `status` - (Optional) The status of the notification rule. Possible values are `enabled` and `disabled`, default is `enabled`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `status` - (Optional) The status of the notification rule. Possible values are `ENABLED` and `DISABLED`, default is `ENABLED`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Configuration blocks containing notification target information. Can be specified multiple times. At least one target must be specified on creation.
 
 An `target` block supports the following arguments:
 
 * `address` - (Required) The ARN of notification rule target. For example, a SNS Topic ARN.
-* `type` - (Optional) The type of the notification target. Default value is `sns`.
+* `type` - (Optional) The type of the notification target. Default value is `SNS`.
 
 ## Attribute Reference
 
@@ -94,7 +94,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The codestar notification rule ARN.
 * `arn` - The codestar notification rule ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -118,4 +118,4 @@ Using `terraform import`, import CodeStar notification rule using the ARN. For e
 % terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4e53883c7fac8ce18f0f284d8670fbec11d282232b37f3e8c5d77110845632ed -->
+<!-- cache-key: cdktf-0.19.0 input-4e53883c7fac8ce18f0f284d8670fbec11d282232b37f3e8c5d77110845632ed -->

@@ -72,4 +72,4 @@ Using `terraform import`, import Direct Connect Gateways using the gateway `id`.
 % terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-db317b4e261abf2f1827c55dbc125b82d7d76ea9e8e48abeda0133e6d7d18e78 -->
+<!-- cache-key: cdktf-0.19.0 input-db317b4e261abf2f1827c55dbc125b82d7d76ea9e8e48abeda0133e6d7d18e78 -->

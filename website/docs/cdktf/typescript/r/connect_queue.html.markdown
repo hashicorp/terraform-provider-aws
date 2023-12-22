@@ -116,8 +116,8 @@ This resource supports the following arguments:
 * `name` - (Required) Specifies the name of the Queue.
 * `outboundCallerConfig` - (Required) A block that defines the outbound caller ID name, number, and outbound whisper flow. The Outbound Caller Config block is documented below.
 * `quickConnectIds` - (Optional) Specifies a list of quick connects ids that determine the quick connects available to agents who are working the queue.
-* `status` - (Optional) Specifies the description of the Queue. Valid values are `enabled`, `disabled`.
-* `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `status` - (Optional) Specifies the description of the Queue. Valid values are `ENABLED`, `DISABLED`.
+* `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `outboundCallerConfig` block supports the following arguments:
 
@@ -132,7 +132,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the Queue.
 * `queueId` - The identifier for the Queue.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -156,4 +156,4 @@ Using `terraform import`, import Amazon Connect Queues using the `instanceId` an
 % terraform import aws_connect_queue.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2ad77533b286fa62f6bf36fa4951ae8f0bd431d1f8cd5d285ecbbda98060e486 -->
+<!-- cache-key: cdktf-0.19.0 input-2ad77533b286fa62f6bf36fa4951ae8f0bd431d1f8cd5d285ecbbda98060e486 -->

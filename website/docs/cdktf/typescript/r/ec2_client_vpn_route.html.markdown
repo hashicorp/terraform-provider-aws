@@ -82,15 +82,15 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Client VPN endpoint.
-* `origin` - Indicates how the Client VPN route was added. Will be `addRoute` for routes created by this resource.
+* `origin` - Indicates how the Client VPN route was added. Will be `add-route` for routes created by this resource.
 * `type` - The type of the route.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `4M`)
-- `delete` - (Default `4M`)
+- `create` - (Default `4m`)
+- `delete` - (Default `4m`)
 
 ## Import
 
@@ -114,4 +114,4 @@ Using `terraform import`, import AWS Client VPN routes using the endpoint ID, ta
 % terraform import aws_ec2_client_vpn_route.example cvpn-endpoint-1234567890abcdef,subnet-9876543210fedcba,10.1.0.0/24
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-144efd2b6259f86199d398e7181456f408b908b3630ac4f3343668fe63a992b9 -->
+<!-- cache-key: cdktf-0.19.0 input-144efd2b6259f86199d398e7181456f408b908b3630ac4f3343668fe63a992b9 -->

@@ -95,4 +95,4 @@ Using `terraform import`, import GuardDuty ThreatIntelSet using the primary Guar
 % terraform import aws_guardduty_threatintelset.MyThreatIntelSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cffb05b04bc89aa2a4faddb04a7472478095a1942cb1aa200f8f7a8b0848a9fd -->
+<!-- cache-key: cdktf-0.19.0 input-cffb05b04bc89aa2a4faddb04a7472478095a1942cb1aa200f8f7a8b0848a9fd -->

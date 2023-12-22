@@ -119,4 +119,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_id` - Version ID of the newly created copy.
 
-<!-- cache-key: cdktf-0.18.0 input-a85f1ab646454d1b2a5db0ee8a76202e123a448298b840089b1ec7bd23a4c87c -->
+<!-- cache-key: cdktf-0.19.0 input-a85f1ab646454d1b2a5db0ee8a76202e123a448298b840089b1ec7bd23a4c87c -->

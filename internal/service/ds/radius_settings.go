@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -90,6 +91,8 @@ func ResourceRadiusSettings() *schema.Resource {
 }
 
 func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID := d.Get("directory_id").(string)
@@ -111,19 +114,21 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.EnableRadiusWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("enabling Directory Service Directory (%s) RADIUS: %s", directoryID, err)
+		return sdkdiag.AppendErrorf(diags, "enabling Directory Service Directory (%s) RADIUS: %s", directoryID, err)
 	}
 
 	d.SetId(directoryID)
 
 	if _, err := waitRadiusCompleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Directory Service Directory (%s) RADIUS create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) RADIUS create: %s", d.Id(), err)
 	}
 
-	return resourceRadiusSettingsRead(ctx, d, meta)
+	return append(diags, resourceRadiusSettingsRead(ctx, d, meta)...)
 }
 
 func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	output, err := FindRadiusSettings(ctx, conn, d.Id())
@@ -131,11 +136,11 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) RADIUS settings not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Directory Service Directory (%s) RADIUS settings: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Directory Service Directory (%s) RADIUS settings: %s", d.Id(), err)
 	}
 
 	d.Set("authentication_protocol", output.AuthenticationProtocol)
@@ -148,10 +153,12 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("shared_secret", output.SharedSecret)
 	d.Set("use_same_username", output.UseSameUsername)
 
-	return nil
+	return diags
 }
 
 func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	input := &directoryservice.UpdateRadiusInput{
@@ -172,17 +179,19 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.UpdateRadiusWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Directory Service Directory (%s) RADIUS: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) RADIUS: %s", d.Id(), err)
 	}
 
 	if _, err := waitRadiusCompleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Directory Service Directory (%s) RADIUS update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) RADIUS update: %s", d.Id(), err)
 	}
 
-	return resourceRadiusSettingsRead(ctx, d, meta)
+	return append(diags, resourceRadiusSettingsRead(ctx, d, meta)...)
 }
 
 func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	_, err := conn.DisableRadiusWithContext(ctx, &directoryservice.DisableRadiusInput{
@@ -190,12 +199,12 @@ func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("disabling Directory Service Directory (%s) RADIUS: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling Directory Service Directory (%s) RADIUS: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

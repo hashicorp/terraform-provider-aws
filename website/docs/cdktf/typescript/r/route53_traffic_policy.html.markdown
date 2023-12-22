@@ -78,4 +78,4 @@ Using `terraform import`, import Route53 Traffic Policy using the `id` and `vers
 % terraform import aws_route53_traffic_policy.example 01a52019-d16f-422a-ae72-c306d2b6df7e/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b96db7d2de859a1798fa4d7060a0fcce7e3e2591a6bc52e84df625b66db068e3 -->
+<!-- cache-key: cdktf-0.19.0 input-b96db7d2de859a1798fa4d7060a0fcce7e3e2591a6bc52e84df625b66db068e3 -->

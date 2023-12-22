@@ -76,4 +76,4 @@ Using `terraform import`, import DeviceFarm Uploads using their ARN. For example
 % terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-157c6a3834c0d5903b438d5bff03780c3535132f31f3df5b70aed301ac010dfd -->
+<!-- cache-key: cdktf-0.19.0 input-157c6a3834c0d5903b438d5bff03780c3535132f31f3df5b70aed301ac010dfd -->

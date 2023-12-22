@@ -50,14 +50,14 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A comma-separated string made up of `ip` and `destinationPoolName`.
+* `id` - A comma-separated string made up of `ip` and `destination_pool_name`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Assignment
 % terraform import aws_sesv2_dedicated_ip_assignment.example "0.0.0.0,my-pool"
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ad1eca5879354d37ff31d84910a7c75bc98ff4e0846d438b18b1ca96ed71fe9f -->
+<!-- cache-key: cdktf-0.19.0 input-ad1eca5879354d37ff31d84910a7c75bc98ff4e0846d438b18b1ca96ed71fe9f -->

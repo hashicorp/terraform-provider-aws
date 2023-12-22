@@ -70,4 +70,4 @@ Using `terraform import`, import Backup Global Settings using the `id`. For exam
 % terraform import aws_backup_global_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61e4ea90b0bc8bb7e796f1019721fafa7192f84c3c85dd25a159206e861e05c7 -->
+<!-- cache-key: cdktf-0.19.0 input-61e4ea90b0bc8bb7e796f1019721fafa7192f84c3c85dd25a159206e861e05c7 -->

@@ -107,6 +107,10 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "CORSConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
+
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) CORS Configuration: %s", bucket, err)
 	}
@@ -252,7 +256,7 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 		}
 
 		if v, ok := tfMap["max_age_seconds"].(int); ok {
-			rule.MaxAgeSeconds = int32(v)
+			rule.MaxAgeSeconds = aws.Int32(int32(v))
 		}
 
 		rules = append(rules, rule)

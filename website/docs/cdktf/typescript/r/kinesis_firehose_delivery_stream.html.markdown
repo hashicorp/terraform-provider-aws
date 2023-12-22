@@ -725,20 +725,20 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `awsWafLogs`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `kinesisSourceConfiguration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. More details are given below.
 * `mskSourceConfiguration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. More details are given below.
 * `serverSideEncryption` - (Optional) Encrypt at rest options.
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extendedS3` instead), `extendedS3`, `redshift`, `elasticsearch`, `splunk`, `httpEndpoint`, `opensearch` and `opensearchserverless`.
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
 is redshift). More details are given below.
 * `elasticsearchConfiguration` - (Optional) Configuration options when `destination` is `elasticsearch`. More details are given below.
-* `extendedS3Configuration` - (Optional, only Required when `destination` is `extendedS3`) Enhanced configuration options for the s3 destination. More details are given below.
-* `httpEndpointConfiguration` - (Optional) Configuration options when `destination` is `httpEndpoint`. Requires the user to also specify an `s3Configuration` block.  More details are given below.
+* `extendedS3Configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
+* `httpEndpointConfiguration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  More details are given below.
 * `opensearchConfiguration` - (Optional) Configuration options when `destination` is `opensearch`. More details are given below.
 * `opensearchserverlessConfiguration` - (Optional) Configuration options when `destination` is `opensearchserverless`. More details are given below.
-* `redshiftConfiguration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3Configuration` block. More details are given below.
+* `redshiftConfiguration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. More details are given below.
 * `splunkConfiguration` - (Optional) Configuration options when `destination` is `splunk`. More details are given below.
 
 The `kinesisSourceConfiguration` object supports the following:
@@ -754,21 +754,21 @@ The `mskSourceConfiguration` object supports the following:
 
 The `authenticationConfiguration` object supports the following:
 
-* `connectivity` - (Required) The type of connectivity used to access the Amazon MSK cluster. Valid values: `public`, `private`.
+* `connectivity` - (Required) The type of connectivity used to access the Amazon MSK cluster. Valid values: `PUBLIC`, `PRIVATE`.
 * `roleArn` - (Required) The ARN of the role used to access the Amazon MSK cluster.
 
 The `serverSideEncryption` object supports the following:
 
 * `enabled` - (Optional) Whether to enable encryption at rest. Default is `false`.
-* `keyType`- (Optional) Type of encryption key. Default is `awsOwnedCmk`. Valid values are `awsOwnedCmk` and `customerManagedCmk`
-* `keyArn` - (Optional) Amazon Resource Name (ARN) of the encryption key. Required when `keyType` is `customerManagedCmk`.
+* `keyType`- (Optional) Type of encryption key. Default is `AWS_OWNED_CMK`. Valid values are `AWS_OWNED_CMK` and `CUSTOMER_MANAGED_CMK`
+* `keyArn` - (Optional) Amazon Resource Name (ARN) of the encryption key. Required when `key_type` is `CUSTOMER_MANAGED_CMK`.
 
 The `extendedS3Configuration` object supports the same fields from [s3_configuration](#s3-configuration) as well as the following:
 
 * `dataFormatConversionConfiguration` - (Optional) Nested argument for the serializer, deserializer, and schema for converting data from the JSON format to the Parquet or ORC format before writing it to Amazon S3. More details given below.
 * `processingConfiguration` - (Optional) The data processing configuration.  More details are given below.
-* `s3BackupMode` - (Optional) The Amazon S3 backup mode.  Valid values are `disabled` and `enabled`.  Default value is `disabled`.
-* `s3BackupConfiguration` - (Optional) The configuration for backup in Amazon S3. Required if `s3BackupMode` is `enabled`. Supports the same fields as `s3Configuration` object.
+* `s3BackupMode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3BackupConfiguration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 * `dynamicPartitioningConfiguration` - (Optional) The configuration for dynamic partitioning. See [Dynamic Partitioning Configuration](#dynamic_partitioning_configuration) below for more details. Required when using dynamic partitioning.
 
 The `redshiftConfiguration` object supports the following:
@@ -779,8 +779,8 @@ The `redshiftConfiguration` object supports the following:
 * `retryDuration` - (Optional) The length of time during which Firehose retries delivery after a failure, starting from the initial request and including the first attempt. The default value is 3600 seconds (60 minutes). Firehose does not retry if the value of DurationInSeconds is 0 (zero) or if the first delivery attempt takes longer than the current value.
 * `roleArn` - (Required) The arn of the role the stream assumes.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
-* `s3BackupMode` - (Optional) The Amazon S3 backup mode.  Valid values are `disabled` and `enabled`.  Default value is `disabled`.
-* `s3BackupConfiguration` - (Optional) The configuration for backup in Amazon S3. Required if `s3BackupMode` is `enabled`. Supports the same fields as `s3Configuration` object.
+* `s3BackupMode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
+* `s3BackupConfiguration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
 * `dataTableName` - (Required) The name of the table in the redshift cluster that the s3 bucket will copy to.
 * `copyOptions` - (Optional) Copy options for copying the data from the s3 intermediate bucket into redshift, for example to change the default delimiter. For valid values, see the [AWS documentation](http://docs.aws.amazon.com/firehose/latest/APIReference/API_CopyCommand.html)
 * `dataTableColumns` - (Optional) The data table columns that will be targeted by the copy command.
@@ -791,14 +791,14 @@ The `elasticsearchConfiguration` object supports the following:
 
 * `bufferingInterval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
 * `bufferingSize` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
-* `domainArn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `clusterEndpoint`.
-* `clusterEndpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domainArn`.
+* `domainArn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
+* `clusterEndpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
 * `indexName` - (Required) The Elasticsearch index name.
-* `indexRotationPeriod` - (Optional) The Elasticsearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `noRotation`, `oneHour`, `oneDay`, `oneWeek`, and `oneMonth`.  The default value is `oneDay`.
+* `indexRotationPeriod` - (Optional) The Elasticsearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
 * `retryDuration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
-* `roleArn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `describeElasticsearchDomain`, `describeElasticsearchDomains`, and `describeElasticsearchDomainConfig`.  The pattern needs to be `arn:.*`.
+* `roleArn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeElasticsearchDomain`, `DescribeElasticsearchDomains`, and `DescribeElasticsearchDomainConfig`.  The pattern needs to be `arn:.*`.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
-* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `failedDocumentsOnly` and `allDocuments`.  Default value is `failedDocumentsOnly`.
+* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `typeName` - (Optional) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `vpcConfig` - (Optional) The VPC configuration for the delivery stream to connect to Elastic Search associated with the VPC. More details are given below
@@ -808,14 +808,14 @@ The `opensearchConfiguration` object supports the following:
 
 * `bufferingInterval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
 * `bufferingSize` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
-* `domainArn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `clusterEndpoint`.
-* `clusterEndpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domainArn`.
+* `domainArn` - (Optional) The ARN of the Amazon ES domain.  The pattern needs to be `arn:.*`.  Conflicts with `cluster_endpoint`.
+* `clusterEndpoint` - (Optional) The endpoint to use when communicating with the cluster. Conflicts with `domain_arn`.
 * `indexName` - (Required) The OpenSearch index name.
-* `indexRotationPeriod` - (Optional) The OpenSearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `noRotation`, `oneHour`, `oneDay`, `oneWeek`, and `oneMonth`.  The default value is `oneDay`.
+* `indexRotationPeriod` - (Optional) The OpenSearch index rotation period.  Index rotation appends a timestamp to the IndexName to facilitate expiration of old data.  Valid values are `NoRotation`, `OneHour`, `OneDay`, `OneWeek`, and `OneMonth`.  The default value is `OneDay`.
 * `retryDuration` - (Optional) After an initial failure to deliver to Amazon OpenSearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
-* `roleArn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `describeDomain`, `describeDomains`, and `describeDomainConfig`.  The pattern needs to be `arn:.*`.
+* `roleArn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon ES Configuration API and for indexing documents.  The IAM role must have permission for `DescribeDomain`, `DescribeDomains`, and `DescribeDomainConfig`.  The pattern needs to be `arn:.*`.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
-* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `failedDocumentsOnly` and `allDocuments`.  Default value is `failedDocumentsOnly`.
+* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `typeName` - (Optional) The Elasticsearch type name with maximum length of 100 characters. Types are deprecated in OpenSearch_1.1. TypeName must be empty.
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `vpcConfig` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch associated with the VPC. More details are given below
@@ -830,7 +830,7 @@ The `opensearchserverlessConfiguration` object supports the following:
 * `retryDuration` - (Optional) After an initial failure to deliver to the Serverless offering for Amazon OpenSearch Service, the total amount of time, in seconds between 0 to 7200, during which Kinesis Data Firehose retries delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of the IAM role to be assumed by Kinesis Data Firehose for calling the Serverless offering for Amazon OpenSearch Service Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
-* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `failedDocumentsOnly` and `allDocuments`.  Default value is `failedDocumentsOnly`.
+* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `vpcConfig` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch Serverless associated with the VPC. More details are given below
 * `processingConfiguration` - (Optional) The data processing configuration.  More details are given below.
@@ -839,10 +839,10 @@ The `splunkConfiguration` objects supports the following:
 
 * `hecAcknowledgmentTimeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
 * `hecEndpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
-* `hecEndpointType` - (Optional) The HEC endpoint type. Valid values are `raw` or `event`. The default value is `raw`.
+* `hecEndpointType` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
 * `hecToken` - (Required) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
-* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `failedEventsOnly` and `allEvents`.  Default value is `failedEventsOnly`.
+* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
 * `retryDuration` - (Optional) After an initial failure to deliver to Splunk, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
 * `processingConfiguration` - (Optional) The data processing configuration.  More details are given below.
@@ -854,7 +854,7 @@ The `httpEndpointConfiguration` objects supports the following:
 * `accessKey` - (Optional) The access key required for Kinesis Firehose to authenticate with the HTTP endpoint selected as the destination.
 * `roleArn` - (Required) Kinesis Data Firehose uses this IAM role for all the permissions that the delivery stream needs. The pattern needs to be `arn:.*`.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
-* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `failedDataOnly` and `allData`.  Default value is `failedDataOnly`.
+* `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDataOnly` and `AllData`.  Default value is `FailedDataOnly`.
 * `bufferingSize` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
 * `bufferingInterval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300 (5 minutes).
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
@@ -875,19 +875,19 @@ The `processingConfiguration` object supports the following:
 
 The `processors` array objects support the following:
 
-* `type` - (Required) The type of processor. Valid Values: `recordDeAggregation`, `lambda`, `metadataExtraction`, `appendDelimiterToRecord`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
+* `type` - (Required) The type of processor. Valid Values: `RecordDeAggregation`, `Lambda`, `MetadataExtraction`, `AppendDelimiterToRecord`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
 * `parameters` - (Optional) Array of processor parameters. More details are given below
 
 The `parameters` array objects support the following:
 
-* `parameterName` - (Required) Parameter name. Valid Values: `lambdaArn`, `numberOfRetries`, `metadataExtractionQuery`, `jsonParsingEngine`, `roleArn`, `bufferSizeInMBs`, `bufferIntervalInSeconds`, `subRecordType`, `delimiter`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
+* `parameterName` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `MetadataExtractionQuery`, `JsonParsingEngine`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`, `SubRecordType`, `Delimiter`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
 * `parameterValue` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ~> **NOTE:** Parameters with default values, including `numberOfRetries`(default: 3), `roleArn`(default: firehose role ARN), `bufferSizeInMBs`(default: 3), and `bufferIntervalInSeconds`(default: 60), are not stored in terraform state. To prevent perpetual differences, it is therefore recommended to only include parameters with non-default values.
 
 The `requestConfiguration` object supports the following:
 
-* `contentEncoding` - (Optional) Kinesis Data Firehose uses the content encoding to compress the body of a request before sending the request to the destination. Valid values are `none` and `gzip`.  Default value is `none`.
+* `contentEncoding` - (Optional) Kinesis Data Firehose uses the content encoding to compress the body of a request before sending the request to the destination. Valid values are `NONE` and `GZIP`.  Default value is `NONE`.
 * `commonAttributes` - (Optional) Describes the metadata sent to the HTTP endpoint destination. More details are given below
 
 The `commonAttributes` array objects support the following:
@@ -971,7 +971,7 @@ class MyConvertedCode extends TerraformStack {
 * `bufferingSize` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
   We recommend setting SizeInMBs to a value greater than the amount of data you typically ingest into the delivery stream in 10 seconds. For example, if you typically ingest data at 1 MB/sec set SizeInMBs to be 10 MB or higher.
 * `bufferingInterval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300.
-* `compressionFormat` - (Optional) The compression format. If no value is specified, the default is `uncompressed`. Other supported values are `gzip`, `zip`, `snappy`, & `hadoopSnappy`.
+* `compressionFormat` - (Optional) The compression format. If no value is specified, the default is `UNCOMPRESSED`. Other supported values are `GZIP`, `ZIP`, `Snappy`, & `HADOOP_SNAPPY`.
 * `errorOutputPrefix` - (Optional) Prefix added to failed records before writing them to S3. Not currently supported for `redshift` destination. This prefix appears immediately following the bucket name. For information about how to specify this prefix, see [Custom Prefixes for Amazon S3 Objects](https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html).
 * `kmsKeyArn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
   be used.
@@ -1013,23 +1013,23 @@ class MyConvertedCode extends TerraformStack {
 
 * `blockSizeBytes` - (Optional) The Hadoop Distributed File System (HDFS) block size. This is useful if you intend to copy the data from Amazon S3 to HDFS before querying. The default is 256 MiB and the minimum is 64 MiB. Kinesis Data Firehose uses this value for padding calculations.
 * `bloomFilterColumns` - (Optional) A list of column names for which you want Kinesis Data Firehose to create bloom filters.
-* `bloomFilterFalsePositiveProbability` - (Optional) The Bloom filter false positive probability (FPP). The lower the FPP, the bigger the Bloom filter. The default value is `005`, the minimum is `0`, and the maximum is `1`.
-* `compression` - (Optional) The compression code to use over data blocks. The default is `snappy`.
+* `bloomFilterFalsePositiveProbability` - (Optional) The Bloom filter false positive probability (FPP). The lower the FPP, the bigger the Bloom filter. The default value is `0.05`, the minimum is `0`, and the maximum is `1`.
+* `compression` - (Optional) The compression code to use over data blocks. The default is `SNAPPY`.
 * `dictionaryKeyThreshold` - (Optional) A float that represents the fraction of the total number of non-null rows. To turn off dictionary encoding, set this fraction to a number that is less than the number of distinct keys in a dictionary. To always use dictionary encoding, set this threshold to `1`.
 * `enablePadding` - (Optional) Set this to `true` to indicate that you want stripes to be padded to the HDFS block boundaries. This is useful if you intend to copy the data from Amazon S3 to HDFS before querying. The default is `false`.
-* `formatVersion` - (Optional) The version of the file to write. The possible values are `v011` and `v012`. The default is `v012`.
-* `paddingTolerance` - (Optional) A float between 0 and 1 that defines the tolerance for block padding as a decimal fraction of stripe size. The default value is `005`, which means 5 percent of stripe size. For the default values of 64 MiB ORC stripes and 256 MiB HDFS blocks, the default block padding tolerance of 5 percent reserves a maximum of 3.2 MiB for padding within the 256 MiB block. In such a case, if the available size within the block is more than 3.2 MiB, a new, smaller stripe is inserted to fit within that space. This ensures that no stripe crosses block boundaries and causes remote reads within a node-local task. Kinesis Data Firehose ignores this parameter when `enablePadding` is `false`.
+* `formatVersion` - (Optional) The version of the file to write. The possible values are `V0_11` and `V0_12`. The default is `V0_12`.
+* `paddingTolerance` - (Optional) A float between 0 and 1 that defines the tolerance for block padding as a decimal fraction of stripe size. The default value is `0.05`, which means 5 percent of stripe size. For the default values of 64 MiB ORC stripes and 256 MiB HDFS blocks, the default block padding tolerance of 5 percent reserves a maximum of 3.2 MiB for padding within the 256 MiB block. In such a case, if the available size within the block is more than 3.2 MiB, a new, smaller stripe is inserted to fit within that space. This ensures that no stripe crosses block boundaries and causes remote reads within a node-local task. Kinesis Data Firehose ignores this parameter when `enable_padding` is `false`.
 * `rowIndexStride` - (Optional) The number of rows between index entries. The default is `10000` and the minimum is `1000`.
 * `stripeSizeBytes` - (Optional) The number of bytes in each stripe. The default is 64 MiB and the minimum is 8 MiB.
 
 ###### parquet_ser_de
 
 * `blockSizeBytes` - (Optional) The Hadoop Distributed File System (HDFS) block size. This is useful if you intend to copy the data from Amazon S3 to HDFS before querying. The default is 256 MiB and the minimum is 64 MiB. Kinesis Data Firehose uses this value for padding calculations.
-* `compression` - (Optional) The compression code to use over data blocks. The possible values are `uncompressed`, `snappy`, and `gzip`, with the default being `snappy`. Use `snappy` for higher decompression speed. Use `gzip` if the compression ratio is more important than speed.
+* `compression` - (Optional) The compression code to use over data blocks. The possible values are `UNCOMPRESSED`, `SNAPPY`, and `GZIP`, with the default being `SNAPPY`. Use `SNAPPY` for higher decompression speed. Use `GZIP` if the compression ratio is more important than speed.
 * `enableDictionaryCompression` - (Optional) Indicates whether to enable dictionary compression.
 * `maxPaddingBytes` - (Optional) The maximum amount of padding to apply. This is useful if you intend to copy the data from Amazon S3 to HDFS before querying. The default is `0`.
 * `pageSizeBytes` - (Optional) The Parquet page size. Column chunks are divided into pages. A page is conceptually an indivisible unit (in terms of compression and encoding). The minimum value is 64 KiB and the default is 1 MiB.
-* `writerVersion` - (Optional) Indicates the version of row format to output. The possible values are `v1` and `v2`. The default is `v1`.
+* `writerVersion` - (Optional) Indicates the version of row format to output. The possible values are `V1` and `V2`. The default is `V1`.
 
 #### schema_configuration
 
@@ -1038,7 +1038,7 @@ class MyConvertedCode extends TerraformStack {
 * `tableName` - (Required) Specifies the AWS Glue table that contains the column information that constitutes your data schema.
 * `catalogId` - (Optional) The ID of the AWS Glue Data Catalog. If you don't supply this, the AWS account ID is used by default.
 * `region` - (Optional) If you don't specify an AWS Region, the default is the current region.
-* `versionId` - (Optional) Specifies the table version for the output data schema. Defaults to `latest`.
+* `versionId` - (Optional) Specifies the table version for the output data schema. Defaults to `LATEST`.
 
 #### dynamic_partitioning_configuration
 
@@ -1054,7 +1054,7 @@ Required when using [dynamic partitioning](https://docs.aws.amazon.com/firehose/
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://aws.amazon.com/documentation/firehose/
 
@@ -1062,9 +1062,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `10M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -1090,4 +1090,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extendedS3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.18.0 input-a1a8ee815e60ee19fc9869aa9b7d23a6638e58e958bfdba7f5657d2ac077f81b -->
+<!-- cache-key: cdktf-0.19.0 input-a1a8ee815e60ee19fc9869aa9b7d23a6638e58e958bfdba7f5657d2ac077f81b -->

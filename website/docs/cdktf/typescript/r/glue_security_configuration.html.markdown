@@ -61,17 +61,17 @@ This resource supports the following arguments:
 
 #### cloudwatch_encryption Argument Reference
 
-* `cloudwatchEncryptionMode` - (Optional) Encryption mode to use for CloudWatch data. Valid values: `disabled`, `sseKms`. Default value: `disabled`.
+* `cloudwatchEncryptionMode` - (Optional) Encryption mode to use for CloudWatch data. Valid values: `DISABLED`, `SSE-KMS`. Default value: `DISABLED`.
 * `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 
 #### job_bookmarks_encryption Argument Reference
 
-* `jobBookmarksEncryptionMode` - (Optional) Encryption mode to use for job bookmarks data. Valid values: `cseKms`, `disabled`. Default value: `disabled`.
+* `jobBookmarksEncryptionMode` - (Optional) Encryption mode to use for job bookmarks data. Valid values: `CSE-KMS`, `DISABLED`. Default value: `DISABLED`.
 * `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 
 #### s3_encryption Argument Reference
 
-* `s3EncryptionMode` - (Optional) Encryption mode to use for S3 data. Valid values: `disabled`, `sseKms`, `sseS3`. Default value: `disabled`.
+* `s3EncryptionMode` - (Optional) Encryption mode to use for S3 data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-S3`. Default value: `DISABLED`.
 * `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 
 ## Attribute Reference
@@ -102,4 +102,4 @@ Using `terraform import`, import Glue Security Configurations using `name`. For 
 % terraform import aws_glue_security_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-648d5a94dbcbfce0a30b8db8178f35b6d6f0e3b9f5501dfc1bc90378045104ee -->
+<!-- cache-key: cdktf-0.19.0 input-648d5a94dbcbfce0a30b8db8178f35b6d6f0e3b9f5501dfc1bc90378045104ee -->

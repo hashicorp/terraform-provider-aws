@@ -76,7 +76,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) A description of what the contact list is about.
-* `tags` - (Optional) Key-value map of resource tags for the contact list. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags for the contact list. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topic` - (Optional) Configuration block(s) with topic for the contact list. Detailed below.
 
 ### topic
@@ -120,4 +120,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Contact List using the 
 % terraform import aws_sesv2_contact_list.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bf6ee9d89685af78292cb0d5392a6357f5844d7e092a1f578086fbf6539e59a5 -->
+<!-- cache-key: cdktf-0.19.0 input-bf6ee9d89685af78292cb0d5392a6357f5844d7e092a1f578086fbf6539e59a5 -->

@@ -92,4 +92,4 @@ Using `terraform import`, import `aws_servicecatalog_portfolio_share` using the 
 % terraform import aws_servicecatalog_portfolio_share.example port-12344321:ACCOUNT:123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2bfc4e872e821217e1db9b54e4495ec060f98eb8c8810ca144d89c25443c542e -->
+<!-- cache-key: cdktf-0.19.0 input-2bfc4e872e821217e1db9b54e4495ec060f98eb8c8810ca144d89c25443c542e -->

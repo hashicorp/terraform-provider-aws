@@ -635,4 +635,4 @@ Using `terraform import`, import Network Firewall Rule Groups using their `arn`.
 % terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->
+<!-- cache-key: cdktf-0.19.0 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->

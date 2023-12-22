@@ -49,11 +49,11 @@ This data source exports the following attributes in addition to the arguments a
 * `securityGroupId` - ID of the security group associated with the CloudHSM cluster.
 * `subnetIds` - IDs of subnets in which cluster operates.
 * `clusterCertificates` - The list of cluster certificates.
-    * `clusterCertificates0ClusterCertificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
-    * `clusterCertificates0ClusterCsr` - The certificate signing request (CSR). Available only in UNINITIALIZED state.
-    * `clusterCertificates0AwsHardwareCertificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
-    * `clusterCertificates0HsmCertificate` - The HSM certificate issued (signed) by the HSM hardware.
-    * `clusterCertificates0ManufacturerHardwareCertificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
+    * `cluster_certificates.0.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.
+    * `cluster_certificates.0.cluster_csr` - The certificate signing request (CSR). Available only in UNINITIALIZED state.
+    * `cluster_certificates.0.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
+    * `cluster_certificates.0.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
+    * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
 The number of available cluster certificates may vary depending on state of the cluster.
 
-<!-- cache-key: cdktf-0.18.0 input-cafc753026d5e76ff2fae8fcd6781f60ca5e79de76e720cef8a6975659131495 -->
+<!-- cache-key: cdktf-0.19.0 input-cafc753026d5e76ff2fae8fcd6781f60ca5e79de76e720cef8a6975659131495 -->

@@ -93,4 +93,4 @@ The `encryption_config` configuration block supports the following arguments:
 * `encryption_type` - The type of encryption. Valid Values: `KMS`.
 * `key_id` - The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-<!-- cache-key: cdktf-0.18.0 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->
+<!-- cache-key: cdktf-0.19.0 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->

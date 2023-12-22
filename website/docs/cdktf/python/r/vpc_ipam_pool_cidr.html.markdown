@@ -143,4 +143,4 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 % terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->
+<!-- cache-key: cdktf-0.19.0 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->

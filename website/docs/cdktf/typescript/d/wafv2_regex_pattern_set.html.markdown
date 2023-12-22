@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAFv2 Regex Pattern Set.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `cloudfront` or `regional`. To work with CloudFront, you must also specify the region `usEast1` (N. Virginia) on the AWS provider.
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
 ## Attribute Reference
 
@@ -57,4 +57,4 @@ Each `regularExpression` supports the following argument:
 
 * `regexString` - (Required) String representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
 
-<!-- cache-key: cdktf-0.18.0 input-a646ff63f23c77b2e1c1477a070043fec306e7b9d0c94cd6c0f0b67fafdb28da -->
+<!-- cache-key: cdktf-0.19.0 input-a646ff63f23c77b2e1c1477a070043fec306e7b9d0c94cd6c0f0b67fafdb28da -->

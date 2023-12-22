@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `queueUrls` - A list of queue URLs.
 
-<!-- cache-key: cdktf-0.18.0 input-1e5fe100d7582003d54198ed26f28cc150e201a30f6ce59c4e3b9c34624d3a76 -->
+<!-- cache-key: cdktf-0.19.0 input-1e5fe100d7582003d54198ed26f28cc150e201a30f6ce59c4e3b9c34624d3a76 -->

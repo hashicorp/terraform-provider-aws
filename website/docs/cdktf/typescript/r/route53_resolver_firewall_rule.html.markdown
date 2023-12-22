@@ -66,11 +66,11 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the rule, to manage and use it.
-* `action` - (Required) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list. Valid values: `allow`, `block`, `alert`.
-* `blockOverrideDnsType` - (Required if `blockResponse` is `override`) The DNS record's type. This determines the format of the record value that you provided in BlockOverrideDomain. Value values: `cname`.
-* `blockOverrideDomain` - (Required if `blockResponse` is `override`) The custom DNS record to send back in response to the query.
-* `blockOverrideTtl` - (Required if `blockResponse` is `override`) The recommended amount of time, in seconds, for the DNS resolver or web browser to cache the provided override record. Minimum value of 0. Maximum value of 604800.
-* `blockResponse` - (Required if `action` is `block`) The way that you want DNS Firewall to block the request. Valid values: `nodata`, `nxdomain`, `override`.
+* `action` - (Required) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list. Valid values: `ALLOW`, `BLOCK`, `ALERT`.
+* `blockOverrideDnsType` - (Required if `block_response` is `OVERRIDE`) The DNS record's type. This determines the format of the record value that you provided in BlockOverrideDomain. Value values: `CNAME`.
+* `blockOverrideDomain` - (Required if `block_response` is `OVERRIDE`) The custom DNS record to send back in response to the query.
+* `blockOverrideTtl` - (Required if `block_response` is `OVERRIDE`) The recommended amount of time, in seconds, for the DNS resolver or web browser to cache the provided override record. Minimum value of 0. Maximum value of 604800.
+* `blockResponse` - (Required if `action` is `BLOCK`) The way that you want DNS Firewall to block the request. Valid values: `NODATA`, `NXDOMAIN`, `OVERRIDE`.
 * `firewallDomainListId` - (Required) The ID of the domain list that you want to use in the rule.
 * `firewallRuleGroupId` - (Required) The unique identifier of the firewall rule group where you want to create the rule.
 * `priority` - (Required) The setting that determines the processing order of the rule in the rule group. DNS Firewall processes the rules in a rule group by order of priority, starting from the lowest setting.
@@ -103,4 +103,4 @@ Using `terraform import`, import  Route 53 Resolver DNS Firewall rules using the
 % terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-91abb2b9b51d1173006c0a1458d5a94bbfd790f314498d4abce090eaa02a7e45 -->
+<!-- cache-key: cdktf-0.19.0 input-91abb2b9b51d1173006c0a1458d5a94bbfd790f314498d4abce090eaa02a7e45 -->

@@ -61,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - List of Tag values, with a maximum of 50 elements.
 * `volume_id` - ID of the volume that the snapshot is of.
 
-<!-- cache-key: cdktf-0.18.0 input-8de9bd583ae91dc99a2426809f4ba7a76d20e95064b4a418a3d285d9bb3c459b -->
+<!-- cache-key: cdktf-0.19.0 input-8de9bd583ae91dc99a2426809f4ba7a76d20e95064b4a418a3d285d9bb3c459b -->

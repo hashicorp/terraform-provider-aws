@@ -86,4 +86,4 @@ Using `terraform import`, import ECR Registry Policy using the registry id. For 
 % terraform import aws_ecr_registry_policy.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a8b9e1b12da0ab4f7f9e19fe22a9fd339fcf53514637769a293dcb91b039f9b6 -->
+<!-- cache-key: cdktf-0.19.0 input-a8b9e1b12da0ab4f7f9e19fe22a9fd339fcf53514637769a293dcb91b039f9b6 -->

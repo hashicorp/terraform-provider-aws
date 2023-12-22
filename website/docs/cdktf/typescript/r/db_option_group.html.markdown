@@ -85,7 +85,7 @@ This resource supports the following arguments:
 * `engineName` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `majorEngineVersion` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) List of options to apply.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 `option` blocks support the following:
 
@@ -107,13 +107,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - DB option group name.
 * `arn` - ARN of the DB option group.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `15M`)
+- `delete` - (Default `15m`)
 
 ## Import
 
@@ -137,4 +137,4 @@ Using `terraform import`, import DB option groups using the `name`. For example:
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62a59e358d472f90cc96a8b627a9411731fa9d779529aff440ffd21e6234b0b2 -->
+<!-- cache-key: cdktf-0.19.0 input-62a59e358d472f90cc96a8b627a9411731fa9d779529aff440ffd21e6234b0b2 -->

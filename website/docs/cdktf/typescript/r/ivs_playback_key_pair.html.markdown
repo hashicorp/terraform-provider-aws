@@ -45,7 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `name` - (Optional) Playback Key Pair name.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -53,14 +53,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Playback Key Pair.
 * `fingerprint` - Key-pair identifier.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import IVS (Interactive Video) Playback Key Pair using
 % terraform import aws_ivs_playback_key_pair.example arn:aws:ivs:us-west-2:326937407773:playback-key/KDJRJNQhiQzA
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7d629869f9647ea4bb2e6762ea0a06ac8cf1d19444905446ee0e3f95d7b62b08 -->
+<!-- cache-key: cdktf-0.19.0 input-7d629869f9647ea4bb2e6762ea0a06ac8cf1d19444905446ee0e3f95d7b62b08 -->

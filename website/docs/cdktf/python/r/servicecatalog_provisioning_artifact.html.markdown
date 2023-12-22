@@ -97,4 +97,4 @@ Using `terraform import`, import `aws_servicecatalog_provisioning_artifact` usin
 % terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec:prod-el3an0rma3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a7d327a6dfcafe1faac099b2d4490b5d1603912ff87a7717d27d809de4e883f3 -->
+<!-- cache-key: cdktf-0.19.0 input-a7d327a6dfcafe1faac099b2d4490b5d1603912ff87a7717d27d809de4e883f3 -->

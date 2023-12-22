@@ -230,4 +230,4 @@ Using `terraform import`, import Workspaces directory using the directory ID. Fo
 % terraform import aws_workspaces_directory.main d-4444444444
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->
+<!-- cache-key: cdktf-0.19.0 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->

@@ -82,4 +82,4 @@ Using `terraform import`, import Transfer Workflows using the  `id`. For example
 % terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->
+<!-- cache-key: cdktf-0.19.0 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->

@@ -110,7 +110,7 @@ This resource supports the following arguments:
 - `organizationEnabled` - (Optional) Specifies whether an event data store collects events logged for an organization in AWS Organizations. Default: `false`.
 - `retentionPeriod` - (Optional) The retention period of the event data store, in days. You can set a retention period of up to 2555 days, the equivalent of seven years. Default: `2555`.
 - `kmsKeyId` - Specifies the AWS KMS key ID to use to encrypt the events delivered by CloudTrail. The value can be an alias name prefixed by alias/, a fully specified ARN to an alias, a fully specified ARN to a key, or a globally unique identifier.
-- `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 - `terminationProtectionEnabled` - (Optional) Specifies whether termination protection is enabled for the event data store. If termination protection is enabled, you cannot delete the event data store until termination protection is disabled. Default: `true`.
 
 ### Advanced Event Selector Arguments
@@ -124,8 +124,8 @@ This resource supports the following arguments:
 
 `fieldSelector` supports the following arguments:
 
-- `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resourcesType`, `resourcesArn`.
-- `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resourcesType` fields.
+- `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
+- `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 - `notEquals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
 - `startsWith` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
 - `notStartsWith` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
@@ -138,7 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `arn` - ARN of the event data store.
 - `id` - Name of the event data store.
-- `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+- `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -162,4 +162,4 @@ Using `terraform import`, import event data stores using their `arn`. For exampl
 % terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-606e5cb558b509aa1002c2f846e4174eed937e4e6b6708dfbb236e4bae1cfe9d -->
+<!-- cache-key: cdktf-0.19.0 input-606e5cb558b509aa1002c2f846e4174eed937e4e6b6708dfbb236e4bae1cfe9d -->

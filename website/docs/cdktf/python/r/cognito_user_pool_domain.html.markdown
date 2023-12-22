@@ -118,4 +118,4 @@ Using `terraform import`, import Cognito User Pool Domains using the `domain`. F
 % terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-733a59c8cc009e81485e84116993b875f945dcad026524678e85b20d84780cc3 -->
+<!-- cache-key: cdktf-0.19.0 input-733a59c8cc009e81485e84116993b875f945dcad026524678e85b20d84780cc3 -->

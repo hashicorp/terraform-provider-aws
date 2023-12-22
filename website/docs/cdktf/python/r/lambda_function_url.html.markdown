@@ -93,4 +93,4 @@ Using `terraform import`, import Lambda function URLs using the `function_name` 
 % terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-109acf5fac25dcc5daf91ea88836c775555057c7e2ea1a59edfd11a98e567940 -->
+<!-- cache-key: cdktf-0.19.0 input-109acf5fac25dcc5daf91ea88836c775555057c7e2ea1a59edfd11a98e567940 -->

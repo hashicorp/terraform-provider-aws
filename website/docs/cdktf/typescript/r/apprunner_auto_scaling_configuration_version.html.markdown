@@ -48,7 +48,7 @@ The following arguments supported:
 * `maxConcurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
 * `maxSize` - (Optional, Forces new resource) Maximal number of instances that App Runner provisions for your service.
 * `minSize` - (Optional, Forces new resource) Minimal number of instances that App Runner provisions for your service.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -56,9 +56,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of this auto scaling configuration version.
 * `autoScalingConfigurationRevision` - The revision of this auto scaling configuration.
-* `latest` - Whether the auto scaling configuration has the highest `autoScalingConfigurationRevision` among all configurations that share the same `autoScalingConfigurationName`.
+* `latest` - Whether the auto scaling configuration has the highest `auto_scaling_configuration_revision` among all configurations that share the same `auto_scaling_configuration_name`.
 * `status` - Current state of the auto scaling configuration. An INACTIVE configuration revision has been deleted and can't be used. It is permanently removed some time after deletion.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import App Runner AutoScaling Configuration Versions u
 % terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->
+<!-- cache-key: cdktf-0.19.0 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->

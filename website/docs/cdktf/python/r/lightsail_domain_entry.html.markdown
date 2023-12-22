@@ -77,4 +77,4 @@ Using `terraform import`, import `aws_lightsail_domain_entry` using the id attri
 % terraform import aws_lightsail_domain_entry.example www,mydomain.com,A,127.0.0.1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5611067be5b2911c504ce2dd0c0db39671077d1db16f1803538d003af55e4cb1 -->
+<!-- cache-key: cdktf-0.19.0 input-5611067be5b2911c504ce2dd0c0db39671077d1db16f1803538d003af55e4cb1 -->

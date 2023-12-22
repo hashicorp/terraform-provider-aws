@@ -79,16 +79,16 @@ func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData,
 
 	out, err := conn.CreateSourceRepository(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Name == nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Name))
 
-	return resourceSourceRepositoryRead(ctx, d, meta)
+	return append(diags, resourceSourceRepositoryRead(ctx, d, meta)...)
 }
 
 func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -107,7 +107,7 @@ func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, ResNameSourceRepository, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameSourceRepository, d.Id(), err)
 	}
 
 	d.Set("name", out.Name)
@@ -135,7 +135,7 @@ func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionDeleting, ResNameSourceRepository, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionDeleting, ResNameSourceRepository, d.Id(), err)
 	}
 
 	return diags

@@ -93,13 +93,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-- `scanType` - (Required) the scanning type to set for the registry. Can be either `enhanced` or `basic`.
+- `scanType` - (Required) the scanning type to set for the registry. Can be either `ENHANCED` or `BASIC`.
 - `rule` - (Optional) One or multiple blocks specifying scanning rules to determine which repository filters are used and at what frequency scanning will occur. See [below for schema](#rule).
 
 ### rule
 
-- `repositoryFilter` - (Required) One or more repository filter blocks, containing a `filter` (required string filtering repositories, see pattern regex [here](https://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_ScanningRepositoryFilter.html)) and a `filterType` (required string, currently only `wildcard` is supported).
-- `scanFrequency` - (Required) The frequency that scans are performed at for a private registry. Can be `scanOnPush`, `continuousScan`, or `manual`.
+- `repositoryFilter` - (Required) One or more repository filter blocks, containing a `filter` (required string filtering repositories, see pattern regex [here](https://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_ScanningRepositoryFilter.html)) and a `filter_type` (required string, currently only `WILDCARD` is supported).
+- `scanFrequency` - (Required) The frequency that scans are performed at for a private registry. Can be `SCAN_ON_PUSH`, `CONTINUOUS_SCAN`, or `MANUAL`.
 
 ## Attribute Reference
 
@@ -129,4 +129,4 @@ Using `terraform import`, import ECR Scanning Configurations using the `registry
 % terraform import aws_ecr_registry_scanning_configuration.example 012345678901
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-878f43063e7870789fdafbc4e35da8eca405013c513258165088a92488bbfa61 -->
+<!-- cache-key: cdktf-0.19.0 input-878f43063e7870789fdafbc4e35da8eca405013c513258165088a92488bbfa61 -->

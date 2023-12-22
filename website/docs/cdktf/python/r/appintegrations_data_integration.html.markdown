@@ -86,4 +86,4 @@ Using `terraform import`, import Amazon AppIntegrations Data Integrations using 
 % terraform import aws_appintegrations_data_integration.example 12345678-1234-1234-1234-123456789123
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c453729b63eb0dcd3c4b7bbf7e0c63bfc3f55c4cc0725680004f1efcf202b819 -->
+<!-- cache-key: cdktf-0.19.0 input-c453729b63eb0dcd3c4b7bbf7e0c63bfc3f55c4cc0725680004f1efcf202b819 -->

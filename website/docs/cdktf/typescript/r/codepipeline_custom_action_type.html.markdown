@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `category` - (Required) The category of the custom action. Valid values: `source`, `build`, `deploy`, `test`, `invoke`, `approval`
+* `category` - (Required) The category of the custom action. Valid values: `Source`, `Build`, `Deploy`, `Test`, `Invoke`, `Approval`
 * `configurationProperty` - (Optional) The configuration properties for the custom action. Max 10 items.
 
 The `configurationProperty` object supports the following:
@@ -59,7 +59,7 @@ The `configurationProperty` object supports the following:
 * `queryable` - (Optional) Indicates that the property will be used in conjunction with PollForJobs.
 * `required` - (Required) Whether the configuration property is a required value.
 * `secret`- (Required) Whether the configuration property is secret.
-* `type`- (Optional) The type of the configuration property. Valid values: `string`, `number`, `boolean`
+* `type`- (Optional) The type of the configuration property. Valid values: `String`, `Number`, `Boolean`
 
 * `inputArtifactDetails` - (Required) The details of the input artifact for the action.
 
@@ -85,17 +85,17 @@ The `settings` object supports the following:
 * `revisionUrlTemplate` - (Optional) The URL returned to the AWS CodePipeline console that contains a link to the page where customers can update or change the configuration of the external action.
 * `thirdPartyConfigurationUrl` - (Optional) The URL of a sign-up page where users can sign up for an external service and perform initial configuration of the action provided by that service.
 
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` - (Required) The version identifier of the custom action.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Composed of category, provider and version. For example, `build:terraform:1`
+* `id` - Composed of category, provider and version. For example, `Build:terraform:1`
 * `arn` - The action ARN.
 * `owner` - The creator of the action being called.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -119,4 +119,4 @@ Using `terraform import`, import CodeDeploy CustomActionType using the `id`. For
 % terraform import aws_codepipeline_custom_action_type.example Build:terraform:1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-618f4e853ef9774ea870455f957f72ac7ccbe371d784f81ae5996c728184b956 -->
+<!-- cache-key: cdktf-0.19.0 input-618f4e853ef9774ea870455f957f72ac7ccbe371d784f81ae5996c728184b956 -->

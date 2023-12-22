@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `accountId` - (Optional) ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
-* `alternateContactType` - (Required) Type of the alternate contact. Allowed values are: `billing`, `operations`, `security`.
+* `alternateContactType` - (Required) Type of the alternate contact. Allowed values are: `BILLING`, `OPERATIONS`, `SECURITY`.
 * `emailAddress` - (Required) An email address for the alternate contact.
 * `name` - (Required) Name of the alternate contact.
 * `phoneNumber` - (Required) Phone number for the alternate contact.
@@ -57,9 +57,9 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `5M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -107,4 +107,4 @@ Import the Alternate Contact for another account using the `accountId` and `alte
 % terraform import aws_account_alternate_contact.operations 1234567890/OPERATIONS
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-03bffb9572a9af37cd374a887e8789217031dddd609768f253119fb07d95935d -->
+<!-- cache-key: cdktf-0.19.0 input-03bffb9572a9af37cd374a887e8789217031dddd609768f253119fb07d95935d -->

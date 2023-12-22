@@ -141,9 +141,9 @@ This resource supports the following arguments:
 * `privateKey` – (Required) The contents of the private key in PEM-encoded format.
 * `path` - (Optional) The IAM path for the server certificate.  If it is not
     included, it defaults to a slash (/). If this certificate is for use with
-    AWS CloudFront, the path must be in format `/cloudfront/yourPathHere`.
+    AWS CloudFront, the path must be in format `/cloudfront/your_path_here`.
     See [IAM Identifiers][1] for more details on IAM Paths.
-* `tags` - (Optional) Map of resource tags for the server certificate. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags for the server certificate. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **NOTE:** AWS performs behind-the-scenes modifications to some certificate files if they do not adhere to a specific format. These modifications will result in terraform forever believing that it needs to update the resources since the local and AWS file contents will not match after theses modifications occur. In order to prevent this from happening you must ensure that all your PEM-encoded files use UNIX line-breaks and that `certificateBody` contains only one certificate. All other certificates should go in `certificateChain`. It is common for some Certificate Authorities to issue certificate files that have DOS line-breaks and that are actually multiple certificates concatenated together in order to form a full certificate chain.
 
@@ -155,7 +155,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `expiration` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) on which the certificate is set to expire.
 * `id` - The unique Server Certificate name
 * `name` - The name of the Server Certificate
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uploadDate` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) when the server certificate was uploaded.
 
 ## Import
@@ -184,4 +184,4 @@ Using `terraform import`, import IAM Server Certificates using the `name`. For e
 [2]: https://docs.aws.amazon.com/IAM/latest/UserGuide/ManagingServerCerts.html
 [lifecycle]: /docs/configuration/resources.html
 
-<!-- cache-key: cdktf-0.18.0 input-4e79a75d64fc823b8d2391e118523a861e5a2f30f4797410fdc70324a0c27272 -->
+<!-- cache-key: cdktf-0.19.0 input-4e79a75d64fc823b8d2391e118523a861e5a2f30f4797410fdc70324a0c27272 -->

@@ -99,9 +99,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1M`)
-- `update` - (Default `1M`)
-- `delete` - (Default `1M`)
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 
@@ -125,4 +125,4 @@ Using `terraform import`, import `awsCleanroomsCollaboration` using the `id`. Fo
 % terraform import aws_cleanrooms_collaboration.collaboration 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-395ee6487e82b1be6f52fee6f12058bc05b7b0fad6b5632c7701a3893516718e -->
+<!-- cache-key: cdktf-0.19.0 input-395ee6487e82b1be6f52fee6f12058bc05b7b0fad6b5632c7701a3893516718e -->

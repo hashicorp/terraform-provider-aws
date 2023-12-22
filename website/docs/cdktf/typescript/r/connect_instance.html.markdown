@@ -98,11 +98,11 @@ This resource supports the following arguments:
 * `autoResolveBestVoicesEnabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contactFlowLogsEnabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
 * `contactLensEnabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.
-* `directoryId` - (Optional) The identifier for the directory if identity_management_type is `existingDirectory`.
+* `directoryId` - (Optional) The identifier for the directory if identity_management_type is `EXISTING_DIRECTORY`.
 * `earlyMediaEnabled` - (Optional) Specifies whether early media for outbound calls is enabled . Defaults to `true` if outbound calls is enabled.
-* `identityManagementType` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `saml`, `connectManaged`, `existingDirectory`.
+* `identityManagementType` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
 * `inboundCallsEnabled` - (Required) Specifies whether inbound calls are enabled.
-* `instanceAlias` - (Optional) Specifies the name of the instance. Required if `directoryId` not specified.
+* `instanceAlias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
 * `multiPartyConferenceEnabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outboundCallsEnabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
@@ -121,8 +121,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -146,4 +146,4 @@ Using `terraform import`, import Connect instances using the `id`. For example:
 % terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->
+<!-- cache-key: cdktf-0.19.0 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->

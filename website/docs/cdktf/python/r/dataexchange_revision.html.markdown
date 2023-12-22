@@ -65,4 +65,4 @@ Using `terraform import`, import DataExchange Revisions using their `data-set-id
 % terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1dff294cf3af4fd0944cbd190d7f06ffbbea96e953f96933b6e5b54e4c8fdcd1 -->
+<!-- cache-key: cdktf-0.19.0 input-1dff294cf3af4fd0944cbd190d7f06ffbbea96e953f96933b6e5b54e4c8fdcd1 -->

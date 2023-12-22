@@ -261,8 +261,8 @@ This resource supports the following arguments:
 * `loadBalancerInfo` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `onPremisesInstanceTagFilter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `triggerConfiguration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
-* `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `update` and `ignore`. Defaults to `update`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
 
@@ -281,7 +281,7 @@ _Only one `alarmConfiguration` is allowed_.
 You can configure a deployment group to automatically rollback when a deployment fails or when a monitoring threshold you specify is met. In this case, the last known good version of an application revision is deployed. `autoRollbackConfiguration` supports the following:
 
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
-* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `deploymentFailure`, `deploymentStopOnAlarm` and `deploymentStopOnRequest`.
+* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE`, `DEPLOYMENT_STOP_ON_ALARM` and `DEPLOYMENT_STOP_ON_REQUEST`.
 
 _Only one `autoRollbackConfiguration` is allowed_.
 
@@ -298,29 +298,29 @@ _Only one `blueGreenDeploymentConfig` is allowed_.
 You can configure how traffic is rerouted to instances in a replacement environment in a blue/green deployment. `deploymentReadyOption` supports the following:
 
 * `actionOnTimeout` - (Optional) When to reroute traffic from an original environment to a replacement environment in a blue/green deployment.
-    * `continueDeployment`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
-    * `stopDeployment`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
-* `waitTimeInMinutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `stopDeployment` option for `actionOnTimeout`.
+    * `CONTINUE_DEPLOYMENT`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
+    * `STOP_DEPLOYMENT`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
+* `waitTimeInMinutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `STOP_DEPLOYMENT` option for `action_on_timeout`.
 
 You can configure how instances will be added to the replacement environment in a blue/green deployment. `greenFleetProvisioningOption` supports the following:
 
 * `action` - (Optional) The method used to add instances to a replacement environment.
-    * `discoverExisting`: Use instances that already exist or will be created manually.
-    * `copyAutoScalingGroup`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `copyAutoScalingGroup`. Use `autoscalingGroups` to specify the Auto Scaling group.
+    * `DISCOVER_EXISTING`: Use instances that already exist or will be created manually.
+    * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscaling_groups` to specify the Auto Scaling group.
 
 You can configure how instances in the original environment are terminated when a blue/green deployment is successful. `terminateBlueInstancesOnDeploymentSuccess` supports the following:
 
 * `action` - (Optional) The action to take on instances in the original environment after a successful blue/green deployment.
-    * `terminate`: Instances are terminated after a specified wait time.
-    * `keepAlive`: Instances are left running after they are deregistered from the load balancer and removed from the deployment group.
+    * `TERMINATE`: Instances are terminated after a specified wait time.
+    * `KEEP_ALIVE`: Instances are left running after they are deregistered from the load balancer and removed from the deployment group.
 * `terminationWaitTimeInMinutes` - (Optional) The number of minutes to wait after a successful blue/green deployment before terminating instances from the original environment.
 
 ### deployment_style Argument Reference
 
 You can configure the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deploymentStyle` supports the following:
 
-* `deploymentOption` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `withTrafficControl` or `withoutTrafficControl`. Default is `withoutTrafficControl`.
-* `deploymentType` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `inPlace` or `blueGreen`. Default is `inPlace`.
+* `deploymentOption` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`. Default is `WITHOUT_TRAFFIC_CONTROL`.
+* `deploymentType` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`. Default is `IN_PLACE`.
 
 _Only one `deploymentStyle` is allowed_.
 
@@ -329,7 +329,7 @@ _Only one `deploymentStyle` is allowed_.
 The `ec2TagFilter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
-* `type` - (Optional) The type of the tag filter, either `keyOnly`, `valueOnly`, or `keyAndValue`.
+* `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
 * `value` - (Optional) The value of the tag filter.
 
 Multiple occurrences of `ec2TagFilter` are allowed, where any instance that matches to at least one of the tag filters is selected.
@@ -349,9 +349,9 @@ Each `ecsService` configuration block supports the following:
 
 You can configure the **Load Balancer** to use in a deployment. `loadBalancerInfo` supports the following:
 
-* `elbInfo` - (Optional) The Classic Elastic Load Balancer to use in a deployment. Conflicts with `targetGroupInfo` and `targetGroupPairInfo`.
-* `targetGroupInfo` - (Optional) The (Application/Network Load Balancer) target group to use in a deployment. Conflicts with `elbInfo` and `targetGroupPairInfo`.
-* `targetGroupPairInfo` - (Optional) The (Application/Network Load Balancer) target group pair to use in a deployment. Conflicts with `elbInfo` and `targetGroupInfo`.
+* `elbInfo` - (Optional) The Classic Elastic Load Balancer to use in a deployment. Conflicts with `target_group_info` and `target_group_pair_info`.
+* `targetGroupInfo` - (Optional) The (Application/Network Load Balancer) target group to use in a deployment. Conflicts with `elb_info` and `target_group_pair_info`.
+* `targetGroupPairInfo` - (Optional) The (Application/Network Load Balancer) target group pair to use in a deployment. Conflicts with `elb_info` and `target_group_info`.
 
 #### load_balancer_info elb_info Argument Reference
 
@@ -396,14 +396,14 @@ The `testTrafficRoute` configuration block supports the following:
 The `onPremisesInstanceTagFilter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
-* `type` - (Optional) The type of the tag filter, either `keyOnly`, `valueOnly`, or `keyAndValue`.
+* `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
 * `value` - (Optional) The value of the tag filter.
 
 ### trigger_configuration Argument Reference
 
 Add triggers to a Deployment Group to receive notifications about events related to deployments or instances in the group. Notifications are sent to subscribers of the **SNS** topic associated with the trigger. _CodeDeploy must have permission to publish to the topic from this deployment group_. `triggerConfiguration` supports the following:
 
-* `triggerEvents` - (Required) The event type or types for which notifications are triggered. Some values that are supported: `deploymentStart`, `deploymentSuccess`, `deploymentFailure`, `deploymentStop`, `deploymentRollback`, `instanceStart`, `instanceSuccess`, `instanceFailure`.  See [the CodeDeploy documentation][1] for all possible values.
+* `triggerEvents` - (Required) The event type or types for which notifications are triggered. Some values that are supported: `DeploymentStart`, `DeploymentSuccess`, `DeploymentFailure`, `DeploymentStop`, `DeploymentRollback`, `InstanceStart`, `InstanceSuccess`, `InstanceFailure`.  See [the CodeDeploy documentation][1] for all possible values.
 * `triggerName` - (Required) The name of the notification trigger.
 * `triggerTargetArn` - (Required) The ARN of the SNS topic through which notifications are sent.
 
@@ -415,7 +415,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Application name and deployment group name.
 * `computePlatform` - The destination platform type for the deployment.
 * `deploymentGroupId` - The ID of the CodeDeploy deployment group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -441,4 +441,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.18.0 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->
+<!-- cache-key: cdktf-0.19.0 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->

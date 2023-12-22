@@ -44,15 +44,15 @@ The following arguments are optional:
 
 * `description` - (Optional) The optional description for the tracker resource.
 * `kmsKeyId` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
-* `positionFiltering` - (Optional) The position filtering method of the tracker resource. Valid values: `timeBased`, `distanceBased`, `accuracyBased`. Default: `timeBased`.
-* `tags` - (Optional) Key-value tags for the tracker. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `positionFiltering` - (Optional) The position filtering method of the tracker resource. Valid values: `TimeBased`, `DistanceBased`, `AccuracyBased`. Default: `TimeBased`.
+* `tags` - (Optional) Key-value tags for the tracker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `createTime` - The timestamp for when the tracker resource was created in ISO 8601 format.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trackerArn` - The Amazon Resource Name (ARN) for the tracker resource. Used when you need to specify a resource across all AWS.
 * `updateTime` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
 
@@ -78,4 +78,4 @@ Using `terraform import`, import `awsLocationTracker` resources using the tracke
 % terraform import aws_location_tracker.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-92c1e9973bd9acd1e32bccee7a0c518d0693fd82125603fc93d69ca391807e92 -->
+<!-- cache-key: cdktf-0.19.0 input-92c1e9973bd9acd1e32bccee7a0c518d0693fd82125603fc93d69ca391807e92 -->

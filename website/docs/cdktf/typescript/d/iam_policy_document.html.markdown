@@ -589,11 +589,11 @@ The following arguments are optional:
 
 ~> **NOTE:** Statements without a `sid` cannot be overridden. In other words, a statement without a `sid` from `sourcePolicyDocuments` cannot be overridden by statements from `overridePolicyDocuments`.
 
-* `overridePolicyDocuments` (Optional) - List of IAM policy documents that are merged together into the exported document. In merging, statements with non-blank `sid`s will override statements with the same `sid` from earlier documents in the list. Statements with non-blank `sid`s will also override statements with the same `sid` from `sourcePolicyDocuments`.  Non-overriding statements will be added to the exported document.
+* `overridePolicyDocuments` (Optional) - List of IAM policy documents that are merged together into the exported document. In merging, statements with non-blank `sid`s will override statements with the same `sid` from earlier documents in the list. Statements with non-blank `sid`s will also override statements with the same `sid` from `source_policy_documents`.  Non-overriding statements will be added to the exported document.
 * `policyId` (Optional) - ID for the policy document.
-* `sourcePolicyDocuments` (Optional) - List of IAM policy documents that are merged together into the exported document. Statements defined in `sourcePolicyDocuments` must have unique `sid`s. Statements with the same `sid` from `overridePolicyDocuments` will override source statements.
+* `sourcePolicyDocuments` (Optional) - List of IAM policy documents that are merged together into the exported document. Statements defined in `source_policy_documents` must have unique `sid`s. Statements with the same `sid` from `override_policy_documents` will override source statements.
 * `statement` (Optional) - Configuration block for a policy statement. Detailed below.
-* `version` (Optional) - IAM policy document version. Valid values are `20081017` and `20121017`. Defaults to `20121017`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
+* `version` (Optional) - IAM policy document version. Valid values are `2008-10-17` and `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
 
 ### `statement`
 
@@ -601,12 +601,12 @@ The following arguments are optional:
 
 * `actions` (Optional) - List of actions that this statement either allows or denies. For example, `["ec2:RunInstances", "s3:*"]`.
 * `condition` (Optional) - Configuration block for a condition. Detailed below.
-* `effect` (Optional) - Whether this statement allows or denies the given actions. Valid values are `allow` and `deny`. Defaults to `allow`.
+* `effect` (Optional) - Whether this statement allows or denies the given actions. Valid values are `Allow` and `Deny`. Defaults to `Allow`.
 * `notActions` (Optional) - List of actions that this statement does *not* apply to. Use to apply a policy statement to all actions *except* those listed.
 * `notPrincipals` (Optional) - Like `principals` except these are principals that the statement does *not* apply to.
 * `notResources` (Optional) - List of resource ARNs that this statement does *not* apply to. Use to apply a policy statement to all resources *except* those listed. Conflicts with `resources`.
 * `principals` (Optional) - Configuration block for principals. Detailed below.
-* `resources` (Optional) - List of resource ARNs that this statement applies to. This is required by AWS if used for an IAM policy. Conflicts with `notResources`.
+* `resources` (Optional) - List of resource ARNs that this statement applies to. This is required by AWS if used for an IAM policy. Conflicts with `not_resources`.
 * `sid` (Optional) - Sid (statement ID) is an identifier for a policy statement.
 
 ### `condition`
@@ -629,8 +629,8 @@ The `principals` and `notPrincipals` arguments define to whom a statement applie
 
 The following arguments are required:
 
-* `identifiers` (Required) List of identifiers for principals. When `type` is `aws`, these are IAM principal ARNs, e.g., `arn:aws:iam::12345678901:role/yakRole`.  When `type` is `service`, these are AWS Service roles, e.g., `lambdaAmazonawsCom`. When `type` is `federated`, these are web identity users or SAML provider ARNs, e.g., `accountsGoogleCom` or `arn:aws:iam::12345678901:samlProvider/yakSamlProvider`. When `type` is `canonicalUser`, these are [canonical user IDs](https://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html#FindingCanonicalId), e.g., `79A59Df900B949E55D96A1E698Fbacedfd6E09D98Eacf8F8D5218E7Cd47Ef2Be`.
-* `type` (Required) Type of principal. Valid values include `aws`, `service`, `federated`, `canonicalUser` and `*`.
+* `identifiers` (Required) List of identifiers for principals. When `type` is `AWS`, these are IAM principal ARNs, e.g., `arn:aws:iam::12345678901:role/yak-role`.  When `type` is `Service`, these are AWS Service roles, e.g., `lambda.amazonaws.com`. When `type` is `Federated`, these are web identity users or SAML provider ARNs, e.g., `accounts.google.com` or `arn:aws:iam::12345678901:saml-provider/yak-saml-provider`. When `type` is `CanonicalUser`, these are [canonical user IDs](https://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html#FindingCanonicalId), e.g., `79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be`.
+* `type` (Required) Type of principal. Valid values include `AWS`, `Service`, `Federated`, `CanonicalUser` and `*`.
 
 ## Attribute Reference
 
@@ -638,4 +638,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.18.0 input-c602f06a4415d21639bfb95fc6d2eb21bd336984864688c93e5e0c70aab27794 -->
+<!-- cache-key: cdktf-0.19.0 input-c602f06a4415d21639bfb95fc6d2eb21bd336984864688c93e5e0c70aab27794 -->

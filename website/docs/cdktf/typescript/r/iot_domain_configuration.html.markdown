@@ -42,9 +42,9 @@ class MyConvertedCode extends TerraformStack {
 * `authorizerConfig` - (Optional) An object that specifies the authorization service for a domain. See below.
 * `domainName` - (Optional) Fully-qualified domain name.
 * `name` - (Required) The name of the domain configuration. This value must be unique to a region.
-* `serverCertificateArns` - (Optional) The ARNs of the certificates that IoT passes to the device during the TLS handshake. Currently you can specify only one certificate ARN. This value is not required for Amazon Web Services-managed domains. When using a custom `domainName`, the cert must include it.
-* `serviceType` - (Optional) The type of service delivered by the endpoint. Note: Amazon Web Services IoT Core currently supports only the `data` service type.
-* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `serverCertificateArns` - (Optional) The ARNs of the certificates that IoT passes to the device during the TLS handshake. Currently you can specify only one certificate ARN. This value is not required for Amazon Web Services-managed domains. When using a custom `domain_name`, the cert must include it.
+* `serviceType` - (Optional) The type of service delivered by the endpoint. Note: Amazon Web Services IoT Core currently supports only the `DATA` service type.
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tlsConfig` - (Optional) An object that specifies the TLS configuration for a domain. See below.
 * `validationCertificateArn` - (Optional) The certificate used to validate the server certificate and prove domain name ownership. This certificate must be signed by a public certificate authority. This value is not required for Amazon Web Services-managed domains.
 
@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the domain configuration.
 * `domainType` - The type of the domain.
 * `id` - The name of the created domain configuration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import domain configurations using the name. For examp
 % terraform import aws_iot_domain_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2d5835d5848bd62e30c91cc17fabb8e78c6dfcf5b391c5c8303b7743fa49409e -->
+<!-- cache-key: cdktf-0.19.0 input-2d5835d5848bd62e30c91cc17fabb8e78c6dfcf5b391c5c8303b7743fa49409e -->

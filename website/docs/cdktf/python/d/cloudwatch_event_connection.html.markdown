@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `authorization_type` - Type of authorization to use to connect. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 
-<!-- cache-key: cdktf-0.18.0 input-c28a6e87c62c9016e5553ac80ba81f240b8c76ab8a07aa2ea802508e58427f58 -->
+<!-- cache-key: cdktf-0.19.0 input-c28a6e87c62c9016e5553ac80ba81f240b8c76ab8a07aa2ea802508e58427f58 -->

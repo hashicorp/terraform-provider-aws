@@ -123,22 +123,22 @@ This resource supports the following arguments:
 * `accountId` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `budgetName` - (Required) The name of a budget.
 * `actionThreshold` - (Required) The trigger threshold of the action. See [Action Threshold](#action-threshold).
-* `actionType` - (Required) The type of action. This defines the type of tasks that can be carried out by this action. This field also determines the format for definition. Valid values are `applyIamPolicy`, `applyScpPolicy`, and `runSsmDocuments`.
-* `approvalModel` - (Required) This specifies if the action needs manual or automatic approval. Valid values are `automatic` and `manual`.
+* `actionType` - (Required) The type of action. This defines the type of tasks that can be carried out by this action. This field also determines the format for definition. Valid values are `APPLY_IAM_POLICY`, `APPLY_SCP_POLICY`, and `RUN_SSM_DOCUMENTS`.
+* `approvalModel` - (Required) This specifies if the action needs manual or automatic approval. Valid values are `AUTOMATIC` and `MANUAL`.
 * `definition` - (Required) Specifies all of the type-specific parameters. See [Definition](#definition).
 * `executionRoleArn` - (Required) The role passed for action execution and reversion. Roles and actions must be in the same account.
-* `notificationType` - (Required) The type of a notification. Valid values are `actual` or `forecasted`.
+* `notificationType` - (Required) The type of a notification. Valid values are `ACTUAL` or `FORECASTED`.
 * `subscriber` - (Required) A list of subscribers. See [Subscriber](#subscriber).
 
 ### Action Threshold
 
-* `actionThresholdType` - (Required) The type of threshold for a notification. Valid values are `percentage` or `absoluteValue`.
+* `actionThresholdType` - (Required) The type of threshold for a notification. Valid values are `PERCENTAGE` or `ABSOLUTE_VALUE`.
 * `actionThresholdValue` - (Required) The threshold of a notification.
 
 ### Subscriber
 
 * `address` - (Required) The address that AWS sends budget notifications to, either an SNS topic or an email.
-* `subscriptionType` - (Required) The type of notification that AWS sends to a subscriber. Valid values are `sns` or `email`.
+* `subscriptionType` - (Required) The type of notification that AWS sends to a subscriber. Valid values are `SNS` or `EMAIL`.
 
 ### Definition
 
@@ -160,7 +160,7 @@ This resource supports the following arguments:
 
 #### SSM Action Definition
 
-* `actionSubType` - (Required) The action subType. Valid values are `stopEc2Instances` or `stopRdsInstances`.
+* `actionSubType` - (Required) The action subType. Valid values are `STOP_EC2_INSTANCES` or `STOP_RDS_INSTANCES`.
 * `instanceIds` - (Required) The EC2 and RDS instance IDs.
 * `region` - (Required) The Region to run the SSM document.
 
@@ -177,8 +177,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
@@ -202,4 +202,4 @@ Using `terraform import`, import budget actions using `accountId:actionId:budget
 % terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a8daba74b839303b60ec0ca7332cc6e8fa6dbb5c1bd3883e6e008d98d91f359b -->
+<!-- cache-key: cdktf-0.19.0 input-a8daba74b839303b60ec0ca7332cc6e8fa6dbb5c1bd3883e6e008d98d91f359b -->

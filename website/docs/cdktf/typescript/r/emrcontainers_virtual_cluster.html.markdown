@@ -51,13 +51,13 @@ The following arguments are required:
 
 * `containerProvider` - (Required) Configuration block for the container provider associated with your cluster.
 * `name` – (Required) Name of the virtual cluster.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### container_provider Arguments
 
 * `id` - The name of the container provider that is running your EMR Containers cluster
 * `info` - Nested list containing information about the configuration of the container provider
-    * `eksInfo` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
+    * `eks_info` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
         * `namespace` - The namespace where the EMR Containers cluster is running
 * `type` - The type of the container provider
 
@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the cluster.
 * `id` - The ID of the cluster.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -91,4 +91,4 @@ Using `terraform import`, import EKS Clusters using the `id`. For example:
 % terraform import aws_emrcontainers_virtual_cluster.example a1b2c3d4e5f6g7h8i9j10k11l
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-221e0f1e69a0b4a1b86a8c23d4aa75c1195f9ddf4419494ec9832c76d6a2f913 -->
+<!-- cache-key: cdktf-0.19.0 input-221e0f1e69a0b4a1b86a8c23d4aa75c1195f9ddf4419494ec9832c76d6a2f913 -->

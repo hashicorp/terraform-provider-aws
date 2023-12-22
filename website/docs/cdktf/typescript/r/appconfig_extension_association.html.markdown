@@ -135,4 +135,4 @@ Using `terraform import`, import AppConfig Extension Associations using their ex
 % terraform import aws_appconfig_extension_association.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-17365f1464d46d38d1dcf2819aa51132f201f9fd4618e6d0e60185e1fad561f2 -->
+<!-- cache-key: cdktf-0.19.0 input-17365f1464d46d38d1dcf2819aa51132f201f9fd4618e6d0e60185e1fad561f2 -->

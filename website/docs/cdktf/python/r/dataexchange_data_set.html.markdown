@@ -67,4 +67,4 @@ Using `terraform import`, import DataExchange DataSets using their ARN. For exam
 % terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bcb32869378838571a8ae492463bc57c036b3f3e8528a58d44a0847e4f76852a -->
+<!-- cache-key: cdktf-0.19.0 input-bcb32869378838571a8ae492463bc57c036b3f3e8528a58d44a0847e4f76852a -->

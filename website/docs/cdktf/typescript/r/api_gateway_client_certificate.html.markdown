@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `description` - (Optional) Description of the client certificate.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `expirationDate` - Date when the client certificate will expire.
 * `pemEncodedCertificate` - The PEM-encoded public key of the client certificate.
 * `arn` - ARN
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -74,4 +74,4 @@ Using `terraform import`, import API Gateway Client Certificates using the id. F
 % terraform import aws_api_gateway_client_certificate.demo ab1cqe
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f5e9958abec817b82b925c0b36a7398f6252c227f18c1f61028418cabf76045c -->
+<!-- cache-key: cdktf-0.19.0 input-f5e9958abec817b82b925c0b36a7398f6252c227f18c1f61028418cabf76045c -->

@@ -57,13 +57,13 @@ One of the following sets of credentials is also required.
 If you choose to use __Certificate credentials__ you will have to provide:
 
 * `certificate` - (Required) The pem encoded TLS Certificate from Apple.
-* `privateKey` - (Required) The Certificate Private Key file (ie. `key` file).
+* `privateKey` - (Required) The Certificate Private Key file (ie. `.key` file).
 
 If you choose to use __Key credentials__ you will have to provide:
 
 * `bundleId` - (Required) The ID assigned to your iOS app. To find this value, choose Certificates, IDs & Profiles, choose App IDs in the Identifiers section, and choose your app.
 * `teamId` - (Required) The ID assigned to your Apple developer account team. This value is provided on the Membership page.
-* `tokenKey` - (Required) The `p8` file that you download from your Apple developer account when you create an authentication key.
+* `tokenKey` - (Required) The `.p8` file that you download from your Apple developer account when you create an authentication key.
 * `tokenKeyId` - (Required) The ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section.
 
 ## Attribute Reference
@@ -92,4 +92,4 @@ Using `terraform import`, import Pinpoint APNs VoIP Sandbox Channel using the `a
 % terraform import aws_pinpoint_apns_voip_sandbox_channel.apns_voip_sandbox application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10a8793c57ea80faa1bcc8e11505f01ac9d61ce493402a8a9a145cb769e2c84c -->
+<!-- cache-key: cdktf-0.19.0 input-10a8793c57ea80faa1bcc8e11505f01ac9d61ce493402a8a9a145cb769e2c84c -->

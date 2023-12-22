@@ -259,4 +259,4 @@ Using `terraform import`, import API Gateway domain names using their `name`. Fo
 % terraform import aws_api_gateway_domain_name.example dev.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-94b48fa1d23d0d114bb8d9f31a16923c5bf9db107914287c83b704a97489f072 -->
+<!-- cache-key: cdktf-0.19.0 input-94b48fa1d23d0d114bb8d9f31a16923c5bf9db107914287c83b704a97489f072 -->

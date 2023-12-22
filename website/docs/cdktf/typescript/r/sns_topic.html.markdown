@@ -113,11 +113,11 @@ The `<endpoint>SuccessFeedbackRoleArn` and `<endpoint>FailureFeedbackRoleArn` ar
 
 This resource supports the following arguments:
 
-* `name` - (Optional) The name of the topic. Topic names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 256 characters long. For a FIFO (first-in-first-out) topic, the name must end with the `fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`
+* `name` - (Optional) The name of the topic. Topic names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 256 characters long. For a FIFO (first-in-first-out) topic, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`
 * `displayName` - (Optional) The display name for the topic
 * `policy` - (Optional) The fully-formed AWS policy as JSON. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
-* `deliveryPolicy` - (Optional) The SNS delivery policy. More on [AWS documentation](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html)
+* `deliveryPolicy` - (Optional) The SNS delivery policy. More details in the [AWS documentation](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html).
 * `applicationSuccessFeedbackRoleArn` - (Optional) The IAM role permitted to receive success feedback for this topic
 * `applicationSuccessFeedbackSampleRate` - (Optional) Percentage of success to sample
 * `applicationFailureFeedbackRoleArn` - (Optional) IAM role for failure feedback
@@ -125,9 +125,10 @@ This resource supports the following arguments:
 * `httpSuccessFeedbackSampleRate` - (Optional) Percentage of success to sample
 * `httpFailureFeedbackRoleArn` - (Optional) IAM role for failure feedback
 * `kmsMasterKeyId` - (Optional) The ID of an AWS-managed customer master key (CMK) for Amazon SNS or a custom CMK. For more information, see [Key Terms](https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html#sse-key-terms)
-* `signatureVersion` - (Optional) If `signatureVersion` should be [1 (SHA1) or 2 (SHA256)](https://docs.aws.amazon.com/sns/latest/dg/sns-verify-signature-of-message.html). The signature version corresponds to the hashing algorithm used while creating the signature of the notifications, subscription confirmations, or unsubscribe confirmation messages sent by Amazon SNS.
-* `tracingConfig` - (Optional) Tracing mode of an Amazon SNS topic. Valid values: `"passThrough"`, `"active"`.
+* `signatureVersion` - (Optional) If `SignatureVersion` should be [1 (SHA1) or 2 (SHA256)](https://docs.aws.amazon.com/sns/latest/dg/sns-verify-signature-of-message.html). The signature version corresponds to the hashing algorithm used while creating the signature of the notifications, subscription confirmations, or unsubscribe confirmation messages sent by Amazon SNS.
+* `tracingConfig` - (Optional) Tracing mode of an Amazon SNS topic. Valid values: `"PassThrough"`, `"Active"`.
 * `fifoTopic` - (Optional) Boolean indicating whether or not to create a FIFO (first-in-first-out) topic (default is `false`).
+* `archivePolicy` - (Optional) The message archive policy for FIFO topics. More details in the [AWS documentation](https://docs.aws.amazon.com/sns/latest/dg/message-archiving-and-replay-topic-owner.html).
 * `contentBasedDeduplication` - (Optional) Enables content-based deduplication for FIFO topics. For more information, see the [related documentation](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-dedup.html)
 * `lambdaSuccessFeedbackRoleArn` - (Optional) The IAM role permitted to receive success feedback for this topic
 * `lambdaSuccessFeedbackSampleRate` - (Optional) Percentage of success to sample
@@ -138,7 +139,7 @@ This resource supports the following arguments:
 * `firehoseSuccessFeedbackRoleArn` - (Optional) The IAM role permitted to receive success feedback for this topic
 * `firehoseSuccessFeedbackSampleRate` - (Optional) Percentage of success to sample
 * `firehoseFailureFeedbackRoleArn` - (Optional) IAM role for failure feedback
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -146,8 +147,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ARN of the SNS topic
 * `arn` - The ARN of the SNS topic, as a more obvious property (clone of id)
+* `beginningArchiveTime` - The oldest timestamp at which a FIFO topic subscriber can start a replay.
 * `owner` - The AWS Account ID of the SNS topic owner
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -171,4 +173,4 @@ Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 % terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0d5a35abbfaca86d4dd3ed7192fda282da053dc7b804f69b6b227e9ae60cda2f -->
+<!-- cache-key: cdktf-0.19.0 input-311dadd136784e610ac528a7d6495a10fda33fd115a478163d12e4e634cb2b45 -->

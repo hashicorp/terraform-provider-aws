@@ -280,12 +280,12 @@ The following arguments are optional:
 * `cognitoOptions` - (Optional) Configuration block for authenticating Kibana with Cognito. Detailed below.
 * `domainEndpointOptions` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebsOptions` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/elasticsearch-service/pricing/). Detailed below.
-* `elasticsearchVersion` - (Optional) Version of Elasticsearch to deploy. Defaults to `15`.
+* `elasticsearchVersion` - (Optional) Version of Elasticsearch to deploy. Defaults to `1.5`.
 * `encryptAtRest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). Detailed below.
 * `logPublishingOptions` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `nodeToNodeEncryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
 * `snapshotOptions` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running Elasticsearch 5.3 and later, Amazon ES takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions of Elasticsearch, Amazon ES takes daily automated snapshots.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcOptions` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)). Detailed below.
 
 ### advanced_security_options
@@ -296,15 +296,15 @@ The following arguments are optional:
 
 #### master_user_options
 
-* `masterUserArn` - (Optional) ARN for the main user. Only specify if `internalUserDatabaseEnabled` is not set or set to `false`.
-* `masterUserName` - (Optional) Main user's username, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internalUserDatabaseEnabled` is set to `true`.
-* `masterUserPassword` - (Optional) Main user's password, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internalUserDatabaseEnabled` is set to `true`.
+* `masterUserArn` - (Optional) ARN for the main user. Only specify if `internal_user_database_enabled` is not set or set to `false`.
+* `masterUserName` - (Optional) Main user's username, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
+* `masterUserPassword` - (Optional) Main user's password, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
 
 ### auto_tune_options
 
-* `desiredState` - (Required) The Auto-Tune desired state for the domain. Valid values: `enabled` or `disabled`.
-* `maintenanceSchedule` - (Required if `rollbackOnDisable` is set to `defaultRollback`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
-* `rollbackOnDisable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `defaultRollback` or `noRollback`.
+* `desiredState` - (Required) The Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
+* `maintenanceSchedule` - (Required if `rollback_on_disable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
+* `rollbackOnDisable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
 
 #### maintenance_schedule
 
@@ -315,7 +315,7 @@ The following arguments are optional:
 ##### duration
 
 * `value` - (Required) An integer specifying the value of the duration of an Auto-Tune maintenance window.
-* `unit` - (Required) The unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `hours`.
+* `unit` - (Required) The unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `HOURS`.
 
 ### cluster_config
 
@@ -325,11 +325,11 @@ The following arguments are optional:
 * `dedicatedMasterType` - (Optional) Instance type of the dedicated main nodes in the cluster.
 * `instanceCount` - (Optional) Number of instances in the cluster.
 * `instanceType` - (Optional) Instance type of data nodes in the cluster.
-* `warmCount` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warmCount` can be only and must be set when `warmEnabled` is set to `true`.
+* `warmCount` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warmEnabled` - (Optional) Whether to enable warm storage.
-* `warmType` - (Optional) Instance type for the Elasticsearch cluster's warm nodes. Valid values are `ultrawarm1MediumElasticsearch`, `ultrawarm1LargeElasticsearch` and `ultrawarm1XlargeElasticsearch`. `warmType` can be only and must be set when `warmEnabled` is set to `true`.
+* `warmType` - (Optional) Instance type for the Elasticsearch cluster's warm nodes. Valid values are `ultrawarm1.medium.elasticsearch`, `ultrawarm1.large.elasticsearch` and `ultrawarm1.xlarge.elasticsearch`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 * `zoneAwarenessConfig` - (Optional) Configuration block containing zone awareness settings. Detailed below.
-* `zoneAwarenessEnabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availabilityZoneCount` within the `zoneAwarenessConfig` must be set to `3`.
+* `zoneAwarenessEnabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 
 #### cold_storage_options
 
@@ -337,7 +337,7 @@ The following arguments are optional:
 
 #### zone_awareness_config
 
-* `availabilityZoneCount` - (Optional) Number of Availability Zones for the domain to use with `zoneAwarenessEnabled`. Defaults to `2`. Valid values: `2` or `3`.
+* `availabilityZoneCount` - (Optional) Number of Availability Zones for the domain to use with `zone_awareness_enabled`. Defaults to `2`. Valid values: `2` or `3`.
 
 ### cognito_options
 
@@ -354,34 +354,34 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 * `customEndpointEnabled` - (Optional) Whether to enable custom endpoint for the Elasticsearch domain.
 * `customEndpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforceHttps` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tlsSecurityPolicy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `policyMinTls10201907` and `policyMinTls12201907`. Terraform will only perform drift detection if a configuration value is provided.
+* `tlsSecurityPolicy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 
 * `ebsEnabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
 * `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the GP3 and Provisioned IOPS EBS volume types.
-* `throughput` - (Required if `volumeType` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
-* `volumeSize` - (Required if `ebsEnabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
+* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
+* `volumeSize` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volumeType` - (Optional) Type of EBS volumes attached to data nodes.
 
 ### encrypt_at_rest
 
 ~> **Note:** You can enable `encryptAtRest` _in place_ for an existing, unencrypted domain only if your Elasticsearch version is 6.7 or greater. For lower versions, if you enable `encryptAtRest`, Terraform with recreate the domain, potentially causing data loss. For any version, if you disable `encryptAtRest` for an existing, encrypted domain, Terraform will recreate the domain, potentially causing data loss. If you change the `kmsKeyId`, Terraform will also recreate the domain, potentially causing data loss.
 
-* `enabled` - (Required) Whether to enable encryption at rest. If the `encryptAtRest` block is not provided then this defaults to `false`. Enabling encryption on new domains requires `elasticsearchVersion` 5.1 or greater.
+* `enabled` - (Required) Whether to enable encryption at rest. If the `encrypt_at_rest` block is not provided then this defaults to `false`. Enabling encryption on new domains requires `elasticsearch_version` 5.1 or greater.
 * `kmsKeyId` - (Optional) KMS key ARN to encrypt the Elasticsearch domain with. If not specified then it defaults to using the `aws/es` service KMS key. Note that KMS will accept a KMS key ID but will return the key ARN. To prevent Terraform detecting unwanted changes, use the key ARN instead.
 
 ### log_publishing_options
 
 * `cloudwatchLogGroupArn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Whether given log publishing option is enabled or not.
-* `logType` - (Required) Type of Elasticsearch log. Valid values: `indexSlowLogs`, `searchSlowLogs`, `esApplicationLogs`, `auditLogs`.
+* `logType` - (Required) Type of Elasticsearch log. Valid values: `INDEX_SLOW_LOGS`, `SEARCH_SLOW_LOGS`, `ES_APPLICATION_LOGS`, `AUDIT_LOGS`.
 
 ### node_to_node_encryption
 
 ~> **Note:** You can enable `nodeToNodeEncryption` _in place_ for an existing, unencrypted domain only if your Elasticsearch version is 6.7 or greater. For lower versions, if you enable `nodeToNodeEncryption`, Terraform will recreate the domain, potentially causing data loss. For any version, if you disable `nodeToNodeEncryption` for an existing, node-to-node encrypted domain, Terraform will recreate the domain, potentially causing data loss.
 
-* `enabled` - (Required) Whether to enable node-to-node encryption. If the `nodeToNodeEncryption` block is not provided then this defaults to `false`. Enabling node-to-node encryption of a new domain requires an `elasticsearchVersion` of `60` or greater.
+* `enabled` - (Required) Whether to enable node-to-node encryption. If the `node_to_node_encryption` block is not provided then this defaults to `false`. Enabling node-to-node encryption of a new domain requires an `elasticsearch_version` of `6.0` or greater.
 
 ### snapshot_options
 
@@ -407,17 +407,17 @@ This resource exports the following attributes in addition to the arguments abov
 * `domainName` - Name of the Elasticsearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibanaEndpoint` - Domain-specific endpoint for kibana without https scheme.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpcOptions0AvailabilityZones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnetIds` were created inside.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpcOptions0AvailabilityZones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpcOptions0VpcId` - If the domain was created inside a VPC, the ID of the VPC.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -441,4 +441,4 @@ Using `terraform import`, import Elasticsearch domains using the `domainName`. F
 % terraform import aws_elasticsearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2ba3b0b9b5de9cf5e4bfb0c3d93db7aa5852b5b15d23694c08cdf16cdf8481e6 -->
+<!-- cache-key: cdktf-0.19.0 input-2ba3b0b9b5de9cf5e4bfb0c3d93db7aa5852b5b15d23694c08cdf16cdf8481e6 -->

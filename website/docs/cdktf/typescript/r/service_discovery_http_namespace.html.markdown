@@ -39,7 +39,7 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the http namespace.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
-* `tags` - (Optional) A map of tags to assign to the namespace. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the namespace. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of a namespace.
 * `arn` - The ARN that Amazon Route 53 assigns to the namespace when you create it.
 * `httpName` - The name of an HTTP namespace.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -72,4 +72,4 @@ Using `terraform import`, import Service Discovery HTTP Namespace using the name
 % terraform import aws_service_discovery_http_namespace.example ns-1234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-72ee12af572418f0c5d18cd5ae2d5d173e51de9928465723b81dfdbd70c4804b -->
+<!-- cache-key: cdktf-0.19.0 input-72ee12af572418f0c5d18cd5ae2d5d173e51de9928465723b81dfdbd70c4804b -->

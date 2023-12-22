@@ -73,8 +73,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -98,4 +98,4 @@ Using `terraform import`, import Direct Connect hosted public virtual interfaces
 % terraform import aws_dx_hosted_public_virtual_interface.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-262d7b7a8f2eb087cdb87de5bfe3e80f0a5fe07b0c75b381a8e2e13dc74e39ca -->
+<!-- cache-key: cdktf-0.19.0 input-262d7b7a8f2eb087cdb87de5bfe3e80f0a5fe07b0c75b381a8e2e13dc74e39ca -->

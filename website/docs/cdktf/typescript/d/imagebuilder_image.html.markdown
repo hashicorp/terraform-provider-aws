@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`xXX`) to fetch the latest build version or a full build version (e.g., `20201126/1`) to fetch an exact version.
+* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attribute Reference
 
@@ -51,28 +51,28 @@ This data source exports the following attributes in addition to the arguments a
 * `enhancedImageMetadataEnabled` - Whether additional information about the image being created is collected.
 * `imageRecipeArn` - ARN of the image recipe.
 * `imageScanningConfiguration` - List of an object with image scanning configuration fields.
-    * `imageScanningEnabled` - Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image.
-    * `ecrConfiguration` - Configuration block with ECR configuration.
-        * `repositoryName` - The name of the container repository that Amazon Inspector scans to identify findings for your container images.
-        * `containerTags` - Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
+    * `image_scanning_enabled` - Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image.
+    * `ecr_configuration` - Configuration block with ECR configuration.
+        * `repository_name` - The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+        * `container_tags` - Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 * `imageTestsConfiguration` - List of an object with image tests configuration.
-    * `imageTestsEnabled` - Whether image tests are enabled.
-    * `timeoutMinutes` - Number of minutes before image tests time out.
+    * `image_tests_enabled` - Whether image tests are enabled.
+    * `timeout_minutes` - Number of minutes before image tests time out.
 * `infrastructureConfigurationArn` - ARN of the Image Builder Infrastructure Configuration.
 * `name` - Name of the image.
 * `platform` - Platform of the image.
 * `osVersion` - Operating System version of the image.
 * `outputResources` - List of objects with resources created by the image.
     * `amis` - Set of objects with each Amazon Machine Image (AMI) created.
-        * `accountId` - Account identifier of the AMI.
+        * `account_id` - Account identifier of the AMI.
         * `description` - Description of the AMI.
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
     * `containers` - Set of objects with each container image created and stored in the output repository.
-        * `imageUris` - Set of URIs for created containers.
+        * `image_uris` - Set of URIs for created containers.
         * `region` - Region of the container image.
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.
 
-<!-- cache-key: cdktf-0.18.0 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->
+<!-- cache-key: cdktf-0.19.0 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->

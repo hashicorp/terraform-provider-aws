@@ -67,20 +67,20 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `fileCacheType` - The type of cache that you're creating. The only supported value is `lustre`.
-* `fileCacheTypeVersion` - The version for the type of cache that you're creating. The only supported value is `212`.
+* `fileCacheType` - The type of cache that you're creating. The only supported value is `LUSTRE`.
+* `fileCacheTypeVersion` - The version for the type of cache that you're creating. The only supported value is `2.12`.
 * `storageCapacity` - The storage capacity of the cache in gibibytes (GiB). Valid values are `1200` GiB, `2400` GiB, and increments of `2400` GiB.
 * `subnetIds` - A list of subnet IDs that the cache will be accessible from. You can specify only one subnet ID.
 
 The following arguments are optional:
 
 * `copyTagsToDataRepositoryAssociations` - A boolean flag indicating whether tags for the cache should be copied to data repository associations. This value defaults to false.
-* `dataRepositoryAssociation` - See the [`dataRepositoryAssociation` configuration](#data-repository-association-arguments) block. Max of 8.
+* `dataRepositoryAssociation` - See the [`data_repository_association` configuration](#data-repository-association-arguments) block. Max of 8.
 A list of up to 8 configurations for data repository associations (DRAs) to be created during the cache creation. The DRAs link the cache to either an Amazon S3 data repository or a Network File System (NFS) data repository that supports the NFSv3 protocol. The DRA configurations must meet the following requirements: 1) All configurations on the list must be of the same data repository type, either all S3 or all NFS. A cache can't link to different data repository types at the same time. 2) An NFS DRA must link to an NFS file system that supports the NFSv3 protocol. DRA automatic import and automatic export is not supported.
 * `kmsKeyId` - Specifies the ID of the AWS Key Management Service (AWS KMS) key to use for encrypting data on an Amazon File Cache. If a KmsKeyId isn't specified, the Amazon FSx-managed AWS KMS key for your account is used.
-* `lustreConfiguration` - See the [`lustreConfiguration`](#lustre-configuration-arguments) block. Required when `fileCacheType` is `lustre`.
+* `lustreConfiguration` - See the [`lustre_configuration`](#lustre-configuration-arguments) block. Required when `file_cache_type` is `LUSTRE`.
 * `securityGroupIds` - A list of IDs specifying the security groups to apply to all network interfaces created for Amazon File Cache access.
-* `tags` - (Optional) A map of tags to assign to the file cache. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the file cache. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Data Repository Association arguments
 
@@ -95,17 +95,17 @@ The `dataRepositoryAssociation` configuration block supports the following argum
 
 The `nfs` configuration block supports the following arguments:
 
-* `version` - (Required) - The version of the NFS (Network File System) protocol of the NFS data repository. The only supported value is NFS3, which indicates that the data repository must support the NFSv3 protocol. The only supported value is `nfs3`.
+* `version` - (Required) - The version of the NFS (Network File System) protocol of the NFS data repository. The only supported value is NFS3, which indicates that the data repository must support the NFSv3 protocol. The only supported value is `NFS3`.
 * `dnsIps` - (Optional) - A list of up to 2 IP addresses of DNS servers used to resolve the NFS file system domain name. The provided IP addresses can either be the IP addresses of a DNS forwarder or resolver that the customer manages and runs inside the customer VPC, or the IP addresses of the on-premises DNS servers.
 
 #### Lustre Configuration arguments
 
 The `lustreConfiguration` configuration block supports the following arguments:
 
-* `deploymentType` - (Required) Specifies the cache deployment type. The only supported value is `cache1`.
-* `metadataConfiguration` - (Required) The configuration for a Lustre MDT (Metadata Target) storage volume. See the [`metadataConfiguration`](#metadata-configuration-arguments) block.
+* `deploymentType` - (Required) Specifies the cache deployment type. The only supported value is `CACHE_1`.
+* `metadataConfiguration` - (Required) The configuration for a Lustre MDT (Metadata Target) storage volume. See the [`metadata_configuration`](#metadata-configuration-arguments) block.
 * `perUnitStorageThroughput` - (Required) Provisions the amount of read and write throughput for each 1 tebibyte (TiB) of cache storage capacity, in MB/s/TiB. The only supported value is `1000`.
-* `weeklyMaintenanceStartTime` - (Optional) A recurring weekly time, in the format `d:hh:mm`. `d` is the day of the week, for which `1` represents Monday and `7` represents Sunday. `hh` is the zero-padded hour of the day (0-23), and `mm` is the zero-padded minute of the hour. For example, 1:05:00 specifies maintenance at 5 AM Monday. See the [ISO week date](https://en.wikipedia.org/wiki/ISO_week_date) for more information.
+* `weeklyMaintenanceStartTime` - (Optional) A recurring weekly time, in the format `D:HH:MM`. `D` is the day of the week, for which `1` represents Monday and `7` represents Sunday. `HH` is the zero-padded hour of the day (0-23), and `MM` is the zero-padded minute of the hour. For example, 1:05:00 specifies maintenance at 5 AM Monday. See the [ISO week date](https://en.wikipedia.org/wiki/ISO_week_date) for more information.
 
 #### Metadata Configuration arguments
 
@@ -129,9 +129,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -155,4 +155,4 @@ Using `terraform import`, import Amazon File Cache cache using the resource `id`
 % terraform import aws_fsx_file_cache.example fc-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1859ea99cb9d6d35c3bafa1903ea724f9611978baf76d96694a45ea873f2f1c0 -->
+<!-- cache-key: cdktf-0.19.0 input-1859ea99cb9d6d35c3bafa1903ea724f9611978baf76d96694a45ea873f2f1c0 -->

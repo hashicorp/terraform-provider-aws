@@ -38,10 +38,10 @@ class MyConvertedCode extends TerraformStack {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `userName:password`.
+* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
 * `expiresAt` - Time in UTC RFC3339 format when the authorization token expires.
 * `id` - Region of the authorization token.
 * `password` - Password decoded from the authorization token.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.18.0 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->
+<!-- cache-key: cdktf-0.19.0 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->

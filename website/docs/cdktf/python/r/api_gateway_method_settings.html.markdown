@@ -239,4 +239,4 @@ Using `terraform import`, import `aws_api_gateway_method_settings` using `REST-A
 % terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7743821eda51c37e62e60ebb2ef0df1ec418fbff45349d42c5ad9056c52929c9 -->
+<!-- cache-key: cdktf-0.19.0 input-7743821eda51c37e62e60ebb2ef0df1ec418fbff45349d42c5ad9056c52929c9 -->

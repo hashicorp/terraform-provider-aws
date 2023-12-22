@@ -78,22 +78,22 @@ This data source exports the following attributes in addition to the arguments a
 * `defaultOutboundQueueId` - Specifies the default outbound queue for the Routing Profile.
 * `description` - Description of the Routing Profile.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
-* `mediaConcurrencies` - One or more `mediaConcurrencies` blocks that specify the channels that agents can handle in the Contact Control Panel (CCP) for this Routing Profile. The `mediaConcurrencies` block is documented below.
-* `queueConfigs` - One or more `queueConfigs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queueConfigs` block is documented below.
+* `mediaConcurrencies` - One or more `media_concurrencies` blocks that specify the channels that agents can handle in the Contact Control Panel (CCP) for this Routing Profile. The `media_concurrencies` block is documented below.
+* `queueConfigs` - One or more `queue_configs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queue_configs` block is documented below.
 * `tags` - Map of tags to assign to the Routing Profile.
 
 A `mediaConcurrencies` block supports the following attributes:
 
-* `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `voice`, `chat`, `task`.
-* `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `voice`: Minimum value of 1. Maximum value of 1. Valid Range for `chat`: Minimum value of 1. Maximum value of 10. Valid Range for `task`: Minimum value of 1. Maximum value of 10.
+* `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
+* `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
 
 A `queueConfigs` block supports the following attributes:
 
-* `channel` - Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `voice`, `chat`, `task`.
+* `channel` - Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
 * `delay` - Delay, in seconds, that a contact should be in the queue before they are routed to an available agent
 * `priority` - Order in which contacts are to be handled for the queue.
 * `queueArn` - ARN for the queue.
 * `queueId` - Identifier for the queue.
 * `queueName` - Name for the queue.
 
-<!-- cache-key: cdktf-0.18.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->
+<!-- cache-key: cdktf-0.19.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->

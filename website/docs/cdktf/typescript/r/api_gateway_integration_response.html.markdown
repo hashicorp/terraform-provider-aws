@@ -80,17 +80,17 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `httpMethod` - (Required) HTTP method (`get`, `post`, `put`, `delete`, `head`, `options`, `any`).
+* `httpMethod` - (Required) HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`).
 * `resourceId` - (Required) API resource ID.
 * `restApiId` - (Required) ID of the associated REST API.
 * `statusCode` - (Required) HTTP status code.
 
 The following arguments are optional:
 
-* `contentHandling` - (Optional) How to handle request payload content type conversions. Supported values are `convertToBinary` and `convertToText`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
+* `contentHandling` - (Optional) How to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
 * `responseParameters` - (Optional) Map of response parameters that can be read from the backend response. For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`.
 * `responseTemplates` - (Optional) Map of templates used to transform the integration response body.
-* `selectionPattern` - (Optional) Regular expression pattern used to choose an integration response based on the response from the backend. Omit configuring this to make the integration the default one. If the backend is an `aws` Lambda function, the AWS Lambda function error header is matched. For all other `http` and `aws` backends, the HTTP status code is matched.
+* `selectionPattern` - (Optional) Regular expression pattern used to choose an integration response based on the response from the backend. Omit configuring this to make the integration the default one. If the backend is an `AWS` Lambda function, the AWS Lambda function error header is matched. For all other `HTTP` and `AWS` backends, the HTTP status code is matched.
 
 ## Attribute Reference
 
@@ -118,4 +118,4 @@ Using `terraform import`, import `awsApiGatewayIntegrationResponse` using `restA
 % terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-97c39e121698d07126a2f35c245570b6347a512d3549856ca8d5c2fc0f8be7e7 -->
+<!-- cache-key: cdktf-0.19.0 input-97c39e121698d07126a2f35c245570b6347a512d3549856ca8d5c2fc0f8be7e7 -->

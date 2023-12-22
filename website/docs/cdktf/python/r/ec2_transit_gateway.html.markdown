@@ -87,4 +87,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway` using the EC2 Transit
 % terraform import aws_ec2_transit_gateway.example tgw-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8abb713f19097861ce297d1a598e2ebacc47c1a42889776410c75cd929a248ea -->
+<!-- cache-key: cdktf-0.19.0 input-8abb713f19097861ce297d1a598e2ebacc47c1a42889776410c75cd929a248ea -->

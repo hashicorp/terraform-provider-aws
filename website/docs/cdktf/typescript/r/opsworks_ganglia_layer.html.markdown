@@ -55,9 +55,9 @@ This resource supports the following arguments:
 * `url` - (Optional) The URL path to use for Ganglia. Defaults to "/ganglia".
 * `username` - (Optiona) The username to use for Ganglia. Defaults to "opsworks".
 * `useEbsOptimizedInstances` - (Optional) Whether to use EBS-optimized instances.
-* `ebsVolume` - (Optional) `ebsVolume` blocks, as described below, will each create an EBS volume and connect it to the layer's instances.
+* `ebsVolume` - (Optional) `ebs_volume` blocks, as described below, will each create an EBS volume and connect it to the layer's instances.
 * `customJson` - (Optional) Custom JSON attributes to apply to the layer.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following extra optional arguments, all lists of Chef recipe names, allow
 custom Chef recipes to be applied to layer instances at the five different
@@ -84,6 +84,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.18.0 input-cd3f72f3fcce85e722f3f818cc5881919d478fd39c4c26ac44c9940408fce59f -->
+<!-- cache-key: cdktf-0.19.0 input-cd3f72f3fcce85e722f3f818cc5881919d478fd39c4c26ac44c9940408fce59f -->

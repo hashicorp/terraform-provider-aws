@@ -80,4 +80,4 @@ Using `terraform import`, import AppConfig Deployment Strategies using their dep
 % terraform import aws_appconfig_deployment_strategy.example 11xxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5523efc97b4058c67f8184189e652c62466a4aef6fbcf077f1b0196ea0ec5624 -->
+<!-- cache-key: cdktf-0.19.0 input-5523efc97b4058c67f8184189e652c62466a4aef6fbcf077f1b0196ea0ec5624 -->

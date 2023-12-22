@@ -391,4 +391,4 @@ Using `terraform import`, import Kinesis Analytics Application using ARN. For ex
 % terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-14782ea879b9f73b5ee5ad2ef9ec8d20965c88da8a7cb0cb2534adfe79bb7ca6 -->
+<!-- cache-key: cdktf-0.19.0 input-14782ea879b9f73b5ee5ad2ef9ec8d20965c88da8a7cb0cb2534adfe79bb7ca6 -->

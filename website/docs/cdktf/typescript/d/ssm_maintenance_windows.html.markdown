@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of window IDs of the matched SSM maintenance windows.
 
-<!-- cache-key: cdktf-0.18.0 input-c5aedc6143d69465ce8bb1a3ffb4fcbaed9f5bbe552310caa38814607706ddc7 -->
+<!-- cache-key: cdktf-0.19.0 input-c5aedc6143d69465ce8bb1a3ffb4fcbaed9f5bbe552310caa38814607706ddc7 -->

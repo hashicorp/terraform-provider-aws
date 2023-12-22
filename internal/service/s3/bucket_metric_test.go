@@ -312,6 +312,25 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	metricName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketMetricConfig_directoryBucket(rName, metricName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -471,6 +490,23 @@ func testAccBucketMetricConfig_noFilter(bucketName, metricName string) string {
 	return acctest.ConfigCompose(testAccBucketMetricConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
+  name   = %[1]q
+}
+`, metricName))
+}
+
+func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
   name   = %[1]q
 }
 `, metricName))

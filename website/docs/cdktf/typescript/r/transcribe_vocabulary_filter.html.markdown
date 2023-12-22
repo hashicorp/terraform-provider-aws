@@ -52,8 +52,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `vocabularyFilterFileUri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom VocabularyFilter. Conflicts with `words` argument.
-* `tags` - (Optional) A map of tags to assign to the VocabularyFilter. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `words` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabularyFilterFileUri` argument.
+* `tags` - (Optional) A map of tags to assign to the VocabularyFilter. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `words` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_filter_file_uri` argument.
 
 ## Attribute Reference
 
@@ -85,4 +85,4 @@ Using `terraform import`, import Transcribe VocabularyFilter using the `vocabula
 % terraform import aws_transcribe_vocabulary_filter.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-16b5be2fa7e21b3d5f8eb7e880ca04a14415ca27a321bb6d553621e84cea648d -->
+<!-- cache-key: cdktf-0.19.0 input-16b5be2fa7e21b3d5f8eb7e880ca04a14415ca27a321bb6d553621e84cea648d -->

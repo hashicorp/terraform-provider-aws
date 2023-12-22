@@ -74,6 +74,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45M`)
+- `create` - (Default `45m`)
 
-<!-- cache-key: cdktf-0.18.0 input-01264da5e2e5cedeff8b5da6bb3720236b99d8827e99483d8586f6e5626fdcb4 -->
+<!-- cache-key: cdktf-0.19.0 input-01264da5e2e5cedeff8b5da6bb3720236b99d8827e99483d8586f6e5626fdcb4 -->

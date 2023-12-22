@@ -93,4 +93,4 @@ Using `terraform import`, import license configurations using the `id`. For exam
 % terraform import aws_licensemanager_license_configuration.example arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5a8f27111f7375c06f96dc77659a24d2efcdd9bfe181e061904d734084d24650 -->
+<!-- cache-key: cdktf-0.19.0 input-5a8f27111f7375c06f96dc77659a24d2efcdd9bfe181e061904d734084d24650 -->

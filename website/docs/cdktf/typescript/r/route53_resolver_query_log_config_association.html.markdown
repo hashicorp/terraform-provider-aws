@@ -72,4 +72,4 @@ Using `terraform import`, import  Route 53 Resolver query logging configuration 
 % terraform import aws_route53_resolver_query_log_config_association.example rqlca-b320624fef3c4d70
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f62f5b9b4259b2643b1af4febefb7ddfdc7693ad36af9e17d0e6b9e0c1fd40c -->
+<!-- cache-key: cdktf-0.19.0 input-6f62f5b9b4259b2643b1af4febefb7ddfdc7693ad36af9e17d0e6b9e0c1fd40c -->

@@ -95,7 +95,7 @@ This resource supports the following arguments:
 
 * `certificateAuthorityArn` - (Required) ARN of the certificate authority.
 * `certificateSigningRequest` - (Required) Certificate Signing Request in PEM format.
-* `signingAlgorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `sha256Withrsa`, `sha256Withecdsa`, `sha384Withrsa`, `sha384Withecdsa`, `sha512Withrsa`, `sha512Withecdsa`.
+* `signingAlgorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`.
 * `validity` - (Required) Configures end of the validity period for the certificate. See [validity block](#validity-block) below.
 * `templateArn` - (Optional) Template to use when issuing a certificate.
   See [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/UsingTemplates.html) for more information.
@@ -103,8 +103,8 @@ This resource supports the following arguments:
 
 ### validity block
 
-* `type` - (Required) Determines how `value` is interpreted. Valid values: `days`, `months`, `years`, `absolute`, `endDate`.
-* `value` - (Required) If `type` is `days`, `months`, or `years`, the relative time until the certificate expires. If `type` is `absolute`, the date in seconds since the Unix epoch. If `type` is `endDate`, the  date in RFC 3339 format.
+* `type` - (Required) Determines how `value` is interpreted. Valid values: `DAYS`, `MONTHS`, `YEARS`, `ABSOLUTE`, `END_DATE`.
+* `value` - (Required) If `type` is `DAYS`, `MONTHS`, or `YEARS`, the relative time until the certificate expires. If `type` is `ABSOLUTE`, the date in seconds since the Unix epoch. If `type` is `END_DATE`, the  date in RFC 3339 format.
 
 ## Attribute Reference
 
@@ -136,4 +136,4 @@ Using `terraform import`, import ACM PCA Certificates using their ARN. For examp
 % terraform import aws_acmpca_certificate.cert arn:aws:acm-pca:eu-west-1:675225743824:certificate-authority/08319ede-83g9-1400-8f21-c7d12b2b6edb/certificate/a4e9c2aa4bcfab625g1b9136464cd3a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3b19b04277da26192985928a772fc7a153a2937210c9952942adad77721165c9 -->
+<!-- cache-key: cdktf-0.19.0 input-3b19b04277da26192985928a772fc7a153a2937210c9952942adad77721165c9 -->

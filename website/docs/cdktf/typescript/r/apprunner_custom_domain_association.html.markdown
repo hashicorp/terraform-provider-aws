@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments supported:
 
-* `domainName` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `exampleCom` or a subdomain e.g., `subdomainExampleCom`.
+* `domainName` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enableWwwSubdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
 * `serviceArn` - (Required) ARN of the App Runner service.
 
@@ -49,7 +49,7 @@ The following arguments supported:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `domainName` and `serviceArn` separated by a comma (`,`).
+* `id` - The `domain_name` and `service_arn` separated by a comma (`,`).
 * `certificateValidationRecords` - A set of certificate CNAME records used for this domain name. See [Certificate Validation Records](#certificate-validation-records) below for more details.
 * `dnsTarget` - App Runner subdomain of the App Runner service. The custom domain name is mapped to this target name. Attribute only available if resource created (not imported) with Terraform.
 
@@ -58,8 +58,8 @@ This resource exports the following attributes in addition to the arguments abov
 The configuration block consists of the following arguments:
 
 * `name` - Certificate CNAME record name.
-* `status` - Current state of the certificate CNAME record validation. It should change to `success` after App Runner completes validation with your DNS.
-* `type` - Record type, always `cname`.
+* `status` - Current state of the certificate CNAME record validation. It should change to `SUCCESS` after App Runner completes validation with your DNS.
+* `type` - Record type, always `CNAME`.
 * `value` - Certificate CNAME record value.
 
 ## Import
@@ -84,4 +84,4 @@ Using `terraform import`, import App Runner Custom Domain Associations using the
 % terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7cc3a375febd6cf6963cf65a24caeee55d47321c71cc824d65ac258b80d66ca7 -->
+<!-- cache-key: cdktf-0.19.0 input-7cc3a375febd6cf6963cf65a24caeee55d47321c71cc824d65ac258b80d66ca7 -->

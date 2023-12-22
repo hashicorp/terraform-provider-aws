@@ -55,7 +55,7 @@ This resource supports the following arguments:
 
 * `ipamId` - The ID of the IPAM for which you're creating this scope.
 * `description` - (Optional) A description for the scope you're creating.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -90,4 +90,4 @@ Using `terraform import`, import IPAMs using the `scopeId`. For example:
 % terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-68c08f61045d93ee20b37304de2497b2ea7ce59df7aaa4d8e18944d3dc0ddf4e -->
+<!-- cache-key: cdktf-0.19.0 input-68c08f61045d93ee20b37304de2497b2ea7ce59df7aaa4d8e18944d3dc0ddf4e -->

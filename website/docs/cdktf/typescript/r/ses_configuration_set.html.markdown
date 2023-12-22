@@ -74,7 +74,7 @@ The following argument is optional:
 
 ### delivery_options
 
-* `tlsPolicy` - (Optional) Whether messages that use the configuration set are required to use Transport Layer Security (TLS). If the value is `require`, messages are only delivered if a TLS connection can be established. If the value is `optional`, messages can be delivered in plain text if a TLS connection can't be established. Valid values: `require` or `optional`. Defaults to `optional`.
+* `tlsPolicy` - (Optional) Whether messages that use the configuration set are required to use Transport Layer Security (TLS). If the value is `Require`, messages are only delivered if a TLS connection can be established. If the value is `Optional`, messages can be delivered in plain text if a TLS connection can't be established. Valid values: `Require` or `Optional`. Defaults to `Optional`.
 
 ### tracking_options
 
@@ -110,4 +110,4 @@ Using `terraform import`, import SES Configuration Sets using their `name`. For 
 % terraform import aws_ses_configuration_set.test some-configuration-set-test
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f167d5f7a447e1e139965df3ad14d43f4a2543a8bacced24d5237b68849262b5 -->
+<!-- cache-key: cdktf-0.19.0 input-f167d5f7a447e1e139965df3ad14d43f4a2543a8bacced24d5237b68849262b5 -->

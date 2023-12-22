@@ -68,4 +68,4 @@ Using `terraform import`, import CloudWatch Logs destinations using the `name`. 
 % terraform import aws_cloudwatch_log_destination.test_destination test_destination
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-46d1c43716e504d59d633735be752913c3042813cb3fadb4b8427dbfc5e8d918 -->
+<!-- cache-key: cdktf-0.19.0 input-46d1c43716e504d59d633735be752913c3042813cb3fadb4b8427dbfc5e8d918 -->

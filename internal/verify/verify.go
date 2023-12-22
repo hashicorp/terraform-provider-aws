@@ -9,16 +9,6 @@ import (
 
 const UUIDRegexPattern = `[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[ab89][0-9a-f]{3}-[0-9a-f]{12}`
 
-func SliceContainsString(slice []interface{}, s string) (int, bool) {
-	for idx, value := range slice {
-		v := value.(string)
-		if v == s {
-			return idx, true
-		}
-	}
-	return -1, false
-}
-
 // Takes a value containing YAML string and passes it through
 // the YAML parser. Returns either a parsing
 // error or original YAML string.

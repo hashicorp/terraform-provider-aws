@@ -134,4 +134,4 @@ Using `terraform import`, import SSM resource data sync using the `name`. For ex
 % terraform import aws_ssm_resource_data_sync.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1ca6cbc4ead65662883453fcaa95a776d79c46af9c730c2c622c39264e48c38b -->
+<!-- cache-key: cdktf-0.19.0 input-1ca6cbc4ead65662883453fcaa95a776d79c46af9c730c2c622c39264e48c38b -->

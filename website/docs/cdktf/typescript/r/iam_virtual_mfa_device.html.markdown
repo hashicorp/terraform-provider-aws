@@ -49,17 +49,17 @@ This resource supports the following arguments:
 
 * `virtualMfaDeviceName` - (Required) The name of the virtual MFA device. Use with path to uniquely identify a virtual MFA device.
 * `path` – (Optional) The path for the virtual MFA device.
-* `tags` - (Optional) Map of resource tags for the virtual mfa device. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags for the virtual mfa device. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the virtual mfa device.
-* `base32StringSeed` - The base32 seed defined as specified in [RFC3548](https://tools.ietf.org/html/rfc3548.txt). The `base32StringSeed` is base64-encoded.
+* `base32StringSeed` - The base32 seed defined as specified in [RFC3548](https://tools.ietf.org/html/rfc3548.txt). The `base_32_string_seed` is base64-encoded.
 * `enableDate` - The date and time when the virtual MFA device was enabled.
-* `qrCodePng` -  A QR code PNG image that encodes `otpauth://totp/$virtualMfaDeviceName@$accountName?secret=$base32String` where `$virtualMfaDeviceName` is one of the create call arguments. AccountName is the user name if set (otherwise, the account ID), and Base32String is the seed in base32 format.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `qrCodePng` -  A QR code PNG image that encodes `otpauth://totp/$virtualMFADeviceName@$AccountName?secret=$Base32String` where `$virtualMFADeviceName` is one of the create call arguments. AccountName is the user name if set (otherwise, the account ID), and Base32String is the seed in base32 format.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `userName` - The associated IAM User name if the virtual MFA device is enabled.
 
 ## Import
@@ -84,4 +84,4 @@ Using `terraform import`, import IAM Virtual MFA Devices using the `arn`. For ex
 % terraform import aws_iam_virtual_mfa_device.example arn:aws:iam::123456789012:mfa/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e8a74071097a35d1fabe1f8e98c50def43b822970d49ce5d2336e31e57fe8b7c -->
+<!-- cache-key: cdktf-0.19.0 input-e8a74071097a35d1fabe1f8e98c50def43b822970d49ce5d2336e31e57fe8b7c -->

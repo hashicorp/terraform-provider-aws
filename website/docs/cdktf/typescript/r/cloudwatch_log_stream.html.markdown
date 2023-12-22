@@ -74,4 +74,4 @@ Using `terraform import`, import Cloudwatch Log Stream using the stream's `logGr
 % terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4fed32ff75bb830aa4a809d588a8fcccf96c6368ab7e6ad418f7d940ac65117d -->
+<!-- cache-key: cdktf-0.19.0 input-4fed32ff75bb830aa4a809d588a8fcccf96c6368ab7e6ad418f7d940ac65117d -->

@@ -110,4 +110,4 @@ Using `terraform import`, import MSK Connect Custom Plugin using the plugin's `a
 % terraform import aws_mskconnect_custom_plugin.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fa6ff218273ad9d6a29b1b6d47850b35e3eb2ccea8af6818ee7abaf4e10e3981 -->
+<!-- cache-key: cdktf-0.19.0 input-fa6ff218273ad9d6a29b1b6d47850b35e3eb2ccea8af6818ee7abaf4e10e3981 -->

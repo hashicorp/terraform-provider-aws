@@ -188,45 +188,45 @@ The `tagFilter` object supports the following:
 
 The `scalingInstruction` object supports the following:
 
-* `maxCapacity` - (Required) Maximum capacity of the resource. The exception to this upper limit is if you specify a non-default setting for `predictiveScalingMaxCapacityBehavior`.
+* `maxCapacity` - (Required) Maximum capacity of the resource. The exception to this upper limit is if you specify a non-default setting for `predictive_scaling_max_capacity_behavior`.
 * `minCapacity` - (Required) Minimum capacity of the resource.
 * `resourceId` - (Required) ID of the resource. This string consists of the resource type and unique identifier.
-* `scalableDimension` - (Required) Scalable dimension associated with the resource. Valid values: `autoscaling:autoScalingGroup:desiredCapacity`, `dynamodb:index:readCapacityUnits`, `dynamodb:index:writeCapacityUnits`, `dynamodb:table:readCapacityUnits`, `dynamodb:table:writeCapacityUnits`, `ecs:service:desiredCount`, `ec2:spotFleetRequest:targetCapacity`, `rds:cluster:readReplicaCount`.
+* `scalableDimension` - (Required) Scalable dimension associated with the resource. Valid values: `autoscaling:autoScalingGroup:DesiredCapacity`, `dynamodb:index:ReadCapacityUnits`, `dynamodb:index:WriteCapacityUnits`, `dynamodb:table:ReadCapacityUnits`, `dynamodb:table:WriteCapacityUnits`, `ecs:service:DesiredCount`, `ec2:spot-fleet-request:TargetCapacity`, `rds:cluster:ReadReplicaCount`.
 * `serviceNamespace` - (Required) Namespace of the AWS service. Valid values: `autoscaling`, `dynamodb`, `ecs`, `ec2`, `rds`.
 * `targetTrackingConfiguration` - (Required) Structure that defines new target tracking configurations. Each of these structures includes a specific scaling metric and a target value for the metric, along with various parameters to use with dynamic scaling.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_TargetTrackingConfiguration.html).
-* `customizedLoadMetricSpecification` - (Optional) Customized load metric to use for predictive scaling. You must specify either `customizedLoadMetricSpecification` or `predefinedLoadMetricSpecification` when configuring predictive scaling.
+* `customizedLoadMetricSpecification` - (Optional) Customized load metric to use for predictive scaling. You must specify either `customized_load_metric_specification` or `predefined_load_metric_specification` when configuring predictive scaling.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_CustomizedLoadMetricSpecification.html).
 * `disableDynamicScaling` - (Optional) Boolean controlling whether dynamic scaling by AWS Auto Scaling is disabled. Defaults to `false`.
-* `predefinedLoadMetricSpecification` - (Optional) Predefined load metric to use for predictive scaling. You must specify either `predefinedLoadMetricSpecification` or `customizedLoadMetricSpecification` when configuring predictive scaling.
+* `predefinedLoadMetricSpecification` - (Optional) Predefined load metric to use for predictive scaling. You must specify either `predefined_load_metric_specification` or `customized_load_metric_specification` when configuring predictive scaling.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedLoadMetricSpecification.html).
 * `predictiveScalingMaxCapacityBehavior`- (Optional) Defines the behavior that should be applied if the forecast capacity approaches or exceeds the maximum capacity specified for the resource.
-Valid values: `setForecastCapacityToMaxCapacity`, `setMaxCapacityAboveForecastCapacity`, `setMaxCapacityToForecastCapacity`.
+Valid values: `SetForecastCapacityToMaxCapacity`, `SetMaxCapacityAboveForecastCapacity`, `SetMaxCapacityToForecastCapacity`.
 * `predictiveScalingMaxCapacityBuffer` - (Optional) Size of the capacity buffer to use when the forecast capacity is close to or exceeds the maximum capacity.
-* `predictiveScalingMode` - (Optional) Predictive scaling mode. Valid values: `forecastAndScale`, `forecastOnly`.
-* `scalingPolicyUpdateBehavior` - (Optional) Controls whether a resource's externally created scaling policies are kept or replaced. Valid values: `keepExternalPolicies`, `replaceExternalPolicies`. Defaults to `keepExternalPolicies`.
+* `predictiveScalingMode` - (Optional) Predictive scaling mode. Valid values: `ForecastAndScale`, `ForecastOnly`.
+* `scalingPolicyUpdateBehavior` - (Optional) Controls whether a resource's externally created scaling policies are kept or replaced. Valid values: `KeepExternalPolicies`, `ReplaceExternalPolicies`. Defaults to `KeepExternalPolicies`.
 * `scheduledActionBufferTime` - (Optional) Amount of time, in seconds, to buffer the run time of scheduled scaling actions when scaling out.
 
 The `customizedLoadMetricSpecification` object supports the following:
 
 * `metricName` - (Required) Name of the metric.
 * `namespace` - (Required) Namespace of the metric.
-* `statistic` - (Required) Statistic of the metric. Currently, the value must always be `sum`.
+* `statistic` - (Required) Statistic of the metric. Currently, the value must always be `Sum`.
 * `dimensions` - (Optional) Dimensions of the metric.
 * `unit` - (Optional) Unit of the metric.
 
 The `predefinedLoadMetricSpecification` object supports the following:
 
-* `predefinedLoadMetricType` - (Required) Metric type. Valid values: `albTargetGroupRequestCount`, `asgTotalCpuUtilization`, `asgTotalNetworkIn`, `asgTotalNetworkOut`.
+* `predefinedLoadMetricType` - (Required) Metric type. Valid values: `ALBTargetGroupRequestCount`, `ASGTotalCPUUtilization`, `ASGTotalNetworkIn`, `ASGTotalNetworkOut`.
 * `resourceLabel` - (Optional) Identifies the resource associated with the metric type.
 
 The `targetTrackingConfiguration` object supports the following:
 
 * `targetValue` - (Required) Target value for the metric.
-* `customizedScalingMetricSpecification` - (Optional) Customized metric. You can specify either `customizedScalingMetricSpecification` or `predefinedScalingMetricSpecification`.
+* `customizedScalingMetricSpecification` - (Optional) Customized metric. You can specify either `customized_scaling_metric_specification` or `predefined_scaling_metric_specification`.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_CustomizedScalingMetricSpecification.html).
 * `disableScaleIn` - (Optional) Boolean indicating whether scale in by the target tracking scaling policy is disabled. Defaults to `false`.
-* `predefinedScalingMetricSpecification` - (Optional) Predefined metric. You can specify either `predefinedScalingMetricSpecification` or `customizedScalingMetricSpecification`.
+* `predefinedScalingMetricSpecification` - (Optional) Predefined metric. You can specify either `predefined_scaling_metric_specification` or `customized_scaling_metric_specification`.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html).
 * `estimatedInstanceWarmup` - (Optional) Estimated time, in seconds, until a newly launched instance can contribute to the CloudWatch metrics.
 This value is used only if the resource is an Auto Scaling group.
@@ -239,13 +239,13 @@ The `customizedScalingMetricSpecification` object supports the following:
 
 * `metricName` - (Required) Name of the metric.
 * `namespace` - (Required) Namespace of the metric.
-* `statistic` - (Required) Statistic of the metric. Valid values: `average`, `maximum`, `minimum`, `sampleCount`, `sum`.
+* `statistic` - (Required) Statistic of the metric. Valid values: `Average`, `Maximum`, `Minimum`, `SampleCount`, `Sum`.
 * `dimensions` - (Optional) Dimensions of the metric.
 * `unit` - (Optional) Unit of the metric.
 
 The `predefinedScalingMetricSpecification` object supports the following:
 
-* `predefinedScalingMetricType` - (Required) Metric type. Valid values: `albRequestCountPerTarget`, `asgAverageCpuUtilization`, `asgAverageNetworkIn`, `asgAverageNetworkOut`, `dynamoDbReadCapacityUtilization`, `dynamoDbWriteCapacityUtilization`, `ecsServiceAverageCpuUtilization`, `ecsServiceAverageMemoryUtilization`, `ec2SpotFleetRequestAverageCpuUtilization`, `ec2SpotFleetRequestAverageNetworkIn`, `ec2SpotFleetRequestAverageNetworkOut`, `rdsReaderAverageCpuUtilization`, `rdsReaderAverageDatabaseConnections`.
+* `predefinedScalingMetricType` - (Required) Metric type. Valid values: `ALBRequestCountPerTarget`, `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, `DynamoDBReadCapacityUtilization`, `DynamoDBWriteCapacityUtilization`, `ECSServiceAverageCPUUtilization`, `ECSServiceAverageMemoryUtilization`, `EC2SpotFleetRequestAverageCPUUtilization`, `EC2SpotFleetRequestAverageNetworkIn`, `EC2SpotFleetRequestAverageNetworkOut`, `RDSReaderAverageCPUUtilization`, `RDSReaderAverageDatabaseConnections`.
 * `resourceLabel` - (Optional) Identifies the resource associated with the metric type.
 
 ## Attribute Reference
@@ -277,4 +277,4 @@ Using `terraform import`, import Auto Scaling scaling plans using the `name`. Fo
 % terraform import aws_autoscalingplans_scaling_plan.example MyScale1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->
+<!-- cache-key: cdktf-0.19.0 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->

@@ -88,8 +88,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the application.
-* `computePlatform` - (Optional) The compute platform can either be `ecs`, `lambda`, or `server`. Default is `server`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `computePlatform` - (Optional) The compute platform can either be `ECS`, `Lambda`, or `Server`. Default is `Server`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -101,7 +101,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The application's name.
 * `githubAccountName` - The name for a connection to a GitHub account.
 * `linkedToGithub` - Whether the user has authenticated with GitHub for the specified application.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -125,4 +125,4 @@ Using `terraform import`, import CodeDeploy Applications using the `name`. For e
 % terraform import aws_codedeploy_app.example my-application
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-00b9fbbd35972d7215984367937bb47e7c6439d5c41831dac0b563a419c59962 -->
+<!-- cache-key: cdktf-0.19.0 input-00b9fbbd35972d7215984367937bb47e7c6439d5c41831dac0b563a419c59962 -->

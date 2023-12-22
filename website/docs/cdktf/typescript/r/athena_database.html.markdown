@@ -56,14 +56,14 @@ This resource supports the following arguments:
 
 ### ACL Configuration
 
-* `s3AclOption` - (Required) Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `bucketOwnerFullControl`.
+* `s3AclOption` - (Required) Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `BUCKET_OWNER_FULL_CONTROL`.
 
 ~> **NOTE:** When Athena queries are executed, result files may be created in the specified bucket. Consider using `forceDestroy` on the bucket too in order to avoid any problems when destroying the bucket.  
 
 ### Encryption Configuration
 
-* `encryptionOption` - (Required) Type of key; one of `sseS3`, `sseKms`, `cseKms`
-* `kmsKey` - (Optional) KMS key ARN or ID; required for key types `sseKms` and `cseKms`.
+* `encryptionOption` - (Required) Type of key; one of `SSE_S3`, `SSE_KMS`, `CSE_KMS`
+* `kmsKey` - (Optional) KMS key ARN or ID; required for key types `SSE_KMS` and `CSE_KMS`.
 
 ## Attribute Reference
 
@@ -119,4 +119,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-189ae35c915899617823f1aa58e52b808e9d89a93ad41348d3b67590fd2c7244 -->
+<!-- cache-key: cdktf-0.19.0 input-189ae35c915899617823f1aa58e52b808e9d89a93ad41348d3b67590fd2c7244 -->

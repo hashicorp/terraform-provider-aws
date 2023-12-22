@@ -84,4 +84,4 @@ Using `terraform import`, import Audit Manager Account Registration resources us
 % terraform import aws_auditmanager_account_registration.example us-east-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b8a8e96a39604df1b10232cf4a3d5b9b1cb58ec03eaacfe07b1799eb42bf2279 -->
+<!-- cache-key: cdktf-0.19.0 input-b8a8e96a39604df1b10232cf4a3d5b9b1cb58ec03eaacfe07b1799eb42bf2279 -->

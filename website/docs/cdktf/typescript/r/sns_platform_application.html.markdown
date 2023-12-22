@@ -143,4 +143,4 @@ Using `terraform import`, import SNS platform applications using the ARN. For ex
 % terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cab192bfd8c23eada362cd924116cfcfef5154b99069d7d8bda52c652e5e8436 -->
+<!-- cache-key: cdktf-0.19.0 input-cab192bfd8c23eada362cd924116cfcfef5154b99069d7d8bda52c652e5e8436 -->

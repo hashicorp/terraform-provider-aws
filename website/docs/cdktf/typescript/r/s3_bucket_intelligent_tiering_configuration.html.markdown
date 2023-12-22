@@ -12,6 +12,8 @@ description: |-
 
 Provides an [S3 Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intelligent-tiering.html) configuration resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add intelligent tiering configuration for entire S3 bucket
@@ -98,7 +100,7 @@ This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
-* `status` - (Optional) Specifies the status of the configuration. Valid values: `enabled`, `disabled`.
+* `status` - (Optional) Specifies the status of the configuration. Valid values: `Enabled`, `Disabled`.
 * `filter` - (Optional) Bucket filter. The configuration only includes objects that meet the filter's criteria (documented below).
 * `tiering` - (Required) S3 Intelligent-Tiering storage class tiers of the configuration (documented below).
 
@@ -109,7 +111,7 @@ The `filter` configuration supports the following:
 
 The `tiering` configuration supports the following:
 
-* `accessTier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `archiveAccess`, `deepArchiveAccess`.
+* `accessTier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_ACCESS`, `DEEP_ARCHIVE_ACCESS`.
 * `days` - (Required) Number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.
 
 ## Attribute Reference
@@ -138,4 +140,4 @@ Using `terraform import`, import S3 bucket intelligent tiering configurations us
 % terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b6b169e601dae3b6976c4585bd3676643529f574da01b5ad3983daea051c81f0 -->
+<!-- cache-key: cdktf-0.19.0 input-edbf222c0509de935ae7e968f1135a975907d699aec103595f6bbe9c75bcbff7 -->

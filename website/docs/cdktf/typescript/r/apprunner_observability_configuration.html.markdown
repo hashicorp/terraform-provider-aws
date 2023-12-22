@@ -46,13 +46,13 @@ The following arguments supported:
 
 * `observabilityConfigurationName` - (Required, Forces new resource) Name of the observability configuration.
 * `traceConfiguration` - (Optional) Configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Trace Configuration
 
 The `traceConfiguration` block supports the following argument:
 
-* `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `awsxray`.
+* `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
 
 ## Attribute Reference
 
@@ -60,9 +60,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of this observability configuration.
 * `observabilityConfigurationRevision` - The revision of this observability configuration.
-* `latest` - Whether the observability configuration has the highest `observabilityConfigurationRevision` among all configurations that share the same `observabilityConfigurationName`.
+* `latest` - Whether the observability configuration has the highest `observability_configuration_revision` among all configurations that share the same `observability_configuration_name`.
 * `status` - Current state of the observability configuration. An INACTIVE configuration revision has been deleted and can't be used. It is permanently removed some time after deletion.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import App Runner Observability Configuration using th
 % terraform import aws_apprunner_observability_configuration.example arn:aws:apprunner:us-east-1:1234567890:observabilityconfiguration/example/1/d75bc7ea55b71e724fe5c23452fe22a1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8e5cebb86212015c055222a001ff7c401e6fd39752f296bb53ad2acf1c736b46 -->
+<!-- cache-key: cdktf-0.19.0 input-8e5cebb86212015c055222a001ff7c401e6fd39752f296bb53ad2acf1c736b46 -->

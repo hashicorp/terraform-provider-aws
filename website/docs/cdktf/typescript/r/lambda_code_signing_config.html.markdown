@@ -54,7 +54,7 @@ The `allowedPublishers` block supports the following argument:
 
 The `policies` block supports the following argument:
 
-* `untrustedArtifactOnDeployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to Enforce, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to Warn, Lambda allows the deployment and creates a CloudWatch log. Valid values: `warn`, `enforce`. Default value: `warn`.
+* `untrustedArtifactOnDeployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to Enforce, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to Warn, Lambda allows the deployment and creates a CloudWatch log. Valid values: `Warn`, `Enforce`. Default value: `Warn`.
 
 ## Attribute Reference
 
@@ -88,4 +88,4 @@ Using `terraform import`, import Code Signing Configs using their ARN. For examp
 % terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b27a1e90446049f7c1773fd983c1f96949a20ac313e28f81bd237fd17f96c857 -->
+<!-- cache-key: cdktf-0.19.0 input-b27a1e90446049f7c1773fd983c1f96949a20ac313e28f81bd237fd17f96c857 -->

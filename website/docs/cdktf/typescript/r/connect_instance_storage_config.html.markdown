@@ -178,18 +178,18 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
-* `resourceType` - (Required) A valid resource type. Valid Values: `agentEvents` | `attachments` | `callRecordings` | `chatTranscripts` | `contactEvaluations` | `contactTraceRecords` | `mediaStreams` | `realTimeContactAnalysisSegments` | `scheduledReports` | `screenRecordings`.
+* `resourceType` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS` | `SCREEN_RECORDINGS`.
 * `storageConfig` - (Required) Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
 
 ### `storageConfig`
 
 The `storageConfig` configuration block supports the following arguments:
 
-* `kinesisFirehoseConfig` - (Required if `type` is set to `kinesisFirehose`) A block that specifies the configuration of the Kinesis Firehose delivery stream. [Documented below](#kinesis_firehose_config).
-* `kinesisStreamConfig` - (Required if `type` is set to `kinesisStream`) A block that specifies the configuration of the Kinesis data stream. [Documented below](#kinesis_stream_config).
-* `kinesisVideoStreamConfig` - (Required if `type` is set to `kinesisVideoStream`) A block that specifies the configuration of the Kinesis video stream. [Documented below](#kinesis_video_stream_config).
-* `s3Config` - (Required if `type` is set to `s3`) A block that specifies the configuration of S3 Bucket. [Documented below](#s3_config).
-* `storageType` - (Required) A valid storage type. Valid Values: `s3` | `kinesisVideoStream` | `kinesisStream` | `kinesisFirehose`.
+* `kinesisFirehoseConfig` - (Required if `type` is set to `KINESIS_FIREHOSE`) A block that specifies the configuration of the Kinesis Firehose delivery stream. [Documented below](#kinesis_firehose_config).
+* `kinesisStreamConfig` - (Required if `type` is set to `KINESIS_STREAM`) A block that specifies the configuration of the Kinesis data stream. [Documented below](#kinesis_stream_config).
+* `kinesisVideoStreamConfig` - (Required if `type` is set to `KINESIS_VIDEO_STREAM`) A block that specifies the configuration of the Kinesis video stream. [Documented below](#kinesis_video_stream_config).
+* `s3Config` - (Required if `type` is set to `S3`) A block that specifies the configuration of S3 Bucket. [Documented below](#s3_config).
+* `storageType` - (Required) A valid storage type. Valid Values: `S3` | `KINESIS_VIDEO_STREAM` | `KINESIS_STREAM` | `KINESIS_FIREHOSE`.
 
 #### `kinesisFirehoseConfig`
 
@@ -208,7 +208,7 @@ The `kinesisStreamConfig` configuration block supports the following arguments:
 The `kinesisVideoStreamConfig` configuration block supports the following arguments:
 
 * `encryptionConfig` - (Required) The encryption configuration. [Documented below](#encryption_config).
-* `prefix` - (Required) The prefix of the video stream. Minimum length of `1`. Maximum length of `128`. When read from the state, the value returned is `<prefix>Connect-<connectInstanceAlias>Contact` since the API appends additional details to the `prefix`.
+* `prefix` - (Required) The prefix of the video stream. Minimum length of `1`. Maximum length of `128`. When read from the state, the value returned is `<prefix>-connect-<connect_instance_alias>-contact-` since the API appends additional details to the `prefix`.
 * `retentionPeriodHours` - (Required) The number of hours data is retained in the stream. Kinesis Video Streams retains the data in a data store that is associated with the stream. Minimum value of `0`. Maximum value of `87600`. A value of `0`, indicates that the stream does not persist data.
 
 #### `s3Config`
@@ -223,7 +223,7 @@ The `s3Config` configuration block supports the following arguments:
 
 The `encryptionConfig` configuration block supports the following arguments:
 
-* `encryptionType` - (Required) The type of encryption. Valid Values: `kms`.
+* `encryptionType` - (Required) The type of encryption. Valid Values: `KMS`.
 * `keyId` - (Required) The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
 ## Attribute Reference
@@ -231,7 +231,7 @@ The `encryptionConfig` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `associationId` - The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
-* `id` - The identifier of the hosting Amazon Connect Instance, `associationId`, and `resourceType` separated by a colon (`:`).
+* `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
 
 ## Import
 
@@ -255,4 +255,4 @@ Using `terraform import`, import Amazon Connect Instance Storage Configs using t
 % terraform import aws_connect_instance_storage_config.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5:CHAT_TRANSCRIPTS
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->
+<!-- cache-key: cdktf-0.19.0 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->

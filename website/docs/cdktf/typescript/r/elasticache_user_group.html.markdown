@@ -55,13 +55,13 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `engine` - (Required) The current supported value is `redis`.
+* `engine` - (Required) The current supported value is `REDIS`.
 * `userGroupId` - (Required) The ID of the user group.
 
 The following arguments are optional:
 
 * `userIds` - (Optional) The list of user IDs that belong to the user group.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The user group identifier.
 * `arn` - The ARN that identifies the user group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import ElastiCache user groups using the `userGroupId`
 % terraform import aws_elasticache_user_group.my_user_group userGoupId1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-273ead1e6f40d517ea4aa4538fa2dae8368c51b3c1f92a67ddcf5ffa9c8dd66f -->
+<!-- cache-key: cdktf-0.19.0 input-273ead1e6f40d517ea4aa4538fa2dae8368c51b3c1f92a67ddcf5ffa9c8dd66f -->

@@ -69,4 +69,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_policy_table` using th
 % terraform import aws_ec2_transit_gateway_policy_table.example tgw-rtb-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-74a9f90cb0d2a1a3f4d315939168fb889955b8d8ab3822d27c7d6149af4bd379 -->
+<!-- cache-key: cdktf-0.19.0 input-74a9f90cb0d2a1a3f4d315939168fb889955b8d8ab3822d27c7d6149af4bd379 -->

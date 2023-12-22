@@ -89,4 +89,4 @@ The `primary_key` and `replica_keys` objects support the following:
 * `arn`: The key ARN of a primary or replica key of a multi-Region key.
 * `region`: The AWS Region of a primary or replica key in a multi-Region key.
 
-<!-- cache-key: cdktf-0.18.0 input-ea7621c22f20905a0de28c0a03b164a5da43b21e2d3bdf0913f29e827818698b -->
+<!-- cache-key: cdktf-0.19.0 input-ea7621c22f20905a0de28c0a03b164a5da43b21e2d3bdf0913f29e827818698b -->

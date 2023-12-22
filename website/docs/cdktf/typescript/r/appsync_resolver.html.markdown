@@ -121,7 +121,7 @@ This resource supports the following arguments:
 * `responseTemplate` - (Optional) Response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
 * `dataSource` - (Optional) Data source name.
 * `maxBatchSize` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
-* `kind`  - (Optional) Resolver type. Valid values are `unit` and `pipeline`.
+* `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `syncConfig` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
 * `pipelineConfig` - (Optional) The caching configuration for the resolver. See [Pipeline Config](#pipeline-config).
 * `cachingConfig` - (Optional) The Caching Config. See [Caching Config](#caching-config).
@@ -138,9 +138,9 @@ This resource supports the following arguments:
 
 ### Sync Config
 
-* `conflictDetection` - (Optional) Conflict Detection strategy to use. Valid values are `none` and `version`.
-* `conflictHandler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `none`, `optimisticConcurrency`, `automerge`, and `lambda`.
-* `lambdaConflictHandlerConfig` - (Optional) Lambda Conflict Handler Config when configuring `lambda` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+* `conflictDetection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
+* `conflictHandler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
+* `lambdaConflictHandlerConfig` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
 
 #### Lambda Conflict Handler Config
 
@@ -148,8 +148,8 @@ This resource supports the following arguments:
 
 ### Runtime
 
-* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `appsyncJs`.
-* `runtimeVersion` - (Optional) The version of the runtime to use. Currently, the only allowed version is `100`.
+* `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtimeVersion` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ## Attribute Reference
 
@@ -179,4 +179,4 @@ Using `terraform import`, import `awsAppsyncResolver` using the `apiId`, a hyphe
 % terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c52e7e65e799b6104f6c311a148eb1f52433b7035e764e94e6ade1153f6ef6e4 -->
+<!-- cache-key: cdktf-0.19.0 input-c52e7e65e799b6104f6c311a148eb1f52433b7035e764e94e6ade1153f6ef6e4 -->

@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the WAF Regional rule.
 
-<!-- cache-key: cdktf-0.18.0 input-8d1cf5dbf5c7c6a32f1f53f110f8770eb6472cb6316958e0e40be72dbcb9dad8 -->
+<!-- cache-key: cdktf-0.19.0 input-8d1cf5dbf5c7c6a32f1f53f110f8770eb6472cb6316958e0e40be72dbcb9dad8 -->

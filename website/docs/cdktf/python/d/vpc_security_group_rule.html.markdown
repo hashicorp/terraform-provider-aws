@@ -64,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags assigned to the resource.
 * `to_port` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
-<!-- cache-key: cdktf-0.18.0 input-60bbadf919e19a6b86244afce1efa5865475dc66aa0bf2f6b2d6643a6824df84 -->
+<!-- cache-key: cdktf-0.19.0 input-60bbadf919e19a6b86244afce1efa5865475dc66aa0bf2f6b2d6643a6824df84 -->

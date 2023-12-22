@@ -59,7 +59,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name or description of the rule.
 * `metricName` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `predicate` - (Optional) The objects to include in a rule (documented below).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Fields
 
@@ -69,8 +69,8 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 
 #### Arguments
 
-* `type` - (Required) The type of predicate in a rule. Valid values: `byteMatch`, `geoMatch`, `ipMatch`, `regexMatch`, `sizeConstraint`, `sqlInjectionMatch`, or `xssMatch`
-* `dataId` - (Required) The unique identifier of a predicate, such as the ID of a `byteMatchSet` or `ipSet`.
+* `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`
+* `dataId` - (Required) The unique identifier of a predicate, such as the ID of a `ByteMatchSet` or `IPSet`.
 * `negated` - (Required) Whether to use the settings or the negated settings that you specified in the objects.
 
 ## Remarks
@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the WAF Regional Rule.
 * `arn` - The ARN of the WAF Regional Rule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -105,4 +105,4 @@ Using `terraform import`, import WAF Regional Rule using the id. For example:
 % terraform import aws_wafregional_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a40cdd272300595e743e666f37c7f58fb8e82cbebd3677921ecf317be3ff42df -->
+<!-- cache-key: cdktf-0.19.0 input-a40cdd272300595e743e666f37c7f58fb8e82cbebd3677921ecf317be3ff42df -->

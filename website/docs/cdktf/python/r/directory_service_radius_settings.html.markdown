@@ -84,4 +84,4 @@ Using `terraform import`, import RADIUS settings using the directory ID. For exa
 % terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->
+<!-- cache-key: cdktf-0.19.0 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->

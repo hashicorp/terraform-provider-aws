@@ -182,4 +182,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5a4f330d945c67ebd2c327cc9ed1a4d3cbd7331cc6eefe3c8b6a54590b34a394 -->
+<!-- cache-key: cdktf-0.19.0 input-5a4f330d945c67ebd2c327cc9ed1a4d3cbd7331cc6eefe3c8b6a54590b34a394 -->

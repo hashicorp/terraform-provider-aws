@@ -46,7 +46,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account ID.
-* `status` - Association status. Creating this resource will result in an `associated` status, and quota increase requests in the template are automatically applied to new AWS accounts in the organization.
+* `status` - Association status. Creating this resource will result in an `ASSOCIATED` status, and quota increase requests in the template are automatically applied to new AWS accounts in the organization.
 
 ## Import
 
@@ -70,4 +70,4 @@ Using `terraform import`, import Service Quotas Template Association using the `
 % terraform import aws_servicequotas_template_association.example 012345678901 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fdad063536f53c98a55bc859f198823854c380bdaf86b74a52d56b0f744c6e20 -->
+<!-- cache-key: cdktf-0.19.0 input-fdad063536f53c98a55bc859f198823854c380bdaf86b74a52d56b0f744c6e20 -->

@@ -89,4 +89,4 @@ Using `terraform import`, import a subnet group using its `name`. For example:
 % terraform import aws_memorydb_subnet_group.example my-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d868401aa8e04d4973ff0ffe4eb6c8770dd89bad3180e6917e7e0015e53618af -->
+<!-- cache-key: cdktf-0.19.0 input-d868401aa8e04d4973ff0ffe4eb6c8770dd89bad3180e6917e7e0015e53618af -->

@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `registry_id` - Account ID containing the image. For example, `469771592824`.
 * `registry_path` - Docker image URL. For example, `341280168497.dkr.ecr.ca-central-1.amazonaws.com/sagemaker-sparkml-serving:2.4`.
 
-<!-- cache-key: cdktf-0.18.0 input-9f7430a5070692161cbacbbecaaf444a21d44fae9e8ba95244364cce1a3659ec -->
+<!-- cache-key: cdktf-0.19.0 input-9f7430a5070692161cbacbbecaaf444a21d44fae9e8ba95244364cce1a3659ec -->

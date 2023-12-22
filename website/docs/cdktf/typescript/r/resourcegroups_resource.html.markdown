@@ -74,13 +74,13 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `resourceType` - The resource type of a resource, such as `aws::ec2::instance`.
+* `resourceType` - The resource type of a resource, such as `AWS::EC2::Instance`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.18.0 input-aab29303cb0c6f71f3aadcea2dab227a35feb39e7e6c9a2b0ecaf85e8c6d91ff -->
+<!-- cache-key: cdktf-0.19.0 input-aab29303cb0c6f71f3aadcea2dab227a35feb39e7e6c9a2b0ecaf85e8c6d91ff -->

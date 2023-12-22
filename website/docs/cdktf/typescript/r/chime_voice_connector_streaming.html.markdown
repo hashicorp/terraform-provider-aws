@@ -148,7 +148,7 @@ This resource supports the following arguments:
 * `dataRetention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.
 * `disabled` - (Optional) When true, media streaming to Amazon Kinesis is turned off. Default: `false`
 * `streamingNotificationTargets` - (Optional) The streaming notification targets. Valid Values: `EventBridge | SNS | SQS`
-* `mediaInsightsConfiguration` - (Optional) The media insights configuration. See [`mediaInsightsConfiguration`](#media_insights_configuration).
+* `mediaInsightsConfiguration` - (Optional) The media insights configuration. See [`media_insights_configuration`](#media_insights_configuration).
 
 ### media_insights_configuration
 
@@ -183,4 +183,4 @@ Using `terraform import`, import Chime Voice Connector Streaming using the `voic
 % terraform import aws_chime_voice_connector_streaming.default abcdef1ghij2klmno3pqr4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1d6eaf10d1870a1e8fdf049fb6ca121f258d5ffdbe4eae79fe564f39d16ce4f8 -->
+<!-- cache-key: cdktf-0.19.0 input-1d6eaf10d1870a1e8fdf049fb6ca121f258d5ffdbe4eae79fe564f39d16ce4f8 -->

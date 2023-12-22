@@ -77,4 +77,4 @@ Using `terraform import`, import a keyspace using the `name`. For example:
 % terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->
+<!-- cache-key: cdktf-0.19.0 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->

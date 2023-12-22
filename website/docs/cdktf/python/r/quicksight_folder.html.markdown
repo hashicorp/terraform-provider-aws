@@ -144,4 +144,4 @@ Using `terraform import`, import a QuickSight folder using the AWS account ID an
 % terraform import aws_quicksight_folder.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bfe67ec1b66703fe4dec29123039432b9ff61c08d31438163738103ae03db233 -->
+<!-- cache-key: cdktf-0.19.0 input-bfe67ec1b66703fe4dec29123039432b9ff61c08d31438163738103ae03db233 -->

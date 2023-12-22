@@ -79,4 +79,4 @@ Using `terraform import`, import MSK configurations using the configuration ARN.
 % terraform import aws_msk_vpc_connection.example arn:aws:kafka:eu-west-2:123456789012:vpc-connection/123456789012/example/38173259-79cd-4ee8-87f3-682ea6023f48-2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b1983aad22e07fb109f5b2adb453a2e83d036de6685d43ca610e71d747466b69 -->
+<!-- cache-key: cdktf-0.19.0 input-b1983aad22e07fb109f5b2adb453a2e83d036de6685d43ca610e71d747466b69 -->

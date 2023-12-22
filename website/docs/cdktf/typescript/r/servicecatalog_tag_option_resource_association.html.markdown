@@ -60,9 +60,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsServicecatalogTagOptionResourceAssociation`
 % terraform import aws_servicecatalog_tag_option_resource_association.example tag-pjtvyakdlyo3m:prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ae36ed874f6f516a2530c784f0fe767eaadd12cbb9e4007a768baa831153ddc9 -->
+<!-- cache-key: cdktf-0.19.0 input-ae36ed874f6f516a2530c784f0fe767eaadd12cbb9e4007a768baa831153ddc9 -->

@@ -91,7 +91,7 @@ The following arguments are optional:
 
 * `propagatingVgws` - (Optional) List of virtual gateways for propagation.
 * `route` - (Optional) Configuration block of routes. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### route
 
@@ -124,15 +124,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the route table.
 * `arn` - The ARN of the route table.
 * `ownerId` - ID of the AWS account that owns the route table.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - ID of the VPC.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `2M`)
-- `update` - (Default `2M`)
+- `create` - (Default `2m`)
+- `update` - (Default `2m`)
 
 ## Import
 
@@ -158,4 +158,4 @@ Using `terraform import`, import Default VPC route tables using the `vpcId`. For
 
 [tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html
 
-<!-- cache-key: cdktf-0.18.0 input-52890b2ce73c129b096972d97be8827bd1630df722976c50bc3863ebadce1093 -->
+<!-- cache-key: cdktf-0.19.0 input-52890b2ce73c129b096972d97be8827bd1630df722976c50bc3863ebadce1093 -->

@@ -72,4 +72,4 @@ Using `terraform import`, import RAM Resource Associations using their Resource 
 % terraform import aws_ram_resource_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f89af00a7e0729a1d228ab9768d7122c9cd30990cc8c1dcb4c038628bf33b34d -->
+<!-- cache-key: cdktf-0.19.0 input-f89af00a7e0729a1d228ab9768d7122c9cd30990cc8c1dcb4c038628bf33b34d -->

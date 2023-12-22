@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment_acc
 % terraform import aws_ec2_transit_gateway_peering_attachment_accepter.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f990861cdea5515b1adb7416bea698b8254af1069c30ac70cdb56d2891f29e4 -->
+<!-- cache-key: cdktf-0.19.0 input-6f990861cdea5515b1adb7416bea698b8254af1069c30ac70cdb56d2891f29e4 -->

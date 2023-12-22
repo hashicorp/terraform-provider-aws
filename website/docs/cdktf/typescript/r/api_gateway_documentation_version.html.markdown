@@ -89,4 +89,4 @@ Using `terraform import`, import API Gateway documentation versions using `restA
 % terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a4c3d7281104b3d492a309138d97e039e5bb599759343aa17d6a213ef2be7c75 -->
+<!-- cache-key: cdktf-0.19.0 input-a4c3d7281104b3d492a309138d97e039e5bb599759343aa17d6a213ef2be7c75 -->

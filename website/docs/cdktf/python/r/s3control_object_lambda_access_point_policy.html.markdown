@@ -111,4 +111,4 @@ Using `terraform import`, import Object Lambda Access Point policies using the `
 % terraform import aws_s3control_object_lambda_access_point_policy.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5b9c13a7dd0a431d893638258adc51525d5b10d18a0ee8ec93b51bafe8ccf083 -->
+<!-- cache-key: cdktf-0.19.0 input-5b9c13a7dd0a431d893638258adc51525d5b10d18a0ee8ec93b51bafe8ccf083 -->

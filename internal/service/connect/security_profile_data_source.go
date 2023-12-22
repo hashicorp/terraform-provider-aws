@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -64,6 +65,8 @@ func DataSourceSecurityProfile() *schema.Resource {
 }
 
 func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -80,11 +83,11 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 		securityProfileSummary, err := dataSourceGetSecurityProfileSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("finding Connect Security Profile Summary by name (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Security Profile Summary by name (%s): %s", name, err)
 		}
 
 		if securityProfileSummary == nil {
-			return diag.Errorf("finding Connect Security Profile Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Security Profile Summary by name (%s): not found", name)
 		}
 
 		input.SecurityProfileId = securityProfileSummary.Id
@@ -93,11 +96,11 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	resp, err := conn.DescribeSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect Security Profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile: %s", err)
 	}
 
 	if resp == nil || resp.SecurityProfile == nil {
-		return diag.Errorf("getting Connect Security Profile: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile: empty response")
 	}
 
 	securityProfile := resp.SecurityProfile
@@ -113,7 +116,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, *resp.SecurityProfile.Id)
 
 	if err != nil {
-		return diag.Errorf("finding Connect Security Profile Permissions for Security Profile (%s): %s", *resp.SecurityProfile.Id, err)
+		return sdkdiag.AppendErrorf(diags, "finding Connect Security Profile Permissions for Security Profile (%s): %s", *resp.SecurityProfile.Id, err)
 	}
 
 	if permissions != nil {
@@ -121,12 +124,12 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(resp.SecurityProfile.Id)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetSecurityProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.SecurityProfileSummary, error) {

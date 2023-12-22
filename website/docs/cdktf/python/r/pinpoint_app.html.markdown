@@ -94,4 +94,4 @@ Using `terraform import`, import Pinpoint App using the `application-id`. For ex
 % terraform import aws_pinpoint_app.name application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-69252b714649cc19bbfedeb89aa6fa806e2f32d0df2739664cb86bc692aacfc6 -->
+<!-- cache-key: cdktf-0.19.0 input-69252b714649cc19bbfedeb89aa6fa806e2f32d0df2739664cb86bc692aacfc6 -->

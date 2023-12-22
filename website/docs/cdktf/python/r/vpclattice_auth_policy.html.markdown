@@ -98,4 +98,4 @@ Using `terraform import`, import VPC Lattice Auth Policy using the `example_id_a
 % terraform import aws_vpclattice_auth_policy.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b4a5732fa3a54f088c4124bbf3f60126a39eedadb80630bef753b4e9195b528d -->
+<!-- cache-key: cdktf-0.19.0 input-b4a5732fa3a54f088c4124bbf3f60126a39eedadb80630bef753b4e9195b528d -->

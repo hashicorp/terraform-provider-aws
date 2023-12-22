@@ -68,12 +68,12 @@ This resource supports the following arguments:
 
 * `restApiId` - (Required) ID of the associated REST API
 * `resourceId` - (Required) API resource ID
-* `httpMethod` - (Required) HTTP Method (`get`, `post`, `put`, `delete`, `head`, `options`, `any`)
+* `httpMethod` - (Required) HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
 * `statusCode` - (Required) HTTP status code
 * `responseModels` - (Optional) Map of the API models used for the response's content type
 * `responseParameters` - (Optional) Map of response parameters that can be sent to the caller.
    For example: `response_parameters = { "method.response.header.X-Some-Header" = true }`
-   would define that the header `xSomeHeader` can be provided on the response.
+   would define that the header `X-Some-Header` can be provided on the response.
 
 ## Attribute Reference
 
@@ -101,4 +101,4 @@ Using `terraform import`, import `awsApiGatewayMethodResponse` using `restApiId/
 % terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-747ca6d8aa85968a45fb4eebf14083b89f32bb4152faf84deb93ecea4d18c9cb -->
+<!-- cache-key: cdktf-0.19.0 input-747ca6d8aa85968a45fb4eebf14083b89f32bb4152faf84deb93ecea4d18c9cb -->

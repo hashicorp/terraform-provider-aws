@@ -373,7 +373,7 @@ This resource supports the following arguments:
 * `project` - (Required) The name or ARN of the project that is to contain the new launch.
 * `randomizationSalt` - (Optional) When Evidently assigns a particular user session to a launch, it must use a randomization ID to determine which variation the user session is served. This randomization ID is a combination of the entity ID and randomizationSalt. If you omit randomizationSalt, Evidently uses the launch name as the randomizationSalt.
 * `scheduledSplitsConfig` - (Optional) A block that defines the traffic allocation percentages among the feature variations during each step of the launch. [Detailed below](#scheduled_splits_config).
-* `tags` - (Optional) Tags to apply to the launch. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the launch. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `groups`
 
@@ -394,7 +394,7 @@ The `metricMonitors` block supports the following arguments:
 
 The `metricDefinition` block supports the following arguments:
 
-* `entityIdKey` - (Required) Specifies the entity, such as a user or session, that does an action that causes a metric value to be recorded. An example is `userDetailsUserId`.
+* `entityIdKey` - (Required) Specifies the entity, such as a user or session, that does an action that causes a metric value to be recorded. An example is `userDetails.userID`.
 * `eventPattern` - (Required) Specifies The EventBridge event pattern that defines how the metric is recorded.
 * `name` - (Required) Specifies the name for the metric.
 * `unitLabel` - (Optional) Specifies a label for the units that the metric is measuring.
@@ -424,9 +424,9 @@ The `steps` block supports the following arguments:
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `2M`)
-* `delete` - (Default `2M`)
-* `update` - (Default `2M`)
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
 
 ## Attribute Reference
 
@@ -437,9 +437,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `execution` - A block that contains information about the start and end times of the launch. [Detailed below](#execution)
 * `id` - The launch `name` and the project `name` or `arn` separated by a colon (`:`).
 * `lastUpdatedTime` - The date and time that the launch was most recently updated.
-* `status` - The current state of the launch. Valid values are `created`, `updating`, `running`, `completed`, and `cancelled`.
+* `status` - The current state of the launch. Valid values are `CREATED`, `UPDATING`, `RUNNING`, `COMPLETED`, and `CANCELLED`.
 * `statusReason` - If the launch was stopped, this is the string that was entered by the person who stopped the launch, to explain why it was stopped.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `type` - The type of launch.
 
 ### `execution`
@@ -495,4 +495,4 @@ Import using the `name` of the launch and `arn` of the project separated by a `:
 % terraform import aws_evidently_launch.example exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aae11bd8a9c8b5e230e84e3f211fbabba6612255938e01ceece5ed580fbee328 -->
+<!-- cache-key: cdktf-0.19.0 input-aae11bd8a9c8b5e230e84e3f211fbabba6612255938e01ceece5ed580fbee328 -->

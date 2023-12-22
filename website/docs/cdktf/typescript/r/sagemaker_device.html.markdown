@@ -58,7 +58,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The id is constructed from `deviceFleetName/deviceName`.
+* `id` - The id is constructed from `device-fleet-name/device-name`.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device.
 
 ## Import
@@ -83,4 +83,4 @@ Using `terraform import`, import SageMaker Devices using the `deviceFleetName/de
 % terraform import aws_sagemaker_device.example my-fleet/my-device
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-baa6c522eea0c7f933208c4fefa045d0c6a31387586c39061b3b1a1c768ab3ca -->
+<!-- cache-key: cdktf-0.19.0 input-baa6c522eea0c7f933208c4fefa045d0c6a31387586c39061b3b1a1c768ab3ca -->

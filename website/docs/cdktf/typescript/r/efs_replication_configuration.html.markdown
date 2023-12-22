@@ -106,8 +106,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -131,4 +131,4 @@ Using `terraform import`, import EFS Replication Configurations using the file s
 % terraform import aws_efs_replication_configuration.example fs-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-946efd1b44fba73bdf7367fb477373ab0672aab7b032ed389da0ec41f5bbc874 -->
+<!-- cache-key: cdktf-0.19.0 input-946efd1b44fba73bdf7367fb477373ab0672aab7b032ed389da0ec41f5bbc874 -->

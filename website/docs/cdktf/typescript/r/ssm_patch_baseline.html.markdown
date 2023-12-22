@@ -211,43 +211,43 @@ This resource supports the following arguments:
 * `description` - (Optional) The description of the patch baseline.
 * `operatingSystem` - (Optional) The operating system the patch baseline applies to.
   Valid values are
-  `almaLinux`,
-  `amazonLinux`,
-  `amazonLinux2`,
-  `amazonLinux2022`,
-  `amazonLinux2023`,
-  `centos`,
-  `debian`,
-  `macos`,
-  `oracleLinux`,
-  `raspbian`,
-  `redhatEnterpriseLinux`,
-  `rockyLinux`,
-  `suse`,
-  `ubuntu`, and
-  `windows`.
-  The default value is `windows`.
+  `ALMA_LINUX`,
+  `AMAZON_LINUX`,
+  `AMAZON_LINUX_2`,
+  `AMAZON_LINUX_2022`,
+  `AMAZON_LINUX_2023`,
+  `CENTOS`,
+  `DEBIAN`,
+  `MACOS`,
+  `ORACLE_LINUX`,
+  `RASPBIAN`,
+  `REDHAT_ENTERPRISE_LINUX`,
+  `ROCKY_LINUX`,
+  `SUSE`,
+  `UBUNTU`, and
+  `WINDOWS`.
+  The default value is `WINDOWS`.
 * `approvedPatchesComplianceLevel` - (Optional) The compliance level for approved patches.
   This means that if an approved patch is reported as missing, this is the severity of the compliance violation.
-  Valid values are `critical`, `high`, `medium`, `low`, `informational`, `unspecified`.
-  The default value is `unspecified`.
+  Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`.
+  The default value is `UNSPECIFIED`.
 * `approvedPatches` - (Optional) A list of explicitly approved patches for the baseline.
-  Cannot be specified with `approvalRule`.
+  Cannot be specified with `approval_rule`.
 * `rejectedPatches` - (Optional) A list of rejected patches.
 * `globalFilter` - (Optional) A set of global filters used to exclude patches from the baseline.
   Up to 4 global filters can be specified using Key/Value pairs.
-  Valid Keys are `product`, `classification`, `msrcSeverity`, and `patchId`.
+  Valid Keys are `PRODUCT`, `CLASSIFICATION`, `MSRC_SEVERITY`, and `PATCH_ID`.
 * `approvalRule` - (Optional) A set of rules used to include patches in the baseline.
   Up to 10 approval rules can be specified.
-  See [`approvalRule`](#approval_rule-block) below.
+  See [`approval_rule`](#approval_rule-block) below.
 * `source` - (Optional) Configuration block with alternate sources for patches.
   Applies to Linux instances only.
   See [`source`](#source-block) below.
-* `rejectedPatchesAction` - (Optional) The action for Patch Manager to take on patches included in the `rejectedPatches` list.
-  Valid values are `allowAsDependency` and `block`.
+* `rejectedPatchesAction` - (Optional) The action for Patch Manager to take on patches included in the `rejected_patches` list.
+  Valid values are `ALLOW_AS_DEPENDENCY` and `BLOCK`.
 * `approvedPatchesEnableNonSecurity` - (Optional) Indicates whether the list of approved patches includes non-security updates that should be applied to the instances.
   Applies to Linux instances only.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `approvalRule` Block
 
@@ -255,19 +255,19 @@ The `approvalRule` block supports:
 
 * `approveAfterDays` - (Optional) The number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline.
   Valid Range: 0 to 100.
-  Conflicts with `approveUntilDate`.
+  Conflicts with `approve_until_date`.
 * `approveUntilDate` - (Optional) The cutoff date for auto approval of released patches.
   Any patches released on or before this date are installed automatically.
-  Date is formatted as `yyyyMmDd`.
-  Conflicts with `approveAfterDays`
+  Date is formatted as `YYYY-MM-DD`.
+  Conflicts with `approve_after_days`
 * `patchFilter` - (Required) The patch filter group that defines the criteria for the rule.
   Up to 5 patch filters can be specified per approval rule using Key/Value pairs.
-  Valid combinations of these Keys and the `operatingSystem` value can be found in the [SSM DescribePatchProperties API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribePatchProperties.html).
+  Valid combinations of these Keys and the `operating_system` value can be found in the [SSM DescribePatchProperties API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribePatchProperties.html).
   Valid Values are exact values for the patch property given as the key, or a wildcard `*`, which matches all values.
-    * `patchSet` defaults to `os` if unspecified
+    * `PATCH_SET` defaults to `OS` if unspecified
 * `complianceLevel` - (Optional) The compliance level for patches approved by this rule.
-  Valid values are `critical`, `high`, `medium`, `low`, `informational`, and `unspecified`.
-  The default value is `unspecified`.
+  Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, and `UNSPECIFIED`.
+  The default value is `UNSPECIFIED`.
 * `enableNonSecurity` - (Optional) Boolean enabling the application of non-security updates.
   The default value is `false`.
   Valid for Linux instances only.
@@ -278,8 +278,8 @@ The `source` block supports:
 
 * `name` - (Required) The name specified to identify the patch source.
 * `configuration` - (Required) The value of the yum repo configuration.
-  For information about other options available for your yum repository configuration, see the [`dnfConf` documentation](https://man7.org/linux/man-pages/man5/dnf.conf.5.html)
-* `products` - (Required) The specific operating system versions a patch repository applies to, such as `"ubuntu1604"`, `"amazonLinux201609"`, `"redhatEnterpriseLinux72"` or `"suse127"`.
+  For information about other options available for your yum repository configuration, see the [`dnf.conf` documentation](https://man7.org/linux/man-pages/man5/dnf.conf.5.html)
+* `products` - (Required) The specific operating system versions a patch repository applies to, such as `"Ubuntu16.04"`, `"AmazonLinux2016.09"`, `"RedhatEnterpriseLinux7.2"` or `"Suse12.7"`.
   For lists of supported product values, see [PatchFilter](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
 
 ## Attribute Reference
@@ -288,7 +288,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the patch baseline.
 * `arn` - The ARN of the patch baseline.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -312,4 +312,4 @@ Using `terraform import`, import SSM Patch Baselines using their baseline ID. Fo
 % terraform import aws_ssm_patch_baseline.example pb-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8564c1040b94d2bca2a77bd1f5497dbfad332cf94b1bfaa55582ef2dc819bc93 -->
+<!-- cache-key: cdktf-0.19.0 input-8564c1040b94d2bca2a77bd1f5497dbfad332cf94b1bfaa55582ef2dc819bc93 -->

@@ -46,7 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the backup report plan.
 * `creationTime` - Date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
-* `deploymentStatus` - Deployment status of a report plan. The statuses are: `createInProgress` | `updateInProgress` | `deleteInProgress` | `completed`.
+* `deploymentStatus` - Deployment status of a report plan. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`.
 * `description` - Description of the report plan.
 * `id` - ID of the report plan.
 * `reportDeliveryChannel` - An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
@@ -72,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `regions` - (Optional) Specifies the list of regions a report covers.
 * `reportTemplate` - Identifies the report template for the report. Reports are built using a report template.
 
-<!-- cache-key: cdktf-0.18.0 input-bb9ee564d7e610ad5a515bf5d6d41add676ed63ed91647947ed5d6fcd34dde46 -->
+<!-- cache-key: cdktf-0.19.0 input-bb9ee564d7e610ad5a515bf5d6d41add676ed63ed91647947ed5d6fcd34dde46 -->

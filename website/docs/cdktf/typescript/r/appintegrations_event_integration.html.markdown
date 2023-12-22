@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `eventbridgeBus` - (Required) EventBridge bus.
 * `eventFilter` - (Required) Block that defines the configuration information for the event filter. The Event Filter block is documented below.
 * `name` - (Required) Name of the Event Integration.
-* `tags` - (Optional) Tags to apply to the Event Integration. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Event Integration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `eventFilter` block supports the following arguments:
 
@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Event Integration.
 * `id` - Identifier of the Event Integration which is the name of the Event Integration.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import Amazon AppIntegrations Event Integrations using
 % terraform import aws_appintegrations_event_integration.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8b79c762f6b5fb4efdf9be46519afb95e300098781375353c9e9d4ad128687a6 -->
+<!-- cache-key: cdktf-0.19.0 input-8b79c762f6b5fb4efdf9be46519afb95e300098781375353c9e9d4ad128687a6 -->

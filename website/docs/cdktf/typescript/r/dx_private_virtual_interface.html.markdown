@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection.
 The MTU of a virtual private interface can be either `1500` or `9001` (jumbo frames). Default is `1500`.
 * `sitelinkEnabled` - (Optional) Indicates whether to enable or disable SiteLink.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpnGatewayId` - (Optional) The ID of the [virtual private gateway](vpn_gateway.html) to which to connect the virtual interface.
 
 ## Attribute Reference
@@ -65,15 +65,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the virtual interface.
 * `awsDevice` - The Direct Connect endpoint on which the virtual interface terminates.
 * `jumboFrameCapable` - Indicates whether jumbo frames (9001 MTU) are supported.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -97,4 +97,4 @@ Using `terraform import`, import Direct Connect private virtual interfaces using
 % terraform import aws_dx_private_virtual_interface.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c9ac0219d04bdf984abd5ff5099a9682a1da16fcc6658d74d4103ab21c9a9998 -->
+<!-- cache-key: cdktf-0.19.0 input-c9ac0219d04bdf984abd5ff5099a9682a1da16fcc6658d74d4103ab21c9a9998 -->

@@ -60,20 +60,20 @@ This resource supports the following arguments:
 * `name` - (Required) The identifier for the proxy. This name must be unique for all proxies owned by your AWS account in the specified AWS Region. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `auth` - (Required) Configuration block(s) with authorization mechanisms to connect to the associated instances or clusters. Described below.
 * `debugLogging` - (Optional) Whether the proxy includes detailed information about SQL statements in its logs. This information helps you to debug issues involving SQL behavior or the performance and scalability of the proxy connections. The debug information includes the text of SQL statements that you submit through the proxy. Thus, only enable this setting when needed for debugging, and only when you have security measures in place to safeguard any sensitive information that appears in the logs.
-* `engineFamily` - (Required, Forces new resource) The kinds of databases that the proxy can connect to. This value determines which database network protocol the proxy recognizes when it interprets network traffic to and from the database. For Aurora MySQL, RDS for MariaDB, and RDS for MySQL databases, specify `mysql`. For Aurora PostgreSQL and RDS for PostgreSQL databases, specify `postgresql`. For RDS for Microsoft SQL Server, specify `sqlserver`. Valid values are `mysql`, `postgresql`, and `sqlserver`.
+* `engineFamily` - (Required, Forces new resource) The kinds of databases that the proxy can connect to. This value determines which database network protocol the proxy recognizes when it interprets network traffic to and from the database. For Aurora MySQL, RDS for MariaDB, and RDS for MySQL databases, specify `MYSQL`. For Aurora PostgreSQL and RDS for PostgreSQL databases, specify `POSTGRESQL`. For RDS for Microsoft SQL Server, specify `SQLSERVER`. Valid values are `MYSQL`, `POSTGRESQL`, and `SQLSERVER`.
 * `idleClientTimeout` - (Optional) The number of seconds that a connection to the proxy can be inactive before the proxy disconnects it. You can set this value higher or lower than the connection timeout limit for the associated database.
 * `requireTls` - (Optional) A Boolean parameter that specifies whether Transport Layer Security (TLS) encryption is required for connections to the proxy. By enabling this setting, you can enforce encrypted TLS connections to the proxy.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of the IAM role that the proxy uses to access secrets in AWS Secrets Manager.
 * `vpcSecurityGroupIds` - (Optional) One or more VPC security group IDs to associate with the new proxy.
 * `vpcSubnetIds` - (Required) One or more VPC subnet IDs to associate with the new proxy.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 `auth` blocks support the following:
 
-* `authScheme` - (Optional) The type of authentication that the proxy uses for connections from the proxy to the underlying database. One of `secrets`.
-* `clientPasswordAuthType` - (Optional) The type of authentication the proxy uses for connections from clients. Valid values are `mysqlNativePassword`, `postgresScramSha256`, `postgresMd5`, and `sqlServerAuthentication`.
+* `authScheme` - (Optional) The type of authentication that the proxy uses for connections from the proxy to the underlying database. One of `SECRETS`.
+* `clientPasswordAuthType` - (Optional) The type of authentication the proxy uses for connections from clients. Valid values are `MYSQL_NATIVE_PASSWORD`, `POSTGRES_SCRAM_SHA_256`, `POSTGRES_MD5`, and `SQL_SERVER_AUTHENTICATION`.
 * `description` - (Optional) A user-specified description about the authentication used by a proxy to log in as a specific database user.
-* `iamAuth` - (Optional) Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy. One of `disabled`, `required`.
+* `iamAuth` - (Optional) Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy. One of `DISABLED`, `REQUIRED`.
 * `secretArn` - (Optional) The Amazon Resource Name (ARN) representing the secret that the proxy uses to authenticate to the RDS DB instance or Aurora DB cluster. These secrets are stored within Amazon Secrets Manager.
 * `username` - (Optional) The name of the database user to which the proxy connects.
 
@@ -84,15 +84,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Amazon Resource Name (ARN) for the proxy.
 * `arn` - The Amazon Resource Name (ARN) for the proxy.
 * `endpoint` - The endpoint that you can use to connect to the proxy. You include the endpoint value in the connection string for a database client application.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `30M`)
-- `delete` - (Default `60M`)
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `60m`)
 
 ## Import
 
@@ -116,4 +116,4 @@ Using `terraform import`, import DB proxies using the `name`. For example:
 % terraform import aws_db_proxy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8a3c238396074ac96e7b1e4adfae2e3755201827cad27408ac90aeb3b6b1ca32 -->
+<!-- cache-key: cdktf-0.19.0 input-8a3c238396074ac96e7b1e4adfae2e3755201827cad27408ac90aeb3b6b1ca32 -->

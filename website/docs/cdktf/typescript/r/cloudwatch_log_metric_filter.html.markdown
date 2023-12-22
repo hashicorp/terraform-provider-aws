@@ -57,12 +57,12 @@ This resource supports the following arguments:
 
 The `metricTransformation` block supports the following arguments:
 
-* `name` - (Required) The name of the CloudWatch metric to which the monitored log information should be published (e.g., `errorCount`)
+* `name` - (Required) The name of the CloudWatch metric to which the monitored log information should be published (e.g., `ErrorCount`)
 * `namespace` - (Required) The destination namespace of the CloudWatch metric.
 * `value` - (Required) What to publish to the metric. For example, if you're counting the occurrences of a particular term like "Error", the value will be "1" for each occurrence. If you're counting the bytes transferred the published value will be the value in the log event.
 * `defaultValue` - (Optional) The value to emit when a filter pattern does not match a log event. Conflicts with `dimensions`.
-* `dimensions` - (Optional) Map of fields to use as dimensions for the metric. Up to 3 dimensions are allowed. Conflicts with `defaultValue`.
-* `unit` - (Optional) The unit to assign to the metric. If you omit this, the unit is set as `none`.
+* `dimensions` - (Optional) Map of fields to use as dimensions for the metric. Up to 3 dimensions are allowed. Conflicts with `default_value`.
+* `unit` - (Optional) The unit to assign to the metric. If you omit this, the unit is set as `None`.
 
 ## Attribute Reference
 
@@ -92,4 +92,4 @@ Using `terraform import`, import CloudWatch Log Metric Filter using the `logGrou
 % terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c3539b00aea6703f03f30c699d9e6682c77afa8c2025da9bd2bce0e294523841 -->
+<!-- cache-key: cdktf-0.19.0 input-c3539b00aea6703f03f30c699d9e6682c77afa8c2025da9bd2bce0e294523841 -->

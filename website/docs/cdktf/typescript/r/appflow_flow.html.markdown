@@ -61,8 +61,8 @@ class MyConvertedCode extends TerraformStack {
               },
             ],
             resources: [
-              "arn:aws:s3:::example_destination",
-              "arn:aws:s3:::example_destination/*",
+              "arn:aws:s3:::example-destination",
+              "arn:aws:s3:::example-destination/*",
             ],
             sid: "AllowAppFlowDestinationActions",
           },
@@ -87,8 +87,8 @@ class MyConvertedCode extends TerraformStack {
               },
             ],
             resources: [
-              "arn:aws:s3:::example_source",
-              "arn:aws:s3:::example_source/*",
+              "arn:aws:s3:::example-source",
+              "arn:aws:s3:::example-source/*",
             ],
             sid: "AllowAppFlowSourceActions",
           },
@@ -181,12 +181,12 @@ This resource supports the following arguments:
 * `triggerConfig` - (Required) A [Trigger](#trigger-config) that determine how and when the flow runs.
 * `description` - (Optional) Description of the flow you want to create.
 * `kmsArn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### Destination Flow Config
 
-* `connectorType` - (Required) Type of connector, such as Salesforce, Amplitude, and so on. Valid values are `salesforce`, `singular`, `slack`, `redshift`, `s3`, `marketo`, `googleanalytics`, `zendesk`, `servicenow`, `datadog`, `trendmicro`, `snowflake`, `dynatrace`, `infornexus`, `amplitude`, `veeva`, `eventBridge`, `lookoutMetrics`, `upsolver`, `honeycode`, `customerProfiles`, `sapoData`, and `customConnector`.
+* `connectorType` - (Required) Type of connector, such as Salesforce, Amplitude, and so on. Valid values are `Salesforce`, `Singular`, `Slack`, `Redshift`, `S3`, `Marketo`, `Googleanalytics`, `Zendesk`, `Servicenow`, `Datadog`, `Trendmicro`, `Snowflake`, `Dynatrace`, `Infornexus`, `Amplitude`, `Veeva`, `EventBridge`, `LookoutMetrics`, `Upsolver`, `Honeycode`, `CustomerProfiles`, `SAPOData`, and `CustomConnector`.
 * `destinationConnectorProperties` - (Required) This stores the information that is required to query a particular connector. See [Destination Connector Properties](#destination-connector-properties) for more information.
 * `apiVersion` - (Optional) API version that the destination connector uses.
 * `connectorProfileName` - (Optional) Name of the connector profile. This name must be unique for each connector profile in the AWS account.
@@ -219,7 +219,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `customProperties` - (Optional) Custom properties that are specific to the connector when it's used as a destination in the flow. Maximum of 50 items.
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the custom connector as destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update, delete, or upsert.
-* `writeOperationType` - (Optional) Type of write operation to be performed in the custom connector when it's used as destination. Valid values are `insert`, `upsert`, `update`, and `delete`.
+* `writeOperationType` - (Optional) Type of write operation to be performed in the custom connector when it's used as destination. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ##### Customer Profiles Destination Properties
 
@@ -242,16 +242,16 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### S3 Output Format Config
 
 * `aggregationConfig` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
-* `fileType` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `csv`, `json`, and `parquet`.
+* `fileType` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefixConfig` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
-* `preserveSourceDataTyping` - (Optional, Boolean) Whether the data types from the source system need to be preserved (Only valid for `parquet` file type)
+* `preserveSourceDataTyping` - (Optional, Boolean) Whether the data types from the source system need to be preserved (Only valid for `Parquet` file type)
 
 ##### Salesforce Destination Properties
 
 * `object` - (Required) Object specified in the flow destination.
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
-* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `upsert`, then `idFieldNames` is required. Valid values are `insert`, `upsert`, `update`, and `delete`.
+* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ##### SAPOData Destination Properties
 
@@ -259,7 +259,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `successResponseHandlingConfig` - (Optional) Determines how Amazon AppFlow handles the success response that it gets from the connector after placing data. See [Success Response Handling Config](#success-response-handling-config) for more details.
-* `writeOperation` - (Optional) Possible write operations in the destination connector. When this value is not provided, this defaults to the `insert` operation. Valid values are `insert`, `upsert`, `update`, and `delete`.
+* `writeOperation` - (Optional) Possible write operations in the destination connector. When this value is not provided, this defaults to the `INSERT` operation. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ###### Success Response Handling Config
 
@@ -275,31 +275,31 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 
 ##### Upsolver Destination Properties
 
-* `bucketName` - (Required) Upsolver Amazon S3 bucket name in which Amazon AppFlow places the transferred data. This must begin with `upsolverAppflow`.
+* `bucketName` - (Required) Upsolver Amazon S3 bucket name in which Amazon AppFlow places the transferred data. This must begin with `upsolver-appflow`.
 * `bucketPrefix` - (Optional) Object key for the Upsolver Amazon S3 Bucket in which Amazon AppFlow places the destination files.
 * `s3OutputFormatConfig` - (Optional) Configuration that determines how Amazon AppFlow should format the flow output data when Upsolver is used as the destination. See [Upsolver S3 Output Format Config](#upsolver-s3-output-format-config) for more details.
 
 ###### Upsolver S3 Output Format Config
 
 * `aggregationConfig` - (Optional) Aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
-* `fileType` - (Optional) File type that Amazon AppFlow places in the Upsolver Amazon S3 bucket. Valid values are `csv`, `json`, and `parquet`.
+* `fileType` - (Optional) File type that Amazon AppFlow places in the Upsolver Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefixConfig` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
 
 ###### Aggregation Config
 
-* `aggregationType` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `none` and `singleFile`.
+* `aggregationType` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
 
 ###### Prefix Config
 
-* `prefixFormat` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `year`, `month`, `day`, `hour`, and `minute`.
-* `prefixType` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `filename`, `path`, and `pathAndFilename`.
+* `prefixFormat` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
+* `prefixType` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
 
 ##### Zendesk Destination Properties
 
 * `object` - (Required) Object specified in the flow destination.
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
-* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Zendesk. When the value is `upsert`, then `idFieldNames` is required. Valid values are `insert`, `upsert`, `update`, and `delete`.
+* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Zendesk. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ###### Error Handling Config
 
@@ -309,7 +309,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 
 ### Source Flow Config
 
-* `connectorType` - (Required) Type of connector, such as Salesforce, Amplitude, and so on. Valid values are `salesforce`, `singular`, `slack`, `redshift`, `s3`, `marketo`, `googleanalytics`, `zendesk`, `servicenow`, `datadog`, `trendmicro`, `snowflake`, `dynatrace`, `infornexus`, `amplitude`, `veeva`, `eventBridge`, `lookoutMetrics`, `upsolver`, `honeycode`, `customerProfiles`, `sapoData`, and `customConnector`.
+* `connectorType` - (Required) Type of connector, such as Salesforce, Amplitude, and so on. Valid values are `Salesforce`, `Singular`, `Slack`, `Redshift`, `S3`, `Marketo`, `Googleanalytics`, `Zendesk`, `Servicenow`, `Datadog`, `Trendmicro`, `Snowflake`, `Dynatrace`, `Infornexus`, `Amplitude`, `Veeva`, `EventBridge`, `LookoutMetrics`, `Upsolver`, `Honeycode`, `CustomerProfiles`, `SAPOData`, and `CustomConnector`.
 * `sourceConnectorProperties` - (Required) Information that is required to query a particular source connector. See [Source Connector Properties](#source-connector-properties) for details.
 * `apiVersion` - (Optional) API version that the destination connector uses.
 * `connectorProfileName` - (Optional) Name of the connector profile. This name must be unique for each connector profile in the AWS account.
@@ -352,7 +352,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 ###### S3 Input Format Config
 
-* `s3InputFileType` - (Optional) File type that Amazon AppFlow gets from your Amazon S3 bucket. Valid values are `csv` and `json`.
+* `s3InputFileType` - (Optional) File type that Amazon AppFlow gets from your Amazon S3 bucket. Valid values are `CSV` and `JSON`.
 
 ##### Salesforce Source Properties
 
@@ -379,46 +379,46 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 ### Task
 
 * `sourceFields` - (Required) Source fields to which a particular task is applied.
-* `taskType` - (Required) Particular task implementation that Amazon AppFlow performs. Valid values are `arithmetic`, `filter`, `map`, `mapAll`, `mask`, `merge`, `passthrough`, `truncate`, and `validate`.
+* `taskType` - (Required) Particular task implementation that Amazon AppFlow performs. Valid values are `Arithmetic`, `Filter`, `Map`, `Map_all`, `Mask`, `Merge`, `Passthrough`, `Truncate`, and `Validate`.
 * `connectorOperator` - (Optional) Operation to be performed on the provided source fields. See [Connector Operator](#connector-operator) for details.
 * `destinationField` - (Optional) Field in a destination connector, or a field value against which Amazon AppFlow validates a source field.
-* `taskProperties` - (Optional) Map used to store task-related information. The execution service looks for particular information based on the `taskType`. Valid keys are `value`, `values`, `dataType`, `upperBound`, `lowerBound`, `sourceDataType`, `destinationDataType`, `validationAction`, `maskValue`, `maskLength`, `truncateLength`, `mathOperationFieldsOrder`, `concatFormat`, `subfieldCategoryMap`, and `excludeSourceFieldsList`.
+* `taskProperties` - (Optional) Map used to store task-related information. The execution service looks for particular information based on the `TaskType`. Valid keys are `VALUE`, `VALUES`, `DATA_TYPE`, `UPPER_BOUND`, `LOWER_BOUND`, `SOURCE_DATA_TYPE`, `DESTINATION_DATA_TYPE`, `VALIDATION_ACTION`, `MASK_VALUE`, `MASK_LENGTH`, `TRUNCATE_LENGTH`, `MATH_OPERATION_FIELDS_ORDER`, `CONCAT_FORMAT`, `SUBFIELD_CATEGORY_MAP`, and `EXCLUDE_SOURCE_FIELDS_LIST`.
 
 #### Connector Operator
 
-* `amplitude` - (Optional) Operation to be performed on the provided Amplitude source fields. The only valid value is `between`.
-* `customConnector` - (Optional) Operators supported by the custom connector. Valid values are `projection`, `lessThan`, `greaterThan`, `contains`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `notEqualTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `datadog` - (Optional) Operation to be performed on the provided Datadog source fields. Valid values are `projection`, `between`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `dynatrace` - (Optional) Operation to be performed on the provided Dynatrace source fields. Valid values are `projection`, `between`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `googleAnalytics` - (Optional) Operation to be performed on the provided Google Analytics source fields. Valid values are `projection` and `between`.
-* `inforNexus` - (Optional) Operation to be performed on the provided Infor Nexus source fields. Valid values are `projection`, `between`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `marketo` - (Optional) Operation to be performed on the provided Marketo source fields. Valid values are `projection`, `between`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `s3` - (Optional) Operation to be performed on the provided Amazon S3 source fields. Valid values are `projection`, `lessThan`, `greaterThan`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `notEqualTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `salesforce` - (Optional) Operation to be performed on the provided Salesforce source fields. Valid values are `projection`, `lessThan`, `greaterThan`, `contains`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `notEqualTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `sapoData` - (Optional) Operation to be performed on the provided SAPOData source fields. Valid values are `projection`, `lessThan`, `greaterThan`, `contains`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `notEqualTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `serviceNow` - (Optional) Operation to be performed on the provided ServiceNow source fields. Valid values are `projection`, `lessThan`, `greaterThan`, `contains`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `notEqualTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `singular` - (Optional) Operation to be performed on the provided Singular source fields. Valid values are `projection`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `slack` - (Optional) Operation to be performed on the provided Slack source fields. Valid values are `projection`, `lessThan`, `greaterThan`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `trendmicro` - (Optional) Operation to be performed on the provided Trend Micro source fields. Valid values are `projection`, `equalTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `veeva` - (Optional) Operation to be performed on the provided Veeva source fields. Valid values are `projection`, `lessThan`, `greaterThan`, `contains`, `between`, `lessThanOrEqualTo`, `greaterThanOrEqualTo`, `equalTo`, `notEqualTo`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
-* `zendesk` - (Optional) Operation to be performed on the provided Zendesk source fields. Valid values are `projection`, `greaterThan`, `addition`, `multiplication`, `division`, `subtraction`, `maskAll`, `maskFirstN`, `maskLastN`, `validateNonNull`, `validateNonZero`, `validateNonNegative`, `validateNumeric`, and `noOp`.
+* `amplitude` - (Optional) Operation to be performed on the provided Amplitude source fields. The only valid value is `BETWEEN`.
+* `customConnector` - (Optional) Operators supported by the custom connector. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `datadog` - (Optional) Operation to be performed on the provided Datadog source fields. Valid values are `PROJECTION`, `BETWEEN`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `dynatrace` - (Optional) Operation to be performed on the provided Dynatrace source fields. Valid values are `PROJECTION`, `BETWEEN`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `googleAnalytics` - (Optional) Operation to be performed on the provided Google Analytics source fields. Valid values are `PROJECTION` and `BETWEEN`.
+* `inforNexus` - (Optional) Operation to be performed on the provided Infor Nexus source fields. Valid values are `PROJECTION`, `BETWEEN`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `marketo` - (Optional) Operation to be performed on the provided Marketo source fields. Valid values are `PROJECTION`, `BETWEEN`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `s3` - (Optional) Operation to be performed on the provided Amazon S3 source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `salesforce` - (Optional) Operation to be performed on the provided Salesforce source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `sapoData` - (Optional) Operation to be performed on the provided SAPOData source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `serviceNow` - (Optional) Operation to be performed on the provided ServiceNow source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `singular` - (Optional) Operation to be performed on the provided Singular source fields. Valid values are `PROJECTION`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `slack` - (Optional) Operation to be performed on the provided Slack source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `trendmicro` - (Optional) Operation to be performed on the provided Trend Micro source fields. Valid values are `PROJECTION`, `EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `veeva` - (Optional) Operation to be performed on the provided Veeva source fields. Valid values are `PROJECTION`, `LESS_THAN`, `GREATER_THAN`, `CONTAINS`, `BETWEEN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN_OR_EQUAL_TO`, `EQUAL_TO`, `NOT_EQUAL_TO`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
+* `zendesk` - (Optional) Operation to be performed on the provided Zendesk source fields. Valid values are `PROJECTION`, `GREATER_THAN`, `ADDITION`, `MULTIPLICATION`, `DIVISION`, `SUBTRACTION`, `MASK_ALL`, `MASK_FIRST_N`, `MASK_LAST_N`, `VALIDATE_NON_NULL`, `VALIDATE_NON_ZERO`, `VALIDATE_NON_NEGATIVE`, `VALIDATE_NUMERIC`, and `NO_OP`.
 
 ### Trigger Config
 
-* `triggerType` - (Required) Type of flow trigger. Valid values are `scheduled`, `event`, and `onDemand`.
-* `triggerProperties` - (Optional) Configuration details of a schedule-triggered flow as defined by the user. Currently, these settings only apply to the `scheduled` trigger type. See [Scheduled Trigger Properties](#scheduled-trigger-properties) for details.
+* `triggerType` - (Required) Type of flow trigger. Valid values are `Scheduled`, `Event`, and `OnDemand`.
+* `triggerProperties` - (Optional) Configuration details of a schedule-triggered flow as defined by the user. Currently, these settings only apply to the `Scheduled` trigger type. See [Scheduled Trigger Properties](#scheduled-trigger-properties) for details.
 
 #### Scheduled Trigger Properties
 
 The `triggerProperties` block only supports one attribute: `scheduled`, a block which in turn supports the following:
 
-* `scheduleExpression` - (Required) Scheduling expression that determines the rate at which the schedule will run, for example `rate(5Minutes)`.
-* `dataPullMode` - (Optional) Whether a scheduled flow has an incremental data transfer or a complete data transfer for each flow run. Valid values are `incremental` and `complete`.
+* `scheduleExpression` - (Required) Scheduling expression that determines the rate at which the schedule will run, for example `rate(5minutes)`.
+* `dataPullMode` - (Optional) Whether a scheduled flow has an incremental data transfer or a complete data transfer for each flow run. Valid values are `Incremental` and `Complete`.
 * `firstExecutionFrom` - (Optional) Date range for the records to import from the connector in the first flow run. Must be a valid RFC3339 timestamp.
 * `scheduleEndTime` - (Optional) Scheduled end time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
 * `scheduleOffset` - (Optional) Optional offset that is added to the time interval for a schedule-triggered flow. Maximum value of 36000.
 * `scheduleStartTime` - (Optional) Scheduled start time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
-* `timezone` - (Optional) Time zone used when referring to the date and time of a scheduled-triggered flow, such as `america/newYork`.
+* `timezone` - (Optional) Time zone used when referring to the date and time of a scheduled-triggered flow, such as `America/New_York`.
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -486,4 +486,4 @@ Using `terraform import`, import AppFlow flows using the `arn`. For example:
 % terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-17e1cfe9c9c0df000acad27d00f90bbaa486384b6d2aa3d057f258c6051b900d -->
+<!-- cache-key: cdktf-0.19.0 input-52dd4f526d94aeed3592adc8cf2c2d9b7f68ae1b371ede9d06457cd4223725bf -->

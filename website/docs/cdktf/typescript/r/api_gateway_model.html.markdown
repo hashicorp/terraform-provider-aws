@@ -85,4 +85,4 @@ Using `terraform import`, import `awsApiGatewayModel` using `restApiId/name`. Fo
 % terraform import aws_api_gateway_model.example 12345abcde/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3c89195f3305545d621230506fac11346c31eec2c1309a11239463f693b441d7 -->
+<!-- cache-key: cdktf-0.19.0 input-3c89195f3305545d621230506fac11346c31eec2c1309a11239463f693b441d7 -->

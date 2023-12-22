@@ -84,4 +84,4 @@ Using `terraform import`, import `aws_inspector_assessment_template` using the t
 % terraform import aws_inspector_assessment_template.example arn:aws:inspector:us-west-2:123456789012:target/0-9IaAzhGR/template/0-WEcjR8CH
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8ab910475a5ea18490628aba73cd2f6da8ce0d1a11648cd0f2169486753e2383 -->
+<!-- cache-key: cdktf-0.19.0 input-8ab910475a5ea18490628aba73cd2f6da8ce0d1a11648cd0f2169486753e2383 -->

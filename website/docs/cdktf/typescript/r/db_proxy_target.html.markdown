@@ -93,13 +93,13 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `endpoint` - Hostname for the target RDS DB Instance. Only returned for `rdsInstance` type.
-* `id` - Identifier of  `dbProxyName`, `targetGroupName`, target type (e.g., `rdsInstance` or `trackedCluster`), and resource identifier separated by forward slashes (`/`).
+* `endpoint` - Hostname for the target RDS DB Instance. Only returned for `RDS_INSTANCE` type.
+* `id` - Identifier of  `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`).
 * `port` - Port for the target RDS DB Instance or Aurora DB Cluster.
 * `rdsResourceId` - Identifier representing the DB Instance or DB Cluster target.
 * `targetArn` - Amazon Resource Name (ARN) for the DB instance or DB cluster. Currently not returned by the RDS API.
-* `trackedClusterId` - DB Cluster identifier for the DB Instance target. Not returned unless manually importing an `rdsInstance` target that is part of a DB Cluster.
-* `type` - Type of targetE.g., `rdsInstance` or `trackedCluster`
+* `trackedClusterId` - DB Cluster identifier for the DB Instance target. Not returned unless manually importing an `RDS_INSTANCE` target that is part of a DB Cluster.
+* `type` - Type of targetE.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`
 
 ## Import
 
@@ -147,4 +147,4 @@ Provisioned Clusters:
 % terraform import aws_db_proxy_target.example example-proxy/default/TRACKED_CLUSTER/example-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7434cf3969d924cf4dd540c487f947d3059ac1146283da81333dc7dd742fe6ae -->
+<!-- cache-key: cdktf-0.19.0 input-7434cf3969d924cf4dd540c487f947d3059ac1146283da81333dc7dd742fe6ae -->

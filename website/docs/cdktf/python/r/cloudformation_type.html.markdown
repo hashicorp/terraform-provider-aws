@@ -96,4 +96,4 @@ Using `terraform import`, import `aws_cloudformation_type` using the type versio
 % terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4738423c73768d212dce00b4674e015861f2836ad18ef9b55653e2e9fd2462e5 -->
+<!-- cache-key: cdktf-0.19.0 input-4738423c73768d212dce00b4674e015861f2836ad18ef9b55653e2e9fd2462e5 -->

@@ -58,9 +58,9 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import CodeCatalyst Source Repository using the `examp
 % terraform import aws_codecatalyst_source_repository.example source_repository-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-03b428f1b5cc0fdf28b4d5ea9381e651fe9e72981c5ada420c0f7134b76c3774 -->
+<!-- cache-key: cdktf-0.19.0 input-03b428f1b5cc0fdf28b4d5ea9381e651fe9e72981c5ada420c0f7134b76c3774 -->

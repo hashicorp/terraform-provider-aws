@@ -61,7 +61,7 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the shared directory.
-* `method` - Method used when sharing a directory (i.e., `organizations` or `handshake`).
+* `method` - Method used when sharing a directory (i.e., `ORGANIZATIONS` or `HANDSHAKE`).
 * `notes` - Message sent by the directory owner to the directory consumer to help the directory consumer administrator determine whether to approve or reject the share invitation.
 * `ownerAccountId` - Account identifier of the directory owner.
 * `ownerDirectoryId` - Identifier of the Managed Microsoft AD directory from the perspective of the directory owner.
@@ -95,4 +95,4 @@ Using `terraform import`, import Directory Service Shared Directories using the 
 % terraform import aws_directory_service_shared_directory_accepter.example d-9267633ece
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-63416097ef145afd37784c7610985af402f18b723a7a423cc37dfe1e13007046 -->
+<!-- cache-key: cdktf-0.19.0 input-63416097ef145afd37784c7610985af402f18b723a7a423cc37dfe1e13007046 -->

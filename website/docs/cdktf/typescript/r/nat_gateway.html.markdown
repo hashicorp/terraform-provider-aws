@@ -117,32 +117,32 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `allocationId` - (Optional) The Allocation ID of the Elastic IP address for the NAT Gateway. Required for `connectivityType` of `public`.
+* `allocationId` - (Optional) The Allocation ID of the Elastic IP address for the NAT Gateway. Required for `connectivity_type` of `public`.
 * `connectivityType` - (Optional) Connectivity type for the NAT Gateway. Valid values are `private` and `public`. Defaults to `public`.
 * `privateIp` - (Optional) The private IPv4 address to assign to the NAT Gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
 * `subnetId` - (Required) The Subnet ID of the subnet in which to place the NAT Gateway.
 * `secondaryAllocationIds` - (Optional) A list of secondary allocation EIP IDs for this NAT Gateway.
 * `secondaryPrivateIpAddressCount` - (Optional) [Private NAT Gateway only] The number of secondary private IPv4 addresses you want to assign to the NAT Gateway.
 * `secondaryPrivateIpAddresses` - (Optional) A list of secondary private IPv4 addresses to assign to the NAT Gateway.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `associationId` - The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivityType` is `public`.
+* `associationId` - The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.
 * `id` - The ID of the NAT Gateway.
 * `networkInterfaceId` - The ID of the network interface associated with the NAT Gateway.
 * `publicIp` - The Elastic IP address associated with the NAT Gateway.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `30M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -166,4 +166,4 @@ Using `terraform import`, import NAT Gateways using the `id`. For example:
 % terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->
+<!-- cache-key: cdktf-0.19.0 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->

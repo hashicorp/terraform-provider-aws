@@ -190,7 +190,7 @@ This resource supports the following arguments:
 * `vpcId` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `propagatingVgws` - (Optional) A list of virtual gateways for propagation.
 
 ### route Argument Reference
@@ -228,15 +228,15 @@ attribute once the route resource is created.
 * `id` - The ID of the routing table.
 * `arn` - The ARN of the route table.
 * `ownerId` - The ID of the AWS account that owns the route table.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `2M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -260,4 +260,4 @@ Using `terraform import`, import Route Tables using the route table `id`. For ex
 % terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d300bb2babcdde7f3a257080c421d049a58a89200afecf3485288c3ad0d30c6d -->
+<!-- cache-key: cdktf-0.19.0 input-d300bb2babcdde7f3a257080c421d049a58a89200afecf3485288c3ad0d30c6d -->

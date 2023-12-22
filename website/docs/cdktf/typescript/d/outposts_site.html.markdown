@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `accountId` - AWS Account identifier.
 * `description` - Description.
 
-<!-- cache-key: cdktf-0.18.0 input-35136b0820f723be3d4e35e80bb8abd4839b40210fd445ddc0cbd77d3cf4f75f -->
+<!-- cache-key: cdktf-0.19.0 input-35136b0820f723be3d4e35e80bb8abd4839b40210fd445ddc0cbd77d3cf4f75f -->

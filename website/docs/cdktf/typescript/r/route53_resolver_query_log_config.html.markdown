@@ -45,7 +45,7 @@ This resource supports the following arguments:
 * `destinationArn` - (Required) The ARN of the resource that you want Route 53 Resolver to send query logs.
 You can send query logs to an [S3 bucket](s3_bucket.html), a [CloudWatch Logs log group](cloudwatch_log_group.html), or a [Kinesis Data Firehose delivery stream](kinesis_firehose_delivery_stream.html).
 * `name` - (Required) The name of the Route 53 Resolver query logging configuration.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -56,8 +56,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `ownerId` - The AWS account ID of the account that created the query logging configuration.
 * `shareStatus` - An indication of whether the query logging configuration is shared with other AWS accounts, or was shared with the current account by another AWS account.
 Sharing is configured through AWS Resource Access Manager (AWS RAM).
-Values are `notShared`, `sharedByMe` or `sharedWithMe`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import  Route 53 Resolver query logging configurations
 % terraform import aws_route53_resolver_query_log_config.example rqlc-92edc3b1838248bf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5223f85f64c286cf17d4b87baa9cc06e62338ab91d82d959ba69e32ab94b1a4d -->
+<!-- cache-key: cdktf-0.19.0 input-5223f85f64c286cf17d4b87baa9cc06e62338ab91d82d959ba69e32ab94b1a4d -->

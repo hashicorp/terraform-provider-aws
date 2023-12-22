@@ -58,8 +58,8 @@ The following arguments are optional:
 * `imageScanningConfiguration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `imageTestsConfiguration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
-* `status` - (Optional) Status of the image pipeline. Valid values are `disabled` and `enabled`. Defaults to `enabled`.
-* `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
+* `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_scanning_configuration
 
@@ -90,7 +90,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `pipelineExecutionStartCondition` - (Optional) Condition when the pipeline should trigger a new image build. Valid values are `expressionMatchAndDependencyUpdatesAvailable` and `expressionMatchOnly`. Defaults to `expressionMatchAndDependencyUpdatesAvailable`.
+* `pipelineExecutionStartCondition` - (Optional) Condition when the pipeline should trigger a new image build. Valid values are `EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE` and `EXPRESSION_MATCH_ONLY`. Defaults to `EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE`.
 
 * `timezone` - (Optional) The timezone that applies to the scheduling expression. For example, "Etc/UTC", "America/Los_Angeles" in the [IANA timezone format](https://www.joda.org/joda-time/timezones.html). If not specified this defaults to UTC.
 
@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `dateNextRun` - Date the image pipeline will run next.
 * `dateUpdated` - Date the image pipeline was updated.
 * `platform` - Platform of the image pipeline.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -128,4 +128,4 @@ Using `terraform import`, import `awsImagebuilderImagePipeline` resources using 
 % terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-13e924ec569b627a02963bf24503600d1c77afb7d92500fcb19f3ff11c58c554 -->
+<!-- cache-key: cdktf-0.19.0 input-13e924ec569b627a02963bf24503600d1c77afb7d92500fcb19f3ff11c58c554 -->

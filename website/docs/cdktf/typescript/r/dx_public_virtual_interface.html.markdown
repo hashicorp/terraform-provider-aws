@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `bgpAuthKey` - (Optional) The authentication key for BGP configuration.
 * `customerAddress` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 * `routeFilterPrefixes` - (Required) A list of routes to be advertised to the AWS network in this region.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -63,14 +63,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
 * `awsDevice` - The Direct Connect endpoint on which the virtual interface terminates.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -94,4 +94,4 @@ Using `terraform import`, import Direct Connect public virtual interfaces using 
 % terraform import aws_dx_public_virtual_interface.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ebdc8f75c16e66de8524c4ee98373933ff1fa3ba07471cde890864f94bc85d6f -->
+<!-- cache-key: cdktf-0.19.0 input-ebdc8f75c16e66de8524c4ee98373933ff1fa3ba07471cde890864f94bc85d6f -->

@@ -69,7 +69,7 @@ The following arguments are optional:
 * `mediaConnectFlows` - (Optional) A list of the MediaConnect Flows. See [Media Connect Flows](#media-connect-flows) for more details.
 * `roleArn` - (Optional) The ARN of the role this input assumes during and after creation.
 * `sources` - (Optional) The source URLs for a PULL-type input. See [Sources](#sources) for more details.
-* `tags`- (Optional) A map of tags to assign to the Input. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags`- (Optional) A map of tags to assign to the Input. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Settings for a private VPC Input. See [VPC](#vpc) for more details.
 
 ### Destinations
@@ -109,9 +109,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import MediaLive Input using the `id`. For example:
 % terraform import aws_medialive_input.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->
+<!-- cache-key: cdktf-0.19.0 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->

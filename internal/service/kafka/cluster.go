@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -534,6 +535,8 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	name := d.Get("cluster_name").(string)
@@ -585,7 +588,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MSK Cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Cluster (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ClusterArn))
@@ -593,7 +596,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	cluster, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("waiting for MSK Cluster (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	if vpcConnectivity != nil {
@@ -608,20 +611,22 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateConnectivityWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
@@ -629,11 +634,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", d.Id(), err)
 	}
 
 	output, err := conn.GetBootstrapBrokersWithContext(ctx, &kafka.GetBootstrapBrokersInput{
@@ -641,7 +646,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	}
 
 	clusterARN := aws.StringValue(cluster.ClusterArn)
@@ -658,14 +663,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("bootstrap_brokers_vpc_connectivity_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivityTls)))
 	if cluster.BrokerNodeGroupInfo != nil {
 		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
-			return diag.Errorf("setting broker_node_group_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting broker_node_group_info: %s", err)
 		}
 	} else {
 		d.Set("broker_node_group_info", nil)
 	}
 	if cluster.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
-			return diag.Errorf("setting client_authentication: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
 		}
 	} else {
 		d.Set("client_authentication", nil)
@@ -675,7 +680,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
 		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
-			return diag.Errorf("setting configuration_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting configuration_info: %s", err)
 		}
 	} else {
 		d.Set("configuration_info", nil)
@@ -684,7 +689,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 	if cluster.EncryptionInfo != nil {
 		if err := d.Set("encryption_info", []interface{}{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
-			return diag.Errorf("setting encryption_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting encryption_info: %s", err)
 		}
 	} else {
 		d.Set("encryption_info", nil)
@@ -692,7 +697,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	if cluster.LoggingInfo != nil {
 		if err := d.Set("logging_info", []interface{}{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
-			return diag.Errorf("setting logging_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting logging_info: %s", err)
 		}
 	} else {
 		d.Set("logging_info", nil)
@@ -700,7 +705,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 	if cluster.OpenMonitoring != nil {
 		if err := d.Set("open_monitoring", []interface{}{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
-			return diag.Errorf("setting open_monitoring: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting open_monitoring: %s", err)
 		}
 	} else {
 		d.Set("open_monitoring", nil)
@@ -711,10 +716,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	setTagsOut(ctx, cluster.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	if d.HasChange("broker_node_group_info.0.connectivity_info") {
@@ -730,18 +737,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateConnectivityWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -755,18 +762,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateBrokerTypeWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker type: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker type: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -787,18 +794,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateBrokerStorageWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -812,18 +819,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateBrokerCountWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker count: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker count: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -845,18 +852,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateMonitoringWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -873,18 +880,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateClusterConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) configuration: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -904,18 +911,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateClusterKafkaVersionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -946,25 +953,27 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateSecurityWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) security: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) security: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
 		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
@@ -973,18 +982,18 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MSK Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MSK Cluster (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGroupInfo {

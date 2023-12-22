@@ -70,7 +70,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the KX database.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -80,15 +80,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdTimestamp` - Timestamp at which the databse is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - A comma-delimited string joining environment ID and database name.
 * `lastModifiedTimestamp` - Last timestamp at which the database was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -112,4 +112,4 @@ Using `terraform import`, import an AWS FinSpace Kx Database using the `id` (env
 % terraform import aws_finspace_kx_database.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-database
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d4510cf871c3b574384323c384811db1afe4695931c813e1e9e6fb86b9433a73 -->
+<!-- cache-key: cdktf-0.19.0 input-d4510cf871c3b574384323c384811db1afe4695931c813e1e9e6fb86b9433a73 -->

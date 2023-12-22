@@ -41,7 +41,7 @@ This resource supports the following arguments:
 * `fileSystemId` - (Required) ID of the file system for which the access point is intended.
 * `posixUser` - (Optional) Operating system user and group applied to all file system requests made using the access point. [Detailed](#posix_user) below.
 * `rootDirectory`- (Optional) Directory on the Amazon EFS file system that the access point provides access to. [Detailed](#root_directory) below.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### posix_user
 
@@ -54,14 +54,14 @@ This resource supports the following arguments:
 The access point exposes the specified file system path as the root directory of your file system to applications using the access point. NFS clients using the access point can only access data in the access point's RootDirectory and it's subdirectories.
 
 * `creationInfo` - (Optional) POSIX IDs and permissions to apply to the access point's Root Directory. See [Creation Info](#creation_info) below.
-* `path` - (Optional) Path on the EFS file system to expose as the root directory to NFS clients using the access point to access the EFS file system. A path can have up to four subdirectories. If the specified path does not exist, you are required to provide `creationInfo`.
+* `path` - (Optional) Path on the EFS file system to expose as the root directory to NFS clients using the access point to access the EFS file system. A path can have up to four subdirectories. If the specified path does not exist, you are required to provide `creation_info`.
 
 ### creation_info
 
 If the `path` specified does not exist, EFS creates the root directory using the `creationInfo` settings when a client connects to an access point.
 
-* `ownerGid` - (Required) POSIX group ID to apply to the `rootDirectory`.
-* `ownerUid` - (Required) POSIX user ID to apply to the `rootDirectory`.
+* `ownerGid` - (Required) POSIX group ID to apply to the `root_directory`.
+* `ownerUid` - (Required) POSIX user ID to apply to the `root_directory`.
 * `permissions` - (Required) POSIX permissions to apply to the RootDirectory, in the format of an octal number representing the file's mode bits.
 
 ## Attribute Reference
@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the access point.
 * `fileSystemArn` - ARN of the file system.
 * `id` - ID of the access point.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -95,4 +95,4 @@ Using `terraform import`, import the EFS access points using the `id`. For examp
 % terraform import aws_efs_access_point.test fsap-52a643fb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ffd407eb1dbab3cdcf58701fd44811aa2c2bcc1408ea548ad5726f0832c16821 -->
+<!-- cache-key: cdktf-0.19.0 input-ffd407eb1dbab3cdcf58701fd44811aa2c2bcc1408ea548ad5726f0832c16821 -->

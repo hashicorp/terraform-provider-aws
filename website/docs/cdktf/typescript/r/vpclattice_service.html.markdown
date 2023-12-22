@@ -46,10 +46,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authType` - (Optional) Type of IAM policy. Either `none` or `awsIam`.
+* `authType` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificateArn` - (Optional) Amazon Resource Name (ARN) of the certificate.
 * `customDomainName` - (Optional) Custom domain name of the service.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -59,14 +59,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `dnsEntry` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -90,4 +90,4 @@ Using `terraform import`, import VPC Lattice Service using the `id`. For example
 % terraform import aws_vpclattice_service.example svc-06728e2357ea55f8a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9538031e1f3e91a6025513a51240647cd5ea1ebb1f5f4cc3598ae3498c4720e0 -->
+<!-- cache-key: cdktf-0.19.0 input-9538031e1f3e91a6025513a51240647cd5ea1ebb1f5f4cc3598ae3498c4720e0 -->

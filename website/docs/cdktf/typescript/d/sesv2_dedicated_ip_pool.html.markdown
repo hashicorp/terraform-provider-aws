@@ -47,14 +47,14 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Dedicated IP Pool.
-* `dedicatedIps` - A list of objects describing the pool's dedicated IP's. See [`dedicatedIps`](#dedicated_ips).
-* `scalingMode` - (Optional) IP pool scaling mode. Valid values: `standard`, `managed`.
+* `dedicatedIps` - A list of objects describing the pool's dedicated IP's. See [`dedicated_ips`](#dedicated_ips).
+* `scalingMode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`.
 * `tags` - A map of tags attached to the pool.
 
 ### dedicated_ips
 
 * `ip` - IPv4 address.
 * `warmupPercentage` - Indicates how complete the dedicated IP warm-up process is. When this value equals `1`, the address has completed the warm-up process and is ready for use.
-* `warmupStatus` - The warm-up status of a dedicated IP address. Valid values: `inProgress`, `done`.
+* `warmupStatus` - The warm-up status of a dedicated IP address. Valid values: `IN_PROGRESS`, `DONE`.
 
-<!-- cache-key: cdktf-0.18.0 input-85f32989660a929d8bc2374a2bb39ccd95b65ab0f91d1df95fd4ec734bc35496 -->
+<!-- cache-key: cdktf-0.19.0 input-85f32989660a929d8bc2374a2bb39ccd95b65ab0f91d1df95fd4ec734bc35496 -->

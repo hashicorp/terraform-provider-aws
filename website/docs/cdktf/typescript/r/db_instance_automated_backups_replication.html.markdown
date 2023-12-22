@@ -125,10 +125,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `kmsKeyId` - (Optional, Forces new resource) The AWS KMS key identifier for encryption of the replicated automated backups. The KMS key ID is the Amazon Resource Name (ARN) for the KMS encryption key in the destination AWS Region, for example, `arn:aws:kms:usEast1:123456789012:key/akiaiosfodnn7Example`.
-* `preSignedUrl` - (Optional, Forces new resource) A URL that contains a [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) signed request for the [`startDbInstanceAutomatedBackupsReplication`](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartDBInstanceAutomatedBackupsReplication.html) action to be called in the AWS Region of the source DB instance.
+* `kmsKeyId` - (Optional, Forces new resource) The AWS KMS key identifier for encryption of the replicated automated backups. The KMS key ID is the Amazon Resource Name (ARN) for the KMS encryption key in the destination AWS Region, for example, `arn:aws:kms:us-east-1:123456789012:key/AKIAIOSFODNN7EXAMPLE`.
+* `preSignedUrl` - (Optional, Forces new resource) A URL that contains a [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) signed request for the [`StartDBInstanceAutomatedBackupsReplication`](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartDBInstanceAutomatedBackupsReplication.html) action to be called in the AWS Region of the source DB instance.
 * `retentionPeriod` - (Optional, Forces new resource) The retention period for the replicated automated backups, defaults to `7`.
-* `sourceDbInstanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the source DB instance for the replicated automated backups, for example, `arn:aws:rds:usWest2:123456789012:db:mydatabase`.
+* `sourceDbInstanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the source DB instance for the replicated automated backups, for example, `arn:aws:rds:us-west-2:123456789012:db:mydatabase`.
 
 ## Attribute Reference
 
@@ -140,8 +140,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `75M`)
-- `delete` - (Default `75M`)
+- `create` - (Default `75m`)
+- `delete` - (Default `75m`)
 
 ## Import
 
@@ -165,4 +165,4 @@ Using `terraform import`, import RDS instance automated backups replication usin
 % terraform import aws_db_instance_automated_backups_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a1a4df51ceeb0b407d09f3cecea4189146c75a1f96880f39dc75e22abd29cc11 -->
+<!-- cache-key: cdktf-0.19.0 input-a1a4df51ceeb0b407d09f3cecea4189146c75a1f96880f39dc75e22abd29cc11 -->

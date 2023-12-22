@@ -64,11 +64,11 @@ This data source exports the following attributes in addition to the arguments a
 * `encrypted` - Whether EFS is encrypted.
 * `kmsKeyId` - ARN for the KMS encryption key.
 * `lifecyclePolicy` - File system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
-* `name` - The value of the file system's `name` tag.
+* `name` - The value of the file system's `Name` tag.
 * `performanceMode` - File system performance mode.
 * `provisionedThroughputInMibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
 * `tags` -A map of tags to assign to the file system.
 * `throughputMode` - Throughput mode for the file system.
 * `sizeInBytes` - Current byte count used by the file system.
 
-<!-- cache-key: cdktf-0.18.0 input-91848697481eb0959ef949486e3ade78e73077540a9a38720f250c99edbeced7 -->
+<!-- cache-key: cdktf-0.19.0 input-91848697481eb0959ef949486e3ade78e73077540a9a38720f250c99edbeced7 -->

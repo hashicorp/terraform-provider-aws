@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
       data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<broker xmlns="http://activemq.apache.org/schema/core">\n  <plugins>\n    <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>\n    <statisticsBrokerPlugin/>\n    <timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>\n  </plugins>\n</broker>\n\n',
       description: "Example Configuration",
       engineType: "ActiveMQ",
-      engineVersion: "5.15.0",
+      engineVersion: "5.17.6",
       name: "example",
     });
   }
@@ -60,7 +60,7 @@ class MyConvertedCode extends TerraformStack {
       data: "# Default RabbitMQ delivery acknowledgement timeout is 30 minutes in milliseconds\nconsumer_timeout = 1800000\n\n",
       description: "Example Configuration",
       engineType: "RabbitMQ",
-      engineVersion: "3.11.16",
+      engineVersion: "3.11.20",
       name: "example",
     });
   }
@@ -72,16 +72,16 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `data` - (Required) Broker configuration in XML format for `activeMq` or [Cuttlefish](https://github.com/Kyorai/cuttlefish) format for `rabbitMq`. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
-* `engineType` - (Required) Type of broker engine. Valid values are `activeMq` and `rabbitMq`.
+* `data` - (Required) Broker configuration in XML format for `ActiveMQ` or [Cuttlefish](https://github.com/Kyorai/cuttlefish) format for `RabbitMQ`. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
+* `engineType` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engineVersion` - (Required) Version of the broker engine.
 * `name` - (Required) Name of the configuration.
 
 The following arguments are optional:
 
-* `authenticationStrategy` - (Optional) Authentication strategy associated with the configuration. Valid values are `simple` and `ldap`. `ldap` is not supported for `engineType` `rabbitMq`.
+* `authenticationStrategy` - (Optional) Authentication strategy associated with the configuration. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `description` - (Optional) Description of the configuration.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the configuration.
 * `id` - Unique ID that Amazon MQ generates for the configuration.
 * `latestRevision` - Latest revision of the configuration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -114,4 +114,4 @@ Using `terraform import`, import MQ Configurations using the configuration ID. F
 % terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-04eb0aa6dff9d0a504fd0ee6b546bf9faa3350cf68b6f6ead258a17890bff141 -->
+<!-- cache-key: cdktf-0.19.0 input-692d3129e9e66fb877e1b432563a265729c8bf6b5c33e77ade50073e2ac04eba -->

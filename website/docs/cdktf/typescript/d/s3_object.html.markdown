@@ -88,7 +88,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
-* `checksumMode` - (Optional) To retrieve the object's checksum, this argument must be `enabled`. If you enable `checksumMode` and the object is encrypted with KMS, you must have permission to use the `kms:decrypt` action. Valid values: `enabled`
+* `checksumMode` - (Optional) To retrieve the object's checksum, this argument must be `ENABLED`. If you enable `checksum_mode` and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `ENABLED`
 * `key` - (Required) Full path to the object inside the bucket
 * `versionId` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
@@ -118,11 +118,11 @@ This data source exports the following attributes in addition to the arguments a
 * `objectLockRetainUntilDate` - The date and time when this object's object lock will expire.
 * `serverSideEncryption` - If the object is stored using server-side encryption (KMS or Amazon S3-managed encryption key), this field includes the chosen encryption and algorithm used.
 * `sseKmsKeyId` - If present, specifies the ID of the Key Management Service (KMS) master encryption key that was used for the object.
-* `storageClass` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `standard` storage class objects.
+* `storageClass` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `versionId` - Latest version ID of the object returned.
 * `websiteRedirectLocation` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
 * `tags`  - Map of tags assigned to the object.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/indexHtml` and `indexHtml` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.18.0 input-222e50e78a98cdd8982d72d096abde0605f9c9d699620754eb3607023a2f5858 -->
+<!-- cache-key: cdktf-0.19.0 input-222e50e78a98cdd8982d72d096abde0605f9c9d699620754eb3607023a2f5858 -->

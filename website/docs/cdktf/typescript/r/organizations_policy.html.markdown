@@ -59,8 +59,8 @@ This resource supports the following arguments:
 * `name` - (Required) The friendly name to assign to the policy.
 * `description` - (Optional) A description to assign to the policy.
 * `skipDestroy` - (Optional) If set to `true`, destroy will **not** delete the policy and instead just remove the resource from state. This can be useful in situations where the policies (and the associated attachment) must be preserved to meet the AWS minimum requirement of 1 attached policy.
-* `type` - (Optional) The type of policy to create. Valid values are `aiservicesOptOutPolicy`, `backupPolicy`, `serviceControlPolicy` (SCP), and `tagPolicy`. Defaults to `serviceControlPolicy`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Optional) The type of policy to create. Valid values are `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `SERVICE_CONTROL_POLICY` (SCP), and `TAG_POLICY`. Defaults to `SERVICE_CONTROL_POLICY`.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) of the policy.
 * `arn` - Amazon Resource Name (ARN) of the policy.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import `awsOrganizationsPolicy` using the policy ID. F
 % terraform import aws_organizations_policy.example p-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-128c9bb3bbac2ba8788017312dc8562e953ffd4a69f70d461a1f9b33a72a9acc -->
+<!-- cache-key: cdktf-0.19.0 input-128c9bb3bbac2ba8788017312dc8562e953ffd4a69f70d461a1f9b33a72a9acc -->

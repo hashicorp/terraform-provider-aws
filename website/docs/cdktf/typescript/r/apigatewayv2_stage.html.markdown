@@ -48,16 +48,16 @@ The following arguments are required:
 The following arguments are optional:
 
 * `accessLogSettings` - (Optional) Settings for logging access in this stage.
-Use the [`awsApiGatewayAccount`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
+Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
 * `autoDeploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`. Applicable for HTTP APIs.
-* `clientCertificateId` - (Optional) Identifier of a client certificate for the stage. Use the [`awsApiGatewayClientCertificate`](/docs/providers/aws/r/api_gateway_client_certificate.html) resource to configure a client certificate.
+* `clientCertificateId` - (Optional) Identifier of a client certificate for the stage. Use the [`aws_api_gateway_client_certificate`](/docs/providers/aws/r/api_gateway_client_certificate.html) resource to configure a client certificate.
 Supported only for WebSocket APIs.
 * `defaultRouteSettings` - (Optional) Default route settings for the stage.
-* `deploymentId` - (Optional) Deployment identifier of the stage. Use the [`awsApigatewayv2Deployment`](/docs/providers/aws/r/apigatewayv2_deployment.html) resource to configure a deployment.
+* `deploymentId` - (Optional) Deployment identifier of the stage. Use the [`aws_apigatewayv2_deployment`](/docs/providers/aws/r/apigatewayv2_deployment.html) resource to configure a deployment.
 * `description` - (Optional) Description for the stage. Must be less than or equal to 1024 characters in length.
 * `routeSettings` - (Optional) Route settings for the stage.
 * `stageVariables` - (Optional) Map that defines the stage variables for the stage.
-* `tags` - (Optional) Map of tags to assign to the stage. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the stage. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### access_log_settings
 
@@ -70,7 +70,7 @@ Supported only for WebSocket APIs.
 Defaults to `false`. Supported only for WebSocket APIs.
 * `detailedMetricsEnabled` - (Optional) Whether detailed metrics are enabled for the default route. Defaults to `false`.
 * `loggingLevel` - (Optional) Logging level for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
-Valid values: `error`, `info`, `off`. Defaults to `off`. Supported only for WebSocket APIs. Terraform will only perform drift detection of its value when present in a configuration.
+Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebSocket APIs. Terraform will only perform drift detection of its value when present in a configuration.
 * `throttlingBurstLimit` - (Optional) Throttling burst limit for the default route.
 * `throttlingRateLimit` - (Optional) Throttling rate limit for the default route.
 
@@ -81,7 +81,7 @@ Valid values: `error`, `info`, `off`. Defaults to `off`. Supported only for WebS
 Defaults to `false`. Supported only for WebSocket APIs.
 * `detailedMetricsEnabled` - (Optional) Whether detailed metrics are enabled for the route. Defaults to `false`.
 * `loggingLevel` - (Optional) Logging level for the route. Affects the log entries pushed to Amazon CloudWatch Logs.
-Valid values: `error`, `info`, `off`. Defaults to `off`. Supported only for WebSocket APIs. Terraform will only perform drift detection of its value when present in a configuration.
+Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebSocket APIs. Terraform will only perform drift detection of its value when present in a configuration.
 * `throttlingBurstLimit` - (Optional) Throttling burst limit for the route.
 * `throttlingRateLimit` - (Optional) Throttling rate limit for the route.
 
@@ -91,12 +91,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Stage identifier.
 * `arn` - ARN of the stage.
-* `executionArn` - ARN prefix to be used in an [`awsLambdaPermission`](/docs/providers/aws/r/lambda_permission.html)'s `sourceArn` attribute.
-For WebSocket APIs this attribute can additionally be used in an [`awsIamPolicy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
+* `executionArn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute.
+For WebSocket APIs this attribute can additionally be used in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
 * `invokeUrl` - URL to invoke the API pointing to the stage,
-  e.g., `wss://z4675Bid1JExecuteApiEuWest2AmazonawsCom/exampleStage`, or `https://z4675Bid1JExecuteApiEuWest2AmazonawsCom/`
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+  e.g., `wss://z4675bid1j.execute-api.eu-west-2.amazonaws.com/example-stage`, or `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/`
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -122,4 +122,4 @@ Using `terraform import`, import `awsApigatewayv2Stage` using the API identifier
 
 -> **Note:** The API Gateway managed stage created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.18.0 input-c7cc2d4235ed06a055a36c6327f99044a8a10f0f104b25ba18451743f15b5497 -->
+<!-- cache-key: cdktf-0.19.0 input-c7cc2d4235ed06a055a36c6327f99044a8a10f0f104b25ba18451743f15b5497 -->

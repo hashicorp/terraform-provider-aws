@@ -86,4 +86,4 @@ This resource exports the following attributes in addition to the arguments abov
 [1]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html
 [2]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html
 
-<!-- cache-key: cdktf-0.18.0 input-3938cfbc30acbf16d80d3b3f6c56e132af303339229bf6a953b7b328c401cceb -->
+<!-- cache-key: cdktf-0.19.0 input-3938cfbc30acbf16d80d3b3f6c56e132af303339229bf6a953b7b328c401cceb -->

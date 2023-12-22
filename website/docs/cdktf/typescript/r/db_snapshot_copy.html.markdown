@@ -71,7 +71,7 @@ This resource supports the following arguments:
 * `sourceDbSnapshotIdentifier` - (Required) Snapshot identifier of the source snapshot.
 * `targetCustomAvailabilityZone` - (Optional) The external custom Availability Zone.
 * `targetDbSnapshotIdentifier` - (Required) The Identifier for the snapshot.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -91,14 +91,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `sourceDbSnapshotIdentifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `sourceRegion` - The region that the DB snapshot was created in or copied from.
 * `storageType` - Specifies the storage type associated with DB snapshot.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - Provides the VPC ID associated with the DB snapshot.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `20M`)
+- `create` - (Default `20m`)
 
 ## Import
 
@@ -122,4 +122,4 @@ Using `terraform import`, import `awsDbSnapshotCopy` using the snapshot identifi
 % terraform import aws_db_snapshot_copy.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-082f155090a12691f858aa1fdb27e4c7fb93bb3dd71c2796c7c873690f9af714 -->
+<!-- cache-key: cdktf-0.19.0 input-082f155090a12691f858aa1fdb27e4c7fb93bb3dd71c2796c7c873690f9af714 -->

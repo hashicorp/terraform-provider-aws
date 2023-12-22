@@ -115,8 +115,8 @@ This resource supports the following arguments:
 * `comment` - (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.
 * `delegationSetId` - (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with `vpc` as delegation sets can only be used for public zones.
 * `forceDestroy` - (Optional) Whether to destroy all records (possibly managed outside of Terraform) in the zone when destroying the zone.
-* `tags` - (Optional) A map of tags to assign to the zone. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the `delegationSetId` argument in this resource and any [`awsRoute53ZoneAssociation` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
+* `tags` - (Optional) A map of tags to assign to the zone. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the `delegation_set_id` argument in this resource and any [`aws_route53_zone_association` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
 
 ### vpc Argument Reference
 
@@ -132,7 +132,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `nameServers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
 * `primaryNameServer` - The Route 53 name server that created the SOA record.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -156,4 +156,4 @@ Using `terraform import`, import Route53 Zones using the zone `id`. For example:
 % terraform import aws_route53_zone.myzone Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8a7477da45196901e3ea8ac68ebc92bd2954c60b50b24acf390c93289191b92e -->
+<!-- cache-key: cdktf-0.19.0 input-8a7477da45196901e3ea8ac68ebc92bd2954c60b50b24acf390c93289191b92e -->

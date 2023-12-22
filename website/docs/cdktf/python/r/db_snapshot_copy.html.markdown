@@ -114,4 +114,4 @@ Using `terraform import`, import `aws_db_snapshot_copy` using the snapshot ident
 % terraform import aws_db_snapshot_copy.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-082f155090a12691f858aa1fdb27e4c7fb93bb3dd71c2796c7c873690f9af714 -->
+<!-- cache-key: cdktf-0.19.0 input-082f155090a12691f858aa1fdb27e4c7fb93bb3dd71c2796c7c873690f9af714 -->
