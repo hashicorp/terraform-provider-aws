@@ -28,8 +28,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceAwsLogSource,
-			Name:    "Aws Log Source",
+			Factory: newResourceLogSource,
+			Name:    "Log Source",
 		},
 	}
 }

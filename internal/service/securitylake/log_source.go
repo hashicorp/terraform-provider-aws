@@ -25,9 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Aws Log Source")
-func newResourceAwsLogSource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAwsLogSource{}
+// @FrameworkResource(name="Log Source")
+func newResourceLogSource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceLogSource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -37,26 +37,26 @@ func newResourceAwsLogSource(_ context.Context) (resource.ResourceWithConfigure,
 }
 
 const (
-	ResNameAwsLogSource = "Aws Log Source"
+	ResNameLogSource = "Log Source"
 )
 
-type resourceAwsLogSource struct {
+type resourceLogSource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceAwsLogSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securitylake_aws_log_source"
+func (r *resourceLogSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_securitylake_log_source"
 }
 
-func (r *resourceAwsLogSource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceLogSource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"sources": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourcesModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[logSourceSourcesModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -92,9 +92,9 @@ func (r *resourceAwsLogSource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *resourceAwsLogSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceLogSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
-	var data resourceAwsLogSourceModel
+	var data resourceLogSourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -109,104 +109,88 @@ func (r *resourceAwsLogSource) Create(ctx context.Context, req resource.CreateRe
 	_, err := conn.CreateAwsLogSource(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameLogSource, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	var awsLogSources []awsLogSourceSourcesModel
-	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &awsLogSources, false)...)
+	var logSources []logSourceSourcesModel
+	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &logSources, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var regions []string
-	for _, awsLogSource := range awsLogSources {
-		resp.Diagnostics.Append(awsLogSource.Regions.ElementsAs(ctx, &regions, false)...)
+	for _, logSource := range logSources {
+		resp.Diagnostics.Append(logSource.Regions.ElementsAs(ctx, &regions, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	//Looking if datalake exists to create a uniqu ID for the Log Resource
-	// datalakeIn := &securitylake.ListDataLakesInput{
-	// 	Regions: regions,
-	// }
-
-	// datalakes, err := conn.ListDataLakes(ctx, datalakeIn)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	//Creating the unique ID
-	// datalake := datalakes.DataLakes[0]
 	var id string
-	for _, awsLogawsLogSources := range awsLogSources {
-		id = awsLogawsLogSources.SourceName.ValueString() + "/" + awsLogawsLogSources.SourceVersion.ValueString()
+	for _, awsLoglogSources := range logSources {
+		id = awsLoglogSources.SourceName.ValueString() + "/" + awsLoglogSources.SourceVersion.ValueString()
 	}
 
 	data.ID = flex.StringToFramework(ctx, &id)
-	out, err := findAwsLogSourceById(ctx, conn, regions, id)
+	out, err := findLogSourceById(ctx, conn, regions, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameLogSource, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	//Trying to get the informatiom we need from output
-	config, err := extractAwsLogSourceConfiguration(out)
+	config, err := extractLogSourceConfiguration(out)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameAwsLogSource, data.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameLogSource, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	var awsLogSourceSource awsLogSourceSourcesModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, config, &awsLogSourceSource)...)
+	var logSourceSource logSourceSourcesModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, config, &logSourceSource)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &awsLogSourceSource)
+	data.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &logSourceSource)
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
-func (r *resourceAwsLogSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceLogSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var data resourceAwsLogSourceModel
+	var data resourceLogSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var awsLogSources []awsLogSourceSourcesModel
-	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &awsLogSources, false)...)
+	var logSources []logSourceSourcesModel
+	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &logSources, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var regions []string
-	for _, awsLogSource := range awsLogSources {
-		resp.Diagnostics.Append(awsLogSource.Regions.ElementsAs(ctx, &regions, false)...)
+	for _, logSource := range logSources {
+		resp.Diagnostics.Append(logSource.Regions.ElementsAs(ctx, &regions, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	out, err := findAwsLogSourceById(ctx, conn, regions, data.ID.ValueString())
+	out, err := findLogSourceById(ctx, conn, regions, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameLogSource, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -217,28 +201,28 @@ func (r *resourceAwsLogSource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	config, err := extractAwsLogSourceConfiguration(out)
+	config, err := extractLogSourceConfiguration(out)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameLogSource, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	var awsLogSourceSource awsLogSourceSourcesModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, config, &awsLogSourceSource)...)
+	var logSourceSource logSourceSourcesModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, config, &logSourceSource)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &awsLogSourceSource)
+	data.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &logSourceSource)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAwsLogSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceAwsLogSourceModel
+func (r *resourceLogSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceLogSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -247,33 +231,38 @@ func (r *resourceAwsLogSource) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAwsLogSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceLogSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var data resourceAwsLogSourceModel
+	var data resourceLogSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var awsLogSources []awsLogSourceSourcesModel
-	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &awsLogSources, false)...)
+	var logSources []logSourceSourcesModel
+	resp.Diagnostics.Append(data.Sources.ElementsAs(ctx, &logSources, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var regions []string
-	for _, awsLogSource := range awsLogSources {
-		resp.Diagnostics.Append(awsLogSource.Regions.ElementsAs(ctx, &regions, false)...)
+	for _, logSource := range logSources {
+		resp.Diagnostics.Append(logSource.Regions.ElementsAs(ctx, &regions, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	out, err := findAwsLogSourceById(ctx, conn, regions, data.ID.ValueString())
+	out, err := findLogSourceById(ctx, conn, regions, data.ID.ValueString())
+
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameLogSource, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -282,14 +271,14 @@ func (r *resourceAwsLogSource) Delete(ctx context.Context, req resource.DeleteRe
 	//Trying to get the informatiom we need from output
 	var config *awstypes.AwsLogSourceConfiguration
 
-	config, err = extractAwsLogSourceConfiguration(out)
+	config, err = extractLogSourceConfiguration(out)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameAwsLogSource, data.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameLogSource, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -301,29 +290,26 @@ func (r *resourceAwsLogSource) Delete(ctx context.Context, req resource.DeleteRe
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameAwsLogSource, data.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameLogSource, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-
 }
 
-func findAwsLogSourceById(ctx context.Context, conn *securitylake.Client, regions []string, id string) (*securitylake.ListLogSourcesOutput, error) {
-
+func findLogSourceById(ctx context.Context, conn *securitylake.Client, regions []string, id string) (*securitylake.ListLogSourcesOutput, error) {
 	parsedID, err := parseARNString(id)
 	if err != nil {
-
 		return nil, err
 	}
 
-	awsLogSource := awstypes.AwsLogSourceResource{
+	logSource := awstypes.AwsLogSourceResource{
 		SourceVersion: aws.String(parsedID.SourceVersion),
 		SourceName:    awstypes.AwsLogSourceName(parsedID.SourceName),
 	}
 
 	logSourceResource := &awstypes.LogSourceResourceMemberAwsLogSource{
-		Value: awsLogSource,
+		Value: logSource,
 	}
 
 	input := &securitylake.ListLogSourcesInput{
@@ -333,23 +319,27 @@ func findAwsLogSourceById(ctx context.Context, conn *securitylake.Client, region
 
 	output, err := conn.ListLogSources(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("error listing log sources for region %s: %w", regions, err)
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
 }
 
-func (r *resourceAwsLogSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceLogSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-type resourceAwsLogSourceModel struct {
-	Sources  fwtypes.ListNestedObjectValueOf[awsLogSourceSourcesModel] `tfsdk:"sources"`
-	ID       types.String                                              `tfsdk:"id"`
-	Timeouts timeouts.Value                                            `tfsdk:"timeouts"`
+type resourceLogSourceModel struct {
+	Sources  fwtypes.ListNestedObjectValueOf[logSourceSourcesModel] `tfsdk:"sources"`
+	ID       types.String                                           `tfsdk:"id"`
+	Timeouts timeouts.Value                                         `tfsdk:"timeouts"`
 }
 
-type awsLogSourceSourcesModel struct {
+type logSourceSourcesModel struct {
 	Accounts      fwtypes.SetValueOf[types.String] `tfsdk:"accounts"`
 	Regions       fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
 	SourceName    types.String                     `tfsdk:"source_name"`
@@ -363,7 +353,6 @@ type ParsedID struct {
 
 // parsing id that includes datalake arn.
 func parseARNString(s string) (*ParsedID, error) {
-
 	parts := strings.Split(s, "/")
 	if len(parts) < 1 {
 		return nil, fmt.Errorf("invalid ID format")
@@ -375,14 +364,14 @@ func parseARNString(s string) (*ParsedID, error) {
 	}, nil
 }
 
-// extractAwsLogSourceConfiguration extracts the configuration from the first log source in the output.
-func extractAwsLogSourceConfiguration(out *securitylake.ListLogSourcesOutput) (*awstypes.AwsLogSourceConfiguration, error) {
+// extractlogSourceConfiguration extracts the configuration from the first log source in the output.
+func extractLogSourceConfiguration(out *securitylake.ListLogSourcesOutput) (*awstypes.AwsLogSourceConfiguration, error) {
 	if len(out.Sources) == 0 {
 		var nfe *awstypes.ResourceNotFoundException
 		return nil, nfe
 	}
 
-	var awsLogSourceResource awstypes.AwsLogSourceResource
+	var logSourceResource awstypes.AwsLogSourceResource
 	var accounts []string
 	var regions []string
 	for _, logSource := range out.Sources {
@@ -394,11 +383,11 @@ func extractAwsLogSourceConfiguration(out *securitylake.ListLogSourcesOutput) (*
 		if logSource.Region != nil {
 			regions = append(regions, *logSource.Region)
 		}
-		// Extracting AwsLogSourceResource
-		if awsLogSource, ok := logSource.Sources[0].(*awstypes.LogSourceResourceMemberAwsLogSource); ok {
-			awsLogSourceResource = awsLogSource.Value
+		// Extracting logSourceResource
+		if logSource, ok := logSource.Sources[0].(*awstypes.LogSourceResourceMemberAwsLogSource); ok {
+			logSourceResource = logSource.Value
 		} else {
-			return nil, fmt.Errorf("log source resource is not of type AwsLogSourceResource")
+			return nil, fmt.Errorf("log source resource is not of type logSourceResource")
 		}
 	}
 
@@ -406,8 +395,8 @@ func extractAwsLogSourceConfiguration(out *securitylake.ListLogSourcesOutput) (*
 	config := &awstypes.AwsLogSourceConfiguration{
 		Accounts:      accounts,
 		Regions:       regions,
-		SourceName:    awsLogSourceResource.SourceName,
-		SourceVersion: awsLogSourceResource.SourceVersion,
+		SourceName:    logSourceResource.SourceName,
+		SourceVersion: logSourceResource.SourceVersion,
 	}
 
 	return config, nil
