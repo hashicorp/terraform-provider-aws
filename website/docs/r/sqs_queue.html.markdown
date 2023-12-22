@@ -54,7 +54,8 @@ resource "aws_sqs_queue" "terraform_queue" {
 
 ```terraform
 resource "aws_sqs_queue" "terraform_queue" {
-  name                      = "terraform-example-queue"
+  name = "terraform-example-queue"
+
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.terraform_queue_deadletter.arn
     maxReceiveCount     = 4
