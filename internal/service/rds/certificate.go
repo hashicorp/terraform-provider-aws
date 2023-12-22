@@ -26,8 +26,6 @@ func ResourceCertificate() *schema.Resource {
 			"certificate_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
-				Optional: false,
-				Computed: false,
 			},
 		},
 	}
