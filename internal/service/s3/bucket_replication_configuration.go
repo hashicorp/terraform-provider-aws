@@ -895,12 +895,12 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 			m["id"] = aws.ToString(rule.ID)
 		}
 
-		if rule.Priority != nil {
-			m["priority"] = aws.ToInt32(rule.Priority)
-		}
-
 		if rule.Prefix != nil {
 			m["prefix"] = aws.ToString(rule.Prefix)
+		}
+
+		if rule.Priority != nil {
+			m["priority"] = aws.ToInt32(rule.Priority)
 		}
 
 		if rule.SourceSelectionCriteria != nil {

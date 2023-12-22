@@ -2101,20 +2101,19 @@ func expandBucketLifecycleRules(ctx context.Context, l []interface{}) []types.Li
 
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
 		result := types.LifecycleRule{}
 
-		if v, ok := tfMap["abort_incomplete_multipart_upload"].(int); ok && v > 0 {
+		if v, ok := tfMap["abort_incomplete_multipart_upload_days"].(int); ok && v > 0 {
 			result.AbortIncompleteMultipartUpload = &types.AbortIncompleteMultipartUpload{
 				DaysAfterInitiation: aws.Int32(int32(v)),
 			}
 		}
 
-		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			result.Expiration = expandBucketLifecycleExpiration(v)
 		}
 
@@ -2444,55 +2443,55 @@ func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.
 	var rules []types.ReplicationRule
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfRuleMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
 		rule := types.ReplicationRule{}
 
-		if v, ok := tfMap["status"].(string); ok && v != "" {
+		if v, ok := tfRuleMap["status"].(string); ok && v != "" {
 			rule.Status = types.ReplicationRuleStatus(v)
 		} else {
 			continue
 		}
 
-		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfRuleMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Destination = expandBucketDestination(v)
 		} else {
 			rule.Destination = &types.Destination{}
 		}
 
-		if v, ok := tfMap["id"].(string); ok && v != "" {
+		if v, ok := tfRuleMap["id"].(string); ok && v != "" {
 			rule.ID = aws.String(v)
 		}
 
-		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfRuleMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.SourceSelectionCriteria = expandBucketSourceSelectionCriteria(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfRuleMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			// XML schema V2.
-			tfMap := v[0].(map[string]interface{})
+			tfFilterMap := v[0].(map[string]interface{})
 			var filter types.ReplicationRuleFilter
 
-			if tags := Tags(tftags.New(ctx, tfMap["tags"]).IgnoreAWS()); len(tags) > 0 {
+			if tags := Tags(tftags.New(ctx, tfFilterMap["tags"]).IgnoreAWS()); len(tags) > 0 {
 				filter = &types.ReplicationRuleFilterMemberAnd{
 					Value: types.ReplicationRuleAndOperator{
-						Prefix: aws.String(tfMap["prefix"].(string)),
+						Prefix: aws.String(tfFilterMap["prefix"].(string)),
 						Tags:   tags,
 					},
 				}
 			} else {
 				filter = &types.ReplicationRuleFilterMemberPrefix{
-					Value: tfMap["prefix"].(string),
+					Value: tfFilterMap["prefix"].(string),
 				}
 			}
 
 			rule.Filter = filter
-			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
+			rule.Priority = aws.Int32(int32(tfRuleMap["priority"].(int)))
 
-			if v, ok := tfMap["delete_marker_replication_status"].(string); ok && v != "" {
+			if v, ok := tfRuleMap["delete_marker_replication_status"].(string); ok && v != "" {
 				rule.DeleteMarkerReplication = &types.DeleteMarkerReplication{
 					Status: types.DeleteMarkerReplicationStatus(v),
 				}
@@ -2503,7 +2502,7 @@ func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.
 			}
 		} else {
 			// XML schema V1.
-			rule.Prefix = aws.String(tfMap["prefix"].(string))
+			rule.Prefix = aws.String(tfRuleMap["prefix"].(string))
 		}
 
 		rules = append(rules, rule)
@@ -2651,12 +2650,12 @@ func flattenBucketReplicationRules(ctx context.Context, rules []types.Replicatio
 			m["id"] = aws.ToString(rule.ID)
 		}
 
-		if rule.Priority != nil {
-			m["priority"] = aws.ToInt32(rule.Priority)
-		}
-
 		if rule.Prefix != nil {
 			m["prefix"] = aws.ToString(rule.Prefix)
+		}
+
+		if rule.Priority != nil {
+			m["priority"] = aws.ToInt32(rule.Priority)
 		}
 
 		if rule.SourceSelectionCriteria != nil {
