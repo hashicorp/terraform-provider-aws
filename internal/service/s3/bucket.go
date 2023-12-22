@@ -1222,7 +1222,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input := &s3.PutBucketCorsInput{
 				Bucket: aws.String(d.Id()),
 				CORSConfiguration: &types.CORSConfiguration{
-					CORSRules: expandBucketCORSRules(d.Get("cors_rule").(*schema.Set).List()),
+					CORSRules: expandBucketCORSRules(d.Get("cors_rule").([]interface{})),
 				},
 			}
 
@@ -1718,19 +1718,19 @@ func expandBucketCORSRules(l []interface{}) []types.CORSRule {
 		rule := types.CORSRule{}
 
 		if v, ok := tfMap["allowed_headers"].([]interface{}); ok && len(v) > 0 {
-			rule.AllowedHeaders = flex.ExpandStringValueList(v)
+			rule.AllowedHeaders = flex.ExpandStringValueListEmpty(v)
 		}
 
 		if v, ok := tfMap["allowed_methods"].([]interface{}); ok && len(v) > 0 {
-			rule.AllowedMethods = flex.ExpandStringValueList(v)
+			rule.AllowedMethods = flex.ExpandStringValueListEmpty(v)
 		}
 
 		if v, ok := tfMap["allowed_origins"].([]interface{}); ok && len(v) > 0 {
-			rule.AllowedOrigins = flex.ExpandStringValueList(v)
+			rule.AllowedOrigins = flex.ExpandStringValueListEmpty(v)
 		}
 
 		if v, ok := tfMap["expose_headers"].([]interface{}); ok && len(v) > 0 {
-			rule.ExposeHeaders = flex.ExpandStringValueList(v)
+			rule.ExposeHeaders = flex.ExpandStringValueListEmpty(v)
 		}
 
 		if v, ok := tfMap["max_age_seconds"].(int); ok {
