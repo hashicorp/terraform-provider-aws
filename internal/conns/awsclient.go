@@ -44,9 +44,9 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	s3ExpressClient           *s3_sdkv2.Client
-	s3UsePathStyle            bool                                      // From provider configuration.
-	s3UsEast1RegionalEndpoint endpoints_sdkv1.S3UsEast1RegionalEndpoint // From provider configuration.
-	stsRegion                 string                                    // From provider configuration.
+	s3UsePathStyle            bool   // From provider configuration.
+	s3USEast1RegionalEndpoint string // From provider configuration.
+	stsRegion                 string // From provider configuration.
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
@@ -87,7 +87,7 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
 	if c.s3ExpressClient == nil {
 		if s3Client.Options().Region == names.GlobalRegionID {
 			c.s3ExpressClient = errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
-				"s3_us_east_1_regional_endpoint": endpoints_sdkv1.RegionalS3UsEast1Endpoint,
+				"s3_us_east_1_regional_endpoint": "regional",
 			}))
 		} else {
 			c.s3ExpressClient = s3Client
@@ -190,12 +190,10 @@ func (c *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
 		m["s3_use_path_style"] = c.s3UsePathStyle
 		// AWS SDK for Go v2 does not use the AWS_S3_US_EAST_1_REGIONAL_ENDPOINT environment variable during configuration.
 		// For compatibility, read it now.
-		if c.s3UsEast1RegionalEndpoint == endpoints_sdkv1.UnsetS3UsEast1Endpoint {
-			if v, err := endpoints_sdkv1.GetS3UsEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT")); err == nil {
-				c.s3UsEast1RegionalEndpoint = v
-			}
+		if c.s3USEast1RegionalEndpoint == "" {
+			c.s3USEast1RegionalEndpoint = NormalizeS3USEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT"))
 		}
-		m["s3_us_east_1_regional_endpoint"] = c.s3UsEast1RegionalEndpoint
+		m["s3_us_east_1_regional_endpoint"] = c.s3USEast1RegionalEndpoint
 	case names.STS:
 		m["sts_region"] = c.stsRegion
 	}

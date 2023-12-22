@@ -53,6 +53,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
 )
@@ -824,7 +825,7 @@ func PartitionDNSSuffix() string {
 
 func PartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return conns.ReverseDNS(partition.DNSSuffix())
+		return names.ReverseDNS(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
