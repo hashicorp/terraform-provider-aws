@@ -24,6 +24,7 @@ Terraform resource for managing an AWS Security Lake Aws Log Source.
 ```terraform
 resource "aws_securitylake_log_source" "example" {
 	sources {
+    accounts 	     = ["1234567890"] 
 		regions        = ["eu-west-1"]
 		source_name    = "ROUTE53"
 		source_version = "1.0"

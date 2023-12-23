@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securitylake_test
 
 import (
@@ -164,8 +167,11 @@ func testAccLogSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), fmt.Sprintf(`
 
 
+data "aws_caller_identity" "test" {}
+
 resource "aws_securitylake_log_source" "test" {
   sources {
+    accounts       = [data.aws_caller_identity.test.account_id]
     regions        = [%[2]q]
     source_name    = "ROUTE53"
     source_version = "1.0"
