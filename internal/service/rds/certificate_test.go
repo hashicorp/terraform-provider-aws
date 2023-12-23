@@ -53,7 +53,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		response, err := conn.DescribeCertificates(&rds_sdkv1.DescribeCertificatesInput{})
+		response, err := conn.DescribeCertificatesWithContext(ctx, &rds_sdkv1.DescribeCertificatesInput{})
 		if err != nil {
 			return err
 		}
@@ -81,7 +81,7 @@ func testAccCheckCertificate(ctx context.Context, n string, certificate_identifi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		response, err := conn.DescribeCertificates(&rds_sdkv1.DescribeCertificatesInput{})
+		response, err := conn.DescribeCertificatesWithContext(ctx, &rds_sdkv1.DescribeCertificatesInput{})
 		if err != nil {
 			return err
 		}
