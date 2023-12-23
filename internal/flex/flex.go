@@ -76,6 +76,24 @@ func ExpandStringyValueList[E ~string](configured []any) []E {
 	return vs
 }
 
+// ExpandStringValueList takes the result of flatmap.Expand for an array of strings
+// and returns a []string
+func ExpandStringValueListEmpty(configured []interface{}) []string {
+	return ExpandStringyValueListEmpty[string](configured)
+}
+
+func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
+	vs := make([]E, 0, len(configured))
+	for _, v := range configured {
+		if val, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
+			vs = append(vs, E(val))
+		} else {
+			vs = append(vs, E(""))
+		}
+	}
+	return vs
+}
+
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
