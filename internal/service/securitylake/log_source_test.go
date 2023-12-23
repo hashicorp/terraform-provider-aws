@@ -163,13 +163,14 @@ func testAccCheckLogSourceExists(ctx context.Context, name string, logSource *ty
 func testAccLogSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), fmt.Sprintf(`
 
+
 resource "aws_securitylake_log_source" "test" {
-	sources {
-		regions        = [%[2]q]
-		source_name    = "ROUTE53"
-		source_version = "1.0"
-	}
-	depends_on = [aws_securitylake_data_lake.test]
+  sources {
+    regions        = [%[2]q]
+    source_name    = "ROUTE53"
+    source_version = "1.0"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
 }
 `, rName, acctest.Region()))
 }
