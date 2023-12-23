@@ -61,7 +61,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Reading the system-default SSL/TLS certificate: %s", err)
 	}
-	d.Set("certificate_identifier", aws.ToString(output.DefaultCertificateForNewLaunches))
+	d.Set("certificate_identifier", output.DefaultCertificateForNewLaunches)
 
 	return diags
 }
