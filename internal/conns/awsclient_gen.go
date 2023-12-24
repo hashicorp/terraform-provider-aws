@@ -163,6 +163,7 @@ import (
 	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
+	groundstation_sdkv1 "github.com/aws/aws-sdk-go/service/groundstation"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -650,6 +651,10 @@ func (c *AWSClient) GrafanaConn(ctx context.Context) *managedgrafana_sdkv1.Manag
 
 func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greengrass {
 	return errs.Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass, make(map[string]any)))
+}
+
+func (c *AWSClient) GroundStationConn(ctx context.Context) *groundstation_sdkv1.GroundStation {
+	return errs.Must(conn[*groundstation_sdkv1.GroundStation](ctx, c, names.GroundStation, make(map[string]any)))
 }
 
 func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {

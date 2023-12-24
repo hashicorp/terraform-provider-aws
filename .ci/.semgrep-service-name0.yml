@@ -3608,3 +3608,17 @@ rules:
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
     severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
