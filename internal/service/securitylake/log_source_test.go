@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecurityLakeLogSource_basic(t *testing.T) {
+func testAccLogSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -64,7 +64,7 @@ func TestAccSecurityLakeLogSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeLogSource_multyRegions(t *testing.T) {
+func testAccLogSource_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -84,7 +84,7 @@ func TestAccSecurityLakeLogSource_multyRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogSourceConfig_multyRegions(rName),
+				Config: testAccLogSourceConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLogSourceExists(ctx, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
@@ -106,7 +106,7 @@ func TestAccSecurityLakeLogSource_multyRegions(t *testing.T) {
 	})
 }
 
-func TestAccSecurityLakeLogSource_disappears(t *testing.T) {
+func testAccLogSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_log_source.test"
@@ -232,7 +232,7 @@ resource "aws_securitylake_log_source" "test" {
 `, rName, acctest.Region()))
 }
 
-func testAccLogSourceConfig_multyRegions(rName string) string {
+func testAccLogSourceConfig_multiRegion(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_replication(rName), fmt.Sprintf(`
 
 
