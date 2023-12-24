@@ -32,6 +32,16 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the default EBS encryption state. For example:
+
+```terraform
+import {
+  to = aws_rds_certificate.example
+  id = default 
+}
+```
+
+
 Using `terraform import`, import the default EBS encryption state. For example:
 
 ```console
