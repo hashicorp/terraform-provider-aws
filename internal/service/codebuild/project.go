@@ -629,6 +629,15 @@ func ResourceProject() *schema.Resource {
 				Optional:     true,
 				Default:      60,
 				ValidateFunc: validation.IntBetween(5, 480),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("environment.0.type") == codebuild.EnvironmentTypeArmLambdaContainer {
+						return true
+					}
+					if d.Get("environment.0.type") == codebuild.EnvironmentTypeLinuxLambdaContainer {
+						return true
+					}
+					return false
+				},
 			},
 			"queued_timeout": {
 				Type:         schema.TypeInt,
