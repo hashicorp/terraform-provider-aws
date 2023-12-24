@@ -1,0 +1,3 @@
+```release-note:new-resource
+resource/aws_securitylake_log_source
+```
