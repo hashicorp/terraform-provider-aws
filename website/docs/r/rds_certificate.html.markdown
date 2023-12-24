@@ -29,3 +29,12 @@ The following arguments are required:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Import
+
+
+Using `terraform import`, import the default EBS encryption state. For example:
+
+```console
+% terraform import aws_rds_certificate.example default
+```
