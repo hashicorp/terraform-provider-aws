@@ -32,7 +32,6 @@ This resource exports no additional attributes.
 
 ## Import
 
-
 Using `terraform import`, import the default EBS encryption state. For example:
 
 ```console
