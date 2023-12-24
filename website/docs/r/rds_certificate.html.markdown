@@ -37,10 +37,9 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_rds_certificate.example
-  id = default 
+  id = default
 }
 ```
-
 
 Using `terraform import`, import the default EBS encryption state. For example:
 
