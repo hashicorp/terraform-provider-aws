@@ -30,7 +30,7 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 				Config: testAccCertificateConfig_Basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-rsa4096-g1"),
 				),
 			},
 			{
@@ -42,7 +42,7 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 				Config: testAccCertificateConfig_Basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-rsa4096-g1"),
 				),
 			},
 		},
@@ -60,7 +60,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 
 		for _, c := range (*response).Certificates {
 			if aws.BoolValue(c.CustomerOverride) == true {
-				return fmt.Errorf("RDS certificate customer override is removed not on resource destruction")
+				return fmt.Errorf("RDS certificate customer override is not removed on resource destruction")
 			}
 		}
 
@@ -97,7 +97,7 @@ func testAccCheckCertificate(ctx context.Context, n string, certificate_identifi
 func testAccCertificateConfig_Basic(certificate_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_certificate" "test" {
-  certificate_identifier = %s
+  certificate_identifier = "%s"
 }
 	`, certificate_identifier)
 }
