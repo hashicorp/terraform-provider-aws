@@ -394,12 +394,16 @@ func extractLogSourceConfiguration(out *securitylake.ListLogSourcesOutput) (*aws
 	var regions []string
 	for _, logSource := range out.Sources {
 		if logSource.Account != nil {
+			//Ensuring that the account is passed only one time.
 			if !contains(accounts, *logSource.Account) {
 				accounts = append(accounts, *logSource.Account)
 			}
 		}
 		if logSource.Region != nil {
-			regions = append(regions, *logSource.Region)
+			//Ensuring that the region is passed only one time.
+			if !contains(regions, *logSource.Region) {
+				regions = append(regions, *logSource.Region)
+			}
 		}
 		// Extracting logSourceResource
 		if logSource, ok := logSource.Sources[0].(*awstypes.LogSourceResourceMemberAwsLogSource); ok {
