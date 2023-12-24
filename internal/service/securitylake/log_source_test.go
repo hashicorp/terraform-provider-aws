@@ -31,6 +31,7 @@ func TestAccSecurityLakeLogSource_basic(t *testing.T) {
 
 	resourceName := "aws_securitylake_log_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var logSource types.AwsLogSourceConfiguration
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,7 +44,57 @@ func TestAccSecurityLakeLogSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogSourceConfig_basic(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogSourceExists(ctx, resourceName, &logSource),
+					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "sources.0.regions.*", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.source_version", "1.0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{""},
+			},
+		},
+	})
+}
+
+func TestAccSecurityLakeLogSource_multyRegions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_securitylake_log_source.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var logSource types.AwsLogSourceConfiguration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogSourceConfig_multyRegions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogSourceExists(ctx, resourceName, &logSource),
+					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.regions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "sources.0.regions.*", acctest.Region()),
+					resource.TestCheckTypeSetElemAttr(resourceName, "sources.0.regions.*", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "sources.0.source_version", "1.0"),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -179,4 +230,22 @@ resource "aws_securitylake_log_source" "test" {
   depends_on = [aws_securitylake_data_lake.test]
 }
 `, rName, acctest.Region()))
+}
+
+func testAccLogSourceConfig_multyRegions(rName string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfig_replication(rName), fmt.Sprintf(`
+
+
+data "aws_caller_identity" "test" {}
+
+resource "aws_securitylake_log_source" "test" {
+  sources {
+    accounts       = [data.aws_caller_identity.test.account_id]
+    regions        = [%[2]q,%[3]q]
+    source_name    = "ROUTE53"
+    source_version = "1.0"
+  }
+  depends_on = [aws_securitylake_data_lake.test, aws_securitylake_data_lake.region_2]
+}
+`, rName, acctest.Region(), acctest.AlternateRegion()))
 }
