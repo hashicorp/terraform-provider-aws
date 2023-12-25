@@ -3587,6 +3587,9 @@ var awsPartition = partition{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -37220,6 +37223,13 @@ var awsusgovPartition = partition{
 				}: endpoint{
 					Hostname: "batch.us-gov-west-1.amazonaws.com",
 				},
+			},
+		},
+		"bedrock": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
 			},
 		},
 		"cassandra": service{
