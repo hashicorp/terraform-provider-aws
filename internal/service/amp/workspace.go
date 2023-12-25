@@ -51,6 +51,12 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"logging_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -86,6 +92,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("alias"); ok {
 		input.Alias = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		input.KmsKeyArn = aws.String(v.(string))
 	}
 
 	result, err := conn.CreateWorkspaceWithContext(ctx, input)
@@ -139,6 +149,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("alias", ws.Alias)
+	d.Set("kms_key_arn", ws.KmsKeyArn)
 	arn := aws.StringValue(ws.Arn)
 	d.Set("arn", arn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
