@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_s3_object")
@@ -157,9 +159,17 @@ func DataSourceObject() *schema.Resource {
 func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
 	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
@@ -175,7 +185,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := findObject(ctx, conn, input)
+	output, err := findObject(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -231,7 +241,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
 	if isContentTypeAllowed(output.ContentType) {
-		downloader := manager.NewDownloader(conn)
+		downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
 		buf := manager.NewWriteAtBuffer(make([]byte, 0))
 		input := &s3.GetObjectInput{
 			Bucket:    aws.String(bucket),
@@ -251,7 +261,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("body", string(buf.Bytes()))
 	}
 
-	if tags, err := ObjectListTags(ctx, conn, bucket, key); err == nil {
+	if tags, err := ObjectListTags(ctx, conn, bucket, key, optFns...); err == nil {
 		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
