@@ -62,12 +62,6 @@ func ResourceKey() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 22),
 			},
-			"xks_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -127,6 +121,13 @@ func ResourceKey() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"xks_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"custom_key_store_id"},
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 		},
 	}
 }
@@ -159,17 +160,14 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Policy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("xks_key_id"); ok {
-		if _, ok := d.GetOk("custom_key_store_id"); !ok {
-			return sdkdiag.AppendErrorf(diags, "custom_key_store_id must be set when xks_key_id is set")
-		}
-
-		input.Origin = aws.String(kms.OriginTypeExternalKeyStore)
-		input.CustomKeyStoreId = aws.String(d.Get("custom_key_store_id").(string))
-		input.XksKeyId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("custom_key_store_id"); ok {
+	if v, ok := d.GetOk("custom_key_store_id"); ok {
 		input.Origin = aws.String(kms.OriginTypeAwsCloudhsm)
 		input.CustomKeyStoreId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("xks_key_id"); ok {
+		input.Origin = aws.String(kms.OriginTypeExternalKeyStore)
+		input.XksKeyId = aws.String(v.(string))
 	}
 
 	// AWS requires any principal in the policy to exist before the key is created.
