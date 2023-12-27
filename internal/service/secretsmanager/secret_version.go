@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -71,11 +75,12 @@ func ResourceSecretVersion() *schema.Resource {
 
 func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.PutSecretValueInput{
-		SecretId: aws.String(secretID),
+		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		SecretId:           aws.String(secretID),
 	}
 
 	if v, ok := d.GetOk("secret_string"); ok {
@@ -114,7 +119,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
@@ -187,7 +192,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
@@ -237,7 +242,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {

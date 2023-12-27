@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -5,8 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
@@ -87,7 +90,7 @@ func ResourcePermission() *schema.Resource {
 
 func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
@@ -115,7 +118,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -205,7 +208,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 
 	err := json.Unmarshal([]byte(*output.Policy), &policyDoc)
 	if err != nil {
-		return nil, fmt.Errorf("error reading EventBridge permission (%s): %w", statementID, err)
+		return nil, fmt.Errorf("reading EventBridge permission (%s): %w", statementID, err)
 	}
 
 	return FindPermissionPolicyStatementByID(&policyDoc, statementID)
@@ -213,7 +216,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 
 func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -237,7 +240,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -266,7 +269,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
 	}
 
-	if !regexp.MustCompile(`^events:[a-zA-Z]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^events:[A-Za-z]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be: events: followed by one or more alphabetic characters", k))
 	}
 	return
@@ -275,7 +278,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
 func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
+	if !regexache.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be * or a 12 digit AWS account ID", k))
 	}
 	return
@@ -288,7 +291,7 @@ func validatePermissionStatementID(v interface{}, k string) (ws []string, es []e
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[a-zA-Z0-9-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be one or more alphanumeric, hyphen, or underscore characters", k))
 	}
 	return

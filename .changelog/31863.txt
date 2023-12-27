@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_quicksight_data_set: Allow physical table map to be optional
+```

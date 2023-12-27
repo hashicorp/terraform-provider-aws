@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -41,7 +44,7 @@ func ResourceRegionSettings() *schema.Resource {
 
 func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.UpdateRegionSettingsInput{}
 
@@ -66,7 +69,7 @@ func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRegionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	output, err := conn.DescribeRegionSettingsWithContext(ctx, &backup.DescribeRegionSettingsInput{})
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -290,7 +293,7 @@ func testAccCheckFunctionURLExists(ctx context.Context, n string, v *lambda.GetF
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		output, err := tflambda.FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
@@ -306,7 +309,7 @@ func testAccCheckFunctionURLExists(ctx context.Context, n string, v *lambda.GetF
 
 func testAccCheckFunctionURLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function_url" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
@@ -112,7 +115,7 @@ func TestAccELBBackendServerPolicy_update(t *testing.T) {
 
 func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_backend_policy" {
@@ -159,7 +162,7 @@ func testAccCheckBackendServerPolicyExists(ctx context.Context, n string) resour
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		_, err = tfelb.FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
 

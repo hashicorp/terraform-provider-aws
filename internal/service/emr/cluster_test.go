@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/emr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -37,7 +40,7 @@ func TestAccEMRCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexp.MustCompile("cluster/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "applications.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applications.*", "Spark"),
@@ -218,7 +221,7 @@ func TestAccEMRCluster_sJSON(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestMatchResourceAttr(resourceName, "configurations_json",
-						regexp.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
+						regexache.MustCompile("{\"JAVA_HOME\":\"/usr/lib/jvm/java-1.8.0\".+")),
 				),
 			},
 			{
@@ -559,11 +562,11 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 			{
 				Config:      testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Destroy:     true,
-				ExpectError: regexp.MustCompile(`DependencyViolation`),
+				ExpectError: regexache.MustCompile(`DependencyViolation`),
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 					err := testAccDeleteManagedSecurityGroups(ctx, conn, &vpc)
 
@@ -1027,7 +1030,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_bootstrap(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
@@ -1037,7 +1040,18 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", "10"),
 				),
 			},
 			{
@@ -1052,7 +1066,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapAdd(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
@@ -1062,7 +1076,18 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "2"),
@@ -1082,7 +1107,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapReorder(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
@@ -1092,7 +1117,18 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.2", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.4", "4"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.5", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.6", "6"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.7", "7"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.8", "8"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.9", "9"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.10", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "2"),
@@ -1351,7 +1387,7 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "log_encryption_kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -1663,7 +1699,7 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_cluster" {
@@ -1698,7 +1734,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *emr.Cluster) re
 			return fmt.Errorf("No EMR Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
 		output, err := tfemr.FindClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -2039,25 +2075,45 @@ resource "aws_iam_role_policy_attachment" "emr_autoscaling_role" {
 `, rName)
 }
 
-func testAccClusterBootstrapActionBucketConfig(rName string) string {
+func testAccClusterConfig_baseBootstrapActionBucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "tester" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "tester" {
+  bucket = aws_s3_bucket.tester.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "tester" {
+  bucket = aws_s3_bucket.tester.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "tester" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.tester,
+    aws_s3_bucket_ownership_controls.tester,
+  ]
+
   bucket = aws_s3_bucket.tester.id
   acl    = "public-read"
 }
 
 resource "aws_s3_object" "testobject" {
-  bucket  = aws_s3_bucket.tester.bucket
+  bucket  = aws_s3_bucket_acl.tester.bucket
   key     = "testscript.sh"
   content = <<EOF
 #!/bin/bash
 echo $@
 EOF
-
 
   acl = "public-read"
 }
@@ -3013,7 +3069,7 @@ func testAccClusterConfig_bootstrap(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterBootstrapActionBucketConfig(rName),
+		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3056,8 +3112,10 @@ resource "aws_emr_cluster" "test" {
     path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
-    args = ["1",
-      "2",
+    args = [
+      "0",
+      "1",
+      "",
       "3",
       "4",
       "5",
@@ -3077,7 +3135,7 @@ func testAccClusterConfig_bootstrapAdd(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterBootstrapActionBucketConfig(rName),
+		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3120,8 +3178,10 @@ resource "aws_emr_cluster" "test" {
     path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
-    args = ["1",
-      "2",
+    args = [
+      "0",
+      "1",
+      "",
       "3",
       "4",
       "5",
@@ -3147,7 +3207,7 @@ func testAccClusterConfig_bootstrapReorder(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterBootstrapActionBucketConfig(rName),
+		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3196,8 +3256,10 @@ resource "aws_emr_cluster" "test" {
     path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
-    args = ["1",
-      "2",
+    args = [
+      "0",
+      "1",
+      "",
       "3",
       "4",
       "5",
@@ -3780,7 +3842,7 @@ func testAccClusterConfig_instanceFleets(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterBootstrapActionBucketConfig(rName),
+		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3868,7 +3930,7 @@ func testAccClusterConfig_instanceFleetMultipleSubnets(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterBootstrapActionBucketConfig(rName),
+		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3968,7 +4030,7 @@ func testAccClusterConfig_instanceFleetsMasterOnly(rName string) string {
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterConfig_baseIAMServiceRole(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterBootstrapActionBucketConfig(rName),
+		testAccClusterConfig_baseBootstrapActionBucket(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 

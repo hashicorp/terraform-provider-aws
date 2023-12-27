@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cur_test
 
 import (
@@ -6,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
+func testAccReportDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
@@ -19,7 +22,7 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +45,7 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
+func testAccReportDefinitionDataSource_additional(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
@@ -50,7 +53,7 @@ func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,13 +85,8 @@ data "aws_billing_service_account" "test" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
+  bucket        = %[2]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -128,11 +126,11 @@ POLICY
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
-  report_name                = "%[1]s"
+  report_name                = %[1]q
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region
@@ -152,13 +150,8 @@ data "aws_billing_service_account" "test" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
+  bucket        = %[2]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -198,11 +191,11 @@ POLICY
 resource "aws_cur_report_definition" "test" {
   depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
-  report_name                = "%[1]s"
+  report_name                = %[1]q
   time_unit                  = "DAILY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
   s3_prefix                  = ""
   s3_region                  = aws_s3_bucket.test.region

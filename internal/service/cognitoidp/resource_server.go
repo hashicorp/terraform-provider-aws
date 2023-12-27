@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -80,7 +83,7 @@ func ResourceResourceServer() *schema.Resource {
 
 func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	identifier := d.Get("identifier").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -101,7 +104,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.CreateResourceServerWithContext(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Resource Server: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito Resource Server: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", userPoolID, identifier))
@@ -111,11 +114,11 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.DescribeResourceServerInput{
@@ -134,7 +137,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
@@ -144,7 +147,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)
@@ -169,7 +172,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
@@ -195,7 +198,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {

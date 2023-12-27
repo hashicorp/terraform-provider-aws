@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -33,7 +36,7 @@ func TestAccFSxOpenzfsSnapshot_basic(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`snapshot/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`snapshot/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "volume_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -172,7 +175,7 @@ func TestAccFSxOpenzfsSnapshot_childVolume(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_childVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`snapshot/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`snapshot/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -230,7 +233,7 @@ func testAccCheckOpenzfsSnapshotExists(ctx context.Context, resourceName string,
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		output, err := tffsx.FindSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -249,7 +252,7 @@ func testAccCheckOpenzfsSnapshotExists(ctx context.Context, resourceName string,
 
 func testAccCheckOpenzfsSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_openzfs_snapshot" {

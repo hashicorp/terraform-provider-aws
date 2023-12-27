@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -7,14 +10,16 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccPolicy_basic(t *testing.T) {
@@ -35,7 +40,7 @@ func testAccPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_required(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
 					resource.TestCheckResourceAttr(resourceName, "content", content1),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -128,7 +133,7 @@ func testAccPolicy_description(t *testing.T) {
 
 func testAccPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var p1, p2, p3, p4 organizations.Policy
+	var policy organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 
@@ -139,12 +144,11 @@ func testAccPolicy_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_tagA(rName),
+				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &p1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -154,27 +158,20 @@ func testAccPolicy_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
-				Config: testAccPolicyConfig_tagB(rName),
+				Config: testAccPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &p2),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_tagC(rName),
+				Config: testAccPolicyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &p3),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
-				),
-			},
-			{
-				Config: testAccPolicyConfig_noTag(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &p4),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -198,7 +195,7 @@ func testAccPolicy_skipDestroy(t *testing.T) {
 				Config: testAccPolicyConfig_skipDestroy(rName, content),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
 					resource.TestCheckResourceAttr(resourceName, "content", content),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -451,7 +448,7 @@ func testAccPolicy_importManagedPolicy(t *testing.T) {
 				ResourceName:  resourceName,
 				ImportStateId: resourceID,
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID))),
+				ExpectError:   regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID))),
 			},
 		},
 	})
@@ -459,24 +456,16 @@ func testAccPolicy_importManagedPolicy(t *testing.T) {
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_policy" {
 				continue
 			}
 
-			input := &organizations.DescribePolicyInput{
-				PolicyId: &rs.Primary.ID,
-			}
+			_, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
 
-			resp, err := conn.DescribePolicyWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -484,9 +473,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if resp != nil && resp.Policy != nil {
-				return fmt.Errorf("Policy %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Organizations Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -497,23 +484,21 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 // skip_destroy is true and the policy should still exist after destroy completes
 func testAccCheckPolicyNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_policy" {
 				continue
 			}
 
-			input := &organizations.DescribePolicyInput{
-				PolicyId: &rs.Primary.ID,
-			}
+			_, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
 
-			_, err := conn.DescribePolicyWithContext(ctx, input)
 			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 				// The organization was destroyed, so we can safely assume the policy
 				// skipped during destruction was as well
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
@@ -523,29 +508,22 @@ func testAccCheckPolicyNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPolicyExists(ctx context.Context, resourceName string, policy *organizations.Policy) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *organizations.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
-		input := &organizations.DescribePolicyInput{
-			PolicyId: &rs.Primary.ID,
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
-		resp, err := conn.DescribePolicyWithContext(ctx, input)
+		output, err := tforganizations.FindPolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.Policy == nil {
-			return fmt.Errorf("Policy %q does not exist", rs.Primary.ID)
-		}
-
-		*policy = *resp.Policy
+		*v = *output
 
 		return nil
 	}
@@ -567,15 +545,15 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  description = "%s"
-  name        = "%s"
+  description = %[1]q
+  name        = %[2]q
 
   depends_on = [aws_organizations_organization.test]
 }
 `, description, rName)
 }
 
-func testAccPolicyConfig_tagA(rName string) string {
+func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -591,19 +569,18 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name = "%s"
+  name = %[1]q
 
   depends_on = [aws_organizations_organization.test]
 
   tags = {
-    TerraformProviderAwsTest = true
-    Alpha                    = 1
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccPolicyConfig_tagB(rName string) string {
+func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -619,66 +596,16 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name = "%s"
+  name = %[1]q
 
   depends_on = [aws_organizations_organization.test]
 
   tags = {
-    TerraformProviderAwsTest = true
-    Beta                     = 1
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName)
-}
-
-func testAccPolicyConfig_tagC(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = "%s"
-
-  depends_on = [aws_organizations_organization.test]
-
-  tags = {
-    TerraformProviderAwsTest = true
-  }
-}
-`, rName)
-}
-
-func testAccPolicyConfig_noTag(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = "%s"
-
-  depends_on = [aws_organizations_organization.test]
-}
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPolicyConfig_required(rName, content string) string {
@@ -686,8 +613,8 @@ func testAccPolicyConfig_required(rName, content string) string {
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_policy" "test" {
-  content = %s
-  name    = "%s"
+  content = %[1]s
+  name    = %[2]q
 
   depends_on = [aws_organizations_organization.test]
 }
@@ -790,9 +717,9 @@ func testAccPolicyConfig_type(rName, content, policyType string) string {
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_policy" "test" {
-  content = %s
-  name    = "%s"
-  type    = "%s"
+  content = %[1]s
+  name    = %[2]q
+  type    = %[3]q
 
   depends_on = [aws_organizations_organization.test]
 }
@@ -804,8 +731,8 @@ func testAccPolicyConfig_skipDestroy(rName, content string) string {
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_policy" "test" {
-  content = %s
-  name    = "%s"
+  content = %[1]s
+  name    = %[2]q
 
   skip_destroy = true
 

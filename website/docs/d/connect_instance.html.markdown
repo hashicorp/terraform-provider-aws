@@ -32,15 +32,15 @@ data "aws_connect_instance" "foo" {
 
 ~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
 
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `created_time` - When the instance was created.
 * `arn` - ARN of the instance.

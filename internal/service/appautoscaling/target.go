@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling
 
 import (
@@ -77,7 +80,7 @@ func ResourceTarget() *schema.Resource {
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	resourceID := d.Get("resource_id").(string)
 	input := &applicationautoscaling.RegisterScalableTargetInput{
@@ -86,7 +89,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ResourceId:        aws.String(resourceID),
 		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
@@ -106,7 +109,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
 		func() (interface{}, error) {
@@ -140,7 +143,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &applicationautoscaling.RegisterScalableTargetInput{
@@ -167,7 +170,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Id()),

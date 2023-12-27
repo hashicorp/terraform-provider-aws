@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
@@ -390,7 +393,7 @@ func testAccCheckSlotTypeExistsWithVersion(ctx context.Context, rName, slotTypeV
 			return fmt.Errorf("No Lex Slot Type ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		output, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, rs.Primary.ID, slotTypeVersion)
 
@@ -410,7 +413,7 @@ func testAccCheckSlotTypeExists(ctx context.Context, rName string, output *lexmo
 
 func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		_, err := tflexmodels.FindSlotTypeVersionByName(ctx, conn, slotTypeName, slotTypeVersion)
 
@@ -428,7 +431,7 @@ func testAccCheckSlotTypeNotExists(ctx context.Context, slotTypeName, slotTypeVe
 
 func testAccCheckSlotTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_slot_type" {

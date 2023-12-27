@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -136,14 +139,14 @@ func ResourceFramework() *schema.Resource {
 
 func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &backup.CreateFrameworkInput{
 		IdempotencyToken:  aws.String(id.UniqueId()),
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
-		FrameworkTags:     GetTagsIn(ctx),
+		FrameworkTags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -168,7 +171,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	resp, err := conn.DescribeFrameworkWithContext(ctx, &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(d.Id()),
@@ -202,7 +205,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	if d.HasChanges("description", "control") {
 		input := &backup.UpdateFrameworkInput{
@@ -232,7 +235,7 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.DeleteFrameworkInput{
 		FrameworkName: aws.String(d.Id()),

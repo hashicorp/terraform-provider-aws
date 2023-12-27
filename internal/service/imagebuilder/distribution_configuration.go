@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -118,7 +121,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 127),
-											validation.StringMatch(regexp.MustCompile(`^[-_A-Za-z0-9{][-_A-Za-z0-9\s:{}]+[-_A-Za-z0-9}]$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\s:{}-]+[0-9A-Za-z_}-]$`), "must contain only alphanumeric characters, underscores, and hyphens"),
 										),
 									},
 									"target_account_ids": {
@@ -291,11 +294,11 @@ func ResourceDistributionConfiguration() *schema.Resource {
 
 func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -327,7 +330,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 
 func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
@@ -358,14 +361,14 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
 
-	SetTagsOut(ctx, distributionConfiguration.Tags)
+	setTagsOut(ctx, distributionConfiguration.Tags)
 
 	return diags
 }
 
 func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges("description", "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
@@ -393,7 +396,7 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),

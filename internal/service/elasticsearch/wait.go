@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
@@ -55,7 +58,7 @@ func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Elasticsearc
 	if tfresource.TimedOut(err) {
 		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return fmt.Errorf("Error describing Elasticsearch domain: %w", err)
+			return fmt.Errorf("describing Elasticsearch domain: %w", err)
 		}
 		if !aws.BoolValue(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
@@ -84,7 +87,7 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchS
 	if tfresource.TimedOut(err) {
 		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return fmt.Errorf("Error describing Elasticsearch domain: %w", err)
+			return fmt.Errorf("describing Elasticsearch domain: %w", err)
 		}
 		if !aws.BoolValue(out.Processing) {
 			return nil
@@ -119,7 +122,7 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchS
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return fmt.Errorf("Error describing Elasticsearch domain: %s", err)
+			return fmt.Errorf("describing Elasticsearch domain: %s", err)
 		}
 		if out != nil && !aws.BoolValue(out.Processing) {
 			return nil

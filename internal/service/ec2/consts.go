@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -41,6 +44,13 @@ func SpotAllocationStrategy_Values() []string {
 		SpotAllocationStrategyLowestPrice,
 	)
 }
+
+const (
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-request-status.html#spot-instance-request-status-understand
+	spotInstanceRequestStatusCodeFulfilled          = "fulfilled"
+	spotInstanceRequestStatusCodePendingEvaluation  = "pending-evaluation"
+	spotInstanceRequestStatusCodePendingFulfillment = "pending-fulfillment"
+)
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
@@ -287,3 +297,37 @@ const (
 	gatewayIDLocal      = "local"
 	gatewayIDVPCLattice = "VpcLattice"
 )
+
+const (
+	verifiedAccessAttachmentTypeVPC = "vpc"
+)
+
+func verifiedAccessAttachmentType_Values() []string {
+	return []string{
+		verifiedAccessAttachmentTypeVPC,
+	}
+}
+
+const (
+	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
+	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
+)
+
+func verifiedAccessEndpointType_Values() []string {
+	return []string{
+		verifiedAccessEndpointTypeLoadBalancer,
+		verifiedAccessEndpointTypeNetworkInterface,
+	}
+}
+
+const (
+	verifiedAccessEndpointProtocolHTTP  = "http"
+	verifiedAccessEndpointProtocolHTTPS = "https"
+)
+
+func verifiedAccessEndpointProtocol_Values() []string {
+	return []string{
+		verifiedAccessEndpointProtocolHTTP,
+		verifiedAccessEndpointProtocolHTTPS,
+	}
+}

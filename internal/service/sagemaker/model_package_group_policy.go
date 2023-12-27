@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -51,7 +54,7 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 
 func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("resource_policy").(string))
 	if err != nil {
@@ -76,7 +79,7 @@ func resourceModelPackageGroupPolicyPut(ctx context.Context, d *schema.ResourceD
 
 func resourceModelPackageGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	mpg, err := FindModelPackageGroupPolicyByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -103,7 +106,7 @@ func resourceModelPackageGroupPolicyRead(ctx context.Context, d *schema.Resource
 
 func resourceModelPackageGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(d.Id()),

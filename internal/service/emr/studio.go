@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -115,7 +118,7 @@ func ResourceStudio() *schema.Resource {
 
 func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.CreateStudioInput{
 		AuthMode:                 aws.String(d.Get("auth_mode").(string)),
@@ -124,7 +127,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:                     aws.String(d.Get("name").(string)),
 		ServiceRole:              aws.String(d.Get("service_role").(string)),
 		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 		VpcId:                    aws.String(d.Get("vpc_id").(string)),
 		WorkspaceSecurityGroupId: aws.String(d.Get("workspace_security_group_id").(string)),
 	}
@@ -174,7 +177,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emr.UpdateStudioInput{
@@ -209,7 +212,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	studio, err := FindStudioByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -237,14 +240,14 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
 	d.Set("subnet_ids", flex.FlattenStringSet(studio.SubnetIds))
 
-	SetTagsOut(ctx, studio.Tags)
+	setTagsOut(ctx, studio.Tags)
 
 	return diags
 }
 
 func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),

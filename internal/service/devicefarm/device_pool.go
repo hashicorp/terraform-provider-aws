@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm
 
 import (
@@ -93,7 +96,7 @@ func ResourceDevicePool() *schema.Resource {
 
 func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateDevicePoolInput{
@@ -118,7 +121,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.DevicePool.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
 	}
 
@@ -127,7 +130,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	devicePool, err := FindDevicePoolByARN(ctx, conn, d.Id())
 
@@ -163,7 +166,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateDevicePoolInput{
@@ -202,7 +205,7 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
 	_, err := conn.DeleteDevicePoolWithContext(ctx, &devicefarm.DeleteDevicePoolInput{
@@ -273,7 +276,7 @@ func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
 func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 	poolArn, err := arn.Parse(id)
 	if err != nil {
-		return "", fmt.Errorf("Error parsing '%s': %w", id, err)
+		return "", fmt.Errorf("parsing '%s': %w", id, err)
 	}
 
 	poolArnResouce := poolArn.Resource

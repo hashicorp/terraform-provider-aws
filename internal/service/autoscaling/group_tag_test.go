@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -6,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -101,7 +104,7 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 
 func testAccCheckGroupTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_group_tag" {
@@ -148,7 +151,7 @@ func testAccCheckGroupTagExists(ctx context.Context, n string) resource.TestChec
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		_, err = tfautoscaling.GetTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 

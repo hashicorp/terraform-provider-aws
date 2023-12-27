@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2
 
 import (
@@ -60,7 +63,7 @@ func ResourceMemberAssociation() *schema.Resource {
 
 func resourceMemberAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	accountID := d.Get("account_id").(string)
 	input := &inspector2.AssociateMemberInput{
@@ -84,14 +87,14 @@ func resourceMemberAssociationCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceMemberAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	member, err := FindMemberByAccountID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amazon Inspector Member Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -108,7 +111,7 @@ func resourceMemberAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceMemberAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting Amazon Inspector Member Association: %s", d.Id())
 

@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -191,7 +194,7 @@ func ResourceGameServerGroup() *schema.Resource {
 
 func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := &gamelift.CreateGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Get("game_server_group_name").(string)),
@@ -200,7 +203,7 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		MaxSize:             aws.Int64(int64(d.Get("max_size").(int))),
 		MinSize:             aws.Int64(int64(d.Get("min_size").(int))),
 		RoleArn:             aws.String(d.Get("role_arn").(string)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -255,8 +258,8 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
-	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	gameServerGroupName := d.Id()
 
@@ -323,7 +326,7 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGameServerGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Updating GameLift Game Server Group: %s", d.Id())
 
@@ -353,7 +356,7 @@ func resourceGameServerGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceGameServerGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Game Server Group: %s", d.Id())
 	input := &gamelift.DeleteGameServerGroupInput{

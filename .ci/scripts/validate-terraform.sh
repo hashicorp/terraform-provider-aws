@@ -43,7 +43,7 @@ while read -r filename ; do
 
         # We need to capture the output and error code here. We don't want to exit on the first error
         set +e
-        tflint_output=$(${TFLINT_CMD} --config .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
+        tflint_output=$(${TFLINT_CMD} --config .ci/.tflint.hcl --filter=$tf "${rules[@]}" 2>&1)
         tflint_exitcode=$?
         set -e
 

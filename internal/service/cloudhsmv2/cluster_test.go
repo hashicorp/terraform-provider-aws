@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
@@ -31,10 +34,10 @@ func testAccCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^cluster-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_state", cloudhsmv2.ClusterStateUninitialized),
 					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm1.medium"),
-					resource.TestMatchResourceAttr(resourceName, "security_group_id", regexp.MustCompile(`^sg-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "security_group_id", regexache.MustCompile(`^sg-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "source_backup_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
@@ -124,7 +127,7 @@ func testAccCluster_tags(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudhsm_v2_cluster" {
@@ -150,7 +153,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

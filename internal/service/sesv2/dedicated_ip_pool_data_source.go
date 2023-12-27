@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -65,7 +68,7 @@ const (
 )
 
 func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Get("pool_name").(string))
 	if err != nil {
@@ -82,7 +85,7 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("dedicated_ips", flattenDedicatedIPs(outIP.DedicatedIps))
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Id(), err)
 	}

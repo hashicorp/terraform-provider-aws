@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -90,7 +93,7 @@ func ResourceRateBasedRule() *schema.Resource {
 
 func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	wr := NewRetryer(conn, region)
@@ -101,7 +104,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 			Name:        aws.String(d.Get("name").(string)),
 			RateKey:     aws.String(d.Get("rate_key").(string)),
 			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		return conn.CreateRateBasedRuleWithContext(ctx, input)
@@ -126,7 +129,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	params := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(d.Id()),
@@ -171,7 +174,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRateBasedRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChanges("predicate", "rate_limit") {
@@ -190,7 +193,7 @@ func resourceRateBasedRuleUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRateBasedRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	oldPredicates := d.Get("predicate").(*schema.Set).List()

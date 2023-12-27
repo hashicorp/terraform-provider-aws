@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -26,8 +29,9 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"key_name": {
 				Type:         schema.TypeString,
@@ -57,7 +61,7 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 
 func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	keyName := d.Get("key_name").(string)
 	workspaceID := d.Get("workspace_id").(string)
@@ -84,7 +88,7 @@ func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceWorkspaceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	workspaceID, keyName, err := WorkspaceAPIKeyParseResourceID(d.Id())
 

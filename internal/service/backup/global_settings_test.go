@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -6,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -62,7 +65,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 
 func testAccCheckGlobalSettingsExists(ctx context.Context, settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		resp, err := conn.DescribeGlobalSettingsWithContext(ctx, &backup.DescribeGlobalSettingsInput{})
 		if err != nil {
 			return err

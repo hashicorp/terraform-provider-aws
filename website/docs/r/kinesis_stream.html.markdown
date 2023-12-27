@@ -38,7 +38,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in.
 * `shard_count` – (Optional) The number of shards that the stream will use. If the `stream_mode` is `PROVISIONED`, this field is required.
@@ -55,9 +55,9 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 
 * `stream_mode` - (Required) Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique Stream id
 * `name` - The unique Stream name
@@ -75,10 +75,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Streams can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using the `name`. For example:
 
+```terraform
+import {
+  to = aws_kinesis_stream.test_stream
+  id = "terraform-kinesis-test"
+}
 ```
-$ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
+
+Using `terraform import`, import Kinesis Streams using the `name`. For example:
+
+```console
+% terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

@@ -109,7 +109,7 @@ resource "aws_launch_template" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
@@ -263,7 +263,7 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile.
+* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
@@ -415,11 +415,11 @@ The metadata options for the instances.
 
 The `metadata_options` block supports the following:
 
-* `http_endpoint` - (Optional) Whether the metadata service is available. Can be `enabled` or `disabled`.
-* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
-* `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`.
-* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `optional` or `required`.
-* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
+* `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
+* `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
+* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. Can be `"enabled"` or `"disabled"`.
+* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Can be `"enabled"` or `"disabled"`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -492,9 +492,9 @@ Each `tag_specifications` block supports the following:
 * `resource_type` - (Optional) The type of resource to tag.
 * `tags` -(Optional)  A map of tags to assign to the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
@@ -503,8 +503,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Launch Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_launch_template.web
+  id = "lt-12345678"
+}
 ```
-$ terraform import aws_launch_template.web lt-12345678
+
+Using `terraform import`, import Launch Templates using the `id`. For example:
+
+```console
+% terraform import aws_launch_template.web lt-12345678
 ```

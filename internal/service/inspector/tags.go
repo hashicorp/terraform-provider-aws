@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build !generate
 // +build !generate
 
@@ -49,8 +52,16 @@ func updateTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifie
 	return nil
 }
 
+func createTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string, tags []*inspector.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates Inspector Classic service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).InspectorConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).InspectorConn(ctx), identifier, oldTags, newTags)
 }

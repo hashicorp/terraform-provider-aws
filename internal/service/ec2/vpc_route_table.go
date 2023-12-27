@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -19,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,7 +38,6 @@ var routeTableValidTargets = []string{
 	"core_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
-	"instance_id",
 	"local_gateway_id",
 	"nat_gateway_id",
 	"network_interface_id",
@@ -119,11 +122,6 @@ func ResourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"instance_id": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use network_interface_id instead",
-						},
 						"local_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -167,7 +165,7 @@ func ResourceRouteTable() *schema.Resource {
 
 func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateRouteTableInput{
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
@@ -211,9 +209,11 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindRouteTableByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
@@ -225,6 +225,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
+	routeTable := outputRaw.(*ec2.RouteTable)
 	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -242,20 +243,20 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("propagating_vgws", propagatingVGWs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting propagating_vgws: %s", err)
 	}
-	if err := d.Set("route", flattenRoutes(ctx, conn, routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenRoutes(ctx, conn, d, routeTable.Routes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
 	d.Set("vpc_id", routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
-	SetTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
+	setTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
 	return diags
 }
 
 func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("propagating_vgws") {
 		o, n := d.GetChange("propagating_vgws")
@@ -346,7 +347,7 @@ func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
@@ -391,7 +392,7 @@ func resourceRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["ipv6_cidr_block"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", verify.CanonicalCIDRBlock(v.(string))))
+		buf.WriteString(fmt.Sprintf("%s-", itypes.CanonicalCIDRBlock(v.(string))))
 	}
 
 	if v, ok := m["cidr_block"]; ok {
@@ -424,12 +425,6 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	instanceSet := false
-	if v, ok := m["instance_id"]; ok {
-		instanceSet = v.(string) != ""
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
 	if v, ok := m["transit_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -446,7 +441,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m["network_interface_id"]; ok && !(instanceSet || natGatewaySet) {
+	if v, ok := m["network_interface_id"]; ok && !natGatewaySet {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -484,6 +479,25 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 	}
 
 	input.RouteTableId = aws.String(routeTableID)
+
+	_, target := routeTableRouteTargetAttribute(tfMap)
+
+	if target == gatewayIDLocal {
+		// created by AWS so probably doesn't need a retry but just to be sure
+		// we provide a small one
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, time.Second*15,
+			func() (interface{}, error) {
+				return routeFinder(ctx, conn, routeTableID, destination)
+			},
+			errCodeInvalidRouteNotFound,
+		)
+
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("local route cannot be created but must exist to be adopted, %s %s does not exist", target, destination)
+		}
+
+		return nil
+	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
@@ -665,10 +679,6 @@ func expandCreateRouteInput(tfMap map[string]interface{}) *ec2.CreateRouteInput 
 		apiObject.GatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_id"].(string); ok && v != "" {
-		apiObject.InstanceId = aws.String(v)
-	}
-
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
 		apiObject.LocalGatewayId = aws.String(v)
 	}
@@ -728,11 +738,11 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 	}
 
 	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
-		apiObject.GatewayId = aws.String(v)
-	}
-
-	if v, ok := tfMap["instance_id"].(string); ok && v != "" {
-		apiObject.InstanceId = aws.String(v)
+		if v == gatewayIDLocal {
+			apiObject.LocalTarget = aws.Bool(true)
+		} else {
+			apiObject.GatewayId = aws.String(v)
+		}
 	}
 
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
@@ -801,10 +811,6 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 		}
 	}
 
-	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.StringValue(v)
-	}
-
 	if v := apiObject.LocalGatewayId; v != nil {
 		tfMap["local_gateway_id"] = aws.StringValue(v)
 	}
@@ -828,7 +834,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
+func flattenRoutes(ctx context.Context, conn *ec2.EC2, d *schema.ResourceData, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -840,7 +846,13 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 			continue
 		}
 
-		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDVPCLattice {
+			continue
+		}
+
+		// local routes from config need to be included but not default local routes, as determined by hasLocalConfig
+		// see local route tests
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal && !hasLocalConfig(d, apiObject) {
 			continue
 		}
 
@@ -869,6 +881,35 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 	}
 
 	return tfList
+}
+
+// hasLocalConfig along with flattenRoutes prevents default local routes from
+// being stored in state but allows configured local routes to be stored in
+// state. hasLocalConfig checks the ResourceData and flattenRoutes skips or
+// includes the route. Normally, you can't count on ResourceData to represent
+// config. However, in this case, a local gateway route in ResourceData must
+// come from config because of the gatekeeping done by hasLocalConfig and
+// flattenRoutes.
+func hasLocalConfig(d *schema.ResourceData, apiObject *ec2.Route) bool {
+	if apiObject.GatewayId == nil {
+		return false
+	}
+	if v, ok := d.GetOk("route"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(map[string]interface{})
+			if v["cidr_block"].(string) != aws.StringValue(apiObject.DestinationCidrBlock) &&
+				v["destination_prefix_list_id"] != aws.StringValue(apiObject.DestinationPrefixListId) &&
+				v["ipv6_cidr_block"] != aws.StringValue(apiObject.DestinationIpv6CidrBlock) {
+				continue
+			}
+
+			if v["gateway_id"].(string) == gatewayIDLocal {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // routeTableRouteDestinationAttribute returns the attribute key and value of the route table route's destination.

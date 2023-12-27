@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -66,7 +69,7 @@ func ResourceCapacityProvider() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.IntBetween(1, 10000),
+										ValidateFunc: validation.IntBetween(0, 10000),
 									},
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
@@ -116,13 +119,13 @@ func ResourceCapacityProvider() *schema.Resource {
 
 func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	name := d.Get("name").(string)
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(name),
 		AutoScalingGroupProvider: expandAutoScalingGroupProviderCreate(d.Get("auto_scaling_group_provider")),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateCapacityProviderWithContext(ctx, &input)
@@ -141,7 +144,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -159,7 +162,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	output, err := FindCapacityProviderByARN(ctx, conn, d.Id())
 
@@ -181,14 +184,14 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", output.Name)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateCapacityProviderInput{
@@ -229,7 +232,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
 	_, err := conn.DeleteCapacityProviderWithContext(ctx, &ecs.DeleteCapacityProviderInput{
@@ -317,24 +320,24 @@ func expandManagedScaling(configured interface{}) *ecs.ManagedScaling {
 		return nil
 	}
 
-	p := configured.([]interface{})[0].(map[string]interface{})
+	tfMap := configured.([]interface{})[0].(map[string]interface{})
 
 	managedScaling := ecs.ManagedScaling{}
 
-	if val, ok := p["instance_warmup_period"].(int); ok && val != 0 {
-		managedScaling.InstanceWarmupPeriod = aws.Int64(int64(val))
+	if v, ok := tfMap["instance_warmup_period"].(int); ok {
+		managedScaling.InstanceWarmupPeriod = aws.Int64(int64(v))
 	}
-	if val, ok := p["maximum_scaling_step_size"].(int); ok && val != 0 {
-		managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
+	if v, ok := tfMap["maximum_scaling_step_size"].(int); ok && v != 0 {
+		managedScaling.MaximumScalingStepSize = aws.Int64(int64(v))
 	}
-	if val, ok := p["minimum_scaling_step_size"].(int); ok && val != 0 {
-		managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
+	if v, ok := tfMap["minimum_scaling_step_size"].(int); ok && v != 0 {
+		managedScaling.MinimumScalingStepSize = aws.Int64(int64(v))
 	}
-	if val, ok := p["status"].(string); ok && len(val) > 0 {
-		managedScaling.Status = aws.String(val)
+	if v, ok := tfMap["status"].(string); ok && len(v) > 0 {
+		managedScaling.Status = aws.String(v)
 	}
-	if val, ok := p["target_capacity"].(int); ok && val != 0 {
-		managedScaling.TargetCapacity = aws.Int64(int64(val))
+	if v, ok := tfMap["target_capacity"].(int); ok && v != 0 {
+		managedScaling.TargetCapacity = aws.Int64(int64(v))
 	}
 
 	return &managedScaling

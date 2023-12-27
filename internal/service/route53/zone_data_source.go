@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -82,7 +85,7 @@ func DataSourceZone() *schema.Resource {
 
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, nameExists := d.GetOk("name")
@@ -143,7 +146,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 				// we check if tags match
 				matchingTags := true
 				if len(tags) > 0 {
-					listTags, err := ListTags(ctx, conn, hostedZoneId, route53.TagResourceTypeHostedzone)
+					listTags, err := listTags(ctx, conn, hostedZoneId, route53.TagResourceTypeHostedzone)
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "finding Route 53 Hosted Zone: %s", err)
@@ -199,7 +202,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
 	}
 
-	tags, err = ListTags(ctx, conn, idHostedZone, route53.TagResourceTypeHostedzone)
+	tags, err = listTags(ctx, conn, idHostedZone, route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", idHostedZone, err)

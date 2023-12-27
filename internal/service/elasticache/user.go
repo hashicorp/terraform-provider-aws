@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -40,6 +43,7 @@ func ResourceUser() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -123,14 +127,14 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	userID := d.Get("user_id").(string)
 	input := &elasticache.CreateUserInput{
 		AccessString:       aws.String(d.Get("access_string").(string)),
 		Engine:             aws.String(d.Get("engine").(string)),
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		UserId:             aws.String(userID),
 		UserName:           aws.String(d.Get("user_name").(string)),
 	}
@@ -163,7 +167,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -181,9 +185,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	user, err := FindUserByID(ctx, conn, d.Id())
+	// An ongoing OOB update (where the user is in "modifying" state) can cause "UserNotFound: ... is not available for tagging" errors.
+	// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
+	user, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
@@ -219,7 +225,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elasticache.ModifyUserInput{
@@ -260,7 +266,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	log.Printf("[INFO] Deleting ElastiCache User: %s", d.Id())
 	_, err := conn.DeleteUserWithContext(ctx, &elasticache.DeleteUserInput{

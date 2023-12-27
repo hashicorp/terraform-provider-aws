@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
@@ -60,7 +63,7 @@ func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *directo
 			return fmt.Errorf("No Directory Service Shared Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		output, err := tfds.FindSharedDirectory(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
@@ -76,7 +79,7 @@ func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *directo
 
 func testAccCheckSharedDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_shared_directory" {

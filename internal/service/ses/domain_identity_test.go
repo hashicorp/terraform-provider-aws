@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -73,7 +76,7 @@ func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`invalid value for domain \(cannot end with a period\)`),
+				ExpectError: regexache.MustCompile(`invalid value for domain \(cannot end with a period\)`),
 			},
 		},
 	})
@@ -81,7 +84,7 @@ func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 
 func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_domain_identity" {
@@ -121,7 +124,7 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -144,7 +147,7 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckDomainIdentityDisappears(ctx context.Context, identity string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		input := &ses.DeleteIdentityInput{
 			Identity: aws.String(identity),
@@ -178,7 +181,7 @@ func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFu
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 	input := &ses.ListIdentitiesInput{}
 

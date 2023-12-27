@@ -67,6 +67,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT` | EC2 Quota for Rules per Security Group. Defaults to 50. **DEPRECATED:** Can be augmented or replaced with Service Quotas lookup. |
 | `EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME` | Amazon EventBridge partner event bus name. |
 | `EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME` | Amazon EventBridge partner event source name. |
+| `FINSPACE_MANAGED_KX_LICENSE_ENABLED` | Enables tests requiring a license to provision managed KX resources. |
 | `GCM_API_KEY` | API Key for Google Cloud Messaging in Pinpoint and SNS Platform Application testing. |
 | `GITHUB_TOKEN` | GitHub token for CodePipeline testing. |
 | `GLOBALACCERATOR_BYOIP_IPV4_ADDRESS` | IPv4 address from a BYOIP CIDR of AWS Account used for testing Global Accelerator's BYOIP accelerator. |
@@ -74,6 +75,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `GRAFANA_SSO_USER_ID` | AWS SSO user ID for Grafana testing. |
 | `MACIE_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for Macie Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
+| `QUICKSIGHT_ATHENA_TESTING_ENABLED` | Enable QuickSight tests dependent on Amazon Athena resources. |
 | `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
 | `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | SageMaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -75,14 +78,14 @@ func ResourcePortfolio() *schema.Resource {
 }
 func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(name),
 		IdempotencyToken: aws.String(id.UniqueId()),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -106,7 +109,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := FindPortfolioByID(ctx, conn, d.Id())
 
@@ -127,14 +130,14 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdatePortfolioInput{
 		AcceptLanguage: aws.String(AcceptLanguageEnglish),
@@ -175,7 +178,7 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Service Catalog Portfolio: %s", d.Id())
 	_, err := conn.DeletePortfolioWithContext(ctx, &servicecatalog.DeletePortfolioInput{

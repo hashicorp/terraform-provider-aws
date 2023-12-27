@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -78,10 +81,10 @@ func ResourceMap() *schema.Resource {
 
 func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreateMapInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -113,7 +116,7 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribeMapInput{
 		MapName: aws.String(d.Id()),
@@ -147,14 +150,14 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("map_name", output.MapName)
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChange("description") {
 		input := &locationservice.UpdateMapInput{
@@ -177,7 +180,7 @@ func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeleteMapInput{
 		MapName: aws.String(d.Id()),

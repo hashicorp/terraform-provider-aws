@@ -19,9 +19,9 @@ data "aws_ecrpublic_authorization_token" "token" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `authorization_token` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
 * `expires_at` - Time in UTC RFC3339 format when the authorization token expires.

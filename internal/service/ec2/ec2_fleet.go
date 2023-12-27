@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -699,7 +702,7 @@ func ResourceFleet() *schema.Resource {
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	fleetType := d.Get("type").(string)
 	input := &ec2.CreateFleetInput{
@@ -776,7 +779,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	fleet, err := FindFleetByID(ctx, conn, d.Id())
 
@@ -842,14 +845,14 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_until", aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	SetTagsOut(ctx, fleet.Tags)
+	setTagsOut(ctx, fleet.Tags)
 
 	return diags
 }
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyFleetInput{
@@ -889,7 +892,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
 	output, err := conn.DeleteFleetsWithContext(ctx, &ec2.DeleteFleetsInput{

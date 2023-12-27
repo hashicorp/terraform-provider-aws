@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -27,7 +30,7 @@ func DataSourceRateBasedRule() *schema.Resource {
 
 func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)

@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -36,7 +39,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`fleet/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`fleet/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "termination"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_state", "active"),
@@ -2694,7 +2697,7 @@ func TestAccEC2Fleet_capacityRebalanceInvalidType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFleetConfig_invalidTypeForCapacityRebalance(rName),
-				ExpectError: regexp.MustCompile(`Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain`),
+				ExpectError: regexache.MustCompile(`Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain`),
 			},
 		},
 	})
@@ -3147,7 +3150,7 @@ func testAccCheckFleetHistory(ctx context.Context, resourceName string, errorMsg
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		input := &ec2.DescribeFleetHistoryInput{
 			FleetId:   aws.String(rs.Primary.ID),
@@ -3192,7 +3195,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, v *ec2.FleetData) re
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindFleetByID(ctx, conn, rs.Primary.ID)
 
@@ -3208,7 +3211,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, v *ec2.FleetData) re
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_fleet" {
@@ -3253,7 +3256,7 @@ func testAccCheckFleetRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
 }
 
 func testAccPreCheckFleet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeFleetsInput{
 		MaxResults: aws.Int64(1),

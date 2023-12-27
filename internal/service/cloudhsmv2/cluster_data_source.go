@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2
 
 import (
@@ -73,7 +76,7 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &cloudhsmv2.DescribeClustersInput{

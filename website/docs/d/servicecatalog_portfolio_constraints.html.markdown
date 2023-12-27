@@ -6,7 +6,7 @@ description: |-
   Provides information on Service Catalog Portfolio Constraints
 ---
 
-# Data source: aws_servicecatalog_portfolio_constraints
+# Data Source: aws_servicecatalog_portfolio_constraints
 
 Provides information on Service Catalog Portfolio Constraints.
 
@@ -31,9 +31,9 @@ The following arguments are optional:
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `product_id` - (Optional) Product identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `details` - List of information about the constraints. See details below.
 

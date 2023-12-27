@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -65,7 +68,7 @@ func ResourceRequestValidator() *schema.Resource {
 
 func resourceRequestValidatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigateway.CreateRequestValidatorInput{
@@ -88,7 +91,7 @@ func resourceRequestValidatorCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	output, err := FindRequestValidatorByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
 
@@ -111,7 +114,7 @@ func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -156,7 +159,7 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceRequestValidatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Request Validator: %s", d.Id())
 	_, err := conn.DeleteRequestValidatorWithContext(ctx, &apigateway.DeleteRequestValidatorInput{

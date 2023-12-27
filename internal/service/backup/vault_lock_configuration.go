@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -31,7 +34,7 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
 			"backup_vault_arn": {
 				Type:     schema.TypeString,
@@ -59,7 +62,7 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 
 func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultLockConfigurationInput{
@@ -91,7 +94,7 @@ func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	output, err := FindVaultByName(ctx, conn, d.Id())
 
@@ -115,7 +118,7 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 
 func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
 	_, err := conn.DeleteBackupVaultLockConfigurationWithContext(ctx, &backup.DeleteBackupVaultLockConfigurationInput{

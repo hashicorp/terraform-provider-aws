@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -35,7 +38,7 @@ func ResourceDomainIdentityVerification() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -53,7 +56,7 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 
 	response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting identity verification attributes: %s", err)
+		return nil, fmt.Errorf("getting identity verification attributes: %s", err)
 	}
 
 	return response.VerificationAttributes[domainName], nil
@@ -61,12 +64,12 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 
 func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 	domainName := d.Get("domain").(string)
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("Error getting identity verification attributes: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("getting identity verification attributes: %s", err))
 		}
 
 		if att == nil {
@@ -98,7 +101,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 
 func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
 	d.Set("domain", domainName)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -25,7 +28,6 @@ func testAccHoursOfOperationDataSource_hoursOfOperationID(t *testing.T) {
 				Config: testAccHoursOfOperationDataSourceConfig_id(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_arn", resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_id", resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -55,7 +57,6 @@ func testAccHoursOfOperationDataSource_name(t *testing.T) {
 				Config: testAccHoursOfOperationDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_arn", resourceName, "hours_of_operation_arn"), // Deprecated
 					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_id", resourceName, "hours_of_operation_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),

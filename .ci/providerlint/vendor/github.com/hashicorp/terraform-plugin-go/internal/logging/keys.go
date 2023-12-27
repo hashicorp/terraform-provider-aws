@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logging
 
 // Global logging keys attached to all requests.
@@ -7,6 +10,9 @@ package logging
 const (
 	// Attribute of the diagnostic being logged.
 	KeyDiagnosticAttribute = "diagnostic_attribute"
+
+	// Function Argument of the diagnostic being logged.
+	KeyDiagnosticFunctionArgument = "diagnostic_function_argument"
 
 	// Number of the error diagnostics.
 	KeyDiagnosticErrorCount = "diagnostic_error_count"
@@ -50,4 +56,10 @@ const (
 
 	// The protocol version being used, as a string, such as "6"
 	KeyProtocolVersion = "tf_proto_version"
+
+	// Whether the GetProviderSchemaOptional server capability is enabled
+	KeyServerCapabilityGetProviderSchemaOptional = "tf_server_capability_get_provider_schema_optional"
+
+	// Whether the PlanDestroy server capability is enabled
+	KeyServerCapabilityPlanDestroy = "tf_server_capability_plan_destroy"
 )

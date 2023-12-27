@@ -30,7 +30,7 @@ resource "aws_ec2_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `context` - (Optional) Reserved.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`. Supported only for fleets of type `maintain`.
@@ -199,9 +199,9 @@ This configuration block supports the following:
 
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fleet identifier
 * `arn` - The ARN of the fleet
@@ -225,8 +225,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_fleet` can be imported by using the Fleet identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_fleet` using the Fleet identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_fleet.example
+  id = "fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c"
+}
 ```
-$ terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
+
+Using `terraform import`, import `aws_ec2_fleet` using the Fleet identifier. For example:
+
+```console
+% terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
 ```

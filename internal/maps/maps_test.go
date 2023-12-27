@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package maps
 
 import (
@@ -7,7 +10,45 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestApplyToAll(t *testing.T) {
+func TestApplyToAllKeys(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    map[string]int
+		expected map[string]int
+	}
+	tests := map[string]testCase{
+		"three elements": {
+			input: map[string]int{
+				"one": 1,
+				"two": 2,
+				"3":   3},
+			expected: map[string]int{
+				"ONE": 1,
+				"TWO": 2,
+				"3":   3},
+		},
+		"zero elements": {
+			input:    map[string]int{},
+			expected: map[string]int{},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := ApplyToAllKeys(test.input, strings.ToUpper)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestApplyToAllValues(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -42,7 +83,7 @@ func TestApplyToAll(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := ApplyToAll(test.input, strings.ToUpper)
+			got := ApplyToAllValues(test.input, strings.ToUpper)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -212,7 +215,7 @@ func TestAccMemoryDBUser_tags(t *testing.T) {
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_user" {
@@ -247,7 +250,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 			return fmt.Errorf("No MemoryDB User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
 		_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes["user_name"])
 

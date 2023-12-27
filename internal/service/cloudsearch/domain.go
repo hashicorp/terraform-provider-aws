@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudsearch
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -118,7 +121,7 @@ func ResourceDomain() *schema.Resource {
 						"source_fields": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`score`), "Cannot be set to reserved field score"),
+							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`score`), "Cannot be set to reserved field score"),
 						},
 						"type": {
 							Type:         schema.TypeString,
@@ -137,7 +140,7 @@ func ResourceDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z]([a-z0-9-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 			},
 			"scaling_parameters": {
 				Type:     schema.TypeList,
@@ -175,7 +178,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
@@ -263,7 +266,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	domainStatus, err := FindDomainStatusByName(ctx, conn, d.Id())
 
@@ -339,7 +342,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 	requiresIndexDocuments := false
 
 	if d.HasChange("scaling_parameters") {
@@ -470,7 +473,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
 	_, err := conn.DeleteDomainWithContext(ctx, &cloudsearch.DeleteDomainInput{
@@ -493,7 +496,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexp.MustCompile(`^(\*?[a-z][a-z0-9_]{2,63}|[a-z][a-z0-9_]{2,63}\*?)$`).MatchString(value) {
+	if !regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{2,63}\*?)$`).MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with a letter and be at least 3 and no more than 64 characters long", k))
 	}
@@ -542,7 +545,7 @@ func defineIndexFields(ctx context.Context, conn *cloudsearch.CloudSearch, domai
 			_, err = conn.DefineIndexFieldWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
+				return fmt.Errorf("defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
 			}
 		}
 	}

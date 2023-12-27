@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -81,7 +84,7 @@ func addrToSchema(addr []string, schemaMap map[string]*Schema) []*Schema {
 			case *Resource:
 				current = &Schema{
 					Type: typeObject,
-					Elem: v.Schema,
+					Elem: v.SchemaMap(),
 				}
 			case *Schema:
 				current = v

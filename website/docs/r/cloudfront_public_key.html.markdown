@@ -22,7 +22,7 @@ resource "aws_cloudfront_public_key" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `comment` - (Optional) An optional comment about the public key.
 * `encoded_key` - (Required) The encoded public key that you want to add to CloudFront to use with features like field-level encryption.
@@ -31,9 +31,9 @@ The following arguments are supported:
 
 **NOTE:** When setting `encoded_key` value, there needs a newline at the end of string. Otherwise, multiple runs of terraform will want to recreate the `aws_cloudfront_public_key` resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the public key configuration.
 * `etag` - The current version of the public key. For example: `E2QWRUHAPOMQZL`.
@@ -41,8 +41,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront Public Key can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Public Key using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_public_key.example
+  id = "K3D5EWEUDCCXON"
+}
 ```
-$ terraform import aws_cloudfront_public_key.example K3D5EWEUDCCXON
+
+Using `terraform import`, import CloudFront Public Key using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_public_key.example K3D5EWEUDCCXON
 ```

@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -49,7 +52,7 @@ func testContactChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(channelResourceName, "name", rName),
 					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
 					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(channelResourceName, "arn", "ssm-contacts", regexp.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
+					acctest.MatchResourceAttrRegionalARN(channelResourceName, "arn", "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
 				),
 			},
 			{
@@ -326,7 +329,7 @@ func testContactChannel_type(t *testing.T) {
 
 func testAccCheckContactChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssmcontacts_contact_channel" {
@@ -371,7 +374,7 @@ func testAccCheckContactChannelExists(ctx context.Context, name string) resource
 			return create.Error(names.SSMContacts, create.ErrActionCheckingExistence, tfssmcontacts.ResNameContactChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 		_, err := conn.GetContactChannel(ctx, &ssmcontacts.GetContactChannelInput{
 			ContactChannelId: aws.String(rs.Primary.ID),
 		})

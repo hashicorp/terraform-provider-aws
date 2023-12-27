@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -18,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_autoscaling_policy")
@@ -503,7 +506,7 @@ func customizedMetricDataQuerySchema() *schema.Schema {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	name := d.Get("name").(string)
 	input, err := getPutScalingPolicyInput(d)
@@ -526,7 +529,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	p, err := FindScalingPolicy(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -567,7 +570,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	input, err := getPutScalingPolicyInput(d)
 
@@ -587,7 +590,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
 	_, err := conn.DeletePolicyWithContext(ctx, &autoscaling.DeletePolicyInput{

@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -35,18 +38,17 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`[a-z0-9]+`)),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexp.MustCompile(`[a-z0-9]+`)),
+					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -76,7 +78,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Config: testAccRestAPIConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -92,7 +94,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Config: testAccRestAPIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -103,7 +105,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Config: testAccRestAPIConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -180,7 +182,7 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					// This can eventually be moved to a PreCheck function
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -230,7 +232,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -1036,10 +1038,10 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, 0),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
 			},
 			{
@@ -1049,14 +1051,14 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, -1),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "-1"), // -1 removes existing values
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", ""),
 				),
 			},
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "5242880"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "5242880"),
@@ -1079,7 +1081,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 1, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "1", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
@@ -1093,7 +1095,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated minimum compression size still overrides
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 2, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
@@ -1101,7 +1103,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated body minimum compression size is still overridden
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 2, 1048576),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 1048576),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
@@ -1129,8 +1131,6 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1048576"),
 				),
-				// TODO: The attribute type must be changed to NullableTypeInt so it can be Computed properly.
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:            resourceName,
@@ -1203,7 +1203,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 			// Verify invalid body fails creation, when fail_on_warnings is true
 			{
 				Config:      testAccRestAPIConfig_failOnWarnings(rName, "original", "fail_on_warnings = true"),
-				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
+				ExpectError: regexache.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Verify invalid body succeeds creation, when fail_on_warnings is not set
 			{
@@ -1211,7 +1211,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/users"}),
-					resource.TestMatchResourceAttr(resourceName, "description", regexp.MustCompile(`original`)),
+					resource.TestMatchResourceAttr(resourceName, "description", regexache.MustCompile(`original`)),
 				),
 			},
 			{
@@ -1223,12 +1223,12 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 			// Verify invalid body fails update, when fail_on_warnings is true
 			{
 				Config:      testAccRestAPIConfig_failOnWarnings(rName, "update", "fail_on_warnings = true"),
-				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
+				ExpectError: regexache.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Verify invalid body succeeds update, when fail_on_warnings is not set
 			{
 				Config: testAccRestAPIConfig_failOnWarnings(rName, "update", ""),
-				Check:  resource.TestMatchResourceAttr(resourceName, "description", regexp.MustCompile(`update`)),
+				Check:  resource.TestMatchResourceAttr(resourceName, "description", regexache.MustCompile(`update`)),
 			},
 		},
 	})
@@ -1348,7 +1348,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Allow"`)),
 				),
 			},
 			{
@@ -1363,7 +1363,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test2"}),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Allow"`)),
 				),
 			},
 			// Verify updated policy still overrides body
@@ -1372,7 +1372,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test2"}),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Deny"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Deny"`)),
 				),
 			},
 		},
@@ -1395,7 +1395,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				Config: testAccRestAPIConfig_policySetByBody(rName, "Allow"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Allow"`)),
 				),
 			},
 			{
@@ -1410,7 +1410,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 
 func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		resp, err := conn.GetResourcesWithContext(ctx, &apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
@@ -1441,7 +1441,7 @@ func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, ro
 
 func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.RestApi, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		resp, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
 			RestApiId: conf.Id,
@@ -1474,7 +1474,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
 
@@ -1490,7 +1490,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 
 func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_rest_api" {
@@ -2414,20 +2414,20 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, bodyDescription)
 }
 
-func testAccRestAPIConfig_minimumCompressionSize(rName string, minimumCompressionSize int) string {
+func testAccRestAPIConfig_minimumCompressionSize(rName string, minimumCompressionSize string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  minimum_compression_size = %[2]d
   name                     = %[1]q
+  minimum_compression_size = %[2]q
 }
 `, rName, minimumCompressionSize)
 }
 
-func testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName string, minimumCompressionSize int, bodyMinimumCompressionSize int) string {
+func testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName string, minimumCompressionSize string, bodyMinimumCompressionSize int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  minimum_compression_size = %[2]d
   name                     = %[1]q
+  minimum_compression_size = %[2]q
 
   body = jsonencode({
     swagger = "2.0"

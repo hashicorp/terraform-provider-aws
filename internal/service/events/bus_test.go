@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
@@ -129,7 +132,7 @@ func TestAccEventsBus_default(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBusConfig_basic("default"),
-				ExpectError: regexp.MustCompile(`cannot be 'default'`),
+				ExpectError: regexache.MustCompile(`cannot be 'default'`),
 			},
 		},
 	})
@@ -192,7 +195,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 
 func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_bus" {
@@ -227,7 +230,7 @@ func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.Describ
 			return fmt.Errorf("No EventBridge Event Bus ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindEventBusByName(ctx, conn, rs.Primary.ID)
 

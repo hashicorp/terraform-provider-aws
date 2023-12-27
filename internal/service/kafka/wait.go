@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
@@ -15,7 +18,7 @@ const (
 	configurationDeletedTimeout = 5 * time.Minute
 )
 
-func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) { //nolint:unparam
+func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ClusterStateCreating},
 		Target:  []string{kafka.ClusterStateActive},
@@ -25,7 +28,7 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, time
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*kafka.ClusterInfo); ok {
+	if output, ok := outputRaw.(*kafka.Cluster); ok {
 		if state, stateInfo := aws.StringValue(output.State), output.StateInfo; state == kafka.ClusterStateFailed && stateInfo != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateInfo.Code), aws.StringValue(stateInfo.Message)))
 		}
@@ -36,7 +39,7 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, time
 	return nil, err
 }
 
-func waitClusterDeleted(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
+func waitClusterDeleted(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ClusterStateDeleting},
 		Target:  []string{},
@@ -46,7 +49,7 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Kafka, arn string, time
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*kafka.ClusterInfo); ok {
+	if output, ok := outputRaw.(*kafka.Cluster); ok {
 		if state, stateInfo := aws.StringValue(output.State), output.StateInfo; state == kafka.ClusterStateFailed && stateInfo != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateInfo.Code), aws.StringValue(stateInfo.Message)))
 		}

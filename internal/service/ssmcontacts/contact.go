@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts
 
 import (
@@ -63,13 +66,13 @@ const (
 )
 
 func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMContactsClient()
+	client := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	input := &ssmcontacts.CreateContactInput{
 		Alias:       aws.String(d.Get("alias").(string)),
 		DisplayName: aws.String(d.Get("display_name").(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        types.ContactType(d.Get("type").(string)),
 	}
 
@@ -88,7 +91,7 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactByID(ctx, conn, d.Id())
 
@@ -110,7 +113,7 @@ func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	if d.HasChanges("display_name") {
 		in := &ssmcontacts.UpdateContactInput{
@@ -128,7 +131,7 @@ func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMContacts Contact %s", d.Id())
 

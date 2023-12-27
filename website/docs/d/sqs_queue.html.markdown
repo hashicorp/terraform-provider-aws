@@ -24,7 +24,9 @@ data "aws_sqs_queue" "example" {
 
 * `name` - (Required) Name of the queue to match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the queue.
 * `url` - URL of the queue.

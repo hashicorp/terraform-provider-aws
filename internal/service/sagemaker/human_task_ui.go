@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -66,7 +69,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -78,12 +81,12 @@ func ResourceHumanTaskUI() *schema.Resource {
 
 func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("human_task_ui_name").(string)
 	input := &sagemaker.CreateHumanTaskUiInput{
 		HumanTaskUiName: aws.String(name),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
 	}
 
@@ -101,7 +104,7 @@ func resourceHumanTaskUICreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	humanTaskUi, err := FindHumanTaskUIByName(ctx, conn, d.Id())
 
@@ -136,7 +139,7 @@ func resourceHumanTaskUIUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHumanTaskUIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker HumanTaskUi: %s", d.Id())
 	_, err := conn.DeleteHumanTaskUiWithContext(ctx, &sagemaker.DeleteHumanTaskUiInput{

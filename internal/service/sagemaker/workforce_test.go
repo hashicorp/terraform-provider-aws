@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
@@ -33,7 +36,7 @@ func testAccWorkforce_cognitoConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.client_id", "aws_cognito_user_pool_client.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.user_pool", "aws_cognito_user_pool.test", "id"),
@@ -72,7 +75,7 @@ func testAccWorkforce_oidcConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint1),
@@ -99,7 +102,7 @@ func testAccWorkforce_oidcConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint2),
@@ -230,7 +233,7 @@ func testAccWorkforce_disappears(t *testing.T) {
 
 func testAccCheckWorkforceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_workforce" {
@@ -265,7 +268,7 @@ func testAccCheckWorkforceExists(ctx context.Context, n string, workforce *sagem
 			return fmt.Errorf("No SageMaker Workforce ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		output, err := tfsagemaker.FindWorkforceByName(ctx, conn, rs.Primary.ID)
 

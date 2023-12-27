@@ -1,17 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -67,7 +65,7 @@ func DataSourcePolicy() *schema.Resource {
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
@@ -75,35 +73,30 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
-		raw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return FindPolicyByName(ctx, conn, name, pathPrefix)
+				return findPolicyByTwoPartKey(ctx, conn, name, pathPrefix)
 			},
 		)
 
-		if errors.Is(err, tfresource.ErrEmptyResult) {
-			return sdkdiag.AppendErrorf(diags, "no IAM policy found matching criteria (%s); try different search", PolicySearchDetails(name, pathPrefix))
-		}
-		if errors.Is(err, tfresource.ErrTooManyResults) {
-			return sdkdiag.AppendErrorf(diags, "multiple IAM policies found matching criteria (%s); try different search. %s", PolicySearchDetails(name, pathPrefix), err)
-		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading IAM policy (%s): %s", PolicySearchDetails(name, pathPrefix), err)
+			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IAM Policy", err))
 		}
 
-		arn = aws.StringValue((raw.(*iam.Policy)).Arn)
+		arn = aws.StringValue((outputRaw.(*iam.Policy)).Arn)
 	}
 
 	// We need to make a call to `iam.GetPolicy` because `iam.ListPolicies` doesn't return all values
-	policy, err := FindPolicyByARN(ctx, conn, arn)
+	policy, err := findPolicyByARN(ctx, conn, arn)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM policy (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s): %s", arn, err)
 	}
 
-	policyArn := aws.StringValue(policy.Arn)
+	arn = aws.StringValue(policy.Arn)
 
-	d.SetId(policyArn)
-	d.Set("arn", policyArn)
+	d.SetId(arn)
+	d.Set("arn", arn)
 	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("path", policy.Path)
@@ -113,65 +106,22 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	// Retrieve policy
-	policyVersionInput := &iam.GetPolicyVersionInput{
-		PolicyArn: policy.Arn,
-		VersionId: policy.DefaultVersionId,
-	}
-
-	// Handle IAM eventual consistency
-	var policyVersionOutput *iam.GetPolicyVersionOutput
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		policyVersionOutput, err = conn.GetPolicyVersionWithContext(ctx, policyVersionInput)
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		policyVersionOutput, err = conn.GetPolicyVersionWithContext(ctx, policyVersionInput)
-	}
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return findPolicyVersion(ctx, conn, arn, aws.StringValue(policy.DefaultVersionId))
+		},
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) version: %s", policyArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) default version: %s", arn, err)
 	}
 
-	if policyVersionOutput == nil || policyVersionOutput.PolicyVersion == nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) version: empty output", policyArn)
-	}
-
-	policyVersion := policyVersionOutput.PolicyVersion
-
-	var policyDocument string
-	if policyVersion != nil {
-		policyDocument, err = url.QueryUnescape(aws.StringValue(policyVersion.Document))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", policyArn, err)
-		}
+	policyDocument, err := url.QueryUnescape(aws.StringValue(outputRaw.(*iam.PolicyVersion).Document))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
 	}
 
 	d.Set("policy", policyDocument)
 
 	return diags
-}
-
-// PolicySearchDetails returns the configured search criteria as a printable string
-func PolicySearchDetails(name, pathPrefix string) string {
-	var policyDetails []string
-	if name != "" {
-		policyDetails = append(policyDetails, fmt.Sprintf("Name: %s", name))
-	}
-	if pathPrefix != "" {
-		policyDetails = append(policyDetails, fmt.Sprintf("PathPrefix: %s", pathPrefix))
-	}
-
-	return strings.Join(policyDetails, ", ")
 }

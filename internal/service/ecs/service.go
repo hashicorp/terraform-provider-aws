@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -476,7 +479,7 @@ func ResourceService() *schema.Resource {
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -492,7 +495,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
 		SchedulingStrategy:       aws.String(schedulingStrategy),
 		ServiceName:              aws.String(name),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -622,7 +625,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -640,7 +643,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster := d.Get("cluster").(string)
 
@@ -762,21 +765,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	// 	return fmt.Errorf("setting service_connect_configuration for (%s): %w", d.Id(), err)
 	// }
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
-	SetTagsOut(ctx, service.Tags)
+	setTagsOut(ctx, service.Tags)
 
 	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateServiceInput{
@@ -785,26 +788,18 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Service:            aws.String(d.Id()),
 		}
 
-		schedulingStrategy := d.Get("scheduling_strategy").(string)
-
-		switch schedulingStrategy {
-		case ecs.SchedulingStrategyDaemon:
-			if d.HasChange("deployment_minimum_healthy_percent") {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-				}
-			}
-		case ecs.SchedulingStrategyReplica:
-			if d.HasChange("desired_count") {
-				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+		if d.HasChange("alarms") {
+			if input.DeploymentConfiguration == nil {
+				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
 			}
 
-			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-					MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-				}
+			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		if d.HasChange("capacity_provider_strategy") {
+			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 		}
 
 		if d.HasChange("deployment_circuit_breaker") {
@@ -818,6 +813,52 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		switch schedulingStrategy := d.Get("scheduling_strategy").(string); schedulingStrategy {
+		case ecs.SchedulingStrategyDaemon:
+			if d.HasChange("deployment_minimum_healthy_percent") {
+				if input.DeploymentConfiguration == nil {
+					input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+				}
+
+				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int)))
+			}
+		case ecs.SchedulingStrategyReplica:
+			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
+				if input.DeploymentConfiguration == nil {
+					input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+				}
+
+				input.DeploymentConfiguration.MaximumPercent = aws.Int64(int64(d.Get("deployment_maximum_percent").(int)))
+				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int)))
+			}
+
+			if d.HasChange("desired_count") {
+				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+			}
+		}
+
+		if d.HasChange("enable_ecs_managed_tags") {
+			input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
+		}
+
+		if d.HasChange("enable_execute_command") {
+			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
+		}
+
+		if d.HasChange("health_check_grace_period_seconds") {
+			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
+		}
+
+		if d.HasChange("load_balancer") {
+			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
+				input.LoadBalancers = expandLoadBalancers(v.List())
+			}
+		}
+
+		if d.HasChange("network_configuration") {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 		}
 
 		if d.HasChange("ordered_placement_strategy") {
@@ -852,44 +893,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("alarms") {
-			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
-			}
-		}
-
 		if d.HasChange("platform_version") {
 			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
-		}
-
-		if d.HasChange("health_check_grace_period_seconds") {
-			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
-		}
-
-		if d.HasChange("task_definition") {
-			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
-		}
-
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
-		}
-
-		if d.HasChange("capacity_provider_strategy") {
-			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
-		}
-
-		if d.HasChange("enable_execute_command") {
-			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
-		}
-
-		if d.HasChange("enable_ecs_managed_tags") {
-			input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
-		}
-
-		if d.HasChange("load_balancer") {
-			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
-				input.LoadBalancers = expandLoadBalancers(v.List())
-			}
 		}
 
 		if d.HasChange("propagate_tags") {
@@ -902,6 +907,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("service_registries") {
 			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
+		}
+
+		if d.HasChange("task_definition") {
+			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
 		}
 
 		// Retry due to IAM eventual consistency
@@ -944,7 +953,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	service, err := FindServiceNoTagsByID(ctx, conn, d.Id(), d.Get("cluster").(string))
 

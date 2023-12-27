@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -5,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -22,10 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -124,10 +127,10 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
 			"configuration_endpoint": {
@@ -275,7 +278,6 @@ func ResourceCluster() *schema.Resource {
 					"parameter_group_name",
 					"port",
 					"security_group_ids",
-					"security_group_names",
 					"snapshot_arns",
 					"snapshot_name",
 					"snapshot_retention_limit",
@@ -288,14 +290,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"security_group_names": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ForceNew:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeList,
@@ -332,6 +326,12 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"transit_encryption_enabled": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -350,16 +350,12 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-
-	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
-	}
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &elasticache.CreateCacheClusterInput{
 		CacheClusterId: aws.String(clusterID),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("replication_group_id"); ok {
@@ -447,6 +443,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SnapshotName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("transit_encryption_enabled"); ok {
+		input.TransitEncryptionEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("az_mode"); ok {
 		input.AZMode = aws.String(v.(string))
 	}
@@ -480,7 +480,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -498,7 +498,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	c, err := FindCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -553,6 +553,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ip_discovery", c.IpDiscovery)
 	d.Set("network_type", c.NetworkType)
 	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
+	d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
 	return diags
 }
@@ -571,9 +572,6 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
-		return fmt.Errorf("setting security_group_names: %w", err)
-	}
 	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
 		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
@@ -589,7 +587,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elasticache.ModifyCacheClusterInput{
@@ -779,7 +777,7 @@ func (b byCacheNodeId) Less(i, j int) bool {
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)

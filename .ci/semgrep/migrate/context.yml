@@ -6,6 +6,9 @@ rules:
       include:
         - internal/service/*
         - internal/acctest/*
+      exclude:
+        - "internal/service/*/service_package.go"
+        - "internal/service/*/service_package_gen.go"
     patterns:
       - pattern: |
           $CONN.$API(...)
@@ -15,15 +18,16 @@ rules:
       - metavariable-regex:
           metavariable: $API
           # This weird construction is to get around greedy matching
-          regex: ^(?!.*(WithContext|_Values)).*$
+          regex: ^(?!.*(WithContext|_Values|Paginator)).*$
       - pattern-not: |
           $CONN.$APIV2(ctx, ...)
-      - pattern-not: tfconnect.$API(...)
       - pattern-not: tfcodestarconnections.$API()
+      - pattern-not: tfconnect.$API(...)
       - pattern-not: tfdirectconnect.$API()
       - pattern-not: tfkafkaconnect.$API()
       - pattern-not: conn.Handlers.$X(...)
       - pattern-not: conn.Handlers.$X.$Y(...)
+      - pattern-not: conn.Options()
     severity: ERROR
   - id: context-todo
     languages: [go]

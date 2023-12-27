@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_vpc_attachment"
 description: |-
-  Terraform resource for managing an AWS NetworkManager VpcAttachment.
+  Terraform resource for managing an AWS Network Manager VPC Attachment.
 ---
 
 # Resource: aws_networkmanager_vpc_attachment
 
-Terraform resource for managing an AWS NetworkManager VpcAttachment.
+Terraform resource for managing an AWS Network Manager VPC Attachment.
 
 ## Example Usage
 
@@ -37,12 +37,15 @@ The following arguments are optional:
 
 ### options
 
-* `appliance_mode_support` - (Optional) Indicates whether appliance mode is supported. If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow.
+* `appliance_mode_support` - (Optional) Indicates whether appliance mode is supported.
+  If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow.
+  If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 * `ipv6_support` - (Optional) Indicates whether IPv6 is supported.
+  If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the attachment.
 * `attachment_policy_rule_number` - The policy rule number associated with the attachment.
@@ -58,8 +61,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_networkmanager_vpc_attachment` can be imported using the attachment ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_vpc_attachment` using the attachment ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_vpc_attachment.example
+  id = "attachment-0f8fa60d2238d1bd8"
+}
 ```
-$ terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8
+
+Using `terraform import`, import `aws_networkmanager_vpc_attachment` using the attachment ID. For example:
+
+```console
+% terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8
 ```

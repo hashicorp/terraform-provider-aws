@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -10,16 +13,6 @@ func flattenSecurityGroupIDs(securityGroups []*elasticache.SecurityGroupMembersh
 	for _, sg := range securityGroups {
 		if sg.SecurityGroupId != nil {
 			result = append(result, *sg.SecurityGroupId)
-		}
-	}
-	return result
-}
-
-func flattenSecurityGroupNames(securityGroups []*elasticache.CacheSecurityGroupMembership) []string {
-	result := make([]string, 0, len(securityGroups))
-	for _, sg := range securityGroups {
-		if sg.CacheSecurityGroupName != nil {
-			result = append(result, *sg.CacheSecurityGroupName)
 		}
 	}
 	return result

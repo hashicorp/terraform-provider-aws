@@ -1,17 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -225,6 +230,26 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSetConfigUpdateLogicalTableMap(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.1.name", "Column2"),
 				),
 			},
 			{
@@ -255,7 +280,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
@@ -275,7 +300,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
@@ -305,6 +330,43 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSet_permissionsMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigPermissionsMultiple(rId, rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:PassDataSet"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeIngestion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:ListIngestions"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet quicksight.DataSet
@@ -329,6 +391,51 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.match_all_value", "*"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_multi_value_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.status", quicksight.StatusEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	// This test requires additional configuration of the QuickSight service role. Ensure
+	// the role has the AWS managed "AmazonS3ReadOnlyAccess" and "AWSQuicksightAthenaAccess"
+	// identity policies attached. The default LakeFormation data catalog settings may also
+	// need adjusted, depending on the current configuration.
+	//
+	// Ref: https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html
+	if os.Getenv("QUICKSIGHT_ATHENA_TESTING_ENABLED") == "" {
+		t.Skip("Environment variable QUICKSIGHT_ATHENA_TESTING_ENABLED is not set")
+	}
+
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigRefreshProperties(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.column_name", "column1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size_unit", "DAY"),
 				),
 			},
 			{
@@ -387,6 +494,46 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigNoPhysicalTableMap(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.logical_table_map_id", "joined"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "j"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.right_operand", "right"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.left_operand", "left"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.type", "INNER"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.on_clause", "Column1 = Column2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet *quicksight.DataSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -399,7 +546,7 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeDataSetInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -422,7 +569,7 @@ func testAccCheckDataSetExists(ctx context.Context, resourceName string, dataSet
 
 func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_set" {
 				continue
@@ -657,9 +804,7 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-      upload_settings {
-        format = "JSON"
-      }
+      upload_settings {}
     }
   }
   logical_table_map {
@@ -667,6 +812,46 @@ resource "aws_quicksight_data_set" "test" {
     alias                = "Group1"
     source {
       physical_table_id = %[1]q
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigUpdateLogicalTableMap(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {}
+    }
+  }
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+    data_transforms {
+      create_columns_operation {
+        columns {
+          column_id   = "Column2"
+          column_name = "Column2"
+          expression  = "Column1"
+        }
+      }
     }
   }
 }
@@ -752,6 +937,47 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
+func testAccDataSetConfigPermissionsMultiple(rId, rName string, count int) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		testAccDataSource_UserConfigMultiple(rName, count),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+
+  dynamic "permissions" {
+    for_each = aws_quicksight_user.test
+    content {
+      actions = [
+        "quicksight:DescribeDataSet",
+        "quicksight:DescribeDataSetPermissions",
+        "quicksight:PassDataSet",
+        "quicksight:DescribeIngestion",
+        "quicksight:ListIngestions",
+      ]
+      principal = aws_quicksight_user.test[permissions.key].arn
+    }
+  }
+}
+`, rId, rName))
+}
+
 func testAccDataSetConfigRowLevelPermissionTagConfiguration(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
@@ -781,6 +1007,91 @@ resource "aws_quicksight_data_set" "test" {
       tag_key                   = "uniquetagkey"
       match_all_value           = "*"
       tag_multi_value_delimiter = ","
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigRefreshProperties(rId, rName string) string {
+	// NOTE: Must use Athena data source here as incremental refresh is not supported by S3
+	return acctest.ConfigCompose(
+		testAccBaseDataSourceConfig(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[2]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[2]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL       = "TRUE"
+    classification = "json"
+  }
+
+  storage_descriptor {
+    location      = "s3://${aws_s3_bucket.test.id}/data/"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      name                  = "jsonserde"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
+      parameters = {
+        "serialization.format" = "1"
+      }
+    }
+    columns {
+      name = "column1"
+      type = "date"
+    }
+  }
+}
+
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = %[2]q
+  type           = "ATHENA"
+  parameters {
+    athena {
+      work_group = "primary"
+    }
+  }
+  ssl_properties {
+    disable_ssl = false
+  }
+}
+
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    relational_table {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      catalog         = "AwsDataCatalog"
+      schema          = aws_glue_catalog_database.test.name
+      name            = aws_glue_catalog_table.test.name
+      input_columns {
+        name = "column1"
+        type = "DATETIME"
+      }
+    }
+  }
+  refresh_properties {
+    refresh_configuration {
+      incremental_refresh {
+        lookback_window {
+          column_name = "column1"
+          size        = 1
+          size_unit   = "DAY"
+        }
+      }
     }
   }
 }
@@ -844,4 +1155,85 @@ resource "aws_quicksight_data_set" "test" {
   }
 }
 `, rId, rName, key1, value1, key2, value2))
+}
+
+func testAccDataSetConfigNoPhysicalTableMap(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "left" {
+  data_set_id = "%[1]s-left"
+  name        = "%[2]s-left"
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = "%[1]s-left"
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
+
+resource "aws_quicksight_data_set" "right" {
+  data_set_id = "%[1]s-right"
+  name        = "%[2]s-right"
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = "%[1]s-right"
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column2"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+}
+
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  logical_table_map {
+    logical_table_map_id = "right"
+    alias                = "r"
+    source {
+      data_set_arn = aws_quicksight_data_set.right.arn
+    }
+  }
+
+  logical_table_map {
+    logical_table_map_id = "left"
+    alias                = "l"
+    source {
+      data_set_arn = aws_quicksight_data_set.left.arn
+    }
+  }
+
+  logical_table_map {
+    logical_table_map_id = "joined"
+    alias                = "j"
+    source {
+      join_instruction {
+        left_operand  = "left"
+        right_operand = "right"
+        type          = "INNER"
+        on_clause     = "Column1 = Column2"
+      }
+    }
+  }
+}
+`, rId, rName))
 }

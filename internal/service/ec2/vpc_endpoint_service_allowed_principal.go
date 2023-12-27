@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -38,7 +41,7 @@ func ResourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 
 func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
@@ -63,7 +66,7 @@ func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *sc
 
 func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
@@ -87,7 +90,7 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *sche
 
 func resourceVPCEndpointServiceAllowedPrincipalDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)

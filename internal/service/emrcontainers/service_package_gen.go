@@ -5,6 +5,10 @@ package emrcontainers
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,6 +35,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceJobTemplate,
+			TypeName: "aws_emrcontainers_job_template",
+			Name:     "Job Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceVirtualCluster,
 			TypeName: "aws_emrcontainers_virtual_cluster",
 			Name:     "Virtual Cluster",
@@ -45,4 +57,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.EMRContainers
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*emrcontainers_sdkv1.EMRContainers, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return emrcontainers_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

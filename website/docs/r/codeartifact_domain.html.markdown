@@ -20,15 +20,15 @@ resource "aws_codeartifact_domain" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain` - (Required) The name of the domain to create. All domain names in an AWS Region that are in the same AWS account must be unique. The domain name is used as the prefix in DNS hostnames. Do not use sensitive information in a domain name because it is publicly discoverable.
 * `encryption_key` - (Optional) The encryption key for the domain. This is used to encrypt content stored in a domain. The KMS Key Amazon Resource Name (ARN). The default aws/codeartifact AWS KMS master key is used if this element is absent.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Domain.
 * `arn` - The ARN of the Domain.
@@ -40,8 +40,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Domain can be imported using the CodeArtifact Domain arn, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain using the CodeArtifact Domain arn. For example:
 
+```terraform
+import {
+  to = aws_codeartifact_domain.example
+  id = "arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305"
+}
 ```
-$ terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305
+
+Using `terraform import`, import CodeArtifact Domain using the CodeArtifact Domain arn. For example:
+
+```console
+% terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305
 ```

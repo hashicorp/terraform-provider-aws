@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
 import (
@@ -5,9 +8,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -264,7 +267,7 @@ func ResourceProject() *schema.Resource {
 						"certificate": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
 						},
 						"registry_credential": {
 							Type:     schema.TypeList,
@@ -452,28 +455,6 @@ func ResourceProject() *schema.Resource {
 				MaxItems: 12,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource": {
-										Type:       schema.TypeString,
-										Sensitive:  true,
-										Optional:   true,
-										Deprecated: "Use the aws_codebuild_source_credential resource instead",
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codebuild.SourceAuthType_Values(), false),
-										Deprecated:   "Use the aws_codebuild_source_credential resource instead",
-									},
-								},
-							},
-							Deprecated: "Use the aws_codebuild_source_credential resource instead",
-						},
 						"buildspec": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -565,28 +546,6 @@ func ResourceProject() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource": {
-										Type:       schema.TypeString,
-										Sensitive:  true,
-										Optional:   true,
-										Deprecated: "Use the aws_codebuild_source_credential resource instead",
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codebuild.SourceAuthType_Values(), false),
-										Deprecated:   "Use the aws_codebuild_source_credential resource instead",
-									},
-								},
-							},
-							Deprecated: "Use the aws_codebuild_source_credential resource instead",
-						},
 						"buildspec": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -738,7 +697,7 @@ func ResourceProject() *schema.Resource {
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	projectEnv := expandProjectEnvironment(d)
 	projectSource := expandProjectSource(d)
@@ -769,7 +728,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		LogsConfig:          projectLogsConfig,
 		BuildBatchConfig:    projectBatchConfig,
 		FileSystemLocations: projectFileSystemLocations,
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -839,7 +798,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		resp, err = conn.CreateProjectWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeBuild project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeBuild project: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Project.Arn))
@@ -856,7 +815,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err = conn.UpdateProjectVisibilityWithContext(ctx, visInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating CodeBuild project (%s) visibility: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeBuild project (%s) visibility: %s", d.Id(), err)
 		}
 	}
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
@@ -1292,17 +1251,6 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
 	}
 
-	// Probe data for auth details (max of 1 auth per ProjectSource object)
-	if v, ok := data["auth"]; ok && len(v.([]interface{})) > 0 {
-		if auths := v.([]interface{}); auths[0] != nil {
-			auth := auths[0].(map[string]interface{})
-			projectSource.Auth = &codebuild.SourceAuth{
-				Type:     aws.String(auth["type"].(string)),
-				Resource: aws.String(auth["resource"].(string)),
-			}
-		}
-	}
-
 	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE, BITBUCKET source types.
 	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise || sourceType == codebuild.SourceTypeBitbucket {
 		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
@@ -1341,7 +1289,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	project, err := FindProjectByARN(ctx, conn, d.Id())
 
@@ -1419,14 +1367,14 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("badge_url", "")
 	}
 
-	SetTagsOut(ctx, project.Tags)
+	setTagsOut(ctx, project.Tags)
 
 	return diags
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	if d.HasChanges("project_visibility", "resource_access_role") {
 		visInput := &codebuild.UpdateProjectVisibilityInput{
@@ -1440,7 +1388,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.UpdateProjectVisibilityWithContext(ctx, visInput)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating CodeBuild project (%s) visibility: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeBuild project (%s) visibility: %s", d.Id(), err)
 		}
 	}
 
@@ -1560,7 +1508,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// The documentation clearly says "The replacement set of tags for this build project."
 		// But its a slice of pointers so if not set for every update, they get removed.
-		input.Tags = GetTagsIn(ctx)
+		input.Tags = getTagsIn(ctx)
 
 		// Handle IAM eventual consistency
 		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -1591,7 +1539,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := conn.DeleteProjectWithContext(ctx, &codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
@@ -1833,9 +1781,6 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 
 	m["build_status_config"] = flattenProjectBuildStatusConfig(source.BuildStatusConfig)
 
-	if source.Auth != nil {
-		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
-	}
 	if source.SourceIdentifier != nil {
 		m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
 	}
@@ -2001,25 +1946,14 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 	return envVariables
 }
 
-func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
-	auth := map[string]interface{}{}
-	auth["type"] = aws.StringValue(sourceAuth.Type)
-
-	if sourceAuth.Resource != nil {
-		auth["resource"] = aws.StringValue(sourceAuth.Resource)
-	}
-
-	return auth
-}
-
 func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[A-Za-z0-9]`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter or number", value))
 	}
 
-	if !regexp.MustCompile(`^[A-Za-z0-9\-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, hyphens and underscores allowed in %q", value))
 	}
@@ -2040,8 +1974,8 @@ func validProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []
 		return
 	}
 
-	simplePattern := `^[a-z0-9][^/]*\/(.+)$`
-	if !regexp.MustCompile(simplePattern).MatchString(value) {
+	simplePattern := `^[0-9a-z][^/]*\/(.+)$`
+	if !regexache.MustCompile(simplePattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q does not match pattern (%q): %q",
 			k, simplePattern, value))

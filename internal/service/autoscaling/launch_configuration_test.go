@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -35,7 +38,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
@@ -54,8 +57,6 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_price", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "user_data"),
 					resource.TestCheckNoResourceAttr(resourceName, "user_data_base64"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_security_groups.#", "0"),
 				),
 			},
 			{
@@ -768,7 +769,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 
 func testAccCheckLaunchConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_launch_configuration" {
@@ -803,7 +804,7 @@ func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *aut
 			return fmt.Errorf("No Auto Scaling Launch Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		output, err := tfautoscaling.FindLaunchConfigurationByName(ctx, conn, rs.Primary.ID)
 
@@ -828,7 +829,7 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 
@@ -844,7 +845,7 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 
 func testAccCheckInstanceHasPublicIPAddress(ctx context.Context, group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		instanceID := aws.StringValue(group.Instances[idx].InstanceId)
 		instance, err := tfec2.FindInstanceByID(ctx, conn, instanceID)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -129,11 +132,11 @@ func ResourceReservedInstance() *schema.Resource {
 }
 
 func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
 		ReservedDBInstancesOfferingId: aws.String(d.Get("offering_id").(string)),
-		Tags:                          GetTagsIn(ctx),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("instance_count").(int); ok && v > 0 {
@@ -159,7 +162,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	reservation, err := FindReservedDBInstanceByID(ctx, conn, d.Id())
 

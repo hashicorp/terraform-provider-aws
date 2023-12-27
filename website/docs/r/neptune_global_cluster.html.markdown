@@ -100,7 +100,7 @@ resource "aws_neptune_global_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
@@ -118,9 +118,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 * `update` - (Defaults to 120 mins) Used when updating the Global Cluster members (time is per member)
 * `delete` - (Defaults to 5 mins) Used when deleting the Global Cluster members (time is per member)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Global Cluster Amazon Resource Name (ARN)
 * `global_cluster_members` - Set of objects containing Global Cluster members.
@@ -131,13 +131,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_global_cluster` can be imported by using the Global Cluster identifier, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_global_cluster` using the Global Cluster identifier. For example:
 
-```
-$ terraform import aws_neptune_global_cluster.example example
+```terraform
+import {
+  to = aws_neptune_global_cluster.example
+  id = "example"
+}
 ```
 
-Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Using `terraform import`, import `aws_neptune_global_cluster` using the Global Cluster identifier. For example:
+
+```console
+% terraform import aws_neptune_global_cluster.example example
+```
+
+Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_neptune_global_cluster" "example" {

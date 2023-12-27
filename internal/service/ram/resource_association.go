@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
@@ -48,7 +51,7 @@ func ResourceResourceAssociation() *schema.Resource {
 
 func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
@@ -75,7 +78,7 @@ func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
@@ -106,7 +109,7 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {

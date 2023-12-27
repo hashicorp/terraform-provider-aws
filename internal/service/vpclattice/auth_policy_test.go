@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -41,7 +44,7 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"*"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Action":"*"`)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", "aws_vpclattice_service.test", "arn"),
 				),
 			},
@@ -85,7 +88,7 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 
 func testAccCheckAuthPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_auth_policy" {
@@ -123,7 +126,7 @@ func testAccCheckAuthPolicyExists(ctx context.Context, name string, authpolicy *
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAuthPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetAuthPolicy(ctx, &vpclattice.GetAuthPolicyInput{
 			ResourceIdentifier: aws.String(rs.Primary.ID),
 		})

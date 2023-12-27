@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -5,13 +8,18 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -169,7 +177,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	return result
 }
 
-// IgnoreAWS returns non-system tag keys.
+// IgnoreSystem returns non-system tag keys.
 // The ignored keys vary on the specified service.
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
@@ -419,6 +427,28 @@ func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	return true
 }
 
+func (tags KeyValueTags) Difference(target KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if val, ok := target[k]; !ok || (v.ValueString() != val.ValueString()) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+func (tags KeyValueTags) HasZeroValue() bool {
+	for _, v := range tags {
+		if v.ValueString() == "" {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Equal returns whether or two sets of key-value tags are equal.
 func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	if tags == nil && other == nil {
@@ -445,6 +475,10 @@ func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	}
 
 	return true
+}
+
+func (tags KeyValueTags) DeepEqual(target KeyValueTags) bool {
+	return reflect.DeepEqual(tags, target)
 }
 
 // Hash returns a stable hash value.
@@ -610,7 +644,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -631,6 +665,14 @@ type TagData struct {
 
 	// Tag value.
 	Value *string
+}
+
+func (td *TagData) ValueString() string {
+	if td.Value == nil {
+		return ""
+	}
+
+	return *td.Value
 }
 
 func (td *TagData) Equal(other *TagData) bool {
@@ -703,12 +745,149 @@ func (td *TagData) String() string {
 	return fmt.Sprintf("TagData{%s}", strings.Join(fields, ", "))
 }
 
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
+}
+
+// tagSource is an enum that identifiers the source of the tag
+type tagSource int
+
+const (
+	configuration tagSource = iota
+	plan
+	state
+)
+
+// configTag contains the value and source of the incoming tag
+type configTag struct {
+	value  string
+	source tagSource
+}
+
+// ResolveDuplicates resolves differences between incoming tags, defaultTags, and ignoreConfig
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	cf := d.GetRawConfig()
+	configExists := !cf.IsNull() && cf.IsKnown()
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	configTags := make(map[string]configTag)
+	if configExists {
+		c := cf.GetAttr(names.AttrTags)
+
+		// if the config is null just return the incoming tags
+		// no duplicates to calculate
+		if c.IsNull() {
+			return t
+		}
+
+		if !c.IsNull() && c.IsKnown() {
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, configuration)
+		}
+	}
+
+	if pl := d.GetRawPlan(); !pl.IsNull() && pl.IsKnown() {
+		c := pl.GetAttr(names.AttrTags)
+		if !c.IsNull() && c.IsKnown() {
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, plan)
+		}
+	}
+
+	if st := d.GetRawState(); !st.IsNull() && st.IsKnown() {
+		c := st.GetAttr(names.AttrTags)
+		if !c.IsNull() {
+			normalizeTagsFromRaw(c.AsValueMap(), configTags, state)
+		}
+	}
+
+	for k, v := range configTags {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == v.value {
+					// config does not exist during a refresh.
+					// set duplicate values from other sources for refresh diff calculation
+					if !configExists {
+						result[k] = v.value
+					} else {
+						if v.source == configuration {
+							result[k] = v.value
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
+// ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags fwdiag.Diagnostics) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	var tagsAll types.Map
+	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
+
+	if diags.HasError() {
+		return KeyValueTags{}
+	}
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	for k, v := range tagsAll.Elements() {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				s, err := strconv.Unquote(v.String()) // TODO rework to use Framework Map.Equals() value
+
+				if err != nil {
+					diags.AddError(
+						"unable to normalize string",
+						"unable to normalize string default value",
+					)
+				}
+
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == s {
+					result[k] = s
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
 // ToSnakeCase converts a string to snake case.
 //
 // For example, AWS Go SDK field names are in PascalCase,
 // while Terraform schema attribute names are in snake_case.
 func ToSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
+	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
+	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
+}
+
+func normalizeTagsFromRaw(m map[string]cty.Value, incoming map[string]configTag, source tagSource) {
+	for k, v := range m {
+		if !v.IsNull() {
+			if _, ok := incoming[k]; !ok {
+				incoming[k] = configTag{
+					value:  v.AsString(),
+					source: source,
+				}
+			}
+		}
+	}
 }

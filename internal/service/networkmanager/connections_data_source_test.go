@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -24,7 +27,7 @@ func TestAccNetworkManagerConnectionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccConnectionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", 1),
 					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", "1"),
 				),
 			},

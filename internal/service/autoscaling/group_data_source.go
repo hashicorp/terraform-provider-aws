@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -56,6 +59,22 @@ func DataSourceGroup() *schema.Resource {
 			"health_check_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"instance_maintenance_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"min_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"launch_configuration": {
 				Type:     schema.TypeString,
@@ -493,6 +512,22 @@ func DataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"traffic_source": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"identifier": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"vpc_zone_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -539,7 +574,7 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	groupName := d.Get("name").(string)
@@ -558,6 +593,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
+	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(group.InstanceMaintenancePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+	}
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
@@ -589,6 +627,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
+	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(group.TrafficSources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
+	}
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 	if group.WarmPoolConfiguration != nil {
 		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {

@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -101,7 +104,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 				Config: testAccZoneConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("hostedzone/.+")),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("hostedzone/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
@@ -446,9 +449,42 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 	})
 }
 
+// Excercises exception handling during forced destruction in partitions
+// which do no support DNSSEC (e.g. GovCloud).
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/22334
+func TestAccRoute53Zone_VPC_single_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_zone.test"
+	vpcResourceName := "aws_vpc.test1"
+	zoneName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_vpcSingle_forceDestroy(rName, zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
+					testAccCheckZoneAssociatesVPC(vpcResourceName, &zone),
+					// Add >100 records to verify pagination works ok
+					testAccCreateRandomRecordsInZoneID(ctx, &zone, 100),
+					testAccCreateRandomRecordsInZoneID(ctx, &zone, 5),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_zone" {
@@ -474,7 +510,7 @@ func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		var changes []*route53.Change
 		if recordsCount > 100 {
@@ -522,7 +558,7 @@ func testAccCheckZoneExists(ctx context.Context, n string, v *route53.GetHostedZ
 			return fmt.Errorf("No Route53 Hosted Zone ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		output, err := tfroute53.FindHostedZoneByID(ctx, conn, rs.Primary.ID)
 
@@ -699,6 +735,27 @@ resource "aws_route53_zone" "test" {
 
   vpc {
     vpc_id = aws_vpc.test2.id
+  }
+}
+`, rName, zoneName)
+}
+
+func testAccZoneConfig_vpcSingle_forceDestroy(rName, zoneName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test1" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "%[2]s."
+
+  vpc {
+    vpc_id = aws_vpc.test1.id
   }
 }
 `, rName, zoneName)

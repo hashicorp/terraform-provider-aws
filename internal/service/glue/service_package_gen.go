@@ -5,6 +5,10 @@ package glue
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,6 +81,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataCatalogEncryptionSettings,
 			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  ResourceDataQualityRuleset,
+			TypeName: "aws_glue_data_quality_ruleset",
+			Name:     "Data Quality Ruleset",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDevEndpoint,
@@ -161,4 +173,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Glue
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*glue_sdkv1.Glue, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return glue_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

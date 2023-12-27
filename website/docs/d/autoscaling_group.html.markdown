@@ -22,7 +22,7 @@ data "aws_autoscaling_group" "foo" {
 
 * `name` - Specify the exact name of the desired autoscaling group.
 
-## Attributes Reference
+## Attribute Reference
 
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
@@ -36,6 +36,9 @@ interpolation.
 * `health_check_grace_period` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
+* `instance_maintenance_policy` - Instance maintenance policy for the group.
+    * `min_healthy_percentage` - Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+    * `max_healthy_percentage` - Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 * `launch_configuration` - The name of the associated launch configuration.
 * `launch_template` - List of launch templates for the group.
     * `id` - ID of the launch template.
@@ -116,6 +119,9 @@ interpolation.
     * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
+* `traffic_source` -Traffic sources.
+    * `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
+    * `type` - Traffic source type.
 * `vpc_zone_identifier` - VPC ID for the group.
 * `warm_pool` - List of warm pool configuration objects.
     * `instance_reuse_policy` - List of instance reuse policy objects.

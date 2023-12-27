@@ -88,7 +88,10 @@ resource "aws_flow_log" "test" {
 If we were to [run the test](running-and-writing-acceptance-tests.md#running-an-acceptance-test) on the command line, this is how the erroring output might look:
 
 ```console
-% make testacc TESTS=TestAccVPCFlowLog_destinationError PKG=vpc
+make testacc TESTS=TestAccVPCFlowLog_destinationError PKG=vpc
+```
+
+```
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/ec2/... -v -count 1 -parallel 20 -run='TestAccVPCFlowLog_destinationError'  -timeout 180m
 === RUN   TestAccVPCFlowLog_destinationError
@@ -150,7 +153,10 @@ resource "aws_flow_log" "test" {
 If we were to [run the test](running-and-writing-acceptance-tests.md#running-an-acceptance-test) on the command line, this is how the erroring output might look:
 
 ```console
-% make testacc TESTS=TestAccVPCFlowLog_LogDestinationType_s3 PKG=vpc
+make testacc TESTS=TestAccVPCFlowLog_LogDestinationType_s3 PKG=vpc
+```
+
+```
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/ec2/... -v -count 1 -parallel 20 -run='TestAccVPCFlowLog_LogDestinationType_s3'  -timeout 180m
 === RUN   TestAccVPCFlowLog_LogDestinationType_s3
@@ -199,7 +205,7 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 				Config:      testAccVPCFlowLogConfig_destinationError(rName),
                 // This error should not happen!
                 // See https://github.com/hashicorp/terraform-provider-aws/issues/45912
-				ExpectError: regexp.MustCompile(`invalid destination`),
+				ExpectError: regexache.MustCompile(`invalid destination`),
 			},
 		},
 	})
@@ -293,7 +299,10 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 [Running the test](running-and-writing-acceptance-tests.md#running-an-acceptance-test) from the command line, we might see the following output:
 
 ```console
-% make testacc TESTS=TestAccVPCFlowLog_LogDestinationType_s3 PKG=vpc
+make testacc TESTS=TestAccVPCFlowLog_LogDestinationType_s3 PKG=vpc
+```
+
+```
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/ec2/... -v -count 1 -parallel 20 -run='TestAccVPCFlowLog_LogDestinationType_s3'  -timeout 180m
 === RUN   TestAccVPCFlowLog_LogDestinationType_s3

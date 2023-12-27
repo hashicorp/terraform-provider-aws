@@ -12,7 +12,7 @@ Use this data source to get the Account ID of the [AWS Redshift Service Account]
 in a given region for the purpose of allowing Redshift to store audit data in S3.
 
 ~> **Note:** AWS documentation [states that](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
-The `aws_redshift_service_account` data source should now be considered deprecated and will be removed in a future version.
+The `aws_redshift_service_account` data source has been deprecated and will be removed in a future version.
 
 ## Example Usage
 
@@ -65,7 +65,9 @@ resource "aws_s3_bucket_policy" "allow_audit_logging" {
 * `region` - (Optional) Name of the region whose AWS Redshift account ID is desired.
 Defaults to the region from the AWS provider configuration.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the AWS Redshift service account in the selected region.
 * `arn` - ARN of the AWS Redshift service account in the selected region.

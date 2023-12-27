@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -49,7 +52,7 @@ func DataSourceSessionContext() *schema.Resource {
 
 func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	arn := d.Get("arn").(string)
 
@@ -115,7 +118,7 @@ func RoleNameSessionFromARN(rawARN string) (string, string) {
 		return "", ""
 	}
 
-	reAssume := regexp.MustCompile(`^assumed-role/.{1,}/.{2,}`)
+	reAssume := regexache.MustCompile(`^assumed-role/.{1,}/.{2,}`)
 
 	if !reAssume.MatchString(parsedARN.Resource) || parsedARN.Service != "sts" {
 		return "", ""

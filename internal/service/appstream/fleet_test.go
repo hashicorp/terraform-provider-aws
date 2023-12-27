@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -8,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -312,7 +315,7 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 		resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -331,7 +334,7 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet" {
@@ -358,11 +361,11 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccFleetConfig_basic(name, instanceType string) string {
-	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
+	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type = %[2]q
 
   compute_capacity {
@@ -392,7 +395,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-03-11-2023"
 
   compute_capacity {
     desired_instances = 1
@@ -430,7 +433,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name = "Amazon-AppStream2-Sample-Image-03-11-2023"
 
   compute_capacity {
     desired_instances = 1
@@ -468,7 +471,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name = "Amazon-AppStream2-Sample-Image-03-11-2023"
 
   compute_capacity {
     desired_instances = 1
@@ -494,11 +497,11 @@ resource "aws_appstream_fleet" "test" {
 }
 
 func testAccFleetConfig_emptyDomainJoin(name, instanceType, empty string) string {
-	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
+	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type = %[2]q
 
   compute_capacity {

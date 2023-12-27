@@ -1,9 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validThingTypeDescription(v interface{}, k string) (ws []string, errors []error) {
@@ -12,7 +17,7 @@ func validThingTypeDescription(v interface{}, k string) (ws []string, errors []e
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 2028 characters", k))
 	}
-	if !regexp.MustCompile(`[\\p{Graph}\\x20]*`).MatchString(value) {
+	if !regexache.MustCompile(`[\\p{Graph}\\x20]*`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			`%q must match pattern [\p{Graph}\x20]*`, k))
 	}
@@ -21,7 +26,7 @@ func validThingTypeDescription(v interface{}, k string) (ws []string, errors []e
 
 func validThingTypeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`[a-zA-Z0-9:_-]+`).MatchString(value) {
+	if !regexache.MustCompile(`[0-9A-Za-z_:-]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, colons, underscores and hyphens allowed in %q", k))
 	}
@@ -34,7 +39,7 @@ func validThingTypeSearchableAttribute(v interface{}, k string) (ws []string, er
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 128 characters", k))
 	}
-	if !regexp.MustCompile(`[a-zA-Z0-9_.,@/:#-]+`).MatchString(value) {
+	if !regexache.MustCompile(`[0-9A-Za-z_.,@/:#-]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
 	}
@@ -57,7 +62,7 @@ func validTopicRuleElasticsearchEndpoint(v interface{}, k string) (ws []string, 
 	value := v.(string)
 
 	// https://docs.aws.amazon.com/iot/latest/apireference/API_ElasticsearchAction.html
-	if !regexp.MustCompile(`https?://.*`).MatchString(value) {
+	if !regexache.MustCompile(`https?://.*`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q should be an URL: %q",
 			k, value))
@@ -84,14 +89,14 @@ func validTopicRuleName(v interface{}, s string) ([]string, []error) {
 		return nil, []error{fmt.Errorf("Name must between 1 and 128 characters long")}
 	}
 
-	matched, err := regexp.MatchReader("^[a-zA-Z0-9_]+$", strings.NewReader(name))
+	matched, err := regexp.MatchReader("^[0-9A-Za-z_]+$", strings.NewReader(name))
 
 	if err != nil {
 		return nil, []error{err}
 	}
 
 	if !matched {
-		return nil, []error{fmt.Errorf("Name must match the pattern ^[a-zA-Z0-9_]+$")}
+		return nil, []error{fmt.Errorf("Name must match the pattern ^[0-9A-Za-z_]+$")}
 	}
 
 	return nil, nil

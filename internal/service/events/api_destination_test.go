@@ -1,22 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 )
 
-const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+const uuidRegex = "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
 
 func TestAccEventsAPIDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -46,7 +49,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIDestinationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
 				),
@@ -65,7 +68,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIDestinationExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
 					testAccCheckAPIDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -206,7 +209,7 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 
 func testAccCheckAPIDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_api_destination" {
@@ -235,7 +238,7 @@ func testAccCheckAPIDestinationExists(ctx context.Context, n string, v *eventbri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 		params := eventbridge.DescribeApiDestinationInput{
 			Name: aws.String(rs.Primary.ID),
 		}

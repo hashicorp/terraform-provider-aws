@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codegurureviewer_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codegurureviewer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -42,8 +45,8 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexp.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexp.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
@@ -77,8 +80,8 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_kms_key(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexp.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexp.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
@@ -112,8 +115,8 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_s3_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexp.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexp.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
@@ -202,7 +205,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 
 func testAccCheckRepositoryAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codegurureviewer_repository_association" {
@@ -238,7 +241,7 @@ func testAccCheckRepositoryAssociationExists(ctx context.Context, name string, r
 			return create.Error(names.CodeGuruReviewer, create.ErrActionCheckingExistence, tfcodegurureviewer.ResNameRepositoryAssociation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 		resp, err := conn.DescribeRepositoryAssociationWithContext(ctx, &codegurureviewer.DescribeRepositoryAssociationInput{
 			AssociationArn: aws.String(rs.Primary.ID),
 		})
@@ -254,7 +257,7 @@ func testAccCheckRepositoryAssociationExists(ctx context.Context, name string, r
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
 	_, err := conn.ListRepositoryAssociationsWithContext(ctx, input)

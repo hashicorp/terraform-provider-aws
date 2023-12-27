@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
@@ -10,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func testAccResourceLFTags_basic(t *testing.T) {
@@ -39,6 +43,29 @@ func testAccResourceLFTags_basic(t *testing.T) {
 					}),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),
+			},
+		},
+	})
+}
+
+func testAccResourceLFTags_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_resource_lf_tags.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceLFTagsConfig_basic(rName, []string{"copse"}, "copse"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTags(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -80,7 +107,7 @@ func testAccResourceLFTags_database(t *testing.T) {
 	})
 }
 
-func testAccResourceLFTags_databaseMultiple(t *testing.T) {
+func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -92,7 +119,7 @@ func testAccResourceLFTags_databaseMultiple(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccResourceLFTagsConfig_databaseMultiple(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "woodcote", "theloop"),
+				Config:  testAccResourceLFTagsConfig_databaseMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "woodcote", "theloop"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
@@ -107,7 +134,7 @@ func testAccResourceLFTags_databaseMultiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceLFTagsConfig_databaseMultiple(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "stowe", "becketts"),
+				Config: testAccResourceLFTagsConfig_databaseMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "stowe", "becketts"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
@@ -117,6 +144,83 @@ func testAccResourceLFTags_databaseMultiple(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
 						"key":   fmt.Sprintf("%s-2", rName),
 						"value": "becketts",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccResourceLFTags_hierarchy(t *testing.T) {
+	ctx := acctest.Context(t)
+	databaseResourceName := "aws_lakeformation_resource_lf_tags.database_tags"
+	tableResourceName := "aws_lakeformation_resource_lf_tags.table_tags"
+	columnResourceName := "aws_lakeformation_resource_lf_tags.column_tags"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceLFTagsConfig_hierarchy(rName,
+					[]string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"},
+					[]string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"},
+					[]string{"one", "two", "three"},
+					"woodcote",
+					"theloop",
+					"two",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
+						"key":   rName,
+						"value": "woodcote",
+					}),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "theloop",
+					}),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
+						"key":   fmt.Sprintf("%s-3", rName),
+						"value": "two",
+					}),
+				),
+			},
+			{
+				Config: testAccResourceLFTagsConfig_hierarchy(rName,
+					[]string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"},
+					[]string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"},
+					[]string{"one", "two", "three"},
+					"stowe",
+					"becketts",
+					"three",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
+					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
+						"key":   rName,
+						"value": "stowe",
+					}),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "becketts",
+					}),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
+						"key":   fmt.Sprintf("%s-3", rName),
+						"value": "three",
 					}),
 				),
 			},
@@ -172,7 +276,7 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccResourceLFTagsConfig_tableWithColumnsMultiple(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "luffield", "vale"),
+				Config:  testAccResourceLFTagsConfig_tableWithColumnsMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "luffield", "vale"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
@@ -187,7 +291,7 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceLFTagsConfig_tableWithColumnsMultiple(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "copse", "aintree"),
+				Config: testAccResourceLFTagsConfig_tableWithColumnsMultipleTags(rName, []string{"abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"}, []string{"farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"}, "copse", "aintree"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
@@ -206,7 +310,7 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 
 func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_resource_lf_tags" {
@@ -393,7 +497,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 		_, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
 		return err
@@ -420,7 +524,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -436,7 +540,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[3]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
@@ -462,7 +566,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -476,13 +580,13 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[3]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
 }
 
-func testAccResourceLFTagsConfig_databaseMultiple(rName string, values1, values2 []string, value1, value2 string) string {
+func testAccResourceLFTagsConfig_databaseMultipleTags(rName string, values1, values2 []string, value1, value2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -502,7 +606,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -510,7 +614,7 @@ resource "aws_lakeformation_lf_tag" "test2" {
   key    = "%[1]s-2"
   values = [%[3]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -529,10 +633,119 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[5]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2)
+}
+
+func testAccResourceLFTagsConfig_hierarchy(rName string, values1, values2, values3 []string, value1, value2, value3 string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name = "event"
+      type = "string"
+    }
+
+    columns {
+      name = "timestamp"
+      type = "date"
+    }
+
+    columns {
+      name = "value"
+      type = "double"
+    }
+  }
+}
+
+resource "aws_lakeformation_lf_tag" "test" {
+  key    = %[1]q
+  values = [%[2]s]
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_lf_tag" "test2" {
+  key    = "%[1]s-2"
+  values = [%[3]s]
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_lf_tag" "column_tags" {
+  key    = "%[1]s-3"
+  values = [%[6]s]
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_resource_lf_tags" "database_tags" {
+  database {
+    name = aws_glue_catalog_database.test.name
+  }
+
+  lf_tag {
+    key   = aws_lakeformation_lf_tag.test.key
+    value = %[4]q
+  }
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_resource_lf_tags" "table_tags" {
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+
+  lf_tag {
+    key   = aws_lakeformation_lf_tag.test2.key
+    value = %[5]q
+  }
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_resource_lf_tags" "column_tags" {
+  table_with_columns {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+    column_names  = ["event", "timestamp"]
+  }
+
+  lf_tag {
+    key   = aws_lakeformation_lf_tag.column_tags.key
+    value = %[7]q
+  }
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2, fmt.Sprintf(`"%s"`, strings.Join(values3, `", "`)), value3)
 }
 
 func testAccResourceLFTagsConfig_table(rName string, values []string, value string) string {
@@ -577,7 +790,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -592,13 +805,13 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[3]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
 }
 
-func testAccResourceLFTagsConfig_tableWithColumnsMultiple(rName string, values1, values2 []string, value1 string, value2 string) string {
+func testAccResourceLFTagsConfig_tableWithColumnsMultipleTags(rName string, values1, values2 []string, value1 string, value2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -640,7 +853,7 @@ resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = [%[2]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -648,7 +861,7 @@ resource "aws_lakeformation_lf_tag" "test2" {
   key    = "%[1]s-2"
   values = [%[3]s]
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 
@@ -669,7 +882,7 @@ resource "aws_lakeformation_resource_lf_tags" "test" {
     value = %[5]q
   }
 
-  # for consistency, ensure that admins are setup before testing
+  # for consistency, ensure that admins are set up before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, fmt.Sprintf(`"%s"`, strings.Join(values1, `", "`)), fmt.Sprintf(`"%s"`, strings.Join(values2, `", "`)), value1, value2)

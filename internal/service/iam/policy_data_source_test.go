@@ -1,60 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
-
-func TestPolicySearchDetails(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name       string
-		PathPrefix string
-		Expected   string
-	}{
-		{
-			Name:       "",
-			PathPrefix: "",
-			Expected:   "",
-		},
-		{
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "",
-			Expected:   "Name: tf-acc-test-policy",
-		},
-		{
-			Name:       "",
-			PathPrefix: "/test-prefix/",
-			Expected:   "PathPrefix: /test-prefix/",
-		},
-		{
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "/test-prefix/",
-			Expected:   "Name: tf-acc-test-policy, PathPrefix: /test-prefix/",
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.Name, func(t *testing.T) {
-			t.Parallel()
-
-			got := tfiam.PolicySearchDetails(testCase.Name, testCase.PathPrefix)
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -237,7 +195,7 @@ func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath),
-				ExpectError: regexp.MustCompile(`no IAM policy found matching criteria`),
+				ExpectError: regexache.MustCompile(`no matching IAM Policy found`),
 			},
 		},
 	})

@@ -33,14 +33,13 @@ data "aws_secretsmanager_secret" "by-name" {
 * `arn` - (Optional) ARN of the secret to retrieve.
 * `name` - (Optional) Name of the secret to retrieve.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
 * `description` - Description of the secret.
 * `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `id` - ARN of the secret.
-* `rotation_enabled` - Whether rotation is enabled or not.
-* `rotation_lambda_arn` - Rotation Lambda function ARN if rotation is enabled.
-* `rotation_rules` - Rotation rules if rotation is enabled.
 * `tags` - Tags of the secret.
 * `policy` - Resource-based policy document that's attached to the secret.

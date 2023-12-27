@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -78,7 +81,7 @@ func ResourceIPAMScope() *schema.Resource {
 
 func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateIpamScopeInput{
 		ClientToken:       aws.String(id.UniqueId()),
@@ -107,7 +110,7 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	scope, err := FindIPAMScopeByID(ctx, conn, d.Id())
 
@@ -130,14 +133,14 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("is_default", scope.IsDefault)
 	d.Set("pool_count", scope.PoolCount)
 
-	SetTagsOut(ctx, scope.Tags)
+	setTagsOut(ctx, scope.Tags)
 
 	return diags
 }
 
 func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("description") {
 		input := &ec2.ModifyIpamScopeInput{
@@ -164,7 +167,7 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
 	_, err := conn.DeleteIpamScopeWithContext(ctx, &ec2.DeleteIpamScopeInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -13,13 +16,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,7 +37,7 @@ const (
 	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
 	latestPolicyVersionID = -1
 	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
-	waitCoreNetworkPolicyCreatedTimeInMinutes = 4
+	waitCoreNetworkPolicyCreatedTimeInMinutes = 5
 )
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
@@ -50,10 +53,7 @@ func ResourceCoreNetwork() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceCoreNetworkCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -66,13 +66,27 @@ func ResourceCoreNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"base_policy_document": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 10000000),
+					validation.StringIsJSON,
+				),
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+				ConflictsWith: []string{"base_policy_region", "base_policy_regions"},
+			},
 			"base_policy_region": {
 				Deprecated: "Use the base_policy_regions argument instead. " +
 					"This argument will be removed in the next major version of the provider.",
 				Type:          schema.TypeString,
 				Optional:      true,
 				ValidateFunc:  verify.ValidRegionName,
-				ConflictsWith: []string{"base_policy_regions"},
+				ConflictsWith: []string{"base_policy_document", "base_policy_regions"},
 			},
 			"base_policy_regions": {
 				Type:     schema.TypeSet,
@@ -81,13 +95,12 @@ func ResourceCoreNetwork() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidRegionName,
 				},
-				ConflictsWith: []string{"base_policy_region"},
+				ConflictsWith: []string{"base_policy_document", "base_policy_region"},
 			},
 			"create_base_policy": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ConflictsWith: []string{"policy_document"},
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -125,23 +138,6 @@ func ResourceCoreNetwork() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 50),
 			},
-			"policy_document": {
-				Deprecated: "Use the aws_networkmanager_core_network_policy_attachment resource instead. " +
-					"This attribute will be removed in the next major version of the provider.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 10000000),
-					validation.StringIsJSON,
-				),
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-				ConflictsWith: []string{"create_base_policy"},
-			},
 			"segments": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -175,71 +171,76 @@ func ResourceCoreNetwork() *schema.Resource {
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy_document"); ok {
-		input.PolicyDocument = aws.String(v.(string))
-	}
-
 	// check if the user wants to create a base policy document
 	// this creates the core network with a starting policy document set to LIVE
 	// this is required for the first terraform apply if there attachments to the core network
-	// and the core network is created without the policy_document argument set
 	if _, ok := d.GetOk("create_base_policy"); ok {
-		// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
-		regions := []interface{}{meta.(*conns.AWSClient).Region}
-		if v, ok := d.GetOk("base_policy_region"); ok {
-			regions = []interface{}{v.(string)}
-		} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
-			regions = v.(*schema.Set).List()
-		}
+		// if user supplies a full base_policy_document for maximum flexibility, use it. Otherwise, use regions list
+		// var policyDocumentTarget string
+		if v, ok := d.GetOk("base_policy_document"); ok {
+			input.PolicyDocument = aws.String(v.(string))
+		} else {
+			// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
+			regions := []interface{}{meta.(*conns.AWSClient).Region}
+			if v, ok := d.GetOk("base_policy_region"); ok {
+				regions = []interface{}{v.(string)}
+			} else if v, ok := d.GetOk("base_policy_regions"); ok && v.(*schema.Set).Len() > 0 {
+				regions = v.(*schema.Set).List()
+			}
 
-		policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
-		if err != nil {
-			return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+			policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "Formatting Core Network Base Policy: %s", err)
+			}
+			input.PolicyDocument = aws.String(policyDocumentTarget)
 		}
-		input.PolicyDocument = aws.String(policyDocumentTarget)
 	}
 
 	output, err := conn.CreateCoreNetworkWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Core Network: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Core Network: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CoreNetwork.CoreNetworkId))
 
 	if _, err := waitCoreNetworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Core Network (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCoreNetworkRead(ctx, d, meta)
+	return append(diags, resourceCoreNetworkRead(ctx, d, meta)...)
 }
 
 func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Core Network %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Core Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", coreNetwork.CoreNetworkArn)
@@ -250,40 +251,23 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("description", coreNetwork.Description)
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
-		return diag.Errorf("setting edges: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting edges: %s", err)
 	}
 	d.Set("global_network_id", coreNetwork.GlobalNetworkId)
 	if err := d.Set("segments", flattenCoreNetworkSegments(coreNetwork.Segments)); err != nil {
-		return diag.Errorf("setting segments: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting segments: %s", err)
 	}
 	d.Set("state", coreNetwork.State)
 
-	// getting the policy document uses a different API call
-	// policy document is also optional
-	// pass in latestPolicyVersionId to get the latest version id by default
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), latestPolicyVersionID)
+	setTagsOut(ctx, coreNetwork.Tags)
 
-	if tfresource.NotFound(err) {
-		d.Set("policy_document", nil)
-	} else if err != nil {
-		return diag.Errorf("reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
-	} else {
-		encodedPolicyDocument, err := protocol.EncodeJSONValue(coreNetworkPolicy.PolicyDocument, protocol.NoEscape)
-
-		if err != nil {
-			return diag.Errorf("encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
-		}
-
-		d.Set("policy_document", encodedPolicyDocument)
-	}
-
-	SetTagsOut(ctx, coreNetwork.Tags)
-
-	return nil
+	return diags
 }
 
 func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChange("description") {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
@@ -292,23 +276,11 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Core Network (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Core Network (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("policy_document") {
-		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
-
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -325,26 +297,28 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 			policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
 
 			if err != nil {
-				return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+				return sdkdiag.AppendErrorf(diags, "Formatting Core Network Base Policy: %s", err)
 			}
 
 			err = PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
 
 			if err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 
 			if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceCoreNetworkRead(ctx, d, meta)
+	return append(diags, resourceCoreNetworkRead(ctx, d, meta)...)
 }
 
 func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
 	_, err := conn.DeleteCoreNetworkWithContext(ctx, &networkmanager.DeleteCoreNetworkInput{
@@ -352,29 +326,18 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Core Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitCoreNetworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Core Network (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-func resourceCoreNetworkCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if d.HasChange("policy_document") {
-		if o, n := d.GetChange("policy_document"); !verify.JSONStringsEqual(o.(string), n.(string)) {
-			d.SetNewComputed("edges")
-			d.SetNewComputed("segments")
-		}
-	}
-
-	return nil
+	return diags
 }
 
 func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.CoreNetwork, error) {
@@ -482,10 +445,12 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkMan
 
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.CoreNetworkStateDeleting},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusCoreNetworkState(ctx, conn, id),
+		Pending:    []string{networkmanager.CoreNetworkStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Delay:      5 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Refresh:    statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
@@ -8,10 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
@@ -60,7 +63,7 @@ func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, 
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 

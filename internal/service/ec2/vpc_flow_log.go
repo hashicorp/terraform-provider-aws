@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -164,7 +167,7 @@ func ResourceFlowLog() *schema.Resource {
 
 func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	var resourceID string
 	var resourceType string
@@ -242,7 +245,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxAggregationInterval = aws.Int64(int64(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
 		return conn.CreateFlowLogsWithContext(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 
@@ -261,7 +264,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	fl, err := FindFlowLogByID(ctx, conn, d.Id())
 
@@ -315,7 +318,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("traffic_type", fl.TrafficType)
 	}
 
-	SetTagsOut(ctx, fl.Tags)
+	setTagsOut(ctx, fl.Tags)
 
 	return diags
 }
@@ -330,7 +333,7 @@ func resourceLogFlowUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceLogFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting Flow Log: %s", d.Id())
 	output, err := conn.DeleteFlowLogsWithContext(ctx, &ec2.DeleteFlowLogsInput{

@@ -1,7 +1,7 @@
 name: "Report a Documentation Error"
 description: "Choose this option if you've found an error in the provider documentation or contribution guides."
 title: "[Docs]: "
-labels: ["documentation", "needs-triage"]
+labels: ["documentation"]
 body:
   - type: markdown
     attributes:

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -51,15 +54,21 @@ func ResourceJob() *schema.Resource {
 							Optional: true,
 							Default:  "glueetl",
 						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"python_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
+						},
+						"runtime": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+						},
+						"script_location": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -77,11 +86,6 @@ func ResourceJob() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"execution_class": {
 				Type:         schema.TypeString,
@@ -103,6 +107,11 @@ func ResourceJob() *schema.Resource {
 						},
 					},
 				},
+			},
+			"glue_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"max_capacity": {
 				Type:          schema.TypeFloat,
@@ -176,14 +185,14 @@ func ResourceJob() *schema.Resource {
 
 func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &glue.CreateJobInput{
 		Command: expandJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
-		Tags:    GetTagsIn(ctx),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
@@ -244,7 +253,6 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.WorkerType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Job: %s", input)
 	output, err := conn.CreateJobWithContext(ctx, input)
 
 	if err != nil {
@@ -258,7 +266,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	job, err := FindJobByName(ctx, conn, d.Id())
 
@@ -311,7 +319,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		jobUpdate := &glue.JobUpdate{
@@ -382,7 +390,6 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			JobUpdate: jobUpdate,
 		}
 
-		log.Printf("[DEBUG] Updating Glue Job: %s", input)
 		_, err := conn.UpdateJobWithContext(ctx, input)
 
 		if err != nil {
@@ -395,7 +402,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
 	_, err := conn.DeleteJobWithContext(ctx, &glue.DeleteJobInput{
@@ -433,6 +440,10 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 
 	if v, ok := m["python_version"].(string); ok && v != "" {
 		jobCommand.PythonVersion = aws.String(v)
+	}
+
+	if v, ok := m["runtime"].(string); ok && v != "" {
+		jobCommand.Runtime = aws.String(v)
 	}
 
 	return jobCommand
@@ -477,6 +488,7 @@ func flattenJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
 		"name":            aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
 		"python_version":  aws.StringValue(jobCommand.PythonVersion),
+		"runtime":         aws.StringValue(jobCommand.Runtime),
 	}
 
 	return []map[string]interface{}{m}

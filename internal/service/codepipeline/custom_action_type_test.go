@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
@@ -219,7 +222,7 @@ func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *codepi
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		output, err := tfcodepipeline.FindCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
 
@@ -235,7 +238,7 @@ func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *codepi
 
 func testAccCheckCustomActionTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codepipeline_custom_action_type" {

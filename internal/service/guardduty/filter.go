@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -8,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -34,29 +38,27 @@ func ResourceFilter() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
+			"action": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(guardduty.FilterAction_Values(), false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 64),
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"detector_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -69,21 +71,15 @@ func ResourceFilter() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"equals": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+									"field": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"greater_than": {
 										Type:         schema.TypeString,
@@ -105,24 +101,34 @@ func ResourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"not_equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			"action": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.FilterActionNoop,
-					guardduty.FilterActionArchive,
-				}, false),
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 64),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+				),
 			},
 			"rank": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -131,7 +137,7 @@ func ResourceFilter() *schema.Resource {
 
 func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.CreateFilterInput{
 		Action:      aws.String(d.Get("action").(string)),
@@ -139,7 +145,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -161,7 +167,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	var detectorID, name string
 	var err error
@@ -214,7 +220,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 
-	SetTagsOut(ctx, filter.Tags)
+	setTagsOut(ctx, filter.Tags)
 
 	d.SetId(filterCreateID(detectorID, name))
 
@@ -223,7 +229,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	if d.HasChanges("action", "description", "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
@@ -251,7 +257,7 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorId := d.Get("detector_id").(string)
 	name := d.Get("name").(string)

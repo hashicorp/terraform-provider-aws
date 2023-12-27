@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecrpublic_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecrpublic "github.com/hashicorp/terraform-provider-aws/internal/service/ecrpublic"
@@ -374,7 +377,7 @@ func testAccCheckRepositoryExists(ctx context.Context, name string, res *ecrpubl
 			return fmt.Errorf("No ECR Public repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		output, err := conn.DescribeRepositoriesWithContext(ctx, &ecrpublic.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -394,7 +397,7 @@ func testAccCheckRepositoryExists(ctx context.Context, name string, res *ecrpubl
 
 func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecrpublic_repository" {

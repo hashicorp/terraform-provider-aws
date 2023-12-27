@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
@@ -46,7 +49,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`networkprofile:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
 			},
 			{
@@ -64,7 +67,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`networkprofile:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
 			},
 		},
@@ -196,7 +199,7 @@ func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *devicefa
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 		resp, err := tfdevicefarm.FindNetworkProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -213,7 +216,7 @@ func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *devicefa
 
 func testAccCheckNetworkProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_network_profile" {
