@@ -18,6 +18,7 @@ type ResourcePrefixCtxKey string
 const (
 	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
 	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
+	MapBlockKey                                = "MapBlockKey"
 )
 
 // Expand  = TF -->  AWS
@@ -94,6 +95,10 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		if fieldName == "Tags" {
 			continue // Resource tags are handled separately.
 		}
+		if fieldName == MapBlockKey {
+			continue
+		}
+
 		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo, valFrom)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.

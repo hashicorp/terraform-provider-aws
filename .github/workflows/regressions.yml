@@ -22,20 +22,20 @@ jobs:
           channel-id: ${{ secrets.SLACK_CHANNEL }}
           payload: |
             {
-            	"blocks": [
-            		{
-            			"type": "section",
-            			"text": {
-            				"type": "mrkdwn",
-            				"text": ":warning: The following has been labeled as a regression:"
-            			}
-            		},
-            		{
-            			"type": "section",
-            			"text": {
-            				"type": "mrkdwn",
-            				"text": "<${{ env.EVENT_URL }}|${{ env.EVENT_TITLE }}>"
-            			}
-            		}
-            	]
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: The following has been labeled as a regression:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('<{0}|{1}>', env.EVENT_URL, env.EVENT_TITLE)) }}
+                  }
+                }
+              ]
             }
