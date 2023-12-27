@@ -1864,7 +1864,11 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 		}
 
 		if _, err := conn.SetInstanceProtectionWithContext(ctx, input); err != nil {
-			return fmt.Errorf("disabling Auto Scaling Group (%s) scale-in protections: %w", name, err)
+			// Ignore ValidationError there instance is already fully terminated
+			// and is not a part of Auto Scaling group anymore
+			if !tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not part of Auto Scaling group") {
+				return fmt.Errorf("disabling Auto Scaling Group (%s) scale-in protections: %w", name, err)
+			}
 		}
 	}
 
