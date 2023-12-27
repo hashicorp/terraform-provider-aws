@@ -602,7 +602,7 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 
   timeouts {
-	update = "1h"
+    update = "1h"
   }
 }
 `, rName))
@@ -638,7 +638,7 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 
   timeouts {
-	update = "1h"
+    update = "1h"
   }
 }
 `, rName))
