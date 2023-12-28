@@ -122,16 +122,10 @@ func ResourceClassifier() *schema.Resource {
 							Optional: true,
 						},
 						"serde": {
-							Type:     schema.TypeString,
-							Optional: true,
-							// Computed is required because if nothing is set, the API
-							// will return "" which will be translated to "None"
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"OpenCSVSerDe",
-								"LazySimpleSerDe",
-								"None",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(glue.CsvSerdeOption_Values(), false),
 						},
 					},
 				},
@@ -487,12 +481,6 @@ func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interf
 		"custom_datatype_configured": aws.BoolValue(csvClassifier.CustomDatatypeConfigured),
 		"custom_datatypes":           aws.StringValueSlice(csvClassifier.CustomDatatypes),
 		"serde":                      aws.StringValue(csvClassifier.Serde),
-	}
-
-	// When setting the value of `serde` to "None", it comes back as "" within the API
-	// This needs to be translated from "" or the validation will fail.
-	if m["serde"].(string) == "" {
-		m["serde"] = "None"
 	}
 
 	return []map[string]interface{}{m}
