@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -106,6 +107,8 @@ func DataSourceSnapshot() *schema.Resource {
 }
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -114,14 +117,14 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	snapshot, err := FindSnapshotByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MemoryDB Snapshot", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Snapshot", err))
 	}
 
 	d.SetId(aws.StringValue(snapshot.Name))
 
 	d.Set("arn", snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
-		return diag.Errorf("failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
 	d.Set("kms_key_arn", snapshot.KmsKeyId)
@@ -131,12 +134,12 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

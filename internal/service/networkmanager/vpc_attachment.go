@@ -179,13 +179,13 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateVpcAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager VPC (%s) Attachment (%s): %s", vpcARN, coreNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager VPC (%s) Attachment (%s): %s", vpcARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.VpcAttachment.Attachment.AttachmentId))
 
 	if _, err := waitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
@@ -205,7 +205,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := vpcAttachment.Attachment
@@ -223,7 +223,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("edge_location", a.EdgeLocation)
 	if vpcAttachment.Options != nil {
 		if err := d.Set("options", []interface{}{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
-			return diag.Errorf("setting options: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
 		d.Set("options", nil)
@@ -279,11 +279,11 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.UpdateVpcAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -304,7 +304,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if sErr != nil {
-		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
 	}
 
 	d.Set("state", output.Attachment.State)

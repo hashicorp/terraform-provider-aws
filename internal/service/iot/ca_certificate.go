@@ -196,14 +196,14 @@ func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("generation_id", certificateDescription.GenerationId)
 	if output.RegistrationConfig != nil {
 		if err := d.Set("registration_config", []interface{}{flattenRegistrationConfig(output.RegistrationConfig)}); err != nil {
-			return diag.Errorf("setting registration_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting registration_config: %s", err)
 		}
 	} else {
 		d.Set("registration_config", nil)
 	}
 	if certificateDescription.Validity != nil {
 		if err := d.Set("validity", []interface{}{flattenCertificateValidity(certificateDescription.Validity)}); err != nil {
-			return diag.Errorf("setting validity: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting validity: %s", err)
 		}
 	} else {
 		d.Set("validity", nil)

@@ -47,6 +47,10 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -113,6 +117,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set("arn", arn)
 	d.Set("configuration_profile_id", profileId)
 	d.Set("description", out.Description)
+	d.Set("kms_key_identifier", out.KmsKeyIdentifier)
 	d.Set("location_uri", out.LocationUri)
 	d.Set("name", out.Name)
 	d.Set("retrieval_role_arn", out.RetrievalRoleArn)

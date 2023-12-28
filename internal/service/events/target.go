@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -469,6 +470,8 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	rule := d.Get("rule").(string)
@@ -496,15 +499,17 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("creating EventBridge Target (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Target (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceTargetRead(ctx, d, meta)
+	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	busName := d.Get("event_bus_name").(string)
@@ -514,11 +519,11 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EventBridge Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", t.Arn)
@@ -530,13 +535,13 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if t.RunCommandParameters != nil {
 		if err := d.Set("run_command_targets", flattenTargetRunParameters(t.RunCommandParameters)); err != nil {
-			return diag.Errorf("setting run_command_targets: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting run_command_targets: %s", err)
 		}
 	}
 
 	if t.HttpParameters != nil {
 		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(t.HttpParameters)}); err != nil {
-			return diag.Errorf("setting http_target: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting http_target: %s", err)
 		}
 	} else {
 		d.Set("http_target", nil)
@@ -544,62 +549,64 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if t.RedshiftDataParameters != nil {
 		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
-			return diag.Errorf("setting redshift_target: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting redshift_target: %s", err)
 		}
 	}
 
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenTargetECSParameters(ctx, t.EcsParameters)); err != nil {
-			return diag.Errorf("setting ecs_target: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting ecs_target: %s", err)
 		}
 	}
 
 	if t.BatchParameters != nil {
 		if err := d.Set("batch_target", flattenTargetBatchParameters(t.BatchParameters)); err != nil {
-			return diag.Errorf("setting batch_target: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting batch_target: %s", err)
 		}
 	}
 
 	if t.KinesisParameters != nil {
 		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(t.KinesisParameters)); err != nil {
-			return diag.Errorf("setting kinesis_target: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting kinesis_target: %s", err)
 		}
 	}
 
 	if t.SageMakerPipelineParameters != nil {
 		if err := d.Set("sagemaker_pipeline_target", flattenTargetSageMakerPipelineParameters(t.SageMakerPipelineParameters)); err != nil {
-			return diag.Errorf("setting sagemaker_pipeline_parameters: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting sagemaker_pipeline_parameters: %s", err)
 		}
 	}
 
 	if t.SqsParameters != nil {
 		if err := d.Set("sqs_target", flattenTargetSQSParameters(t.SqsParameters)); err != nil {
-			return diag.Errorf("setting sqs_target: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting sqs_target: %s", err)
 		}
 	}
 
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
-			return diag.Errorf("setting input_transformer: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting input_transformer: %s", err)
 		}
 	}
 
 	if t.RetryPolicy != nil {
 		if err := d.Set("retry_policy", flattenTargetRetryPolicy(t.RetryPolicy)); err != nil {
-			return diag.Errorf("setting retry_policy: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting retry_policy: %s", err)
 		}
 	}
 
 	if t.DeadLetterConfig != nil {
 		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
-			return diag.Errorf("setting dead_letter_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := buildPutTargetInputStruct(ctx, d)
@@ -612,13 +619,15 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("updating EventBridge Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	return resourceTargetRead(ctx, d, meta)
+	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.RemoveTargetsInput{
@@ -638,14 +647,14 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EventBridge Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func putTargetError(apiObject *eventbridge.PutTargetsResultEntry) error {

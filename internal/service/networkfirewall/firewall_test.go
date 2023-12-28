@@ -600,6 +600,10 @@ resource "aws_networkfirewall_firewall" "test" {
   subnet_mapping {
     subnet_id = aws_subnet.example.id
   }
+
+  timeouts {
+    update = "1h"
+  }
 }
 `, rName))
 }
@@ -631,6 +635,10 @@ resource "aws_networkfirewall_firewall" "test" {
 
   subnet_mapping {
     subnet_id = aws_subnet.example.id
+  }
+
+  timeouts {
+    update = "1h"
   }
 }
 `, rName))

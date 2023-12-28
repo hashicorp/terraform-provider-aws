@@ -41,6 +41,8 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
 				),
 			},
 			{
@@ -84,6 +86,53 @@ func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression02),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const (
+		resourceName               = "aws_secretsmanager_secret_rotation.test"
+		lambdaFunctionResourceName = "aws_lambda_function.test"
+		scheduleExpression         = "rate(10 days)"
+		days                       = 7
+	)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "0"),
+				),
+			},
+			{
+				Config: testAccSecretRotationConfig_basic(rName, days),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
 				),
 			},
 			{
@@ -293,6 +342,11 @@ func testAccSecretRotationConfig_basic(rName string, automaticallyAfterDays int)
 		fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "test-string"
 }
 
 resource "aws_secretsmanager_secret_rotation" "test" {

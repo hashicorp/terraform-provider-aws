@@ -38,8 +38,7 @@ func (t MapTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t MapTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("%T", zero)
+	return "types.MapTypeOf[" + t.ElementType().String() + "]"
 }
 
 func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
@@ -52,7 +51,11 @@ func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 		return NewMapValueOfUnknown[T](ctx), diags
 	}
 
-	mapValue, d := basetypes.NewMapValue(NewMapTypeOf[T](ctx), in.Elements())
+	// Here marks the spot where countless hours were spent all over the
+	// internal organs of framework and autoflex only to discover the
+	// first argument in this call should be an element type not the map
+	// type.
+	mapValue, d := basetypes.NewMapValue(t.ElementType(), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewMapValueOfUnknown[T](ctx), diags
@@ -73,13 +76,11 @@ func (t MapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) 
 	}
 
 	mapValue, ok := attrValue.(basetypes.MapValue)
-
 	if !ok {
 		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
 	mapValuable, diags := t.ValueFromMap(ctx, mapValue)
-
 	if diags.HasError() {
 		return nil, fmt.Errorf("unexpected error converting MapValue to MapValuable: %v", diags)
 	}
