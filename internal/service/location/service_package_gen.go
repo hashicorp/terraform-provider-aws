@@ -67,6 +67,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceKey,
+			TypeName: "aws_location_key",
+			Name:     "Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "key_arn",
+			},
+		},
+		{
 			Factory:  ResourceMap,
 			TypeName: "aws_location_map",
 			Name:     "Map",
