@@ -79,6 +79,32 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAMPWorkspace_kms(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v prometheusservice.WorkspaceDescription
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_kms(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAMPWorkspace_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v prometheusservice.WorkspaceDescription
@@ -352,4 +378,18 @@ resource "aws_prometheus_workspace" "test" {
   }
 }
 `, rName, idx)
+}
+
+func testAccWorkspaceConfig_kms(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {
+  alias       = %[1]q
+  kms_key_arn = aws_kms_key.test.arn
+}
+
+resource "aws_kms_key" "test" {
+  description             = "Test"
+  deletion_window_in_days = 7
+}
+`, rName)
 }
