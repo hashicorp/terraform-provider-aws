@@ -558,9 +558,9 @@ func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{}
 	if policy.StatelessRuleGroupReferences != nil {
 		p["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
 	}
-    if policy.TLSInspectionConfigurationArn != nil {
-        p["tls_inspection_configuration_arn"] = aws.StringValue(policy.TLSInspectionConfigurationArn)
-    }
+	if policy.TLSInspectionConfigurationArn != nil {
+		p["tls_inspection_configuration_arn"] = aws.StringValue(policy.TLSInspectionConfigurationArn)
+	}
 
 	return []interface{}{p}
 }
