@@ -74,7 +74,6 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 	})
 }
 
-// Test to ensure the Serde value is set properly in a CsvClassifier block
 func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 	ctx := acctest.Context(t)
 	var classifier glue.Classifier
@@ -88,7 +87,6 @@ func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
-			// Set the serde to the default value (None)
 			{
 				Config: testAccClassifierConfig_csvWithSerde(rName, false, "PRESENT", "|", false, "None"),
 				Check: resource.ComposeTestCheckFunc(
@@ -98,7 +96,6 @@ func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
-			// Update the serde to a non-default value (OpenCSVSerDe)
 			{
 				Config: testAccClassifierConfig_csvWithSerde(rName, false, "PRESENT", ",", false, "OpenCSVSerDe"),
 				Check: resource.ComposeTestCheckFunc(
@@ -555,14 +552,14 @@ resource "aws_glue_classifier" "test" {
 func testAccClassifierConfig_csvWithSerde(rName string, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool, serde string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
-  name = "%s"
+  name = %[1]q
 
   csv_classifier {
-    allow_single_column    = "%t"
-    contains_header        = "%s"
-    delimiter              = "%s"
-    disable_value_trimming = "%t"
-    serde                  = "%s"
+    allow_single_column    = %[2]t
+    contains_header        = %[3]q
+    delimiter              = %[4]q
+    disable_value_trimming = %[5]t
+    serde                  = %[6]q
     header                 = ["header_column1", "header_column2"]
   }
 }
