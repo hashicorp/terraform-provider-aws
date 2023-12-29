@@ -23,6 +23,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
       priority     = 1
       resource_arn = aws_networkfirewall_rule_group.example.arn
     }
+    tls_inspection_configuration_arn = "arn:aws:network-firewall:REGION:ACCT:tls-configuration/example"
   }
 
   tags = {
@@ -82,7 +83,6 @@ resource "aws_networkfirewall_firewall_policy" "test" {
       }
       action_name = "ExampleCustomAction"
     }
-    tls_inspection_configuration_arn = "arn:aws:network-firewall:REGION:ACCT:tls-configuration/example"
   }
 }
 ```
@@ -130,7 +130,7 @@ In addition, you can specify custom actions that are compatible with your standa
 
 * `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
 
-* `tls_inspection_configuration_arn` - (Optional) The (ARN) of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."
+* `tls_inspection_configuration_arn` - (Optional) The (ARN) of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."  This cannot be removed from a FW Policy.
 
 ### Rule Variables
 
