@@ -648,7 +648,7 @@ resource "aws_efs_file_system" "test" {
   }
 
   lifecycle_policy {
-	%[3]s = %[4]q
+    %[3]s = %[4]q
   }
 }
 `, lpName1, lpVal1, lpName2, lpVal2)
