@@ -52,6 +52,12 @@ func ResourceRepository() *schema.Resource {
 				Computed: true,
 			},
 
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"repository_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -87,6 +93,10 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
 		Tags:                  getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateRepositoryWithContext(ctx, input)
@@ -130,6 +140,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)
 	d.Set("arn", out.RepositoryMetadata.Arn)
+	d.Set("kms_key_id", out.RepositoryMetadata.KmsKeyId)
 	d.Set("clone_url_http", out.RepositoryMetadata.CloneUrlHttp)
 	d.Set("clone_url_ssh", out.RepositoryMetadata.CloneUrlSsh)
 	d.Set("description", out.RepositoryMetadata.RepositoryDescription)
@@ -165,6 +176,12 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("description") {
 		if err := resourceUpdateDescription(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) description: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("kms_key_id") {
+		if err := resourceUpdateEncryptionKey(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) encryption key: %s", d.Id(), err)
 		}
 	}
 
@@ -241,6 +258,20 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	if _, err := conn.UpdateDefaultBranchWithContext(ctx, branchInput); err != nil {
 		return fmt.Errorf("Updating Default Branch for CodeCommit Repository: %s", err.Error())
+	}
+
+	return nil
+}
+
+func resourceUpdateEncryptionKey(ctx context.Context, conn *codecommit.CodeCommit, d *schema.ResourceData) error {
+	input := &codecommit.UpdateRepositoryEncryptionKeyInput{
+		KmsKeyId:       aws.String((d.Get("kms_key_id").(string))),
+		RepositoryName: aws.String(d.Id()),
+	}
+
+	_, err := conn.UpdateRepositoryEncryptionKeyWithContext(ctx, input)
+	if err != nil {
+		return fmt.Errorf("Updating Repository Encryption Key for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil
