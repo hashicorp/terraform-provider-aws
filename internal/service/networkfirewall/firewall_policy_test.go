@@ -6,6 +6,7 @@ package networkfirewall_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,7 +49,7 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "0"),
-					//resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", "arn:aws:networkfirewall:region:account-id:tls-inspection-config/example"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -922,6 +923,43 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 	})
 }
 
+func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationArn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", regexp.MustCompile(`^arn:aws:network-firewall:.+terraformtests$`)),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_updatetlsInspectionConfigurationArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", regexp.MustCompile(`^arn:aws:network-firewall:.+terraformtests2$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
@@ -1601,6 +1639,44 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   }
 }
 `, rName))
+}
+
+// The tls_inspection_configuration_arn cannot be updated after policy creation unless there way already an inspection policy attached on fw policy creation.
+
+func testAccFirewallPolicyConfig_tlsInspectionConfigurationArn(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+	
+resource "aws_networkfirewall_firewall_policy" "test" {
+    name = %[1]q
+
+    firewall_policy {
+        stateless_fragment_default_actions = ["aws:drop"]
+        stateless_default_actions          = ["aws:pass"]
+        tls_inspection_configuration_arn   = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/terraformtests"
+    }
+}
+`, rName)
+}
+
+func testAccFirewallPolicyConfig_updatetlsInspectionConfigurationArn(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+    name = %[1]q
+
+    firewall_policy {
+		stateless_fragment_default_actions = ["aws:drop"]
+        stateless_default_actions          = ["aws:pass"]
+        tls_inspection_configuration_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/terraformtests2"
+    }
+}
+`, rName)
 }
 
 func testAccFirewallPolicyConfig_encryptionConfiguration(rName, statelessDefaultActions string) string {
