@@ -73,6 +73,10 @@ func DataSourceFileSystem() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"transition_to_archive": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

@@ -391,6 +391,20 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", efs.TransitionToIARulesAfter30Days),
 				),
 			},
+			{
+				Config: testAccFileSystemConfig_lifecyclePolicyTransitionToArchive(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+					"transition_to_archive",
+					efs.TransitionToArchiveRulesAfter60Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_archive", efs.TransitionToArchiveRulesAfter60Days),
+				),
+			},
 		},
 	})
 }
@@ -619,6 +633,22 @@ resource "aws_efs_file_system" "test" {
 
   lifecycle_policy {
     %[3]s = %[4]q
+  }
+}
+`, lpName1, lpVal1, lpName2, lpVal2)
+}
+
+func testAccFileSystemConfig_lifecyclePolicyTransitionToArchive(lpName1, lpVal1, lpName2, lpVal2 string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  throughput_mode = "elastic"
+
+  lifecycle_policy {
+    %[1]s = %[2]q
+  }
+
+  lifecycle_policy {
+	%[3]s = %[4]q
   }
 }
 `, lpName1, lpVal1, lpName2, lpVal2)
