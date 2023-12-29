@@ -55,7 +55,6 @@ func ResourceRepository() *schema.Resource {
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"repository_id": {
