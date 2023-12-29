@@ -55,6 +55,7 @@ func ResourceRepository() *schema.Resource {
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 
 			"repository_id": {
@@ -106,6 +107,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(d.Get("repository_name").(string))
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)
 	d.Set("arn", out.RepositoryMetadata.Arn)
+	d.Set("kms_key_id", out.RepositoryMetadata.KmsKeyId)
 	d.Set("clone_url_http", out.RepositoryMetadata.CloneUrlHttp)
 	d.Set("clone_url_ssh", out.RepositoryMetadata.CloneUrlSsh)
 
