@@ -19,11 +19,27 @@ resource "aws_codecommit_repository" "test" {
 }
 ```
 
+### AWS KMS Customer Managed Keys (CMK)
+
+```terraform
+resource "aws_codecommit_repository" "test" {
+  repository_name = "MyTestRepository"
+  description     = "This is the Sample App Repository"
+  kms_key_id      = aws_kms_key.test.key_id
+}
+
+resource "aws_kms_key" "test" {
+  description             = "test"
+  deletion_window_in_days = 7
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
+* `kms_key_id` - (Optional) The ID of the encryption key. You can view the ID of an encryption key in the KMS console, or use the KMS APIs to programmatically retrieve a key ID. For more information about acceptable values for kmsKeyID, see KeyId in the Decrypt API description in the Key Management Service API Reference.  If no key is specified, the default aws/codecommit Amazon Web Services managed key is used.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
 * `default_branch` - (Optional) The default branch of the repository. The branch specified here needs to exist.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
