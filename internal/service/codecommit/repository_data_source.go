@@ -34,6 +34,11 @@ func DataSourceRepository() *schema.Resource {
 				Computed: true,
 			},
 
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"repository_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,6 +83,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(out.RepositoryMetadata.RepositoryName))
 	d.Set("arn", out.RepositoryMetadata.Arn)
+	d.Set("kms_key_id", out.RepositoryMetadata.KmsKeyId)
 	d.Set("clone_url_http", out.RepositoryMetadata.CloneUrlHttp)
 	d.Set("clone_url_ssh", out.RepositoryMetadata.CloneUrlSsh)
 	d.Set("repository_name", out.RepositoryMetadata.RepositoryName)
