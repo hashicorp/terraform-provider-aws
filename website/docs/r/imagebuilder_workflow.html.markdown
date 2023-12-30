@@ -15,9 +15,9 @@ Terraform resource for managing an AWS EC2 Image Builder Workflow.
 
 ```terraform
 resource "aws_imagebuilder_workflow" "example" {
-  name     = "example"
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = "example"
+  version = "1.0.0"
+  type    = "TEST"
 
   data = <<-EOT
   name: example
