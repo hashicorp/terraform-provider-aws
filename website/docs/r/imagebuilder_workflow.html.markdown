@@ -64,8 +64,8 @@ The following arguments are optional:
 * `data` - (Optional) Inline YAML string with data of the workflow. Exactly one of `data` and `uri` can be specified.
 * `description` - (Optional) Description of the workflow.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key used to encrypt the workflow.
-* `tags` - (Optional) Key-value map of resource tags for the component. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `uri` - (Optional) S3 URI with data of the component. Exactly one of `data` and `uri` can be specified.
+* `tags` - (Optional) Key-value map of resource tags for the workflow. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `uri` - (Optional) S3 URI with data of the workflow. Exactly one of `data` and `uri` can be specified.
 
 ## Attribute Reference
 
