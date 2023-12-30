@@ -294,9 +294,9 @@ func testAccCheckWorkflowExists(ctx context.Context, resourceName string) resour
 func testAccWorkflowConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   data = <<-EOT
   name: test-image
@@ -333,9 +333,9 @@ resource "aws_imagebuilder_workflow" "test" {
 func testAccWorkflowConfig_changeDescription(rName, changeDescription string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   change_description = %[2]q
 
@@ -374,9 +374,9 @@ resource "aws_imagebuilder_workflow" "test" {
 func testAccWorkflowConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   description = %[2]q
 
@@ -419,9 +419,9 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   kms_key_id = aws_kms_key.test.arn
 
@@ -460,9 +460,9 @@ resource "aws_imagebuilder_workflow" "test" {
 func testAccWorkflowConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   tags = {
     %[2]q = %[3]q
@@ -503,9 +503,9 @@ resource "aws_imagebuilder_workflow" "test" {
 func testAccWorkflowConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   tags = {
     %[2]q = %[3]q
@@ -585,9 +585,9 @@ resource "aws_s3_object" "test" {
 }
 
 resource "aws_imagebuilder_workflow" "test" {
-  name     = %[1]q
-  version  = "1.0.0"
-  type     = "TEST"
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
 
   uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
 }
