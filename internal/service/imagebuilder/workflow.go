@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
