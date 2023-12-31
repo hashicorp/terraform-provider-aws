@@ -152,6 +152,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 				),
 			},
@@ -377,6 +378,7 @@ resource "aws_route53_resolver_endpoint" "test" {
   ip_address {
     subnet_id = aws_subnet.test[0].id
   }
+  protocols = ["Do53", "DoH"]
 }
 `, name))
 }

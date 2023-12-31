@@ -94,6 +94,14 @@ func ResourceEndpoint() *schema.Resource {
 				MaxItems: 64,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"protocols": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 1,
+				MaxItems: 2,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -121,6 +129,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("protocols"); ok {
+		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	output, err := conn.CreateResolverEndpointWithContext(ctx, input)
@@ -160,6 +172,8 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", ep.Name)
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 
+	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
+
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
 	if err != nil {
@@ -180,6 +194,21 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
 			Name:               aws.String(d.Get("name").(string)),
 			ResolverEndpointId: aws.String(d.Id()),
+		})
+
+		if err != nil {
+			return diag.Errorf("updating Route53 Resolver Endpoint (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("protocols") {
+		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
+			ResolverEndpointId: aws.String(d.Id()),
+			Protocols:          flex.ExpandStringSet(d.Get("protocols").(*schema.Set)),
 		})
 
 		if err != nil {
