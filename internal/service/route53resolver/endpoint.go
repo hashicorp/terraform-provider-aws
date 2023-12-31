@@ -97,10 +97,16 @@ func ResourceEndpoint() *schema.Resource {
 			"protocols": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 2,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						route53resolver.ProtocolDo53,
+						route53resolver.ProtocolDoH,
+						route53resolver.ProtocolDoHFips,
+					}, false),
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
