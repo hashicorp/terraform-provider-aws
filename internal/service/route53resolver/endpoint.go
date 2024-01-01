@@ -97,6 +97,7 @@ func ResourceEndpoint() *schema.Resource {
 			"protocols": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				MinItems: 1,
 				MaxItems: 2,
 				Elem: &schema.Schema{
