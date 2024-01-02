@@ -199,6 +199,7 @@ const (
 	SecurityLake                 = "securitylake"
 	ServerlessRepo               = "serverlessrepo"
 	ServiceCatalog               = "servicecatalog"
+	ServiceCatalogAppRegistry    = "servicecatalogappregistry"
 	ServiceDiscovery             = "servicediscovery"
 	ServiceQuotas                = "servicequotas"
 	Shield                       = "shield"

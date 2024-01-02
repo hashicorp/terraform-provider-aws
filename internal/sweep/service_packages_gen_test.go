@@ -189,6 +189,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
@@ -407,6 +408,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		securitylake.ServicePackage(ctx),
 		serverlessrepo.ServicePackage(ctx),
 		servicecatalog.ServicePackage(ctx),
+		servicecatalogappregistry.ServicePackage(ctx),
 		servicediscovery.ServicePackage(ctx),
 		servicequotas.ServicePackage(ctx),
 		ses.ServicePackage(ctx),
