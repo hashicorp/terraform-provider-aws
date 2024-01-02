@@ -1121,7 +1121,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return conn.CreateAutoScalingGroupWithContext(ctx, createInput)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		ErrCodeValidationError, "Invalid IAM Instance Profile")
+		errCodeValidationError, "Invalid IAM Instance Profile")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s): %s", asgName, err)
@@ -1135,7 +1135,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				func() (interface{}, error) {
 					return conn.PutLifecycleHookWithContext(ctx, input)
 				},
-				ErrCodeValidationError, "Unable to publish test message to notification target")
+				errCodeValidationError, "Unable to publish test message to notification target")
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s) Lifecycle Hook: %s", d.Id(), err)
@@ -1803,7 +1803,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -1866,7 +1866,7 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 		if _, err := conn.SetInstanceProtectionWithContext(ctx, input); err != nil {
 			// Ignore ValidationError when instance is already fully terminated
 			// and is not a part of Auto Scaling group anymore
-			if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not part of Auto Scaling group") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationError, "not part of Auto Scaling group") {
 				continue
 			}
 
@@ -1898,7 +1898,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "No warm pool found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No warm pool found") {
 		return nil
 	}
 
@@ -2106,7 +2106,7 @@ func FindInstanceRefreshes(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2142,7 +2142,7 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.AutoScaling, 
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2178,7 +2178,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Au
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2213,7 +2213,7 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2254,7 +2254,7 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling,
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2299,7 +2299,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
