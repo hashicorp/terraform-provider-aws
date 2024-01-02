@@ -23,6 +23,7 @@ var (
 var (
 	// ListOfStringType is a custom type used for defining a List of strings.
 	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}}
+	ListOfARNType    = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}}
 )
 
 type listTypeOf[T attr.Value] struct {

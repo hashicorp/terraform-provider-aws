@@ -8,10 +8,13 @@ import (
 	"fmt"
 	"strings"
 
+	elasticache_v2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -69,11 +72,12 @@ func FindCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id
 	return FindCacheCluster(ctx, conn, input)
 }
 
-// FindCacheClusterByID retrieves an ElastiCache Cache Cluster by id.
-func FindElasicCacheServerlessByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.ServerlessCache, error) {
-	input := &elasticache.DescribeServerlessCachesInput{
+// FindServerlessCacheByID retrieves an ElastiCache Cache Cluster by id.
+func FindServerlessCacheByID(ctx context.Context, conn *elasticache_v2.Client, id string) (awstypes.ServerlessCache, error) {
+	input := &elasticache_v2.DescribeServerlessCachesInput{
 		ServerlessCacheName: aws.String(id),
 	}
+
 	return FindServerlessCacheCluster(ctx, conn, input)
 }
 
@@ -109,24 +113,23 @@ func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input 
 	return result.CacheClusters[0], nil
 }
 
-// FindCacheCluster retrieves an ElastiCache Cache Cluster using DescribeCacheClustersInput.
-func FindServerlessCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeServerlessCachesInput) (*elasticache.ServerlessCache, error) {
-	result, err := conn.DescribeServerlessCachesWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeServerlessCacheNotFoundFault) {
-		return nil, &retry.NotFoundError{
+// FindServerlessChache retrieves an ElastiCache Cache Cluster using DescribeCacheClustersInput.
+func FindServerlessCacheCluster(ctx context.Context, conn *elasticache_v2.Client, input *elasticache_v2.DescribeServerlessCachesInput) (awstypes.ServerlessCache, error) {
+	result, err := conn.DescribeServerlessCaches(ctx, input)
+
+	if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
+		return awstypes.ServerlessCache{}, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
-		return nil, err
+		return awstypes.ServerlessCache{}, err
 	}
 
-	if result == nil || len(result.ServerlessCaches) == 0 || result.ServerlessCaches[0] == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "empty result",
-			LastRequest: input,
-		}
+	if result == nil || len(result.ServerlessCaches) == 0 {
+		return awstypes.ServerlessCache{}, tfresource.NewEmptyResultError(input)
 	}
 
 	return result.ServerlessCaches[0], nil

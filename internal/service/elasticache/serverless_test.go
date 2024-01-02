@@ -295,7 +295,7 @@ func testAccCheckServerlesssElasticCacheExists(ctx context.Context, resourceName
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
-		grg, err := tfelasticache.FindElasicCacheServerlessByID(ctx, conn, rs.Primary.ID)
+		grg, err := tfelasticache.FindElasiCacheServerlessByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("retrieving ElastiCache Serverlesss (%s): %w", rs.Primary.ID, err)
 		}
@@ -315,7 +315,7 @@ func testAccCheckElasticCacheServerlessDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfelasticache.FindElasicCacheServerlessByID(ctx, conn, rs.Primary.ID)
+			_, err := tfelasticache.FindElasiCacheServerlessByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
