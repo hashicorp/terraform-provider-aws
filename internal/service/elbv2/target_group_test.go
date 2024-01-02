@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -1400,7 +1401,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false, "round_robin"),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1409,7 +1410,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", true, "round_robin"),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1418,7 +1419,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "source_ip", true, "round_robin"),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1427,7 +1428,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "source_ip", true, "round_robin"),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -4937,6 +4938,12 @@ resource "aws_vpc" "test" {
 }
 
 func testAccTargetGroupConfig_stickinessValidity(rName, protocol, stickyType string, enabled bool, loadBalanceAlgorithmType string) string {
+	if loadBalanceAlgorithmType == "" {
+		loadBalanceAlgorithmType = "null"
+	} else {
+		loadBalanceAlgorithmType = strconv.Quote(loadBalanceAlgorithmType)
+	}
+
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name_prefix = "tf-"
@@ -4949,7 +4956,7 @@ resource "aws_lb_target_group" "test" {
     enabled = %[3]t
   }
 
-  load_balancing_algorithm_type = %[4]q
+  load_balancing_algorithm_type = %[4]s
 }
 
 resource "aws_vpc" "test" {
