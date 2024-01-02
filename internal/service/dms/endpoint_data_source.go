@@ -240,6 +240,78 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"postgres_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"babelfish_database_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"capture_ddls": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"database_mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ddl_artifacts_schema": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"fail_tasks_on_lob_truncation": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"heartbeat_enable": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"heartbeat_frequency": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"heartbeat_schema": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"map_boolean_as_boolean": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"map_jsonb_as_clob": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"map_long_varchar_as": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"plugin_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"slot_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"redis_settings": {
 				Type:     schema.TypeList,
 				Computed: true,

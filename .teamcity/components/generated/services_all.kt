@@ -101,6 +101,7 @@ val services = mapOf(
     "glue" to ServiceSpec("Glue"),
     "grafana" to ServiceSpec("Managed Grafana"),
     "greengrass" to ServiceSpec("IoT Greengrass"),
+    "groundstation" to ServiceSpec("Ground Station"),
     "guardduty" to ServiceSpec("GuardDuty"),
     "healthlake" to ServiceSpec("HealthLake"),
     "iam" to ServiceSpec("IAM (Identity & Access Management)"),

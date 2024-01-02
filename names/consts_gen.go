@@ -102,6 +102,7 @@ const (
 	Glue                         = "glue"
 	Grafana                      = "grafana"
 	Greengrass                   = "greengrass"
+	GroundStation                = "groundstation"
 	GuardDuty                    = "guardduty"
 	HealthLake                   = "healthlake"
 	IAM                          = "iam"
