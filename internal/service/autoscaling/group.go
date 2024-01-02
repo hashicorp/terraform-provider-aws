@@ -250,6 +250,12 @@ func ResourceGroup() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 									},
+									"max_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntBetween(100, 200),
+									},
 									"min_healthy_percentage": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -3372,6 +3378,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 		if v, null, _ := nullable.Int(v).Value(); !null {
 			apiObject.InstanceWarmup = aws.Int64(v)
 		}
+	}
+
+	if v, ok := tfMap["max_healthy_percentage"].(int); ok {
+		apiObject.MaxHealthyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["min_healthy_percentage"].(int); ok {
