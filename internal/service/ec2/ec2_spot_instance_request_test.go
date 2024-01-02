@@ -720,11 +720,11 @@ func testAccCheckSpotInstanceRequestIDsNotEqual(sir1, sir2 *ec2.SpotInstanceRequ
 
 func testAccSpotInstanceRequestConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -740,11 +740,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -764,11 +764,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -789,11 +789,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_validUntil(rName string, validUntil string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   valid_until          = %[2]q
@@ -814,11 +814,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_noPrice(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   wait_for_fulfillment = true
 
@@ -837,11 +837,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_keyName(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   key_name             = aws_key_pair.test.key_name
   wait_for_fulfillment = true
@@ -870,11 +870,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_launchGroup(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -895,11 +895,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_blockDuration(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                    = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type          = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price             = "0.05"
   wait_for_fulfillment   = true
@@ -921,7 +921,7 @@ resource "aws_ec2_tag" "test" {
 func testAccSpotInstanceRequestConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -943,7 +943,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -965,11 +965,11 @@ resource "aws_ec2_tag" "test" {
 func testAccSpotInstanceRequestConfig_subnetAndSGAndPublicIPAddress(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price                  = "0.05"
   wait_for_fulfillment        = true
@@ -1056,11 +1056,11 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_interrupt(rName, interruptionBehavior string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("c5.large", "c4.large"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                            = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                            = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type                  = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price                     = "0.07"
   wait_for_fulfillment           = true
@@ -1081,7 +1081,7 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_withInstanceProfile(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -1109,7 +1109,7 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   iam_instance_profile = aws_iam_instance_profile.test.name
   spot_price           = "0.05"
