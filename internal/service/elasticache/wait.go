@@ -127,10 +127,6 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCach
 }
 
 const (
-	ServerlessCacheCreatedTimeout = 40 * time.Minute
-	ServerlessCacheUpdatedTimeout = 80 * time.Minute
-	ServerlessCacheDeletedTimeout = 40 * time.Minute
-
 	ServerlessCacheAvailableMinTimeout = 10 * time.Second
 	ServerlessCacheAvailableDelay      = 30 * time.Second
 
