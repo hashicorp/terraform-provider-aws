@@ -1844,32 +1844,26 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 	// no longer applies scale-in protection to new instances, but there's still
 	// old ones that have it.
 
-	const chunkSize = 50 // API limit.
-	for i, n := 0, len(instances); i < n; i += chunkSize {
-		j := i + chunkSize
-		if j > n {
-			j = n
-		}
-
-		var instanceIDs []string
-
-		for k := i; k < j; k++ {
-			instanceIDs = append(instanceIDs, aws.StringValue(instances[k].InstanceId))
-		}
-
+	const batchSize = 50 // API limit.
+	for _, chunk := range slices.Chunks(instances, batchSize) {
+		instanceIDs := slices.ApplyToAll(chunk, func(v *autoscaling.Instance) string {
+			return aws.StringValue(v.InstanceId)
+		})
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          aws.StringSlice(instanceIDs),
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
-		if _, err := conn.SetInstanceProtectionWithContext(ctx, input); err != nil {
-			// Ignore ValidationError when instance is already fully terminated
-			// and is not a part of Auto Scaling group anymore
-			if tfawserr.ErrMessageContains(err, errCodeValidationError, "not part of Auto Scaling group") {
-				continue
-			}
+		_, err := conn.SetInstanceProtectionWithContext(ctx, input)
 
+		// Ignore ValidationError when instance is already fully terminated
+		// and is not a part of Auto Scaling Group anymore.
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not part of Auto Scaling group") {
+			continue
+		}
+
+		if err != nil {
 			return fmt.Errorf("disabling Auto Scaling Group (%s) scale-in protections: %w", name, err)
 		}
 	}
