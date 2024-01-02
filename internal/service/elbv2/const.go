@@ -137,8 +137,19 @@ func loadBalancingAlgorithmType_Values() []string {
 	return []string{
 		loadBalancingAlgorithmTypeRoundRobin,
 		loadBalancingAlgorithmTypeLeastOutstandingRequests,
-		// TODO
-		// loadBalancingAlgorithmTypeWeightedRandom,
+		loadBalancingAlgorithmTypeWeightedRandom,
+	}
+}
+
+const (
+	loadBalancingAnomalyMitigationOn  = "on"
+	loadBalancingAnomalyMitigationOff = "off"
+)
+
+func loadBalancingAnomalyMitigationType_Values() []string {
+	return []string{
+		loadBalancingAnomalyMitigationOn,
+		loadBalancingAnomalyMitigationOff,
 	}
 }
 
