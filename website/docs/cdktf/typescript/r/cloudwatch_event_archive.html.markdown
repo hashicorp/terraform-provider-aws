@@ -94,7 +94,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 characters.
 * `eventSourceArn` - (Required) Event bus source ARN from where these events should be archived.
 * `description` - (Optional) The description of the new event archive.
-* `eventPattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `eventSourceArn`.
+* `eventPattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `event_source_arn`.
 * `retentionDays` - (Optional) The maximum number of days to retain events in the new event archive. By default, it archives indefinitely.
 
 ## Attribute Reference
@@ -125,4 +125,4 @@ Using `terraform import`, import an EventBridge archive using the `name`. For ex
 % terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-230aef7101e3a99451d3a96541a344389622f8e93208093246611e6e08ee12b5 -->
+<!-- cache-key: cdktf-0.19.0 input-230aef7101e3a99451d3a96541a344389622f8e93208093246611e6e08ee12b5 -->

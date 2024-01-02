@@ -73,4 +73,4 @@ Using `terraform import`, import Route 53 Resolver configs using the Route 53 Re
 % terraform import aws_route53_resolver_config.example rslvr-rc-715aa20c73a23da7
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9e9ab64717f5492816cdea672c9253b6943b2cad6b967b971fcb44194acec4cf -->
+<!-- cache-key: cdktf-0.19.0 input-9e9ab64717f5492816cdea672c9253b6943b2cad6b967b971fcb44194acec4cf -->

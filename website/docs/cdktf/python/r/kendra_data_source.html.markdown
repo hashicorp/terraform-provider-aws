@@ -649,4 +649,4 @@ Using `terraform import`, import Kendra Data Source using the unique identifiers
 % terraform import aws_kendra_data_source.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3d8d2a0a2fb5b1865ed53ffa27e14132c1841e03d807830e180030cfe38f2630 -->
+<!-- cache-key: cdktf-0.19.0 input-3d8d2a0a2fb5b1865ed53ffa27e14132c1841e03d807830e180030cfe38f2630 -->

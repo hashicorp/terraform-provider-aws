@@ -80,4 +80,4 @@ Using `terraform import`, import App Runner Observability Configuration using th
 % terraform import aws_apprunner_observability_configuration.example arn:aws:apprunner:us-east-1:1234567890:observabilityconfiguration/example/1/d75bc7ea55b71e724fe5c23452fe22a1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8e5cebb86212015c055222a001ff7c401e6fd39752f296bb53ad2acf1c736b46 -->
+<!-- cache-key: cdktf-0.19.0 input-8e5cebb86212015c055222a001ff7c401e6fd39752f296bb53ad2acf1c736b46 -->

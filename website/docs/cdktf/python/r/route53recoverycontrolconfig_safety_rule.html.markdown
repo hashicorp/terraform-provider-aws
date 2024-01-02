@@ -118,4 +118,4 @@ Using `terraform import`, import Route53 Recovery Control Config Safety Rule usi
 % terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7fff1efee90763bc95e5e1aa7048eaa46466d5f09d9ca28fd68052bc48898c54 -->
+<!-- cache-key: cdktf-0.19.0 input-7fff1efee90763bc95e5e1aa7048eaa46466d5f09d9ca28fd68052bc48898c54 -->

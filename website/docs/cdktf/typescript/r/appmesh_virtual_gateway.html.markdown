@@ -106,7 +106,7 @@ This resource supports the following arguments:
 * `meshName` - (Required) Name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) Virtual gateway specification to apply.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -222,7 +222,7 @@ The `grpc` connection pool object supports the following:
 The `http` connection pool object supports the following:
 
 * `maxConnections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
-* `maxPendingRequests` - (Optional) Number of overflowing requests after `maxConnections` Envoy will queue to upstream cluster. Minimum value of `1`.
+* `maxPendingRequests` - (Optional) Number of overflowing requests after `max_connections` Envoy will queue to upstream cluster. Minimum value of `1`.
 
 The `http2` connection pool object supports the following:
 
@@ -236,12 +236,12 @@ The `healthCheck` object supports the following:
 * `timeoutMillis` - (Required) Amount of time to wait when receiving a response from the health check, in milliseconds.
 * `unhealthyThreshold` - (Required) Number of consecutive failed health checks that must occur before declaring a virtual gateway unhealthy.
 * `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
-* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `portMapping` for the listener.
+* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
 The `tls` object supports the following:
 
 * `certificate` - (Required) Listener's TLS certificate.
-* `mode`- (Required) Listener's TLS mode. Valid values: `disabled`, `permissive`, `strict`.
+* `mode`- (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
 * `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
 
 The `certificate` object supports the following:
@@ -298,7 +298,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDate` - Creation date of the virtual gateway.
 * `lastUpdatedDate` - Last update date of the virtual gateway.
 * `resourceOwner` - Resource owner's AWS account ID.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -324,4 +324,4 @@ Using `terraform import`, import App Mesh virtual gateway using `meshName` toget
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-0f019884935cffb4e15faa186fec437bbd1c1ed08bbdf658cac478d98a5253e8 -->
+<!-- cache-key: cdktf-0.19.0 input-0f019884935cffb4e15faa186fec437bbd1c1ed08bbdf658cac478d98a5253e8 -->

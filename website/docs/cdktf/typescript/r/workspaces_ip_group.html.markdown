@@ -56,7 +56,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the IP group.
 * `description` - (Optional) The description of the IP group.
 * `rules` - (Optional) One or more pairs specifying the IP group rule (in CIDR format) from which web requests originate.
-* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
 
@@ -64,7 +64,7 @@ This resource supports the following arguments:
 
 #### Arguments
 
-* `source` - (Required) The IP address range, in CIDR notation, e.g., `10000/16`
+* `source` - (Required) The IP address range, in CIDR notation, e.g., `10.0.0.0/16`
 * `description` - (Optional) The description.
 
 ## Attribute Reference
@@ -72,7 +72,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The IP group identifier.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -96,4 +96,4 @@ Using `terraform import`, import WorkSpaces IP groups using their GroupID. For e
 % terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4b601bcbe6ec03a647bced3e04fee24a2ec058d79738bc0ec9fc5dbfd30d43de -->
+<!-- cache-key: cdktf-0.19.0 input-4b601bcbe6ec03a647bced3e04fee24a2ec058d79738bc0ec9fc5dbfd30d43de -->

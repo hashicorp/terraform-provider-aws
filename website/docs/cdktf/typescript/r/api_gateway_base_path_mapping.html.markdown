@@ -127,4 +127,4 @@ For a non-root `basePath`:
 % terraform import aws_api_gateway_base_path_mapping.example example.com/base-path
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7c630b1c026c451c91ce4be44cb571b40bd69a91e074917021e877a73f91c912 -->
+<!-- cache-key: cdktf-0.19.0 input-7c630b1c026c451c91ce4be44cb571b40bd69a91e074917021e877a73f91c912 -->

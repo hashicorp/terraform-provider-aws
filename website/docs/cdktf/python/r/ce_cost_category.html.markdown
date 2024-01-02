@@ -155,4 +155,4 @@ Using `terraform import`, import `aws_ce_cost_category` using the id. For exampl
 % terraform import aws_ce_cost_category.example costCategoryARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d32509d874b0d724dcb62ee9ca6ed83a7cb80815f66336ea0a19f4b9bd60e60 -->
+<!-- cache-key: cdktf-0.19.0 input-6d32509d874b0d724dcb62ee9ca6ed83a7cb80815f66336ea0a19f4b9bd60e60 -->

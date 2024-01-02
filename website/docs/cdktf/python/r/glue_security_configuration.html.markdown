@@ -96,4 +96,4 @@ Using `terraform import`, import Glue Security Configurations using `name`. For 
 % terraform import aws_glue_security_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-648d5a94dbcbfce0a30b8db8178f35b6d6f0e3b9f5501dfc1bc90378045104ee -->
+<!-- cache-key: cdktf-0.19.0 input-648d5a94dbcbfce0a30b8db8178f35b6d6f0e3b9f5501dfc1bc90378045104ee -->

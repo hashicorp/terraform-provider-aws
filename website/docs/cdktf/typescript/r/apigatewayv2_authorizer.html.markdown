@@ -73,32 +73,32 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `apiId` - (Required) API identifier.
-* `authorizerType` - (Required) Authorizer type. Valid values: `jwt`, `request`.
-Specify `request` for a Lambda function using incoming request parameters.
-For HTTP APIs, specify `jwt` to use JSON Web Tokens.
+* `authorizerType` - (Required) Authorizer type. Valid values: `JWT`, `REQUEST`.
+Specify `REQUEST` for a Lambda function using incoming request parameters.
+For HTTP APIs, specify `JWT` to use JSON Web Tokens.
 * `name` - (Required) Name of the authorizer. Must be between 1 and 128 characters in length.
 * `authorizerCredentialsArn` - (Optional) Required credentials as an IAM role for API Gateway to invoke the authorizer.
-Supported only for `request` authorizers.
+Supported only for `REQUEST` authorizers.
 * `authorizerPayloadFormatVersion` - (Optional) Format of the payload sent to an HTTP API Lambda authorizer. Required for HTTP API Lambda authorizers.
-Valid values: `10`, `20`.
+Valid values: `1.0`, `2.0`.
 * `authorizerResultTtlInSeconds` - (Optional) Time to live (TTL) for cached authorizer results, in seconds. If it equals 0, authorization caching is disabled.
 If it is greater than 0, API Gateway caches authorizer responses. The maximum value is 3600, or 1 hour. Defaults to `300`.
 Supported only for HTTP API Lambda authorizers.
 * `authorizerUri` - (Optional) Authorizer's Uniform Resource Identifier (URI).
-For `request` authorizers this must be a well-formed Lambda function URI, such as the `invokeArn` attribute of the [`awsLambdaFunction`](/docs/providers/aws/r/lambda_function.html) resource.
-Supported only for `request` authorizers. Must be between 1 and 2048 characters in length.
+For `REQUEST` authorizers this must be a well-formed Lambda function URI, such as the `invoke_arn` attribute of the [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) resource.
+Supported only for `REQUEST` authorizers. Must be between 1 and 2048 characters in length.
 * `enableSimpleResponses` - (Optional) Whether a Lambda authorizer returns a response in a simple format. If enabled, the Lambda authorizer can return a boolean value instead of an IAM policy.
 Supported only for HTTP APIs.
 * `identitySources` - (Optional) Identity sources for which authorization is requested.
-For `request` authorizers the value is a list of one or more mapping expressions of the specified request parameters.
-For `jwt` authorizers the single entry specifies where to extract the JSON Web Token (JWT) from inbound requests.
-* `jwtConfiguration` - (Optional) Configuration of a JWT authorizer. Required for the `jwt` authorizer type.
+For `REQUEST` authorizers the value is a list of one or more mapping expressions of the specified request parameters.
+For `JWT` authorizers the single entry specifies where to extract the JSON Web Token (JWT) from inbound requests.
+* `jwtConfiguration` - (Optional) Configuration of a JWT authorizer. Required for the `JWT` authorizer type.
 Supported only for HTTP APIs.
 
 The `jwtConfiguration` object supports the following:
 
 * `audience` - (Optional) List of the intended recipients of the JWT. A valid JWT must provide an aud that matches at least one entry in this list.
-* `issuer` - (Optional) Base domain of the identity provider that issues JSON Web Tokens, such as the `endpoint` attribute of the [`awsCognitoUserPool`](/docs/providers/aws/r/cognito_user_pool.html) resource.
+* `issuer` - (Optional) Base domain of the identity provider that issues JSON Web Tokens, such as the `endpoint` attribute of the [`aws_cognito_user_pool`](/docs/providers/aws/r/cognito_user_pool.html) resource.
 
 ## Attribute Reference
 
@@ -128,4 +128,4 @@ Using `terraform import`, import `awsApigatewayv2Authorizer` using the API ident
 % terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-322d065b428456a7d1cc59a5a9728d8c2146130eb3756317834d9f82f13b132e -->
+<!-- cache-key: cdktf-0.19.0 input-322d065b428456a7d1cc59a5a9728d8c2146130eb3756317834d9f82f13b132e -->

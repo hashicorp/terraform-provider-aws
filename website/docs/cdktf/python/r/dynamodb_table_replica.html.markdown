@@ -123,4 +123,4 @@ Using `terraform import`, import DynamoDB table replicas using the `table-name:m
 % terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-825c94d582679fcb249521e58e00123dba670a7f2f1b962c70bbd04b4762d01d -->
+<!-- cache-key: cdktf-0.19.0 input-825c94d582679fcb249521e58e00123dba670a7f2f1b962c70bbd04b4762d01d -->

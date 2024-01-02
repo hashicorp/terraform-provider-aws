@@ -66,12 +66,12 @@ The following arguments are optional:
 * `displayName` - (Optional) Human-readable friendly name for the AppStream fleet.
 * `domainJoinInfo` - (Optional) Configuration block for the name of the directory and organizational unit (OU) to use to join the fleet to a Microsoft Active Directory domain. See below.
 * `enableDefaultInternetAccess` - (Optional) Enables or disables default internet access for the fleet.
-* `fleetType` - (Optional) Fleet type. Valid values are: `onDemand`, `alwaysOn`
+* `fleetType` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`
 * `iamRoleArn` - (Optional) ARN of the IAM role to apply to the fleet.
-* `idleDisconnectTimeoutInSeconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnectTimeoutInSeconds` time interval begins.
+* `idleDisconnectTimeoutInSeconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins.
 * `imageName` - (Optional) Name of the image used to create the fleet.
 * `imageArn` - (Optional) ARN of the public, private, or shared image to use.
-* `streamView` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `app` is specified, only the windows of applications opened by users display. When `desktop` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `app`.
+* `streamView` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
 * `maxUserDurationInSeconds` - (Optional) Maximum amount of time that a streaming session can remain active, in seconds.
 * `vpcConfig` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
@@ -96,7 +96,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Unique identifier (ID) of the appstream fleet.
 * `arn` - ARN of the appstream fleet.
-* `state` - State of the fleet. Can be `starting`, `running`, `stopping` or `stopped`
+* `state` - State of the fleet. Can be `STARTING`, `RUNNING`, `STOPPING` or `STOPPED`
 * `createdTime` -  Date and time, in UTC and extended RFC 3339 format, when the fleet was created.
 * `computeCapacity` - Describes the capacity status for a fleet.
 
@@ -128,4 +128,4 @@ Using `terraform import`, import `awsAppstreamFleet` using the id. For example:
 % terraform import aws_appstream_fleet.example fleetNameExample
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-73fdf63ad01b397b97d73714aee955eca2295534a2f89adc78fa6fd555eab144 -->
+<!-- cache-key: cdktf-0.19.0 input-73fdf63ad01b397b97d73714aee955eca2295534a2f89adc78fa6fd555eab144 -->

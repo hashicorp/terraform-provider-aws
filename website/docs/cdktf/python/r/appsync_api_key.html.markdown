@@ -73,4 +73,4 @@ Using `terraform import`, import `aws_appsync_api_key` using the AppSync API ID 
 % terraform import aws_appsync_api_key.example xxxxx:yyyyy
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9537eb2363c3276a35011eec4122475228554d13bf2934197192259c7ebc0bcd -->
+<!-- cache-key: cdktf-0.19.0 input-9537eb2363c3276a35011eec4122475228554d13bf2934197192259c7ebc0bcd -->

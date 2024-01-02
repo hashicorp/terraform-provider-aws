@@ -133,4 +133,4 @@ Using `terraform import`, import EKS Fargate Profiles using the `cluster_name` a
 % terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->
+<!-- cache-key: cdktf-0.19.0 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->

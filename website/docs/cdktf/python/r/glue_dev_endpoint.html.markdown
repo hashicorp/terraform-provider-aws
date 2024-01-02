@@ -115,4 +115,4 @@ Using `terraform import`, import a Glue Development Endpoint using the `name`. F
 % terraform import aws_glue_dev_endpoint.example foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-59223466494b9a1666a02d2c293b3450a6518da65a3ffe2d8e998ffd375782a6 -->
+<!-- cache-key: cdktf-0.19.0 input-59223466494b9a1666a02d2c293b3450a6518da65a3ffe2d8e998ffd375782a6 -->

@@ -351,14 +351,14 @@ type resourceJobQueueData struct {
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 
-func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics {
+func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	r.ARN = flex.StringToFrameworkLegacy(ctx, out.JobQueueArn)
 	r.Name = flex.StringToFramework(ctx, out.JobQueueName)
 	r.ComputeEnvironments = flex.FlattenFrameworkStringValueListLegacy(ctx, flattenComputeEnvironmentOrder(out.ComputeEnvironmentOrder))
 	r.Priority = flex.Int64ToFrameworkLegacy(ctx, out.Priority)
-	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn, &diags)
+	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn)
 	r.State = flex.StringToFrameworkLegacy(ctx, out.State)
 
 	setTagsOut(ctx, out.Tags)

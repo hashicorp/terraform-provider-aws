@@ -49,16 +49,16 @@ This resource supports the following arguments:
 
     - Must contain from 1 to 255 alphanumeric characters and hyphens.
 
-* `certificatePem` - (Optional) The contents of the .pem X.509 certificate file for the certificate. Either `certificatePem` or `certificateWallet` must be set.
-* `certificateWallet` - (Optional) The contents of the Oracle Wallet certificate for use with SSL, provided as a base64-encoded String. Either `certificatePem` or `certificateWallet` must be set.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `certificatePem` - (Optional) The contents of the .pem X.509 certificate file for the certificate. Either `certificate_pem` or `certificate_wallet` must be set.
+* `certificateWallet` - (Optional) The contents of the Oracle Wallet certificate for use with SSL, provided as a base64-encoded String. Either `certificate_pem` or `certificate_wallet` must be set.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `certificateArn` - The Amazon Resource Name (ARN) for the certificate.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import certificates using the `certificateId`. For exa
 % terraform import aws_dms_certificate.test test-dms-certificate-tf
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-43c2ddd8bdacc0b322a9d01379d67b520abc0514fee6ac2b769064b1afbc324d -->
+<!-- cache-key: cdktf-0.19.0 input-43c2ddd8bdacc0b322a9d01379d67b520abc0514fee6ac2b769064b1afbc324d -->

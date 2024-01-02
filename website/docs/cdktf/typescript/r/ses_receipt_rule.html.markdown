@@ -61,7 +61,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) If true, the rule will be enabled
 * `recipients` - (Optional) A list of email addresses
 * `scanEnabled` - (Optional) If true, incoming emails will be scanned for spam and viruses
-* `tlsPolicy` - (Optional) `require` or `optional`
+* `tlsPolicy` - (Optional) `Require` or `Optional`
 * `addHeaderAction` - (Optional) A list of Add Header Action blocks. Documented below.
 * `bounceAction` - (Optional) A list of Bounce Action blocks. Documented below.
 * `lambdaAction` - (Optional) A list of Lambda Action blocks. Documented below.
@@ -88,7 +88,7 @@ Bounce actions support the following:
 Lambda actions support the following:
 
 * `functionArn` - (Required) The ARN of the Lambda function to invoke
-* `invocationType` - (Optional) `event` or `requestResponse`
+* `invocationType` - (Optional) `Event` or `RequestResponse`
 * `topicArn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
@@ -104,11 +104,11 @@ SNS actions support the following:
 
 * `topicArn` - (Required) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
-* `encoding` - (Optional) The encoding to use for the email within the Amazon SNS notification. Default value is `utf8`.
+* `encoding` - (Optional) The encoding to use for the email within the Amazon SNS notification. Default value is `UTF-8`.
 
 Stop actions support the following:
 
-* `scope` - (Required) The scope to apply. The only acceptable value is `ruleSet`.
+* `scope` - (Required) The scope to apply. The only acceptable value is `RuleSet`.
 * `topicArn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
@@ -147,4 +147,4 @@ Using `terraform import`, import SES receipt rules using the ruleset name and ru
 % terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ab45199c3afbc7c5a3c72ec3d4ff7c87e01a23be591b82978865a7ece9fb3494 -->
+<!-- cache-key: cdktf-0.19.0 input-ab45199c3afbc7c5a3c72ec3d4ff7c87e01a23be591b82978865a7ece9fb3494 -->

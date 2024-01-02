@@ -86,8 +86,8 @@ class MyConvertedCode extends TerraformStack {
 ## Argument Reference
 
 * `secretId` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
-* `versionId` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `versionStage`.
-* `versionStage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `awscurrent`.
+* `versionId` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
+* `versionStage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
 
 ## Attribute Reference
 
@@ -99,4 +99,4 @@ This data source exports the following attributes in addition to the arguments a
 * `secretBinary` - Decrypted part of the protected secret information that was originally provided as a binary.
 * `versionId` - Unique identifier of this version of the secret.
 
-<!-- cache-key: cdktf-0.18.0 input-0b6eddd0447056d7c1accf69edad117a5cfffc0cc933681a436ac5274d6d9488 -->
+<!-- cache-key: cdktf-0.19.0 input-0b6eddd0447056d7c1accf69edad117a5cfffc0cc933681a436ac5274d6d9488 -->

@@ -46,8 +46,8 @@ The following arguments are optional:
 * `internetMeasurementsLogDelivery` - (Optional) Publish internet measurements for Internet Monitor to an Amazon S3 bucket in addition to CloudWatch Logs.
 * `maxCityNetworksToMonitor` - (Optional) The maximum number of city-networks to monitor for your resources. A city-network is the location (city) where clients access your application resources from and the network or ASN, such as an internet service provider (ISP), that clients access the resources through. This limit helps control billing costs.
 * `resources` - (Optional) The resources to include in a monitor, which you provide as a set of Amazon Resource Names (ARNs).
-* `status` - (Optional) The status for a monitor. The accepted values for Status with the UpdateMonitor API call are the following: `active` and `inactive`.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `status` - (Optional) The status for a monitor. The accepted values for Status with the UpdateMonitor API call are the following: `ACTIVE` and `INACTIVE`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `trafficPercentageToMonitor` - (Optional) The percentage of the internet-facing traffic for your application that you want to monitor with this monitor.
 
 ### Health Events Config
@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Monitor.
 * `id` - Name of the monitor.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import Internet Monitor Monitors using the `monitorNam
 % terraform import aws_internetmonitor_monitor.some some-monitor
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-959844264023e663c6657a471798b74c5622af4b37ac96f4fafe7949bc5ed03b -->
+<!-- cache-key: cdktf-0.19.0 input-959844264023e663c6657a471798b74c5622af4b37ac96f4fafe7949bc5ed03b -->

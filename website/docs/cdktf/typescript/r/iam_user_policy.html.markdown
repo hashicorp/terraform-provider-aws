@@ -71,7 +71,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The user policy ID, in the form of `userName:userPolicyName`.
+* `id` - The user policy ID, in the form of `user_name:user_policy_name`.
 * `name` - The name of the policy (always set).
 
 ## Import
@@ -96,4 +96,4 @@ Using `terraform import`, import IAM User Policies using the `userName:userPolic
 % terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0e7d9174e258c37b6b2bfd4094bb5d0f358c81bf66ad2ec394e1153843121ade -->
+<!-- cache-key: cdktf-0.19.0 input-0e7d9174e258c37b6b2bfd4094bb5d0f358c81bf66ad2ec394e1153843121ade -->

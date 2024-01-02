@@ -80,6 +80,7 @@ provider "aws" {
   <li><code>apigatewayv2</code></li>
   <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
   <li><code>appconfig</code></li>
+  <li><code>appfabric</code></li>
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
@@ -112,6 +113,7 @@ provider "aws" {
   <li><code>codebuild</code></li>
   <li><code>codecatalyst</code></li>
   <li><code>codecommit</code></li>
+  <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
   <li><code>codestarconnections</code></li>
@@ -122,8 +124,10 @@ provider "aws" {
   <li><code>computeoptimizer</code></li>
   <li><code>configservice</code> (or <code>config</code>)</li>
   <li><code>connect</code></li>
+  <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
+  <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -166,6 +170,7 @@ provider "aws" {
   <li><code>glue</code></li>
   <li><code>grafana</code> (or <code>managedgrafana</code> or <code>amg</code>)</li>
   <li><code>greengrass</code></li>
+  <li><code>groundstation</code></li>
   <li><code>guardduty</code></li>
   <li><code>healthlake</code></li>
   <li><code>iam</code></li>
@@ -196,11 +201,13 @@ provider "aws" {
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
+  <li><code>lookoutmetrics</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
   <li><code>medialive</code></li>
   <li><code>mediapackage</code></li>
+  <li><code>mediapackagev2</code></li>
   <li><code>mediastore</code></li>
   <li><code>memorydb</code></li>
   <li><code>mq</code></li>
@@ -213,10 +220,12 @@ provider "aws" {
   <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
   <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
+  <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
@@ -247,6 +256,7 @@ provider "aws" {
   <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
+  <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
   <li><code>servicediscovery</code></li>
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
@@ -260,6 +270,7 @@ provider "aws" {
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>
@@ -273,6 +284,7 @@ provider "aws" {
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>
+  <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
   <li><code>xray</code></li>

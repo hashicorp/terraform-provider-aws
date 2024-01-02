@@ -241,7 +241,8 @@ class MyConvertedCode extends TerraformStack {
           },
           predefinedLoadMetricSpecification: {
             predefinedMetricType: "ASGTotalCPUUtilization",
-            resourceLabel: "testLabel",
+            resourceLabel:
+              "app/my-alb/778d41231b141a0f/targetgroup/my-alb-target-group/943f017f100becff",
           },
           targetValue: 10,
         },
@@ -256,7 +257,7 @@ class MyConvertedCode extends TerraformStack {
 
 * `name` - (Required) Name of the policy.
 * `autoscalingGroupName` - (Required) Name of the autoscaling group.
-* `adjustmentType` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `changeInCapacity`, `exactCapacity`, and `percentChangeInCapacity`.
+* `adjustmentType` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
 * `policyType` - (Optional) Policy type, either "SimpleScaling", "StepScaling", "TargetTrackingScaling", or "PredictiveScaling". If this value isn't provided, AWS will default to "SimpleScaling."
 * `predictiveScalingConfiguration` - (Optional) Predictive scaling policy configuration to use with Amazon EC2 Auto Scaling.
 * `estimatedInstanceWarmup` - (Optional) Estimated time, in seconds, until a newly launched instance will contribute CloudWatch metrics. Without a value, AWS will default to the group's specified cooldown period.
@@ -264,12 +265,12 @@ class MyConvertedCode extends TerraformStack {
 
 The following argument is only available to "SimpleScaling" and "StepScaling" type policies:
 
-* `minAdjustmentMagnitude` - (Optional) Minimum value to scale by when `adjustmentType` is set to `percentChangeInCapacity`.
+* `minAdjustmentMagnitude` - (Optional) Minimum value to scale by when `adjustment_type` is set to `PercentChangeInCapacity`.
 
 The following arguments are only available to "SimpleScaling" type policies:
 
 * `cooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes and before the next scaling activity can start.
-* `scalingAdjustment` - (Optional) Number of instances by which to scale. `adjustmentType` determines the interpretation of this number (e.g., as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity.
+* `scalingAdjustment` - (Optional) Number of instances by which to scale. `adjustment_type` determines the interpretation of this number (e.g., as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity.
 
 The following arguments are only available to "StepScaling" type policies:
 
@@ -366,8 +367,8 @@ class MyConvertedCode extends TerraformStack {
 
 The following fields are available in target tracking configuration:
 
-* `predefinedMetricSpecification` - (Optional) Predefined metric. Conflicts with `customizedMetricSpecification`.
-* `customizedMetricSpecification` - (Optional) Customized metric. Conflicts with `predefinedMetricSpecification`.
+* `predefinedMetricSpecification` - (Optional) Predefined metric. Conflicts with `customized_metric_specification`.
+* `customizedMetricSpecification` - (Optional) Customized metric. Conflicts with `predefined_metric_specification`.
 * `targetValue` - (Required) Target value for the metric.
 * `disableScaleIn` - (Optional, Default: false) Whether scale in by the target tracking policy is disabled.
 
@@ -400,10 +401,10 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metricStat`, but not both.
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
 * `id` - (Required) Short name for the metric used in target tracking scaling policy.
 * `label` - (Optional) Human-readable label for this metric or expression.
-* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metricStat`, but not both.
+* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `returnData` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ##### metric_stat
@@ -433,17 +434,17 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `maxCapacityBreachBehavior` - (Optional) Defines the behavior that should be applied if the forecast capacity approaches or exceeds the maximum capacity of the Auto Scaling group. Valid values are `honorMaxCapacity` or `increaseMaxCapacity`. Default is `honorMaxCapacity`.
+* `maxCapacityBreachBehavior` - (Optional) Defines the behavior that should be applied if the forecast capacity approaches or exceeds the maximum capacity of the Auto Scaling group. Valid values are `HonorMaxCapacity` or `IncreaseMaxCapacity`. Default is `HonorMaxCapacity`.
 * `maxCapacityBuffer` - (Optional) Size of the capacity buffer to use when the forecast capacity is close to or exceeds the maximum capacity. Valid range is `0` to `100`. If set to `0`, Amazon EC2 Auto Scaling may scale capacity higher than the maximum capacity to equal but not exceed forecast capacity.
 * `metricSpecification` - (Required) This structure includes the metrics and target utilization to use for predictive scaling.
-* `mode` - (Optional) Predictive scaling mode. Valid values are `forecastAndScale` and `forecastOnly`. Default is `forecastOnly`.
+* `mode` - (Optional) Predictive scaling mode. Valid values are `ForecastAndScale` and `ForecastOnly`. Default is `ForecastOnly`.
 * `schedulingBufferTime` - (Optional) Amount of time, in seconds, by which the instance launch time can be advanced. Minimum is `0`.
 
 #### metric_specification
 
 This argument supports the following arguments:
 
-* `customizedCapacityMetricSpecification` - (Optional) Customized capacity metric specification. The field is only valid when you use `customizedLoadMetricSpecification`
+* `customizedCapacityMetricSpecification` - (Optional) Customized capacity metric specification. The field is only valid when you use `customized_load_metric_specification`
 * `customizedLoadMetricSpecification` - (Optional) Customized load metric specification.
 * `customizedScalingMetricSpecification` - (Optional) Customized scaling metric specification.
 * `predefinedLoadMetricSpecification` - (Optional) Predefined load metric specification.
@@ -454,22 +455,22 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `predefinedMetricType` - (Required) Metric type. Valid values are `asgTotalCpuUtilization`, `asgTotalNetworkIn`, `asgTotalNetworkOut`, or `albTargetGroupRequestCount`.
-* `resourceLabel` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `predefinedMetricType` - (Required) Metric type. Valid values are `ASGTotalCPUUtilization`, `ASGTotalNetworkIn`, `ASGTotalNetworkOut`, or `ALBTargetGroupRequestCount`.
+* `resourceLabel` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group. You create the resource label by appending the final portion of the load balancer ARN and the final portion of the target group ARN into a single value, separated by a forward slash (/). Refer to [PredefinedMetricSpecification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_PredefinedMetricSpecification.html) for more information.
 
 ##### predefined_metric_pair_specification
 
 This argument supports the following arguments:
 
-* `predefinedMetricType` - (Required) Which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric. For example, if the metric type is `asgcpuUtilization`, the Auto Scaling group's total CPU metric is used as the load metric, and the average CPU metric is used for the scaling metric. Valid values are `asgcpuUtilization`, `asgNetworkIn`, `asgNetworkOut`, or `albRequestCount`.
-* `resourceLabel` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `predefinedMetricType` - (Required) Which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric. For example, if the metric type is `ASGCPUUtilization`, the Auto Scaling group's total CPU metric is used as the load metric, and the average CPU metric is used for the scaling metric. Valid values are `ASGCPUUtilization`, `ASGNetworkIn`, `ASGNetworkOut`, or `ALBRequestCount`.
+* `resourceLabel` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group. You create the resource label by appending the final portion of the load balancer ARN and the final portion of the target group ARN into a single value, separated by a forward slash (/). Refer to [PredefinedMetricSpecification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_PredefinedMetricSpecification.html) for more information.
 
 ##### predefined_scaling_metric_specification
 
 This argument supports the following arguments:
 
-* `predefinedMetricType` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `asgAverageCpuUtilization`, `asgAverageNetworkIn`, `asgAverageNetworkOut`, or `albRequestCountPerTarget`.
-* `resourceLabel` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `predefinedMetricType` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, or `ALBRequestCountPerTarget`.
+* `resourceLabel` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group. You create the resource label by appending the final portion of the load balancer ARN and the final portion of the target group ARN into a single value, separated by a forward slash (/). Refer to [PredefinedMetricSpecification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_PredefinedMetricSpecification.html) for more information.
 
 ##### customized_scaling_metric_specification
 
@@ -493,10 +494,10 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metricStat`, but not both.
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
 * `id` - (Required) Short name for the metric used in predictive scaling policy.
 * `label` - (Optional) Human-readable label for this metric or expression.
-* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metricStat`, but not both.
+* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `returnData` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ##### metric_stat
@@ -554,4 +555,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6ef16432ba01c530072bf934dd255361c14e5ea52efe71ab800335601445b659 -->
+<!-- cache-key: cdktf-0.19.0 input-3cda1de0835095d7e158606559f0db3eb8b0ad3b3a1b8d1d3a230f006e768d8b -->

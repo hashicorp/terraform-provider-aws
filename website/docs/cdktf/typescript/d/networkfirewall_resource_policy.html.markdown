@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy
 
-<!-- cache-key: cdktf-0.18.0 input-107f955d750a5b8827c396d72211b79ae4ad8c3cde0654c3353f405a454c633b -->
+<!-- cache-key: cdktf-0.19.0 input-107f955d750a5b8827c396d72211b79ae4ad8c3cde0654c3353f405a454c633b -->

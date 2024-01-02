@@ -73,4 +73,4 @@ Using `terraform import`, import a pull-through cache rule using the `ecrReposit
 % terraform import aws_ecr_pull_through_cache_rule.example ecr-public
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6f34bbf2ac113908932d429c51221ac1598eaf73e0c126d6199e75b0b3c98d1b -->
+<!-- cache-key: cdktf-0.19.0 input-6f34bbf2ac113908932d429c51221ac1598eaf73e0c126d6199e75b0b3c98d1b -->

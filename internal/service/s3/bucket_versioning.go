@@ -123,9 +123,13 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 			input.MFA = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return conn.PutBucketVersioning(ctx, input)
 		}, errCodeNoSuchBucket)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
+			err = errDirectoryBucket(err)
+		}
 
 		if err != nil {
 			return diag.Errorf("creating S3 Bucket (%s) Versioning: %s", bucket, err)
@@ -163,7 +167,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenBucketVersioningConfiguration(output)); err != nil {
+	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
 		return diag.Errorf("setting versioning_configuration: %s", err)
 	}
 
@@ -267,7 +271,7 @@ func expandBucketVersioningConfiguration(l []interface{}) *types.VersioningConfi
 	return result
 }
 
-func flattenBucketVersioningConfiguration(config *s3.GetBucketVersioningOutput) []interface{} {
+func flattenVersioning(config *s3.GetBucketVersioningOutput) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -339,7 +343,7 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket,
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
 		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
-		Timeout:                   s3BucketPropagationTimeout,
+		Timeout:                   bucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,
 		Delay:                     1 * time.Second,

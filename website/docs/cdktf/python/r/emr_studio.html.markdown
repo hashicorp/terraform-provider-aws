@@ -86,4 +86,4 @@ Using `terraform import`, import EMR studios using the `id`. For example:
 % terraform import aws_emr_studio.studio es-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->
+<!-- cache-key: cdktf-0.19.0 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->

@@ -432,4 +432,4 @@ Using `terraform import`, import `aws_networkmanager_core_network_policy_attachm
 % terraform import aws_networkmanager_core_network_policy_attachment.example core-network-0d47f6t230mz46dy4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-34a808698d2a9df593aff61b1eaca0c1844cef8687a30e103f1a946e027e2540 -->
+<!-- cache-key: cdktf-0.19.0 input-34a808698d2a9df593aff61b1eaca0c1844cef8687a30e103f1a946e027e2540 -->

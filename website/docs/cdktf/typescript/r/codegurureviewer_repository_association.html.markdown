@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `repository` - (Required) An object describing the repository to associate. Valid values: `bitbucket`, `codecommit`, `githubEnterpriseServer`, or `s3Bucket`. Block is documented below. Note: for repositories that leverage CodeStar connections (ex. `bitbucket`, `githubEnterpriseServer`) the connection must be in `available` status prior to creating this resource.
+* `repository` - (Required) An object describing the repository to associate. Valid values: `bitbucket`, `codecommit`, `github_enterprise_server`, or `s3_bucket`. Block is documented below. Note: for repositories that leverage CodeStar connections (ex. `bitbucket`, `github_enterprise_server`) the connection must be in `Available` status prior to creating this resource.
 
 The following arguments are optional:
 
@@ -90,14 +90,14 @@ This configuration block supports the following:
 
 ### s3_bucket
 
-* `bucketName` - (Required) The name of the S3 bucket used for associating a new S3 repository. Note: The name must begin with `codeguruReviewer`.
+* `bucketName` - (Required) The name of the S3 bucket used for associating a new S3 repository. Note: The name must begin with `codeguru-reviewer-`.
 * `name` - (Required) The name of the repository in the S3 bucket.
 
 ## kms_key_details
 
 This configuration block supports the following:
 
-* `encryptionOption` - (Optional) The encryption option for a repository association. It is either owned by AWS Key Management Service (KMS) (`awsOwnedCmk`) or customer managed (`customerManagedCmk`).
+* `encryptionOption` - (Optional) The encryption option for a repository association. It is either owned by AWS Key Management Service (KMS) (`AWS_OWNED_CMK`) or customer managed (`CUSTOMER_MANAGED_CMK`).
 * `kmsKeyId` - (Optional) The ID of the AWS KMS key that is associated with a repository association.
 
 ## Attribute Reference
@@ -118,8 +118,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.18.0 input-b8a4a1df23287da973904a4fa9f7f519b62aeebe1f60535df99ad7d1c408a770 -->
+<!-- cache-key: cdktf-0.19.0 input-b8a4a1df23287da973904a4fa9f7f519b62aeebe1f60535df99ad7d1c408a770 -->

@@ -49,8 +49,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `instanceType` - (Optional) Desired instance type. Conflicts with `preferredInstanceTypes`.
-* `preferredInstanceTypes` - (Optional) Ordered list of preferred instance types. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. Conflicts with `instanceType`.
+* `instanceType` - (Optional) Desired instance type. Conflicts with `preferred_instance_types`.
+* `preferredInstanceTypes` - (Optional) Ordered list of preferred instance types. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. Conflicts with `instance_type`.
 
 ## Attribute Reference
 
@@ -58,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - Outpost identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-bdb4cb1efd03c682353c33d56fbb0c15999ee4c0eda85c05b04d636ffab6f3a8 -->
+<!-- cache-key: cdktf-0.19.0 input-bdb4cb1efd03c682353c33d56fbb0c15999ee4c0eda85c05b04d636ffab6f3a8 -->

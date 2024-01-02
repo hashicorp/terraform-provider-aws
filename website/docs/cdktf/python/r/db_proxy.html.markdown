@@ -109,4 +109,4 @@ Using `terraform import`, import DB proxies using the `name`. For example:
 % terraform import aws_db_proxy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8a3c238396074ac96e7b1e4adfae2e3755201827cad27408ac90aeb3b6b1ca32 -->
+<!-- cache-key: cdktf-0.19.0 input-8a3c238396074ac96e7b1e4adfae2e3755201827cad27408ac90aeb3b6b1ca32 -->

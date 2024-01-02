@@ -68,10 +68,10 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `availabilityZoneGroup` - (Optional) Availability zone group.
-* `engine` - (Required) DB engine. Engine values include `aurora`, `auroraMysql`, `auroraPostgresql`, `docdb`, `mariadb`, `mysql`, `neptune`, `oracleEe`, `oracleSe`, `oracleSe1`, `oracleSe2`, `postgres`, `sqlserverEe`, `sqlserverEx`, `sqlserverSe`, and `sqlserverWeb`.
+* `engine` - (Required) DB engine. Engine values include `aurora`, `aurora-mysql`, `aurora-postgresql`, `docdb`, `mariadb`, `mysql`, `neptune`, `oracle-ee`, `oracle-se`, `oracle-se1`, `oracle-se2`, `postgres`, `sqlserver-ee`, `sqlserver-ex`, `sqlserver-se`, and `sqlserver-web`.
 * `engineVersion` - (Optional) Version of the DB engine. If none is provided, the AWS-defined default version will be used.
-* `instanceClass` - (Optional) DB instance class. Examples of classes are `dbM32Xlarge`, `dbT2Small`, and `dbM3Medium`.
-* `licenseModel` - (Optional) License model. Examples of license models are `generalPublicLicense`, `bringYourOwnLicense`, and `amazonLicense`.
+* `instanceClass` - (Optional) DB instance class. Examples of classes are `db.m3.2xlarge`, `db.t2.small`, and `db.m3.medium`.
+* `licenseModel` - (Optional) License model. Examples of license models are `general-public-license`, `bring-your-own-license`, and `amazon-license`.
 * `preferredInstanceClasses` - (Optional) Ordered list of preferred RDS DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
 * `preferredEngineVersions` - (Optional) Ordered list of preferred RDS DB instance engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
 * `storageType` - (Optional) Storage types. Examples of storage types are `standard`, `io1`, `gp2`, and `aurora`.
@@ -100,6 +100,6 @@ This data source exports the following attributes in addition to the arguments a
 * `outpostCapable` - Whether a DB instance supports RDS on Outposts.
 * `readReplicaCapable` - Whether a DB instance can have a read replica.
 * `supportedEngineModes` - A list of the supported DB engine modes.
-* `supportedNetworkTypes` - The network types supported by the DB instance (`ipv4` or `dual`).
+* `supportedNetworkTypes` - The network types supported by the DB instance (`IPV4` or `DUAL`).
 
-<!-- cache-key: cdktf-0.18.0 input-d3074786a5def42976852645afdb8943af9aab3562de935df98229e60b04c7e9 -->
+<!-- cache-key: cdktf-0.19.0 input-d3074786a5def42976852645afdb8943af9aab3562de935df98229e60b04c7e9 -->

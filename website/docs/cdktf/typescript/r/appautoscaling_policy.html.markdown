@@ -276,10 +276,10 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the policy. Must be between 1 and 255 characters in length.
-* `policyType` - (Optional) Policy type. Valid values are `stepScaling` and `targetTrackingScaling`. Defaults to `stepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html) and [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html) documentation.
-* `resourceId` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `resourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
-* `scalableDimension` - (Required) Scalable dimension of the scalable target. Documentation can be found in the `scalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
-* `serviceNamespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `serviceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
+* `policyType` - (Optional) Policy type. Valid values are `StepScaling` and `TargetTrackingScaling`. Defaults to `StepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html) and [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html) documentation.
+* `resourceId` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
+* `scalableDimension` - (Required) Scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
+* `serviceNamespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
 * `stepScalingPolicyConfiguration` - (Optional) Step scaling policy configuration, requires `policy_type = "StepScaling"` (default). See supported fields below.
 * `targetTrackingScalingPolicyConfiguration` - (Optional) Target tracking policy, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
 
@@ -287,7 +287,7 @@ This resource supports the following arguments:
 
 The `stepScalingPolicyConfiguration` configuration block supports the following arguments:
 
-* `adjustmentType` - (Required) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `changeInCapacity`, `exactCapacity`, and `percentChangeInCapacity`.
+* `adjustmentType` - (Required) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
 * `cooldown` - (Required) Amount of time, in seconds, after a scaling activity completes and before the next scaling activity can start.
 * `metricAggregationType` - (Optional) Aggregation type for the policy's metrics. Valid values are "Minimum", "Maximum", and "Average". Without a value, AWS will treat the aggregation type as "Average".
 * `minAdjustmentMagnitude` - (Optional) Minimum number to adjust your scalable dimension as a result of a scaling activity. If the adjustment type is PercentChangeInCapacity, the scaling policy changes the scalable dimension of the scalable target by this amount.
@@ -405,7 +405,7 @@ The `targetTrackingScalingPolicyConfiguration` `customizedMetricSpecification` c
 * `dimensions` - (Optional) Configuration block(s) with the dimensions of the metric if the metric was published with dimensions. Detailed below.
 * `metricName` - (Optional) Name of the metric.
 * `namespace` - (Optional) Namespace of the metric.
-* `statistic` - (Optional) Statistic of the metric. Valid values: `average`, `minimum`, `maximum`, `sampleCount`, and `sum`.
+* `statistic` - (Optional) Statistic of the metric. Valid values: `Average`, `Minimum`, `Maximum`, `SampleCount`, and `Sum`.
 * `unit` - (Optional) Unit of the metric.
 * `metrics` - (Optional) Metrics to include, as a metric data query.
 
@@ -420,10 +420,10 @@ The `targetTrackingScalingPolicyConfiguration` `customizedMetricSpecification` `
 
 The `targetTrackingScalingPolicyConfiguration` `customizedMetricSpecification` `metrics` configuration block supports the following arguments:
 
-* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metricStat`, but not both.
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
 * `id` - (Required) Short name for the metric used in target tracking scaling policy.
 * `label` - (Optional) Human-readable label for this metric or expression.
-* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metricStat`, but not both.
+* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `returnData` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ### target_tracking_scaling_policy_configuration customized_metric_specification metrics metric_stat
@@ -454,7 +454,7 @@ The `targetTrackingScalingPolicyConfiguration` `customizedMetricSpecification` `
 The `targetTrackingScalingPolicyConfiguration` `predefinedMetricSpecification` configuration block supports the following arguments:
 
 * `predefinedMetricType` - (Required) Metric type.
-* `resourceLabel` - (Optional) Reserved for future use if the `predefinedMetricType` is not `albRequestCountPerTarget`. If the `predefinedMetricType` is `albRequestCountPerTarget`, you must specify this argument. Documentation can be found at: [AWS Predefined Scaling Metric Specification](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html). Must be less than or equal to 1023 characters in length.
+* `resourceLabel` - (Optional) Reserved for future use if the `predefined_metric_type` is not `ALBRequestCountPerTarget`. If the `predefined_metric_type` is `ALBRequestCountPerTarget`, you must specify this argument. Documentation can be found at: [AWS Predefined Scaling Metric Specification](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html). Must be less than or equal to 1023 characters in length.
 
 ## Attribute Reference
 
@@ -487,4 +487,4 @@ Using `terraform import`, import Application AutoScaling Policy using the `servi
 % terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fbf0b558db12d5a4ee505edd94d9a657fd67e6fe4b86ba032dbf944c9b850975 -->
+<!-- cache-key: cdktf-0.19.0 input-fbf0b558db12d5a4ee505edd94d9a657fd67e6fe4b86ba032dbf944c9b850975 -->

@@ -60,7 +60,7 @@ The `sourceS3Path` configuration block supports the following arguments:
 The following arguments are optional:
 
 * `description` - (Optional) The description for a thesaurus.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -69,15 +69,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the thesaurus.
 * `id` - The unique identifiers of the thesaurus and index separated by a slash (`/`).
 * `status` - The current status of the thesaurus.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -101,4 +101,4 @@ Using `terraform import`, import `awsKendraThesaurus` using the unique identifie
 % terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c0dadf9d404f36bcb0eb8e47f42f731ded578d3015ecba91c35c34dacf029082 -->
+<!-- cache-key: cdktf-0.19.0 input-c0dadf9d404f36bcb0eb8e47f42f731ded578d3015ecba91c35c34dacf029082 -->

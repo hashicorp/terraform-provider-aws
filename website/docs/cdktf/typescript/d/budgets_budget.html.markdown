@@ -60,9 +60,9 @@ This data source exports the following attributes in addition to the arguments a
 * `costTypes` - Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `notification` - Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `plannedLimit` - Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
-* `timePeriodEnd` - The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017010112:00`.
-* `timePeriodStart` - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017010112:00`.
-* `timeUnit` - The length of time until a budget resets the actual and forecasted spend. Valid values: `monthly`, `quarterly`, `annually`, and `daily`.
+* `timePeriodEnd` - The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
+* `timePeriodStart` - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+* `timeUnit` - The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
 
 ### Actual Spend
 
@@ -72,20 +72,20 @@ The amount of cost, usage, RI units, or Savings Plans units that you used. Type 
 
 The parameters that determine the budget amount for an auto-adjusting budget.
 
-* `autoAdjustType` (Required) - The string that defines whether your budget auto-adjusts based on historical or forecasted data. Valid values: `forecast`,`historical`.
-* `historicalOptions` (Optional) - Configuration block of [Historical Options](#historical-options). Required for `autoAdjustType` of `historical` Configuration block that defines the historical data that your auto-adjusting budget is based on.
+* `autoAdjustType` (Required) - The string that defines whether your budget auto-adjusts based on historical or forecasted data. Valid values: `FORECAST`,`HISTORICAL`.
+* `historicalOptions` (Optional) - Configuration block of [Historical Options](#historical-options). Required for `auto_adjust_type` of `HISTORICAL` Configuration block that defines the historical data that your auto-adjusting budget is based on.
 * `lastAutoAdjustTime` (Optional) - The last time that your budget was auto-adjusted.
 
 ### Budget Notification
 
 Valid keys for `notification` parameter.
 
-* `comparisonOperator` - (Required) Comparison operator to use to evaluate the condition. Can be `lessThan`, `equalTo` or `greaterThan`.
+* `comparisonOperator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
 * `threshold` - (Required) Threshold when the notification should be sent.
-* `thresholdType` - (Required) What kind of threshold is defined. Can be `percentage` OR `absoluteValue`.
-* `notificationType` - (Required) What kind of budget value to notify on. Can be `actual` or `forecasted`.
-* `subscriberEmailAddresses` - (Optional) E-Mail addresses to notify. Either this or `subscriberSnsTopicArns` is required.
-* `subscriberSnsTopicArns` - (Optional) SNS topics to notify. Either this or `subscriberEmailAddresses` is required.
+* `thresholdType` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
+* `notificationType` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`.
+* `subscriberEmailAddresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
+* `subscriberSnsTopicArns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
 
 ### Cost Filter
 
@@ -134,14 +134,14 @@ Type is [Spend](#spend)
 ### Historical Options
 
 * `budgetAdjustmentPeriod` (Required) - The number of budget periods included in the moving-average calculation that determines your auto-adjusted budget amount.
-* `lookbackAvailablePeriods` (Optional) - The integer that describes how many budget periods in your BudgetAdjustmentPeriod are included in the calculation of your current budget limit. If the first budget period in your BudgetAdjustmentPeriod has no cost data, then that budget period isn’t included in the average that determines your budget limit. You can’t set your own LookBackAvailablePeriods. The value is automatically calculated from the `budgetAdjustmentPeriod` and your historical cost data.
+* `lookbackAvailablePeriods` (Optional) - The integer that describes how many budget periods in your BudgetAdjustmentPeriod are included in the calculation of your current budget limit. If the first budget period in your BudgetAdjustmentPeriod has no cost data, then that budget period isn’t included in the average that determines your budget limit. You can’t set your own LookBackAvailablePeriods. The value is automatically calculated from the `budget_adjustment_period` and your historical cost data.
 
 ### Planned Budget Limits
 
 Valid keys for `plannedLimit` parameter.
 
 * `amount` - (Required) The amount of cost or usage being measured for a budget.
-* `startTime` - (Required) The start time of the budget limit. Format: `2017010112:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `startTime` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 * `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 
 ### Spend
@@ -149,4 +149,4 @@ Valid keys for `plannedLimit` parameter.
 * `amount` - The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold. Length Constraints: Minimum length of `1`. Maximum length of `2147483647`.
 * `unit` - The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP. Length Constraints: Minimum length of `1`. Maximum length of `2147483647`.
 
-<!-- cache-key: cdktf-0.18.0 input-b7c31c3ad39479e59da06d0c3fe09f56627948373042fa6519f4be932fdc9787 -->
+<!-- cache-key: cdktf-0.19.0 input-b7c31c3ad39479e59da06d0c3fe09f56627948373042fa6519f4be932fdc9787 -->

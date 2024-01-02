@@ -81,7 +81,7 @@ This data source exports the following attributes in addition to the arguments a
 * `maxContacts` - Maximum number of contacts that can be in the queue before it is considered full. Minimum value of 0.
 * `outboundCallerConfig` - A block that defines the outbound caller ID name, number, and outbound whisper flow. The Outbound Caller Config block is documented below.
 * `queueId` - Identifier for the Queue.
-* `status` - Description of the Queue. Values are `enabled` or `disabled`.
+* `status` - Description of the Queue. Values are `ENABLED` or `DISABLED`.
 * `tags` - Map of tags assigned to the Queue.
 
 A `outboundCallerConfig` block supports the following arguments:
@@ -90,4 +90,4 @@ A `outboundCallerConfig` block supports the following arguments:
 * `outboundCallerIdNumberId` - Specifies the caller ID number.
 * `outboundFlowId` - Outbound whisper flow to be used during an outbound call.
 
-<!-- cache-key: cdktf-0.18.0 input-d0262a3c29b46b8dbb30b2ae9f8094c5a65be92283024cb87ab840ae200c1772 -->
+<!-- cache-key: cdktf-0.19.0 input-d0262a3c29b46b8dbb30b2ae9f8094c5a65be92283024cb87ab840ae200c1772 -->

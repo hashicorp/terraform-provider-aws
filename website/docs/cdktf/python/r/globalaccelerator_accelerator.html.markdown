@@ -102,4 +102,4 @@ Using `terraform import`, import Global Accelerator accelerators using the `arn`
 % terraform import aws_globalaccelerator_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7f5b36602f0875f89018a31aa91d4a8e5d30b8b26a613494ca2259ff9749c761 -->
+<!-- cache-key: cdktf-0.19.0 input-7f5b36602f0875f89018a31aa91d4a8e5d30b8b26a613494ca2259ff9749c761 -->

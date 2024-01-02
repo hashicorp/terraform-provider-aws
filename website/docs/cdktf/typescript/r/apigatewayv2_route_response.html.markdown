@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `apiId` - (Required) API identifier.
-* `routeId` - (Required) Identifier of the [`awsApigatewayv2Route`](/docs/providers/aws/r/apigatewayv2_route.html).
+* `routeId` - (Required) Identifier of the [`aws_apigatewayv2_route`](/docs/providers/aws/r/apigatewayv2_route.html).
 * `routeResponseKey` - (Required) Route response key.
 * `modelSelectionExpression` - (Optional) The [model selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-model-selection-expressions) for the route response.
 * `responseModels` - (Optional) Response models for the route response.
@@ -77,4 +77,4 @@ Using `terraform import`, import `awsApigatewayv2RouteResponse` using the API id
 % terraform import aws_apigatewayv2_route_response.example aabbccddee/1122334/998877
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-09d67e36afad395b0392b180f09d72c54381ca9fc1c80ad3269815c5d740e985 -->
+<!-- cache-key: cdktf-0.19.0 input-09d67e36afad395b0392b180f09d72c54381ca9fc1c80ad3269815c5d740e985 -->

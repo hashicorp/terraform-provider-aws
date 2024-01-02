@@ -45,8 +45,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `awsRegion` - (Optional) The AWS Region in which the Amazon Chime Voice Connector is created. Default value: `usEast1`
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `awsRegion` - (Optional) The AWS Region in which the Amazon Chime Voice Connector is created. Default value: `us-east-1`
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN (Amazon Resource Name) of the Amazon Chime Voice Connector.
 * `outboundHostName` - The outbound host name for the Amazon Chime Voice Connector.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_chime_voice_connector.test example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-57d9ed8368462a0a6c75d0f398c65a29c78ba9f2b52b59eeb50b3be795890ccd -->
+<!-- cache-key: cdktf-0.19.0 input-57d9ed8368462a0a6c75d0f398c65a29c78ba9f2b52b59eeb50b3be795890ccd -->

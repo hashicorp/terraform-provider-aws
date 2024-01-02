@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the CloudFront function.
-* `stage` - (Required) Function’s stage, either `development` or `live`.
+* `stage` - (Required) Function’s stage, either `DEVELOPMENT` or `LIVE`.
 
 ## Attribute Reference
 
@@ -60,6 +60,6 @@ This data source exports the following attributes in addition to the arguments a
 * `etag` - ETag hash of the function
 * `lastModifiedTime` - When this resource was last modified.
 * `runtime` - Identifier of the function's runtime.
-* `status` - Status of the function. Can be `unpublished`, `unassociated` or `associated`.
+* `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 
-<!-- cache-key: cdktf-0.18.0 input-91b978e70ce3fa4778a1e7fadb7052748a3a704504ddaff849ccb10b0b522561 -->
+<!-- cache-key: cdktf-0.19.0 input-91b978e70ce3fa4778a1e7fadb7052748a3a704504ddaff849ccb10b0b522561 -->

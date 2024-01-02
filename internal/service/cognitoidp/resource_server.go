@@ -118,7 +118,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.DescribeResourceServerInput{
@@ -137,7 +137,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
@@ -147,7 +147,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)

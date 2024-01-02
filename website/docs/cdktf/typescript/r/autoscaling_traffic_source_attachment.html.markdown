@@ -56,10 +56,10 @@ This resource supports the following arguments:
   The following lists the valid values:
   `elb` if `identifier` is the name of a Classic Load Balancer.
   `elbv2` if `identifier` is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group.
-  `vpcLattice` if `identifier` is the ARN of a VPC Lattice target group.
+  `vpc-lattice` if `identifier` is the ARN of a VPC Lattice target group.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-72bb6c9704283849d9c75ff3dafc57a9e90be5f5708ae5130ec931e2c4f0ef04 -->
+<!-- cache-key: cdktf-0.19.0 input-72bb6c9704283849d9c75ff3dafc57a9e90be5f5708ae5130ec931e2c4f0ef04 -->

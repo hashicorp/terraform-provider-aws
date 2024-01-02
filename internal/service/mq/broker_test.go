@@ -239,9 +239,9 @@ func TestDiffUsers(t *testing.T) {
 }
 
 const (
-	testAccBrokerVersionNewer = "5.16.3"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.15.12" // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.8.6"   // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
@@ -535,7 +535,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -1298,7 +1298,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "4"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", "data.aws_subnets.default", "ids.#"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access": "false",
@@ -1581,7 +1581,7 @@ resource "aws_mq_broker" "test" {
     time_zone   = "CET"
   }
 
-  publicly_accessible = true
+  publicly_accessible = false
   security_groups     = aws_security_group.test[*].id
 
   user {
@@ -2146,6 +2146,17 @@ resource "aws_mq_broker" "test" {
     username = "Test"
     password = "TestTest1234"
   }
+}
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
 }
 `, rName, version)
 }

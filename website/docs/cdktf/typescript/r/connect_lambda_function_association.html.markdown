@@ -71,4 +71,4 @@ Using `terraform import`, import `awsConnectLambdaFunctionAssociation` using the
 % terraform import aws_connect_lambda_function_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111,arn:aws:lambda:us-west-2:123456789123:function:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0dc6354187f80cf8f051974afaaff4271402269b69f61f468fc0147b5f4d0bfa -->
+<!-- cache-key: cdktf-0.19.0 input-0dc6354187f80cf8f051974afaaff4271402269b69f61f468fc0147b5f4d0bfa -->

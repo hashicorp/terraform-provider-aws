@@ -110,8 +110,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `workforceName` - (Required) The name of the Workforce (must be unique).
-* `cognitoConfig` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidcConfig`. see [Cognito Config](#cognito-config) details below.
-* `oidcConfig` - (Optional) Use this parameter to configure a private workforce using your own OIDC Identity Provider. Conflicts with `cognitoConfig`. see [OIDC Config](#oidc-config) details below.
+* `cognitoConfig` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
+* `oidcConfig` - (Optional) Use this parameter to configure a private workforce using your own OIDC Identity Provider. Conflicts with `cognito_config`. see [OIDC Config](#oidc-config) details below.
 * `sourceIpConfig` - (Optional) A list of IP address ranges Used to create an allow list of IP addresses for a private workforce. By default, a workforce isn't restricted to specific IP addresses. see [Source Ip Config](#source-ip-config) details below.
 * `workforceVpcConfig` - (Optional) configure a workforce using VPC. see [Workforce VPC Config](#workforce-vpc-config) details below.
 
@@ -172,4 +172,4 @@ Using `terraform import`, import SageMaker Workforces using the `workforceName`.
 % terraform import aws_sagemaker_workforce.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b4c9ab9708ddac7777a4511e715674b772e0a778ceb4beb60491fda22462d138 -->
+<!-- cache-key: cdktf-0.19.0 input-b4c9ab9708ddac7777a4511e715674b772e0a778ceb4beb60491fda22462d138 -->

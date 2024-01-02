@@ -40,14 +40,14 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of Pipeline.
 * `description` - (Optional) The description of Pipeline.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the client certificate.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -71,4 +71,4 @@ Using `terraform import`, import `awsDatapipelinePipeline` using the id (Pipelin
 % terraform import aws_datapipeline_pipeline.default df-1234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-900f2070a2090481270a42e79665c28c006980d650e7abfe29339b39fbd3a425 -->
+<!-- cache-key: cdktf-0.19.0 input-900f2070a2090481270a42e79665c28c006980d650e7abfe29339b39fbd3a425 -->

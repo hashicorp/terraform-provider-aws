@@ -692,11 +692,11 @@ The following arguments are optional:
 * `eventBusName` - (Optional) The name or ARN of the event bus to associate with the rule.
   If you omit this, the `default` event bus is used.
 * `httpTarget` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
-* `input` - (Optional) Valid JSON text passed to the target. Conflicts with `inputPath` and `inputTransformer`.
-* `inputPath` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `inputTransformer`.
-* `inputTransformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `inputPath`.
+* `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
+* `inputPath` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
+* `inputTransformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `kinesisTarget` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
-* `roleArn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecsTarget` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
+* `roleArn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
 * `runCommandTargets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshiftTarget` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retryPolicy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
@@ -724,23 +724,23 @@ The following arguments are optional:
 ### ecs_target
 
 * `taskDefinitionArn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.
-* `capacityProviderStrategy` - (Optional) The capacity provider strategy to use for the task. If a `capacityProviderStrategy` specified, the `launchType` parameter must be omitted. If no `capacityProviderStrategy` or `launchType` is specified, the default capacity provider strategy for the cluster is used. Can be one or more. See below.
+* `capacityProviderStrategy` - (Optional) The capacity provider strategy to use for the task. If a `capacity_provider_strategy` specified, the `launch_type` parameter must be omitted. If no `capacity_provider_strategy` or `launch_type` is specified, the default capacity provider strategy for the cluster is used. Can be one or more. See below.
 * `enableEcsManagedTags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task.
 * `enableExecuteCommand` - (Optional) Whether or not to enable the execute command functionality for the containers in this task. If true, this enables execute command functionality on all containers in the task.
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
-* `launchType` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `ec2`, `external`, or `fargate`.
-* `networkConfiguration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launchType` is `fargate` because the awsvpc mode is required for Fargate tasks.
+* `launchType` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `EC2`, `EXTERNAL`, or `FARGATE`.
+* `networkConfiguration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launch_type` is `FARGATE` because the awsvpc mode is required for Fargate tasks.
 * `orderedPlacementStrategy` - (Optional) An array of placement strategy objects to use for the task. You can specify a maximum of five strategy rules per task.
 * `placementConstraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
-* `platformVersion` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `110`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
-* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `taskDefinition`.
+* `platformVersion` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
+* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
 * `taskCount` - (Optional) The number of tasks to create based on the TaskDefinition. Defaults to `1`.
 * `tags` - (Optional) A map of tags to assign to ecs resources.
 
 ### http_target
 
 * `headerParameters` - (Optional) Enables you to specify HTTP headers to add to the request.
-* `pathParameterValues` - (Optional) The list of values that correspond sequentially to any path variables in your endpoint ARN (for example `arn:aws:executeApi:usEast1:123456:myapi/*/post/pets/*`).
+* `pathParameterValues` - (Optional) The list of values that correspond sequentially to any path variables in your endpoint ARN (for example `arn:aws:execute-api:us-east-1:123456:myapi/*/POST/pets/*`).
 * `queryStringParameters` - (Optional) Represents keys/values of query string parameters that are appended to the invoked endpoint.
 
 ### input_transformer
@@ -766,7 +766,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 ### ordered_placement_strategy
 
 * `type` - (Required) Type of placement strategy. The only valid values at this time are `binpack`, `random` and `spread`.
-* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecsAvailabilityZone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
+* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecs.availability-zone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
 
 ### placement_constraint
 
@@ -789,8 +789,8 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ### run_command_targets
 
-* `key` - (Required) Can be either `tag:tagKey` or `instanceIds`.
-* `values` - (Required) If Key is `tag:tagKey`, Values is a list of tag values. If Key is `instanceIds`, Values is a list of Amazon EC2 instance IDs.
+* `key` - (Required) Can be either `tag:tag-key` or `InstanceIds`.
+* `values` - (Required) If Key is `tag:tag-key`, Values is a list of tag values. If Key is `InstanceIds`, Values is a list of Amazon EC2 instance IDs.
 
 ### sqs_target
 
@@ -831,4 +831,4 @@ Using `terraform import`, import EventBridge Targets using `eventBusName/ruleNam
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-164c7e04d13a473ab9a0bbaa30d85030d052da19096a3497304d82fd1d72d513 -->
+<!-- cache-key: cdktf-0.19.0 input-164c7e04d13a473ab9a0bbaa30d85030d052da19096a3497304d82fd1d72d513 -->

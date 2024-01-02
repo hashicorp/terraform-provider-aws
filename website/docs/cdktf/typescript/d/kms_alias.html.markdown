@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `targetKeyId` - Key identifier pointed to by the alias.
 * `targetKeyArn` - ARN pointed to by the alias.
 
-<!-- cache-key: cdktf-0.18.0 input-a26328bd3bb7108ab75996766b208d1cd2fdaf417bd2555aa1588956c0544b01 -->
+<!-- cache-key: cdktf-0.19.0 input-a26328bd3bb7108ab75996766b208d1cd2fdaf417bd2555aa1588956c0544b01 -->

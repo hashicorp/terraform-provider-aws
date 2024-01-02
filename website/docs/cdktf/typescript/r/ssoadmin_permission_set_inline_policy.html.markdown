@@ -97,8 +97,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -122,4 +122,4 @@ Using `terraform import`, import SSO Permission Set Inline Policies using the `p
 % terraform import aws_ssoadmin_permission_set_inline_policy.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f84fb52afb87edc6b7246f6e44d458f33af2b054e17ae0d967f945cade307d27 -->
+<!-- cache-key: cdktf-0.19.0 input-f84fb52afb87edc6b7246f6e44d458f33af2b054e17ae0d967f945cade307d27 -->

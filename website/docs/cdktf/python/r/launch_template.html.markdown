@@ -255,7 +255,7 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile.
+* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
@@ -512,4 +512,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a5333efb037c0df523bc8a52b27bb2917c678c42feabe7b2e32815b125c04e27 -->
+<!-- cache-key: cdktf-0.19.0 input-740500aac22d15b6b6233d6f4556ea72a049c35bfa06ee3b2a9bc0de4c406a93 -->

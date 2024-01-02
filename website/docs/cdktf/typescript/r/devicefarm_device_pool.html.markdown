@@ -49,12 +49,12 @@ class MyConvertedCode extends TerraformStack {
 * `rule` - (Required) The device pool's rules. See [Rule](#rule).
 * `description` - (Optional) The device pool's description.
 * `maxDevices` - (Optional) The number of devices that Device Farm can add to your device pool.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Rule
 
-* `attribute` - (Optional) The rule's stringified attribute. Valid values are: `appiumVersion`, `arn`, `availability`, `fleetType`, `formFactor`, `instanceArn`, `instanceLabels`, `manufacturer`, `model`, `osVersion`, `platform`, `remoteAccessEnabled`, `remoteDebugEnabled`.
-* `operator` - (Optional) Specifies how Device Farm compares the rule's attribute to the value. For the operators that are supported by each attribute. Valid values are: `equals`, `notIn`, `in`, `greaterThan`, `greaterThanOrEquals`, `lessThan`, `lessThanOrEquals`, `contains`.
+* `attribute` - (Optional) The rule's stringified attribute. Valid values are: `APPIUM_VERSION`, `ARN`, `AVAILABILITY`, `FLEET_TYPE`, `FORM_FACTOR`, `INSTANCE_ARN`, `INSTANCE_LABELS`, `MANUFACTURER`, `MODEL`, `OS_VERSION`, `PLATFORM`, `REMOTE_ACCESS_ENABLED`, `REMOTE_DEBUG_ENABLED`.
+* `operator` - (Optional) Specifies how Device Farm compares the rule's attribute to the value. For the operators that are supported by each attribute. Valid values are: `EQUALS`, `NOT_IN`, `IN`, `GREATER_THAN`, `GREATER_THAN_OR_EQUALS`, `LESS_THAN`, `LESS_THAN_OR_EQUALS`, `CONTAINS`.
 * `value` - (Optional) The rule's value.
 
 ## Attribute Reference
@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of this Device Pool
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import DeviceFarm Device Pools using their ARN. For ex
 % terraform import aws_devicefarm_device_pool.example arn:aws:devicefarm:us-west-2:123456789012:devicepool:4fa784c7-ccb4-4dbf-ba4f-02198320daa1/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-70dc4ff5fd779dddf25798da293a38ce0cbfa6d4a0332256582b1806152f2230 -->
+<!-- cache-key: cdktf-0.19.0 input-70dc4ff5fd779dddf25798da293a38ce0cbfa6d4a0332256582b1806152f2230 -->

@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `total_address_count` - Total number of addresses in the pool.
 * `total_available_address_count` - Total number of available addresses in the pool.
 
-<!-- cache-key: cdktf-0.18.0 input-48bacd43b83d45d6042e5adf0821e82fae16e4191784bc09d4af47b05ff7cf8b -->
+<!-- cache-key: cdktf-0.19.0 input-48bacd43b83d45d6042e5adf0821e82fae16e4191784bc09d4af47b05ff7cf8b -->

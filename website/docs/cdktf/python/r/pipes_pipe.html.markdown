@@ -591,4 +591,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->
+<!-- cache-key: cdktf-0.19.0 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->

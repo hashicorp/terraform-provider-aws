@@ -8,12 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -209,7 +205,7 @@ func TestARNStringFromFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid ARN": {
-			input:    fwtypes.ARNValue(errs.Must(arn.Parse("arn:aws:iam::123456789012:user/David"))),
+			input:    fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
 			expected: aws.String("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
@@ -246,7 +242,7 @@ func TestStringToFrameworkARN(t *testing.T) {
 	tests := map[string]testCase{
 		"valid ARN": {
 			input:    aws.String("arn:aws:iam::123456789012:user/David"),
-			expected: fwtypes.ARNValue(errs.Must(arn.Parse("arn:aws:iam::123456789012:user/David"))),
+			expected: fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
 			input:    nil,
@@ -259,12 +255,9 @@ func TestStringToFrameworkARN(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var diags diag.Diagnostics
-			got := flex.StringToFrameworkARN(context.Background(), test.input, &diags)
+			got := flex.StringToFrameworkARN(context.Background(), test.input)
 
-			if err := fwdiag.DiagnosticsError(diags); err != nil {
-				t.Errorf("err %q", err)
-			} else if diff := cmp.Diff(got, test.expected); diff != "" {
+			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})

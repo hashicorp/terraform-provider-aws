@@ -52,20 +52,20 @@ This data source exports the following attributes in addition to the arguments a
 * `enhancedImageMetadataEnabled` - Whether additional information about the image being created is collected.
 * `imageRecipeArn` - ARN of the image recipe.
 * `imageTestsConfiguration` - List of an object with image scanning configuration.
-    * `imageScanningEnabled`  - Whether image scanning is enabled.
-    * `ecrConfiguration`  - List if an object with ecr configuration for image scanning
-        * `containerTags`  - Tags that are added to the output containers that are scanned
-        * `repositoryName`  - The name of the container repository that Amazon Inspector scans
+    * `image_scanning_enabled`  - Whether image scanning is enabled.
+    * `ecr_configuration`  - List if an object with ecr configuration for image scanning
+        * `container_tags`  - Tags that are added to the output containers that are scanned
+        * `repository_name`  - The name of the container repository that Amazon Inspector scans
 * `imageTestsConfiguration` - List of an object with image tests configuration.
-    * `imageTestsEnabled` - Whether image tests are enabled.
-    * `timeoutMinutes` - Number of minutes before image tests time out.
+    * `image_tests_enabled` - Whether image tests are enabled.
+    * `timeout_minutes` - Number of minutes before image tests time out.
 * `infrastructureConfigurationArn` - ARN of the Image Builder Infrastructure Configuration.
 * `name` - Name of the image pipeline.
 * `platform` - Platform of the image pipeline.
 * `schedule` - List of an object with schedule settings.
-    * `pipelineExecutionStartCondition` - Condition when the pipeline should trigger a new image build.
-    * `scheduleExpression` - Cron expression of how often the pipeline start condition is evaluated.
+    * `pipeline_execution_start_condition` - Condition when the pipeline should trigger a new image build.
+    * `schedule_expression` - Cron expression of how often the pipeline start condition is evaluated.
 * `status` - Status of the image pipeline.
 * `tags` - Key-value map of resource tags for the image pipeline.
 
-<!-- cache-key: cdktf-0.18.0 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->
+<!-- cache-key: cdktf-0.19.0 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->

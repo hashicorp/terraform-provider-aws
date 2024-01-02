@@ -53,7 +53,8 @@ The following arguments are optional:
 * `enhancedImageMetadataEnabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
 * `imageRecipeArn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `imageTestsConfiguration` - (Optional) Configuration block with image tests configuration. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `imageScanningConfiguration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_tests_configuration
 
@@ -61,6 +62,20 @@ The following arguments are optional:
 
 * `imageTestsEnabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeoutMinutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
+
+### image_scanning_configuration
+
+The following arguments are optional:
+
+* `imageScanningEnabled` - (Optional) Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image. Defaults to `false`.
+* `ecrConfiguration` - (Optional) Configuration block with ECR configuration. Detailed below.
+
+### ecr_configuration
+
+The following arguments are optional:
+
+* `repositoryName` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+* `containerTags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 
 ## Attribute Reference
 
@@ -72,22 +87,22 @@ This resource exports the following attributes in addition to the arguments abov
 * `osVersion` - Operating System version of the image.
 * `outputResources` - List of objects with resources created by the image.
     * `amis` - Set of objects with each Amazon Machine Image (AMI) created.
-        * `accountId` - Account identifier of the AMI.
+        * `account_id` - Account identifier of the AMI.
         * `description` - Description of the AMI.
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
     * `containers` - Set of objects with each container image created and stored in the output repository.
-        * `imageUris` - Set of URIs for created containers.
+        * `image_uris` - Set of URIs for created containers.
         * `region` - Region of the container image.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Version of the image.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
+* `create` - (Default `60m`)
 
 ## Import
 
@@ -111,4 +126,4 @@ Using `terraform import`, import `awsImagebuilderImage` resources using the Amaz
 % terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-230d8578b45b14b1a8845c108bc90b30adc5aa2a7396435740852e45a6722d75 -->
+<!-- cache-key: cdktf-0.19.0 input-1cfd36f8fabb6982d4f93c93832c07a2a2e26fd75759b9f073c07a7c18e7453f -->

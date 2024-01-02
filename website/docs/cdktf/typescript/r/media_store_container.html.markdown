@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the container. Must contain alphanumeric characters or underscores.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the container.
 * `endpoint` - The DNS endpoint of the container.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -71,4 +71,4 @@ Using `terraform import`, import MediaStore Container using the MediaStore Conta
 % terraform import aws_media_store_container.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-534cdde6fc1c98559d9e005ae9cd5a252af07161d62318424cfe7000b0a2d854 -->
+<!-- cache-key: cdktf-0.19.0 input-534cdde6fc1c98559d9e005ae9cd5a252af07161d62318424cfe7000b0a2d854 -->

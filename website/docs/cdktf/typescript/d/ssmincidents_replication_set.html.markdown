@@ -51,14 +51,14 @@ This data source exports the following attributes in addition to the arguments a
 * `deletionProtected` - If `true`, the last remaining Region in a replication set can’t be deleted.
 * `lastModifiedBy` - The ARN of the user who last modified the replication set.
 * `status` - The overall status of a replication set.
-    * Valid Values: `active` | `creating` | `updating` | `deleting` | `failed`
+    * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 
 The `region` configuration block exports the following attributes for each Region:
 
 * `name` - The name of the Region.
 * `kmsKeyArn` - The ARN of the AWS Key Management Service (AWS KMS) encryption key.
 * `status` - The current status of the Region.
-    * Valid Values: `active` | `creating` | `updating` | `deleting` | `failed`
+    * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 * `statusMessage` - More information about the status of a Region.
 
-<!-- cache-key: cdktf-0.18.0 input-39319f4ba29ed3dd3b2f5e50f169ffe1879a34918a97973bcb5a09f09dcd8369 -->
+<!-- cache-key: cdktf-0.19.0 input-39319f4ba29ed3dd3b2f5e50f169ffe1879a34918a97973bcb5a09f09dcd8369 -->

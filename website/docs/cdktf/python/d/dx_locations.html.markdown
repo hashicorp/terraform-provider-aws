@@ -42,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `location_codes` - Code for the locations.
 
-<!-- cache-key: cdktf-0.18.0 input-edf9691bbd1000b72a448faca5fe847d9e9f887f6e0151e1dd14c6adec8f3ca6 -->
+<!-- cache-key: cdktf-0.19.0 input-edf9691bbd1000b72a448faca5fe847d9e9f887f6e0151e1dd14c6adec8f3ca6 -->

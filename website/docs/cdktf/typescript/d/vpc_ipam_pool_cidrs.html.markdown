@@ -129,6 +129,6 @@ The following attribute is additionally exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `1M`)
+- `read` - (Default `1m`)
 
-<!-- cache-key: cdktf-0.18.0 input-b9fe0569a3bb59535a5bd318b59bb8f37d4a198fb5bfa62af131cfaa8ffd8980 -->
+<!-- cache-key: cdktf-0.19.0 input-b9fe0569a3bb59535a5bd318b59bb8f37d4a198fb5bfa62af131cfaa8ffd8980 -->

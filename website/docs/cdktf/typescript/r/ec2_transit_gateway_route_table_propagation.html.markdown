@@ -76,4 +76,4 @@ Using `terraform import`, import `awsEc2TransitGatewayRouteTablePropagation` usi
 % terraform import aws_ec2_transit_gateway_route_table_propagation.example tgw-rtb-12345678_tgw-attach-87654321
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0296774da3cc7e6a2540fcd890af389ccf67fa4d39cf5ee59832361eca60bcc4 -->
+<!-- cache-key: cdktf-0.19.0 input-0296774da3cc7e6a2540fcd890af389ccf67fa4d39cf5ee59832361eca60bcc4 -->

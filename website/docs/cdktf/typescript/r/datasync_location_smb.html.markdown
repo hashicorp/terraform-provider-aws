@@ -46,25 +46,25 @@ This resource supports the following arguments:
 
 * `agentArns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `domain` - (Optional) The name of the Windows domain the SMB server belongs to.
-* `mountOptions` - (Optional) Configuration block containing mount options used by DataSync to access the SMB Server. Can be `automatic`, `smb2`, or `smb3`.
+* `mountOptions` - (Optional) Configuration block containing mount options used by DataSync to access the SMB Server. Can be `AUTOMATIC`, `SMB2`, or `SMB3`.
 * `password` - (Required) The password of the user who can mount the share and has file permissions in the SMB.
 * `serverHostname` - (Required) Specifies the IP address or DNS name of the SMB server. The DataSync Agent(s) use this to mount the SMB share.
 * `subdirectory` - (Required) Subdirectory to perform actions as source or destination. Should be exported by the NFS server.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user` - (Required) The user who can mount the share and has file and folder permissions in the SMB share.
 
 ### mount_options Argument Reference
 
 The `mountOptions` configuration block supports the following arguments:
 
-* `version` - (Optional) The specific SMB version that you want DataSync to use for mounting your SMB share. Valid values: `automatic`, `smb2`, and `smb3`. Default: `automatic`
+* `version` - (Optional) The specific SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB2`, and `SMB3`. Default: `AUTOMATIC`
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import `awsDatasyncLocationSmb` using the Amazon Resou
 % terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ef64a786032b1bd4736b717fcbb2fa2b4849fff365db36c6537de225840acb5d -->
+<!-- cache-key: cdktf-0.19.0 input-ef64a786032b1bd4736b717fcbb2fa2b4849fff365db36c6537de225840acb5d -->

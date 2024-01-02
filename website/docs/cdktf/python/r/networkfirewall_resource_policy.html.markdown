@@ -113,4 +113,4 @@ Using `terraform import`, import Network Firewall Resource Policies using the `r
 % terraform import aws_networkfirewall_resource_policy.example aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c5fa671486177fa4e87a6bb581a11477626a302a6be68b0b30edb7287b73cc5c -->
+<!-- cache-key: cdktf-0.19.0 input-c5fa671486177fa4e87a6bb581a11477626a302a6be68b0b30edb7287b73cc5c -->

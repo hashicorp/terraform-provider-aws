@@ -95,4 +95,4 @@ Using `terraform import`, import KMS multi-Region replica keys using the `id`. F
 % terraform import aws_kms_replica_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d9e0bf46edfbeab8b46e2d9e97a2d761d4db8938a03b29da3f959636cabf71c7 -->
+<!-- cache-key: cdktf-0.19.0 input-d9e0bf46edfbeab8b46e2d9e97a2d761d4db8938a03b29da3f959636cabf71c7 -->

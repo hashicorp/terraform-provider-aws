@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `fsxFilesystemArn` - (Required) The Amazon Resource Name (ARN) for the FSx for Lustre file system.
 * `securityGroupArns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for Lustre file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uri` - The URL of the FSx for Lustre location that was described.
 * `creationTime` - The time that the FSx for Lustre location was created.
 
@@ -76,4 +76,4 @@ Using `terraform import`, import `awsDatasyncLocationFsxLustreFileSystem` using 
 % terraform import aws_datasync_location_fsx_lustre_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:476956259333:file-system/fs-08e04cd442c1bb94a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ff1125dfd4d4a7819d78cada4fa2e6a9cacc0dbd81f2b217268a7544a6a5415d -->
+<!-- cache-key: cdktf-0.19.0 input-ff1125dfd4d4a7819d78cada4fa2e6a9cacc0dbd81f2b217268a7544a6a5415d -->

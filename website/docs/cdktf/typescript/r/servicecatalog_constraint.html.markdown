@@ -53,7 +53,7 @@ The following arguments are required:
 * `parameters` - (Required) Constraint parameters in JSON format. The syntax depends on the constraint type. See details below.
 * `portfolioId` - (Required) Portfolio identifier.
 * `productId` - (Required) Product identifier.
-* `type` - (Required) Type of constraint. Valid values are `launch`, `notification`, `resourceUpdate`, `stackset`, and `template`.
+* `type` - (Required) Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `RESOURCE_UPDATE`, `STACKSET`, and `TEMPLATE`.
 
 The following arguments are optional:
 
@@ -64,7 +64,7 @@ The following arguments are optional:
 
 The `type` you specify determines what must be included in the `parameters` JSON:
 
-* `launch`: You are required to specify either the RoleArn or the LocalRoleName but can't use both. If you specify the `localRoleName` property, when an account uses the launch constraint, the IAM role with that name in the account will be used. This allows launch-role constraints to be account-agnostic so the administrator can create fewer resources per shared account. The given role name must exist in the account used to create the launch constraint and the account of the user who launches a product with this launch constraint. You cannot have both a `launch` and a `stackset` constraint. You also cannot have more than one `launch` constraint on an `awsServicecatalogProduct` and `awsServicecatalogPortfolio`. Specify the `roleArn` and `localRoleName` properties as follows:
+* `launch`: You are required to specify either the RoleArn or the LocalRoleName but can't use both. If you specify the `LocalRoleName` property, when an account uses the launch constraint, the IAM role with that name in the account will be used. This allows launch-role constraints to be account-agnostic so the administrator can create fewer resources per shared account. The given role name must exist in the account used to create the launch constraint and the account of the user who launches a product with this launch constraint. You cannot have both a `LAUNCH` and a `STACKSET` constraint. You also cannot have more than one `LAUNCH` constraint on an `aws_servicecatalog_product` and `aws_servicecatalog_portfolio`. Specify the `RoleArn` and `LocalRoleName` properties as follows:
 
 ```json
 { "RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole" }
@@ -74,19 +74,19 @@ The `type` you specify determines what must be included in the `parameters` JSON
 { "LocalRoleName" : "SCBasicLaunchRole" }
 ```
 
-* `notification`: Specify the `notificationArns` property as follows:
+* `notification`: Specify the `NotificationArns` property as follows:
 
 ```json
 { "NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"] }
 ```
 
-* `resourceUpdate`: Specify the `tagUpdatesOnProvisionedProduct` property as follows. The `tagUpdatesOnProvisionedProduct` property accepts a string value of `allowed` or `notAllowed`.
+* `resourceUpdate`: Specify the `TagUpdatesOnProvisionedProduct` property as follows. The `TagUpdatesOnProvisionedProduct` property accepts a string value of `ALLOWED` or `NOT_ALLOWED`.
 
 ```json
 { "Version" : "2.0","Properties" :{ "TagUpdateOnProvisionedProduct" : "String" }}
 ```
 
-* `stackset`: Specify the Parameters property as follows. You cannot have both a `launch` and a `stackset` constraint. You also cannot have more than one `stackset` constraint on on an `awsServicecatalogProduct` and `awsServicecatalogPortfolio`. Products with a `stackset` constraint will launch an AWS CloudFormation stack set.
+* `stackset`: Specify the Parameters property as follows. You cannot have both a `LAUNCH` and a `STACKSET` constraint. You also cannot have more than one `STACKSET` constraint on on an `aws_servicecatalog_product` and `aws_servicecatalog_portfolio`. Products with a `STACKSET` constraint will launch an AWS CloudFormation stack set.
 
 ```json
 { "Version" : "String", "Properties" : { "AccountList" : [ "String" ], "RegionList" : [ "String" ], "AdminRole" : "String", "ExecutionRole" : "String" }}
@@ -105,10 +105,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `update` - (Default `3M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -132,4 +132,4 @@ Using `terraform import`, import `awsServicecatalogConstraint` using the constra
 % terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f391e00f1f29453b1e81c01e36db6ce37af9e3b44513a1ffefd379e9b7d4ba13 -->
+<!-- cache-key: cdktf-0.19.0 input-f391e00f1f29453b1e81c01e36db6ce37af9e3b44513a1ffefd379e9b7d4ba13 -->

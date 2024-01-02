@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `forceDestroy` - (Optional, Default: `false`) A boolean that indicates that all recovery points stored in the vault are deleted so that the vault can be destroyed without error.
 * `kmsKeyArn` - (Optional) The server-side encryption key that is used to protect your backups.
 * `name` - (Required) Name of the backup vault to create.
-* `tags` - (Optional) Metadata that you can assign to help organize the resources that you create. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Metadata that you can assign to help organize the resources that you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -51,13 +51,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name of the vault.
 * `arn` - The ARN of the vault.
 * `recoveryPoints` - The number of recovery points that are stored in a backup vault.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `10M`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import Backup vault using the `name`. For example:
 % terraform import aws_backup_vault.test-vault TestVault
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-eca95e815c6165631f5519aecaf60793b9c12d8e7d3bc319cb6177906c2d98c0 -->
+<!-- cache-key: cdktf-0.19.0 input-eca95e815c6165631f5519aecaf60793b9c12d8e7d3bc319cb6177906c2d98c0 -->

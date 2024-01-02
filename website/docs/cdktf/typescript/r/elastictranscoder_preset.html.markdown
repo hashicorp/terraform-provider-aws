@@ -109,7 +109,7 @@ The `audio` object supports the following:
 * `audioPackingMode` - The method of organizing audio channels and tracks. Use Audio:Channels to specify the number of channels in your output, and Audio:AudioPackingMode to specify the number of tracks and their relation to the channels. If you do not specify an Audio:AudioPackingMode, Elastic Transcoder uses SingleTrack.
 * `bitRate` - The bit rate of the audio stream in the output file, in kilobits/second. Enter an integer between 64 and 320, inclusive.
 * `channels` - The number of audio channels in the output file
-* `codec` - The audio codec for the output file. Valid values are `aac`, `flac`, `mp2`, `mp3`, `pcm`, and `vorbis`.
+* `codec` - The audio codec for the output file. Valid values are `AAC`, `flac`, `mp2`, `mp3`, `pcm`, and `vorbis`.
 * `sampleRate` - The sample rate of the audio stream in the output file, in hertz. Valid values are: `auto`, `22050`, `32000`, `44100`, `48000`, `96000`
 
 The `audioCodecOptions` object supports the following:
@@ -127,48 +127,48 @@ The `thumbnails` object supports the following:
 * `maxHeight` - The maximum height of thumbnails, in pixels. If you specify auto, Elastic Transcoder uses 1080 (Full HD) as the default value. If you specify a numeric value, enter an even integer between 32 and 3072, inclusive.
 * `maxWidth` - The maximum width of thumbnails, in pixels. If you specify auto, Elastic Transcoder uses 1920 (Full HD) as the default value. If you specify a numeric value, enter an even integer between 32 and 4096, inclusive.
 * `paddingPolicy` - When you set PaddingPolicy to Pad, Elastic Transcoder might add black bars to the top and bottom and/or left and right sides of thumbnails to make the total size of the thumbnails match the values that you specified for thumbnail MaxWidth and MaxHeight settings.
-* `resolution` - The width and height of thumbnail files in pixels, in the format WidthxHeight, where both values are even integers. The values cannot exceed the width and height that you specified in the Video:Resolution object. (To better control resolution and aspect ratio of thumbnails, we recommend that you use the thumbnail values `maxWidth`, `maxHeight`, `sizingPolicy`, and `paddingPolicy` instead of `resolution` and `aspectRatio`. The two groups of settings are mutually exclusive. Do not use them together)
-* `sizingPolicy` - A value that controls scaling of thumbnails. Valid values are: `fit`, `fill`, `stretch`, `keep`, `shrinkToFit`, and `shrinkToFill`.
+* `resolution` - The width and height of thumbnail files in pixels, in the format WidthxHeight, where both values are even integers. The values cannot exceed the width and height that you specified in the Video:Resolution object. (To better control resolution and aspect ratio of thumbnails, we recommend that you use the thumbnail values `max_width`, `max_height`, `sizing_policy`, and `padding_policy` instead of `resolution` and `aspect_ratio`. The two groups of settings are mutually exclusive. Do not use them together)
+* `sizingPolicy` - A value that controls scaling of thumbnails. Valid values are: `Fit`, `Fill`, `Stretch`, `Keep`, `ShrinkToFit`, and `ShrinkToFill`.
 
 The `video` object supports the following:
 
-* `aspectRatio` - The display aspect ratio of the video in the output file. Valid values are: `auto`, `1:1`, `4:3`, `3:2`, `16:9`. (Note; to better control resolution and aspect ratio of output videos, we recommend that you use the values `maxWidth`, `maxHeight`, `sizingPolicy`, `paddingPolicy`, and `displayAspectRatio` instead of `resolution` and `aspectRatio`.)
+* `aspectRatio` - The display aspect ratio of the video in the output file. Valid values are: `auto`, `1:1`, `4:3`, `3:2`, `16:9`. (Note; to better control resolution and aspect ratio of output videos, we recommend that you use the values `max_width`, `max_height`, `sizing_policy`, `padding_policy`, and `display_aspect_ratio` instead of `resolution` and `aspect_ratio`.)
 * `bitRate` - The bit rate of the video stream in the output file, in kilobits/second. You can configure variable bit rate or constant bit rate encoding.
-* `codec` - The video codec for the output file. Valid values are `gif`, `h264`, `mpeg2`, `vp8`, and `vp9`.
+* `codec` - The video codec for the output file. Valid values are `gif`, `H.264`, `mpeg2`, `vp8`, and `vp9`.
 * `displayAspectRatio` - The value that Elastic Transcoder adds to the metadata in the output file. If you set DisplayAspectRatio to auto, Elastic Transcoder chooses an aspect ratio that ensures square pixels. If you specify another option, Elastic Transcoder sets that value in the output file.
 * `fixedGop` - Whether to use a fixed value for Video:FixedGOP. Not applicable for containers of type gif. Valid values are true and false. Also known as, Fixed Number of Frames Between Keyframes.
-* `frameRate` - The frames per second for the video stream in the output file. The following values are valid: `auto`, `10`, `15`, `2397`, `24`, `25`, `2997`, `30`, `50`, `60`.
+* `frameRate` - The frames per second for the video stream in the output file. The following values are valid: `auto`, `10`, `15`, `23.97`, `24`, `25`, `29.97`, `30`, `50`, `60`.
 * `keyframesMaxDist` - The maximum number of frames between key frames. Not applicable for containers of type gif.
 * `maxFrameRate` - If you specify auto for FrameRate, Elastic Transcoder uses the frame rate of the input video for the frame rate of the output video, up to the maximum frame rate. If you do not specify a MaxFrameRate, Elastic Transcoder will use a default of 30.
 * `maxHeight` - The maximum height of the output video in pixels. If you specify auto, Elastic Transcoder uses 1080 (Full HD) as the default value. If you specify a numeric value, enter an even integer between 96 and 3072, inclusive.
 * `maxWidth` - The maximum width of the output video in pixels. If you specify auto, Elastic Transcoder uses 1920 (Full HD) as the default value. If you specify a numeric value, enter an even integer between 128 and 4096, inclusive.
-* `paddingPolicy` - When you set PaddingPolicy to Pad, Elastic Transcoder might add black bars to the top and bottom and/or left and right sides of the output video to make the total size of the output video match the values that you specified for `maxWidth` and `maxHeight`.
-* `resolution` - The width and height of the video in the output file, in pixels. Valid values are `auto` and `widthxheight`. (see note for `aspectRatio`)
-* `sizingPolicy` - A value that controls scaling of the output video. Valid values are: `fit`, `fill`, `stretch`, `keep`, `shrinkToFit`, `shrinkToFill`.
+* `paddingPolicy` - When you set PaddingPolicy to Pad, Elastic Transcoder might add black bars to the top and bottom and/or left and right sides of the output video to make the total size of the output video match the values that you specified for `max_width` and `max_height`.
+* `resolution` - The width and height of the video in the output file, in pixels. Valid values are `auto` and `widthxheight`. (see note for `aspect_ratio`)
+* `sizingPolicy` - A value that controls scaling of the output video. Valid values are: `Fit`, `Fill`, `Stretch`, `Keep`, `ShrinkToFit`, `ShrinkToFill`.
 
 The `videoWatermarks` object supports the following:
 
-* `horizontalAlign` - The horizontal position of the watermark unless you specify a nonzero value for `horzontalOffset`.
-* `horizontalOffset` - The amount by which you want the horizontal position of the watermark to be offset from the position specified by `horizontalAlign`.
+* `horizontalAlign` - The horizontal position of the watermark unless you specify a nonzero value for `horzontal_offset`.
+* `horizontalOffset` - The amount by which you want the horizontal position of the watermark to be offset from the position specified by `horizontal_align`.
 * `id` - A unique identifier for the settings for one watermark. The value of Id can be up to 40 characters long. You can specify settings for up to four watermarks.
 * `maxHeight` - The maximum height of the watermark.
 * `maxWidth` - The maximum width of the watermark.
 * `opacity` - A percentage that indicates how much you want a watermark to obscure the video in the location where it appears.
-* `sizingPolicy` - A value that controls scaling of the watermark. Valid values are: `fit`, `stretch`, `shrinkToFit`
-* `target` - A value that determines how Elastic Transcoder interprets values that you specified for `videoWatermarksHorizontalOffset`, `videoWatermarksVerticalOffset`, `videoWatermarksMaxWidth`, and `videoWatermarksMaxHeight`. Valid values are `content` and `frame`.
-* `verticalAlign` - The vertical position of the watermark unless you specify a nonzero value for `verticalAlign`. Valid values are `top`, `bottom`, `center`.
-* `verticalOffset` - The amount by which you want the vertical position of the watermark to be offset from the position specified by `verticalAlign`
+* `sizingPolicy` - A value that controls scaling of the watermark. Valid values are: `Fit`, `Stretch`, `ShrinkToFit`
+* `target` - A value that determines how Elastic Transcoder interprets values that you specified for `video_watermarks.horizontal_offset`, `video_watermarks.vertical_offset`, `video_watermarks.max_width`, and `video_watermarks.max_height`. Valid values are `Content` and `Frame`.
+* `verticalAlign` - The vertical position of the watermark unless you specify a nonzero value for `vertical_align`. Valid values are `Top`, `Bottom`, `Center`.
+* `verticalOffset` - The amount by which you want the vertical position of the watermark to be offset from the position specified by `vertical_align`
 
 The `videoCodecOptions` map supports the following:
 
 * `profile` - The codec profile that you want to use for the output file. (H.264/VP8 Only)
-* `level` - The H.264 level that you want to use for the output file. Elastic Transcoder supports the following levels: `1`, `1B`, `11`, `12`, `13`, `2`, `21`, `22`, `3`, `31`, `32`, `4`, `41` (H.264 only)
+* `level` - The H.264 level that you want to use for the output file. Elastic Transcoder supports the following levels: `1`, `1b`, `1.1`, `1.2`, `1.3`, `2`, `2.1`, `2.2`, `3`, `3.1`, `3.2`, `4`, `4.1` (H.264 only)
 * `maxReferenceFrames` - The maximum number of previously decoded frames to use as a reference for decoding future frames. Valid values are integers 0 through 16. (H.264 only)
 * `maxBitRate` - The maximum number of kilobits per second in the output video. Specify a value between 16 and 62,500 inclusive, or `auto`. (Optional, H.264/MPEG2/VP8/VP9 only)
 * `bufferSize` - The maximum number of kilobits in any x seconds of the output video. This window is commonly 10 seconds, the standard segment duration when you're using ts for the container type of the output video. Specify an integer greater than 0. If you specify MaxBitRate and omit BufferSize, Elastic Transcoder sets BufferSize to 10 times the value of MaxBitRate. (Optional, H.264/MPEG2/VP8/VP9 only)
 * `interlacedMode` -  The interlace mode for the output video. (Optional, H.264/MPEG2 Only)
-* `colorSpaceConversion` - The color space conversion Elastic Transcoder applies to the output video. Valid values are `none`, `bt709ToBt601`, `bt601ToBt709`, and `auto`. (Optional, H.264/MPEG2 Only)
-* `chromaSubsampling` - The sampling pattern for the chroma (color) channels of the output video. Valid values are `yuv420P` and `yuv422P`.
+* `colorSpaceConversion` - The color space conversion Elastic Transcoder applies to the output video. Valid values are `None`, `Bt709toBt601`, `Bt601toBt709`, and `Auto`. (Optional, H.264/MPEG2 Only)
+* `chromaSubsampling` - The sampling pattern for the chroma (color) channels of the output video. Valid values are `yuv420p` and `yuv422p`.
 * `loopCount` - The number of times you want the output gif to loop (Gif only)
 
 ## Attribute Reference
@@ -199,4 +199,4 @@ Using `terraform import`, import Elastic Transcoder presets using the `id`. For 
 % terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8282c40b65cf6c7bab35ac986097ade68a35de7fee2c7e606836eefd3ed414ca -->
+<!-- cache-key: cdktf-0.19.0 input-8282c40b65cf6c7bab35ac986097ade68a35de7fee2c7e606836eefd3ed414ca -->

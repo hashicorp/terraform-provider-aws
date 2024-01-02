@@ -167,4 +167,4 @@ Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hy
 % terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c52e7e65e799b6104f6c311a148eb1f52433b7035e764e94e6ade1153f6ef6e4 -->
+<!-- cache-key: cdktf-0.19.0 input-c52e7e65e799b6104f6c311a148eb1f52433b7035e764e94e6ade1153f6ef6e4 -->

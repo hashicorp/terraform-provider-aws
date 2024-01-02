@@ -78,7 +78,7 @@ This resource supports the following arguments:
   This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
   This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### egress and ingress
 
@@ -107,7 +107,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the network ACL
 * `arn` - The ARN of the network ACL
 * `ownerId` - The ID of the AWS account that owns the network ACL.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -131,4 +131,4 @@ Using `terraform import`, import Network ACLs using the `id`. For example:
 % terraform import aws_network_acl.main acl-7aaabd18
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5b9f089b5a06ae7544fcc277d74d9e0edb7b4bb28c855db30503815cfb46f3a1 -->
+<!-- cache-key: cdktf-0.19.0 input-5b9f089b5a06ae7544fcc277d74d9e0edb7b4bb28c855db30503815cfb46f3a1 -->

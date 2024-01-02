@@ -96,7 +96,7 @@ This resource supports the following arguments:
 * `description` - (Optional) A textual description for the workflow.
 * `onExceptionSteps` - (Optional) Specifies the steps (actions) to take if errors are encountered during execution of the workflow. See Workflow Steps below.
 * `steps` - (Required) Specifies the details for the steps that are in the specified workflow. See Workflow Steps below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Workflow Steps
 
@@ -105,13 +105,13 @@ This resource supports the following arguments:
 * `decryptStepDetails` - (Optional) Details for a step that decrypts the file.
 * `deleteStepDetails` - (Optional) Details for a step that deletes the file.
 * `tagStepDetails` - (Optional) Details for a step that creates one or more tags.
-* `type` - (Required) One of the following step types are supported. `copy`, `custom`, `decrypt`, `delete`, and `tag`.
+* `type` - (Required) One of the following step types are supported. `COPY`, `CUSTOM`, `DECRYPT`, `DELETE`, and `TAG`.
 
 #### Copy Step Details
 
 * `destinationFileLocation` - (Optional) Specifies the location for the file being copied. Use ${Transfer:username} in this field to parametrize the destination prefix by username.
 * `name` - (Optional) The name of the step, used as an identifier.
-* `overwriteExisting` - (Optional) A flag that indicates whether or not to overwrite an existing file of the same name. The default is `false`. Valid values are `true` and `false`.
+* `overwriteExisting` - (Optional) A flag that indicates whether or not to overwrite an existing file of the same name. The default is `FALSE`. Valid values are `TRUE` and `FALSE`.
 * `sourceFileLocation` - (Optional) Specifies which file to use as input to the workflow step: either the output from the previous step, or the originally uploaded file for the workflow. Enter ${previous.file} to use the previous file as the input. In this case, this workflow step uses the output file from the previous workflow step as input. This is the default value. Enter ${original.file} to use the originally-uploaded file location as input for this step.
 
 #### Custom Step Details
@@ -125,9 +125,9 @@ This resource supports the following arguments:
 
 * `destinationFileLocation` - (Optional) Specifies the location for the file being copied. Use ${Transfer:username} in this field to parametrize the destination prefix by username.
 * `name` - (Optional) The name of the step, used as an identifier.
-* `overwriteExisting` - (Optional) A flag that indicates whether or not to overwrite an existing file of the same name. The default is `false`. Valid values are `true` and `false`.
+* `overwriteExisting` - (Optional) A flag that indicates whether or not to overwrite an existing file of the same name. The default is `FALSE`. Valid values are `TRUE` and `FALSE`.
 * `sourceFileLocation` - (Optional) Specifies which file to use as input to the workflow step: either the output from the previous step, or the originally uploaded file for the workflow. Enter ${previous.file} to use the previous file as the input. In this case, this workflow step uses the output file from the previous workflow step as input. This is the default value. Enter ${original.file} to use the originally-uploaded file location as input for this step.
-* `type` - (Required) The type of encryption used. Currently, this value must be `"pgp"`.
+* `type` - (Required) The type of encryption used. Currently, this value must be `"PGP"`.
 
 #### Delete Step Details
 
@@ -166,7 +166,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Workflow ARN.
 * `id` - The Workflow id.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -190,4 +190,4 @@ Using `terraform import`, import Transfer Workflows using the `worflowId`. For e
 % terraform import aws_transfer_workflow.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cd26b4eb2c7b6d9241f3db734757f36018a8ddd76361c4116bc6c49c94847364 -->
+<!-- cache-key: cdktf-0.19.0 input-cd26b4eb2c7b6d9241f3db734757f36018a8ddd76361c4116bc6c49c94847364 -->

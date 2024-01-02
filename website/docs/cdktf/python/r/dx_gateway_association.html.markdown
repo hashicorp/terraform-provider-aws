@@ -182,4 +182,4 @@ Using `terraform import`, import Direct Connect gateway associations using `dx_g
 % terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a27cdf93a7d5c42337724f3a987226ae88c4ae0502a4d4160e2444683c6a343d -->
+<!-- cache-key: cdktf-0.19.0 input-a27cdf93a7d5c42337724f3a987226ae88c4ae0502a4d4160e2444683c6a343d -->

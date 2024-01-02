@@ -166,8 +166,8 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `enabled` - (Required) Whether this continuous deployment policy is enabled.
-* `stagingDistributionDnsNames` - (Required) CloudFront domain name of the staging distribution. See [`stagingDistributionDnsNames`](#staging_distribution_dns_names).
-* `trafficConfig` - (Required) Parameters for routing production traffic from primary to staging distributions. See [`trafficConfig`](#traffic_config).
+* `stagingDistributionDnsNames` - (Required) CloudFront domain name of the staging distribution. See [`staging_distribution_dns_names`](#staging_distribution_dns_names).
+* `trafficConfig` - (Required) Parameters for routing production traffic from primary to staging distributions. See [`traffic_config`](#traffic_config).
 
 ### `stagingDistributionDnsNames`
 
@@ -176,24 +176,24 @@ The following arguments are required:
 
 ### `trafficConfig`
 
-* `type` - (Required) Type of traffic configuration. Valid values are `singleWeight` and `singleHeader`.
-* `singleHeaderConfig` - (Optional) Determines which HTTP requests are sent to the staging distribution. See [`singleHeaderConfig`](#single_header_config).
-* `singleWeightConfig` - (Optional) Contains the percentage of traffic to send to the staging distribution. See [`singleWeightConfig`](#single_weight_config).
+* `type` - (Required) Type of traffic configuration. Valid values are `SingleWeight` and `SingleHeader`.
+* `singleHeaderConfig` - (Optional) Determines which HTTP requests are sent to the staging distribution. See [`single_header_config`](#single_header_config).
+* `singleWeightConfig` - (Optional) Contains the percentage of traffic to send to the staging distribution. See [`single_weight_config`](#single_weight_config).
 
 ### `singleHeaderConfig`
 
-* `header` - (Required) Request header name to send to the staging distribution. The header must contain the prefix `awsCfCd`.
+* `header` - (Required) Request header name to send to the staging distribution. The header must contain the prefix `aws-cf-cd-`.
 * `value` - (Required) Request header value.
 
 ### `singleWeightConfig`
 
-* `weight` - (Required) The percentage of traffic to send to a staging distribution, expressed as a decimal number between `0` and `15`.
-* `sessionStickinessConfig` - (Optional) Session stickiness provides the ability to define multiple requests from a single viewer as a single session. This prevents the potentially inconsistent experience of sending some of a given user's requests to the staging distribution, while others are sent to the primary distribution. Define the session duration using TTL values. See [`sessionStickinessConfig`](#session_stickiness_config).
+* `weight` - (Required) The percentage of traffic to send to a staging distribution, expressed as a decimal number between `0` and `.15`.
+* `sessionStickinessConfig` - (Optional) Session stickiness provides the ability to define multiple requests from a single viewer as a single session. This prevents the potentially inconsistent experience of sending some of a given user's requests to the staging distribution, while others are sent to the primary distribution. Define the session duration using TTL values. See [`session_stickiness_config`](#session_stickiness_config).
 
 ### `sessionStickinessConfig`
 
-* `idleTtl` - (Required) The amount of time in seconds after which sessions will cease if no requests are received. Valid values are `300` – `3600` (5–60 minutes). The value must be less than or equal to `maximumTtl`.
-* `maximumTtl` - (Required) The maximum amount of time in seconds to consider requests from the viewer as being part of the same session. Valid values are `300` – `3600` (5–60 minutes). The value must be greater than or equal to `idleTtl`.
+* `idleTtl` - (Required) The amount of time in seconds after which sessions will cease if no requests are received. Valid values are `300` – `3600` (5–60 minutes). The value must be less than or equal to `maximum_ttl`.
+* `maximumTtl` - (Required) The maximum amount of time in seconds to consider requests from the viewer as being part of the same session. Valid values are `300` – `3600` (5–60 minutes). The value must be greater than or equal to `idle_ttl`.
 
 ## Attribute Reference
 
@@ -225,4 +225,4 @@ Using `terraform import`, import CloudFront Continuous Deployment Policy using t
 % terraform import aws_cloudfront_continuous_deployment_policy.example abcd-1234 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10ca91c1c5f42a4e7c34b2e87eb874a6c1a113aec1a477105e5b977db0a0d32d -->
+<!-- cache-key: cdktf-0.19.0 input-10ca91c1c5f42a4e7c34b2e87eb874a6c1a113aec1a477105e5b977db0a0d32d -->

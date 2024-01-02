@@ -141,21 +141,21 @@ The following arguments are optional:
 
 ### schedule
 
-* `refreshType` - (Required) The type of refresh that the dataset undergoes. Valid values are `incrementalRefresh` and `fullRefresh`.
-* `startAfterDateTime` (Optional) Time after which the refresh schedule can be started, expressed in `yyyyMmDdthh:mm:ss` format.
+* `refreshType` - (Required) The type of refresh that the dataset undergoes. Valid values are `INCREMENTAL_REFRESH` and `FULL_REFRESH`.
+* `startAfterDateTime` (Optional) Time after which the refresh schedule can be started, expressed in `YYYY-MM-DDTHH:MM:SS` format.
 * `scheduleFrequency` - (Optional) The configuration of the [schedule frequency](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RefreshFrequency.html). See [schedule_frequency](#schedule_frequency).
 
 ### schedule_frequency
 
-* `interval` - (Required) The interval between scheduled refreshes. Valid values are `minute15`, `minute30`, `hourly`, `daily`, `weekly` and `monthly`.
-* `timeOfTheDay` - (Optional) The time of day that you want the dataset to refresh. This value is expressed in `hh:mm` format. This field is not required for schedules that refresh hourly.
+* `interval` - (Required) The interval between scheduled refreshes. Valid values are `MINUTE15`, `MINUTE30`, `HOURLY`, `DAILY`, `WEEKLY` and `MONTHLY`.
+* `timeOfTheDay` - (Optional) The time of day that you want the dataset to refresh. This value is expressed in `HH:MM` format. This field is not required for schedules that refresh hourly.
 * `timezone` - (Optional) The timezone that you want the refresh schedule to use.
 * `refreshOnDay` - (Optional) The [refresh on entity](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScheduleRefreshOnEntity.html) configuration for weekly or monthly schedules. See [refresh_on_day](#refresh_on_day).
 
 ### refresh_on_day
 
 * `dayOfMonth` - (Optional) The day of the month that you want to schedule refresh on.
-* `dayOfWeek` - (Optional) The day of the week that you want to schedule a refresh on. Valid values are `sunday`, `monday`, `tuesday`, `wednesday`, `thursday`, `friday` and `saturday`.
+* `dayOfWeek` - (Optional) The day of the week that you want to schedule a refresh on. Valid values are `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY` and `SATURDAY`.
 
 ## Attribute Reference
 
@@ -186,4 +186,4 @@ Using `terraform import`, import a QuickSight Refresh Schedule using the AWS acc
 % terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-883bce749fc26eb189d4bb33cee6fff44b81f594e4f17aefe99500bd5e24ebe3 -->
+<!-- cache-key: cdktf-0.19.0 input-883bce749fc26eb189d4bb33cee6fff44b81f594e4f17aefe99500bd5e24ebe3 -->

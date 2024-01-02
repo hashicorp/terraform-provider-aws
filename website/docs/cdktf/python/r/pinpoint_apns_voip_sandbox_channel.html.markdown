@@ -86,4 +86,4 @@ Using `terraform import`, import Pinpoint APNs VoIP Sandbox Channel using the `a
 % terraform import aws_pinpoint_apns_voip_sandbox_channel.apns_voip_sandbox application-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10a8793c57ea80faa1bcc8e11505f01ac9d61ce493402a8a9a145cb769e2c84c -->
+<!-- cache-key: cdktf-0.19.0 input-10a8793c57ea80faa1bcc8e11505f01ac9d61ce493402a8a9a145cb769e2c84c -->

@@ -52,4 +52,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `last_modified` - (Optional) The date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
-<!-- cache-key: cdktf-0.18.0 input-13bd8e71cdf5fa3e7a18a3d1a2e20ff12ed7d291e84a336a056ad1006100d7f8 -->
+<!-- cache-key: cdktf-0.19.0 input-13bd8e71cdf5fa3e7a18a3d1a2e20ff12ed7d291e84a336a056ad1006100d7f8 -->

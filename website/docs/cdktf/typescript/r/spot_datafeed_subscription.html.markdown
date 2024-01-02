@@ -79,4 +79,4 @@ Using `terraform import`, import a Spot Datafeed Subscription using the word `sp
 % terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-70bf26be611a3ee0c49d03716734469d118e9b44f2ed7494fad6b135c57c3c2e -->
+<!-- cache-key: cdktf-0.19.0 input-70bf26be611a3ee0c49d03716734469d118e9b44f2ed7494fad6b135c57c3c2e -->

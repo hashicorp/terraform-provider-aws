@@ -117,4 +117,4 @@ Using `terraform import`, import Glacier Vault Locks using the Glacier Vault nam
 % terraform import aws_glacier_vault_lock.example example-vault
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-518c16374c45cebffee79cb05e96dd966379682d9c133b507d51448663341de4 -->
+<!-- cache-key: cdktf-0.19.0 input-518c16374c45cebffee79cb05e96dd966379682d9c133b507d51448663341de4 -->

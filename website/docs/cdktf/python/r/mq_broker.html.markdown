@@ -43,7 +43,7 @@ class MyConvertedCode(TerraformStack):
                 revision=test.latest_revision
             ),
             engine_type="ActiveMQ",
-            engine_version="5.15.9",
+            engine_version="5.17.6",
             host_instance_type="mq.t2.micro",
             security_groups=[Token.as_string(aws_security_group_test.id)],
             user=[MqBrokerUser(
@@ -77,7 +77,7 @@ class MyConvertedCode(TerraformStack):
                 revision=test.latest_revision
             ),
             engine_type="ActiveMQ",
-            engine_version="5.15.9",
+            engine_version="5.17.6",
             host_instance_type="mq.m5.large",
             security_groups=[Token.as_string(aws_security_group_test.id)],
             storage_type="ebs",
@@ -95,7 +95,7 @@ The following arguments are required:
 
 * `broker_name` - (Required) Name of the broker.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
-* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
+* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.17.6`.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
 * `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
@@ -218,4 +218,4 @@ Using `terraform import`, import MQ Brokers using their broker id. For example:
 % terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e4ac8cdba2a86a52d15d44c9fa76955d14e86f7fe0c194e7077682ba082c4e20 -->
+<!-- cache-key: cdktf-0.19.0 input-d85029fe617087d37abc0e8005a439a956c3a95b4c6454674dc44a09e08d0bcd -->

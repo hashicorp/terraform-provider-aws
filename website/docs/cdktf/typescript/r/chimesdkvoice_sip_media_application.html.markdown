@@ -50,7 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `endpoints`
 
@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` -  ARN (Amazon Resource Name) of the AWS Chime SDK Voice Sip Media Application
 * `id` - The SIP media application ID.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import a ChimeSDKVoice SIP Media Application using the
 % terraform import aws_chimesdkvoice_sip_media_application.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e1b6072f4d998c9e513ec72230b13fe8b463d6b65adffbd9a34c66c4336e5e88 -->
+<!-- cache-key: cdktf-0.19.0 input-e1b6072f4d998c9e513ec72230b13fe8b463d6b65adffbd9a34c66c4336e5e88 -->

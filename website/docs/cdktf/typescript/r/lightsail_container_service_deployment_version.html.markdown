@@ -78,10 +78,10 @@ This resource supports the following arguments:
 The `container` configuration block supports the following arguments:
 
 * `containerName` - (Required) The name for the container.
-* `image` - (Required) The name of the image used for the container. Container images sourced from your Lightsail container service, that are registered and stored on your service, start with a colon (`:`). For example, `:containerService1Mystaticwebsite1`. Container images sourced from a public registry like Docker Hub don't start with a colon. For example, `nginx:latest` or `nginx`.
+* `image` - (Required) The name of the image used for the container. Container images sourced from your Lightsail container service, that are registered and stored on your service, start with a colon (`:`). For example, `:container-service-1.mystaticwebsite.1`. Container images sourced from a public registry like Docker Hub don't start with a colon. For example, `nginx:latest` or `nginx`.
 * `command` - (Optional) The launch command for the container. A list of string.
 * `environment` - (Optional) A key-value map of the environment variables of the container.
-* `ports` - (Optional) A key-value map of the open firewall ports of the container. Valid values: `http`, `https`, `tcp`, `udp`.
+* `ports` - (Optional) A key-value map of the open firewall ports of the container. Valid values: `HTTP`, `HTTPS`, `TCP`, `UDP`.
 
 ### `publicEndpoint`
 
@@ -106,7 +106,7 @@ The `healthCheck` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `serviceName` and `version` separation by a slash (`/`).
+* `id` - The `service_name` and `version` separation by a slash (`/`).
 * `createdAt` - The timestamp when the deployment was created.
 * `state` - The current state of the container service.
 * `version` - The version number of the deployment.
@@ -115,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
+* `create` - (Default `30m`)
 
 ## Import
 
@@ -139,4 +139,4 @@ Using `terraform import`, import Lightsail Container Service Deployment Version 
 % terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bb1ba480fb42ed01fcc93296f85d9bb0f9f2e3da82d84722d66da594585cd420 -->
+<!-- cache-key: cdktf-0.19.0 input-bb1ba480fb42ed01fcc93296f85d9bb0f9f2e3da82d84722d66da594585cd420 -->

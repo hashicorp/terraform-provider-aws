@@ -12,11 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -188,7 +190,6 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Subnet: %s", input)
 	output, err := conn.CreateSubnetWithContext(ctx, input)
 
 	if err != nil {
@@ -364,7 +365,9 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+
+	tflog.Info(ctx, "Deleting EC2 Subnet")
 
 	if err := deleteLingeringENIs(ctx, conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)

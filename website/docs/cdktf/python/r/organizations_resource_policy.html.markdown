@@ -65,4 +65,4 @@ Using `terraform import`, import `aws_organizations_resource_policy` using the r
 % terraform import aws_organizations_resource_policy.example rp-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8ab0a24a6a925579576b2c3639c5565582765d7c5d8c19ab463df7b7d85f9483 -->
+<!-- cache-key: cdktf-0.19.0 input-8ab0a24a6a925579576b2c3639c5565582765d7c5d8c19ab463df7b7d85f9483 -->

@@ -141,7 +141,7 @@ This resource supports the following arguments:
 * `enable` - (Optional) Whether to enable the scheduled action. Default is `true` .
 * `startTime` - (Optional) The start time in UTC when the schedule is active, in UTC RFC3339 format(for example, YYYY-MM-DDTHH:MM:SSZ).
 * `endTime` - (Optional) The end time in UTC when the schedule is active, in UTC RFC3339 format(for example, YYYY-MM-DDTHH:MM:SSZ).
-* `schedule` - (Required) The schedule of action. The schedule is defined format of "at expression" or "cron expression", for example `at(20160304T17:27:00)` or `cron(0 10 ? * MON *)`. See [Scheduled Action](https://docs.aws.amazon.com/redshift/latest/APIReference/API_ScheduledAction.html) for more information.
+* `schedule` - (Required) The schedule of action. The schedule is defined format of "at expression" or "cron expression", for example `at(2016-03-04T17:27:00)` or `cron(0 10 ? * MON *)`. See [Scheduled Action](https://docs.aws.amazon.com/redshift/latest/APIReference/API_ScheduledAction.html) for more information.
 * `iamRole` - (Required) The IAM role to assume to run the scheduled action.
 * `targetAction` - (Required) Target action. Documented below.
 
@@ -149,9 +149,9 @@ This resource supports the following arguments:
 
 #### `targetAction`
 
-* `pauseCluster` - (Optional) An action that runs a `pauseCluster` API operation. Documented below.
-* `resizeCluster` - (Optional) An action that runs a `resizeCluster` API operation. Documented below.
-* `resumeCluster` - (Optional) An action that runs a `resumeCluster` API operation. Documented below.
+* `pauseCluster` - (Optional) An action that runs a `PauseCluster` API operation. Documented below.
+* `resizeCluster` - (Optional) An action that runs a `ResizeCluster` API operation. Documented below.
+* `resumeCluster` - (Optional) An action that runs a `ResumeCluster` API operation. Documented below.
 
 ### `pauseCluster`
 
@@ -197,4 +197,4 @@ Using `terraform import`, import Redshift Scheduled Action using the `name`. For
 % terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bb46dc91c30f3bd0e92ef6f30fbb8c2c42b66b25bd27c78c262e5e212679b4d1 -->
+<!-- cache-key: cdktf-0.19.0 input-bb46dc91c30f3bd0e92ef6f30fbb8c2c42b66b25bd27c78c262e5e212679b4d1 -->

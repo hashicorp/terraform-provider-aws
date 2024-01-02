@@ -42,8 +42,8 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `domainName` - (Required) A domain name for which the certificate should be issued.
-* `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate. `domainName` attribute is automatically added as a Subject Alternative Name.
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `defaultTags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
+* `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the lightsail certificate.
 * `createdAt` - The timestamp when the instance was created.
 * `domainValidationOptions` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider `defaultTags` configuration block.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 
 ## Import
 
@@ -77,4 +77,4 @@ Using `terraform import`, import `awsLightsailCertificate` using the certificate
 % terraform import aws_lightsail_certificate.test CertificateName
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fa74f908bf0e275af92966e17e2db46d1735155118450df59ddb6d8e9735f416 -->
+<!-- cache-key: cdktf-0.19.0 input-fa74f908bf0e275af92966e17e2db46d1735155118450df59ddb6d8e9735f416 -->

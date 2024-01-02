@@ -150,4 +150,4 @@ Using `terraform import`, import SSO Admin Permissions Boundary Attachments usin
 % terraform import aws_ssoadmin_permissions_boundary_attachment.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b18b40e74ac6a4c483e12a6c4261d755ba4289cd16e5a156898b6ed4b6af7691 -->
+<!-- cache-key: cdktf-0.19.0 input-b18b40e74ac6a4c483e12a6c4261d755ba4289cd16e5a156898b6ed4b6af7691 -->

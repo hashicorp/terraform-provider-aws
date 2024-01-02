@@ -103,9 +103,9 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `awsCn` in AWS China).
+* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `names` - Names of regions that meets the criteria.
 
 [1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-regions.html
 
-<!-- cache-key: cdktf-0.18.0 input-729936980236c90d4bfd49d088a65b256dd691594554c0abd78aef71806ddd45 -->
+<!-- cache-key: cdktf-0.19.0 input-729936980236c90d4bfd49d088a65b256dd691594554c0abd78aef71806ddd45 -->

@@ -43,7 +43,7 @@ This resource supports the following arguments:
 
 * `name` - The name for the organizational unit
 * `parentId` - ID of the parent organizational unit, which may be the root
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `name` - Name of the account
 * `arn` - ARN of the organizational unit
 * `id` - Identifier of the organization unit
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -80,4 +80,4 @@ Using `terraform import`, import AWS Organizations Organizational Units using th
 % terraform import aws_organizations_organizational_unit.example ou-1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e83646b093e28cb1e4ec4a1afa0a1e1832d418c207b7f14b799f6e614b256dc8 -->
+<!-- cache-key: cdktf-0.19.0 input-e83646b093e28cb1e4ec4a1afa0a1e1832d418c207b7f14b799f6e614b256dc8 -->

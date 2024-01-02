@@ -8,21 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccChimeSDKVoiceSipMediaApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
+	var chimeSipMediaApplication *awstypes.SipMediaApplication
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
@@ -31,9 +30,8 @@ func TestAccChimeSDKVoiceSipMediaApplication_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +40,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoints.0.lambda_arn", lambdaFunctionResourceName, "arn"),
 				),
@@ -58,7 +56,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_basic(t *testing.T) {
 
 func TestAccChimeSDKVoiceSipMediaApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
+	var chimeSipMediaApplication *awstypes.SipMediaApplication
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
@@ -66,9 +64,8 @@ func TestAccChimeSDKVoiceSipMediaApplication_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +83,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_disappears(t *testing.T) {
 
 func TestAccChimeSDKVoiceSipMediaApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var chimeSipMediaApplication *chimesdkvoice.SipMediaApplication
+	var chimeSipMediaApplication *awstypes.SipMediaApplication
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -96,9 +93,8 @@ func TestAccChimeSDKVoiceSipMediaApplication_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +103,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoints.0.lambda_arn", lambdaFunctionResourceName, "arn"),
 				),
@@ -117,7 +113,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, chimeSipMediaApplication),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoints.0.lambda_arn", lambdaFunctionResourceName, "arn"),
 				),
@@ -133,7 +129,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_update(t *testing.T) {
 
 func TestAccChimeSDKVoiceSipMediaApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sipMediaApplication *chimesdkvoice.SipMediaApplication
+	var sipMediaApplication *awstypes.SipMediaApplication
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_sip_media_application.test"
@@ -141,9 +137,8 @@ func TestAccChimeSDKVoiceSipMediaApplication_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSipMediaApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +179,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc *chimesdkvoice.SipMediaApplication) resource.TestCheckFunc {
+func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc *awstypes.SipMediaApplication) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -195,16 +190,17 @@ func testAccCheckSipMediaApplicationExists(ctx context.Context, name string, vc 
 			return fmt.Errorf("no ChimeSdkVoice Sip Media Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-		input := &chimesdkvoice.GetSipMediaApplicationInput{
-			SipMediaApplicationId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetSipMediaApplicationWithContext(ctx, input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+		resp, err := tfchimesdkvoice.FindSIPResourceWithRetry(ctx, false, func() (*awstypes.SipMediaApplication, error) {
+			return tfchimesdkvoice.FindSIPMediaApplicationByID(ctx, conn, rs.Primary.ID)
+		})
+
 		if err != nil {
 			return err
 		}
 
-		vc = resp.SipMediaApplication
+		vc = resp
 
 		return nil
 	}
@@ -216,18 +212,23 @@ func testAccCheckSipMediaApplicationDestroy(ctx context.Context) resource.TestCh
 			if rs.Type != "aws_chimesdkvoice_sip_media_application" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
-			input := &chimesdkvoice.GetSipMediaApplicationInput{
-				SipMediaApplicationId: aws.String(rs.Primary.ID),
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+			_, err := tfchimesdkvoice.FindSIPResourceWithRetry(ctx, false, func() (*awstypes.SipMediaApplication, error) {
+				return tfchimesdkvoice.FindSIPMediaApplicationByID(ctx, conn, rs.Primary.ID)
+			})
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			resp, err := conn.GetSipMediaApplicationWithContext(ctx, input)
-			if err == nil {
-				if resp.SipMediaApplication != nil && aws.StringValue(resp.SipMediaApplication.Name) != "" {
-					return fmt.Errorf("error ChimeSdkVoice Sip Media Application still exists")
-				}
+
+			if err != nil {
+				return err
 			}
-			return nil
+
+			return fmt.Errorf("sip media application still exists: (%s)", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

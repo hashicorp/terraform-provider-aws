@@ -66,4 +66,4 @@ Using `terraform import`, import Amazon Inspector Member Association using the `
 % terraform import aws_inspector2_member_association.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-82d5942e4f4d61c9c5edbed4e78715cf0ac4b5f18beb3ce13b9684e5cadbbf9d -->
+<!-- cache-key: cdktf-0.19.0 input-82d5942e4f4d61c9c5edbed4e78715cf0ac4b5f18beb3ce13b9684e5cadbbf9d -->

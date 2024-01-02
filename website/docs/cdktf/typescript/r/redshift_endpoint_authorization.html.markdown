@@ -51,7 +51,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `allowedAllVpcs` - Indicates whether all VPCs in the grantee account are allowed access to the cluster.
-* `id` - The identifier of the Redshift Endpoint Authorization, `account`, and `clusterIdentifier` separated by a colon (`:`).
+* `id` - The identifier of the Redshift Endpoint Authorization, `account`, and `cluster_identifier` separated by a colon (`:`).
 * `endpointCount` - The number of Redshift-managed VPC endpoints created for the authorization.
 * `grantee` - The Amazon Web Services account ID of the grantee of the cluster.
 * `grantor` - The Amazon Web Services account ID of the cluster owner.
@@ -78,4 +78,4 @@ Using `terraform import`, import Redshift endpoint authorization using the `id`.
 % terraform import aws_redshift_endpoint_authorization.example 01234567910:cluster-example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b9e5ce4e1f7abe40dbf21f61540bacd5f31c67c081dc3bdd6f2ce8318ce44e5e -->
+<!-- cache-key: cdktf-0.19.0 input-b9e5ce4e1f7abe40dbf21f61540bacd5f31c67c081dc3bdd6f2ce8318ce44e5e -->

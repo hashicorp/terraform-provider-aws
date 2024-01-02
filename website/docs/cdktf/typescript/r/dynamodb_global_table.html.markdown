@@ -99,7 +99,7 @@ This resource supports the following arguments:
 
 #### `replica`
 
-* `regionName` - (Required) AWS region name of replica DynamoDB TableE.g., `usEast1`
+* `regionName` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
 
 ## Attribute Reference
 
@@ -130,4 +130,4 @@ Using `terraform import`, import DynamoDB Global Tables using the global table n
 % terraform import aws_dynamodb_global_table.MyTable MyTable
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-36c3419a203344c40c1651647342ffb9754b89e09585c7824bc0dc4a9fd6a617 -->
+<!-- cache-key: cdktf-0.19.0 input-36c3419a203344c40c1651647342ffb9754b89e09585c7824bc0dc4a9fd6a617 -->

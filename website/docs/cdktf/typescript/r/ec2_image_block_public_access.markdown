@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `state` - (Required) The state of block public access for AMIs at the account level in the configured AWS Region. Valid values: `unblocked` and `blockNewSharing`.
+* `state` - (Required) The state of block public access for AMIs at the account level in the configured AWS Region. Valid values: `unblocked` and `block-new-sharing`.
 
 ## Attribute Reference
 
@@ -51,10 +51,10 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `update` - (Default `10M`)
+- `update` - (Default `10m`)
 
 ## Import
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.18.0 input-8368ec530535593c1f1e2aea209aa886960d23064815bc5ab871c21a27856e60 -->
+<!-- cache-key: cdktf-0.19.0 input-8368ec530535593c1f1e2aea209aa886960d23064815bc5ab871c21a27856e60 -->

@@ -282,4 +282,4 @@ Using `terraform import`, import `aws_api_gateway_integration` using `REST-API-I
 % terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6579a01c31e2b3a3e752d392012759bae929079686c0227bc0bc75da134a211f -->
+<!-- cache-key: cdktf-0.19.0 input-6579a01c31e2b3a3e752d392012759bae929079686c0227bc0bc75da134a211f -->

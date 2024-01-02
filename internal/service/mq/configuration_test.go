@@ -41,7 +41,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -58,7 +58,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -89,7 +89,7 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -126,7 +126,7 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -251,7 +251,7 @@ resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "simple"
 
   data = <<DATA
@@ -269,7 +269,7 @@ resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration Updated"
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -286,7 +286,7 @@ resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -321,7 +321,7 @@ resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "ldap"
 
   data = <<DATA
@@ -364,7 +364,7 @@ resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "simple"
 
   tags = {
@@ -386,7 +386,7 @@ resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "simple"
 
   tags = {

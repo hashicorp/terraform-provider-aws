@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) The description of the docDB subnet group. Defaults to "Managed by Terraform".
 * `subnetIds` - (Required) A list of VPC subnet IDs.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The docDB subnet group name.
 * `arn` - The ARN of the docDB subnet group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import DocumentDB Subnet groups using the `name`. For 
 % terraform import aws_docdb_subnet_group.default production-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-88009fd606f1c5adfe6f2ed488e5bfa54a43279608f02880560a223786cb4993 -->
+<!-- cache-key: cdktf-0.19.0 input-88009fd606f1c5adfe6f2ed488e5bfa54a43279608f02880560a223786cb4993 -->

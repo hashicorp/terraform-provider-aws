@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
@@ -79,6 +80,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -2461,8 +2463,101 @@ func TestAccRDSCluster_password(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	backupWindowLength := 30 * time.Minute
+	clusterProvisionTime := 5 * time.Minute
+
+	// Unlike rds instance, there is no automated backup created when the cluster is deployed.
+	// However, we can forcefully create one by moving maintenance window behind the deployment.
+	now := time.Now().UTC()
+	backupWindowStart := now.Add(clusterProvisionTime)
+	backupWindowEnd := backupWindowStart.Add(backupWindowLength)
+	preferredBackupWindow := fmt.Sprintf(
+		"%02d:%02d-%02d:%02d",
+		backupWindowStart.Hour(),
+		backupWindowStart.Minute(),
+		backupWindowEnd.Hour(),
+		backupWindowEnd.Minute(),
+	)
+
+	waitUntilAutomatedBackupCreated := func(*terraform.State) error {
+		ticker := time.NewTicker(1 * time.Minute)
+		for {
+			select {
+			case <-time.After(backupWindowLength):
+				return nil
+			case <-ticker.C:
+				conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+				output, _ := conn.DescribeDBClusterSnapshotsWithContext(ctx, &rds.DescribeDBClusterSnapshotsInput{
+					DBClusterIdentifier: aws.String(rName),
+					SnapshotType:        aws.String("automated"),
+				})
+				if output != nil && len(output.DBClusterSnapshots) > 0 {
+					snapshot := output.DBClusterSnapshots[0]
+					if aws.StringValue(snapshot.Status) == "available" {
+						return nil
+					}
+				}
+			}
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterAutomatedBackupsDelete(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_noDeleteAutomatedBackups(rName, preferredBackupWindow),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					waitUntilAutomatedBackupCreated,
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
+	}
+}
+
+func testAccCheckClusterAutomatedBackupsDelete(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster" {
+				continue
+			}
+			describeOutput, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, &rds.DescribeDBClusterSnapshotsInput{
+				DBClusterIdentifier: aws.String(rs.Primary.Attributes["cluster_identifier"]),
+				SnapshotType:        aws.String("automated"),
+			})
+			if err != nil {
+				return err
+			}
+
+			if describeOutput == nil || len(describeOutput.DBClusterSnapshots) == 0 {
+				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes["cluster_identifier"])
+			}
+
+			_, err = conn.DeleteDBClusterAutomatedBackupWithContext(ctx, &rds.DeleteDBClusterAutomatedBackupInput{
+				DbClusterResourceId: aws.String(rs.Primary.Attributes["cluster_resource_id"]),
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
 	}
 }
@@ -4701,4 +4796,19 @@ resource "aws_db_subnet_group" "test" {
 }
 `, rName),
 	)
+}
+
+func testAccClusterConfig_noDeleteAutomatedBackups(rName, preferredBackupWindow string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = "aurora-mysql"
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  preferred_backup_window  = %[2]q
+  skip_final_snapshot      = true
+  delete_automated_backups = false
+}
+`, rName, preferredBackupWindow)
 }

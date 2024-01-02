@@ -222,4 +222,4 @@ Using `terraform import`, import DirectoryService directories using the director
 % terraform import aws_directory_service_directory.sample d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-49c24dcd4cf67951f7f5fa46955d3c67849291a777e1963a25110967098be86d -->
+<!-- cache-key: cdktf-0.19.0 input-49c24dcd4cf67951f7f5fa46955d3c67849291a777e1963a25110967098be86d -->

@@ -44,9 +44,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `apiId` - (Required) API identifier.
-* `integrationId` - (Required) Identifier of the [`awsApigatewayv2Integration`](/docs/providers/aws/r/apigatewayv2_integration.html).
+* `integrationId` - (Required) Identifier of the [`aws_apigatewayv2_integration`](/docs/providers/aws/r/apigatewayv2_integration.html).
 * `integrationResponseKey` - (Required) Integration response key.
-* `contentHandlingStrategy` - (Optional) How to handle response payload content type conversions. Valid values: `convertToBinary`, `convertToText`.
+* `contentHandlingStrategy` - (Optional) How to handle response payload content type conversions. Valid values: `CONVERT_TO_BINARY`, `CONVERT_TO_TEXT`.
 * `responseTemplates` - (Optional) Map of Velocity templates that are applied on the request payload based on the value of the Content-Type header sent by the client.
 * `templateSelectionExpression` - (Optional) The [template selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-template-selection-expressions) for the integration response.
 
@@ -78,4 +78,4 @@ Using `terraform import`, import `awsApigatewayv2IntegrationResponse` using the 
 % terraform import aws_apigatewayv2_integration_response.example aabbccddee/1122334/998877
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c751414ee371648e7a14d8bdd24be3cec193584e33fff3962b58af0f01c841ec -->
+<!-- cache-key: cdktf-0.19.0 input-c751414ee371648e7a14d8bdd24be3cec193584e33fff3962b58af0f01c841ec -->

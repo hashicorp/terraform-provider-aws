@@ -240,4 +240,4 @@ Using `terraform import`, import Config Rule using the name. For example:
 % terraform import aws_config_config_rule.foo example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ddaef59fa5f30160f091633e8659aa1541092b84b1622013d4f61c51640fbed0 -->
+<!-- cache-key: cdktf-0.19.0 input-ddaef59fa5f30160f091633e8659aa1541092b84b1622013d4f61c51640fbed0 -->

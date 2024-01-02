@@ -106,7 +106,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `behaviorOnMxFailure` - (Optional) The action that you want Amazon SES to take if it cannot successfully read the required MX record when you send an email. Defaults to `useDefaultValue`. See the [SES API documentation](https://docs.aws.amazon.com/ses/latest/APIReference/API_SetIdentityMailFromDomain.html) for more information.
+* `behaviorOnMxFailure` - (Optional) The action that you want Amazon SES to take if it cannot successfully read the required MX record when you send an email. Defaults to `UseDefaultValue`. See the [SES API documentation](https://docs.aws.amazon.com/ses/latest/APIReference/API_SetIdentityMailFromDomain.html) for more information.
 
 ## Attribute Reference
 
@@ -136,4 +136,4 @@ Using `terraform import`, import MAIL FROM domain using the `domain` attribute. 
 % terraform import aws_ses_domain_mail_from.example example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca24fb442521ea4cf6a544f70a00738a2579cf348f475450dda372fb8e1b83f2 -->
+<!-- cache-key: cdktf-0.19.0 input-ca24fb442521ea4cf6a544f70a00738a2579cf348f475450dda372fb8e1b83f2 -->

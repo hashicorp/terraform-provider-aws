@@ -70,7 +70,7 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshotId` - Snapshot ID (e.g., snap-59fcb34e).
 * `description` - Description for the snapshot
 * `ownerId` - AWS account ID of the EBS snapshot owner.
-* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `awsMarketplace`, `microsoft`) of snapshot owners.
+* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volumeId` - Volume ID (e.g., vol-59fcb34e).
 * `encrypted` - Whether the snapshot is encrypted.
 * `volumeSize` - Size of the drive in GiBs.
@@ -85,8 +85,8 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.18.0 input-c8ad520ee1902fdd4beb1d909dcc090edcec79bd99fe9a2e9d973ce88eeefa44 -->
+<!-- cache-key: cdktf-0.19.0 input-c8ad520ee1902fdd4beb1d909dcc090edcec79bd99fe9a2e9d973ce88eeefa44 -->

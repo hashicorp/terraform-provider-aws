@@ -69,7 +69,7 @@ This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -77,8 +77,8 @@ The `spec` object supports the following:
 
 The `egressFilter` object supports the following:
 
-* `type` - (Optional) Egress filter type. By default, the type is `dropAll`.
-Valid values are `allowAll` and `dropAll`.
+* `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`.
+Valid values are `ALLOW_ALL` and `DROP_ALL`.
 
 ## Attribute Reference
 
@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `lastUpdatedDate` - Last update date of the service mesh.
 * `meshOwner` - AWS account ID of the service mesh's owner.
 * `resourceOwner` - Resource owner's AWS account ID.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -114,4 +114,4 @@ Using `terraform import`, import App Mesh service meshes using the `name`. For e
 % terraform import aws_appmesh_mesh.simple simpleapp
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3173e5025bf46613bb3d81fd897c112506cd0123d7fe3d3c9ffea66ee2187a85 -->
+<!-- cache-key: cdktf-0.19.0 input-3173e5025bf46613bb3d81fd897c112506cd0123d7fe3d3c9ffea66ee2187a85 -->

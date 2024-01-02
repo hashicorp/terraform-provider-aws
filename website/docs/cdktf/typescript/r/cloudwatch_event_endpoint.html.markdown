@@ -75,7 +75,7 @@ This resource supports the following arguments:
 
 `replicationConfig` supports the following:
 
-* `state` - (Optional) The state of event replication. Valid values: `enabled`, `disabled`. The default state is `enabled`, which means you must supply a `roleArn`. If you don't have a `roleArn` or you don't want event replication enabled, set `state` to `disabled`.
+* `state` - (Optional) The state of event replication. Valid values: `ENABLED`, `DISABLED`. The default state is `ENABLED`, which means you must supply a `role_arn`. If you don't have a `role_arn` or you don't want event replication enabled, set `state` to `DISABLED`.
 
 `routingConfig` support the following:
 
@@ -123,4 +123,4 @@ Using `terraform import`, import EventBridge Global Endpoints using the `name`. 
 % terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-dac45f03f23cfb9ec43d7243c7ab30a08379fa9704853c26c6d6b06354f671a4 -->
+<!-- cache-key: cdktf-0.19.0 input-dac45f03f23cfb9ec43d7243c7ab30a08379fa9704853c26c6d6b06354f671a4 -->

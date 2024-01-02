@@ -89,22 +89,19 @@ class MyConvertedCode extends TerraformStack {
     });
     const ipv6TestPublic = new VpcIpamPool(this, "ipv6_test_public", {
       addressFamily: "ipv6",
-      advertisable: false,
       awsService: "ec2",
       description: "public ipv6",
       ipamScopeId: example.publicDefaultScopeId,
       locale: "us-east-1",
+      publicIpSource: "amazon",
+      publiclyAdvertisable: false,
     });
     const awsVpcIpamPoolCidrIpv6TestPublic = new VpcIpamPoolCidr(
       this,
       "ipv6_test_public_3",
       {
-        cidr: ipv6Cidr.stringValue,
-        cidrAuthorizationContext: {
-          message: message.stringValue,
-          signature: signature.stringValue,
-        },
         ipamPoolId: ipv6TestPublic.id,
+        netmaskLength: 52,
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -118,7 +115,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmaskLength`.
+* `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmask_length`.
 * `cidrAuthorizationContext` - (Optional) A signed document that proves that you are authorized to bring the specified IP address range to Amazon using BYOIP. This is not stored in the state file. See [cidr_authorization_context](#cidr_authorization_context) for more information.
 * `ipamPoolId` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmaskLength` - (Optional) If provided, the cidr provisioned into the specified pool will be the next available cidr given this declared netmask length. Conflicts with `cidr`.
@@ -161,4 +158,4 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 % terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5288bd0213533a9d30b8964349d28b549c9e8b5467bb3ec2fc047dc611c6ccf3 -->
+<!-- cache-key: cdktf-0.19.0 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->

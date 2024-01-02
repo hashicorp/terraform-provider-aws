@@ -92,4 +92,4 @@ The following fields are also exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-faa48f214b0a68965ac66737fa03fbf44f9874b295dbca0d05f8656a6168d9c4 -->
+<!-- cache-key: cdktf-0.19.0 input-faa48f214b0a68965ac66737fa03fbf44f9874b295dbca0d05f8656a6168d9c4 -->

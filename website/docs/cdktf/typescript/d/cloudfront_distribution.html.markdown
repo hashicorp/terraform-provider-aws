@@ -36,24 +36,24 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `id` - Identifier for the distribution. For example: `edfdvbd632Bhds5`.
+* `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier for the distribution. For example: `edfdvbd632Bhds5`.
+* `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 * `aliases` - List that contains information about CNAMEs (alternate domain names), if any, for this distribution.
 
 * `arn` - ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
 
-* `status` - Current status of the distribution. `deployed` if the
+* `status` - Current status of the distribution. `Deployed` if the
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
 
 * `domainName` - Domain name corresponding to the distribution. For
-    example: `d604721Fxaaqy9CloudfrontNet`.
+    example: `d604721fxaaqy9.cloudfront.net`.
 
 * `lastModifiedTime` - Date and time the distribution was last modified.
 
@@ -61,11 +61,11 @@ This data source exports the following attributes in addition to the arguments a
     currently in progress.
 
 * `etag` - Current version of the distribution's information. For example:
-    `e2Qwruhapomqzl`.
+    `E2QWRUHAPOMQZL`.
 
 * `hostedZoneId` - CloudFront Route 53 zone ID that can be used to
      route an [Alias Resource Record Set][7] to. This attribute is simply an
-     alias for the zone ID `z2Fdtndataqyw2`.
+     alias for the zone ID `Z2FDTNDATAQYW2`.
 * `webAclId` AWS WAF web ACL associated with this distribution.
 
-<!-- cache-key: cdktf-0.18.0 input-76fd4092d64caf3eb602d2f1b7554e0601ea2cb2c116df5092f91bc933e23c48 -->
+<!-- cache-key: cdktf-0.19.0 input-76fd4092d64caf3eb602d2f1b7554e0601ea2cb2c116df5092f91bc933e23c48 -->

@@ -104,4 +104,4 @@ Using `terraform import`, import an Audit Manager Control using the `id`. For ex
 % terraform import aws_auditmanager_control.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b868688bbd20f6d5af9ab3798d86ae2370658daf4faa22e5cee0ffe9436e3cc0 -->
+<!-- cache-key: cdktf-0.19.0 input-b868688bbd20f6d5af9ab3798d86ae2370658daf4faa22e5cee0ffe9436e3cc0 -->

@@ -19,7 +19,7 @@ Because of backward incompatible API changes (read [here](https://github.com/aws
 * Rename the `serviceName` attribute of the `dns` object to `hostname`.
 
 * Replace the `backends` attribute of the `spec` object with one or more `backend` configuration blocks,
-setting `virtualServiceName` to the name of the service.
+setting `virtual_service_name` to the name of the service.
 
 The Terraform state associated with existing resources will automatically be migrated.
 
@@ -236,7 +236,7 @@ This resource supports the following arguments:
 * `meshName` - (Required) Name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) Virtual node specification to apply.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -356,14 +356,14 @@ The `awsCloudMap` object supports the following:
 
 * `attributes` - (Optional) String map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
 * `namespaceName` - (Required) Name of the AWS Cloud Map namespace to use.
-Use the [`awsServiceDiscoveryHttpNamespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
-* `serviceName` - (Required) Name of the AWS Cloud Map service to use. Use the [`awsServiceDiscoveryService`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
+Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
+* `serviceName` - (Required) Name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
 
 The `dns` object supports the following:
 
 * `hostname` - (Required) DNS host name for your virtual node.
-* `ipPreference` - (Optional) The preferred IP version that this virtual node uses. Valid values: `iPv6Preferred`, `iPv4Preferred`, `iPv4Only`, `iPv6Only`.
-* `responseType` - (Optional) The DNS response type for the virtual node. Valid values: `loadbalancer`, `endpoints`.
+* `ipPreference` - (Optional) The preferred IP version that this virtual node uses. Valid values: `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, `IPv6_ONLY`.
+* `responseType` - (Optional) The DNS response type for the virtual node. Valid values: `LOADBALANCER`, `ENDPOINTS`.
 
 The `portMapping` object supports the following:
 
@@ -384,7 +384,7 @@ The `grpc` connection pool object supports the following:
 The `http` connection pool object supports the following:
 
 * `maxConnections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
-* `maxPendingRequests` - (Optional) Number of overflowing requests after `maxConnections` Envoy will queue to upstream cluster. Minimum value of `1`.
+* `maxPendingRequests` - (Optional) Number of overflowing requests after `max_connections` Envoy will queue to upstream cluster. Minimum value of `1`.
 
 The `http2` connection pool object supports the following:
 
@@ -402,7 +402,7 @@ The `healthCheck` object supports the following:
 * `timeoutMillis` - (Required) Amount of time to wait when receiving a response from the health check, in milliseconds.
 * `unhealthyThreshold` - (Required) Number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
 * `path` - (Optional) Destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
-* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `portMapping` for the listener.
+* `port` - (Optional) Destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
 The `outlierDetection` object supports the following:
 
@@ -410,7 +410,7 @@ The `outlierDetection` object supports the following:
 * `interval` - (Required) Time interval between ejection sweep analysis.
 * `maxEjectionPercent` - (Required) Maximum percentage of hosts in load balancing pool for upstream service that can be ejected. Will eject at least one host regardless of the value.
 Minimum value of `0`. Maximum value of `100`.
-* `maxServerErrors` - (Required) Number of consecutive `5Xx` errors required for ejection. Minimum value of `1`.
+* `maxServerErrors` - (Required) Number of consecutive `5xx` errors required for ejection. Minimum value of `1`.
 
 The `baseEjectionDuration` and `interval` objects support the following:
 
@@ -456,7 +456,7 @@ The `idle` object supports the following:
 The `tls` object supports the following:
 
 * `certificate` - (Required) Listener's TLS certificate.
-* `mode`- (Required) Listener's TLS mode. Valid values: `disabled`, `permissive`, `strict`.
+* `mode`- (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
 * `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
 
 The `certificate` object supports the following:
@@ -513,7 +513,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDate` - Creation date of the virtual node.
 * `lastUpdatedDate` - Last update date of the virtual node.
 * `resourceOwner` - Resource owner's AWS account ID.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -539,4 +539,4 @@ Using `terraform import`, import App Mesh virtual nodes using `meshName` togethe
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-024d5a96598211a97a1626c3090f4db9af8ed04ddfa8eea2600dc09cba20d3c6 -->
+<!-- cache-key: cdktf-0.19.0 input-024d5a96598211a97a1626c3090f4db9af8ed04ddfa8eea2600dc09cba20d3c6 -->

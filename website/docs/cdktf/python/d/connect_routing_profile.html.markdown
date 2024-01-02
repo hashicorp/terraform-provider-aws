@@ -90,4 +90,4 @@ A `queue_configs` block supports the following attributes:
 * `queue_id` - Identifier for the queue.
 * `queue_name` - Name for the queue.
 
-<!-- cache-key: cdktf-0.18.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->
+<!-- cache-key: cdktf-0.19.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->

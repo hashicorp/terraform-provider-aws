@@ -87,4 +87,4 @@ Using `terraform import`, import Shield protection resources using specifying th
 % terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-35847768aaaa80ceec4dd0e0320b0024c8b87792dc136354d8b49f64094399b6 -->
+<!-- cache-key: cdktf-0.19.0 input-35847768aaaa80ceec4dd0e0320b0024c8b87792dc136354d8b49f64094399b6 -->

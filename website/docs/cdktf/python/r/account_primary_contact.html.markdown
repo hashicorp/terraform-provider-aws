@@ -81,4 +81,4 @@ Using `terraform import`, import the Primary Contact using the `account_id`. For
 % terraform import aws_account_primary_contact.test 1234567890
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-851429f776e6267c98084e58a5ee924b91d3bd11d2fa3463d9a57ae674b83986 -->
+<!-- cache-key: cdktf-0.19.0 input-851429f776e6267c98084e58a5ee924b91d3bd11d2fa3463d9a57ae674b83986 -->

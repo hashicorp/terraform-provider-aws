@@ -139,4 +139,4 @@ Import using the user pool ID and Client ID separated by a `:`:
 % terraform import aws_cognito_risk_configuration.main example:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b75593cc575d1cd95ecde1a9b1a8a4e0bd77767201715d4f626c2fa0398eed4b -->
+<!-- cache-key: cdktf-0.19.0 input-b75593cc575d1cd95ecde1a9b1a8a4e0bd77767201715d4f626c2fa0398eed4b -->

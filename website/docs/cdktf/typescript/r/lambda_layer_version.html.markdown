@@ -59,16 +59,16 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `compatibleArchitectures` - (Optional) List of [Architectures][4] this layer is compatible with. Currently `x8664` and `arm64` can be specified.
-* `compatibleRuntimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
+* `compatibleArchitectures` - (Optional) List of [Architectures][4] this layer is compatible with. Currently `x86_64` and `arm64` can be specified.
+* `compatibleRuntimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 15 runtimes can be specified.
 * `description` - (Optional) Description of what your Lambda Layer does.
-* `filename` (Optional) Path to the function's deployment package within the local filesystem. If defined, The `s3`-prefixed options cannot be used.
+* `filename` (Optional) Path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
 * `licenseInfo` - (Optional) License info for your Lambda Layer. See [License Info][3].
 * `s3Bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename`. This bucket must reside in the same AWS region where you are creating the Lambda function.
 * `s3Key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename`.
 * `s3ObjectVersion` - (Optional) Object version containing the function's deployment package. Conflicts with `filename`.
-* `skipDestroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatibleArchitectures`, `compatibleRuntimes`, `description`, `filename`, `layerName`, `licenseInfo`, `s3Bucket`, `s3Key`, `s3ObjectVersion`, or `sourceCodeHash` forces deletion of the existing layer version and creation of a new layer version.
-* `sourceCodeHash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3Key`. The usual way to set this is `${filebase64Sha256("fileZip")}` (Terraform 0.11.12 or later) or `${base64Sha256(file("fileZip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
+* `skipDestroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`. When this is not set to `true`, changing any of `compatible_architectures`, `compatible_runtimes`, `description`, `filename`, `layer_name`, `license_info`, `s3_bucket`, `s3_key`, `s3_object_version`, or `source_code_hash` forces deletion of the existing layer version and creation of a new layer version.
+* `sourceCodeHash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
 
 ## Attribute Reference
 
@@ -111,4 +111,4 @@ Using `terraform import`, import Lambda Layers using `arn`. For example:
     arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1d7deb31d6f83afe8e8355fe2da3b01431626e21fd36c30f56c344343663f003 -->
+<!-- cache-key: cdktf-0.19.0 input-50ef02506e5f8aa941d34a080bbed522b694d49334f23b8e1ff91fdb6b1d0aba -->

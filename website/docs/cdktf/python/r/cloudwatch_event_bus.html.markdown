@@ -91,4 +91,4 @@ Using `terraform import`, import EventBridge event buses using the `name` (which
 % terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-740b7ef9a57fce58b33a2b98397aad29a82f722b6025aed22c549b727c9580eb -->
+<!-- cache-key: cdktf-0.19.0 input-740b7ef9a57fce58b33a2b98397aad29a82f722b6025aed22c549b727c9580eb -->

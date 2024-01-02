@@ -94,4 +94,4 @@ Using `terraform import`, import SNS Data Protection Topic Policy using the topi
 % terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:0123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9873cc188a9eeb3e1e9911705d4e32ec2577e6f0a3d25c0c52f1bdca092cd422 -->
+<!-- cache-key: cdktf-0.19.0 input-9873cc188a9eeb3e1e9911705d4e32ec2577e6f0a3d25c0c52f1bdca092cd422 -->

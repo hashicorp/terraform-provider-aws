@@ -39,14 +39,14 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Global Network.
-* `tags` - (Optional) Key-value tags for the Global Network. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the Global Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Global Network Amazon Resource Name (ARN)
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -70,4 +70,4 @@ Using `terraform import`, import `awsNetworkmanagerGlobalNetwork` using the glob
 % terraform import aws_networkmanager_global_network.example global-network-0d47f6t230mz46dy4
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45d9523e4e6abfc2c3ebc1524528ff8ab02a7954716f34dfbebd84a6acf5efeb -->
+<!-- cache-key: cdktf-0.19.0 input-45d9523e4e6abfc2c3ebc1524528ff8ab02a7954716f34dfbebd84a6acf5efeb -->

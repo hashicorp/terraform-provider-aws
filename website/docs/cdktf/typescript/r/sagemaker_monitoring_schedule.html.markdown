@@ -48,12 +48,12 @@ This resource supports the following arguments:
 
 * `monitoringScheduleConfig` - (Required) The configuration object that specifies the monitoring schedule and defines the monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the monitoring schedule. The name must be unique within an AWS Region within an AWS account. If omitted, Terraform will assign a random, unique name.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### monitoring_schedule_config
 
 * `monitoringJobDefinitionName` - (Required) The name of the monitoring job definition to schedule.
-* `monitoringType` - (Required) The type of the monitoring job definition to schedule. Valid values are `dataQuality`, `modelQuality`, `modelBias` or `modelExplainability`
+* `monitoringType` - (Required) The type of the monitoring job definition to schedule. Valid values are `DataQuality`, `ModelQuality`, `ModelBias` or `ModelExplainability`
 * `scheduleConfig` - (Optional) Configures the monitoring schedule. Fields are documented below.
 
 #### schedule_config
@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this monitoring schedule.
 * `name` - The name of the monitoring schedule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -90,4 +90,4 @@ Using `terraform import`, import monitoring schedules using the `name`. For exam
 % terraform import aws_sagemaker_monitoring_schedule.test_monitoring_schedule monitoring-schedule-foo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7596aa085f871099e9a876409d5f5ffeface2d09e575c3ce7a5e6974cf591269 -->
+<!-- cache-key: cdktf-0.19.0 input-7596aa085f871099e9a876409d5f5ffeface2d09e575c3ce7a5e6974cf591269 -->

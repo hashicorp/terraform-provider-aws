@@ -79,4 +79,4 @@ Using `terraform import`, import `aws_location_place_index` resources using the 
 % terraform import aws_location_place_index.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-394c1ee28ef77e64cf06721c4fa5a97e00829ed4736062d9087e7923bfc8ee3a -->
+<!-- cache-key: cdktf-0.19.0 input-394c1ee28ef77e64cf06721c4fa5a97e00829ed4736062d9087e7923bfc8ee3a -->

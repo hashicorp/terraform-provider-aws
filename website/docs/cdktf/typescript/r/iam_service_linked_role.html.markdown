@@ -38,10 +38,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `awsServiceName` - (Required, Forces new resource) The AWS service to which this role is attached. You use a string similar to a URL but without the `http://` in front. For example: `elasticbeanstalkAmazonawsCom`. To find the full list of services that support service-linked roles, check [the docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-services-that-work-with-iam.html).
+* `awsServiceName` - (Required, Forces new resource) The AWS service to which this role is attached. You use a string similar to a URL but without the `http://` in front. For example: `elasticbeanstalk.amazonaws.com`. To find the full list of services that support service-linked roles, check [the docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-services-that-work-with-iam.html).
 * `customSuffix` - (Optional, forces new resource) Additional string appended to the role name. Not all AWS services support custom suffixes.
 * `description` - (Optional) The description of the role.
-* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The name of the role.
 * `path` - The path of the role.
 * `uniqueId` - The stable and unique string identifying the role.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -77,4 +77,4 @@ Using `terraform import`, import IAM service-linked roles using role ARN. For ex
 % terraform import aws_iam_service_linked_role.elasticbeanstalk arn:aws:iam::123456789012:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-53b8bf0058bf16f68c2476ca78ddb88722c438f564338bbb9af9fab3c2d80462 -->
+<!-- cache-key: cdktf-0.19.0 input-53b8bf0058bf16f68c2476ca78ddb88722c438f564338bbb9af9fab3c2d80462 -->

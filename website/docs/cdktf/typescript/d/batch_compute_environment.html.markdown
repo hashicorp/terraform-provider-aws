@@ -48,10 +48,10 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the compute environment.
 * `ecsClusterArn` - ARN of the underlying Amazon ECS cluster used by the compute environment.
 * `serviceRole` - ARN of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
-* `type` - Type of the compute environment (for example, `managed` or `unmanaged`).
-* `status` - Current status of the compute environment (for example, `creating` or `valid`).
+* `type` - Type of the compute environment (for example, `MANAGED` or `UNMANAGED`).
+* `status` - Current status of the compute environment (for example, `CREATING` or `VALID`).
 * `statusReason` - Short, human-readable string to provide additional details about the current status of the compute environment.
-* `state` - State of the compute environment (for example, `enabled` or `disabled`). If the state is `enabled`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
+* `state` - State of the compute environment (for example, `ENABLED` or `DISABLED`). If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.18.0 input-40ea513f9e96b190b76debe79cd7a41eb8991b1bc0efea47e7c5e257dd7f3f34 -->
+<!-- cache-key: cdktf-0.19.0 input-40ea513f9e96b190b76debe79cd7a41eb8991b1bc0efea47e7c5e257dd7f3f34 -->

@@ -64,12 +64,12 @@ This resource supports the following arguments:
 * `databaseName` - (Required) The name of the Database to create the Function.
 * `className` - (Required) The Java class that contains the function code.
 * `ownerName` - (Required) The owner of the function.
-* `ownerType` - (Required) The owner type. can be one of `user`, `role`, and `group`.
+* `ownerType` - (Required) The owner type. can be one of `USER`, `ROLE`, and `GROUP`.
 * `resourceUris` - (Optional) The configuration block for Resource URIs. See [resource uris](#resource-uris) below for more details.
 
 ### Resource URIs
 
-* `resourceType` - (Required) The type of the resource. can be one of `jar`, `file`, and `archive`.
+* `resourceType` - (Required) The type of the resource. can be one of `JAR`, `FILE`, and `ARCHIVE`.
 * `uri` - (Required) The URI for accessing the resource.
 
 ## Attribute Reference
@@ -102,4 +102,4 @@ Using `terraform import`, import Glue User Defined Functions using the `catalogI
 % terraform import aws_glue_user_defined_function.func 123456789012:my_database:my_func
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-194cac21dea8d6e573aab71efbb8346e096eb5b0106430a43511971b8c50376b -->
+<!-- cache-key: cdktf-0.19.0 input-194cac21dea8d6e573aab71efbb8346e096eb5b0106430a43511971b8c50376b -->

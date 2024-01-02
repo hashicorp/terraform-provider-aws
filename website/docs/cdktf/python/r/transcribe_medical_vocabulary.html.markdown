@@ -101,4 +101,4 @@ Using `terraform import`, import Transcribe MedicalVocabulary using the `vocabul
 % terraform import aws_transcribe_medical_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ec2666cdcba506c91a439366946ad3db8a956be1cc1dfb2a6e10b62b3551dac0 -->
+<!-- cache-key: cdktf-0.19.0 input-ec2666cdcba506c91a439366946ad3db8a956be1cc1dfb2a6e10b62b3551dac0 -->

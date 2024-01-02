@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `coreNetworkId` - (Required) The ID of a core network.
-* `tags` - (Optional) Key-value tags for the peering. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the peering. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayArn` - (Required) The ARN of the transit gateway for the peering request.
 
 ## Attribute Reference
@@ -52,9 +52,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `edgeLocation` - The edge location for the peer.
 * `id` - Peering ID.
 * `ownerAccountId` - The ID of the account owner.
-* `peeringType` - The type of peering. This will be `transitGateway`.
+* `peeringType` - The type of peering. This will be `TRANSIT_GATEWAY`.
 * `resourceArn` - The resource ARN of the peer.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transitGatewayPeeringAttachmentId` - The ID of the transit gateway peering attachment.
 
 ## Import
@@ -79,4 +79,4 @@ Using `terraform import`, import `awsNetworkmanagerTransitGatewayPeering` using 
 % terraform import aws_networkmanager_transit_gateway_peering.example peering-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-850761bfb6bc5f1c587cc31180329d6f710f011b3f0be9c3b8ba3055502f296f -->
+<!-- cache-key: cdktf-0.19.0 input-850761bfb6bc5f1c587cc31180329d6f710f011b3f0be9c3b8ba3055502f296f -->

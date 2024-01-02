@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `awsMarketplace`, `microsoft`).
+* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 
 * `executableUsers` - (Optional) Limit search to users with *explicit* launch
 permission on  the image. Valid items are the numeric account ID or `self`.
@@ -73,6 +73,6 @@ If false, no deprecated AMIs are included in the response. If no value is specif
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-df8435503c645904f83640627b35c5031003b38da5f178afcb6e456e7076b481 -->
+<!-- cache-key: cdktf-0.19.0 input-df8435503c645904f83640627b35c5031003b38da5f178afcb6e456e7076b481 -->

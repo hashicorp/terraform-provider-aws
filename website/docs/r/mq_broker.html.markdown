@@ -32,7 +32,7 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.9"
+  engine_version     = "5.17.6"
   host_instance_type = "mq.t2.micro"
   security_groups    = [aws_security_group.test.id]
 
@@ -57,7 +57,7 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.9"
+  engine_version     = "5.17.6"
   storage_type       = "ebs"
   host_instance_type = "mq.m5.large"
   security_groups    = [aws_security_group.test.id]
@@ -75,7 +75,7 @@ The following arguments are required:
 
 * `broker_name` - (Required) Name of the broker.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
-* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
+* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.17.6`.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
 * `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 

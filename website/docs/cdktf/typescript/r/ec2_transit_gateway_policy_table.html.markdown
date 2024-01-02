@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `transitGatewayId` - (Required) EC2 Transit Gateway identifier.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Policy Table. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Policy Table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - EC2 Transit Gateway Policy Table Amazon Resource Name (ARN).
 * `id` - EC2 Transit Gateway Policy Table identifier.
 * `state` - The state of the EC2 Transit Gateway Policy Table.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -75,4 +75,4 @@ Using `terraform import`, import `awsEc2TransitGatewayPolicyTable` using the EC2
 % terraform import aws_ec2_transit_gateway_policy_table.example tgw-rtb-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-74a9f90cb0d2a1a3f4d315939168fb889955b8d8ab3822d27c7d6149af4bd379 -->
+<!-- cache-key: cdktf-0.19.0 input-74a9f90cb0d2a1a3f4d315939168fb889955b8d8ab3822d27c7d6149af4bd379 -->

@@ -52,8 +52,8 @@ This data source exports the following attributes in addition to the arguments a
 * `dnsConfig` - Complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance.
 * `healthCheckConfig` - Complex type that contains settings for an optional health check. Only for Public DNS namespaces.
 * `healthCheckCustomConfig` -  A complex type that contains settings for ECS managed health checks.
-* `tags` - Map of tags to assign to the service. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tagsAll` - (**Deprecated**) Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags` - Map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tagsAll` - (**Deprecated**) Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### dns_config
 
@@ -84,4 +84,4 @@ This argument supports the following arguments:
 
 * `failureThreshold` -  The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
-<!-- cache-key: cdktf-0.18.0 input-7f7cfd8f45e41436fd49818ccfcd8108e8b10153e1f88948ca383049b98272be -->
+<!-- cache-key: cdktf-0.19.0 input-7f7cfd8f45e41436fd49818ccfcd8108e8b10153e1f88948ca383049b98272be -->

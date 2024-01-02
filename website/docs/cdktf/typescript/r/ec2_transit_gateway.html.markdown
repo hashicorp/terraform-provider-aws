@@ -47,8 +47,8 @@ This resource supports the following arguments:
 * `defaultRouteTablePropagation` - (Optional) Whether resource attachments automatically propagate routes to the default propagation route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `description` - (Optional) Description of the EC2 Transit Gateway.
 * `dnsSupport` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
-* `multicastSupport` - (Optional) Whether Multicast support is enabled. Required to use `ec2TransitGatewayMulticastDomain`. Valid values: `disable`, `enable`. Default value: `disable`.
-* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `multicastSupport` - (Optional) Whether Multicast support is enabled. Required to use `ec2_transit_gateway_multicast_domain`. Valid values: `disable`, `enable`. Default value: `disable`.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayCidrBlocks` - (Optional) One or more IPv4 or IPv6 CIDR blocks for the transit gateway. Must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6.
 * `vpnEcmpSupport` - (Optional) Whether VPN Equal Cost Multipath Protocol support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
 * `associationDefaultRouteTableId` - Identifier of the default association route table
 * `id` - EC2 Transit Gateway identifier
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `ownerId` - Identifier of the AWS account that owns the EC2 Transit Gateway
 * `propagationDefaultRouteTableId` - Identifier of the default propagation route table
 
@@ -67,9 +67,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import `awsEc2TransitGateway` using the EC2 Transit Ga
 % terraform import aws_ec2_transit_gateway.example tgw-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8abb713f19097861ce297d1a598e2ebacc47c1a42889776410c75cd929a248ea -->
+<!-- cache-key: cdktf-0.19.0 input-8abb713f19097861ce297d1a598e2ebacc47c1a42889776410c75cd929a248ea -->

@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `rotationLambdaArn` - Decrypted part of the protected secret information that was originally provided as a string.
 * `rotationRules` - Decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
 
-<!-- cache-key: cdktf-0.18.0 input-e027aa73fed49f05ed2c35a302ee5eef5a2de9f215c0ad6bb0470048e38bbb27 -->
+<!-- cache-key: cdktf-0.19.0 input-e027aa73fed49f05ed2c35a302ee5eef5a2de9f215c0ad6bb0470048e38bbb27 -->

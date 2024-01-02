@@ -52,7 +52,7 @@ AWS account and region the Stream is created in.
 * `deviceName` - (Optional) The name of the device that is writing to the stream. **In the current implementation, Kinesis Video Streams does not use this name.**
 * `kmsKeyId` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that you want Kinesis Video Streams to use to encrypt stream data. If no key ID is specified, the default, Kinesis Video-managed key (`aws/kinesisvideo`) is used.
 * `mediaType` - (Optional) The media type of the stream. Consumers of the stream can use this information when processing the stream. For more information about media types, see [Media Types][2]. If you choose to specify the MediaType, see [Naming Requirements][3] for guidelines.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -62,15 +62,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream (same as `id`)
 * `creationTime` - A time stamp that indicates when the stream was created.
 * `version` - The version of the stream.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `120M`)
-- `delete` - (Default `120M`)
+- `create` - (Default `5m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 
@@ -98,4 +98,4 @@ Using `terraform import`, import Kinesis Streams using the `arn`. For example:
 [2]: http://www.iana.org/assignments/media-types/media-types.xhtml
 [3]: https://tools.ietf.org/html/rfc6838#section-4.2
 
-<!-- cache-key: cdktf-0.18.0 input-9e588c14e41b8ac56c1691ef835d73ed6f334b72a8ab742e2478725e27ff938c -->
+<!-- cache-key: cdktf-0.19.0 input-9e588c14e41b8ac56c1691ef835d73ed6f334b72a8ab742e2478725e27ff938c -->

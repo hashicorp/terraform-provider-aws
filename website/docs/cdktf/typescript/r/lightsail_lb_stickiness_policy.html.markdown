@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name used for this load balancer (matches `lbName`).
+* `id` - The name used for this load balancer (matches `lb_name`).
 
 ## Import
 
@@ -87,4 +87,4 @@ Using `terraform import`, import `awsLightsailLbStickinessPolicy` using the `lbN
 % terraform import aws_lightsail_lb_stickiness_policy.test example-load-balancer
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d81e14735db5f79619a49663b9e62b0556328959a952750a838262d10f6383c5 -->
+<!-- cache-key: cdktf-0.19.0 input-d81e14735db5f79619a49663b9e62b0556328959a952750a838262d10f6383c5 -->

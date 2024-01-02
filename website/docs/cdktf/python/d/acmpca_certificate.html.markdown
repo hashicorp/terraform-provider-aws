@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `certificate` - PEM-encoded certificate value.
 * `certificate_chain` - PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 
-<!-- cache-key: cdktf-0.18.0 input-f7804d061124fc6489bcc7d11d155c5a561ad1fe6aac3da7e0bdce8a5bdbf606 -->
+<!-- cache-key: cdktf-0.19.0 input-f7804d061124fc6489bcc7d11d155c5a561ad1fe6aac3da7e0bdce8a5bdbf606 -->

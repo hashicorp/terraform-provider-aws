@@ -72,4 +72,4 @@ Using `terraform import`, import Resource Explorer indexes using the `arn`. For 
 % terraform import aws_resourceexplorer2_index.example arn:aws:resource-explorer-2:us-east-1:123456789012:index/6047ac4e-207e-4487-9bcf-cb53bb0ff5cc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-15aba15c558147fe93e81fd33df5a092fce89b9a9fad5f53b520dc3c70e79bbd -->
+<!-- cache-key: cdktf-0.19.0 input-15aba15c558147fe93e81fd33df5a092fce89b9a9fad5f53b520dc3c70e79bbd -->

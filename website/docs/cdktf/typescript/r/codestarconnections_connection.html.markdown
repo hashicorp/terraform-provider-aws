@@ -113,9 +113,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the connection to be created. The name must be unique in the calling AWS account. Changing `name` will create a new resource.
-* `providerType` - (Optional) The name of the external provider where your third-party code repository is configured. Valid values are `bitbucket`, `gitHub` or `gitHubEnterpriseServer`. Changing `providerType` will create a new resource. Conflicts with `hostArn`
-* `hostArn` - (Optional) The Amazon Resource Name (ARN) of the host associated with the connection. Conflicts with `providerType`
-* `tags` - (Optional) Map of key-value resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `providerType` - (Optional) The name of the external provider where your third-party code repository is configured. Valid values are `Bitbucket`, `GitHub` or `GitHubEnterpriseServer`. Changing `provider_type` will create a new resource. Conflicts with `host_arn`
+* `hostArn` - (Optional) The Amazon Resource Name (ARN) of the host associated with the connection. Conflicts with `provider_type`
+* `tags` - (Optional) Map of key-value resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -123,8 +123,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The codestar connection ARN.
 * `arn` - The codestar connection ARN.
-* `connectionStatus` - The codestar connection status. Possible values are `pending`, `available` and `error`.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `connectionStatus` - The codestar connection status. Possible values are `PENDING`, `AVAILABLE` and `ERROR`.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -148,4 +148,4 @@ Using `terraform import`, import CodeStar connections using the ARN. For example
 % terraform import aws_codestarconnections_connection.test-connection arn:aws:codestar-connections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cea28696e8a04ea0fb64e3b43f622ae20b1f905cc54be4b416fdf569f4bc9518 -->
+<!-- cache-key: cdktf-0.19.0 input-cea28696e8a04ea0fb64e3b43f622ae20b1f905cc54be4b416fdf569f4bc9518 -->

@@ -260,7 +260,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `dataSetId` - (Required, Forces new resource) Identifier for the data set.
-* `importMode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `spice` and `directQuery`.
+* `importMode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
 * `physicalTableMap` - (Required) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
@@ -275,8 +275,8 @@ The following arguments are optional:
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
 * `rowLevelPermissionDataSet` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `rowLevelPermissionTagConfiguration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
-* `refreshProperties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `importMode` is set to `spice`. See [refresh_properties](#refresh_properties).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `refreshProperties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### physical_table_map
 
@@ -322,9 +322,9 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 
 * `containsHeader` - (Optional) Whether the file has a header row, or the files each have a header row.
 * `delimiter` - (Optional) Delimiter between values in the file.
-* `format` - (Optional) File format. Valid values are `csv`, `tsv`, `clf`, `elf`, `xlsx`, and `json`.
+* `format` - (Optional) File format. Valid values are `CSV`, `TSV`, `CLF`, `ELF`, `XLSX`, and `JSON`.
 * `startFromRow` - (Optional) A row number to start reading data from.
-* `textQualifier` - (Optional) Text qualifier. Valid values are `doubleQuote` and `singleQuote`.
+* `textQualifier` - (Optional) Text qualifier. Valid values are `DOUBLE_QUOTE` and `SINGLE_QUOTE`.
 
 ### column_groups
 
@@ -333,7 +333,7 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 ### geo_spatial_column_group
 
 * `columns` - (Required) Columns in this hierarchy.
-* `countryCode` - (Required) Country code. Valid values are `us`.
+* `countryCode` - (Required) Country code. Valid values are `US`.
 * `name` - (Required) A display name for the hierarchy.
 
 ### column_level_permission_rules
@@ -372,7 +372,7 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 ### cast_column_type_operation
 
 * `columnName` - (Required) Column name.
-* `newColumnType` - (Required) New column data type. Valid values are `string`, `integer`, `decimal`, `datetime`.
+* `newColumnType` - (Required) New column data type. Valid values are `STRING`, `INTEGER`, `DECIMAL`, `DATETIME`.
 * `format` - (Optional) When casting a column from string to datetime type, you can supply a string in a format supported by Amazon QuickSight to denote the source data format.
 
 ### create_columns_operation
@@ -406,7 +406,7 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 ### tags
 
 * `columnDescription` - (Optional) A description for a column. See [column_description](#column_description).
-* `columnGeographicRole` - (Optional) A geospatial role for a column. Valid values are `country`, `state`, `county`, `city`, `postcode`, `longitude`, and `latitude`.
+* `columnGeographicRole` - (Optional) A geospatial role for a column. Valid values are `COUNTRY`, `STATE`, `COUNTY`, `CITY`, `POSTCODE`, `LONGITUDE`, and `LATITUDE`.
 
 ### column_description
 
@@ -428,7 +428,7 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 * `leftOperand` - (Required) Operand on the left side of a join.
 * `onClause` - (Required) Join instructions provided in the ON clause of a join.
 * `rightOperand` - (Required) Operand on the right side of a join.
-* `type` - (Required) Type of join. Valid values are `inner`, `outer`, `left`, and `right`.
+* `type` - (Required) Type of join. Valid values are `INNER`, `OUTER`, `LEFT`, and `RIGHT`.
 * `leftJoinKeyProperties` - (Optional) Join key properties of the left operand. See [left_join_key_properties](#left_join_key_properties).
 * `rightJoinKeyProperties` - (Optional) Join key properties of the right operand. See [right_join_key_properties](#right_join_key_properties).
 
@@ -448,15 +448,15 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 ### row_level_permission_data_set
 
 * `arn` - (Required) ARN of the dataset that contains permissions for RLS.
-* `permissionPolicy` - (Required) Type of permissions to use when interpreting the permissions for RLS. Valid values are `grantAccess` and `denyAccess`.
+* `permissionPolicy` - (Required) Type of permissions to use when interpreting the permissions for RLS. Valid values are `GRANT_ACCESS` and `DENY_ACCESS`.
 * `formatVersion` - (Optional) User or group rules associated with the dataset that contains permissions for RLS.
 * `namespace` - (Optional) Namespace associated with the dataset that contains permissions for RLS.
-* `status` - (Optional) Status of the row-level security permission dataset. If enabled, the status is `enabled`. If disabled, the status is `disabled`.
+* `status` - (Optional) Status of the row-level security permission dataset. If enabled, the status is `ENABLED`. If disabled, the status is `DISABLED`.
 
 ### row_level_permission_tag_configuration
 
 * `tagRules` - (Required) A set of rules associated with row-level security, such as the tag names and columns that they are assigned to. See [tag_rules](#tag_rules).
-* `status` - (Optional) The status of row-level security tags. If enabled, the status is `enabled`. If disabled, the status is `disabled`.
+* `status` - (Optional) The status of row-level security tags. If enabled, the status is `ENABLED`. If disabled, the status is `DISABLED`.
 
 ### refresh_properties
 
@@ -474,7 +474,7 @@ For a `physicalTableMap` item to be valid, only one of `customSql`, `relationalT
 
 * `columnName` - (Required) The name of the lookback window column.
 * `size` - (Required) The lookback window column size.
-* `sizeUnit` - (Required) The size unit that is used for the lookback window column. Valid values for this structure are `hour`, `day`, and `week`.
+* `sizeUnit` - (Required) The size unit that is used for the lookback window column. Valid values for this structure are `HOUR`, `DAY`, and `WEEK`.
 
 ### tag_rules
 
@@ -489,7 +489,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -513,4 +513,4 @@ Using `terraform import`, import a QuickSight Data Set using the AWS account ID 
 % terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1a8603f1407762c148dd6779a52ba1f5c1ee5c07434a0e03886d6f8b8bec1425 -->
+<!-- cache-key: cdktf-0.19.0 input-1a8603f1407762c148dd6779a52ba1f5c1ee5c07434a0e03886d6f8b8bec1425 -->

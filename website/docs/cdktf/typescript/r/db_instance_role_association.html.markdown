@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `dbInstanceIdentifier` - (Required) DB Instance Identifier to associate with the IAM Role.
-* `featureName` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `supportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
+* `featureName` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
 * `roleArn` - (Required) Amazon Resource Name (ARN) of the IAM Role to associate with the DB Instance.
 
 ## Attribute Reference
@@ -77,4 +77,4 @@ Using `terraform import`, import `awsDbInstanceRoleAssociation` using the DB Ins
 % terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ea9099caf40d7a4cade1ea4194ea1b75c0145f79cdeb15a2e5c098eb364ca5d9 -->
+<!-- cache-key: cdktf-0.19.0 input-ea9099caf40d7a4cade1ea4194ea1b75c0145f79cdeb15a2e5c098eb364ca5d9 -->

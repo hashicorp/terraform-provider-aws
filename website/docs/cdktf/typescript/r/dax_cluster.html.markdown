@@ -42,8 +42,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `clusterEndpointEncryptionType` – (Optional) The type of encryption the
-cluster's endpoint should support. Valid values are: `none` and `tls`.
-Default value is `none`.
+cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
+Default value is `NONE`.
 
 * `clusterName` – (Required) Group identifier. DAX converts this name to
 lowercase
@@ -66,15 +66,15 @@ nodes will be created
 
 * `notificationTopicArn` – (Optional) An Amazon Resource Name (ARN) of an
 SNS topic to send DAX notifications to. Example:
-`arn:aws:sns:usEast1:012345678999:mySnsTopic`
+`arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 
 * `parameterGroupName` – (Optional) Name of the parameter group to associate
 with this DAX cluster
 
 * `maintenanceWindow` – (Optional) Specifies the weekly time range for when
-maintenance on the cluster is performed. The format is `ddd:hh24:miDdd:hh24:mi`
+maintenance on the cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi`
 (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example:
-`sun:05:00Sun:09:00`
+`sun:05:00-sun:09:00`
 
 * `securityGroupIds` – (Optional) One or more VPC security groups associated
 with the cluster
@@ -84,7 +84,7 @@ with the cluster
 * `subnetGroupName` – (Optional) Name of the subnet group to be used for the
 cluster
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `serverSideEncryption` object supports the following:
 
@@ -97,8 +97,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the DAX cluster
 
 * `nodes` - List of node objects including `id`, `address`, `port` and
-`availabilityZone`. Referenceable e.g., as
-`${awsDaxClusterTestNodes0Address}`
+`availability_zone`. Referenceable e.g., as
+`${aws_dax_cluster.test.nodes.0.address}`
 
 * `configurationEndpoint` - The configuration endpoint for this DAX cluster,
 consisting of a DNS name and a port number
@@ -107,15 +107,15 @@ consisting of a DNS name and a port number
 
 * `port` - The port used by the configuration endpoint
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45M`)
-- `update` - (Default `45M`)
-- `delete` - (Default `90M`)
+- `create` - (Default `45m`)
+- `update` - (Default `45m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
@@ -141,4 +141,4 @@ Using `terraform import`, import DAX Clusters using the `clusterName`. For examp
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes
 
-<!-- cache-key: cdktf-0.18.0 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->
+<!-- cache-key: cdktf-0.19.0 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->

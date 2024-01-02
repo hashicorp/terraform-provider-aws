@@ -49,7 +49,7 @@ class MyConvertedCode extends TerraformStack {
 * `functionName` - (Required) Name of the lambda function.
 * `input` - (Required) String in JSON format that is passed as payload to the lambda function.
 * `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults
- to `$latest`.
+ to `$LATEST`.
 
 ## Attribute Reference
 
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.18.0 input-858416cde9289de24a6c4454bdaf3179b1c69d4515be797eefce2b9c352ef2b3 -->
+<!-- cache-key: cdktf-0.19.0 input-858416cde9289de24a6c4454bdaf3179b1c69d4515be797eefce2b9c352ef2b3 -->

@@ -49,10 +49,10 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `keyId` - (Required) Key identifier which can be one of the following format:
-    * Key ID. E.g - `1234Abcd12Ab34Cd56Ef1234567890Ab`
-    * Key ARN. E.g. - `arn:aws:kms:usEast1:111122223333:key/1234Abcd12Ab34Cd56Ef1234567890Ab`
-    * Alias name. E.g. - `alias/myKey`
-    * Alias ARN - E.g. - `arn:aws:kms:usEast1:111122223333:alias/myKey`
+    * Key ID. E.g - `1234abcd-12ab-34cd-56ef-1234567890ab`
+    * Key ARN. E.g. - `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
+    * Alias name. E.g. - `alias/my-key`
+    * Alias ARN - E.g. - `arn:aws:kms:us-east-1:111122223333:alias/my-key`
 * `grantTokens` - (Optional) List of grant tokens
 
 ## Attribute Reference
@@ -61,11 +61,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Key ARN of the asymmetric CMK from which the public key was downloaded.
 * `customerMasterKeySpec` - Type of the public key that was downloaded.
-* `encryptionAlgorithms` - Encryption algorithms that AWS KMS supports for this key. Only set when the `keyUsage` of the public key is `encryptDecrypt`.
+* `encryptionAlgorithms` - Encryption algorithms that AWS KMS supports for this key. Only set when the `key_usage` of the public key is `ENCRYPT_DECRYPT`.
 * `id` - Key ARN of the asymmetric CMK from which the public key was downloaded.
-* `keyUsage` - Permitted use of the public key. Valid values are `encryptDecrypt` or `signVerify`
+* `keyUsage` - Permitted use of the public key. Valid values are `ENCRYPT_DECRYPT` or `SIGN_VERIFY`
 * `publicKey` - Exported public key. The value is a DER-encoded X.509 public key, also known as SubjectPublicKeyInfo (SPKI), as defined in [RFC 5280](https://tools.ietf.org/html/rfc5280). The value is Base64-encoded.
 * `publicKeyPem` - Exported public key. The value is Privacy Enhanced Mail (PEM) encoded.
-* `signingAlgorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `keyUsage` of the public key is `signVerify`.
+* `signingAlgorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `key_usage` of the public key is `SIGN_VERIFY`.
 
-<!-- cache-key: cdktf-0.18.0 input-12b3af34b0a1b4d66a4ded239c7cec5e42bb02e7dbdeb474700393154476f950 -->
+<!-- cache-key: cdktf-0.19.0 input-12b3af34b0a1b4d66a4ded239c7cec5e42bb02e7dbdeb474700393154476f950 -->

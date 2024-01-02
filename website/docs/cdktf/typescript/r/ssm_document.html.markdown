@@ -75,18 +75,18 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the document.
 * `attachmentsSource` - (Optional) One or more configuration blocks describing attachments sources to a version of a document. Defined below.
 * `content` - (Required) The JSON or YAML content of the document.
-* `documentFormat` - (Optional, defaults to JSON) The format of the document. Valid document types include: `json` and `yaml`
-* `documentType` - (Required) The type of the document. Valid document types include: `automation`, `command`, `package`, `policy`, and `session`
+* `documentFormat` - (Optional, defaults to JSON) The format of the document. Valid document types include: `JSON` and `YAML`
+* `documentType` - (Required) The type of the document. Valid document types include: `Automation`, `Command`, `Package`, `Policy`, and `Session`
 * `permissions` - (Optional) Additional Permissions to attach to the document. See [Permissions](#permissions) below for details.
 * `targetType` - (Optional) The target type which defines the kinds of resources the document can run on. For example, /AWS::EC2::Instance. For a list of valid resource types, see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
-* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionName` - (Optional) A field specifying the version of the artifact you are creating with the document. For example, "Release 12, Update 6". This value is unique across all versions of a document and cannot be changed for an existing document version.
 
 ## attachments_source
 
 The `attachmentsSource` block supports the following:
 
-* `key` - (Required) The key describing the location of an attachment to a document. Valid key types include: `sourceUrl` and `s3FileUrl`
+* `key` - (Required) The key describing the location of an attachment to a document. Valid key types include: `SourceUrl` and `S3FileUrl`
 * `values` - (Required) The value describing the location of an attachment to a document
 * `name` - (Optional) The name of the document attachment file
 
@@ -106,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - "Creating", "Active" or "Deleting". The current status of the document.
 * `parameter` - The parameters that are available to this document.
 * `platformTypes` - A list of OS platforms compatible with this SSM document, either "Windows" or "Linux".
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html#document-schemas-features
 [2]: https://docs.aws.amazon.com/systems-manager/latest/userguide/document-schemas-features.html
@@ -119,8 +119,8 @@ publicly, you must specify All as the account ID.
 
 The permissions mapping supports the following:
 
-* `type` - The permission type for the document. The permission type can be `share`.
-* `accountIds` - The AWS user accounts that should have access to the document. The account IDs can either be a group of account IDs or `all`.
+* `type` - The permission type for the document. The permission type can be `Share`.
+* `accountIds` - The AWS user accounts that should have access to the document. The account IDs can either be a group of account IDs or `All`.
 
 ## Import
 
@@ -180,4 +180,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0f47ccad709627d6f83189f2b6d41b8032365327e11d5385345cf2f96e8c2bad -->
+<!-- cache-key: cdktf-0.19.0 input-0f47ccad709627d6f83189f2b6d41b8032365327e11d5385345cf2f96e8c2bad -->

@@ -19,7 +19,7 @@ Before new resources are submitted, please raise a separate pull request contain
 
 To add an AWS SDK for Go service client:
 
-1. Check the file `names/names_data.csv` for the service.
+1. Check the file `names/data/names_data.csv` for the service.
 
 1. If the service is there and there is no value in the `NotImplmented` column, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
@@ -27,26 +27,42 @@ To add an AWS SDK for Go service client:
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
-1. In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
+1. In `names/data/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
 
     !!! tip
         Be very careful when adding or changing data in `names_data.csv`!
         The Provider and generators depend on the file being correct.
         We strongly recommend using an editor with CSV support.
 
-To generate the client, run the following then submit the pull request:
+Once the names data is ready, create a new service directory with the appropriate service name.
+
+```console
+mkdir internal/service/<service>
+```
+
+Add a new file `internal/service/<service>/generate.go` with the following content. This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider).
+
+```go
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+//go:generate go run ../../generate/servicepackage/main.go
+// ONLY generate directives and package declaration! Do not add anything else to this file.
+
+package <service>
+```
+
+Next, generate the client and ensure all dependencies are fetched.
 
 ```console
 make gen
 ```
 
 ```console
-make test
-```
-
-```console
 go mod tidy
 ```
+
+At this point a pull request with the re-generated files and new service client can be submitted.
 
 Once the service client has been added, implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md) in a separate PR.
 
@@ -54,7 +70,7 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 If an AWS service must be created in a non-standard way, for example the service API's endpoint must be accessed via a single AWS Region, then:
 
-1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
 
 1. Run `make gen`
 

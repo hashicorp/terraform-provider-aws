@@ -85,7 +85,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `hierarchyStructure` - (Required) A block that defines the hierarchy structure's levels. The `hierarchyStructure` block is documented below.
+* `hierarchyStructure` - (Required) A block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 
 A `hierarchyStructure` block supports the following arguments:
@@ -134,4 +134,4 @@ Using `terraform import`, import Amazon Connect User Hierarchy Structures using 
 % terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d4221332a1de6be2872d8c5ee9a0bd06fd2ef712cb35778939fcdd12ecf0c17c -->
+<!-- cache-key: cdktf-0.19.0 input-d4221332a1de6be2872d8c5ee9a0bd06fd2ef712cb35778939fcdd12ecf0c17c -->

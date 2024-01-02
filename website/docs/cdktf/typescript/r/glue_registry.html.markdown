@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 * `registryName` – (Required) The Name of the registry.
 * `description` – (Optional) A description of the registry.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of Glue Registry.
 * `id` - Amazon Resource Name (ARN) of Glue Registry.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -72,4 +72,4 @@ Using `terraform import`, import Glue Registries using `arn`. For example:
 % terraform import aws_glue_registry.example arn:aws:glue:us-west-2:123456789012:registry/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca7291533ababa19fd90f315f11beb8ec44905df2527d1937679132938c2cddd -->
+<!-- cache-key: cdktf-0.19.0 input-ca7291533ababa19fd90f315f11beb8ec44905df2527d1937679132938c2cddd -->

@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `source` - Whether the snapshot is from an automatic backup (`automated`) or was created manually (`manual`).
 * `tags` - Map of tags assigned to the snapshot.
 
-<!-- cache-key: cdktf-0.18.0 input-62f791c7099ad6e3e06f89ea492109f2285d5d4a23f2005bec9ce21b57cd5349 -->
+<!-- cache-key: cdktf-0.19.0 input-62f791c7099ad6e3e06f89ea492109f2285d5d4a23f2005bec9ce21b57cd5349 -->

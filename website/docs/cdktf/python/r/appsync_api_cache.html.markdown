@@ -77,4 +77,4 @@ Using `terraform import`, import `aws_appsync_api_cache` using the AppSync API I
 % terraform import aws_appsync_api_cache.example xxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7b300ac441f82586ce425ea9b3f1fabbacd0aa2e6e9a8cba068619ac2633970e -->
+<!-- cache-key: cdktf-0.19.0 input-7b300ac441f82586ce425ea9b3f1fabbacd0aa2e6e9a8cba068619ac2633970e -->

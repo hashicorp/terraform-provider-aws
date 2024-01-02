@@ -305,7 +305,7 @@ After adding inline IAM Policies (e.g., [`awsIamRolePolicy` resource](/docs/prov
 The following arguments are required:
 
 * `name` – (Required) Name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
-* `roleArn` - (Required) ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf. Ensure the resource configuration includes explicit dependencies on the IAM Role permissions by adding [`dependsOn`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) if using the [`awsIamRolePolicy` resource](/docs/providers/aws/r/iam_role_policy.html) or [`awsIamRolePolicyAttachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html), otherwise EKS cannot delete EKS managed EC2 infrastructure such as Security Groups on EKS Cluster deletion.
+* `roleArn` - (Required) ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf. Ensure the resource configuration includes explicit dependencies on the IAM Role permissions by adding [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) if using the [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html) or [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html), otherwise EKS cannot delete EKS managed EC2 infrastructure such as Security Groups on EKS Cluster deletion.
 * `vpcConfig` - (Required) Configuration block for the VPC associated with your cluster. Amazon EKS VPC resources have specific requirements to work properly with Kubernetes. For more information, see [Cluster VPC Considerations](https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html) and [Cluster Security Group Considerations](https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html) in the Amazon EKS User Guide. Detailed below. Also contains attributes detailed in the Attributes section.
 
 The following arguments are optional:
@@ -314,7 +314,7 @@ The following arguments are optional:
 * `encryptionConfig` - (Optional) Configuration block with encryption configuration for the cluster. Only available on Kubernetes 1.13 and above clusters created after March 6, 2020. Detailed below.
 * `kubernetesNetworkConfig` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpostConfig` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
 
 ### encryption_config
@@ -334,7 +334,7 @@ The `provider` configuration block supports the following arguments:
 
 * `endpointPrivateAccess` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpointPublicAccess` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
-* `publicAccessCidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0000/0`. Terraform will only perform drift detection of its value when present in a configuration.
+* `publicAccessCidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
 * `securityGroupIds` – (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
 * `subnetIds` – (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
 
@@ -366,9 +366,9 @@ The `outpostConfig` configuration block supports the following arguments:
     For a list of the available Amazon EC2 instance types, see Compute and storage in AWS Outposts rack features  The control plane is not automatically scaled by Amazon EKS.
 
 * `controlPlanePlacement` - (Optional) An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
-The `controlPlanePlacement` configuration block supports the following arguments:
+The `control_plane_placement` configuration block supports the following arguments:
 
-    * `groupName` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
+    * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
 
 * `outpostArns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
@@ -377,7 +377,7 @@ The `controlPlanePlacement` configuration block supports the following arguments
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster.
-* `certificateAuthority` - Attribute block containing `certificateAuthorityData` for your cluster. Detailed below.
+* `certificateAuthority` - Attribute block containing `certificate-authority-data` for your cluster. Detailed below.
 * `clusterId` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `createdAt` - Unix epoch timestamp in seconds for when the cluster was created.
 * `endpoint` - Endpoint for your Kubernetes API server.
@@ -385,13 +385,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `identity` - Attribute block containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. Detailed below.
 * `kubernetesNetworkConfigServiceIpv6Cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for ipFamily when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `platformVersion` - Platform version for the cluster.
-* `status` - Status of the EKS cluster. One of `creating`, `active`, `deleting`, `failed`.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcConfig` - Configuration block _argument_ that also includes attributes for the VPC associated with your cluster. Detailed below.
 
 ### certificate_authority
 
-* `data` - Base64 encoded certificate data required to communicate with your cluster. Add this to the `certificateAuthorityData` section of the `kubeconfig` file for your cluster.
+* `data` - Base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 
 ### identity
 
@@ -410,10 +410,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `60M`)
-Note that the `update` timeout is used separately for both `version` and `vpcConfig` update timeouts.
-* `delete` - (Default `15M`)
+* `create` - (Default `30m`)
+* `update` - (Default `60m`)
+Note that the `update` timeout is used separately for both `version` and `vpc_config` update timeouts.
+* `delete` - (Default `15m`)
 
 ## Import
 
@@ -437,4 +437,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6cb4e58d2d6459048ce11426d7c64e17bbcb1a488c1508bd0a076ea2e1feb536 -->
+<!-- cache-key: cdktf-0.19.0 input-6cb4e58d2d6459048ce11426d7c64e17bbcb1a488c1508bd0a076ea2e1feb536 -->

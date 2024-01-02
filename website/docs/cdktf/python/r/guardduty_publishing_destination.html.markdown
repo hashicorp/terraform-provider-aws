@@ -149,4 +149,4 @@ Using `terraform import`, import GuardDuty PublishingDestination using the maste
 % terraform import aws_guardduty_publishing_destination.test a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-62a290b6c0d879190b7ab5d6098de0abf59abd632ca625aa1c6a6b8f48e6ac47 -->
+<!-- cache-key: cdktf-0.19.0 input-62a290b6c0d879190b7ab5d6098de0abf59abd632ca625aa1c6a6b8f48e6ac47 -->

@@ -56,20 +56,20 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `autoEnable` - (Required) The status of the feature that is configured for the member accounts within the organization. Valid values: `new`, `all`, `none`.
+* `autoEnable` - (Required) The status of the feature that is configured for the member accounts within the organization. Valid values: `NEW`, `ALL`, `NONE`.
 * `detectorId` - (Required) The ID of the detector that configures the delegated administrator.
-* `name` - (Required) The name of the feature that will be configured for the organization. Valid values: `s3DataEvents`, `eksAuditLogs`, `ebsMalwareProtection`, `rdsLoginEvents`, `eksRuntimeMonitoring`, `lambdaNetworkLogs`.
+* `name` - (Required) The name of the feature that will be configured for the organization. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`.
 * `additionalConfiguration` - (Optional) The additional information that will be configured for the organization See [below](#additional-configuration).
 
 ### Additional Configuration
 
 The `additionalConfiguration` block supports the following:
 
-* `autoEnable` - (Required) The status of the additional configuration that will be configured for the organization. Valid values: `new`, `all`, `none`.
-* `name` - (Required) The name of the additional configuration that will be configured for the organization. Valid values: `eksAddonManagement`.
+* `autoEnable` - (Required) The status of the additional configuration that will be configured for the organization. Valid values: `NEW`, `ALL`, `NONE`.
+* `name` - (Required) The name of the additional configuration that will be configured for the organization. Valid values: `EKS_ADDON_MANAGEMENT`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-af534c2b9dc87ad328aeada98eac41421489586c67758449e011a8a7d6b7e223 -->
+<!-- cache-key: cdktf-0.19.0 input-af534c2b9dc87ad328aeada98eac41421489586c67758449e011a8a7d6b7e223 -->

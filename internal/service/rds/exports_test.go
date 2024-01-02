@@ -8,4 +8,19 @@ var (
 	FindDBInstanceByID = findDBInstanceByIDSDKv1
 
 	ListTags = listTags
+
+	NewBlueGreenOrchestrator = newBlueGreenOrchestrator
+
+	WaitBlueGreenDeploymentDeleted   = waitBlueGreenDeploymentDeleted
+	WaitBlueGreenDeploymentAvailable = waitBlueGreenDeploymentAvailable
+
+	ParseDBInstanceARN = parseDBInstanceARN
+
+	WaitDBInstanceAvailable = waitDBInstanceAvailableSDKv2
+	WaitDBInstanceDeleted   = waitDBInstanceDeleted
+)
+
+const (
+	ErrCodeInvalidParameterCombination = errCodeInvalidParameterCombination
+	ErrCodeInvalidParameterValue       = errCodeInvalidParameterValue
 )

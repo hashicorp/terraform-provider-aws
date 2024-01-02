@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `item` - JSON representation of a map of attribute names to [AttributeValue](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html) objects, as specified by ProjectionExpression.
 
-<!-- cache-key: cdktf-0.18.0 input-15763bbf01ce37024fe77596ac5996501c9715c0941ce02a4eab1115436c2219 -->
+<!-- cache-key: cdktf-0.19.0 input-15763bbf01ce37024fe77596ac5996501c9715c0941ce02a4eab1115436c2219 -->

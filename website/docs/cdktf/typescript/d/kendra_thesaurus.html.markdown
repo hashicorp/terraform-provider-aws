@@ -49,13 +49,13 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Thesaurus.
 * `createdAt` - Unix datetime that the Thesaurus was created.
 * `description` - Description of the Thesaurus.
-* `errorMessage` - When the `status` field value is `failed`, this contains a message that explains why.
+* `errorMessage` - When the `status` field value is `FAILED`, this contains a message that explains why.
 * `fileSizeBytes` - Size of the Thesaurus file in bytes.
 * `id` - Unique identifiers of the Thesaurus and index separated by a slash (`/`).
 * `name` - Name of the Thesaurus.
 * `roleArn` - ARN of a role with permission to access the S3 bucket that contains the Thesaurus. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `sourceS3Path` - S3 location of the Thesaurus input data. Detailed below.
-* `status` - Status of the Thesaurus. It is ready to use when the status is `active`.
+* `status` - Status of the Thesaurus. It is ready to use when the status is `ACTIVE`.
 * `synonymRuleCount` - Number of synonym rules in the Thesaurus file.
 * `termCount` - Number of unique terms in the Thesaurus file. For example, the synonyms `a,b,c` and `a=>d`, the term count would be 4.
 * `updatedAt` - Date and time that the Thesaurus was last updated.
@@ -66,4 +66,4 @@ The `sourceS3Path` configuration block supports the following attributes:
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.
 
-<!-- cache-key: cdktf-0.18.0 input-29125b244608b6530d208362c4905e204c473f5f814e8bb91d9775dec645232b -->
+<!-- cache-key: cdktf-0.19.0 input-29125b244608b6530d208362c4905e204c473f5f814e8bb91d9775dec645232b -->

@@ -76,4 +76,4 @@ Using `terraform import`, import WorkSpaces Connection Alias using the connectio
 % terraform import aws_workspaces_connection_alias.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->
+<!-- cache-key: cdktf-0.19.0 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->

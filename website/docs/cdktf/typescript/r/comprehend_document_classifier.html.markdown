@@ -63,7 +63,7 @@ The following arguments are required:
 
 * `dataAccessRoleArn` - (Required) The ARN for an IAM Role which allows Comprehend to read the training and testing data.
 * `inputDataConfig` - (Required) Configuration for the training and testing data.
-  See the [`inputDataConfig` Configuration Block](#input_data_config-configuration-block) section below.
+  See the [`input_data_config` Configuration Block](#input_data_config-configuration-block) section below.
 * `languageCode` - (Required) Two-letter language code for the language.
   One of `en`, `es`, `fr`, `it`, `de`, or `pt`.
 * `name` - (Required) Name for the Document Classifier.
@@ -72,54 +72,54 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `mode` - (Optional, Default: `multiClass`) The document classification mode.
-  One of `multiClass` or `multiLabel`.
-  `multiClass` is also known as "Single Label" in the AWS Console.
+* `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
+  One of `MULTI_CLASS` or `MULTI_LABEL`.
+  `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
 * `modelKmsKeyId` - (Optional) KMS Key used to encrypt trained Document Classifiers.
   Can be a KMS Key ID or a KMS Key ARN.
 * `outputDataConfig` - (Optional) Configuration for the output results of training.
-  See the [`outputDataConfig` Configuration Block](#output_data_config-configuration-block) section below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  See the [`output_data_config` Configuration Block](#output_data_config-configuration-block) section below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionName` - (Optional) Name for the version of the Document Classifier.
   Each version must have a unique name within the Document Classifier.
   If omitted, Terraform will assign a random, unique version name.
   If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
-  Conflicts with `versionNamePrefix`.
+  Conflicts with `version_name_prefix`.
 * `versionNamePrefix` - (Optional) Creates a unique version name beginning with the specified prefix.
   Has a maximum length of 37 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
-  Conflicts with `versionName`.
+  Conflicts with `version_name`.
 * `volumeKmsKeyId` - (Optional) KMS Key used to encrypt storage volumes during job processing.
   Can be a KMS Key ID or a KMS Key ARN.
 * `vpcConfig` - (Optional) Configuration parameters for VPC to contain Document Classifier resources.
-  See the [`vpcConfig` Configuration Block](#vpc_config-configuration-block) section below.
+  See the [`vpc_config` Configuration Block](#vpc_config-configuration-block) section below.
 
 ### `inputDataConfig` Configuration Block
 
 * `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
-  Used if `dataFormat` is `augmentedManifest`.
-  See the [`augmentedManifests` Configuration Block](#augmented_manifests-configuration-block) section below.
-* `dataFormat` - (Optional, Default: `comprehendCsv`) The format for the training data.
-  One of `comprehendCsv` or `augmentedManifest`.
+  Used if `data_format` is `AUGMENTED_MANIFEST`.
+  See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
+* `dataFormat` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
+  One of `COMPREHEND_CSV` or `AUGMENTED_MANIFEST`.
 * `labelDelimiter` - (Optional) Delimiter between labels when training a multi-label classifier.
   Valid values are `|`, `~`, `!`, `@`, `#`, `$`, `%`, `^`, `*`, `-`, `_`, `+`, `=`, `\`, `:`, `;`, `>`, `?`, `/`, `<space>`, and `<tab>`.
   Default is `|`.
 * `s3Uri` - (Optional) Location of training documents.
-  Used if `dataFormat` is `comprehendCsv`.
+  Used if `data_format` is `COMPREHEND_CSV`.
 * `testS3Uri` - (Optional) Location of test documents.
 
 ### `augmentedManifests` Configuration Block
 
 * `annotationDataS3Uri` - (Optional) Location of annotation files.
 * `attributeNames` - (Required) The JSON attribute that contains the annotations for the training documents.
-* `documentType` - (Optional, Default: `plainTextDocument`) Type of augmented manifest.
-  One of `plainTextDocument` or `semiStructuredDocument`.
+* `documentType` - (Optional, Default: `PLAIN_TEXT_DOCUMENT`) Type of augmented manifest.
+  One of `PLAIN_TEXT_DOCUMENT` or `SEMI_STRUCTURED_DOCUMENT`.
 * `s3Uri` - (Required) Location of augmented manifest file.
 * `sourceDocumentsS3Uri` - (Optional) Location of source PDF files.
-* `split` - (Optional, Default: `train`) Purpose of data in augmented manifest.
-  One of `train` or `test`.
+* `split` - (Optional, Default: `TRAIN`) Purpose of data in augmented manifest.
+  One of `TRAIN` or `TEST`.
 
 ### `outputDataConfig` Configuration Block
 
@@ -127,7 +127,7 @@ The following arguments are optional:
   Can be a KMS Key ID, a KMS Key ARN, a KMS Alias name, or a KMS Alias ARN.
 * `outputS3Uri` - (Computed) Full path for the output documents.
 * `s3Uri` - (Required) Destination path for the output documents.
-  The full path to the output file will be returned in `outputS3Uri`.
+  The full path to the output file will be returned in `output_s3_uri`.
 
 ### `vpcConfig` Configuration Block
 
@@ -139,15 +139,15 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Document Classifier version.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 `awsComprehendDocumentClassifier` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
-* `create` - (Optional, Default: `60M`)
-* `update` - (Optional, Default: `60M`)
-* `delete` - (Optional, Default: `30M`)
+* `create` - (Optional, Default: `60m`)
+* `update` - (Optional, Default: `60m`)
+* `delete` - (Optional, Default: `30m`)
 
 ## Import
 
@@ -171,4 +171,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.19.0 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->

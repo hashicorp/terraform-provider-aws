@@ -72,4 +72,4 @@ Using `terraform import`, import AWS Chime SDK Voice Global Settings using the `
 % terraform import aws_chimesdkvoice_global_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-dd8eeed093a67a95ba6171329281d91e91a270a2747bca2d4eb8cc09920ff746 -->
+<!-- cache-key: cdktf-0.19.0 input-dd8eeed093a67a95ba6171329281d91e91a270a2747bca2d4eb8cc09920ff746 -->

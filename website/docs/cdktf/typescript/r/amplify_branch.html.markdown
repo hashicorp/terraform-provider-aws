@@ -227,8 +227,8 @@ This resource supports the following arguments:
 * `environmentVariables` - (Optional) Environment variables for the branch.
 * `framework` - (Optional) Framework for the branch.
 * `pullRequestEnvironmentName` - (Optional) Amplify environment name for the pull request.
-* `stage` - (Optional) Describes the current stage for the branch. Valid values: `production`, `beta`, `development`, `experimental`, `pullRequest`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `stage` - (Optional) Describes the current stage for the branch. Valid values: `PRODUCTION`, `BETA`, `DEVELOPMENT`, `EXPERIMENTAL`, `PULL_REQUEST`.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Content Time To Live (TTL) for the website in seconds.
 
 ## Attribute Reference
@@ -240,7 +240,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `customDomains` - Custom domains for the branch.
 * `destinationBranch` - Destination branch if the branch is a pull request branch.
 * `sourceBranch` - Source branch if the branch is a pull request branch.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -264,4 +264,4 @@ Using `terraform import`, import Amplify branch using `appId` and `branchName`. 
 % terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-18bb34f7ab2ddc6f2adc5f5bfbff608bb9af62203731b97b751ed9bb930f797a -->
+<!-- cache-key: cdktf-0.19.0 input-18bb34f7ab2ddc6f2adc5f5bfbff608bb9af62203731b97b751ed9bb930f797a -->

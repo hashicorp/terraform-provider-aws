@@ -60,10 +60,10 @@ The following arguments are optional:
 
 The `definition` configuration block supports the following attributes:
 
-* `assumeRole` - (Optional) ARN of the role that performs the self-service actions on your behalf. For example, `arn:aws:iam::12345678910:role/actionRole`. To reuse the provisioned product launch role, set to `launchRole`.
-* `name` - (Required) Name of the SSM document. For example, `awsRestartEc2Instance`. If you are using a shared SSM document, you must provide the ARN instead of the name.
-* `parameters` - (Optional) List of parameters in JSON format. For example: `[{\"name\":\"instanceId\",\"type\":\"target\"}]` or `[{\"name\":\"instanceId\",\"type\":\"textValue\"}]`.
-* `type` - (Optional) Service action definition type. Valid value is `ssmAutomation`. Default is `ssmAutomation`.
+* `assumeRole` - (Optional) ARN of the role that performs the self-service actions on your behalf. For example, `arn:aws:iam::12345678910:role/ActionRole`. To reuse the provisioned product launch role, set to `LAUNCH_ROLE`.
+* `name` - (Required) Name of the SSM document. For example, `AWS-RestartEC2Instance`. If you are using a shared SSM document, you must provide the ARN instead of the name.
+* `parameters` - (Optional) List of parameters in JSON format. For example: `[{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}]` or `[{\"Name\":\"InstanceId\",\"Type\":\"TEXT_VALUE\"}]`.
+* `type` - (Optional) Service action definition type. Valid value is `SSM_AUTOMATION`. Default is `SSM_AUTOMATION`.
 * `version` - (Required) SSM document version. For example, `1`.
 
 ## Attribute Reference
@@ -76,10 +76,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `update` - (Default `3M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -103,4 +103,4 @@ Using `terraform import`, import `awsServicecatalogServiceAction` using the serv
 % terraform import aws_servicecatalog_service_action.example act-f1w12eperfslh
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b03d24933f6fa4d9688080ccdcaa7ae9e07d0a55178d18a59825eb23b87e379c -->
+<!-- cache-key: cdktf-0.19.0 input-b03d24933f6fa4d9688080ccdcaa7ae9e07d0a55178d18a59825eb23b87e379c -->

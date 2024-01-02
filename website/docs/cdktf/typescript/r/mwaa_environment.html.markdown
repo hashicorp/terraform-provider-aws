@@ -168,10 +168,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `airflowConfigurationOptions` - (Optional) The `airflowConfigurationOptions` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
+* `airflowConfigurationOptions` - (Optional) The `airflow_configuration_options` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflowVersion` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
 * `dagS3Path` - (Required) The relative path to the DAG folder on your Amazon S3 storage bucket. For example, dags. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
-* `environmentClass` - (Optional) Environment class for the cluster. Possible options are `mw1Small`, `mw1Medium`, `mw1Large`. Will be set by default to `mw1Small`. Please check the [AWS Pricing](https://aws.amazon.com/de/managed-workflows-for-apache-airflow/pricing/) for more information about the environment classes.
+* `environmentClass` - (Optional) Environment class for the cluster. Possible options are `mw1.small`, `mw1.medium`, `mw1.large`. Will be set by default to `mw1.small`. Please check the [AWS Pricing](https://aws.amazon.com/de/managed-workflows-for-apache-airflow/pricing/) for more information about the environment classes.
 * `executionRoleArn` - (Required) The Amazon Resource Name (ARN) of the task execution role that the Amazon MWAA and its environment can assume. Check the [official AWS documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/mwaa-create-role.html) for the detailed role specification.
 * `kmsKey` - (Optional) The Amazon Resource Name (ARN) of your KMS key that you want to use for encryption. Will be set to the ARN of the managed KMS key `aws/airflow` by default. Please check the [Official Documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/custom-keys-certs.html) for more information.
 * `loggingConfiguration` - (Optional) The Apache Airflow logs you want to send to Amazon CloudWatch Logs.
@@ -187,9 +187,9 @@ This resource supports the following arguments:
 * `sourceBucketArn` - (Required) The Amazon Resource Name (ARN) of your Amazon S3 storage bucket. For example, arn:aws:s3:::airflow-mybucketname.
 * `startupScriptS3ObjectVersion` - (Optional) The version of the startup shell script you want to use. You must specify the version ID that Amazon S3 assigns to the file every time you update the script.
 * `startupScriptS3Path` - (Optional) The relative path to the script hosted in your bucket. The script runs as your environment starts before starting the Apache Airflow process. Use this script to install dependencies, modify configuration options, and set environment variables. See [Using a startup script](https://docs.aws.amazon.com/mwaa/latest/userguide/using-startup-script.html). Supported for environment versions 2.x and later.
-* `webserverAccessMode` - (Optional) Specifies whether the webserver should be accessible over the internet or via your specified VPC. Possible options: `privateOnly` (default) and `publicOnly`.
+* `webserverAccessMode` - (Optional) Specifies whether the webserver should be accessible over the internet or via your specified VPC. Possible options: `PRIVATE_ONLY` (default) and `PUBLIC_ONLY`.
 * `weeklyMaintenanceWindowStart` - (Optional) Specifies the start date for the weekly maintenance window.
-* `tags` - (Optional) A map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Logging configurations
 
@@ -197,7 +197,7 @@ The `loggingConfiguration` block supports the following arguments.
 
 * `dagProcessingLogs` - (Optional) (Optional) Log configuration options for processing DAGs. See [Module logging configuration](#module-logging-configuration) for more information. Disabled by default.
 * `schedulerLogs` - (Optional) Log configuration options for the schedulers. See [Module logging configuration](#module-logging-configuration) for more information. Disabled by default.
-* `taskLogs` - (Optional) Log configuration options for DAG tasks. See [Module logging configuration](#module-logging-configuration) for more information. Enabled by default with `info` log level.
+* `taskLogs` - (Optional) Log configuration options for DAG tasks. See [Module logging configuration](#module-logging-configuration) for more information. Enabled by default with `INFO` log level.
 * `webserverLogs` - (Optional) Log configuration options for the webservers. See [Module logging configuration](#module-logging-configuration) for more information. Disabled by default.
 * `workerLogs` - (Optional) Log configuration options for the workers. See [Module logging configuration](#module-logging-configuration) for more information. Disabled by default.
 
@@ -206,7 +206,7 @@ The `loggingConfiguration` block supports the following arguments.
 A configuration block to use for logging with respect to the various Apache Airflow services: DagProcessingLogs, SchedulerLogs, TaskLogs, WebserverLogs, and WorkerLogs. It supports the following arguments.
 
 * `enabled` - (Required) Enabling or disabling the collection of logs
-* `logLevel` - (Optional) Logging level. Valid values: `critical`, `error`, `warning`, `info`, `debug`. Will be `info` by default.
+* `logLevel` - (Optional) Logging level. Valid values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`. Will be `INFO` by default.
 
 ### Network configuration
 
@@ -224,16 +224,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `loggingConfiguration[0].<logConfigurationType>[0]CloudWatchLogGroupArn` - Provides the ARN for the CloudWatch group where the logs will be published
 * `serviceRoleArn` - The Service Role ARN of the Amazon MWAA Environment
 * `status` - The status of the Amazon MWAA Environment
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `webserverUrl` - The webserver URL of the MWAA Environment
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120M`)
-- `update` - (Default `90M`)
-- `delete` - (Default `90M`)
+- `create` - (Default `120m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
@@ -257,4 +257,4 @@ Using `terraform import`, import MWAA Environment using `name`. For example:
 % terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3002c93c3e9fc1e98e7cfbd839e153f618d73c8c38a32a37712a4061c84cbe9 -->
+<!-- cache-key: cdktf-0.19.0 input-d3002c93c3e9fc1e98e7cfbd839e153f618d73c8c38a32a37712a4061c84cbe9 -->

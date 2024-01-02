@@ -45,11 +45,11 @@ This resource supports the following arguments:
 
 * `schemaName` – (Required) The Name of the schema.
 * `registryArn` - (Required) The ARN of the Glue Registry to create the schema in.
-* `dataFormat` - (Required) The data format of the schema definition. Valid values are `avro`, `json` and `protobuf`.
-* `compatibility` - (Required) The compatibility mode of the schema. Values values are: `none`, `disabled`, `backward`, `backwardAll`, `forward`, `forwardAll`, `full`, and `fullAll`.
-* `schemaDefinition` - (Required) The schema definition using the `dataFormat` setting for `schemaName`.
+* `dataFormat` - (Required) The data format of the schema definition. Valid values are `AVRO`, `JSON` and `PROTOBUF`.
+* `compatibility` - (Required) The compatibility mode of the schema. Values values are: `NONE`, `DISABLED`, `BACKWARD`, `BACKWARD_ALL`, `FORWARD`, `FORWARD_ALL`, `FULL`, and `FULL_ALL`.
+* `schemaDefinition` - (Required) The schema definition using the `data_format` setting for `schema_name`.
 * `description` – (Optional) A description of the schema.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `latestSchemaVersion` - The latest version of the schema associated with the returned schema definition.
 * `nextSchemaVersion` - The next version of the schema associated with the returned schema definition.
 * `schemaCheckpoint` - The version number of the checkpoint (the last time the compatibility mode was changed).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -85,4 +85,4 @@ Using `terraform import`, import Glue Registries using `arn`. For example:
 % terraform import aws_glue_schema.example arn:aws:glue:us-west-2:123456789012:schema/example/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-07d8be72b0ef5ec7a36f90bf89a090da4b36963b4802cf618422290e600eac94 -->
+<!-- cache-key: cdktf-0.19.0 input-07d8be72b0ef5ec7a36f90bf89a090da4b36963b4802cf618422290e600eac94 -->

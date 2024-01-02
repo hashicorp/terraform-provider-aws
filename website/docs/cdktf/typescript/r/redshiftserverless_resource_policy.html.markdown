@@ -84,4 +84,4 @@ Using `terraform import`, import Redshift Serverless Resource Policies using the
 % terraform import aws_redshiftserverless_resource_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a616ab40a392ade8fb2ac2a0656140773e5db2656ed7fdddaff9050c933530e7 -->
+<!-- cache-key: cdktf-0.19.0 input-a616ab40a392ade8fb2ac2a0656140773e5db2656ed7fdddaff9050c933530e7 -->

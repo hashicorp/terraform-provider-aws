@@ -1376,6 +1376,11 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 						"client_properties.ssl.keystore.password": "password",
 						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
 						"topic":                                   "fake_topic",
+						"header.#":                                "2",
+						"header.0.key":                            "header-1",
+						"header.0.value":                          "value-1",
+						"header.1.key":                            "header-2",
+						"header.1.value":                          "value-2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
@@ -1413,6 +1418,11 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 						"client_properties.ssl.keystore.password": "password",
 						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
 						"topic":                                   "different_topic",
+						"header.#":                                "2",
+						"header.0.key":                            "header-1",
+						"header.0.value":                          "value-1",
+						"header.1.key":                            "header-2",
+						"header.1.value":                          "value-2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
@@ -1451,6 +1461,11 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 						"client_properties.ssl.keystore.password": "password",
 						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
 						"topic":                                   "different_topic",
+						"header.#":                                "2",
+						"header.0.key":                            "header-1",
+						"header.0.value":                          "value-1",
+						"header.1.key":                            "header-2",
+						"header.1.value":                          "value-2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
@@ -2864,6 +2879,16 @@ resource "aws_iot_topic_rule" "test" {
       "ssl.keystore"          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.test.arn}')}"
       "ssl.keystore.password" = "password"
       "value.serializer"      = "org.apache.kafka.common.serialization.ByteBufferSerializer"
+    }
+
+    header {
+      key   = "header-1"
+      value = "value-1"
+    }
+
+    header {
+      key   = "header-2"
+      value = "value-2"
     }
   }
 }

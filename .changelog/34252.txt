@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sns_topic: Add `archive_policy` argument and `beginning_archive_time` attribute to support [message archiving](https://docs.aws.amazon.com/sns/latest/dg/fifo-message-archiving-replay.html)
+```
+
+```release-note:enhancement
+resource/aws_sns_topic: Add `replay_policy` argument
+```

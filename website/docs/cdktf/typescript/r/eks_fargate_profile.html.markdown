@@ -96,11 +96,11 @@ The following arguments are required:
 * `fargateProfileName` – (Required) Name of the EKS Fargate Profile.
 * `podExecutionRoleArn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Fargate Profile.
 * `selector` - (Required) Configuration block(s) for selecting Kubernetes Pods to execute with this EKS Fargate Profile. Detailed below.
-* `subnetIds` – (Required) Identifiers of private EC2 Subnets to associate with the EKS Fargate Profile. These subnets must have the following resource tag: `kubernetesIo/cluster/clusterName` (where `clusterName` is replaced with the name of the EKS Cluster).
+* `subnetIds` – (Required) Identifiers of private EC2 Subnets to associate with the EKS Fargate Profile. These subnets must have the following resource tag: `kubernetes.io/cluster/CLUSTER_NAME` (where `CLUSTER_NAME` is replaced with the name of the EKS Cluster).
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### selector Configuration Block
 
@@ -119,14 +119,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the EKS Fargate Profile.
 * `id` - EKS Cluster name and EKS Fargate Profile name separated by a colon (`:`).
 * `status` - Status of the EKS Fargate Profile.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import EKS Fargate Profiles using the `clusterName` an
 % terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->
+<!-- cache-key: cdktf-0.19.0 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->

@@ -160,18 +160,18 @@ This resource supports the following arguments:
 
 * `maxCapacity` - (Required) Max capacity of the scalable target.
 * `minCapacity` - (Required) Min capacity of the scalable target.
-* `resourceId` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `resourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+* `resourceId` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `roleArn` - (Optional) ARN of the IAM role that allows Application AutoScaling to modify your scalable target on your behalf. This defaults to an IAM Service-Linked Role for most services and custom IAM Roles are ignored by the API for those namespaces. See the [AWS Application Auto Scaling documentation](https://docs.aws.amazon.com/autoscaling/application/userguide/security_iam_service-with-iam.html#security_iam_service-with-iam-roles) for more information about how this service interacts with IAM.
-* `scalableDimension` - (Required) Scalable dimension of the scalable target. Documentation can be found in the `scalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
-* `serviceNamespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `serviceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
-* `tags` - (Optional) Map of tags to assign to the scalable target. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `scalableDimension` - (Required) Scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+* `serviceNamespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+* `tags` - (Optional) Map of tags to assign to the scalable target. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the scalable target.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -195,4 +195,4 @@ Using `terraform import`, import Application AutoScaling Target using the `servi
 % terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cff841bc1572dc29970ebd87553eae1d8c7762f0125b027829e17184e7104fdf -->
+<!-- cache-key: cdktf-0.19.0 input-cff841bc1572dc29970ebd87553eae1d8c7762f0125b027829e17184e7104fdf -->

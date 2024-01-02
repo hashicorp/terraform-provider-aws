@@ -91,4 +91,4 @@ This data source exports the following attributes in addition to the arguments a
 * `valid_upgrade_targets` - Set of engine versions that this database engine version can be upgraded to.
 * `version_description` - Description of the database engine version.
 
-<!-- cache-key: cdktf-0.18.0 input-fa55a0405ca9fc58a5c4381651f7bc42f18362fa5a2253efb0a727fa8fb51c93 -->
+<!-- cache-key: cdktf-0.19.0 input-fa55a0405ca9fc58a5c4381651f7bc42f18362fa5a2253efb0a727fa8fb51c93 -->

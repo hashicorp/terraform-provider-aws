@@ -344,7 +344,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `authenticationType` - (Required) Authentication type. Valid values: `apiKey`, `awsIam`, `amazonCognitoUserPools`, `openidConnect`, `awsLambda`
+* `authenticationType` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `name` - (Required) User-supplied name for the GraphqlApi.
 * `logConfig` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openidConnectConfig` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
@@ -352,23 +352,23 @@ This resource supports the following arguments:
 * `lambdaAuthorizerConfig` - (Optional) Nested argument containing Lambda authorizer configuration. Defined below.
 * `schema` - (Optional) Schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 * `additionalAuthenticationProvider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xrayEnabled` - (Optional) Whether tracing with X-ray is enabled. Defaults to false.
-* `visibility` - (Optional) Sets the value of the GraphQL API to public (`global`) or private (`private`). If no value is provided, the visibility will be set to `global` by default. This value cannot be changed once the API has been created.
+* `visibility` - (Optional) Sets the value of the GraphQL API to public (`GLOBAL`) or private (`PRIVATE`). If no value is provided, the visibility will be set to `GLOBAL` by default. This value cannot be changed once the API has been created.
 
 ### log_config
 
 This argument supports the following arguments:
 
 * `cloudwatchLogsRoleArn` - (Required) Amazon Resource Name of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
-* `fieldLogLevel` - (Required) Field logging level. Valid values: `all`, `error`, `none`.
+* `fieldLogLevel` - (Required) Field logging level. Valid values: `ALL`, `ERROR`, `NONE`.
 * `excludeVerboseContent` - (Optional) Set to TRUE to exclude sections that contain information such as headers, context, and evaluated mapping templates, regardless of logging  level. Valid values: `true`, `false`. Default value: `false`
 
 ### additional_authentication_provider
 
 This argument supports the following arguments:
 
-* `authenticationType` - (Required) Authentication type. Valid values: `apiKey`, `awsIam`, `amazonCognitoUserPools`, `openidConnect`, `awsLambda`
+* `authenticationType` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `openidConnectConfig` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `userPoolConfig` - (Optional) Amazon Cognito User Pool configuration. Defined below.
 
@@ -385,7 +385,7 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `defaultAction` - (Required only if Cognito is used as the default auth provider) Action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `allow` and `deny`
+* `defaultAction` - (Required only if Cognito is used as the default auth provider) Action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `ALLOW` and `DENY`
 * `userPoolId` - (Required) User pool ID.
 * `appIdClientRegex` - (Optional) Regular expression for validating the incoming Amazon Cognito User Pool app client ID.
 * `awsRegion` - (Optional) AWS region in which the user pool was created.
@@ -394,7 +394,7 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `authorizerUri` - (Required) ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:invokeFunction` from service principal `appsyncAmazonawsCom`.
+* `authorizerUri` - (Required) ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:InvokeFunction` from service principal `appsync.amazonaws.com`.
 * `authorizerResultTtlInSeconds` - (Optional) Number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
 * `identityValidationExpression` - (Optional) Regular expression for validation of tokens before the Lambda function is called.
 
@@ -404,7 +404,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - API ID
 * `arn` - ARN
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uris` - Map of URIs associated with the APIE.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
 
 ## Import
@@ -429,4 +429,4 @@ Using `terraform import`, import AppSync GraphQL API using the GraphQL API ID. F
 % terraform import aws_appsync_graphql_api.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-604f59c6c350d24f978a0ba94f2c30cf28473a80d9b5a2275a86a5740a4b0ee4 -->
+<!-- cache-key: cdktf-0.19.0 input-604f59c6c350d24f978a0ba94f2c30cf28473a80d9b5a2275a86a5740a4b0ee4 -->

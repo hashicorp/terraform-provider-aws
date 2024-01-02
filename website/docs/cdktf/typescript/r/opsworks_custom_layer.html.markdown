@@ -58,7 +58,7 @@ This resource supports the following arguments:
 * `useEbsOptimizedInstances` - (Optional) Whether to use EBS-optimized instances.
 * `ebsVolume` - (Optional) Will create an EBS volume and connect it to the layer's instances. See [EBS Volume](#ebs-volume).
 * `customJson` - (Optional) Custom JSON attributes to apply to the layer.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following extra optional arguments, all lists of Chef recipe names, allow
 custom Chef recipes to be applied to layer instances at the five different
@@ -93,9 +93,9 @@ lifecycle events, if custom cookbooks are enabled on the layer's stack:
 * `batchSize` - (Optional) Specifies the maximum size of log events in a batch, in bytes, up to `1048576` bytes. The default value is `32768` bytes.
 * `bufferDuration` - (Optional) Specifies the time duration for the batching of log events. The minimum value is `5000` and default value is `5000`.
 * `datetimeFormat` - (Optional) Specifies how the timestamp is extracted from logs. For more information, see the CloudWatch Logs Agent Reference (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html).
-* `encoding` - (Optional) Specifies the encoding of the log file so that the file can be read correctly. The default is `utf8`.
-* `fileFingerprintLines` - (Optional) Specifies the range of lines for identifying a file. The valid values are one number, or two dash-delimited numbers, such as `1`, `25`. The default value is `1`.
-* `initialPosition` - (Optional) Specifies where to start to read data (`startOfFile` or `endOfFile`). The default is `startOfFile`.
+* `encoding` - (Optional) Specifies the encoding of the log file so that the file can be read correctly. The default is `utf_8`.
+* `fileFingerprintLines` - (Optional) Specifies the range of lines for identifying a file. The valid values are one number, or two dash-delimited numbers, such as `1`, `2-5`. The default value is `1`.
+* `initialPosition` - (Optional) Specifies where to start to read data (`start_of_file` or `end_of_file`). The default is `start_of_file`.
 * `multilineStartPattern` - (Optional) Specifies the pattern for identifying the start of a log message.
 * `timeZone` - (Optional) Specifies the time zone of log event time stamps.
 
@@ -123,7 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -147,4 +147,4 @@ Using `terraform import`, import OpsWorks Custom Layers using the `id`. For exam
 % terraform import aws_opsworks_custom_layer.bar 00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8a4b8054a10e74606cd1ea0e8f3f2e390b16a4d6d2acbbb8ade4b0281ed80aa3 -->
+<!-- cache-key: cdktf-0.19.0 input-8a4b8054a10e74606cd1ea0e8f3f2e390b16a4d6d2acbbb8ade4b0281ed80aa3 -->

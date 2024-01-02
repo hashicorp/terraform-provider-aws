@@ -79,4 +79,4 @@ Using `terraform import`, import Kinesis Stream Consumers using the Amazon Resou
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
 
-<!-- cache-key: cdktf-0.18.0 input-faf8b78eb95acfe75982d82f725f47823646882c37a340dc5040b02aee2f21f1 -->
+<!-- cache-key: cdktf-0.19.0 input-faf8b78eb95acfe75982d82f725f47823646882c37a340dc5040b02aee2f21f1 -->

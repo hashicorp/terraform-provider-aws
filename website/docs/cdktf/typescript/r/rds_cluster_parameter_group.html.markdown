@@ -58,7 +58,7 @@ This resource supports the following arguments:
 * `family` - (Required) The family of the DB cluster parameter group.
 * `description` - (Optional) The description of the DB cluster parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of DB parameters to apply. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-cluster-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-cluster-parameters.html) after initial creation of the group.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The db cluster parameter group name.
 * `arn` - The ARN of the db cluster parameter group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -98,4 +98,4 @@ Using `terraform import`, import RDS Cluster Parameter Groups using the `name`. 
 % terraform import aws_rds_cluster_parameter_group.cluster_pg production-pg-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-33eec3977c5897f5b40f1eded02e4088f9efa632caa433fa14e96d5badc226bb -->
+<!-- cache-key: cdktf-0.19.0 input-33eec3977c5897f5b40f1eded02e4088f9efa632caa433fa14e96d5badc226bb -->

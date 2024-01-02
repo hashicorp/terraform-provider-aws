@@ -45,14 +45,14 @@ This resource supports the following arguments:
 * `dbProxyName` - (Required) The name of the DB proxy associated with the DB proxy endpoint that you create.
 * `vpcSubnetIds` - (Required) One or more VPC subnet IDs to associate with the new proxy.
 * `vpcSecurityGroupIds` - (Optional) One or more VPC security group IDs to associate with the new proxy.
-* `targetRole` - (Optional) Indicates whether the DB proxy endpoint can be used for read/write or read-only operations. The default is `readWrite`. Valid values are `readWrite` and `readOnly`.
+* `targetRole` - (Optional) Indicates whether the DB proxy endpoint can be used for read/write or read-only operations. The default is `READ_WRITE`. Valid values are `READ_WRITE` and `READ_ONLY`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the proxy and proxy endpoint separated by `/`, `dbProxyName/dbProxyEndpointName`.
+* `id` - The name of the proxy and proxy endpoint separated by `/`, `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`.
 * `arn` - The Amazon Resource Name (ARN) for the proxy endpoint.
 * `endpoint` - The endpoint that you can use to connect to the proxy. You include the endpoint value in the connection string for a database client application.
 * `isDefault` - Indicates whether this endpoint is the default endpoint for the associated DB proxy.
@@ -62,9 +62,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `30M`)
-- `delete` - (Default `60M`)
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `60m`)
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import DB proxy endpoints using the `dbProxyName/dbPro
 % terraform import aws_db_proxy_endpoint.example example/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-350a8a6ad58a9a637252ca5d1e91e374fee3e01e2e35b79ea8ea63a3a00e8a4d -->
+<!-- cache-key: cdktf-0.19.0 input-350a8a6ad58a9a637252ca5d1e91e374fee3e01e2e35b79ea8ea63a3a00e8a4d -->

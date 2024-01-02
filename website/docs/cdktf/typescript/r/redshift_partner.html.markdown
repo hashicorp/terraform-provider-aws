@@ -50,7 +50,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The identifier of the Redshift partner, `accountId`, `clusterIdentifier`, `databaseName`, `partnerName` separated by a colon (`:`).
+* `id` - The identifier of the Redshift partner, `account_id`, `cluster_identifier`, `database_name`, `partner_name` separated by a colon (`:`).
 * `status` - (Optional) The partner integration status.
 * `statusMessage` - (Optional) The status message provided by the partner.
 
@@ -76,4 +76,4 @@ Using `terraform import`, import Redshift usage limits using the `id`. For examp
 % terraform import aws_redshift_partner.example 01234567910:cluster-example-id:example:example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d4438832cfe9bd08e76f7dbce4113e2e512ea90f05f4a5914f89a70db35ad904 -->
+<!-- cache-key: cdktf-0.19.0 input-d4438832cfe9bd08e76f7dbce4113e2e512ea90f05f4a5914f89a70db35ad904 -->

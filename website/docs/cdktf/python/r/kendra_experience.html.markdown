@@ -122,4 +122,4 @@ Using `terraform import`, import Kendra Experience using the unique identifiers 
 % terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-477863d25f90cf21db701a32b4767e8783661101976bd8e3bf55b7323f3e6452 -->
+<!-- cache-key: cdktf-0.19.0 input-477863d25f90cf21db701a32b4767e8783661101976bd8e3bf55b7323f3e6452 -->

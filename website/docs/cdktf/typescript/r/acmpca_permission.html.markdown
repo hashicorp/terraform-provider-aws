@@ -54,8 +54,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `certificateAuthorityArn` - (Required) ARN of the CA that grants the permissions.
-* `actions` - (Required) Actions that the specified AWS service principal can use. These include `issueCertificate`, `getCertificate`, and `listPermissions`. Note that in order for ACM to automatically rotate certificates issued by a PCA, it must be granted permission on all 3 actions, as per the example above.
-* `principal` - (Required) AWS service or identity that receives the permission. At this time, the only valid principal is `acmAmazonawsCom`.
+* `actions` - (Required) Actions that the specified AWS service principal can use. These include `IssueCertificate`, `GetCertificate`, and `ListPermissions`. Note that in order for ACM to automatically rotate certificates issued by a PCA, it must be granted permission on all 3 actions, as per the example above.
+* `principal` - (Required) AWS service or identity that receives the permission. At this time, the only valid principal is `acm.amazonaws.com`.
 * `sourceAccount` - (Optional) ID of the calling account
 
 ## Attribute Reference
@@ -64,4 +64,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `policy` - IAM policy that is associated with the permission.
 
-<!-- cache-key: cdktf-0.18.0 input-494bcc5d28fd45281186122cb5e3ebdff619ec5306af716d4d8172805c2c661d -->
+<!-- cache-key: cdktf-0.19.0 input-494bcc5d28fd45281186122cb5e3ebdff619ec5306af716d4d8172805c2c661d -->

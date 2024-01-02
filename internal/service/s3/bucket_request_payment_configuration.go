@@ -70,9 +70,13 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketRequestPayment(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "RequestPaymentConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Request Payment Configuration: %s", bucket, err)
@@ -80,7 +84,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
 	})
 

@@ -191,7 +191,7 @@ This resource supports the following arguments:
 * `directoryId` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnetIds` - (Optional) The identifiers of the subnets where the directory resides.
 * `ipGroupIds` - The identifiers of the IP access control groups associated with the directory.
-* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `selfServicePermissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspaceAccessProperties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspaceCreationProperties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
@@ -220,7 +220,7 @@ This resource supports the following arguments:
 -> **Note:** Once you specified `customSecurityGroupId` or `defaultOu`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
 * `customSecurityGroupId` – (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
-* `defaultOu` – (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"ou=<value>,dc=<value>,...,dc=<value>"` pattern.
+* `defaultOu` – (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
 * `enableInternetAccess` – (Optional) Indicates whether internet access is enabled for your WorkSpaces.
 * `enableMaintenanceMode` – (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html)..
 * `userEnabledAsLocalAdministrator` – (Optional) Indicates whether users are local administrators of their WorkSpaces.
@@ -238,7 +238,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `iamRoleId` - The identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
 * `ipGroupIds` - The identifiers of the IP access control groups associated with the directory.
 * `registrationCode` - The registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workspaceSecurityGroupId` - The identifier of the security group that is assigned to new WorkSpaces.
 
 ## Import
@@ -263,4 +263,4 @@ Using `terraform import`, import Workspaces directory using the directory ID. Fo
 % terraform import aws_workspaces_directory.main d-4444444444
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->
+<!-- cache-key: cdktf-0.19.0 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->

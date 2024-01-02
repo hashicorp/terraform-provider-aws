@@ -57,8 +57,8 @@ This resource supports the following arguments:
 * `cnamePrefix` - (Optional) Prefix to use for the fully qualified DNS name of
   the Environment.
 * `description` - (Optional) Short description of the Environment
-* `tier` - (Optional) Elastic Beanstalk Environment tier. Valid values are `worker`
-  or `webServer`. If tier is left blank `webServer` will be used.
+* `tier` - (Optional) Elastic Beanstalk Environment tier. Valid values are `Worker`
+  or `WebServer`. If tier is left blank `WebServer` will be used.
 * `setting` – (Optional) Option settings to configure the new Environment. These
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
@@ -68,17 +68,17 @@ off of. Example stacks can be found in the [Amazon API documentation][1]
   template to use in deployment
 * `platformArn` – (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
   to use in deployment
-* `waitForReadyTimeout` - (Default `20M`) The maximum
+* `waitForReadyTimeout` - (Default `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for an Elastic Beanstalk Environment to be in a ready state before timing
   out.
 * `pollInterval` – The time between polling the AWS API to
 check if changes have been applied. Use this to adjust the rate of API calls
-for any `create` or `update` action. Minimum `10S`, maximum `180S`. Omit this to
+for any `create` or `update` action. Minimum `10s`, maximum `180s`. Omit this to
 use the default behavior, which is an exponential backoff
 * `versionLabel` - (Optional) The name of the Elastic Beanstalk Application Version
 to use in deployment.
-* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Option Settings
 
@@ -141,7 +141,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - Name of the Elastic Beanstalk Environment.
 * `description` - Description of the Elastic Beanstalk Environment.
 * `tier` - The environment tier specified.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `application` – The Elastic Beanstalk Application specified for this environment.
 * `setting` – Settings specifically set for this Environment.
 * `allSettings` – List of all option settings configured in this Environment. These
@@ -182,4 +182,4 @@ Using `terraform import`, import Elastic Beanstalk Environments using the `id`. 
 % terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ad1ef9e1da7358ae03a61072b63ebad273ca716292310f87ea1ffcf0427f9d1d -->
+<!-- cache-key: cdktf-0.19.0 input-ad1ef9e1da7358ae03a61072b63ebad273ca716292310f87ea1ffcf0427f9d1d -->

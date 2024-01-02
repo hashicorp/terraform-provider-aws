@@ -82,7 +82,7 @@ the selected VPC.
 The following attribute is additionally exported:
 
 * `addressFamily` - IP protocol assigned to this pool.
-* `allocationDefaultNetmaskLength` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10000/8` and you enter 16 here, new allocations will default to `10000/16`.
+* `allocationDefaultNetmaskLength` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
 * `allocationMaxNetmaskLength` - The maximum netmask length that will be required for CIDR allocations in this pool.
 * `allocationMinNetmaskLength` - The minimum netmask length that will be required for CIDR allocations in this pool.
 * `allocationResourceTags` - Tags that are required to create resources in using this pool.
@@ -101,6 +101,6 @@ The following attribute is additionally exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-14e0ec5a45dd1fac68d4e842a7b8f6c07c038a22e839fecb94a749a7d96d7a4e -->
+<!-- cache-key: cdktf-0.19.0 input-14e0ec5a45dd1fac68d4e842a7b8f6c07c038a22e839fecb94a749a7d96d7a4e -->

@@ -84,19 +84,16 @@ class MyConvertedCode(TerraformStack):
         )
         ipv6_test_public = VpcIpamPool(self, "ipv6_test_public",
             address_family="ipv6",
-            advertisable=False,
             aws_service="ec2",
             description="public ipv6",
             ipam_scope_id=example.public_default_scope_id,
-            locale="us-east-1"
+            locale="us-east-1",
+            public_ip_source="amazon",
+            publicly_advertisable=False
         )
         aws_vpc_ipam_pool_cidr_ipv6_test_public = VpcIpamPoolCidr(self, "ipv6_test_public_3",
-            cidr=ipv6_cidr.string_value,
-            cidr_authorization_context=VpcIpamPoolCidrCidrAuthorizationContext(
-                message=message.string_value,
-                signature=signature.string_value
-            ),
-            ipam_pool_id=ipv6_test_public.id
+            ipam_pool_id=ipv6_test_public.id,
+            netmask_length=52
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_cidr_ipv6_test_public.override_logical_id("ipv6_test_public")
@@ -146,4 +143,4 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 % terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5288bd0213533a9d30b8964349d28b549c9e8b5467bb3ec2fc047dc611c6ccf3 -->
+<!-- cache-key: cdktf-0.19.0 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->

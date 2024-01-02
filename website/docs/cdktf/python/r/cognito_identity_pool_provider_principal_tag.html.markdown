@@ -98,4 +98,4 @@ Using `terraform import`, import Cognito Identity Pool Roles Attachment using th
 % terraform import aws_cognito_identity_pool_provider_principal_tag.example us-west-2_abc123:CorpAD
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d4f777a31b91b31ab50e67859396a09149b958fe813bebf15e96c5dcc295d8be -->
+<!-- cache-key: cdktf-0.19.0 input-d4f777a31b91b31ab50e67859396a09149b958fe813bebf15e96c5dcc295d8be -->

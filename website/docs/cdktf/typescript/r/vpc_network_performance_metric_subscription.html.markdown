@@ -39,9 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `destination` - (Required) The target Region or Availability Zone that the metric subscription is enabled for. For example, `euWest1`.
-* `metric` - (Optional) The metric used for the enabled subscription. Valid values: `aggregateLatency`. Default: `aggregateLatency`.
-* `source` - (Required) The source Region or Availability Zone that the metric subscription is enabled for. For example, `usEast1`.
+* `destination` - (Required) The target Region or Availability Zone that the metric subscription is enabled for. For example, `eu-west-1`.
+* `metric` - (Optional) The metric used for the enabled subscription. Valid values: `aggregate-latency`. Default: `aggregate-latency`.
+* `source` - (Required) The source Region or Availability Zone that the metric subscription is enabled for. For example, `us-east-1`.
 * `statistic` - (Optional) The statistic used for the enabled subscription. Valid values: `p50`. Default: `p50`.
 
 ## Attribute Reference
@@ -50,4 +50,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `period` - The data aggregation time for the subscription.
 
-<!-- cache-key: cdktf-0.18.0 input-9d68b5453f7e730fab6a7906222b20f270436a0a63a8e8c8fed51dab43b1b2e7 -->
+<!-- cache-key: cdktf-0.19.0 input-9d68b5453f7e730fab6a7906222b20f270436a0a63a8e8c8fed51dab43b1b2e7 -->

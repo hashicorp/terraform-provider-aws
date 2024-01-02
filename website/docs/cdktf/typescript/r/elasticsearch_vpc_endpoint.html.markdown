@@ -66,9 +66,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import elasticsearch VPC endpoint connections using th
 % terraform import aws_elasticsearch_vpc_endpoint_connection.example endpoint-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2068c0865c6751dbf0530210c6d3a7ca46d1c366f24a062e8d2eb949a01e616a -->
+<!-- cache-key: cdktf-0.19.0 input-2068c0865c6751dbf0530210c6d3a7ca46d1c366f24a062e8d2eb949a01e616a -->

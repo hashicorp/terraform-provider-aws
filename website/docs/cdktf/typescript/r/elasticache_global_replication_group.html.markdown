@@ -127,12 +127,12 @@ This resource supports the following arguments:
   When creating, by default the Global Replication Group inherits the version of the primary replication group.
   If a version is specified, the Global Replication Group and all member replication groups will be upgraded to this version.
   Cannot be downgraded without replacing the Global Replication Group and all member replication groups.
-  When the version is 7 or higher, the major and minor version should be set, e.g., `72`.
-  When the version is 6, the major and minor version can be set, e.g., `62`,
-  or the minor version can be unspecified which will use the latest version at creation time, e.g., `6X`.
-  The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below.
-* `globalReplicationGroupIdSuffix` – (Required) The suffix name of a Global Datastore. If `globalReplicationGroupIdSuffix` is changed, creates a new resource.
-* `primaryReplicationGroupId` – (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primaryReplicationGroupId` is changed, creates a new resource.
+  When the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
+  When the version is 6, the major and minor version can be set, e.g., `6.2`,
+  or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
+  The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below.
+* `globalReplicationGroupIdSuffix` – (Required) The suffix name of a Global Datastore. If `global_replication_group_id_suffix` is changed, creates a new resource.
+* `primaryReplicationGroupId` – (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primary_replication_group_id` is changed, creates a new resource.
 * `globalReplicationGroupDescription` – (Optional) A user-created description for the global replication group.
 * `numNodeGroups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameterGroupName` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.
@@ -154,7 +154,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `globalReplicationGroupId` - The full ID of the global replication group.
 * `globalNodeGroups` - Set of node groups (shards) on the global replication group.
   Has the values:
-    * `globalNodeGroupId` - The ID of the global node group.
+    * `global_node_group_id` - The ID of the global node group.
     * `slots` - The keyspace for this node group.
 * `transitEncryptionEnabled` - A flag that indicates whether the encryption in transit is enabled.
 
@@ -162,9 +162,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `60M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -188,4 +188,4 @@ Using `terraform import`, import ElastiCache Global Replication Groups using the
 % terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bfdf8fb8151d1dd27e56bf30242603f71120c4ececefd5c623f1f7efab72074a -->
+<!-- cache-key: cdktf-0.19.0 input-bfdf8fb8151d1dd27e56bf30242603f71120c4ececefd5c623f1f7efab72074a -->

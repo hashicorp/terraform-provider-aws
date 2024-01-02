@@ -64,8 +64,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `acceleratorArn` - (Required) The Amazon Resource Name (ARN) of your accelerator.
-* `clientAffinity` - (Optional) Direct all requests from a user to the same endpoint. Valid values are `none`, `sourceIp`. Default: `none`. If `none`, Global Accelerator uses the "five-tuple" properties of source IP address, source port, destination IP address, destination port, and protocol to select the hash value. If `sourceIp`, Global Accelerator uses the "two-tuple" properties of source (client) IP address and destination IP address to select the hash value.
-* `protocol` - (Optional) The protocol for the connections from clients to the accelerator. Valid values are `tcp`, `udp`.
+* `clientAffinity` - (Optional) Direct all requests from a user to the same endpoint. Valid values are `NONE`, `SOURCE_IP`. Default: `NONE`. If `NONE`, Global Accelerator uses the "five-tuple" properties of source IP address, source port, destination IP address, destination port, and protocol to select the hash value. If `SOURCE_IP`, Global Accelerator uses the "two-tuple" properties of source (client) IP address and destination IP address to select the hash value.
+* `protocol` - (Optional) The protocol for the connections from clients to the accelerator. Valid values are `TCP`, `UDP`.
 * `portRange` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
 
 `portRange` supports the following arguments:
@@ -83,9 +83,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -109,4 +109,4 @@ Using `terraform import`, import Global Accelerator listeners using the `id`. Fo
 % terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-916b1c351e05097e7ddc260e23377eafd367b2e2e899550a7d4798b0d81ab853 -->
+<!-- cache-key: cdktf-0.19.0 input-916b1c351e05097e7ddc260e23377eafd367b2e2e899550a7d4798b0d81ab853 -->

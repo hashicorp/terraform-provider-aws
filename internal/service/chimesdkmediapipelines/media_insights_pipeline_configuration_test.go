@@ -10,22 +10,23 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfchimesdkmediapipelines "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mipc chimesdkmediapipelines.MediaInsightsPipelineConfiguration
+	var mipc awstypes.MediaInsightsPipelineConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -34,10 +35,10 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, chimesdkmediapipelines.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkmediapipelines.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +71,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mipc chimesdkmediapipelines.MediaInsightsPipelineConfiguration
+	var mipc awstypes.MediaInsightsPipelineConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -79,10 +80,10 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, chimesdkmediapipelines.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkmediapipelines.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllProcessorTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3, v4 chimesdkmediapipelines.MediaInsightsPipelineConfiguration
+	var v1, v2, v3, v4 awstypes.MediaInsightsPipelineConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,10 +112,10 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, chimesdkmediapipelines.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkmediapipelines.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -199,7 +200,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mipc chimesdkmediapipelines.MediaInsightsPipelineConfiguration
+	var mipc awstypes.MediaInsightsPipelineConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -208,10 +209,10 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, chimesdkmediapipelines.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkmediapipelines.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -254,7 +255,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 
 func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" {
@@ -263,7 +264,7 @@ func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context) 
 
 			_, err := tfchimesdkmediapipelines.FindMediaInsightsPipelineConfigurationByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, chimesdkmediapipelines.ErrCodeNotFoundException) {
+				if errs.IsA[*awstypes.NotFoundException](err) {
 					return nil
 				}
 				return err
@@ -277,7 +278,7 @@ func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context) 
 	}
 }
 
-func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, name string, mipc *chimesdkmediapipelines.MediaInsightsPipelineConfiguration) resource.TestCheckFunc {
+func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, name string, mipc *awstypes.MediaInsightsPipelineConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -290,7 +291,7 @@ func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, n
 				tfchimesdkmediapipelines.ResNameMediaInsightsPipelineConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 		resp, err := tfchimesdkmediapipelines.FindMediaInsightsPipelineConfigurationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ChimeSDKMediaPipelines, create.ErrActionCheckingExistence,
@@ -304,10 +305,10 @@ func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, n
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 	input := &chimesdkmediapipelines.ListMediaInsightsPipelineConfigurationsInput{}
-	_, err := conn.ListMediaInsightsPipelineConfigurationsWithContext(ctx, input)
+	_, err := conn.ListMediaInsightsPipelineConfigurations(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -318,9 +319,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckMediaInsightsPipelineConfigurationNotRecreated(before, after *chimesdkmediapipelines.MediaInsightsPipelineConfiguration) resource.TestCheckFunc {
+func testAccCheckMediaInsightsPipelineConfigurationNotRecreated(before, after *awstypes.MediaInsightsPipelineConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if beforeID, afterID := aws.StringValue(before.MediaInsightsPipelineConfigurationId), aws.StringValue(after.MediaInsightsPipelineConfigurationId); beforeID != afterID {
+		if beforeID, afterID := aws.ToString(before.MediaInsightsPipelineConfigurationId), aws.ToString(after.MediaInsightsPipelineConfigurationId); beforeID != afterID {
 			return create.Error(names.ChimeSDKMediaPipelines, create.ErrActionCheckingNotRecreated,
 				tfchimesdkmediapipelines.ResNameMediaInsightsPipelineConfiguration, beforeID, errors.New("recreated"))
 		}

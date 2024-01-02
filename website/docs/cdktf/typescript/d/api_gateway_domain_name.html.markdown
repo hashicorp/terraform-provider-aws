@@ -47,7 +47,7 @@ This data source exports the following attributes in addition to the arguments a
 * `certificateName` - Name of the certificate that is used by edge-optimized endpoint for this domain name.
 * `certificateUploadDate` - Upload date associated with the domain certificate.
 * `cloudfrontDomainName` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
-* `cloudfrontZoneId` - For convenience, the hosted zone ID (`z2Fdtndataqyw2`) that can be used to create a Route53 alias record for the distribution.
+* `cloudfrontZoneId` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `endpointConfiguration` - List of objects with the endpoint configuration of this domain name.
     * `types` - List of endpoint types.
 * `regionalCertificateArn` - ARN for an AWS-managed certificate that is used for validating the regional domain name.
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `securityPolicy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-ec3ad0e8dda61e42fd75917952379778e983a6bf94a2c3f251ea482b57cbc3ed -->
+<!-- cache-key: cdktf-0.19.0 input-ec3ad0e8dda61e42fd75917952379778e983a6bf94a2c3f251ea482b57cbc3ed -->

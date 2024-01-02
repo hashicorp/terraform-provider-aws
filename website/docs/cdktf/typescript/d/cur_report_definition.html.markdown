@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `refreshClosedReports` - If true reports are updated after they have been finalized.
 * `reportVersioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.
 
-<!-- cache-key: cdktf-0.18.0 input-7c41a2bcbec1b1838d1888c217040322a9f0e0110b3b20e4772db0809292f796 -->
+<!-- cache-key: cdktf-0.19.0 input-7c41a2bcbec1b1838d1888c217040322a9f0e0110b3b20e4772db0809292f796 -->

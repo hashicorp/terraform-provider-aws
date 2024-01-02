@@ -92,7 +92,7 @@ This resource supports the following arguments:
 
 * `cak` - (Optional) The MAC Security (MACsec) CAK to associate with the dedicated connection. The valid values are 64 hexadecimal characters (0-9, A-E). Required if using `ckn`.
 * `ckn` - (Optional) The MAC Security (MACsec) CKN to associate with the dedicated connection. The valid values are 64 hexadecimal characters (0-9, A-E). Required if using `cak`.
-* `connectionId` - (Required) The ID of the dedicated Direct Connect connection. The connection must be a dedicated connection in the `available` state.
+* `connectionId` - (Required) The ID of the dedicated Direct Connect connection. The connection must be a dedicated connection in the `AVAILABLE` state.
 * `secretArn` - (Optional) The Amazon Resource Name (ARN) of the MAC Security (MACsec) secret key to associate with the dedicated connection.
 
 ~> **Note:** `ckn` and `cak` are mutually exclusive with `secretArn` - these arguments cannot be used together. If you use `ckn` and `cak`, you should not use `secretArn`. If you use the `secretArn` argument to reference an existing MAC Security (MACSec) secret key, you should not use `ckn` or `cak`.
@@ -105,4 +105,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `startOn` - The date in UTC format that the MAC Security (MACsec) secret key takes effect.
 * `state` -  The state of the MAC Security (MACsec) secret key. The possible values are: associating, associated, disassociating, disassociated. See [MacSecKey](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_MacSecKey.html#DX-Type-MacSecKey-state) for descriptions of each state.
 
-<!-- cache-key: cdktf-0.18.0 input-50e631d31892cfa79cc6641d788fa0436c1b909e5a7fa4536b04ed0e3acb3b04 -->
+<!-- cache-key: cdktf-0.19.0 input-50e631d31892cfa79cc6641d788fa0436c1b909e5a7fa4536b04ed0e3acb3b04 -->

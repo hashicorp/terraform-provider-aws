@@ -62,4 +62,4 @@ Using `terraform import`, import the default EBS encryption state. For example:
 % terraform import aws_ebs_encryption_by_default.example default
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-26d56aaac9991ae4f8fb9772f7e16551e204f392912f72bea53feb7f7680cc3b -->
+<!-- cache-key: cdktf-0.19.0 input-26d56aaac9991ae4f8fb9772f7e16551e204f392912f72bea53feb7f7680cc3b -->

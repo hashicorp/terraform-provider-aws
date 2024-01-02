@@ -222,7 +222,7 @@ output "scala_code" {
 
 * `dagEdge` - (Required) List of the edges in the DAG. Defined below.
 * `dagNode` - (Required) List of the nodes in the DAG. Defined below.
-* `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `python`. Valid values are `python` and `scala`.
+* `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
 
 ### dag_edge Argument Reference
 
@@ -248,7 +248,7 @@ output "scala_code" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `pythonScript` - Python script generated from the DAG when the `language` argument is set to `python`.
-* `scalaCode` - Scala code generated from the DAG when the `language` argument is set to `scala`.
+* `pythonScript` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
+* `scalaCode` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.
 
-<!-- cache-key: cdktf-0.18.0 input-be24758996e8a89722ff26b1265bf9700176ddfdb291cd62471cea079785dce2 -->
+<!-- cache-key: cdktf-0.19.0 input-be24758996e8a89722ff26b1265bf9700176ddfdb291cd62471cea079785dce2 -->

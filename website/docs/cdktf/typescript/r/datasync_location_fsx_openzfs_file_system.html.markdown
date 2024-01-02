@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See below.
 * `securityGroupArns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for openzfs file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Must start with `/fsx`.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### protocol
 
@@ -62,7 +62,7 @@ This resource supports the following arguments:
 
 ### mount_options
 
-* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `automatic`, `nfs3`, `nfs40` and `nfs41`. Default: `automatic`
+* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
 
 ## Attribute Reference
 
@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uri` - The URL of the FSx for openzfs location that was described.
 * `creationTime` - The time that the FSx for openzfs location was created.
 
@@ -96,4 +96,4 @@ Using `terraform import`, import `awsDatasyncLocationFsxOpenzfsFileSystem` using
 % terraform import aws_datasync_location_fsx_openzfs_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:file-system/fs-08e04cd442c1bb94a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fd48fc85d580e2ffedd314108832541f3cf603267b4fbea2028c4f03fd9b3981 -->
+<!-- cache-key: cdktf-0.19.0 input-fd48fc85d580e2ffedd314108832541f3cf603267b4fbea2028c4f03fd9b3981 -->

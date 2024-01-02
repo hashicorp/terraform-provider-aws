@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `functionVersion` - Lambda function version which the alias uses.
 * `invokeArn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in aws_api_gateway_integration's `uri`.
 
-<!-- cache-key: cdktf-0.18.0 input-9a9ef3f242a9fa98f2fce5f412613b9059a876ab618fe7d6d35642bfb3e5874d -->
+<!-- cache-key: cdktf-0.19.0 input-9a9ef3f242a9fa98f2fce5f412613b9059a876ab618fe7d6d35642bfb3e5874d -->

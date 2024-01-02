@@ -49,17 +49,17 @@ This resource supports the following arguments:
 * `allowUnassociatedTargets` - (Optional) Whether targets must be registered with the Maintenance Window before tasks can be defined for those targets.
 * `enabled` - (Optional) Whether the maintenance window is enabled. Default: `true`.
 * `endDate` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to no longer run the maintenance window.
-* `scheduleTimezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `america/losAngeles`, `etc/utc`, or `asia/seoul`.
+* `scheduleTimezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `America/Los_Angeles`, `etc/UTC`, or `Asia/Seoul`.
 * `scheduleOffset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window.
 * `startDate` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to begin the maintenance window.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the maintenance window.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import SSM  Maintenance Windows using the maintenance 
 % terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-07f87819be5fb27d9bf208fabda5d907108534ce8f73af29e7515be2e194f293 -->
+<!-- cache-key: cdktf-0.19.0 input-07f87819be5fb27d9bf208fabda5d907108534ce8f73af29e7515be2e194f293 -->

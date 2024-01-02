@@ -141,4 +141,4 @@ Using `terraform import`, import `aws_apigatewayv2_domain_name` using the domain
 % terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-590fddf6e18ec896623edea239e232e92d9d62cdcbd1d648d652e4699c95dd9a -->
+<!-- cache-key: cdktf-0.19.0 input-590fddf6e18ec896623edea239e232e92d9d62cdcbd1d648d652e4699c95dd9a -->

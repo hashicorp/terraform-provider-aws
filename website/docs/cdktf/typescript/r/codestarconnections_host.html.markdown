@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The CodeStar Host ARN.
 * `arn` - The CodeStar Host ARN.
-* `status` - The CodeStar Host status. Possible values are `pending`, `available`, `vpcConfigDeleting`, `vpcConfigInitializing`, and `vpcConfigFailedInitialization`.
+* `status` - The CodeStar Host status. Possible values are `PENDING`, `AVAILABLE`, `VPC_CONFIG_DELETING`, `VPC_CONFIG_INITIALIZING`, and `VPC_CONFIG_FAILED_INITIALIZATION`.
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import CodeStar Host using the ARN. For example:
 % terraform import aws_codestarconnections_host.example-host arn:aws:codestar-connections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-deb204f04b1d3b40e9230a8529e261bf3e35a0ba36cd5b092788c3a247d424f1 -->
+<!-- cache-key: cdktf-0.19.0 input-deb204f04b1d3b40e9230a8529e261bf3e35a0ba36cd5b092788c3a247d424f1 -->

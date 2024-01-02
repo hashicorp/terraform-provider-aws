@@ -74,7 +74,7 @@ This resource supports the following arguments:
 * `accountId` - (Optional) The AWS account ID for the S3 Storage Lens configuration. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `configId` - (Required) The ID of the S3 Storage Lens configuration.
 * `storageLensConfiguration` - (Required) The S3 Storage Lens configuration. See [Storage Lens Configuration](#storage-lens-configuration) below for more details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Storage Lens Configuration
 
@@ -178,8 +178,8 @@ The `s3BucketDestination` block supports the following:
 * `accountId` (Required) The account ID of the owner of the S3 Storage Lens metrics export bucket.
 * `arn` (Required) The Amazon Resource Name (ARN) of the bucket.
 * `encryption` (Optional) Encryption of the metrics exports in this bucket. See [Encryption](#encryption) below for more details.
-* `format` (Required) The export format. Valid values: `csv`, `parquet`.
-* `outputSchemaVersion` (Required) The schema version of the export file. Valid values: `v1`.
+* `format` (Required) The export format. Valid values: `CSV`, `Parquet`.
+* `outputSchemaVersion` (Required) The schema version of the export file. Valid values: `V_1`.
 * `prefix` (Optional) The prefix of the destination bucket where the metrics export will be delivered.
 
 ### Encryption
@@ -214,7 +214,7 @@ The `include` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the S3 Storage Lens configuration.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -238,4 +238,4 @@ Using `terraform import`, import S3 Storage Lens configurations using the `accou
 % terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9a78e0cfb3d6a96dedf49697ad6a9c2449a751f987c0e874d9a0f885a390fd34 -->
+<!-- cache-key: cdktf-0.19.0 input-9a78e0cfb3d6a96dedf49697ad6a9c2449a751f987c0e874d9a0f885a390fd34 -->

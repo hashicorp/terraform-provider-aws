@@ -134,9 +134,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -160,4 +160,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-63ad67b2d16605e26ce5adafa9257f85ab5b20fe8bf73b9375562f9cc014c260 -->
+<!-- cache-key: cdktf-0.19.0 input-63ad67b2d16605e26ce5adafa9257f85ab5b20fe8bf73b9375562f9cc014c260 -->

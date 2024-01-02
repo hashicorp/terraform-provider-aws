@@ -209,41 +209,41 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * Creating an Amazon issued certificate
-    * `domainName` - (Required) Domain name for which the certificate should be issued
-    * `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
-    * `validationMethod` - (Optional) Which method to use for validation. `dns` or `email` are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform.
-    * `keyAlgorithm` - (Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. See [ACM Certificate characteristics](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) for more details.
+    * `domain_name` - (Required) Domain name for which the certificate should be issued
+    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `validation_method` - (Optional) Which method to use for validation. `DNS` or `EMAIL` are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform.
+    * `key_algorithm` - (Optional) Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data. See [ACM Certificate characteristics](https://docs.aws.amazon.com/acm/latest/userguide/acm-certificate.html#algorithms) for more details.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
-    * `validationOption` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
+    * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `privateKey` - (Required) Certificate's PEM-formatted private key
-    * `certificateBody` - (Required) Certificate's PEM-formatted public key
-    * `certificateChain` - (Optional) Certificate's PEM-formatted chain
+    * `private_key` - (Required) Certificate's PEM-formatted private key
+    * `certificate_body` - (Required) Certificate's PEM-formatted public key
+    * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
-    * `certificateAuthorityArn` - (Required) ARN of an ACM PCA
-    * `domainName` - (Required) Domain name for which the certificate should be issued.
-    * `earlyRenewalDuration` - (Optional) Amount of time to start automatic renewal process before expiration.
+    * `certificate_authority_arn` - (Required) ARN of an ACM PCA
+    * `domain_name` - (Required) Domain name for which the certificate should be issued.
+    * `early_renewal_duration` - (Optional) Amount of time to start automatic renewal process before expiration.
       Has no effect if less than 60 days.
       Represented by either
-      a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `p90D`),
-      or a string such as `2160H`.
+      a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `P90D`),
+      or a string such as `2160h`.
 * `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate.
   To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
   or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
 
 Supported nested arguments for the `options` configuration block:
 
-* `certificateTransparencyLoggingPreference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `enabled` or `disabled`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+* `certificateTransparencyLoggingPreference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 
 ## validation_option Configuration Block
 
 Supported nested arguments for the `validationOption` configuration block:
 
 * `domainName` - (Required) Fully qualified domain name (FQDN) in the certificate.
-* `validationDomain` - (Required) Domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domainName` value or a superdomain of the `domainName` value. For example, if you request a certificate for `"testingExampleCom"`, you can specify `"exampleCom"` for this value.
+* `validationDomain` - (Required) Domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
 ## Attribute Reference
 
@@ -254,16 +254,16 @@ This resource exports the following attributes in addition to the arguments abov
 * `domainName` - Domain name for which the certificate is issued
 * `domainValidationOptions` - Set of domain validation objects which can be used to complete certificate validation.
   Can have more than one element, e.g., if SANs are defined.
-  Only set if `dns`-validation was used.
+  Only set if `DNS`-validation was used.
 * `notAfter` - Expiration date and time of the certificate.
 * `notBefore` - Start of the validity period of the certificate.
-* `pendingRenewal` - `true` if a Private certificate eligible for managed renewal is within the `earlyRenewalDuration` period.
+* `pendingRenewal` - `true` if a Private certificate eligible for managed renewal is within the `early_renewal_duration` period.
 * `renewalEligibility` - Whether the certificate is eligible for managed renewal.
 * `renewalSummary` - Contains information about the status of ACM's [managed renewal](https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for the certificate.
 * `status` - Status of the certificate.
 * `type` - Source of the certificate.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `validationEmails` - List of addresses that received a validation email. Only set if `email` validation was used.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `validationEmails` - List of addresses that received a validation email. Only set if `EMAIL` validation was used.
 
 Domain validation objects export the following attributes:
 
@@ -301,4 +301,4 @@ Using `terraform import`, import certificates using their ARN. For example:
 % terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e4c3a7735ec99f4007d8e7e7e89139f9d730f0e5d51221b59505955d1de5da60 -->
+<!-- cache-key: cdktf-0.19.0 input-e4c3a7735ec99f4007d8e7e7e89139f9d730f0e5d51221b59505955d1de5da60 -->

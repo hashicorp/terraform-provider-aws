@@ -76,7 +76,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `policy` – (Required) The policy to be applied to the aws glue data catalog.
-* `enableHybrid` - (Optional) Indicates that you are using both methods to grant cross-account. Valid values are `true` and `false`. Note the terraform will not perform drift detetction on this field as its not return on read.
+* `enableHybrid` - (Optional) Indicates that you are using both methods to grant cross-account. Valid values are `TRUE` and `FALSE`. Note the terraform will not perform drift detetction on this field as its not return on read.
 
 ## Attribute Reference
 
@@ -104,4 +104,4 @@ Using `terraform import`, import Glue Resource Policy using the account ID. For 
 % terraform import aws_glue_resource_policy.Test 12356789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-505ce1c4e38c338e6ee96c4f345643e93eb421593db3b74a6669f3f253de8617 -->
+<!-- cache-key: cdktf-0.19.0 input-505ce1c4e38c338e6ee96c4f345643e93eb421593db3b74a6669f3f253de8617 -->

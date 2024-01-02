@@ -91,7 +91,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `serviceConnectDefaults` - (Optional) Configures a default Service Connect namespace. Detailed below.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `configuration`
 
@@ -100,8 +100,8 @@ This resource supports the following arguments:
 #### `executeCommandConfiguration`
 
 * `kmsKeyId` - (Optional) The AWS Key Management Service key ID to encrypt the data between the local client and the container.
-* `logConfiguration` - (Optional) The log configuration for the results of the execute command actions Required when `logging` is `override`. Detailed below.
-* `logging` - (Optional) The log setting to use for redirecting logs for your execute command results. Valid values are `none`, `default`, and `override`.
+* `logConfiguration` - (Optional) The log configuration for the results of the execute command actions Required when `logging` is `OVERRIDE`. Detailed below.
+* `logging` - (Optional) The log setting to use for redirecting logs for your execute command results. Valid values are `NONE`, `DEFAULT`, and `OVERRIDE`.
 
 ##### `logConfiguration`
 
@@ -118,7 +118,7 @@ This resource supports the following arguments:
 
 ### `serviceConnectDefaults`
 
-* `namespace` - (Required) The ARN of the [`awsServiceDiscoveryHttpNamespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
+* `namespace` - (Required) The ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
 
 ## Attribute Reference
 
@@ -126,7 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN that identifies the cluster.
 * `id` - ARN that identifies the cluster.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import ECS clusters using the `name`. For example:
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->
+<!-- cache-key: cdktf-0.19.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->

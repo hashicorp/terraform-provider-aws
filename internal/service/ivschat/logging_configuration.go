@@ -148,6 +148,8 @@ const (
 )
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateLoggingConfigurationInput{
@@ -161,23 +163,25 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 	out, err := conn.CreateLoggingConfiguration(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
 	if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForCreation, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForCreation, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	return resourceLoggingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
@@ -185,26 +189,28 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVSChat LoggingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionReading, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
 
 	if err := d.Set("destination_configuration", flattenDestinationConfiguration(out.DestinationConfiguration)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
 	d.Set("name", out.Name)
 	d.Set("state", out.State)
 
-	return nil
+	return diags
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
@@ -224,23 +230,25 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating IVSChat LoggingConfiguration (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateLoggingConfiguration(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionUpdating, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionUpdating, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
 	if _, err := waitLoggingConfigurationUpdated(ctx, conn, aws.ToString(out.Arn), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForUpdate, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForUpdate, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	return resourceLoggingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat LoggingConfiguration %s", d.Id())
@@ -252,17 +260,17 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.IVSChat, create.ErrActionDeleting, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionDeleting, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
 	if _, err := waitLoggingConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForDeletion, ResNameLoggingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForDeletion, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) []interface{} {

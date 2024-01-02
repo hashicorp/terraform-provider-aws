@@ -74,4 +74,4 @@ Using `terraform import`, import Route 53 Resolver DNS Firewall configs using th
 % terraform import aws_route53_resolver_firewall_config.example rdsc-be1866ecc1683e95
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-47300e21e1334742b1c6242fae853e95ab5ebc4549ee0296560b626b37cb47ed -->
+<!-- cache-key: cdktf-0.19.0 input-47300e21e1334742b1c6242fae853e95ab5ebc4549ee0296560b626b37cb47ed -->

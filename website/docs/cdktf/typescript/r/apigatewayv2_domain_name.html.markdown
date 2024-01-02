@@ -102,20 +102,20 @@ This resource supports the following arguments:
 * `domainName` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domainNameConfiguration` - (Required) Domain name configuration. See below.
 * `mutualTlsAuthentication` - (Optional) Mutual TLS authentication configuration for the domain name.
-* `tags` - (Optional) Map of tags to assign to the domain name. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the domain name. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `domainNameConfiguration`
 
-* `certificateArn` - (Required) ARN of an AWS-managed certificate that will be used by the endpoint for the domain name. AWS Certificate Manager is the only supported source. Use the [`awsAcmCertificate`](/docs/providers/aws/r/acm_certificate.html) resource to configure an ACM certificate.
-* `endpointType` - (Required) Endpoint type. Valid values: `regional`.
+* `certificateArn` - (Required) ARN of an AWS-managed certificate that will be used by the endpoint for the domain name. AWS Certificate Manager is the only supported source. Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) resource to configure an ACM certificate.
+* `endpointType` - (Required) Endpoint type. Valid values: `REGIONAL`.
 * `hostedZoneId` - (Computed) Amazon Route 53 Hosted Zone ID of the endpoint.
-* `ownershipVerificationCertificateArn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificateArn` is issued via an ACM Private CA or `mutualTlsAuthentication` is configured with an ACM-imported certificate.)
-* `securityPolicy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `tls12`.
+* `ownershipVerificationCertificateArn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
+* `securityPolicy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
 * `targetDomainName` - (Computed) Target domain name.
 
 ### `mutualTlsAuthentication`
 
-* `truststoreUri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucketName/keyName`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
+* `truststoreUri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
 * `truststoreVersion` - (Optional) Version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
 
 ## Attribute Reference
@@ -125,14 +125,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `apiMappingSelectionExpression` - [API mapping selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-mapping-selection-expressions) for the domain name.
 * `arn` - ARN of the domain name.
 * `id` - Domain name identifier.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `60M`)
+- `create` - (Default `10m`)
+- `update` - (Default `60m`)
 
 ## Import
 
@@ -156,4 +156,4 @@ Using `terraform import`, import `awsApigatewayv2DomainName` using the domain na
 % terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-590fddf6e18ec896623edea239e232e92d9d62cdcbd1d648d652e4699c95dd9a -->
+<!-- cache-key: cdktf-0.19.0 input-590fddf6e18ec896623edea239e232e92d9d62cdcbd1d648d652e4699c95dd9a -->

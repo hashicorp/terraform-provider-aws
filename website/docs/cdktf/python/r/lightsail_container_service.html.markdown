@@ -212,4 +212,4 @@ Using `terraform import`, import Lightsail Container Service using the `name`. F
 % terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a73e29d48c4928c341fdc728c20c41a3e699af1e8921fe46e3340cce9c056c70 -->
+<!-- cache-key: cdktf-0.19.0 input-a73e29d48c4928c341fdc728c20c41a3e699af1e8921fe46e3340cce9c056c70 -->

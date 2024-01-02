@@ -42,9 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
-* `name` - (Optional, Forces new resource) Name of the schedule group. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `name` - (Optional, Forces new resource) Name of the schedule group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -54,15 +54,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the schedule group.
 * `creationDate` - Time at which the schedule group was created.
 * `lastModificationDate` - Time at which the schedule group was last modified.
-* `state` - State of the schedule group. Can be `active` or `deleting`.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `state` - State of the schedule group. Can be `ACTIVE` or `DELETING`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import schedule groups using the `name`. For example:
 % terraform import aws_scheduler_schedule_group.example my-schedule-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10168b28a6e4905d4caa31ec8a7ac8f50e27b681fd289f91d98f6ade6ba63b5c -->
+<!-- cache-key: cdktf-0.19.0 input-10168b28a6e4905d4caa31ec8a7ac8f50e27b681fd289f91d98f6ade6ba63b5c -->

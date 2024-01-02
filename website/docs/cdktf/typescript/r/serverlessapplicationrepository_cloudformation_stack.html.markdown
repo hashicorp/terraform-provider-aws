@@ -60,12 +60,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the stack to create. The resource deployed in AWS will be prefixed with `serverlessrepo`
+* `name` - (Required) The name of the stack to create. The resource deployed in AWS will be prefixed with `serverlessrepo-`
 * `applicationId` - (Required) The ARN of the application from the Serverless Application Repository.
-* `capabilities` - (Required) A list of capabilities. Valid values are `capabilityIam`, `capabilityNamedIam`, `capabilityResourcePolicy`, or `capabilityAutoExpand`
+* `capabilities` - (Required) A list of capabilities. Valid values are `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_RESOURCE_POLICY`, or `CAPABILITY_AUTO_EXPAND`
 * `parameters` - (Optional) A map of Parameter structures that specify input parameters for the stack.
 * `semanticVersion` - (Optional) The version of the application to deploy. If not supplied, deploys the latest version.
-* `tags` - (Optional) A list of tags to associate with this stack. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A list of tags to associate with this stack. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -73,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -97,4 +97,4 @@ Using `terraform import`, import Serverless Application Repository Stack using t
 % terraform import aws_serverlessapplicationrepository_cloudformation_stack.example serverlessrepo-postgres-rotator
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3c56c5981c41da613753a417692699808c2eda591b3a00277762ed97e8d26af7 -->
+<!-- cache-key: cdktf-0.19.0 input-3c56c5981c41da613753a417692699808c2eda591b3a00277762ed97e8d26af7 -->

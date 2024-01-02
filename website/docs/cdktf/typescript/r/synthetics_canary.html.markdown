@@ -50,9 +50,9 @@ The following arguments are required:
 
 * `artifactS3Location` - (Required) Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `executionRoleArn` - (Required) ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
-* `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `handler` .
+* `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `.handler` .
 * `name` - (Required) Name for this canary. Has a maximum length of 21 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
-* `runtimeVersion` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `synPythonSelenium10`, `synNodejsPuppeteer30`, `synNodejs22`, `synNodejs21`, `synNodejs20`, and `syn10`.
+* `runtimeVersion` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `syn-python-selenium-1.0`, `syn-nodejs-puppeteer-3.0`, `syn-nodejs-2.2`, `syn-nodejs-2.1`, `syn-nodejs-2.0`, and `syn-1.0`.
 * `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed below.
 
 The following arguments are optional:
@@ -61,14 +61,14 @@ The following arguments are optional:
 * `vpcConfig` - (Optional) Configuration block. Detailed below.
 * `failureRetentionPeriod` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `runConfig` - (Optional) Configuration block for individual canary runs. Detailed below.
-* `s3Bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zipFile`.**
-* `s3Key` - (Optional) S3 key of your script. **Conflicts with `zipFile`.**
-* `s3Version` - (Optional) S3 version ID of your script. **Conflicts with `zipFile`.**
+* `s3Bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
+* `s3Key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
+* `s3Version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
 * `startCanary` - (Optional) Whether to run or stop the canary.
 * `successRetentionPeriod` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `artifactConfig` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
-* `zipFile` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 225KB. **Conflicts with `s3Bucket`, `s3Key`, and `s3Version`.**
+* `zipFile` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 225KB. **Conflicts with `s3_bucket`, `s3_key`, and `s3_version`.**
 
 ### artifact_config
 
@@ -76,8 +76,8 @@ The following arguments are optional:
 
 ### s3_encryption
 
-* `encryptionMode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `sseS3` and `sseKms`.
-* `kmsKeyArn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `sseKms` for `encryptionMode`.
+* `encryptionMode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE_S3` and `SSE_KMS`.
+* `kmsKeyArn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE_KMS` for `encryption_mode`.
 
 ### schedule
 
@@ -107,7 +107,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Name for this canary.
 * `sourceLocationArn` - ARN of the Lambda layer where Synthetics stores the canary script code.
 * `status` - Canary status.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `timeline` - Structure that contains information about when the canary was created, modified, and most recently run. see [Timeline](#timeline).
 
 ### vpc_config
@@ -143,4 +143,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7a9e3e1413440a0151e0d113031ae787861be1f778da70a162639b9434cfd1fb -->
+<!-- cache-key: cdktf-0.19.0 input-7a9e3e1413440a0151e0d113031ae787861be1f778da70a162639b9434cfd1fb -->

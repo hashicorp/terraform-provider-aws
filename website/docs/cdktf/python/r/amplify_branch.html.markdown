@@ -217,4 +217,4 @@ Using `terraform import`, import Amplify branch using `app_id` and `branch_name`
 % terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-18bb34f7ab2ddc6f2adc5f5bfbff608bb9af62203731b97b751ed9bb930f797a -->
+<!-- cache-key: cdktf-0.19.0 input-18bb34f7ab2ddc6f2adc5f5bfbff608bb9af62203731b97b751ed9bb930f797a -->

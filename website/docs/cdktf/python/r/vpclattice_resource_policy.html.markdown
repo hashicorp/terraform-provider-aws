@@ -90,4 +90,4 @@ Using `terraform import`, import VPC Lattice Resource Policy using the `resource
 % terraform import aws_vpclattice_resource_policy.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c969eed7a7377f14bd03d1b92b78d4bf654be694271ee442b4563386ee2c88bd -->
+<!-- cache-key: cdktf-0.19.0 input-c969eed7a7377f14bd03d1b92b78d4bf654be694271ee442b4563386ee2c88bd -->

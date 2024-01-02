@@ -57,7 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 * `engineVersion` - Version number of the Redis engine used by the cluster.
 * `finalSnapshotName` - Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kmsKeyArn` - ARN of the KMS key used to encrypt the cluster at rest.
-* `maintenanceWindow` - Weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:miDdd:hh24:mi` (24H Clock UTC). Example: `sun:23:00Mon:01:30`.
+* `maintenanceWindow` - Weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). Example: `sun:23:00-mon:01:30`.
 * `nodeType` - Compute and memory capacity of the nodes in the cluster.
 * `numReplicasPerShard` - The number of replicas to apply to each shard.
 * `numShards` - Number of shards in the cluster.
@@ -66,20 +66,20 @@ This data source exports the following attributes in addition to the arguments a
 * `securityGroupIds` - Set of VPC Security Group ID-s associated with this cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
-    * `numNodes` - Number of individual nodes in this shard.
-    * `slots` - Keyspace for this shard. Example: `016383`.
+    * `num_nodes` - Number of individual nodes in this shard.
+    * `slots` - Keyspace for this shard. Example: `0-16383`.
     * `nodes` - Set of nodes in this shard.
-        * `availabilityZone` - The Availability Zone in which the node resides.
-        * `createTime` - The date and time when the node was created. Example: `20220101T21:00:00Z`.
+        * `availability_zone` - The Availability Zone in which the node resides.
+        * `create_time` - The date and time when the node was created. Example: `2022-01-01T21:00:00Z`.
         * `name` - Name of this node.
         * `endpoint`
             * `address` - DNS hostname of the node.
             * `port` - Port number that this node is listening on.
 * `snapshotRetentionLimit` - The number of days for which MemoryDB retains automatic snapshots before deleting them. When set to `0`, automatic backups are disabled.
-* `snapshotWindow` - Daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:0009:00`.
+* `snapshotWindow` - Daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:00-09:00`.
 * `snsTopicArn` - ARN of the SNS topic to which cluster notifications are sent.
 * `subnetGroupName` -The name of the subnet group used for the cluster.
 * `tlsEnabled` - When true, in-transit encryption is enabled for the cluster.
 * `tags` - Map of tags assigned to the cluster.
 
-<!-- cache-key: cdktf-0.18.0 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->
+<!-- cache-key: cdktf-0.19.0 input-60661a32615a44866629e2e9ffadb0c1a33a84edf7060e982e9bec51eec4491d -->

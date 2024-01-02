@@ -870,16 +870,15 @@ func addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInp
 
 func addRoleManagedPolicies(ctx context.Context, roleName string, policies []*string, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	var errs []error
 
-	var errs *multierror.Error
 	for _, arn := range policies {
 		if err := attachPolicyToRole(ctx, conn, roleName, aws.StringValue(arn)); err != nil {
-			newErr := fmt.Errorf("attaching managed policy (%s): %w", aws.StringValue(arn), err)
-			errs = multierror.Append(errs, newErr)
+			errs = append(errs, err)
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func readRoleInlinePolicies(ctx context.Context, roleName string, meta interface{}) ([]*iam.PutRolePolicyInput, error) {

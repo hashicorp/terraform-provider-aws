@@ -57,8 +57,8 @@ The following arguments are optional:
 * `engineVersion` - (Optional) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
 * `finalSnapshotName` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kmsKeyArn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
-* `maintenanceWindow` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:miDdd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00Mon:01:30`.
-* `name` - (Optional, Forces new resource) Name of the cluster. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
+* `maintenanceWindow` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
+* `name` - (Optional, Forces new resource) Name of the cluster. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `numReplicasPerShard` - (Optional) The number of replicas to apply to each shard, up to a maximum of 5. Defaults to `1` (i.e. 2 nodes per shard).
 * `numShards` - (Optional) The number of shards in the cluster. Defaults to `1`.
@@ -68,11 +68,11 @@ The following arguments are optional:
 * `snapshotArns` - (Optional, Forces new resource) List of ARN-s that uniquely identify RDB snapshot files stored in S3. The snapshot files will be used to populate the new cluster. Object names in the ARN-s cannot contain any commas.
 * `snapshotName` - (Optional, Forces new resource) The name of a snapshot from which to restore data into the new cluster.
 * `snapshotRetentionLimit` - (Optional) The number of days for which MemoryDB retains automatic snapshots before deleting them. When set to `0`, automatic backups are disabled. Defaults to `0`.
-* `snapshotWindow` - (Optional) The daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:0009:00`.
+* `snapshotWindow` - (Optional) The daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:00-09:00`.
 * `snsTopicArn` - (Optional) ARN of the SNS topic to which cluster notifications are sent.
 * `subnetGroupName` - (Optional, Forces new resource) The name of the subnet group to be used for the cluster. Defaults to a subnet group consisting of default VPC subnets.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tlsEnabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster. When set to `false`, the `aclName` must be `openAccess`. Defaults to `true`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tlsEnabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster. When set to `false`, the `acl_name` must be `open-access`. Defaults to `true`.
 
 ## Attribute Reference
 
@@ -86,24 +86,24 @@ This resource exports the following attributes in addition to the arguments abov
 * `enginePatchVersion` - Patch version number of the Redis engine used by the cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
-    * `numNodes` - Number of individual nodes in this shard.
-    * `slots` - Keyspace for this shard. Example: `016383`.
+    * `num_nodes` - Number of individual nodes in this shard.
+    * `slots` - Keyspace for this shard. Example: `0-16383`.
     * `nodes` - Set of nodes in this shard.
-        * `availabilityZone` - The Availability Zone in which the node resides.
-        * `createTime` - The date and time when the node was created. Example: `20220101T21:00:00Z`.
+        * `availability_zone` - The Availability Zone in which the node resides.
+        * `create_time` - The date and time when the node was created. Example: `2022-01-01T21:00:00Z`.
         * `name` - Name of this node.
         * `endpoint`
             * `address` - DNS hostname of the node.
             * `port` - Port number that this node is listening on.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120M`)
-- `update` - (Default `120M`)
-- `delete` - (Default `120M`)
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 
@@ -127,4 +127,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d6818a9008412346bdaa4fa4b26d098dea2f660a578683a93af8623986328ed6 -->
+<!-- cache-key: cdktf-0.19.0 input-d6818a9008412346bdaa4fa4b26d098dea2f660a578683a93af8623986328ed6 -->

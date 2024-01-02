@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - The group description.
 * `principalId` - The principal ID of the group.
 
-<!-- cache-key: cdktf-0.18.0 input-2c348640ef79405d8a0bd0ed47ae13ff12c796f3ad5a7922552ef44e21969deb -->
+<!-- cache-key: cdktf-0.19.0 input-2c348640ef79405d8a0bd0ed47ae13ff12c796f3ad5a7922552ef44e21969deb -->

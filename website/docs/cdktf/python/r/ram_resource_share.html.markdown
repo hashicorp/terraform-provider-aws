@@ -71,4 +71,4 @@ Using `terraform import`, import resource shares using the `arn` of the resource
 % terraform import aws_ram_resource_share.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d1b95a08fc3018c7477d3c340484bf53d1729e6c175ec03ca5c9a53c81d97b1e -->
+<!-- cache-key: cdktf-0.19.0 input-d1b95a08fc3018c7477d3c340484bf53d1729e6c175ec03ca5c9a53c81d97b1e -->

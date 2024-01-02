@@ -88,4 +88,4 @@ Using `terraform import`, import Direct Connect hosted private virtual interface
 % terraform import aws_dx_hosted_private_virtual_interface.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-30c56346b371b07a0381a9a9a399fae393a6827e0de105fc1f2ffe338e99c3e4 -->
+<!-- cache-key: cdktf-0.19.0 input-30c56346b371b07a0381a9a9a399fae393a6827e0de105fc1f2ffe338e99c3e4 -->

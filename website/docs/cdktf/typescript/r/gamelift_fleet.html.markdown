@@ -38,29 +38,29 @@ This resource supports the following arguments:
 * `certificateConfiguration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
 * `description` - (Optional) Human-readable description of the fleet.
 * `ec2InboundPermission` - (Optional) Range of IP addresses and port settings that permit inbound traffic to access server processes running on the fleet. See below.
-* `ec2InstanceType` - (Required) Name of an EC2 instance typeE.g., `t2Micro`
-* `fleetType` - (Optional) Type of fleet. This value must be `onDemand` or `spot`. Defaults to `onDemand`.
+* `ec2InstanceType` - (Required) Name of an EC2 instance typeE.g., `t2.micro`
+* `fleetType` - (Optional) Type of fleet. This value must be `ON_DEMAND` or `SPOT`. Defaults to `ON_DEMAND`.
 * `instanceRoleArn` - (Optional) ARN of an IAM role that instances in the fleet can assume.
 * `metricGroups` - (Optional) List of names of metric groups to add this fleet to. A metric group tracks metrics across all fleets in the group. Defaults to `default`.
 * `name` - (Required) The name of the fleet.
-* `newGameSessionProtectionPolicy` - (Optional) Game session protection policy to apply to all instances in this fleetE.g., `fullProtection`. Defaults to `noProtection`.
+* `newGameSessionProtectionPolicy` - (Optional) Game session protection policy to apply to all instances in this fleetE.g., `FullProtection`. Defaults to `NoProtection`.
 * `resourceCreationLimitPolicy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtimeConfiguration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
 * `scriptId` - (Optional) ID of the GameLift Script to be deployed on the fleet.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
 #### `certificateConfiguration`
 
-* `certificateType` - (Optional) Indicates whether a TLS/SSL certificate is generated for a fleet. Valid values are `disabled` and `generated`. Default value is `disabled`.
+* `certificateType` - (Optional) Indicates whether a TLS/SSL certificate is generated for a fleet. Valid values are `DISABLED` and `GENERATED`. Default value is `DISABLED`.
 
 #### `ec2InboundPermission`
 
 * `fromPort` - (Required) Starting value for a range of allowed port numbers.
 * `ipRange` - (Required) Range of allowed IP addresses expressed in CIDR notationE.g., `000.000.000.000/[subnet mask]` or `0.0.0.0/[subnet mask]`.
-* `protocol` - (Required) Network communication protocol used by the fleetE.g., `tcp` or `udp`
-* `toPort` - (Required) Ending value for a range of allowed port numbers. Port numbers are end-inclusive. This value must be higher than `fromPort`.
+* `protocol` - (Required) Network communication protocol used by the fleetE.g., `TCP` or `UDP`
+* `toPort` - (Required) Ending value for a range of allowed port numbers. Port numbers are end-inclusive. This value must be higher than `from_port`.
 
 #### `resourceCreationLimitPolicy`
 
@@ -69,14 +69,14 @@ This resource supports the following arguments:
 
 #### `runtimeConfiguration`
 
-* `gameSessionActivationTimeoutSeconds` - (Optional) Maximum amount of time (in seconds) that a game session can remain in status `activating`.
-* `maxConcurrentGameSessionActivations` - (Optional) Maximum number of game sessions with status `activating` to allow on an instance simultaneously.
+* `gameSessionActivationTimeoutSeconds` - (Optional) Maximum amount of time (in seconds) that a game session can remain in status `ACTIVATING`.
+* `maxConcurrentGameSessionActivations` - (Optional) Maximum number of game sessions with status `ACTIVATING` to allow on an instance simultaneously.
 * `serverProcess` - (Optional) Collection of server process configurations that describe which server processes to run on each instance in a fleet. See below.
 
 #### `serverProcess`
 
 * `concurrentExecutions` - (Required) Number of server processes using this configuration to run concurrently on an instance.
-* `launchPath` - (Required) Location of the server executable in a game build. All game builds are installed on instances at the root : for Windows instances `c:\game`, and for Linux instances `/local/game`.
+* `launchPath` - (Required) Location of the server executable in a game build. All game builds are installed on instances at the root : for Windows instances `C:\game`, and for Linux instances `/local/game`.
 * `parameters` - (Optional) Optional list of parameters to pass to the server executable on launch.
 
 ## Attribute Reference
@@ -88,14 +88,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `buildArn` - Build ARN.
 * `operatingSystem` - Operating system of the fleet's computing resources.
 * `scriptArn` - Script ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `70M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `70m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -119,4 +119,4 @@ Using `terraform import`, import GameLift Fleets using the ID. For example:
 % terraform import aws_gamelift_fleet.example <fleet-id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3bb7364110eb682f1c0a8b20937e245e89dbedcb5915fce66d3f5e59fd6676d6 -->
+<!-- cache-key: cdktf-0.19.0 input-3bb7364110eb682f1c0a8b20937e245e89dbedcb5915fce66d3f5e59fd6676d6 -->

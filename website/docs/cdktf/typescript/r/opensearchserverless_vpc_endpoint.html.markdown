@@ -60,9 +60,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import OpenSearchServerless Vpc Endpointa using the `i
 % terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b9fcf6e6b2846dfbeed5befbc44e2dec7f3e97c4887cfb35c50e0ab28f293279 -->
+<!-- cache-key: cdktf-0.19.0 input-b9fcf6e6b2846dfbeed5befbc44e2dec7f3e97c4887cfb35c50e0ab28f293279 -->

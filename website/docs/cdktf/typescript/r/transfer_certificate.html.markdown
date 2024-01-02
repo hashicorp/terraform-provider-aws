@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `certificateChain` - (Optional) The optional list of certificate that make up the chain for the certificate that is being imported.
 * `description` - (Optional) A short description that helps identify the certificate.
 * `privateKey` - (Optional) The private key associated with the certificate being imported.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `usage` - (Required) Specifies if a certificate is being used for signing or encryption. The valid values are SIGNING and ENCRYPTION.
 
 ## Attribute Reference
@@ -88,4 +88,4 @@ Using `terraform import`, import Transfer AS2 Certificate using the `certificate
 % terraform import aws_transfer_certificate.example c-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9e7f080d0a6c4946e22084c4f2ae3c03144eb7cd8a58f89d9fd2f1afa2ea612e -->
+<!-- cache-key: cdktf-0.19.0 input-9e7f080d0a6c4946e22084c4f2ae3c03144eb7cd8a58f89d9fd2f1afa2ea612e -->

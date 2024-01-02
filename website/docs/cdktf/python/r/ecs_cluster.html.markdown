@@ -140,4 +140,4 @@ Using `terraform import`, import ECS clusters using the `name`. For example:
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->
+<!-- cache-key: cdktf-0.19.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->

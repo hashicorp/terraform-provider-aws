@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `repositoryName` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
 * `defaultBranch` - (Optional) The default branch of the repository. The branch specified here needs to exist.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the repository
 * `cloneUrlHttp` - The URL to use for cloning the repository over HTTPS.
 * `cloneUrlSsh` - The URL to use for cloning the repository over SSH.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -76,4 +76,4 @@ Using `terraform import`, import CodeCommit repository using repository name. Fo
 % terraform import aws_codecommit_repository.imported ExistingRepo
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-50d294f897d743c5c8bc69d3979c0e0ea1f7abc83eb38554128f2468842056ab -->
+<!-- cache-key: cdktf-0.19.0 input-50d294f897d743c5c8bc69d3979c0e0ea1f7abc83eb38554128f2468842056ab -->

@@ -150,7 +150,7 @@ The following arguments are optional:
 * `destinationConfig` - (Optional) Configuration block with destination configuration. See below for details.
 * `maximumEventAgeInSeconds` - (Optional) Maximum age of a request that Lambda sends to a function for processing in seconds. Valid values between 60 and 21600.
 * `maximumRetryAttempts` - (Optional) Maximum number of times to retry when the function returns an error. Valid values between 0 and 2. Defaults to 2.
-* `qualifier` - (Optional) Lambda Function published version, `$latest`, or Lambda Alias name.
+* `qualifier` - (Optional) Lambda Function published version, `$LATEST`, or Lambda Alias name.
 
 ### destination_config Configuration Block
 
@@ -265,4 +265,4 @@ Name with qualifier:
 % terraform import aws_lambda_function_event_invoke_config.example my_function:production
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-609bc5423f52ca1abd7ee524d562fbd117b6915dd9a7b4012b252b00f563c6ac -->
+<!-- cache-key: cdktf-0.19.0 input-609bc5423f52ca1abd7ee524d562fbd117b6915dd9a7b4012b252b00f563c6ac -->

@@ -41,12 +41,12 @@ This resource supports the following arguments:
 * `adminUserPassword` - (Optional) The password of the administrator for the first database created in the namespace.
 * `adminUsername` - (Optional) The username of the administrator for the first database created in the namespace.
 * `dbName` - (Optional) The name of the first database created in the namespace.
-* `defaultIamRoleArn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to set as a default in the namespace. When specifying `defaultIamRoleArn`, it also must be part of `iamRoles`.
+* `defaultIamRoleArn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to set as a default in the namespace. When specifying `default_iam_role_arn`, it also must be part of `iam_roles`.
 * `iamRoles` - (Optional) A list of IAM roles to associate with the namespace.
 * `kmsKeyId` - (Optional) The ARN of the Amazon Web Services Key Management Service key used to encrypt your data.
 * `logExports` - (Optional) The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespaceName` - (Required) The name of the namespace.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.
 * `namespaceId` - The Redshift Namespace ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -79,4 +79,4 @@ Using `terraform import`, import Redshift Serverless Namespaces using the `names
 % terraform import aws_redshiftserverless_namespace.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3fa05a19a9755fb51145df09f985b4240171d15c6da3e7aaeeaa933a19f41ff3 -->
+<!-- cache-key: cdktf-0.19.0 input-3fa05a19a9755fb51145df09f985b4240171d15c6da3e7aaeeaa933a19f41ff3 -->

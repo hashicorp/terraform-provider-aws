@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -46,6 +47,8 @@ func ResourceKinesisStreamingDestination() *schema.Resource {
 }
 
 func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	streamArn := d.Get("stream_arn").(string)
@@ -59,29 +62,31 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	output, err := conn.EnableKinesisStreamingDestinationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
+		return sdkdiag.AppendErrorf(diags, "enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output", streamArn, tableName)
+		return sdkdiag.AppendErrorf(diags, "enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output", streamArn, tableName)
 	}
 
 	if err := waitKinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
-		return diag.Errorf("waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be active: %s", streamArn, tableName, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be active: %s", streamArn, tableName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.TableName), aws.StringValue(output.StreamArn)))
 
-	return resourceKinesisStreamingDestinationRead(ctx, d, meta)
+	return append(diags, resourceKinesisStreamingDestinationRead(ctx, d, meta)...)
 }
 
 func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
@@ -89,35 +94,37 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (stream: %s, table: %s) not found, removing from state", streamArn, tableName)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
+		return sdkdiag.AppendErrorf(diags, "retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
 	}
 
 	if output == nil || aws.StringValue(output.DestinationStatus) == dynamodb.DestinationStatusDisabled {
 		if d.IsNewResource() {
-			return diag.Errorf("retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output after creation", streamArn, tableName)
+			return sdkdiag.AppendErrorf(diags, "retrieving DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output after creation", streamArn, tableName)
 		}
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (stream: %s, table: %s) not found, removing from state", streamArn, tableName)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("stream_arn", output.StreamArn)
 	d.Set("table_name", tableName)
 
-	return nil
+	return diags
 }
 
 func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &dynamodb.DisableKinesisStreamingDestinationInput{
@@ -128,14 +135,14 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	_, err = conn.DisableKinesisStreamingDestinationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("disabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
+		return sdkdiag.AppendErrorf(diags, "disabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %s", streamArn, tableName, err)
 	}
 
 	if err := waitKinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
-		return diag.Errorf("waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be disabled: %s", streamArn, tableName, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be disabled: %s", streamArn, tableName, err)
 	}
 
-	return nil
+	return diags
 }
 
 func KinesisStreamingDestinationParseID(id string) (string, string, error) {

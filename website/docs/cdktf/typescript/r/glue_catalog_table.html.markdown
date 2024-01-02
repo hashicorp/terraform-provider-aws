@@ -117,14 +117,14 @@ The follow arguments are optional:
 * `catalogId` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
 * `owner` - (Optional) Owner of the table.
-* `openTableFormatInput` - (Optional) Configuration block for open table formats. See [`openTableFormatInput`](#open_table_format_input) below.
+* `openTableFormatInput` - (Optional) Configuration block for open table formats. See [`open_table_format_input`](#open_table_format_input) below.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
-* `partitionIndex` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partitionIndex`](#partition_index) below.
-* `partitionKeys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partitionKeys`](#partition_keys) below.
+* `partitionIndex` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
+* `partitionKeys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
 * `retention` - (Optional) Retention time for this table.
-* `storageDescriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storageDescriptor`](#storage_descriptor) below.
+* `storageDescriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
 * `tableType` - (Optional) Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
-* `targetTable` - (Optional) Configuration block of a target table for resource linking. See [`targetTable`](#target_table) below.
+* `targetTable` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
 * `viewExpandedText` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `viewOriginalText` - (Optional) If the table is a view, the original text of the view; otherwise null.
 
@@ -133,7 +133,7 @@ The follow arguments are optional:
 ~> **NOTE:** A `openTableFormatInput` cannot be added to an existing `glueCatalogTable`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
-* `icebergInput` - (Required) Configuration block for iceberg table config. See [`icebergInput`](#iceberg_input) below.
+* `icebergInput` - (Required) Configuration block for iceberg table config. See [`iceberg_input`](#iceberg_input) below.
 
 ### iceberg_input
 
@@ -169,9 +169,9 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 * `outputFormat` - (Optional) Output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `parameters` - (Optional) User-supplied properties in key-value form.
 * `schemaReference` - (Optional) Object that references a schema stored in the AWS Glue Schema Registry. When creating a table, you can pass an empty list of columns for the schema, and instead use a schema reference. See [Schema Reference](#schema_reference) below.
-* `serDeInfo` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`serDeInfo`](#ser_de_info) below.
-* `skewedInfo` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewedInfo`](#skewed_info) below.
-* `sortColumns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sortColumns`](#sort_columns) below.
+* `serDeInfo` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info) below.
+* `skewedInfo` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info) below.
+* `sortColumns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns) below.
 * `storedAsSubDirectories` - (Optional) Whether the table data is stored in subdirectories.
 
 #### columns
@@ -183,21 +183,21 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 
 #### schema_reference
 
-* `schemaId` - (Optional) Configuration block that contains schema identity fields. Either this or the `schemaVersionId` has to be provided. See [`schemaId`](#schema_id) below.
-* `schemaVersionId` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schemaId` has to be provided.
+* `schemaId` - (Optional) Configuration block that contains schema identity fields. Either this or the `schema_version_id` has to be provided. See [`schema_id`](#schema_id) below.
+* `schemaVersionId` - (Optional) Unique ID assigned to a version of the schema. Either this or the `schema_id` has to be provided.
 * `schemaVersionNumber` - (Required) Version number of the schema.
 
 ##### schema_id
 
-* `registryName` - (Optional) Name of the schema registry that contains the schema. Must be provided when `schemaName` is specified and conflicts with `schemaArn`.
-* `schemaArn` - (Optional) ARN of the schema. One of `schemaArn` or `schemaName` has to be provided.
-* `schemaName` - (Optional) Name of the schema. One of `schemaArn` or `schemaName` has to be provided.
+* `registryName` - (Optional) Name of the schema registry that contains the schema. Must be provided when `schema_name` is specified and conflicts with `schema_arn`.
+* `schemaArn` - (Optional) ARN of the schema. One of `schema_arn` or `schema_name` has to be provided.
+* `schemaName` - (Optional) Name of the schema. One of `schema_arn` or `schema_name` has to be provided.
 
 #### ser_de_info
 
 * `name` - (Optional) Name of the SerDe.
 * `parameters` - (Optional) Map of initialization parameters for the SerDe, in key-value form.
-* `serializationLibrary` - (Optional) Usually the class that implements the SerDe. An example is `orgApacheHadoopHiveSerde2ColumnarColumnarSerDe`.
+* `serializationLibrary` - (Optional) Usually the class that implements the SerDe. An example is `org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe`.
 
 #### sort_columns
 
@@ -245,4 +245,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45918d95d1ee42b18f0a38282d1c7f92c766f0d90f43a1e0cd1f7c41e6fd3936 -->
+<!-- cache-key: cdktf-0.19.0 input-45918d95d1ee42b18f0a38282d1c7f92c766f0d90f43a1e0cd1f7c41e6fd3936 -->

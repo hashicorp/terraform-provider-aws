@@ -79,8 +79,8 @@ This resource supports the following arguments:
 * `activeDirectoryConfiguration` - (Optional) Configuration block that Amazon FSx uses to join the FSx ONTAP Storage Virtual Machine(SVM) to your Microsoft Active Directory (AD) directory. Detailed below.
 * `fileSystemId` - (Required) The ID of the Amazon FSx ONTAP File System that this SVM will be created on.
 * `name` - (Required) The name of the SVM. You can use a maximum of 47 alphanumeric characters, plus the underscore (_) special character.
-* `rootVolumeSecurityStyle` - (Optional) Specifies the root volume security style, Valid values are `unix`, `ntfs`, and `mixed`. All volumes created under this SVM will inherit the root security style unless the security style is specified on the volume. Default value is `unix`.
-* `tags` - (Optional) A map of tags to assign to the storage virtual machine. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `rootVolumeSecurityStyle` - (Optional) Specifies the root volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. All volumes created under this SVM will inherit the root security style unless the security style is specified on the volume. Default value is `UNIX`.
+* `tags` - (Optional) A map of tags to assign to the storage virtual machine. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### active_directory_configuration
 
@@ -94,11 +94,11 @@ The `activeDirectoryConfiguration` configuration block supports the following ar
 The `selfManagedActiveDirectory` configuration block supports the following arguments:
 
 * `dnsIps` - (Required) A list of up to three IP addresses of DNS servers or domain controllers in the self-managed AD directory.
-* `domainName` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corpExampleCom`.
+* `domainName` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.
 * `password` - (Required) The password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain.
 * `username` - (Required) The user name for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain.
 * `fileSystemAdministratorsGroup` - (Optional) The name of the domain group whose members are granted administrative privileges for the SVM. The group that you specify must already exist in your domain. Defaults to `Domain Admins`.
-* `organizationalUnitDistinguishedName` - (Optional) The fully qualified distinguished name of the organizational unit within your self-managed AD directory that the Windows File Server instance will join. For example, `ou=fSx,dc=yourdomain,dc=corp,dc=com`. Only accepts OU as the direct parent of the SVM. If none is provided, the SVM is created in the default location of your self-managed AD directory. To learn more, see [RFC 2253](https://tools.ietf.org/html/rfc2253).
+* `organizationalUnitDistinguishedName` - (Optional) The fully qualified distinguished name of the organizational unit within your self-managed AD directory that the Windows File Server instance will join. For example, `OU=FSx,DC=yourdomain,DC=corp,DC=com`. Only accepts OU as the direct parent of the SVM. If none is provided, the SVM is created in the default location of your self-managed AD directory. To learn more, see [RFC 2253](https://tools.ietf.org/html/rfc2253).
 
 ## Attribute Reference
 
@@ -106,9 +106,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name of the storage virtual machine.
 * `endpoints` - The endpoints that are used to access data or to manage the storage virtual machine using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [Endpoints](#endpoints) below.
-* `id` - Identifier of the storage virtual machine, e.g., `svm12345678`
-* `subtype` - Describes the SVM's subtype, e.g. `default`
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Identifier of the storage virtual machine, e.g., `svm-12345678`
+* `subtype` - Describes the SVM's subtype, e.g. `DEFAULT`
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The SVM's UUID (universally unique identifier).
 
 ### Endpoints
@@ -127,9 +127,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `delete` - (Default `30M`)
-* `update` - (Default `30M`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -184,4 +184,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-74ebf93c5246fec0a83d413f672feb2cd78262f5765744a5bca89505730e563b -->
+<!-- cache-key: cdktf-0.19.0 input-74ebf93c5246fec0a83d413f672feb2cd78262f5765744a5bca89505730e563b -->

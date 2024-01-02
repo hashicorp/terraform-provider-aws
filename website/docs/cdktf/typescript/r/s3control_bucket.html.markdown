@@ -43,7 +43,7 @@ The following arguments are required:
 
 * `bucket` - (Required) Name of the bucket.
 * `outpostId` - (Required) Identifier of the Outpost to contain this bucket.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `creationDate` - UTC creation date in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `id` - Amazon Resource Name (ARN) of the bucket.
 * `publicAccessBlockEnabled` - Boolean whether Public Access Block is enabled.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -77,4 +77,4 @@ Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (
 % terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2e4677b75d6cbb099b0dd2b2385879475c02ebb3643475b93a119fd3833d7929 -->
+<!-- cache-key: cdktf-0.19.0 input-2e4677b75d6cbb099b0dd2b2385879475c02ebb3643475b93a119fd3833d7929 -->
