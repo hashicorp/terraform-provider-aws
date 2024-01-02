@@ -431,7 +431,7 @@ func (r *resourceServerlessCache) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	deleteTimeout := r.CreateTimeout(ctx, state.Timeouts)
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitServerlessCacheDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 
 	if err != nil {
