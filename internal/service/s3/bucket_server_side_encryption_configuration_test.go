@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -349,7 +348,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_migrate_noChange(t *testin
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_defaultEncryptionDefaultKey(rName, s3.ServerSideEncryptionAwsKms),
+				Config: testAccBucketConfig_defaultEncryptionDefaultKey(rName, string(types.ServerSideEncryptionAwsKms)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "server_side_encryption_configuration.#", "1"),

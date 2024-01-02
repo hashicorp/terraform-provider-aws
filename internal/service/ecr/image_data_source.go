@@ -5,6 +5,7 @@ package ecr
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -48,6 +49,10 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"most_recent": {
 				Type:          schema.TypeBool,
@@ -97,6 +102,18 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	if v, ok := d.Get("most_recent").(bool); ok && v {
+		if len(input.ImageIds) == 0 {
+			input.ImageIds = []*ecr.ImageIdentifier{
+				{
+					ImageTag: aws.String("latest"),
+				},
+			}
+		} else {
+			input.ImageIds[0].ImageTag = aws.String("latest")
+		}
+	}
+
 	if v, ok := d.GetOk("registry_id"); ok {
 		input.RegistryId = aws.String(v.(string))
 	}
@@ -128,11 +145,25 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	imageDetail := imageDetails[0]
+
+	repositoryName := aws.StringValue(imageDetail.RepositoryName)
+	repositoryInput := &ecr.DescribeRepositoriesInput{
+		RepositoryNames: aws.StringSlice([]string{repositoryName}),
+		RegistryId:      imageDetail.RegistryId,
+	}
+
+	repository, err := FindRepository(ctx, conn, repositoryInput)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
+	}
+
 	d.SetId(aws.StringValue(imageDetail.ImageDigest))
 	d.Set("image_digest", imageDetail.ImageDigest)
 	d.Set("image_pushed_at", imageDetail.ImagePushedAt.Unix())
 	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
 	d.Set("image_tags", aws.StringValueSlice(imageDetail.ImageTags))
+	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.StringValue(repository.RepositoryUri), aws.StringValue(imageDetail.ImageDigest)))
 	d.Set("registry_id", imageDetail.RegistryId)
 	d.Set("repository_name", imageDetail.RepositoryName)
 

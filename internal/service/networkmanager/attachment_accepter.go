@@ -97,7 +97,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", attachmentID, err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s): %s", attachmentID, err)
 		}
 
 		state = aws.StringValue(vpcAttachment.Attachment.State)
@@ -108,7 +108,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", attachmentID, err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s): %s", attachmentID, err)
 		}
 
 		state = aws.StringValue(vpnAttachment.Attachment.State)
@@ -119,7 +119,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		connectAttachment, err := FindConnectAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", attachmentID, err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Attachment (%s): %s", attachmentID, err)
 		}
 
 		state = aws.StringValue(connectAttachment.Attachment.State)
@@ -130,7 +130,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		tgwAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", attachmentID, err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s): %s", attachmentID, err)
 		}
 
 		state = aws.StringValue(tgwAttachment.Attachment.State)
@@ -138,7 +138,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		d.SetId(attachmentID)
 
 	default:
-		return diag.Errorf("unsupported Network Manager Attachment type: %s", attachmentType)
+		return sdkdiag.AppendErrorf(diags, "unsupported Network Manager Attachment type: %s", attachmentType)
 	}
 
 	if state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
@@ -149,28 +149,28 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		_, err := conn.AcceptAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("accepting Network Manager Attachment (%s): %s", attachmentID, err)
+			return sdkdiag.AppendErrorf(diags, "accepting Network Manager Attachment (%s): %s", attachmentID, err)
 		}
 
 		switch attachmentType {
 		case networkmanager.AttachmentTypeVpc:
 			if _, err := waitVPCAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.Errorf("waiting for Network Manager VPC Attachment (%s) to be attached: %s", attachmentID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) to be attached: %s", attachmentID, err)
 			}
 
 		case networkmanager.AttachmentTypeSiteToSiteVpn:
 			if _, err := waitSiteToSiteVPNAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.Errorf("waiting for Network Manager VPN Attachment (%s) create: %s", attachmentID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPN Attachment (%s) create: %s", attachmentID, err)
 			}
 
 		case networkmanager.AttachmentTypeConnect:
 			if _, err := waitConnectAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.Errorf("waiting for Network Manager Connect Attachment (%s) create: %s", attachmentID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Attachment (%s) create: %s", attachmentID, err)
 			}
 
 		case networkmanager.AttachmentTypeTransitGatewayRouteTable:
 			if _, err := waitTransitGatewayRouteTableAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.Errorf("waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", attachmentID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", attachmentID, err)
 			}
 		}
 	}
@@ -196,7 +196,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
 
 		a = vpcAttachment.Attachment
@@ -211,7 +211,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s): %s", d.Id(), err)
 		}
 
 		a = vpnAttachment.Attachment
@@ -226,7 +226,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
 		}
 
 		a = connectAttachment.Attachment
@@ -241,7 +241,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if err != nil {
-			return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
 		}
 
 		a = tgwAttachment.Attachment

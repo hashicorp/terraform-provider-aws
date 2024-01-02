@@ -110,6 +110,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Ground Station
 GuardDuty
 HealthLake
 IAM (Identity & Access Management)
@@ -137,6 +138,7 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
+Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
@@ -156,6 +158,7 @@ Organizations
 Outposts
 Outposts (EC2)
 Pinpoint
+Polly
 Pricing Calculator
 QLDB (Quantum Ledger Database)
 QuickSight
