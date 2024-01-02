@@ -88,6 +88,62 @@ func TestAccFinSpaceKxVolume_disappears(t *testing.T) {
 	})
 }
 
+func TestAccFinSpaceKxVolume_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var volume finspace.GetKxVolumeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_volume.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxVolumeConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKxVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKxVolumeConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKxVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
@@ -263,4 +319,49 @@ resource "aws_finspace_kx_volume" "test" {
   }
 }
 `, rName))
+}
+
+func testAccKxVolumeConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccKxVolumeConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_volume" "test" {
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+  nas1_configuration {
+    type = "SSD_250"
+    size = 1200
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, key1, value1))
+}
+
+func testAccKxVolumeConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccKxVolumeConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_volume" "test" {
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+  nas1_configuration {
+    type = "SSD_250"
+    size = 1200
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, key1, value1, key2, value2))
 }

@@ -41,6 +41,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory: newResourceApplicationAccessScope,
+			Name:    "Application Access Scope",
+		},
+		{
 			Factory: newResourceApplicationAssignment,
 			Name:    "Application Assignment",
 		},

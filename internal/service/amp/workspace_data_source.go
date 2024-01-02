@@ -32,6 +32,10 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"prometheus_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -67,6 +71,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("alias", workspace.Alias)
 	d.Set("arn", workspace.Arn)
 	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
+	d.Set("kms_key_arn", workspace.KmsKeyArn)
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
 	d.Set("status", workspace.Status.StatusCode)
 

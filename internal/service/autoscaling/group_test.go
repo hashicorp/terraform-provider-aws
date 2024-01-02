@@ -4113,11 +4113,11 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, v *elbv2.TargetGroup
 func testAccGroupConfig_launchConfigurationBase(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name_prefix   = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = %[2]q
 
   lifecycle {
@@ -4132,7 +4132,7 @@ func testAccGroupConfig_launchTemplateBase(rName, instanceType string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = %[2]q
 }
 `, rName, instanceType))
@@ -4270,7 +4270,7 @@ func testAccGroupConfig_simpleUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_launch_configuration" "test2" {
   name          = "%[1]s-2"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -4325,12 +4325,12 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_az(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -4348,12 +4348,12 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_vpcZoneIdentifier(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -4369,7 +4369,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_elbBase(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
@@ -4435,7 +4435,7 @@ resource "aws_elb" "test" {
 
 resource "aws_launch_configuration" "test" {
   name            = %[1]q
-  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.test.id]
 
@@ -4502,7 +4502,7 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupConfig_vpcLatticeBase(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
@@ -4518,7 +4518,7 @@ resource "aws_vpclattice_target_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 `, rName, targetGroupCount))
@@ -4554,7 +4554,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_trafficSourceELBs(rName string, elbCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
@@ -4566,7 +4566,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = %[1]q
 }
@@ -4641,12 +4641,12 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_trafficSourceELBv2(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 
   enable_monitoring = false
@@ -4710,7 +4710,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_trafficSourceVPCLatticeTargetGroups(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
   count = %[2]d
@@ -4727,7 +4727,7 @@ resource "aws_vpclattice_target_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -5322,7 +5322,7 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupConfig_instanceRefreshStart(rName, launchConfigurationNamePrefix string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -5345,7 +5345,7 @@ resource "aws_autoscaling_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name_prefix   = %[2]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.nano"
 
   lifecycle {
@@ -5387,7 +5387,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_loadBalancers(rName string, elbCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
@@ -5399,7 +5399,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = %[1]q
 }
@@ -5438,12 +5438,12 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_target(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 
   enable_monitoring = false
@@ -5472,7 +5472,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccGroupConfig_targetELBCapacity(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
@@ -5548,7 +5548,7 @@ resource "aws_route" "test" {
 
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 
   associate_public_ip_address = "true"
@@ -5659,11 +5659,11 @@ resource "aws_autoscaling_group" "test" {
 func testAccGroupConfig_partition(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "m5.large"
 
   placement {
@@ -6141,7 +6141,7 @@ EOF
 }
 
 resource "aws_launch_template" "test" {
-  image_id               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type          = "t3.micro"
   name                   = %[1]q
   user_data              = base64encode(local.user_data)

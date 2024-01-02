@@ -1,11 +1,55 @@
-## 5.31.0 (Unreleased)
+## 5.32.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_mq_broker_engine_types` ([#34232](https://github.com/hashicorp/terraform-provider-aws/issues/34232))
+* **New Resource:** `aws_ssoadmin_application_access_scope` ([#34811](https://github.com/hashicorp/terraform-provider-aws/issues/34811))
+
+ENHANCEMENTS:
+
+* data-source/aws_batch_compute_environment: Add `update_policy` attribute ([#34353](https://github.com/hashicorp/terraform-provider-aws/issues/34353))
+* data-source/aws_ecr_image: Add `image_uri` attribute ([#24526](https://github.com/hashicorp/terraform-provider-aws/issues/24526))
+* data-source/aws_lambda_function: Add `logging_config` attribute ([#35050](https://github.com/hashicorp/terraform-provider-aws/issues/35050))
+* data-source/aws_prometheus_workspace: Add `kms_key_arn` attribute ([#35062](https://github.com/hashicorp/terraform-provider-aws/issues/35062))
+* resource/aws_batch_compute_environment: Add `update_policy` parameter ([#34353](https://github.com/hashicorp/terraform-provider-aws/issues/34353))
+* resource/aws_dms_replication_task: Allow `cdc_start_time` to use [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted dates in addition to UNIX timestamps ([#31917](https://github.com/hashicorp/terraform-provider-aws/issues/31917))
+* resource/aws_dms_replication_task: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `replication_instance_arn`, allowing in-place migration between DMS instances ([#30721](https://github.com/hashicorp/terraform-provider-aws/issues/30721))
+* resource/aws_glue_classifier: Add `csv_classifier.serde` argument ([#34251](https://github.com/hashicorp/terraform-provider-aws/issues/34251))
+* resource/aws_kms_key: Add `xks_key_id` attribute ([#31216](https://github.com/hashicorp/terraform-provider-aws/issues/31216))
+* resource/aws_lambda_function: Add `logging_config` configuration block in support of [advanced logging controls](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced) ([#35050](https://github.com/hashicorp/terraform-provider-aws/issues/35050))
+* resource/aws_lambda_function: Add support for `python3.12` `runtime` value ([#35049](https://github.com/hashicorp/terraform-provider-aws/issues/35049))
+* resource/aws_lambda_layer_version: Add support for `python3.12` `compatible_runtimes` value ([#35049](https://github.com/hashicorp/terraform-provider-aws/issues/35049))
+* resource/aws_networkfirewall_firewall: Add configurable timeouts ([#34918](https://github.com/hashicorp/terraform-provider-aws/issues/34918))
+* resource/aws_prometheus_workspace: Add `kms_key_arn` argument, enabling encryption at-rest using AWS KMS Customer Managed Keys (CMK) ([#35062](https://github.com/hashicorp/terraform-provider-aws/issues/35062))
+* resource/aws_redshiftserverless_workgroup: Add `port` argument ([#34925](https://github.com/hashicorp/terraform-provider-aws/issues/34925))
+* resource/aws_s3_bucket: Modify resource Read to support third-party S3 API implementations. Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#35035](https://github.com/hashicorp/terraform-provider-aws/issues/35035))
+* resource/aws_s3_bucket: Modify server-side encryption configuration error handling, enabling support for NetApp StorageGRID ([#34890](https://github.com/hashicorp/terraform-provider-aws/issues/34890))
+* resource/aws_verifiedaccess_endpoint: Add `policy_document` argument ([#34264](https://github.com/hashicorp/terraform-provider-aws/issues/34264))
+
+BUG FIXES:
+
+* data-source/aws_lb_target_group: Change `deregistration_delay` from `TypeInt` to `TypeString` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
+* resource/aws_codebuild_project: Prevent erroneous diffs on `build_timeout` and `queued_timeout` for Lambda compute types ([#35043](https://github.com/hashicorp/terraform-provider-aws/issues/35043))
+* resource/aws_dms_replication_config: Prevent erroneous diffs on `replication_settings` ([#34356](https://github.com/hashicorp/terraform-provider-aws/issues/34356))
+* resource/aws_dms_replication_task: Prevent erroneous diffs on `replication_task_settings` ([#34356](https://github.com/hashicorp/terraform-provider-aws/issues/34356))
+* resource/aws_dynamodb_table: Fix error when waiting for snapshot to be created ([#34848](https://github.com/hashicorp/terraform-provider-aws/issues/34848))
+* resource/aws_finspace_kx_dataview: Properly set `arn` attribute on read, resolving persistent differences when `tags` are configured ([#34998](https://github.com/hashicorp/terraform-provider-aws/issues/34998))
+* resource/aws_lb_target_group: Fix diff on `stickiness.cookie_name` when `stickiness.type` is `lb_cookie` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
+* resource/aws_memorydb_cluster: Treat `snapshotting` status as pending when creating cluster ([#31077](https://github.com/hashicorp/terraform-provider-aws/issues/31077))
+* resource/aws_secretsmanager_secret_rotation: No longer ignores changes to `rotation_rules.automatically_after_days` when `rotation_rules.schedule_expression` is set. ([#35024](https://github.com/hashicorp/terraform-provider-aws/issues/35024))
+* resource/aws_ses_configuration_set: Fix `tracking_options` being omitted from state and resulting in persistent diff ([#35056](https://github.com/hashicorp/terraform-provider-aws/issues/35056))
+* resource/aws_ssoadmin_application: Fix `portal_options.sign_in_options.application_url` triggering `ValidationError` when unset ([#34967](https://github.com/hashicorp/terraform-provider-aws/issues/34967))
+
+## 5.31.0 (December 15, 2023)
 
 FEATURES:
 
 * **New Data Source:** `aws_polly_voices` ([#34916](https://github.com/hashicorp/terraform-provider-aws/issues/34916))
 * **New Data Source:** `aws_ssoadmin_application_assignments` ([#34796](https://github.com/hashicorp/terraform-provider-aws/issues/34796))
 * **New Data Source:** `aws_ssoadmin_principal_application_assignments` ([#34815](https://github.com/hashicorp/terraform-provider-aws/issues/34815))
+* **New Resource:** `aws_finspace_kx_dataview` ([#34828](https://github.com/hashicorp/terraform-provider-aws/issues/34828))
 * **New Resource:** `aws_finspace_kx_scaling_group` ([#34832](https://github.com/hashicorp/terraform-provider-aws/issues/34832))
+* **New Resource:** `aws_finspace_kx_volume` ([#34833](https://github.com/hashicorp/terraform-provider-aws/issues/34833))
 * **New Resource:** `aws_ssoadmin_trusted_token_issuer` ([#34839](https://github.com/hashicorp/terraform-provider-aws/issues/34839))
 
 ENHANCEMENTS:
@@ -18,6 +62,8 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Add support for IBM Db2 databases ([#34834](https://github.com/hashicorp/terraform-provider-aws/issues/34834))
 * resource/aws_dms_endpoint: Add `elasticsearch_settings.use_new_mapping_type` argument ([#29470](https://github.com/hashicorp/terraform-provider-aws/issues/29470))
 * resource/aws_dms_endpoint: Add `postgres_settings` configuration block ([#34724](https://github.com/hashicorp/terraform-provider-aws/issues/34724))
+* resource/aws_finspace_kx_cluster: Add `database.dataview_name`, `scaling_group_configuration`, and `tickerplant_log_configuration` arguments. ([#34831](https://github.com/hashicorp/terraform-provider-aws/issues/34831))
+* resource/aws_finspace_kx_cluster: The `capacity_configuration` argument is now optional. ([#34831](https://github.com/hashicorp/terraform-provider-aws/issues/34831))
 * resource/aws_lb: Add `connection_logs` configuration block ([#34864](https://github.com/hashicorp/terraform-provider-aws/issues/34864))
 * resource/aws_lb: Add plan-time validation that exactly one of either `subnets` or `subnet_mapping` is configured ([#33205](https://github.com/hashicorp/terraform-provider-aws/issues/33205))
 * resource/aws_lb: Allow the number of `subnet_mapping`s for Application Load Balancers to be changed without recreating the resource ([#33205](https://github.com/hashicorp/terraform-provider-aws/issues/33205))

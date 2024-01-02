@@ -40,6 +40,7 @@ import (
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
+	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -56,6 +57,7 @@ import (
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -207,7 +209,6 @@ import (
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
@@ -652,6 +653,10 @@ func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greeng
 	return errs.Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass, make(map[string]any)))
 }
 
+func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation_sdkv2.Client {
+	return errs.Must(client[*groundstation_sdkv2.Client](ctx, c, names.GroundStation, make(map[string]any)))
+}
+
 func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
 	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty, make(map[string]any)))
 }
@@ -786,6 +791,10 @@ func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sd
 
 func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
 	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ, make(map[string]any)))
+}
+
+func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
+	return errs.Must(client[*mq_sdkv2.Client](ctx, c, names.MQ, make(map[string]any)))
 }
 
 func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
@@ -954,10 +963,6 @@ func (c *AWSClient) Route53RecoveryReadinessConn(ctx context.Context) *route53re
 
 func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sdkv1.Route53Resolver {
 	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver, make(map[string]any)))
-}
-
-func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
-	return errs.Must(conn[*s3_sdkv1.S3](ctx, c, names.S3, make(map[string]any)))
 }
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
