@@ -85,6 +85,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.5
+	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/signer v1.19.6
@@ -100,9 +101,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.5
+	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.6
-	github.com/beevik/etree v1.2.0
+	github.com/beevik/etree v1.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0

@@ -1316,13 +1316,13 @@ resource "aws_ssm_parameter" "test" {
 
 func testAccParameterConfig_dataTypeEC2Image(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name      = %[1]q
   data_type = "aws:ec2:image"
   type      = "String"
-  value     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  value     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 }
 `, rName))
 }
