@@ -1091,7 +1091,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 // ValidationError: Invalid use of EC2 'Recover' action. i-abcd1234 is not a valid EC2 instance.
 func testAccMetricAlarmConfig_actionsEC2Automate(rName, action string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -1099,7 +1099,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test[0].id
 
