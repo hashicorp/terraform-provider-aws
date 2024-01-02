@@ -465,7 +465,7 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 	ctx := acctest.Context(t)
 	var ce batch.ComputeEnvironmentDetail
 	resourceName := "aws_batch_compute_environment.test"
-	amiDatasourceName := "data.aws_ami.amzn-ami-minimal-hvm-ebs"
+	amiDatasourceName := "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	keyPairResourceName := "aws_key_pair.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -2538,7 +2538,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
 
@@ -2563,7 +2563,7 @@ resource "aws_batch_compute_environment" "test" {
     }
 
     ec2_key_pair = aws_key_pair.test.id
-    image_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    image_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   }
 
   service_role = aws_iam_role.batch_service.arn
@@ -2992,7 +2992,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccComputeEnvironmentConfig_ec2Configuration(rName string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
 
@@ -3001,12 +3001,12 @@ resource "aws_batch_compute_environment" "test" {
     instance_type = ["optimal"]
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
       image_type        = "ECS_AL2"
     }
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
       image_type        = "ECS_AL2_NVIDIA"
     }
 
@@ -3031,7 +3031,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccComputeEnvironmentConfig_ec2ConfigurationPlacementGroup(rName string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
   strategy = "cluster"
@@ -3045,12 +3045,12 @@ resource "aws_batch_compute_environment" "test" {
     instance_type = ["optimal"]
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
       image_type        = "ECS_AL2"
     }
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
       image_type        = "ECS_AL2_NVIDIA"
     }
 
@@ -3168,7 +3168,7 @@ func testAccComputeenvironmentConfig_ec2Update(rName string, publicKey string) s
 	return acctest.ConfigCompose(
 		testAccComputeEnvironmentConfig_base(rName),
 		testAccComputeEnvironmentConfig_baseForUpdates(rName, publicKey),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -3179,7 +3179,7 @@ resource "aws_batch_compute_environment" "test" {
     ec2_key_pair        = aws_key_pair.test.id
     instance_role       = aws_iam_instance_profile.ecs_instance_2.arn
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
       image_type        = "ECS_AL2"
     }
     launch_template {
