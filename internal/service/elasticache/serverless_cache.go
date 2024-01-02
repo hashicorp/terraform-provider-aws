@@ -3,570 +3,503 @@
 
 package elasticache
 
-//
-//import (
-//	"context"
-//	"log"
-//	"time"
-//
-//	"github.com/aws/aws-sdk-go/aws"
-//	"github.com/aws/aws-sdk-go/service/elasticache"
-//	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-//	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-//	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-//	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-//	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-//	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-//	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-//	"github.com/hashicorp/terraform-provider-aws/names"
-//)
-//
-//const (
-//	serverlesClusterCreatedTimeout = 15 * time.Minute
-//)
-//
-//// @SDKResource("aws_elasticache_serverless", name="Serverless Cache")
-//// @Tags(identifierAttribute="arn")
-//func ResourceServerlessCache() *schema.Resource {
-//	return &schema.Resource{
-//		CreateWithoutTimeout: resourceServerlessCacheCreate,
-//		ReadWithoutTimeout:   resourceServerlessCacheRead,
-//		UpdateWithoutTimeout: resourceServerlessCacheUpdate,
-//		DeleteWithoutTimeout: resourceServerlessCacheDelete,
-//
-//		Importer: &schema.ResourceImporter{
-//			StateContext: schema.ImportStatePassthroughContext,
-//		},
-//
-//		Schema: map[string]*schema.Schema{
-//			"arn": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"engine": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//			},
-//			"serverless_cache_name": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//			},
-//			"cache_usage_limits": {
-//				Type:     schema.TypeList,
-//				Optional: true,
-//				MaxItems: 1,
-//				Elem: &schema.Resource{
-//					Schema: map[string]*schema.Schema{
-//						"data_storage": {
-//							Type:     schema.TypeList,
-//							Optional: true,
-//							MaxItems: 1,
-//							Elem: &schema.Resource{
-//								Schema: map[string]*schema.Schema{
-//									"maximum": {
-//										Type:     schema.TypeInt,
-//										Required: true,
-//									},
-//									"unit": {
-//										Type:     schema.TypeString,
-//										Required: true,
-//									},
-//								},
-//							},
-//						},
-//						"ecpu_per_second": {
-//							Type:     schema.TypeList,
-//							Optional: true,
-//							MaxItems: 1,
-//							Elem: &schema.Resource{
-//								Schema: map[string]*schema.Schema{
-//									"maximum": {
-//										Type:     schema.TypeInt,
-//										Required: true,
-//									},
-//								},
-//							},
-//						},
-//					},
-//				},
-//			},
-//			"create_time": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"daily_snapshot_time": {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//				Computed: true,
-//			},
-//			"description": {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//				Computed: true,
-//			},
-//			"endpoint": {
-//				Type:     schema.TypeList,
-//				Computed: true,
-//				//MaxItems: 1,
-//				Elem: &schema.Resource{
-//					Schema: map[string]*schema.Schema{
-//						"address": {
-//							Type:     schema.TypeString,
-//							Computed: true,
-//						},
-//						"port": {
-//							Type:     schema.TypeInt,
-//							Computed: true,
-//						},
-//					},
-//				},
-//			},
-//			"full_engine_version": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"reader_endpoint": {
-//				Type:     schema.TypeList,
-//				Computed: true,
-//				//MaxItems: 1,
-//				Elem: &schema.Resource{
-//					Schema: map[string]*schema.Schema{
-//						"address": {
-//							Type:     schema.TypeString,
-//							Computed: true,
-//						},
-//						"port": {
-//							Type:     schema.TypeInt,
-//							Computed: true,
-//						},
-//					},
-//				},
-//			},
-//			"status": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"kms_key_id": {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//				Computed: true,
-//			},
-//			"major_engine_version": {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//				Computed: true,
-//			},
-//			"security_group_ids": {
-//				Type:     schema.TypeSet,
-//				Optional: true,
-//				Computed: true,
-//				Elem:     &schema.Schema{Type: schema.TypeString},
-//			},
-//			"snapshot_arns": {
-//				Type:     schema.TypeList,
-//				MaxItems: 1,
-//				Optional: true,
-//				ForceNew: true,
-//				Elem: &schema.Schema{
-//					Type: schema.TypeString,
-//					ValidateFunc: validation.All(
-//						verify.ValidARN,
-//						validation.StringDoesNotContainAny(","),
-//					),
-//				},
-//			},
-//			"snapshot_retention_limit": {
-//				Type:         schema.TypeInt,
-//				Optional:     true,
-//				Computed:     true,
-//				ValidateFunc: validation.IntAtMost(35),
-//			},
-//			"subnet_ids": {
-//				Type:     schema.TypeSet,
-//				Optional: true,
-//				Computed: true,
-//				Elem:     &schema.Schema{Type: schema.TypeString},
-//			},
-//			"user_group_id": {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//				Computed: true,
-//			},
-//			names.AttrTags:    tftags.TagsSchema(),
-//			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-//		},
-//		CustomizeDiff: verify.SetTagsDiff,
-//	}
-//}
-//
-//func resourceServerlessCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
-//
-//	name := d.Get("serverless_cache_name").(string)
-//	engine := d.Get("engine").(string)
-//
-//	input := &elasticache.CreateServerlessCacheInput{
-//		ServerlessCacheName: aws.String(name),
-//		Engine:              aws.String(engine),
-//		Tags:                getTagsIn(ctx),
-//	}
-//
-//	if v, ok := d.GetOk("cache_usage_limits"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-//		input.CacheUsageLimits = expandCacheUsageLimits(v.([]interface{}))
-//	}
-//
-//	if v, ok := d.GetOk("daily_snapshot_time"); ok {
-//		input.DailySnapshotTime = aws.String(v.(string))
-//	}
-//
-//	if v, ok := d.GetOk("description"); ok {
-//		input.Description = aws.String(v.(string))
-//	}
-//
-//	if v, ok := d.GetOk("kms_key_id"); ok {
-//		input.KmsKeyId = aws.String(v.(string))
-//	}
-//
-//	if v, ok := d.GetOk("major_engine_version"); ok {
-//		input.MajorEngineVersion = aws.String(v.(string))
-//	}
-//
-//	if SGIds := d.Get("security_group_ids").(*schema.Set); SGIds.Len() > 0 {
-//		input.SecurityGroupIds = flex.ExpandStringSet(SGIds)
-//	}
-//
-//	snaps := d.Get("snapshot_arns").([]interface{})
-//	if len(snaps) > 0 {
-//		input.SnapshotArnsToRestore = flex.ExpandStringList(snaps)
-//		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
-//	}
-//
-//	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
-//		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
-//	}
-//
-//	if SubnetIds := d.Get("subnet_ids").(*schema.Set); SubnetIds.Len() > 0 {
-//		input.SubnetIds = flex.ExpandStringSet(SubnetIds)
-//	}
-//
-//	if v, ok := d.GetOk("user_group_id"); ok {
-//		input.UserGroupId = aws.String(v.(string))
-//	}
-//
-//	output, err := conn.CreateServerlessCacheWithContext(ctx, input)
-//
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "creating Serverless ElastiCache  (%s): %s", name, err)
-//	}
-//
-//	d.SetId(aws.StringValue(output.ServerlessCache.ServerlessCacheName))
-//
-//	if _, err := waitServerlesssCacheAvailable(ctx, conn, d.Id(), serverlesClusterCreatedTimeout); err != nil {
-//		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) create: %s", d.Id(), err)
-//	}
-//	return append(diags, resourceServerlessCacheRead(ctx, d, meta)...)
-//}
-//
-//func resourceServerlessCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
-//
-//	output, err := FindElasiCacheServerlessByID(ctx, conn, d.Id())
-//
-//	if !d.IsNewResource() && tfresource.NotFound(err) {
-//		log.Printf("[WARN] Serverless ElastiCache (%s) not found, removing from state", d.Id())
-//		d.SetId("")
-//		return diags
-//	}
-//
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "reading Serverless ElastiCache (%s): %s", d.Id(), err)
-//	}
-//
-//	d.Set("engine", output.Engine)
-//	d.Set("serverless_cache_name", output.ServerlessCacheName)
-//	d.Set("arn", output.ARN)
-//	d.Set("description", output.Description)
-//	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
-//
-//	if err := d.Set("cache_usage_limits", flattenCacheUsageLimits(output.CacheUsageLimits)); err != nil {
-//		return sdkdiag.AppendErrorf(diags, "setting cache_usage_limits: %s", err)
-//	}
-//
-//	d.Set("daily_snapshot_time", output.DailySnapshotTime)
-//	d.Set("kms_key_id", output.KmsKeyId)
-//	d.Set("major_engine_version", output.MajorEngineVersion)
-//	d.Set("security_group_ids", flex.FlattenStringSet(output.SecurityGroupIds))
-//	d.Set("snapshot_retention_limit", output.SnapshotRetentionLimit)
-//	d.Set("user_group_id", output.UserGroupId)
-//
-//	if output.CreateTime != nil {
-//		d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
-//	} else {
-//		d.Set("create_time", nil)
-//	}
-//
-//	if err := d.Set("endpoint", flattenEndpoint(output.Endpoint)); err != nil {
-//		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
-//	}
-//
-//	d.Set("full_engine_version", output.FullEngineVersion)
-//
-//	if err := d.Set("reader_endpoint", flattenEndpoint(output.ReaderEndpoint)); err != nil {
-//		return sdkdiag.AppendErrorf(diags, "setting reader_endpoint: %s", err)
-//	}
-//	d.Set("status", output.Status)
-//
-//	return diags
-//}
-//
-//func resourceServerlessCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
-//
-//	if d.HasChanges("daily_snapshot_time") {
-//		input := &elasticache.ModifyServerlessCacheInput{
-//
-//			DailySnapshotTime:   aws.String(d.Get("daily_snapshot_time").(string)),
-//			ServerlessCacheName: aws.String(d.Get("serverless_cache_name").(string)),
-//		}
-//
-//		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
-//		}
-//
-//		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
-//		}
-//	}
-//
-//	if d.HasChanges("description") {
-//		input := &elasticache.ModifyServerlessCacheInput{
-//
-//			Description:         aws.String(d.Get("description").(string)),
-//			ServerlessCacheName: aws.String(d.Get("serverless_cache_name").(string)),
-//		}
-//
-//		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
-//		}
-//
-//		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
-//		}
-//	}
-//
-//	if d.HasChange("cache_usage_limits") {
-//		input := &elasticache.ModifyServerlessCacheInput{
-//
-//			CacheUsageLimits:    expandCacheUsageLimits(d.Get("cache_usage_limits").([]interface{})),
-//			ServerlessCacheName: aws.String(d.Get("serverless_cache_name").(string)),
-//		}
-//
-//		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
-//		}
-//	}
-//
-//	if d.HasChanges("security_group_ids") {
-//		input := &elasticache.ModifyServerlessCacheInput{
-//
-//			SecurityGroupIds:    flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
-//			ServerlessCacheName: aws.String(d.Get("serverless_cache_name").(string)),
-//		}
-//
-//		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
-//		}
-//
-//		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
-//		}
-//	}
-//
-//	if d.HasChanges("snapshot_retention_limit") {
-//		input := &elasticache.ModifyServerlessCacheInput{
-//
-//			SnapshotRetentionLimit: aws.Int64(int64(d.Get("snapshot_retention_limit").(int))),
-//			ServerlessCacheName:    aws.String(d.Get("serverless_cache_name").(string)),
-//		}
-//
-//		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
-//		}
-//
-//		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
-//		}
-//	}
-//
-//	if d.HasChanges("user_group_id") {
-//		input := &elasticache.ModifyServerlessCacheInput{
-//
-//			UserGroupId:         aws.String(d.Get("user_group_id").(string)),
-//			ServerlessCacheName: aws.String(d.Get("serverless_cache_name").(string)),
-//		}
-//
-//		_, err := conn.ModifyServerlessCacheWithContext(ctx, input)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "updating Serverless ElastiCache (%s): %s", d.Id(), err)
-//		}
-//
-//		_, err = waitServerlesssCacheAvailable(ctx, conn, d.Id(), ServerlessCacheUpdatedTimeout)
-//		if err != nil {
-//			return sdkdiag.AppendErrorf(diags, "waiting for Serverless ElastiCache Cluster (%s) to update: %s", d.Id(), err)
-//		}
-//	}
-//
-//	return append(diags, resourceServerlessCacheRead(ctx, d, meta)...)
-//}
-//
-//func resourceServerlessCacheDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
-//
-//	log.Printf("[DEBUG] Deleting Serverless ElastiCache: %s", d.Id())
-//	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
-//		return conn.DeleteServerlessCacheWithContext(ctx, &elasticache.DeleteServerlessCacheInput{
-//			ServerlessCacheName: aws.String(d.Id()),
-//		})
-//	}, "DependencyViolation")
-//
-//	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeServerlessCacheNotFoundFault) {
-//		return diags
-//	}
-//
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "deleting Serverless ElastiCache (%s): %s", d.Id(), err)
-//	}
-//
-//	_, err = waitServerlessCacheDeleted(ctx, conn, d.Id(), ServerlessCacheDeletedTimeout)
-//	if err != nil {
-//		return sdkdiag.AppendErrorf(diags, "waiting for Serverless Cache Cluster (%s) to be deleted: %s", d.Id(), err)
-//	}
-//
-//	return diags
-//}
-//
-//func expandCacheUsageLimits(tfMap []interface{}) *elasticache.CacheUsageLimits {
-//	if tfMap == nil {
-//		return nil
-//	}
-//
-//	apiObject := &elasticache.CacheUsageLimits{}
-//	tfMapRaw := tfMap[0].(map[string]interface{})
-//
-//	if v, ok := tfMapRaw["data_storage"].([]interface{}); ok && len(v) > 0 {
-//		apiObject.DataStorage = expandDataStorage(v)
-//	}
-//
-//	if v, ok := tfMapRaw["ecpu_per_second"].([]interface{}); ok && len(v) > 0 {
-//		apiObject.ECPUPerSecond = expandECPUPerSecond(v)
-//	}
-//
-//	return apiObject
-//}
-//
-//func expandDataStorage(tfMap []interface{}) *elasticache.DataStorage {
-//	if tfMap == nil {
-//		return nil
-//	}
-//
-//	m := tfMap[0].(map[string]interface{})
-//	apiObject := &elasticache.DataStorage{
-//		Maximum: aws.Int64(int64(m["maximum"].(int))),
-//		Unit:    aws.String(m["unit"].(string)),
-//	}
-//
-//	return apiObject
-//}
-//
-//func expandECPUPerSecond(tfMap []interface{}) *elasticache.ECPUPerSecond {
-//	if tfMap == nil {
-//		return nil
-//	}
-//
-//	m := tfMap[0].(map[string]interface{})
-//	apiObject := &elasticache.ECPUPerSecond{
-//		Maximum: aws.Int64(int64(m["maximum"].(int))),
-//	}
-//
-//	return apiObject
-//}
-//
-//func flattenCacheUsageLimits(apiObject *elasticache.CacheUsageLimits) []map[string]interface{} {
-//	if apiObject == nil {
-//		return []map[string]interface{}{}
-//	}
-//
-//	m := map[string]interface{}{
-//		"data_storage":    flattenDataSorage(apiObject.DataStorage),
-//		"ecpu_per_second": flattenECPUSecond(apiObject.ECPUPerSecond),
-//	}
-//
-//	return []map[string]interface{}{m}
-//}
-//
-//func flattenDataSorage(apiObjects *elasticache.DataStorage) []map[string]interface{} {
-//	if apiObjects == nil {
-//		return nil
-//	}
-//
-//	var tfList []map[string]interface{}
-//
-//	flattenedObject := map[string]interface{}{}
-//	if v := apiObjects.Maximum; v != nil {
-//		flattenedObject["maximum"] = aws.Int64Value(v)
-//	}
-//
-//	if v := apiObjects.Unit; v != nil {
-//		flattenedObject["unit"] = aws.StringValue(v)
-//	}
-//
-//	tfList = append(tfList, flattenedObject)
-//
-//	return tfList
-//}
-//
-//func flattenECPUSecond(apiObjects *elasticache.ECPUPerSecond) []map[string]interface{} {
-//	if apiObjects == nil {
-//		return nil
-//	}
-//
-//	var tfList []map[string]interface{}
-//
-//	flattenedObject := map[string]interface{}{}
-//	if v := apiObjects.Maximum; v != nil {
-//		flattenedObject["maximum"] = aws.Int64Value(v)
-//	}
-//
-//	tfList = append(tfList, flattenedObject)
-//
-//	return tfList
-//}
-//
-//func flattenEndpoint(apiObject *elasticache.Endpoint) []map[string]interface{} {
-//	if apiObject == nil {
-//		return []map[string]interface{}{}
-//	}
-//
-//	m := map[string]interface{}{
-//		"address": aws.StringValue(apiObject.Address),
-//		"port":    aws.Int64Value(apiObject.Port),
-//	}
-//
-//	return []map[string]interface{}{m}
-//}
+import (
+	"context"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource(name="Serverless")
+// @Tags(identifierAttribute="arn")
+func newResourceServerlessCache(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceServerlessCache{}
+	r.SetDefaultCreateTimeout(40 * time.Minute)
+	r.SetDefaultUpdateTimeout(80 * time.Minute)
+	r.SetDefaultDeleteTimeout(40 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameServerlessCache = "Serverless Cache"
+)
+
+type resourceServerlessCache struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
+
+func (r *resourceServerlessCache) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_elasticache_serverless_cache"
+}
+
+func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"create_time": schema.StringAttribute{
+				CustomType: fwtypes.TimestampType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"daily_snapshot_time": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"endpoint": schema.ListAttribute{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpoint](ctx),
+				ElementType: fwtypes.NewObjectTypeOf[endpoint](ctx),
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"engine": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"full_engine_version": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"id": framework.IDAttribute(),
+			"kms_key_id": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"major_engine_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"reader_endpoint": schema.ListAttribute{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpoint](ctx),
+				ElementType: fwtypes.NewObjectTypeOf[endpoint](ctx),
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"security_group_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"snapshot_arns_to_restore": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfARNType,
+				ElementType: fwtypes.ARNType,
+				Optional:    true,
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+			},
+			"snapshot_retention_limit": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int64{
+					int64validator.AtMost(35),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"status": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"subnet_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+					setplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"user_group_id": schema.StringAttribute{
+				Optional: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"cache_usage_limits": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[cacheUsageLimits](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"data_storage": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dataStorage](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"maximum": schema.Int64Attribute{
+										Required: true,
+									},
+									"unit": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
+										Required:   true,
+									},
+								},
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+						},
+						"ecpu_per_second": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[ecpuPerSecond](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"maximum": schema.Int64Attribute{
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if s.Blocks == nil {
+		s.Blocks = make(map[string]schema.Block)
+	}
+	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+		Create: true,
+		Update: true,
+		Delete: true,
+	})
+
+	response.Schema = s
+}
+
+func (r *resourceServerlessCache) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().ElastiCacheClient(ctx)
+	var plan resourceServerlessData
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input := &elasticache.CreateServerlessCacheInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input.ServerlessCacheName = flex.StringFromFramework(ctx, plan.Name)
+	input.Tags = getTagsInV2(ctx)
+
+	output, err := conn.CreateServerlessCache(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionCreating, ResNameServerlessCache, plan.Name.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state := plan
+	state.ID = flex.StringToFramework(ctx, output.ServerlessCache.ServerlessCacheName)
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	out, err := waitServerlessCacheAvailable(ctx, conn, aws.ToString(output.ServerlessCache.ServerlessCacheName), createTimeout)
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForCreation, ResNameServerlessCache, plan.Name.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+func (r *resourceServerlessCache) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	conn := r.Meta().ElastiCacheClient(ctx)
+	var state resourceServerlessData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := FindServerlessCacheByID(ctx, conn, state.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionSetting, ResNameServerlessCache, state.Name.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	state.Name = flex.StringToFramework(ctx, out.ServerlessCacheName)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+func (r *resourceServerlessCache) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	conn := r.Meta().ElastiCacheClient(ctx)
+	var state, plan resourceServerlessData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if serverlessCacheHasChanges(ctx, plan, state) {
+		input := &elasticache.ModifyServerlessCacheInput{}
+
+		response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.ServerlessCacheName = flex.StringFromFramework(ctx, state.Name)
+
+		_, err := conn.ModifyServerlessCache(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ElastiCache, create.ErrActionUpdating, ResNameServerlessCache, state.Name.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitServerlessCacheAvailable(ctx, conn, state.Name.ValueString(), updateTimeout)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForUpdate, ResNameServerlessCache, plan.Name.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	// AWS returns null values for certain values that are available on redis only.
+	// always set these values to the state value to avoid unnecessary diff failures on computed values.
+	out, err := FindServerlessCacheByID(ctx, conn, state.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionUpdating, ResNameServerlessCache, state.Name.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceServerlessCache) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().ElastiCacheClient(ctx)
+	var state resourceServerlessData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]interface{}{
+		"id": state.ID.ValueString(),
+	})
+
+	input := &elasticache.DeleteServerlessCacheInput{
+		ServerlessCacheName: flex.StringFromFramework(ctx, state.ID),
+		FinalSnapshotName:   nil,
+	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+		return conn.DeleteServerlessCache(ctx, input)
+	}, "DependencyViolation")
+
+	if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionDeleting, ResNameServerlessCache, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	deleteTimeout := r.CreateTimeout(ctx, state.Timeouts)
+	_, err = waitServerlessCacheDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForDeletion, ResNameServerlessCache, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceServerlessCache) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+}
+
+func (r *resourceServerlessCache) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+type resourceServerlessData struct {
+	ARN                    types.String                                      `tfsdk:"arn"`
+	CacheUsageLimits       fwtypes.ListNestedObjectValueOf[cacheUsageLimits] `tfsdk:"cache_usage_limits"`
+	CreateTime             fwtypes.Timestamp                                 `tfsdk:"create_time"`
+	DailySnapshotTime      types.String                                      `tfsdk:"daily_snapshot_time"`
+	Description            types.String                                      `tfsdk:"description"`
+	Endpoint               fwtypes.ListNestedObjectValueOf[endpoint]         `tfsdk:"endpoint"`
+	Engine                 types.String                                      `tfsdk:"engine"`
+	FullEngineVersion      types.String                                      `tfsdk:"full_engine_version"`
+	ID                     types.String                                      `tfsdk:"id"`
+	KmsKeyId               types.String                                      `tfsdk:"kms_key_id"`
+	MajorEngineVersion     types.String                                      `tfsdk:"major_engine_version"`
+	Name                   types.String                                      `tfsdk:"name"`
+	ReaderEndpoint         fwtypes.ListNestedObjectValueOf[endpoint]         `tfsdk:"reader_endpoint"`
+	SecurityGroupIds       fwtypes.SetValueOf[types.String]                  `tfsdk:"security_group_ids"`
+	SnapshotARNsToRestore  fwtypes.ListValueOf[fwtypes.ARN]                  `tfsdk:"snapshot_arns_to_restore"`
+	SnapshotRetentionLimit types.Int64                                       `tfsdk:"snapshot_retention_limit"`
+	Status                 types.String                                      `tfsdk:"status"`
+	SubnetIds              fwtypes.SetValueOf[types.String]                  `tfsdk:"subnet_ids"`
+	Tags                   types.Map                                         `tfsdk:"tags"`
+	TagsAll                types.Map                                         `tfsdk:"tags_all"`
+	Timeouts               timeouts.Value                                    `tfsdk:"timeouts"`
+	UserGroupID            types.String                                      `tfsdk:"user_group_id"`
+}
+
+type cacheUsageLimits struct {
+	DataStorage   fwtypes.ListNestedObjectValueOf[dataStorage]   `tfsdk:"data_storage"`
+	ECPUPerSecond fwtypes.ListNestedObjectValueOf[ecpuPerSecond] `tfsdk:"ecpu_per_second"`
+}
+
+type dataStorage struct {
+	Maximum types.Int64                                  `tfsdk:"maximum"`
+	Unit    fwtypes.StringEnum[awstypes.DataStorageUnit] `tfsdk:"unit"`
+}
+
+type ecpuPerSecond struct {
+	Maximum types.Int64 `tfsdk:"maximum"`
+}
+
+type endpoint struct {
+	Address types.String `tfsdk:"address"`
+	Port    types.Int64  `tfsdk:"port"`
+}
+
+func serverlessCacheHasChanges(_ context.Context, plan, state resourceServerlessData) bool {
+	return !plan.CacheUsageLimits.Equal(state.CacheUsageLimits) ||
+		!plan.DailySnapshotTime.Equal(state.DailySnapshotTime) ||
+		!plan.Description.Equal(state.Description) ||
+		!plan.UserGroupID.Equal(state.UserGroupID) ||
+		!plan.SecurityGroupIds.Equal(state.SecurityGroupIds) ||
+		!plan.SnapshotRetentionLimit.Equal(state.SnapshotRetentionLimit)
+}
