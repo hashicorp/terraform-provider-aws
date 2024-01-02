@@ -170,6 +170,7 @@ provider "aws" {
   <li><code>glue</code></li>
   <li><code>grafana</code> (or <code>managedgrafana</code> or <code>amg</code>)</li>
   <li><code>greengrass</code></li>
+  <li><code>groundstation</code></li>
   <li><code>guardduty</code></li>
   <li><code>healthlake</code></li>
   <li><code>iam</code></li>

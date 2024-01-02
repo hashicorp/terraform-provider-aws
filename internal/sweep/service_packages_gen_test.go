@@ -105,6 +105,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/greengrass"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/groundstation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -321,6 +322,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		glue.ServicePackage(ctx),
 		grafana.ServicePackage(ctx),
 		greengrass.ServicePackage(ctx),
+		groundstation.ServicePackage(ctx),
 		guardduty.ServicePackage(ctx),
 		healthlake.ServicePackage(ctx),
 		iam.ServicePackage(ctx),
