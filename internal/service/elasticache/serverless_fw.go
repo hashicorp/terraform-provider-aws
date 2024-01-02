@@ -91,6 +91,9 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 			},
 			"engine": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"full_engine_version": schema.StringAttribute{
 				Computed: true,
@@ -101,12 +104,16 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 			"id": framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"major_engine_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -166,6 +173,7 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 				Computed:    true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
+					setplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
