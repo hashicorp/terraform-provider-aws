@@ -1,7 +1,7 @@
 ---
 subcategory: "ElastiCache"
 layout: "aws"
-page_title: "AWS: aws_elasticache_serverless"
+page_title: "AWS: aws_elasticache_serverless_cache"
 description: |-
   Provides an ElastiCache Serverless Cluster resource.
 ---
@@ -15,7 +15,7 @@ Provides an ElastiCache Serverlesss Cluster resource which manages memcache or r
 ### Memcached Serverless
 
 ```terraform
-resource "aws_elasticache_serverless" "example" {
+resource "aws_elasticache_serverless_cache" "example" {
   engine                = "memcached"
   serverless_cache_name = "example"
   cache_usage_limits {
@@ -38,7 +38,7 @@ resource "aws_elasticache_serverless" "example" {
 ### Redis Serverless
 
 ```terraform
-resource "aws_elasticache_serverless" "example" {
+resource "aws_elasticache_serverless_cache" "example" {
   engine                = "redis"
   serverless_cache_name = "example"
   cache_usage_limits {
@@ -65,7 +65,7 @@ resource "aws_elasticache_serverless" "example" {
 The following arguments are required:
 
 * `engine` – (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
-* `serverless_cache_name` – (Required) The Cluster name which serves as a unique identifier to the serverless cache
+* `name` – (Required) The Cluster name which serves as a unique identifier to the serverless cache
 
 The following arguments are optional:
 
@@ -127,8 +127,8 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to                    = aws_elasticache_serverless.my_cluster
-  serverless_cache_name = "my_cluster"
+  to = aws_elasticache_serverless.my_cluster
+  id = "my_cluster"
 }
 ```
 
