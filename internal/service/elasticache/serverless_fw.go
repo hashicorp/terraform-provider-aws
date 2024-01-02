@@ -102,10 +102,10 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 			"id": framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				//Computed: true,
+				//PlanModifiers: []planmodifier.String{
+				//	stringplanmodifier.UseStateForUnknown(),
+				//},
 			},
 			"major_engine_version": schema.StringAttribute{
 				Optional: true,
@@ -177,10 +177,10 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"user_group_id": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				//Computed: true,
+				//PlanModifiers: []planmodifier.String{
+				//	stringplanmodifier.UseStateForUnknown(),
+				//},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -281,6 +281,9 @@ func (r *resourceServerlessCache) Create(ctx context.Context, request resource.C
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+
+	state.DailySnapshotTime = flex.StringToFrameworkLegacy(ctx, out.DailySnapshotTime)
+	state.SnapshotRetentionLimit = flex.Int32ToFrameworkLegacy(ctx, out.SnapshotRetentionLimit)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -391,14 +394,14 @@ func (r *resourceServerlessCache) ModifyPlan(ctx context.Context, request resour
 type resourceServerlessData struct {
 	ARN                    types.String                                      `tfsdk:"arn"`
 	CacheUsageLimits       fwtypes.ListNestedObjectValueOf[cacheUsageLimits] `tfsdk:"cache_usage_limits"`
-	CreateTime             types.String                                      `tfsdk:"create_time"`
+	CreateTime             fwtypes.Timestamp                                 `tfsdk:"create_time"`
 	DailySnapshotTime      types.String                                      `tfsdk:"daily_snapshot_time"`
 	Description            types.String                                      `tfsdk:"description"`
 	Endpoint               fwtypes.ListNestedObjectValueOf[endpoint]         `tfsdk:"endpoint"`
 	Engine                 types.String                                      `tfsdk:"engine"`
 	FullEngineVersion      types.String                                      `tfsdk:"full_engine_version"`
 	ID                     types.String                                      `tfsdk:"id"`
-	KmsKeyID               types.String                                      `tfsdk:"kms_key_id"`
+	KmsKeyId               types.String                                      `tfsdk:"kms_key_id"`
 	MajorEngineVersion     types.String                                      `tfsdk:"major_engine_version"`
 	Name                   types.String                                      `tfsdk:"name"`
 	ReaderEndpoint         fwtypes.ListNestedObjectValueOf[endpoint]         `tfsdk:"reader_endpoint"`
@@ -406,7 +409,7 @@ type resourceServerlessData struct {
 	SnapshotARNsToRestore  fwtypes.ListValueOf[fwtypes.ARN]                  `tfsdk:"snapshot_arns_to_restore"`
 	SnapshotRetentionLimit types.Int64                                       `tfsdk:"snapshot_retention_limit"`
 	Status                 types.String                                      `tfsdk:"status"`
-	SubnetIds              fwtypes.SetNestedObjectValueOf[types.String]      `tfsdk:"subnet_ids"`
+	SubnetIds              fwtypes.SetValueOf[types.String]                  `tfsdk:"subnet_ids"`
 	Tags                   types.Map                                         `tfsdk:"tags"`
 	TagsAll                types.Map                                         `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                    `tfsdk:"timeouts"`

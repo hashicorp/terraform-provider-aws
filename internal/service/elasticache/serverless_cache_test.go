@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,7 +27,7 @@ func TestAccElastiCacheServerless_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless.test"
-	var serverlessElasticCache elasticache.ServerlessCache
+	var serverlessElasticCache awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -69,7 +70,7 @@ func TestAccElastiCacheServerless_basicRedis(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless.test"
-	var serverlessElasticCache elasticache.ServerlessCache
+	var serverlessElasticCache awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -113,7 +114,7 @@ func TestAccElastiCacheServerless_full(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless.test"
-	var serverlessElasticCache elasticache.ServerlessCache
+	var serverlessElasticCache awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -156,7 +157,7 @@ func TestAccElastiCacheServerless_fullRedis(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless.test"
-	var serverlessElasticCache elasticache.ServerlessCache
+	var serverlessElasticCache awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -201,7 +202,7 @@ func TestAccElastiCacheServerless_update(t *testing.T) {
 	descriptionOld := "Memcached Serverless Cluter"
 	descriptionNew := "Memcached Serverless Cluter updated"
 	resourceName := "aws_elasticache_serverless.test"
-	var serverlessElasticCache elasticache.ServerlessCache
+	var serverlessElasticCache awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -262,7 +263,7 @@ func TestAccElastiCacheServerless_disappears(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_serverless.test"
-	var serverlessElasticCache elasticache.ServerlessCache
+	var serverlessElasticCache awstypes.ServerlessCache
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -275,7 +276,7 @@ func TestAccElastiCacheServerless_disappears(t *testing.T) {
 				Config: testAccServerlessElasticCacheConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlesssElasticCacheExists(ctx, resourceName, &serverlessElasticCache),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceServerlessCache(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceServerlessCache, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -283,7 +284,7 @@ func TestAccElastiCacheServerless_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckServerlesssElasticCacheExists(ctx context.Context, resourceName string, v *elasticache.ServerlessCache) resource.TestCheckFunc {
+func testAccCheckServerlesssElasticCacheExists(ctx context.Context, resourceName string, v *awstypes.ServerlessCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -294,13 +295,13 @@ func testAccCheckServerlesssElasticCacheExists(ctx context.Context, resourceName
 			return fmt.Errorf("No ElastiCache Serverless ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
-		grg, err := tfelasticache.FindElasiCacheServerlessByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+		_, err := tfelasticache.FindServerlessCacheByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("retrieving ElastiCache Serverlesss (%s): %w", rs.Primary.ID, err)
 		}
 
-		*v = *grg
+		// *v = *grg
 
 		return nil
 	}
@@ -308,14 +309,14 @@ func testAccCheckServerlesssElasticCacheExists(ctx context.Context, resourceName
 
 func testAccCheckElasticCacheServerlessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_serverless" {
 				continue
 			}
 
-			_, err := tfelasticache.FindElasiCacheServerlessByID(ctx, conn, rs.Primary.ID)
+			_, err := tfelasticache.FindServerlessCacheByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
