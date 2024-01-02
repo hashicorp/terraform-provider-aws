@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Serverless")
+// @FrameworkResource(name="Serverless Cache")
 // @Tags(identifierAttribute="arn")
 func newResourceServerlessCache(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceServerlessCache{}

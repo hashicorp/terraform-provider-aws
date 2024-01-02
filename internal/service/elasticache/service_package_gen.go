@@ -25,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newResourceServerlessCache,
-			Name:    "Serverless",
+			Name:    "Serverless Cache",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
