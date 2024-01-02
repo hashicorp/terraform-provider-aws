@@ -3,5 +3,5 @@ resource/aws_prometheus_workspace: Add `kms_key_arn` argument, enabling encrypti
 ```
 
 ```release-note:enhancement
-datasource/aws_prometheus_workspace: Add `kms_key_arn` attribute 
+data-source/aws_prometheus_workspace: Add `kms_key_arn` attribute 
 ```
