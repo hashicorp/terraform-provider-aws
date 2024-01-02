@@ -214,6 +214,7 @@ const (
 	WAF                          = "waf"
 	WAFRegional                  = "wafregional"
 	WAFV2                        = "wafv2"
+	WellArchitected              = "wellarchitected"
 	WorkLink                     = "worklink"
 	WorkSpaces                   = "workspaces"
 	XRay                         = "xray"
