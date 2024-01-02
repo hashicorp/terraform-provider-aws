@@ -38,6 +38,11 @@ func ResourceSecretRotation() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"rotate_immediatley": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"rotation_lambda_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -87,6 +92,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &secretsmanager.RotateSecretInput{
 		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		RotateImmediately:  aws.Bool(d.Get("rotate_immediatley").(bool)),
 		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
 		SecretId:           aws.String(secretID),
 	}
@@ -149,9 +155,10 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	secretID := d.Get("secret_id").(string)
 
-	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
+	if d.HasChanges("rotation_lambda_arn", "rotation_rules", "rotate_immediatley") {
 		input := &secretsmanager.RotateSecretInput{
 			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			RotateImmediately:  aws.Bool(d.Get("rotate_immediatley").(bool)),
 			RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:           aws.String(secretID),
 		}
