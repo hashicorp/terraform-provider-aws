@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -281,8 +282,9 @@ func (r *resourceServerlessCache) Create(ctx context.Context, request resource.C
 
 	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
-	state.DailySnapshotTime = flex.StringToFrameworkLegacy(ctx, out.DailySnapshotTime)
-	state.SnapshotRetentionLimit = flex.Int32ToFrameworkLegacy(ctx, out.SnapshotRetentionLimit)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -317,6 +319,8 @@ func (r *resourceServerlessCache) Read(ctx context.Context, request resource.Rea
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	state.Name = flex.StringToFramework(ctx, out.ServerlessCacheName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -358,7 +362,7 @@ func (r *resourceServerlessCache) Update(ctx context.Context, request resource.U
 			return
 		}
 
-		updateTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		_, err = waitServerlessCacheAvailable(ctx, conn, state.Name.ValueString(), updateTimeout)
 
 		if err != nil {
@@ -413,6 +417,10 @@ func (r *resourceServerlessCache) Delete(ctx context.Context, request resource.D
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, "DependencyViolation")
+
+	if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
+		return
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(

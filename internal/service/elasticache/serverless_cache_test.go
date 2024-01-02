@@ -48,7 +48,7 @@ func TestAccElastiCacheServerlessCache_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "serverless_cache_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -92,7 +92,7 @@ func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "serverless_cache_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -135,7 +135,7 @@ func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "serverless_cache_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -178,7 +178,7 @@ func TestAccElastiCacheServerlessCache_fullRedis(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "serverless_cache_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -219,12 +219,12 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionOld),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "serverless_cache_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -241,12 +241,12 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionNew),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "serverless_cache_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
 				),
@@ -288,11 +288,11 @@ func testAccCheckServerlessCacheExists(ctx context.Context, resourceName string,
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache Serverless ID is set")
+			return fmt.Errorf("no ElastiCache Serverless ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
@@ -323,6 +323,7 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 			if err != nil {
 				return err
 			}
+
 			return fmt.Errorf("ElastiCache Serverless (%s) still exists", rs.Primary.ID)
 		}
 
@@ -333,9 +334,10 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 func testAccServerlessCacheConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine                = "memcached"
-  serverless_cache_name = %[1]q
+  engine = "memcached"
+  name   = %[1]q
 }
+
 
 `, rName)
 }
@@ -343,9 +345,10 @@ resource "aws_elasticache_serverless_cache" "test" {
 func testAccServerlessCacheConfig_basicRedis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine                = "redis"
-  serverless_cache_name = %[1]q
+  engine = "redis"
+  name   = %[1]q
 }
+
 
 `, rName)
 }
@@ -353,8 +356,8 @@ resource "aws_elasticache_serverless_cache" "test" {
 func testAccServerlessCacheConfig_full(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine                = "memcached"
-  serverless_cache_name = %[1]q
+  engine = "memcached"
+  name   = %[1]q
 
   cache_usage_limits {
     data_storage {
@@ -398,8 +401,8 @@ resource "aws_security_group" "test" {
 func testAccServerlessCacheConfig_fullRedis(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine                = "redis"
-  serverless_cache_name = %[1]q
+  engine = "redis"
+  name   = %[1]q
 
   cache_usage_limits {
     data_storage {
@@ -445,10 +448,11 @@ resource "aws_security_group" "test" {
 func testAccServerlessCacheConfig_update(rName, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  engine                = "memcached"
-  serverless_cache_name = %[1]q
-  description           = %[2]q
+  engine      = "memcached"
+  name        = %[1]q
+  description = %[2]q
 }
+
 
 `, rName, desc)
 }
