@@ -53,6 +53,7 @@ const (
 	EMRServerlessEndpointID              = "emrserverless"
 	EvidentlyEndpointID                  = "evidently"
 	GlacierEndpointID                    = "glacier"
+	GroundStationEndpointID              = "groundstation"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	InternetMonitorEndpointID            = "internetmonitor"
