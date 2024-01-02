@@ -150,11 +150,6 @@ func resourceGroupV0() *schema.Resource {
 										Optional: true,
 										Default:  90,
 									},
-									"max_healthy_percentage": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  100,
-									},
 									"skip_matching": {
 										Type:     schema.TypeBool,
 										Optional: true,
