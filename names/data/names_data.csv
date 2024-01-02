@@ -169,7 +169,7 @@ gamelift,gamelift,gamelift,gamelift,,gamelift,,,GameLift,GameLift,,1,,,aws_gamel
 globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globalaccelerator,,,GlobalAccelerator,GlobalAccelerator,x,1,,,aws_globalaccelerator_,,globalaccelerator_,Global Accelerator,AWS,,,,,,,
 glue,glue,glue,glue,,glue,,,Glue,Glue,,1,,,aws_glue_,,glue_,Glue,AWS,,,,,,,
 databrew,databrew,gluedatabrew,databrew,,databrew,,gluedatabrew,DataBrew,GlueDataBrew,,1,,,aws_databrew_,,databrew_,Glue DataBrew,AWS,,x,,,,,
-groundstation,groundstation,groundstation,groundstation,,groundstation,,,GroundStation,GroundStation,,1,,,aws_groundstation_,,groundstation_,Ground Station,AWS,,,,,,,
+groundstation,groundstation,groundstation,groundstation,,groundstation,,,GroundStation,GroundStation,,,2,,aws_groundstation_,,groundstation_,Ground Station,AWS,,,,,,,
 guardduty,guardduty,guardduty,guardduty,,guardduty,,,GuardDuty,GuardDuty,,1,,,aws_guardduty_,,guardduty_,GuardDuty,Amazon,,,,,,,
 health,health,health,health,,health,,,Health,Health,,1,,,aws_health_,,health_,Health,AWS,,x,,,,,
 healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,,,2,,aws_healthlake_,,healthlake_,HealthLake,Amazon,,,,,,,
