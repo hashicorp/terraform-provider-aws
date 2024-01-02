@@ -3423,6 +3423,64 @@ rules:
             - pattern-not-regex: "^TestAccWavelength"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: wellarchitected-in-func-name
+    languages:
+      - go
+    message: Do not use "WellArchitected" in func name inside wellarchitected package
+    paths:
+      include:
+        - internal/service/wellarchitected
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WellArchitected"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: wellarchitected-in-test-name
+    languages:
+      - go
+    message: Include "WellArchitected" in test name
+    paths:
+      include:
+        - internal/service/wellarchitected/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccWellArchitected"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: wellarchitected-in-const-name
+    languages:
+      - go
+    message: Do not use "WellArchitected" in const name inside wellarchitected package
+    paths:
+      include:
+        - internal/service/wellarchitected
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WellArchitected"
+    severity: WARNING
+  - id: wellarchitected-in-var-name
+    languages:
+      - go
+    message: Do not use "WellArchitected" in var name inside wellarchitected package
+    paths:
+      include:
+        - internal/service/wellarchitected
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)WellArchitected"
+    severity: WARNING
   - id: worklink-in-func-name
     languages:
       - go

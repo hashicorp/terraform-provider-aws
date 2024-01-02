@@ -91,7 +91,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionCreating, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionCreating, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
@@ -105,7 +105,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 
 	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -130,11 +130,11 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	d.Set("certificate_arn", certificateArn)
@@ -168,7 +168,7 @@ func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceDa
 			return diags
 		}
 
-		return create.DiagError(names.ELBV2, create.ErrActionDeleting, ResNameListenerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionDeleting, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	return diags

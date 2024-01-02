@@ -62,6 +62,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -104,6 +105,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/greengrass"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/groundstation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -134,6 +136,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lookoutmetrics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -155,6 +158,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -212,6 +216,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -276,6 +281,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		connect.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
+		customerprofiles.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),
@@ -318,6 +324,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		glue.ServicePackage(ctx),
 		grafana.ServicePackage(ctx),
 		greengrass.ServicePackage(ctx),
+		groundstation.ServicePackage(ctx),
 		guardduty.ServicePackage(ctx),
 		healthlake.ServicePackage(ctx),
 		iam.ServicePackage(ctx),
@@ -348,6 +355,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage(ctx),
 		location.ServicePackage(ctx),
 		logs.ServicePackage(ctx),
+		lookoutmetrics.ServicePackage(ctx),
 		macie2.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
 		mediaconvert.ServicePackage(ctx),
@@ -369,6 +377,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		outposts.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),
+		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
 		qldb.ServicePackage(ctx),
 		quicksight.ServicePackage(ctx),
@@ -426,6 +435,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		waf.ServicePackage(ctx),
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
+		wellarchitected.ServicePackage(ctx),
 		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
 		xray.ServicePackage(ctx),

@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1121,7 +1121,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return conn.CreateAutoScalingGroupWithContext(ctx, createInput)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		ErrCodeValidationError, "Invalid IAM Instance Profile")
+		errCodeValidationError, "Invalid IAM Instance Profile")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s): %s", asgName, err)
@@ -1135,7 +1135,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				func() (interface{}, error) {
 					return conn.PutLifecycleHookWithContext(ctx, input)
 				},
-				ErrCodeValidationError, "Unable to publish test message to notification target")
+				errCodeValidationError, "Unable to publish test message to notification target")
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s) Lifecycle Hook: %s", d.Id(), err)
@@ -1476,7 +1476,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
 			_, err := conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1491,7 +1491,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
 			_, err := conn.AttachTrafficSourcesWithContext(ctx, &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1520,7 +1520,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
 			_, err := conn.DetachLoadBalancersWithContext(ctx, &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1535,7 +1535,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
 			_, err := conn.AttachLoadBalancersWithContext(ctx, &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1564,7 +1564,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
 			_, err := conn.DetachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1579,7 +1579,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
 			_, err := conn.AttachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1803,7 +1803,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -1844,26 +1844,26 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 	// no longer applies scale-in protection to new instances, but there's still
 	// old ones that have it.
 
-	const chunkSize = 50 // API limit.
-	for i, n := 0, len(instances); i < n; i += chunkSize {
-		j := i + chunkSize
-		if j > n {
-			j = n
-		}
-
-		var instanceIDs []string
-
-		for k := i; k < j; k++ {
-			instanceIDs = append(instanceIDs, aws.StringValue(instances[k].InstanceId))
-		}
-
+	const batchSize = 50 // API limit.
+	for _, chunk := range tfslices.Chunks(instances, batchSize) {
+		instanceIDs := tfslices.ApplyToAll(chunk, func(v *autoscaling.Instance) string {
+			return aws.StringValue(v.InstanceId)
+		})
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          aws.StringSlice(instanceIDs),
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
-		if _, err := conn.SetInstanceProtectionWithContext(ctx, input); err != nil {
+		_, err := conn.SetInstanceProtectionWithContext(ctx, input)
+
+		// Ignore ValidationError when instance is already fully terminated
+		// and is not a part of Auto Scaling Group anymore.
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not part of Auto Scaling group") {
+			continue
+		}
+
+		if err != nil {
 			return fmt.Errorf("disabling Auto Scaling Group (%s) scale-in protections: %w", name, err)
 		}
 	}
@@ -1892,7 +1892,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "No warm pool found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No warm pool found") {
 		return nil
 	}
 
@@ -2100,7 +2100,7 @@ func FindInstanceRefreshes(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2136,7 +2136,7 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.AutoScaling, 
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2172,7 +2172,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Au
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2207,7 +2207,7 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2248,7 +2248,7 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling,
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2293,7 +2293,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

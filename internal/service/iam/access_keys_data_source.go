@@ -54,22 +54,24 @@ const (
 )
 
 func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
 	out, err := FindAccessKeys(ctx, conn, username)
 
 	if err != nil {
-		return create.DiagError(names.IAM, create.ErrActionReading, DSNameAccessKeys, username, err)
+		return create.AppendDiagError(diags, names.IAM, create.ErrActionReading, DSNameAccessKeys, username, err)
 	}
 
 	d.SetId(username)
 
 	if err := d.Set("access_keys", flattenAccessKeys(out)); err != nil {
-		return create.DiagError(names.IAM, create.ErrActionSetting, DSNameAccessKeys, d.Id(), err)
+		return create.AppendDiagError(diags, names.IAM, create.ErrActionSetting, DSNameAccessKeys, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenAccessKeys(apiObjects []*iam.AccessKeyMetadata) []interface{} {

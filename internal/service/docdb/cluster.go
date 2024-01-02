@@ -478,7 +478,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -632,7 +632,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return append(diags, diag.FromErr(err)...)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -659,7 +659,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("global_cluster_identifier"); ok {
 		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return append(diags, diag.FromErr(err)...)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 

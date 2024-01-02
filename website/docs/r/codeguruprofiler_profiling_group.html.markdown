@@ -29,18 +29,19 @@ resource "aws_codeguruprofiler_profiling_group" "example" {
 The following arguments are required:
 
 * `agent_orchestration_config` - (Required) Specifies whether profiling is enabled or disabled for the created profiling. See [Agent Orchestration Config](#agent-orchestration-config) for more details.
-* `name` - (Required) The name of the profiling group.
+* `name` - (Required) Name of the profiling group.
 
 The following arguments are optional:
 
-* `compute_platform` - (Optional) The compute platform of the profiling group.
+* `compute_platform` - (Optional) Compute platform of the profiling group.
 * `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Profiling Group.
+* `arn` - ARN of the profiling group.
+* `id` - Name of the profiling group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### Agent Orchestration Config
@@ -49,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeGuru Profiler Profiling Group using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeGuru Profiler Profiling Group using the `id`. For example:
 
 ```terraform
 import {
@@ -58,7 +59,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeGuru Profiler Profiling Group using the `name`. For example:
+Using `terraform import`, import CodeGuru Profiler Profiling Group using the `id`. For example:
 
 ```console
 % terraform import aws_codeguruprofiler_profiling_group.example profiling_group-name-12345678
