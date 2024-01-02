@@ -149,9 +149,9 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("alias", ws.Alias)
-	d.Set("kms_key_arn", ws.KmsKeyArn)
 	arn := aws.StringValue(ws.Arn)
 	d.Set("arn", arn)
+	d.Set("kms_key_arn", ws.KmsKeyArn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
 
 	loggingConfiguration, err := FindLoggingConfigurationByWorkspaceID(ctx, conn, d.Id())
