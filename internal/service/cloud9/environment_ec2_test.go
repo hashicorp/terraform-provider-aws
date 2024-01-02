@@ -186,10 +186,6 @@ func testAccCheckEnvironmentEC2Exists(ctx context.Context, n string, v *cloud9.E
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cloud9 Environment EC2 ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn(ctx)
 
 		output, err := tfcloud9.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
@@ -225,6 +221,7 @@ func testAccCheckEnvironmentEC2Destroy(ctx context.Context) resource.TestCheckFu
 
 			return fmt.Errorf("Cloud9 Environment EC2 %s still exists.", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
