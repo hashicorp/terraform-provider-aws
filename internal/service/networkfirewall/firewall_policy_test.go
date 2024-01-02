@@ -922,7 +922,7 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 	})
 }
 
-func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationArn(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -937,7 +937,7 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationArn(t *testi
 		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationArn(rName, rTlsArn1),
+				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationARN(rName, rTlsArn1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
@@ -946,7 +946,7 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationArn(t *testi
 				),
 			},
 			{
-				Config: testAccFirewallPolicyConfig_updatetlsInspectionConfigurationArn(rName, rTlsArn2),
+				Config: testAccFirewallPolicyConfig_updateTLSInspectionConfigurationARN(rName, rTlsArn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
@@ -1646,38 +1646,38 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 // The tls_inspection_configuration_arn cannot be updated after policy creation unless there way already an inspection policy attached on fw policy creation.
 
-func testAccFirewallPolicyConfig_tlsInspectionConfigurationArn(rName, rTlsArn1 string) string {
+func testAccFirewallPolicyConfig_tlsInspectionConfigurationARN(rName, rTlsArn1 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-	
-resource "aws_networkfirewall_firewall_policy" "test" {
-    name = %[1]q
 
-    firewall_policy {
-        stateless_fragment_default_actions = ["aws:drop"]
-        stateless_default_actions          = ["aws:pass"]
-        tls_inspection_configuration_arn   = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/%[2]s"
-    }
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+    tls_inspection_configuration_arn   = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/%[2]s"
+  }
 }
 `, rName, rTlsArn1)
 }
 
-func testAccFirewallPolicyConfig_updatetlsInspectionConfigurationArn(rName, rTlsArn2 string) string {
+func testAccFirewallPolicyConfig_updateTLSInspectionConfigurationARN(rName, rTlsArn2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
-    name = %[1]q
+  name = %[1]q
 
-    firewall_policy {
-		stateless_fragment_default_actions = ["aws:drop"]
-        stateless_default_actions          = ["aws:pass"]
-        tls_inspection_configuration_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/%[2]s"
-    }
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+    tls_inspection_configuration_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/%[2]s"
+  }
 }
 `, rName, rTlsArn2)
 }
