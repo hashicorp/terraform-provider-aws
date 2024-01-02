@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/ci/providerlint
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.49.8
+	github.com/aws/aws-sdk-go v1.49.13
 	github.com/bflad/tfproviderlint v0.29.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.31.0
 	golang.org/x/tools v0.13.0
