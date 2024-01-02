@@ -163,6 +163,12 @@ func ResourceTargetGroup() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(loadBalancingAlgorithmType_Values(), false),
 			},
+			"load_balancing_anomaly_mitigation": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(loadBalancingAnomalyMitigationType_Values(), false),
+			},
 			"load_balancing_cross_zone_enabled": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -717,6 +723,11 @@ var targetGroupAttributes = targetGroupAttributeMap(map[string]targetGroupAttrib
 	},
 	"load_balancing_algorithm_type": {
 		apiAttributeKey:      targetGroupAttributeLoadBalancingAlgorithmType,
+		tfType:               schema.TypeString,
+		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
+	},
+	"load_balancing_anomaly_mitigation": {
+		apiAttributeKey:      targetGroupAttributeLoadBalancingAlgorithmAnomalyMitigation,
 		tfType:               schema.TypeString,
 		targetTypesSupported: []string{elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp},
 	},

@@ -99,6 +99,11 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"load_balancing_anomaly_mitigation": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"load_balancing_cross_zone_enabled": {
 				Type:     schema.TypeString,
 				Computed: true,
