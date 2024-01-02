@@ -56,7 +56,6 @@ func (r *resourceServerlessCache) Metadata(_ context.Context, request resource.M
 	response.TypeName = "aws_elasticache_serverless_cache"
 }
 
-// Schema returns the schema for this resource.
 func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -102,10 +101,6 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 			"id": framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
-				//Computed: true,
-				//PlanModifiers: []planmodifier.String{
-				//	stringplanmodifier.UseStateForUnknown(),
-				//},
 			},
 			"major_engine_version": schema.StringAttribute{
 				Optional: true,
@@ -177,10 +172,6 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"user_group_id": schema.StringAttribute{
 				Optional: true,
-				//Computed: true,
-				//PlanModifiers: []planmodifier.String{
-				//	stringplanmodifier.UseStateForUnknown(),
-				//},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -323,6 +314,7 @@ func (r *resourceServerlessCache) Read(ctx context.Context, request resource.Rea
 }
 
 func (r *resourceServerlessCache) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	conn := r.Meta().ElastiCacheClient(ctx)
 	var state, plan resourceServerlessData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -332,6 +324,57 @@ func (r *resourceServerlessCache) Update(ctx context.Context, request resource.U
 	}
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if serverlessCacheHasChanges(ctx, plan, state) {
+		input := &elasticache.ModifyServerlessCacheInput{}
+
+		response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.ServerlessCacheName = flex.StringFromFramework(ctx, state.Name)
+
+		_, err := conn.ModifyServerlessCache(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ElastiCache, create.ErrActionUpdating, ResNameServerlessCache, state.Name.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		updateTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+		_, err = waitServerlessCacheAvailable(ctx, conn, state.Name.ValueString(), updateTimeout)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForUpdate, ResNameServerlessCache, plan.Name.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	// AWS returns null values for certain values that are available on redis only.
+	// always set these values to the state value to avoid unnecessary diff failures on computed values.
+	out, err := FindServerlessCacheByID(ctx, conn, state.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionUpdating, ResNameServerlessCache, state.Name.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 
 	if response.Diagnostics.HasError() {
 		return
