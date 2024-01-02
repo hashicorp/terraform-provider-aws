@@ -3380,6 +3380,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 		}
 	}
 
+	if v, ok := tfMap["max_healthy_percentage"].(int); ok {
+		apiObject.MaxHealthyPercentage = aws.Int64(int64(v))
+	}
+
 	if v, ok := tfMap["min_healthy_percentage"].(int); ok {
 		apiObject.MinHealthyPercentage = aws.Int64(int64(v))
 	}
