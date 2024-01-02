@@ -471,7 +471,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
 	// Retry creation without tags
-	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+	if input.Tags != nil && tfawserr.ErrMessageContains(err, errCodeValidationError, tagsOnCreationErrMessage) {
 		input.Tags = nil
 
 		output, err = conn.CreateTargetGroupWithContext(ctx, input)

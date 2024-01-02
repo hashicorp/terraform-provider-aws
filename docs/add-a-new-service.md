@@ -34,19 +34,35 @@ To add an AWS SDK for Go service client:
         The Provider and generators depend on the file being correct.
         We strongly recommend using an editor with CSV support.
 
-To generate the client, run the following then submit the pull request:
+Once the names data is ready, create a new service directory with the appropriate service name.
+
+```console
+mkdir internal/service/<service>
+```
+
+Add a new file `internal/service/<service>/generate.go` with the following content. This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider).
+
+```go
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+//go:generate go run ../../generate/servicepackage/main.go
+// ONLY generate directives and package declaration! Do not add anything else to this file.
+
+package <service>
+```
+
+Next, generate the client and ensure all dependencies are fetched.
 
 ```console
 make gen
 ```
 
 ```console
-make test
-```
-
-```console
 go mod tidy
 ```
+
+At this point a pull request with the re-generated files and new service client can be submitted.
 
 Once the service client has been added, implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md) in a separate PR.
 

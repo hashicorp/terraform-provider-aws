@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `max_healthy_percentage` attribute to instance_refresh.preferences configuration block
+```
+

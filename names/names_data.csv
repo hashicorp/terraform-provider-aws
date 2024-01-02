@@ -223,7 +223,7 @@ license-manager,licensemanager,licensemanager,licensemanager,,licensemanager,,,L
 lightsail,lightsail,lightsail,lightsail,,lightsail,,,Lightsail,Lightsail,x,,2,,aws_lightsail_,,lightsail_,Lightsail,Amazon,,,,,,,
 location,location,locationservice,location,,location,,locationservice,Location,LocationService,,1,,,aws_location_,,location_,Location,Amazon,,,,,,,
 lookoutequipment,lookoutequipment,lookoutequipment,lookoutequipment,,lookoutequipment,,,LookoutEquipment,LookoutEquipment,,1,,,aws_lookoutequipment_,,lookoutequipment_,Lookout for Equipment,Amazon,,x,,,,,
-lookoutmetrics,lookoutmetrics,lookoutmetrics,lookoutmetrics,,lookoutmetrics,,,LookoutMetrics,LookoutMetrics,,1,,,aws_lookoutmetrics_,,lookoutmetrics_,Lookout for Metrics,Amazon,,x,,,,,
+lookoutmetrics,lookoutmetrics,lookoutmetrics,lookoutmetrics,,lookoutmetrics,,,LookoutMetrics,LookoutMetrics,,,2,,aws_lookoutmetrics_,,lookoutmetrics_,Lookout for Metrics,Amazon,,,,,,,
 lookoutvision,lookoutvision,lookoutforvision,lookoutvision,,lookoutvision,,lookoutforvision,LookoutVision,LookoutForVision,,1,,,aws_lookoutvision_,,lookoutvision_,Lookout for Vision,Amazon,,x,,,,,
 ,,,,,,,,,,,,,,,,,Lumberyard,Amazon,x,,,,,,No SDK support
 machinelearning,machinelearning,machinelearning,machinelearning,,machinelearning,,,MachineLearning,MachineLearning,,1,,,aws_machinelearning_,,machinelearning_,Machine Learning,Amazon,,x,,,,,
@@ -277,7 +277,7 @@ pinpoint,pinpoint,pinpoint,pinpoint,,pinpoint,,,Pinpoint,Pinpoint,,1,,,aws_pinpo
 pinpoint-email,pinpointemail,pinpointemail,pinpointemail,,pinpointemail,,,PinpointEmail,PinpointEmail,,1,,,aws_pinpointemail_,,pinpointemail_,Pinpoint Email,Amazon,,x,,,,,
 pinpoint-sms-voice,pinpointsmsvoice,pinpointsmsvoice,pinpointsmsvoice,,pinpointsmsvoice,,,PinpointSMSVoice,PinpointSMSVoice,,1,,,aws_pinpointsmsvoice_,,pinpointsmsvoice_,Pinpoint SMS and Voice,Amazon,,x,,,,,
 pipes,pipes,pipes,pipes,,pipes,,,Pipes,Pipes,,,2,,aws_pipes_,,pipes_,EventBridge Pipes,Amazon,,,,,,,
-polly,polly,polly,polly,,polly,,,Polly,Polly,,1,,,aws_polly_,,polly_,Polly,Amazon,,x,,,,,
+polly,polly,polly,polly,,polly,,,Polly,Polly,,,2,,aws_polly_,,polly_,Polly,Amazon,,,,,,,
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,,,No SDK support
 pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,,2,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,,,
 proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Proton,AWS,,x,,,,,

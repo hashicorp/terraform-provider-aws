@@ -1441,6 +1441,8 @@ func findBucket(ctx context.Context, conn *s3_sdkv2.Client, bucket string, optFn
 
 	_, err := conn.HeadBucket(ctx, input, optFns...)
 
+	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
+	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr_sdkv2.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
 		return &retry.NotFoundError{
 			LastError:   err,

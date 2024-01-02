@@ -2628,7 +2628,11 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		for _, key := range keys {
 			_, err := conn.PutObject(ctx, &s3_sdkv2.PutObjectInput{
@@ -2648,6 +2652,7 @@ func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string)
 func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, key := range keys {

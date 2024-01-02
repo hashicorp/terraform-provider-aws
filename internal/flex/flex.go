@@ -289,10 +289,27 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
+// BoolValueToString converts a Go bool value to a string pointer.
+func BoolValueToString(v bool) *string {
+	return aws.String(strconv.FormatBool(v))
+}
+
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
+}
+
+// IntValueToString converts a Go int value to a string pointer.
+func IntValueToString(v int) *string {
+	return aws.String(strconv.Itoa(v))
+}
+
+// StringToIntValue converts a string pointer to a Go int value.
+// Invalid integer strings are converted to 0.
+func StringToIntValue(v *string) int {
+	i, _ := strconv.Atoi(aws.StringValue(v))
+	return i
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant

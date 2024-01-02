@@ -8,8 +8,10 @@ var (
 	ResourceApplication                        = newResourceApplication
 	ResourceApplicationAssignment              = newResourceApplicationAssignment
 	ResourceApplicationAssignmentConfiguration = newResourceApplicationAssignmentConfiguration
+	ResourceTrustedTokenIssuer                 = newResourceTrustedTokenIssuer
 
 	FindApplicationByID                        = findApplicationByID
 	FindApplicationAssignmentByID              = findApplicationAssignmentByID
 	FindApplicationAssignmentConfigurationByID = findApplicationAssignmentConfigurationByID
+	FindTrustedTokenIssuerByARN                = findTrustedTokenIssuerByARN
 )

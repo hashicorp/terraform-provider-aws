@@ -387,7 +387,7 @@ func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServic
 }
 
 func stopReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
-	log.Printf("[DEBUG] Stopping DMS Replication Task: (%s)", id)
+	log.Printf("[DEBUG] Stopping DMS Replication Task: %s", id)
 
 	task, err := FindReplicationTaskByID(ctx, conn, id)
 	if err != nil {
@@ -401,6 +401,10 @@ func stopReplicationTask(ctx context.Context, id string, conn *dms.DatabaseMigra
 	_, err = conn.StopReplicationTaskWithContext(ctx, &dms.StopReplicationTaskInput{
 		ReplicationTaskArn: task.ReplicationTaskArn,
 	})
+
+	if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "is currently not running") {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("stopping DMS Replication Task (%s): %w", id, err)

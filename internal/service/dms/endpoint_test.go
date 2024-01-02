@@ -573,6 +573,7 @@ func TestAccDMSEndpoint_OpenSearch_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalHostname(resourceName, "elasticsearch_settings.0.endpoint_uri", "es", "search-estest"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.use_new_mapping_type", "false"),
 				),
 			},
 			{
@@ -652,6 +653,35 @@ func TestAccDMSEndpoint_OpenSearch_errorRetryDuration(t *testing.T) {
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "120"),
 			// 	),
 			// },
+		},
+	})
+}
+
+func TestAccDMSEndpoint_OpenSearch_UseNewMappingType(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_openSearchUseNewMappingType(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.use_new_mapping_type", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
 		},
 	})
 }
@@ -1343,6 +1373,69 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_postgreSQLSourceSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.capture_ddls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.ddl_artifacts_schema", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.fail_tasks_on_lob_truncation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_frequency", "5"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.heartbeat_schema", "test"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.map_boolean_as_boolean", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.map_jsonb_as_clob", "true"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.map_long_varchar_as", "wstring"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.max_file_size", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.plugin_name", "pglogical"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.slot_name", "test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_PostgreSQL_settings_target(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_postgreSQLTargetSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.babelfish_database_name", "babelfish"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.database_mode", "babelfish"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.max_file_size", "1024"),
 				),
 			},
 		},
@@ -3274,6 +3367,26 @@ resource "aws_dms_endpoint" "test" {
 `, rName, errorRetryDuration))
 }
 
+func testAccEndpointConfig_openSearchUseNewMappingType(rName string, useNewMappingType bool) string {
+	return acctest.ConfigCompose(
+		testAccEndpointConfig_openSearchBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri            = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    use_new_mapping_type    = %[2]t
+    service_access_role_arn = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, useNewMappingType))
+}
+
 func testAccEndpointConfig_openSearchFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
 	return acctest.ConfigCompose(
 		testAccEndpointConfig_openSearchBase(rName),
@@ -3795,6 +3908,65 @@ resource "aws_dms_endpoint" "test" {
     Name   = %[1]q
     Update = "updated"
     Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_postgreSQLSourceSettings(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 5432
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+
+  postgres_settings {
+    after_connect_script         = "SET search_path TO pg_catalog,public;"
+    capture_ddls                 = true
+    ddl_artifacts_schema         = true
+    execute_timeout              = 100
+    fail_tasks_on_lob_truncation = false
+    heartbeat_enable             = true
+    heartbeat_frequency          = 5
+    heartbeat_schema             = "test"
+    map_boolean_as_boolean       = true
+    map_jsonb_as_clob            = true
+    map_long_varchar_as          = "wstring"
+    max_file_size                = 1024
+    plugin_name                  = "pglogical"
+    slot_name                    = "test"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_postgreSQLTargetSettings(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 5432
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+
+  postgres_settings {
+    after_connect_script    = "SET search_path TO pg_catalog,public;"
+    babelfish_database_name = "babelfish"
+    database_mode           = "babelfish"
+    execute_timeout         = 100
+    max_file_size           = 1024
   }
 }
 `, rName)

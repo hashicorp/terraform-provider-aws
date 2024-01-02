@@ -68,10 +68,3 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		}))
 	}), nil
 }
-
-// Functional options to force the regional endpoint in us-east-1 if the client is configured to use the global endpoint.
-func useRegionalEndpointInUSEast1(o *s3_sdkv2.Options) {
-	if o.Region == names.GlobalRegionID {
-		o.Region = names.USEast1RegionID
-	}
-}
