@@ -3,12 +3,12 @@ subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_serverless_cache"
 description: |-
-  Provides an ElastiCache Serverless Cluster resource.
+  Provides an ElastiCache Serverless Cache resource.
 ---
 
-# Resource: aws_elasticache_serverless
+# Resource: aws_elasticache_serverless_cache
 
-Provides an ElastiCache Serverlesss Cluster resource which manages memcache or redis.
+Provides an ElastiCache Serverlesss Cache resource which manages memcache or redis.
 
 ## Example Usage
 
@@ -123,11 +123,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Serverlesss Clusters using the `serverless_cache_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Serverlesss Cache Clusters using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_elasticache_serverless.my_cluster
+  to = aws_elasticache_serverless_cache.my_cluster
   id = "my_cluster"
 }
 ```
@@ -135,5 +135,5 @@ import {
 Using `terraform import`, import ElastiCache Serverless Clusters using the `sserverless_cache_name`. For example:
 
 ```console
-% terraform import aws_elasticache_serverless.my_cluster my_cluster
+% terraform import aws_elasticache_serverless_cache.my_cluster my_cluster
 ```
