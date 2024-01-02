@@ -1091,7 +1091,7 @@ func flattenTableFieldOption(apiObject []*quicksight.TableFieldOption) []interfa
 			tfMap["url_styling"] = flattenTableFieldURLConfiguration(config.URLStyling)
 		}
 		if config.Visibility != nil {
-			tfMap["visbility"] = aws.StringValue(config.Visibility)
+			tfMap["visibility"] = aws.StringValue(config.Visibility)
 		}
 		if config.Width != nil {
 			tfMap["width"] = aws.StringValue(config.Width)
