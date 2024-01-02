@@ -1676,7 +1676,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
-    tls_inspection_configuration_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/%[2]s"
+    tls_inspection_configuration_arn   = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:tls-configuration/%[2]s"
   }
 }
 `, rName, rTlsArn2)
