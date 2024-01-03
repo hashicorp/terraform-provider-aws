@@ -40,6 +40,7 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -144,6 +145,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", initialName),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 				),
 			},
 			{
@@ -153,6 +155,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
 				),
 			},
 		},
@@ -377,6 +380,8 @@ resource "aws_route53_resolver_endpoint" "test" {
   ip_address {
     subnet_id = aws_subnet.test[0].id
   }
+
+  protocols = ["Do53", "DoH"]
 }
 `, name))
 }

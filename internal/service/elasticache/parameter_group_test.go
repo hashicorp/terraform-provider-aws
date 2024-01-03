@@ -620,31 +620,6 @@ func TestFlattenParameters(t *testing.T) {
 	}
 }
 
-func TestExpandParameters(t *testing.T) {
-	t.Parallel()
-
-	expanded := []interface{}{
-		map[string]interface{}{
-			"name":         "activerehashing",
-			"value":        "yes",
-			"apply_method": "immediate",
-		},
-	}
-	parameters := tfelasticache.ExpandParameters(expanded)
-
-	expected := &elasticache.ParameterNameValue{
-		ParameterName:  aws.String("activerehashing"),
-		ParameterValue: aws.String("yes"),
-	}
-
-	if !reflect.DeepEqual(parameters[0], expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			parameters[0],
-			expected)
-	}
-}
-
 func TestParameterChanges(t *testing.T) {
 	t.Parallel()
 

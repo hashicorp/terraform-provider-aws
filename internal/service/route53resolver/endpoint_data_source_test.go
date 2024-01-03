@@ -31,6 +31,7 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ip_addresses.#", resourceName, "ip_address.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "protocols.#", resourceName, "protocols.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "vpc_id", resourceName, "host_vpc_id"),
 				),

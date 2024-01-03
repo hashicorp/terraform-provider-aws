@@ -729,7 +729,7 @@ resource "aws_ssm_association" "test" {
 }
 
 func testAccAssociationConfig_basicAutomationTargetParamName(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = %[1]q
   role = aws_iam_role.ssm_role.name
@@ -784,7 +784,7 @@ resource "aws_ssm_document" "foo" {
       "maxAttempts": 1,
       "onFailure": "Abort",
       "inputs": {
-        "ImageId": "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}",
+        "ImageId": "${data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id}",
         "InstanceType": "t2.small",
         "MinInstanceCount": 1,
         "MaxInstanceCount": 1,
