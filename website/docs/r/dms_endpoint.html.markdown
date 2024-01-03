@@ -79,6 +79,7 @@ The following arguments are optional:
 * `error_retry_duration` - (Optional) Maximum number of seconds for which DMS retries failed API requests to the OpenSearch cluster. Default is `300`.
 * `full_load_error_percentage` - (Optional) Maximum percentage of records that can fail to be written before a full load operation stops. Default is `10`.
 * `service_access_role_arn` - (Required) ARN of the IAM Role with permissions to write to the OpenSearch cluster.
+* `use_new_mapping_type` - (Optional) Enable to migrate documentation using the documentation type `_doc`. OpenSearch and an Elasticsearch clusters only support the _doc documentation type in versions 7.x and later. The default value is `false`.
 
 ### kafka_settings
 

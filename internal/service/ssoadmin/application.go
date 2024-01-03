@@ -500,8 +500,11 @@ func expandSignInOptions(tfList []signInOptionsData) *awstypes.SignInOptions {
 
 	tfObj := tfList[0]
 	apiObject := &awstypes.SignInOptions{
-		ApplicationUrl: aws.String(tfObj.ApplicationURL.ValueString()),
-		Origin:         awstypes.SignInOrigin(tfObj.Origin.ValueString()),
+		Origin: awstypes.SignInOrigin(tfObj.Origin.ValueString()),
+	}
+
+	if !tfObj.ApplicationURL.IsNull() {
+		apiObject.ApplicationUrl = aws.String(tfObj.ApplicationURL.ValueString())
 	}
 
 	return apiObject
