@@ -517,7 +517,7 @@ resource "aws_efs_file_system" "test" {
 func testAccFileSystemConfig_protection(replicationOverwwrite string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  protection {	
+  protection {
     replication_overwrite = %[1]q
   }
 }
