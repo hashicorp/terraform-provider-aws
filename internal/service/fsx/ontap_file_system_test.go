@@ -48,6 +48,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.intercluster.0.dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -61,6 +62,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
@@ -91,7 +93,6 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_singleAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeSingleAz1),
 				),
 			},
@@ -118,12 +119,11 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPFileSystemConfig_haPair(rName),
+				Config: testAccONTAPFileSystemConfig_haPair(rName, 3072),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeSingleAz2),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "2"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "3072"),
 				),
 			},
@@ -132,6 +132,15 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_haPair(rName, 6144),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "2"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "6144"),
+				),
 			},
 		},
 	})
@@ -722,21 +731,21 @@ resource "aws_fsx_ontap_file_system" "test" {
 `, rName))
 }
 
-func testAccONTAPFileSystemConfig_haPair(rName string) string {
+func testAccONTAPFileSystemConfig_haPair(rName string, capacity int) string {
 	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = 2048
   subnet_ids                      = [aws_subnet.test[0].id]
   deployment_type                 = "SINGLE_AZ_2"
   ha_pairs                        = 2
-  throughput_capacity_per_ha_pair = 3072
+  throughput_capacity_per_ha_pair = %[2]d
   preferred_subnet_id             = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, capacity))
 }
 
 func testAccONTAPFileSystemConfig_adminPassword(rName, pass string) string {
