@@ -66,6 +66,9 @@ func (r *resourceKxDataview) Schema(ctx context.Context, req resource.SchemaRequ
 			"id": framework.IDAttribute(),
 			"arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required: true,
@@ -118,8 +121,20 @@ func (r *resourceKxDataview) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.OneOf(string(awstypes.KxAzModeSingle), string(awstypes.KxAzModeMulti)),
 				},
 			},
+			"availability_zone_id": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 32),
+				},
+			},
 			"status": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"created_timestamp": schema.StringAttribute{
