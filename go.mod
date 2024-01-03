@@ -40,6 +40,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.142.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/emr v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.5

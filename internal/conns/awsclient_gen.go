@@ -34,6 +34,7 @@ import (
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
+	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
@@ -591,6 +592,10 @@ func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv
 
 func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
 	return errs.Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache, make(map[string]any)))
+}
+
+func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache_sdkv2.Client {
+	return errs.Must(client[*elasticache_sdkv2.Client](ctx, c, names.ElastiCache, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticBeanstalkConn(ctx context.Context) *elasticbeanstalk_sdkv1.ElasticBeanstalk {
