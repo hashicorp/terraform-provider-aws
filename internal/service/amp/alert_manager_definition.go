@@ -50,7 +50,6 @@ func resourceAlertManagerDefinition() *schema.Resource {
 
 func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -76,7 +75,6 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 
 func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	amd, err := findAlertManagerDefinitionByID(ctx, conn, d.Id())
@@ -99,7 +97,6 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 
 func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	input := &amp.PutAlertManagerDefinitionInput{
@@ -122,7 +119,6 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Alert Manager Definition: (%s)", d.Id())

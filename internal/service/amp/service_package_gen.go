@@ -56,7 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Rule Group Namespace",
 		},
 		{
-			Factory:  ResourceWorkspace,
+			Factory:  resourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
 			Name:     "Workspace",
 			Tags: &types.ServicePackageResourceTags{

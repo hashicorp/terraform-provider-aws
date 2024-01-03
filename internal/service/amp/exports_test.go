@@ -8,7 +8,9 @@ var (
 	ResourceAlertManagerDefinition = resourceAlertManagerDefinition
 	ResourceRuleGroupNamespace     = resourceRuleGroupNamespace
 	ResourceScraper                = newResourceScraper
+	ResourceWorkspace              = resourceWorkspace
 
 	FindAlertManagerDefinitionByID = findAlertManagerDefinitionByID
 	FindRuleGroupNamespaceByARN    = findRuleGroupNamespaceByARN
+	FindWorkspaceByID              = findWorkspaceByID
 )

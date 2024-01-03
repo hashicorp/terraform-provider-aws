@@ -57,7 +57,6 @@ func resourceRuleGroupNamespace() *schema.Resource {
 
 func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -85,7 +84,6 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	rgn, err := findRuleGroupNamespaceByARN(ctx, conn, d.Id())
@@ -113,7 +111,6 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	input := &amp.PutRuleGroupsNamespaceInput{
@@ -137,7 +134,6 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Rule Group Namespace: (%s)", d.Id())
