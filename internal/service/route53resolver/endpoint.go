@@ -101,12 +101,8 @@ func ResourceEndpoint() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 2,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						route53resolver.ProtocolDo53,
-						route53resolver.ProtocolDoH,
-						route53resolver.ProtocolDoHFips,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(route53resolver.Protocol_Values(), false),
 				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -138,7 +134,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("protocols"); ok {
+	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -177,9 +173,8 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("direction", ep.Direction)
 	d.Set("host_vpc_id", ep.HostVPCId)
 	d.Set("name", ep.Name)
-	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
-
 	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
+	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
@@ -197,26 +192,20 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChange("name") {
-		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
-			Name:               aws.String(d.Get("name").(string)),
+	if d.HasChanges("name", "protocols") {
+		input := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
-		})
-
-		if err != nil {
-			return diag.Errorf("updating Route53 Resolver Endpoint (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
 		}
-	}
 
-	if d.HasChange("protocols") {
-		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
-			ResolverEndpointId: aws.String(d.Id()),
-			Protocols:          flex.ExpandStringSet(d.Get("protocols").(*schema.Set)),
-		})
+		if d.HasChange("protocols") {
+			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
+		}
+
+		_, err := conn.UpdateResolverEndpointWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Route53 Resolver Endpoint (%s): %s", d.Id(), err)
@@ -236,10 +225,12 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		// Add new before deleting old so number of IP addresses doesn't drop below 2.
 		for _, v := range add {
-			_, err := conn.AssociateResolverEndpointIpAddressWithContext(ctx, &route53resolver.AssociateResolverEndpointIpAddressInput{
+			input := &route53resolver.AssociateResolverEndpointIpAddressInput{
 				IpAddress:          expandEndpointIPAddressUpdate(v),
 				ResolverEndpointId: aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.AssociateResolverEndpointIpAddressWithContext(ctx, input)
 
 			if err != nil {
 				return diag.Errorf("associating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
@@ -251,10 +242,12 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		for _, v := range del {
-			_, err := conn.DisassociateResolverEndpointIpAddressWithContext(ctx, &route53resolver.DisassociateResolverEndpointIpAddressInput{
+			input := &route53resolver.DisassociateResolverEndpointIpAddressInput{
 				IpAddress:          expandEndpointIPAddressUpdate(v),
 				ResolverEndpointId: aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.DisassociateResolverEndpointIpAddressWithContext(ctx, input)
 
 			if err != nil {
 				return diag.Errorf("disassociating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
