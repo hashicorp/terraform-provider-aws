@@ -273,9 +273,9 @@ func testAccCheckTrafficMirrorSessionExists(ctx context.Context, n string, v *ec
 }
 
 func testAccTrafficMirrorSessionConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "m5.large" # m5.large required because only Nitro instances support mirroring
   subnet_id     = aws_subnet.test[0].id
 
@@ -366,11 +366,11 @@ resource "aws_ec2_traffic_mirror_session" "test" {
 }
 
 func testAccTrafficMirrorSessionConfig_trafficMirrorTarget(rName string, idx, session int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_instance" "target" {
   count = 2
 
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test[0].id
 
@@ -380,7 +380,7 @@ resource "aws_instance" "target" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "m5.large" # m5.large required because only Nitro instances support mirroring
   subnet_id     = aws_subnet.test[0].id
 
