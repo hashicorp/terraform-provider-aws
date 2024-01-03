@@ -337,8 +337,6 @@ resource "aws_elasticache_serverless_cache" "test" {
   engine = "memcached"
   name   = %[1]q
 }
-
-
 `, rName)
 }
 
@@ -348,8 +346,6 @@ resource "aws_elasticache_serverless_cache" "test" {
   engine = "redis"
   name   = %[1]q
 }
-
-
 `, rName)
 }
 
@@ -452,7 +448,5 @@ resource "aws_elasticache_serverless_cache" "test" {
   name        = %[1]q
   description = %[2]q
 }
-
-
 `, rName, desc)
 }

@@ -134,8 +134,8 @@ const (
 	ServerlessCacheDeletedDelay      = 30 * time.Second
 )
 
-// waitCacheClusterAvailable waits for a Cache Cluster to return Available
-func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) { //nolint:unparam
+// waitServerlessCacheAvailable waits for a cache cluster to return available
+func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ServerlessCacheCreating,
@@ -156,6 +156,7 @@ func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache_v2.Clie
 	return awstypes.ServerlessCache{}, err
 }
 
+// waitServerlessCacheDeleted waits for a cache cluster to be deleted
 func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
