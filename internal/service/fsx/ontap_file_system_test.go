@@ -133,15 +133,6 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
-			{
-				Config: testAccONTAPFileSystemConfig_haPair(rName, 6144),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "2"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "6144"),
-				),
-			},
 		},
 	})
 }

@@ -226,6 +226,7 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			"throughput_capacity_per_ha_pair": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntInSlice([]int{3072, 6144}),
 				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
@@ -431,10 +432,6 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("throughput_capacity") {
 			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
-		}
-
-		if d.HasChange("throughput_capacity_per_ha_pair") {
-			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(d.Get("throughput_capacity_per_ha_pair").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
