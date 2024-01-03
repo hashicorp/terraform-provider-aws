@@ -88,6 +88,18 @@ func DataSourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"protection": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_overwrite": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"provisioned_throughput_in_mibps": {
 				Type:     schema.TypeFloat,
 				Computed: true,
@@ -145,6 +157,9 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("kms_key_id", fs.KmsKeyId)
 	d.Set("name", fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	if fs.SizeInBytes != nil {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
