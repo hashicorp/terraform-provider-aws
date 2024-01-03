@@ -6,6 +6,7 @@ package batch
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	batchtypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
@@ -59,6 +60,10 @@ func (d *dataSourceJobDefinition) Schema(ctx context.Context, req datasource.Sch
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": schema.StringAttribute{
+				Optional:   true,
+				CustomType: fwtypes.ARNType,
+			},
+			"arn_prefix": schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.ARNType,
 			},
@@ -624,8 +629,11 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 
 	// These fields don't have the same name as their api
 	data.ARN = flex.StringToFrameworkARN(ctx, jd.JobDefinitionArn)
+	arnPrefix := strings.TrimSuffix(aws.StringValue(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.Int32Value(jd.Revision)))
+	data.ARNPrefix = flex.StringToFrameworkARN(ctx, aws.String(arnPrefix))
 	data.ID = flex.StringToFramework(ctx, jd.JobDefinitionArn)
 	data.Name = flex.StringToFramework(ctx, jd.JobDefinitionName)
+
 	data.Revision = flex.Int32ToFramework(ctx, jd.Revision)
 	data.Status = flex.StringToFramework(ctx, jd.Status)
 	data.Type = flex.StringToFramework(ctx, jd.Type)
@@ -1109,6 +1117,7 @@ func frameworkFlattenRetryStrategy(ctx context.Context, jd *batchtypes.RetryStra
 
 type dataSourceJobDefinitionData struct {
 	ARN                        fwtypes.ARN  `tfsdk:"arn"`
+	ARNPrefix                  fwtypes.ARN  `tfsdk:"arn_prefix"`
 	ID                         types.String `tfsdk:"id"`
 	Name                       types.String `tfsdk:"name"`
 	Revision                   types.Int64  `tfsdk:"revision"`
