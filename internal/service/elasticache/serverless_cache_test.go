@@ -284,6 +284,69 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var serverlessElasticCache awstypes.ServerlessCache
+
+	tags1 := `
+  tags = {
+    key1 = "value1"
+  }
+`
+	tags2 := `
+  tags = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+`
+	tags3 := `
+  tags = {
+    key2 = "value2"
+  }
+`
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckServerlessCacheDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_tags(rName, tags1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccServerlessCacheConfig_tags(rName, tags2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccServerlessCacheConfig_tags(rName, tags3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckServerlessCacheExists(ctx context.Context, resourceName string, v *awstypes.ServerlessCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -449,4 +512,15 @@ resource "aws_elasticache_serverless_cache" "test" {
   description = %[2]q
 }
 `, rName, desc)
+}
+
+func testAccServerlessCacheConfig_tags(rName, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "memcached"
+  name   = %[1]q
+
+%[2]s
+}
+`, rName, tags)
 }

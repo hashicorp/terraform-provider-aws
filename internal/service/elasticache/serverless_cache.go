@@ -145,9 +145,6 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 				CustomType:  fwtypes.ListOfARNType,
 				ElementType: fwtypes.ARNType,
 				Optional:    true,
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
