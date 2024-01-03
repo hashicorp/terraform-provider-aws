@@ -154,8 +154,9 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			"ha_pairs": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 6),
-				Default:      1,
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -220,11 +221,13 @@ func ResourceONTAPFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 4096}),
+				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			"throughput_capacity_per_ha_pair": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{3072, 6144}),
+				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -275,19 +278,19 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.EndpointIpAddressRange = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("fsx_admin_password"); ok {
+		input.OntapConfiguration.FsxAdminPassword = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("ha_pairs"); ok {
-		input.OntapConfiguration.HAPairs = aws.Int64(int64(v.(int)))
-		if v.(int) > 1 {
+		v := int64(v.(int))
+		input.OntapConfiguration.HAPairs = aws.Int64(v)
+
+		if v > 1 {
 			if v, ok := d.GetOk("throughput_capacity_per_ha_pair"); ok {
 				input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(v.(int)))
 			}
-		} else {
-			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(v.(int)))
 		}
-	}
-
-	if v, ok := d.GetOk("fsx_admin_password"); ok {
-		input.OntapConfiguration.FsxAdminPassword = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -355,8 +358,9 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
-	d.Set("ha_pairs", ontapConfig.HAPairs)
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
+	haPairs := aws.Int64Value(ontapConfig.HAPairs)
+	d.Set("ha_pairs", haPairs)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
@@ -365,12 +369,13 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	if aws.Int64Value(ontapConfig.HAPairs) > int64(1) {
+	if haPairs > 1 {
 		d.Set("throughput_capacity", nil)
+		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
+		d.Set("throughput_capacity_per_ha_pair", nil)
 	}
-	d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 
@@ -426,6 +431,10 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("throughput_capacity") {
 			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+		}
+
+		if d.HasChange("throughput_capacity_per_ha_pair") {
+			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(d.Get("throughput_capacity_per_ha_pair").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
