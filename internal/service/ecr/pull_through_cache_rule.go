@@ -5,6 +5,7 @@ package ecr
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -53,12 +54,9 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 				ForceNew: true,
 			},
 			"credential_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`^arn:aws:secretsmanager:[a-zA-Z0-9-:]+:secret:ecr\-pullthroughcache\/[a-zA-Z0-9\/_+=.@-]+$`),
-					"must be an arn",
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
