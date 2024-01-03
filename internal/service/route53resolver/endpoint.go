@@ -86,6 +86,12 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validResolverName,
 			},
+			"resolver_endpoint_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(route53resolver.ResolverEndpointType_Values(), false),
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -138,6 +144,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("resolver_endpoint_type"); ok {
+		input.ResolverEndpointType = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateResolverEndpointWithContext(ctx, input)
 
 	if err != nil {
@@ -174,6 +184,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("host_vpc_id", ep.HostVPCId)
 	d.Set("name", ep.Name)
 	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
+	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
@@ -192,7 +203,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChanges("name", "protocols") {
+	if d.HasChanges("name", "protocols", "resolver_endpoint_type") {
 		input := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
 		}
@@ -203,6 +214,10 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
+		}
+
+		if d.HasChange("resolver_endpoint_type") {
+			input.ResolverEndpointType = aws.String(d.Get("resolver_endpoint_type").(string))
 		}
 
 		_, err := conn.UpdateResolverEndpointWithContext(ctx, input)
