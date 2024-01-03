@@ -40,6 +40,7 @@ import (
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
+	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -56,6 +57,7 @@ import (
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -76,6 +78,7 @@ import (
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
@@ -91,6 +94,7 @@ import (
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
@@ -207,7 +211,6 @@ import (
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
@@ -652,6 +655,10 @@ func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greeng
 	return errs.Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass, make(map[string]any)))
 }
 
+func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation_sdkv2.Client {
+	return errs.Must(client[*groundstation_sdkv2.Client](ctx, c, names.GroundStation, make(map[string]any)))
+}
+
 func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
 	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty, make(map[string]any)))
 }
@@ -786,6 +793,10 @@ func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sd
 
 func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
 	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ, make(map[string]any)))
+}
+
+func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
+	return errs.Must(client[*mq_sdkv2.Client](ctx, c, names.MQ, make(map[string]any)))
 }
 
 func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
@@ -956,10 +967,6 @@ func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sd
 	return errs.Must(conn[*route53resolver_sdkv1.Route53Resolver](ctx, c, names.Route53Resolver, make(map[string]any)))
 }
 
-func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
-	return errs.Must(conn[*s3_sdkv1.S3](ctx, c, names.S3, make(map[string]any)))
-}
-
 func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
 	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, make(map[string]any)))
 }
@@ -1056,6 +1063,10 @@ func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv
 	return errs.Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog, make(map[string]any)))
 }
 
+func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servicecatalogappregistry_sdkv2.Client {
+	return errs.Must(client[*servicecatalogappregistry_sdkv2.Client](ctx, c, names.ServiceCatalogAppRegistry, make(map[string]any)))
+}
+
 func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
 	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery, make(map[string]any)))
 }
@@ -1114,6 +1125,10 @@ func (c *AWSClient) WAFRegionalConn(ctx context.Context) *wafregional_sdkv1.WAFR
 
 func (c *AWSClient) WAFV2Conn(ctx context.Context) *wafv2_sdkv1.WAFV2 {
 	return errs.Must(conn[*wafv2_sdkv1.WAFV2](ctx, c, names.WAFV2, make(map[string]any)))
+}
+
+func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected_sdkv2.Client {
+	return errs.Must(client[*wellarchitected_sdkv2.Client](ctx, c, names.WellArchitected, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {

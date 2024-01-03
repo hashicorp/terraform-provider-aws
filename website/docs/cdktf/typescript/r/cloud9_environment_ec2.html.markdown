@@ -31,6 +31,7 @@ class MyConvertedCode extends TerraformStack {
     new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
       name: "example-env",
+      imageId: "amazonlinux-2023-x86_64",
     });
   }
 }
@@ -58,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
     const example = new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
       name: config.name,
+      imageId: "amazonlinux-2023-x86_64",
     });
     new DataAwsInstance(this, "cloud9_instance", {
       filter: [
@@ -102,6 +104,7 @@ class MyConvertedCode extends TerraformStack {
     const example = new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
       name: config.name,
+      imageId: "amazonlinux-2023-x86_64",
     });
     const cloud9Instance = new DataAwsInstance(this, "cloud9_instance", {
       filter: [
@@ -135,10 +138,12 @@ This resource supports the following arguments:
 * `imageId` - (Optional) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
     * `amazonlinux-1-x86_64`
     * `amazonlinux-2-x86_64`
+    * `amazonlinux-2023-x86_64`
     * `ubuntu-18.04-x86_64`
     * `ubuntu-22.04-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64`
 

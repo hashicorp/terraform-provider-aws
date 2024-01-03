@@ -110,6 +110,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Ground Station
 GuardDuty
 HealthLake
 IAM (Identity & Access Management)
@@ -199,6 +200,7 @@ Security Hub
 Security Lake
 Serverless Application Repository
 Service Catalog
+Service Catalog AppRegistry
 Service Quotas
 Shield
 Signer
@@ -219,6 +221,7 @@ WAF Classic
 WAF Classic Regional
 Wavelength
 Web Services Budgets
+Well-Architected Tool
 WorkLink
 WorkSpaces
 X-Ray

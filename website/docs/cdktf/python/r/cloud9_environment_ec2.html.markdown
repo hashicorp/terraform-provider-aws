@@ -30,7 +30,8 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         Cloud9EnvironmentEc2(self, "example",
             instance_type="t2.micro",
-            name="example-env"
+            name="example-env",
+            image_id="amazonlinux-2023-x86_64"
         )
 ```
 
@@ -51,7 +52,8 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         example = Cloud9EnvironmentEc2(self, "example",
             instance_type="t2.micro",
-            name=name
+            name=name,
+            image_id="amazonlinux-2023-x86_64"
         )
         DataAwsInstance(self, "cloud9_instance",
             filter=[DataAwsInstanceFilter(
@@ -83,7 +85,8 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         example = Cloud9EnvironmentEc2(self, "example",
             instance_type="t2.micro",
-            name=name
+            name=name,
+            image_id="amazonlinux-2023-x86_64"
         )
         cloud9_instance = DataAwsInstance(self, "cloud9_instance",
             filter=[DataAwsInstanceFilter(
@@ -113,10 +116,12 @@ This resource supports the following arguments:
 * `image_id` - (Optional) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
     * `amazonlinux-1-x86_64`
     * `amazonlinux-2-x86_64`
+    * `amazonlinux-2023-x86_64`
     * `ubuntu-18.04-x86_64`
     * `ubuntu-22.04-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
     * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64`
 

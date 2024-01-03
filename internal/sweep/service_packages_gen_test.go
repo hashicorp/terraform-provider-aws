@@ -105,6 +105,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/greengrass"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/groundstation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -188,6 +189,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
@@ -214,6 +216,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -321,6 +324,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		glue.ServicePackage(ctx),
 		grafana.ServicePackage(ctx),
 		greengrass.ServicePackage(ctx),
+		groundstation.ServicePackage(ctx),
 		guardduty.ServicePackage(ctx),
 		healthlake.ServicePackage(ctx),
 		iam.ServicePackage(ctx),
@@ -404,6 +408,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		securitylake.ServicePackage(ctx),
 		serverlessrepo.ServicePackage(ctx),
 		servicecatalog.ServicePackage(ctx),
+		servicecatalogappregistry.ServicePackage(ctx),
 		servicediscovery.ServicePackage(ctx),
 		servicequotas.ServicePackage(ctx),
 		ses.ServicePackage(ctx),
@@ -430,6 +435,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		waf.ServicePackage(ctx),
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
+		wellarchitected.ServicePackage(ctx),
 		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
 		xray.ServicePackage(ctx),
