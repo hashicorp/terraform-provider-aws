@@ -70,7 +70,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -84,7 +84,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 

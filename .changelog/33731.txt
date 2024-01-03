@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_event_subscription: `source_ids` and `source_type` are Required
+```

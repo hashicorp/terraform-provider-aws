@@ -53,6 +53,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
 )
@@ -824,7 +825,7 @@ func PartitionDNSSuffix() string {
 
 func PartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return conns.ReverseDNS(partition.DNSSuffix())
+		return names.ReverseDNS(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -2085,28 +2086,6 @@ data "aws_ec2_instance_type_offering" "%[1]s" {
   preferred_instance_types = ["%[2]s"]
 }
 `, name, strings.Join(preferredInstanceTypes, "\", \""))
-}
-
-// ConfigLatestAmazonLinuxHVMEBSAMI returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an EBS root device.
-// The data source is named 'amzn-ami-minimal-hvm-ebs'.
-func ConfigLatestAmazonLinuxHVMEBSAMI() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-`
 }
 
 func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
