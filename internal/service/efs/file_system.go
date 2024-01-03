@@ -88,6 +88,11 @@ func ResourceFileSystem() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"transition_to_archive": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(efs.TransitionToArchiveRules_Values(), false),
+						},
 						"transition_to_ia": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -119,6 +124,25 @@ func ResourceFileSystem() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
+			},
+			"protection": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_overwrite": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								efs.ReplicationOverwriteProtectionEnabled,
+								efs.ReplicationOverwriteProtectionDisabled,
+							}, false),
+						},
+					},
+				},
 			},
 			"provisioned_throughput_in_mibps": {
 				Type:     schema.TypeFloat,
@@ -214,13 +238,25 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
-		_, err := conn.PutLifecycleConfigurationWithContext(ctx, &efs.PutLifecycleConfigurationInput{
+		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
 			LifecyclePolicies: expandFileSystemLifecyclePolicies(v.([]interface{})),
-		})
+		}
+
+		_, err := conn.PutLifecycleConfigurationWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+
+		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
 		}
 	}
 
@@ -255,6 +291,9 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting size_in_bytes: %s", err)
@@ -322,6 +361,18 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("protection") {
+		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+
+			_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -475,6 +526,10 @@ func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []int
 
 		tfMap := make(map[string]interface{})
 
+		if apiObject.TransitionToArchive != nil {
+			tfMap["transition_to_archive"] = aws.StringValue(apiObject.TransitionToArchive)
+		}
+
 		if apiObject.TransitionToIA != nil {
 			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
 		}
@@ -500,6 +555,10 @@ func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePol
 		}
 
 		apiObject := &efs.LifecyclePolicy{}
+
+		if v, ok := tfMap["transition_to_archive"].(string); ok && v != "" {
+			apiObject.TransitionToArchive = aws.String(v)
+		}
 
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
 			apiObject.TransitionToIA = aws.String(v)
@@ -533,4 +592,34 @@ func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{}
 	}
 
 	return []interface{}{m}
+}
+
+func expandUpdateFileSystemProtectionInput(id string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &efs.UpdateFileSystemProtectionInput{
+		FileSystemId: aws.String(id),
+	}
+
+	if v, ok := tfMap["replication_overwrite"].(string); ok && v != "" {
+		apiObject.ReplicationOverwriteProtection = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription) []interface{} {
+	if protection == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if protection.ReplicationOverwriteProtection != nil {
+		tfMap["replication_overwrite"] = aws.StringValue(protection.ReplicationOverwriteProtection)
+	}
+
+	return []interface{}{tfMap}
 }

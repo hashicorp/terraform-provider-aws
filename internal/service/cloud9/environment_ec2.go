@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,15 +60,17 @@ func ResourceEnvironmentEC2() *schema.Resource {
 			},
 			"image_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"amazonlinux-1-x86_64",
 					"amazonlinux-2-x86_64",
+					"amazonlinux-2023-x86_64",
 					"ubuntu-18.04-x86_64",
 					"ubuntu-22.04-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
@@ -116,6 +117,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	input := &cloud9.CreateEnvironmentEC2Input{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
+		ImageId:            aws.String(d.Get("image_id").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
 		Tags:               getTagsIn(ctx),
@@ -124,50 +126,30 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
 		input.AutomaticStopTimeMinutes = aws.Int64(int64(v.(int)))
 	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("image_id"); ok {
-		input.ImageId = aws.String(v.(string))
-	}
+
 	if v, ok := d.GetOk("owner_arn"); ok {
 		input.OwnerArn = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("subnet_id"); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	log.Printf("[INFO] Creating Cloud9 EC2 Environment: %s", input)
-	var output *cloud9.CreateEnvironmentEC2Output
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		output, err = conn.CreateEnvironmentEC2WithContext(ctx, input)
-
-		if err != nil {
-			// NotFoundException: User arn:aws:iam::*******:user/****** does not exist.
-			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "User") {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateEnvironmentEC2WithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateEnvironmentEC2WithContext(ctx, input)
+	}, cloud9.ErrCodeNotFoundException, "User")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cloud9 EC2 Environment (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.EnvironmentId))
+	d.SetId(aws.StringValue(outputRaw.(*cloud9.CreateEnvironmentEC2Output).EnvironmentId))
 
-	_, err = waitEnvironmentReady(ctx, conn, d.Id())
-
-	if err != nil {
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Cloud9 EC2 Environment (%s) create: %s", d.Id(), err)
 	}
 
@@ -212,7 +194,6 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 			Name:          aws.String(d.Get("name").(string)),
 		}
 
-		log.Printf("[INFO] Updating Cloud9 EC2 Environment: %s", input)
 		_, err := conn.UpdateEnvironmentWithContext(ctx, &input)
 
 		if err != nil {
@@ -240,9 +221,7 @@ func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting Cloud9 EC2 Environment (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitEnvironmentDeleted(ctx, conn, d.Id())
-
-	if err != nil {
+	if _, err := waitEnvironmentDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Cloud9 EC2 Environment (%s) delete: %s", d.Id(), err)
 	}
 

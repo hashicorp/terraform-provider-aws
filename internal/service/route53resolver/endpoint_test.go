@@ -57,6 +57,8 @@ func testAccResolverEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -161,6 +163,7 @@ func testAccResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", initialName),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 				),
 			},
 			{
@@ -170,6 +173,7 @@ func testAccResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
 				),
 			},
 		},
@@ -181,8 +185,6 @@ func testAccResolverEndpoint_updateResolverEndpointType(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	initialResolverEndpointType := "IPV4"
-	updatedResolverEndpointType := "DUALSTACK"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -191,21 +193,17 @@ func testAccResolverEndpoint_updateResolverEndpointType(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_ResolverEndpointType(rName, initialResolverEndpointType),
+				Config: testAccEndpointConfig_resolverEndpointType(rName, "IPV4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", initialResolverEndpointType),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_updatedResolverEndpointType(rName, updatedResolverEndpointType),
+				Config: testAccEndpointConfig_resolverEndpointType(rName, "DUALSTACK"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", updatedResolverEndpointType),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "DUALSTACK"),
 				),
 			},
 		},
@@ -216,7 +214,6 @@ func testAccResolverEndpoint_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
-	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
@@ -227,16 +224,9 @@ func testAccResolverEndpoint_ipv6(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_ipv6(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
-					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV6"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -471,11 +461,13 @@ resource "aws_route53_resolver_endpoint" "test" {
   ip_address {
     subnet_id = aws_subnet.test[0].id
   }
+
+  protocols = ["Do53", "DoH"]
 }
 `, name))
 }
 
-func testAccEndpointConfig_ResolverEndpointType(rName, ResolverEndpointType string) string {
+func testAccEndpointConfig_resolverEndpointType(rName, resolverEndpointType string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
   direction = "INBOUND"
@@ -496,31 +488,7 @@ resource "aws_route53_resolver_endpoint" "test" {
 
   resolver_endpoint_type = %[1]q
 }
-`, ResolverEndpointType))
-}
-
-func testAccEndpointConfig_updatedResolverEndpointType(rName, ResolverEndpointType string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
-resource "aws_route53_resolver_endpoint" "test" {
-  direction = "INBOUND"
-
-  security_group_ids = aws_security_group.test[*].id
-
-  ip_address {
-    subnet_id = aws_subnet.test[0].id
-  }
-
-  ip_address {
-    subnet_id = aws_subnet.test[1].id
-  }
-
-  ip_address {
-    subnet_id = aws_subnet.test[2].id
-  }
-
-  resolver_endpoint_type = %[1]q
-}
-`, ResolverEndpointType))
+`, resolverEndpointType))
 }
 
 func testAccEndpointConfig_ipv6(rName string) string {

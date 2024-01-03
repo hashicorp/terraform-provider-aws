@@ -170,6 +170,7 @@ provider "aws" {
   <li><code>glue</code></li>
   <li><code>grafana</code> (or <code>managedgrafana</code> or <code>amg</code>)</li>
   <li><code>greengrass</code></li>
+  <li><code>groundstation</code></li>
   <li><code>guardduty</code></li>
   <li><code>healthlake</code></li>
   <li><code>iam</code></li>
@@ -200,6 +201,7 @@ provider "aws" {
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
+  <li><code>lookoutmetrics</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
@@ -220,8 +222,10 @@ provider "aws" {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
+  <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
@@ -252,6 +256,7 @@ provider "aws" {
   <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
+  <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
   <li><code>servicediscovery</code></li>
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
@@ -279,6 +284,7 @@ provider "aws" {
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>
+  <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
   <li><code>xray</code></li>

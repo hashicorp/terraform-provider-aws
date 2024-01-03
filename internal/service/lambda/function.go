@@ -232,6 +232,39 @@ func ResourceFunction() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"logging_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"application_log_level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "",
+							ValidateDiagFunc: enum.Validate[types.ApplicationLogLevel](),
+						},
+						"log_format": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.LogFormat](),
+						},
+						"log_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validLogGroupName(),
+						},
+						"system_log_level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "",
+							ValidateDiagFunc: enum.Validate[types.SystemLogLevel](),
+						},
+					},
+				},
+			},
 			"memory_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -518,6 +551,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ImageConfig = expandImageConfigs(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 {
+		input.LoggingConfig = expandLoggingConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKeyArn = aws.String(v.(string))
 	}
@@ -644,6 +681,9 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
+	}
+	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("package_type", function.PackageType)
@@ -826,6 +866,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("layers") {
 			input.Layers = flex.ExpandStringValueList(d.Get("layers").([]interface{}))
+		}
+
+		if d.HasChange("logging_config") {
+			input.LoggingConfig = expandLoggingConfig(d.Get("logging_config").([]interface{}))
 		}
 
 		if d.HasChange("memory_size") {
@@ -1251,6 +1295,7 @@ func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
 		d.HasChange("image_config") ||
+		d.HasChange("logging_config") ||
 		d.HasChange("memory_size") ||
 		d.HasChange("role") ||
 		d.HasChange("timeout") ||
@@ -1386,6 +1431,40 @@ func expandImageConfigs(imageConfigMaps []interface{}) *types.ImageConfig {
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}
 	return imageConfig
+}
+
+func expandLoggingConfig(tfList []interface{}) *types.LoggingConfig {
+	loggingConfig := &types.LoggingConfig{}
+	if len(tfList) == 1 && tfList[0] != nil {
+		config := tfList[0].(map[string]interface{})
+		if v := config["application_log_level"].(string); len(v) > 0 {
+			loggingConfig.ApplicationLogLevel = types.ApplicationLogLevel(v)
+		}
+		if v := config["log_format"].(string); len(v) > 0 {
+			loggingConfig.LogFormat = types.LogFormat(v)
+		}
+		if v := config["log_group"].(string); len(v) > 0 {
+			loggingConfig.LogGroup = aws.String(v)
+		}
+		if v := config["system_log_level"].(string); len(v) > 0 {
+			loggingConfig.SystemLogLevel = types.SystemLogLevel(v)
+		}
+	}
+	return loggingConfig
+}
+
+func flattenLoggingConfig(apiObject *types.LoggingConfig) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	m := map[string]interface{}{
+		"application_log_level": apiObject.ApplicationLogLevel,
+		"log_format":            apiObject.LogFormat,
+		"log_group":             aws.ToString(apiObject.LogGroup),
+		"system_log_level":      apiObject.SystemLogLevel,
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func flattenEphemeralStorage(response *types.EphemeralStorage) []map[string]interface{} {

@@ -102,6 +102,7 @@ resource "aws_lb" "example" {
 This resource supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
+* `connection_logs` - (Optional) A Connection Logs block. Connection Logs documented below. Only valid for Load Balancers of type `application`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
 * `dns_record_client_routing_policy` - (Optional) Indicates how traffic is distributed among the load balancer Availability Zones. Possible values are `any_availability_zone` (default), `availability_zone_affinity`, or `partial_availability_zone_affinity`. See   [Availability Zone DNS affinity](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#zonal-dns-affinity) for additional details. Only valid for `network` type load balancers.
@@ -123,17 +124,21 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
 * `preserve_host_header` - (Optional) Indicates whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
-* `subnet_mapping` - (Optional) A subnet mapping block as documented below.
-* `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
-cannot be updated for Load Balancers of type `network`. Changing this value
-for load balancers of type `network` will force a recreation of the resource.
-* `xff_header_processing_mode` - (Optional) Determines how the load balancer modifies the `X-Forwarded-For` header in the HTTP request before sending the request to the target. The possible values are `append`, `preserve`, and `remove`. Only valid for Load Balancers of type `application`. The default is `append`.
+* `subnet_mapping` - (Optional) A subnet mapping block as documented below. For Load Balancers of type `network` subnet mappings can only be added.
+* `subnets` - (Optional) A list of subnet IDs to attach to the LB. For Load Balancers of type `network` subnets can only be added (see [Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#availability-zones)), deleting a subnet for load balancers of type `network` will force a recreation of the resource.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `xff_header_processing_mode` - (Optional) Determines how the load balancer modifies the `X-Forwarded-For` header in the HTTP request before sending the request to the target. The possible values are `append`, `preserve`, and `remove`. Only valid for Load Balancers of type `application`. The default is `append`.
 
 ### access_logs
 
 * `bucket` - (Required) The S3 bucket name to store the logs in.
 * `enabled` - (Optional) Boolean to enable / disable `access_logs`. Defaults to `false`, even when `bucket` is specified.
+* `prefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
+
+### connection_logs
+
+* `bucket` - (Required) The S3 bucket name to store the logs in.
+* `enabled` - (Optional) Boolean to enable / disable `connection_logs`. Defaults to `false`, even when `bucket` is specified.
 * `prefix` - (Optional) The S3 bucket prefix. Logs are stored in the root if not configured.
 
 ### subnet_mapping

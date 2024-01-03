@@ -15,8 +15,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceApplication,
+			Name:    "Application",
+		},
+		{
+			Factory: newDataSourceApplicationAssignments,
+			Name:    "Application Assignments",
+		},
+		{
 			Factory: newDataSourceApplicationProviders,
 			Name:    "Application Providers",
+		},
+		{
+			Factory: newDataSourcePrincipalApplicationAssignments,
+			Name:    "Principal Application Assignments",
 		},
 	}
 }
@@ -29,12 +41,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags:    &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory: newResourceApplicationAccessScope,
+			Name:    "Application Access Scope",
+		},
+		{
 			Factory: newResourceApplicationAssignment,
 			Name:    "Application Assignment",
 		},
 		{
 			Factory: newResourceApplicationAssignmentConfiguration,
 			Name:    "Application Assignment Configuration",
+		},
+		{
+			Factory: newResourceTrustedTokenIssuer,
+			Name:    "Trusted Token Issuer",
+			Tags:    &types.ServicePackageResourceTags{},
 		},
 	}
 }

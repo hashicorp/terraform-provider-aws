@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -78,6 +79,8 @@ func resourceSubscriptionFilter() *schema.Resource {
 }
 
 func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	logGroupName := d.Get("log_group_name").(string)
@@ -118,15 +121,17 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		})
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Subscription Filter (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Subscription Filter (%s): %s", name, err)
 	}
 
 	d.SetId(subscriptionFilterID(logGroupName))
 
-	return nil
+	return diags
 }
 
 func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	subscriptionFilter, err := findSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
@@ -134,11 +139,11 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Subscription Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("destination_arn", subscriptionFilter.DestinationArn)
@@ -148,10 +153,12 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("name", subscriptionFilter.FilterName)
 	d.Set("role_arn", subscriptionFilter.RoleArn)
 
-	return nil
+	return diags
 }
 
 func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
@@ -161,14 +168,14 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSubscriptionFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

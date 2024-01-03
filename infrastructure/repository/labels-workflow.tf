@@ -133,10 +133,6 @@ variable "workflow_labels" {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
     },
-    "service/meta" = {
-      color       = "7b42bc", # color:terraform (logomark)
-      description = "Issues and PRs that correspond to meta data sources."
-    },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient
       description = "Managed by automation to categorize the size of a PR."
