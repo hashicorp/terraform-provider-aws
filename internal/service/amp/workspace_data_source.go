@@ -14,8 +14,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_prometheus_workspace")
-func DataSourceWorkspace() *schema.Resource {
+// @SDKDataSource("aws_prometheus_workspace", name="Workspace")
+func dataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
@@ -55,19 +55,17 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).AMPConn(ctx)
+	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
+	workspace, err := findWorkspaceByID(ctx, conn, workspaceID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AMP Workspace (%s): %s", workspaceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s): %s", workspaceID, err)
 	}
 
 	d.SetId(workspaceID)
-
 	d.Set("alias", workspace.Alias)
 	d.Set("arn", workspace.Arn)
 	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
