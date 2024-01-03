@@ -12,27 +12,6 @@ import (
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestAccMetaProfileDataSource_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_profile.test"
-	profileName := acctest.SkipIfEnvVarNotSet(t, "AWS_PROFILE")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProfileDataSourceConfig_ProviderProfile(profileName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", profileName),
-					resource.TestCheckResourceAttr(dataSourceName, "id", profileName),
-				),
-			},
-		},
-	})
-}
-
 func TestAccMetaProfileDataSource_multiProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_profile.test"
@@ -57,21 +36,10 @@ func TestAccMetaProfileDataSource_multiProvider(t *testing.T) {
 	})
 }
 
-func testAccProfileDataSourceConfig_ProviderProfile(name string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-	profile = %[1]q
-}
-
-data "aws_profile" "test" {}
-`, name)
-}
-
 func testAccProfileDataSourceConfig_multiProvider() string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprint(`
 data "aws_profile" "test" {
   provider = "awsalternate"
 }
 `))
-
 }

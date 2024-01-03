@@ -240,7 +240,7 @@ marketplacecommerceanalytics,marketplacecommerceanalytics,marketplacecommerceana
 marketplace-entitlement,marketplaceentitlement,marketplaceentitlementservice,marketplaceentitlementservice,,marketplaceentitlement,,marketplaceentitlementservice,MarketplaceEntitlement,MarketplaceEntitlementService,,1,,,aws_marketplaceentitlement_,,marketplaceentitlement_,Marketplace Entitlement,AWS,,x,,,,,
 meteringmarketplace,meteringmarketplace,marketplacemetering,marketplacemetering,,marketplacemetering,,meteringmarketplace,MarketplaceMetering,MarketplaceMetering,,1,,,aws_marketplacemetering_,,marketplacemetering_,Marketplace Metering,AWS,,x,,,,,
 memorydb,memorydb,memorydb,memorydb,,memorydb,,,MemoryDB,MemoryDB,,1,,,aws_memorydb_,,memorydb_,MemoryDB for Redis,Amazon,,,,,,,
-,,,,,meta,,,Meta,,,,,aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$,aws_meta_,,arn;ip_ranges;billing_service_account;default_tags;partition;region;service\.,Meta Data Sources,,x,,,x,,,Not an AWS service (metadata)
+,,,,,meta,,,Meta,,,,,aws_(arn|billing_service_account|default_tags|ip_ranges|partition|profile|regions?|service)$,aws_meta_,,arn;ip_ranges;billing_service_account;default_tags;partition;profile;region;service\.,Meta Data Sources,,x,,,x,,,Not an AWS service (metadata)
 mgh,mgh,migrationhub,migrationhub,,mgh,,migrationhub,MgH,MigrationHub,,1,,,aws_mgh_,,mgh_,MgH (Migration Hub),AWS,,x,,,,,
 ,,,,,,,,,,,,,,,,,Microservice Extractor for .NET,AWS,x,,,,,,No SDK support
 migrationhub-config,migrationhubconfig,migrationhubconfig,migrationhubconfig,,migrationhubconfig,,,MigrationHubConfig,MigrationHubConfig,,1,,,aws_migrationhubconfig_,,migrationhubconfig_,Migration Hub Config,AWS,,x,,,,,

@@ -11,6 +11,7 @@ description: |-
 Supplies the profile name used to configure the provider. This can be used to pass the provider's profile to other resources, e.g. an external process using a [`provisioner`](https://developer.hashicorp.com/terraform/language/resources/provisioners/local-exec).
 
 ## Example Usage
+
 ```terraform
 provider "aws" {
   profile = "default"

@@ -726,6 +726,7 @@ service/meta:
   - 'website/**/billing_service_account*'
   - 'website/**/default_tags*'
   - 'website/**/partition*'
+  - 'website/**/profile*'
   - 'website/**/region*'
   - 'website/**/service\.*'
 service/mgh:
