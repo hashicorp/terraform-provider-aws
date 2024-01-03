@@ -157,6 +157,9 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("kms_key_id", fs.KmsKeyId)
 	d.Set("name", fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	if fs.SizeInBytes != nil {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
@@ -177,10 +180,6 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
-	}
-
-	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
 	}
 
 	return diags

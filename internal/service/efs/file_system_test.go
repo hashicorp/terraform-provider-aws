@@ -43,6 +43,8 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
 					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
+					resource.TestCheckResourceAttr(resourceName, "protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "size_in_bytes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_ia"),
@@ -122,9 +124,10 @@ func TestAccEFSFileSystem_protection(t *testing.T) {
 		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemConfig_protection,
+				Config: testAccFileSystemConfig_protection("DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "protection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "DISABLED"),
 				),
 			},
@@ -132,6 +135,13 @@ func TestAccEFSFileSystem_protection(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFileSystemConfig_protection("ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "ENABLED"),
+				),
 			},
 		},
 	})
@@ -504,13 +514,15 @@ resource "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemConfig_protection = `
+func testAccFileSystemConfig_protection(replicationOverwwrite string) string {
+	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   protection {	
-    replication_overwrite = "DISABLED"
+    replication_overwrite = %[1]q
   }
 }
-`
+`, replicationOverwwrite)
+}
 
 func testAccFileSystemConfig_availabilityZoneName(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`

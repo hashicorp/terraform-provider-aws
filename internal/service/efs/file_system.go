@@ -238,18 +238,22 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
-		_, err := conn.PutLifecycleConfigurationWithContext(ctx, &efs.PutLifecycleConfigurationInput{
+		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
 			LifecyclePolicies: expandFileSystemLifecyclePolicies(v.([]interface{})),
-		})
+		}
+
+		_, err := conn.PutLifecycleConfigurationWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("protection"); ok {
-		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, expandFileSystemProtection(d.Id(), v.([]interface{})))
+	if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+
+		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
@@ -287,15 +291,14 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting size_in_bytes: %s", err)
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
-
-	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
-	}
 
 	setTagsOut(ctx, fs.Tags)
 
@@ -362,10 +365,14 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChanges("protection") {
-		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, expandFileSystemProtection(d.Id(), d.Get("protection").([]interface{})))
+		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
+			_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -587,18 +594,17 @@ func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{}
 	return []interface{}{m}
 }
 
-func expandFileSystemProtection(id string, tfList []interface{}) *efs.UpdateFileSystemProtectionInput {
-	if len(tfList) == 0 {
+func expandUpdateFileSystemProtectionInput(id string, tfMap map[string]interface{}) *efs.UpdateFileSystemProtectionInput {
+	if tfMap == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
 	apiObject := &efs.UpdateFileSystemProtectionInput{
-		FileSystemId: &id,
+		FileSystemId: aws.String(id),
 	}
 
 	if v, ok := tfMap["replication_overwrite"].(string); ok && v != "" {
-		apiObject.ReplicationOverwriteProtection = &v
+		apiObject.ReplicationOverwriteProtection = aws.String(v)
 	}
 
 	return apiObject
@@ -612,7 +618,7 @@ func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription
 	tfMap := map[string]interface{}{}
 
 	if protection.ReplicationOverwriteProtection != nil {
-		tfMap["replication_overwrite"] = protection.ReplicationOverwriteProtection
+		tfMap["replication_overwrite"] = aws.StringValue(protection.ReplicationOverwriteProtection)
 	}
 
 	return []interface{}{tfMap}
