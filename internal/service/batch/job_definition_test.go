@@ -901,8 +901,8 @@ resource "aws_batch_job_definition" "test" {
     memory  = 128
     vcpus   = 1
   })
-  name                = %[1]q
-  type                = "container"
+  name = %[1]q
+  type = "container"
 }
 `, rName)
 }
