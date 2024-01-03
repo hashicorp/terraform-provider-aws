@@ -51,8 +51,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Alert Manager Definition",
 		},
 		{
-			Factory:  ResourceRuleGroupNamespace,
+			Factory:  resourceRuleGroupNamespace,
 			TypeName: "aws_prometheus_rule_group_namespace",
+			Name:     "Rule Group Namespace",
 		},
 		{
 			Factory:  ResourceWorkspace,

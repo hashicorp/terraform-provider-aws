@@ -6,7 +6,9 @@ package amp
 // Exports for use in tests only.
 var (
 	ResourceAlertManagerDefinition = resourceAlertManagerDefinition
+	ResourceRuleGroupNamespace     = resourceRuleGroupNamespace
 	ResourceScraper                = newResourceScraper
 
 	FindAlertManagerDefinitionByID = findAlertManagerDefinitionByID
+	FindRuleGroupNamespaceByARN    = findRuleGroupNamespaceByARN
 )

@@ -22,57 +22,6 @@ const (
 	workspaceTimeout = 5 * time.Minute
 )
 
-func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeDeleting},
-		Target:  []string{},
-		Refresh: statusRuleGroupNamespace(ctx, conn, id),
-		Timeout: workspaceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitRuleGroupNamespaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeCreating},
-		Target:  []string{prometheusservice.RuleGroupsNamespaceStatusCodeActive},
-		Refresh: statusRuleGroupNamespace(ctx, conn, id),
-		Timeout: workspaceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeUpdating},
-		Target:  []string{prometheusservice.RuleGroupsNamespaceStatusCodeActive},
-		Refresh: statusRuleGroupNamespace(ctx, conn, id),
-		Timeout: workspaceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*types.ScraperDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ScraperStatusCodeCreating),

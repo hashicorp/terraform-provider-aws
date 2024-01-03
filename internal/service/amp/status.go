@@ -13,22 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindRuleGroupNamespaceByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status.StatusCode), nil
-	}
-}
-
 func statusScraper(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindScraperByID(ctx, conn, id)
