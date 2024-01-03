@@ -206,6 +206,7 @@ Service Quotas
 Shield
 Signer
 Storage Gateway
+Systems Manager for SAP
 Timestream Write
 Transcribe
 Transfer Family

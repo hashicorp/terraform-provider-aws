@@ -299,6 +299,7 @@ variable "service_labels" {
     "ssm",
     "ssmcontacts",
     "ssmincidents",
+    "ssmsap",
     "sso",
     "ssoadmin",
     "ssooidc",
