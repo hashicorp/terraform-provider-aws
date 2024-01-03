@@ -92,7 +92,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,7 +132,7 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,7 +162,7 @@ func TestAccAMPScraper_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -196,7 +196,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,7 +230,7 @@ func TestAccAMPScraper_security_groups(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
