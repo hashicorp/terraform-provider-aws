@@ -270,6 +270,7 @@ outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outpo
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,
 ,,,,,,,,,,,,,,,,,ParallelCluster,AWS,x,,,,,,No SDK support
+pca-connector-ad,pcaconnectorad,pcaconnectorad,pcaconnectorad,,pcaconnectorad,,,PCAConnectorAD,PcaConnectorAd,,,2,,aws_pcaconnectorad_,,pcaconnectorad_,Private CA Connector for Active Directory,AWS,,,,,,,
 personalize,personalize,personalize,personalize,,personalize,,,Personalize,Personalize,,1,,,aws_personalize_,,personalize_,Personalize,Amazon,,x,,,,,
 personalize-events,personalizeevents,personalizeevents,personalizeevents,,personalizeevents,,,PersonalizeEvents,PersonalizeEvents,,1,,,aws_personalizeevents_,,personalizeevents_,Personalize Events,Amazon,,x,,,,,
 personalize-runtime,personalizeruntime,personalizeruntime,personalizeruntime,,personalizeruntime,,,PersonalizeRuntime,PersonalizeRuntime,,1,,,aws_personalizeruntime_,,personalizeruntime_,Personalize Runtime,Amazon,,x,,,,,
@@ -340,6 +341,7 @@ sqs,sqs,sqs,sqs,,sqs,,,SQS,SQS,,,2,,aws_sqs_,,sqs_,SQS (Simple Queue),Amazon,,,,
 ssm,ssm,ssm,ssm,,ssm,,,SSM,SSM,,1,2,,aws_ssm_,,ssm_,SSM (Systems Manager),AWS,,,,,,,
 ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMContacts,,,2,,aws_ssmcontacts_,,ssmcontacts_,SSM Contacts,AWS,,,,,,,
 ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,,2,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,,,
+ssm-sap,ssmsap,ssmsap,ssmsap,,ssmsap,,,SSMSAP,SsmSap,,,2,,aws_ssmsap_,,ssmsap_,Systems Manager for SAP,AWS,,,,,,,
 sso,sso,sso,sso,,sso,,,SSO,SSO,,1,,,aws_sso_,,sso_,SSO (Single Sign-On),AWS,,x,x,,,,
 sso-admin,ssoadmin,ssoadmin,ssoadmin,,ssoadmin,,,SSOAdmin,SSOAdmin,x,,2,,aws_ssoadmin_,,ssoadmin_,SSO Admin,AWS,,,,,,,
 identitystore,identitystore,identitystore,identitystore,,identitystore,,,IdentityStore,IdentityStore,,,2,,aws_identitystore_,,identitystore_,SSO Identity Store,AWS,,,,,,,

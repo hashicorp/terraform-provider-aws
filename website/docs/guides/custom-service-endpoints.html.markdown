@@ -222,6 +222,7 @@ provider "aws" {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
   <li><code>polly</code></li>
@@ -269,6 +270,7 @@ provider "aws" {
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>ssmsap</code></li>
   <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>

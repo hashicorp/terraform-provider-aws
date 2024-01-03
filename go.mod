@@ -68,6 +68,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/osis v1.6.5
+	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.3.5
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/polly v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.5
@@ -94,6 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.5
+	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.6

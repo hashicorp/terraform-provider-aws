@@ -160,6 +160,7 @@ Outposts (EC2)
 Pinpoint
 Polly
 Pricing Calculator
+Private CA Connector for Active Directory
 QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
@@ -205,6 +206,7 @@ Service Quotas
 Shield
 Signer
 Storage Gateway
+Systems Manager for SAP
 Timestream Write
 Transcribe
 Transfer Family

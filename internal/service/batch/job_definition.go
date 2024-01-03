@@ -38,6 +38,7 @@ func ResourceJobDefinition() *schema.Resource {
 		ReadWithoutTimeout:   resourceJobDefinitionRead,
 		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,6 +48,12 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"arn_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"container_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -63,12 +70,14 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobContainerProperties,
 			},
+
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
+
 			"node_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -84,6 +93,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 				ValidateFunc: validJobNodeProperties,
 			},
+
 			"eks_properties": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
@@ -309,12 +319,14 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+
 			"platform_capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -324,12 +336,14 @@ func ResourceJobDefinition() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
 			},
+
 			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
+
 			"retry_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -393,12 +407,21 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"revision": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+
+			"scheduling_priority": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -415,6 +438,7 @@ func ResourceJobDefinition() *schema.Resource {
 					},
 				},
 			},
+
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -503,6 +527,10 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("scheduling_priority"); ok {
+		input.SchedulingPriority = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -534,7 +562,9 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", jobDefinition.JobDefinitionArn)
+	arn, revision := aws.StringValue(jobDefinition.JobDefinitionArn), aws.Int64Value(jobDefinition.Revision)
+	d.Set("arn", arn)
+	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
 
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 
@@ -546,6 +576,12 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting container_properties: %s", err)
 	}
 
+	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
+	}
+
+	d.Set("name", jobDefinition.JobDefinitionName)
+
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
 
 	if err != nil {
@@ -556,11 +592,6 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
 	}
 
-	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
-	}
-
-	d.Set("name", jobDefinition.JobDefinitionName)
 	d.Set("parameters", aws.StringValueMap(jobDefinition.Parameters))
 	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
 	d.Set("propagate_tags", jobDefinition.PropagateTags)
@@ -573,7 +604,8 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("retry_strategy", nil)
 	}
 
-	setTagsOut(ctx, jobDefinition.Tags)
+	d.Set("revision", revision)
+	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 
 	if jobDefinition.Timeout != nil {
 		if err := d.Set("timeout", []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
@@ -583,8 +615,9 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("timeout", nil)
 	}
 
-	d.Set("revision", jobDefinition.Revision)
 	d.Set("type", jobDefinition.Type)
+
+	setTagsOut(ctx, jobDefinition.Tags)
 
 	return diags
 }

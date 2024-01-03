@@ -173,6 +173,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.5 h1:V+zBQiUAATdw
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.5/go.mod h1:Hky91JAG7y6hJrIoZ6IyJlB99+AFOPUIfqVQcZ+fbhY=
 github.com/aws/aws-sdk-go-v2/service/osis v1.6.5 h1:u0FL7wY1ni4WQkpfUiBslPmwKOltziQkGg5njTpPH6M=
 github.com/aws/aws-sdk-go-v2/service/osis v1.6.5/go.mod h1:wRTpbH8h5d4SJmdsy9LNEuZNHrNtUCZMl+U1slAW4Ng=
+github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.3.5 h1:oLDKMYBWAcWAVL6Ja5Pq5A07Hd3q7eqCXoyWArfYyYA=
+github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.3.5/go.mod h1:dFFT7BRTg0ePUPoDok8M7cza/BzmjJJlMi6F0bfjTv0=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.9.6 h1:cDjJ1OsUDDHP0DERFe+kon0awE0vMt+6xjd9zuOaOv8=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.9.6/go.mod h1:N3pAD/7GiKZAOBFFsF9BqWdSg33HM8ibXoAyPQXgcNI=
 github.com/aws/aws-sdk-go-v2/service/polly v1.36.5 h1:/BHypWAWPEuwfnlb4hJz5R1uedDGNtorZgEHYtW/wI4=
@@ -225,6 +227,8 @@ github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.5 h1:qIzGNd+8lT3hXdq/TJ7s
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.5/go.mod h1:Jo4uHzInZp+heTq54nz0c71D1a2som4mlvK/jDtZSKw=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.5 h1:WOVvRHb2gJaaQNXkjxT5DSHazMwlycAqi4SMHnX1kyI=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.5/go.mod h1:n+AjlyOudRAgZMU/1XowAXzP5bVYizB7mkjXSsXh4wc=
+github.com/aws/aws-sdk-go-v2/service/ssmsap v1.10.5 h1:iqsSiOQ7n9hfaqPbMEMQsMNErpQzVb7IgRw2EfZYwUs=
+github.com/aws/aws-sdk-go-v2/service/ssmsap v1.10.5/go.mod h1:Tz6K/UVgdQpOjIAIGYhhFdv/pPllj34uWIr4TObcujo=
 github.com/aws/aws-sdk-go-v2/service/sso v1.18.5 h1:ldSFWz9tEHAwHNmjx2Cvy1MjP5/L9kNoR0skc6wyOOM=
 github.com/aws/aws-sdk-go-v2/service/sso v1.18.5/go.mod h1:CaFfXLYL376jgbP7VKC96uFcU8Rlavak0UlAwk1Dlhc=
 github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.5 h1:WaH4tywTDnktvZFmNEMlgxJ89CjDxpedqI/AtJ0wJBs=

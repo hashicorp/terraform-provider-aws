@@ -62,6 +62,7 @@ import (
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
+	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -88,6 +89,7 @@ import (
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	ssmsap_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmsap"
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
@@ -880,6 +882,10 @@ func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
 	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts, make(map[string]any)))
 }
 
+func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {
+	return errs.Must(client[*pcaconnectorad_sdkv2.Client](ctx, c, names.PCAConnectorAD, make(map[string]any)))
+}
+
 func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {
 	return errs.Must(conn[*pinpoint_sdkv1.Pinpoint](ctx, c, names.Pinpoint, make(map[string]any)))
 }
@@ -1018,6 +1024,10 @@ func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts_sdkv2.Cl
 
 func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.Client {
 	return errs.Must(client[*ssmincidents_sdkv2.Client](ctx, c, names.SSMIncidents, make(map[string]any)))
+}
+
+func (c *AWSClient) SSMSAPClient(ctx context.Context) *ssmsap_sdkv2.Client {
+	return errs.Must(client[*ssmsap_sdkv2.Client](ctx, c, names.SSMSAP, make(map[string]any)))
 }
 
 func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {

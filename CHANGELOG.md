@@ -3,22 +3,28 @@
 FEATURES:
 
 * **New Data Source:** `aws_mq_broker_engine_types` ([#34232](https://github.com/hashicorp/terraform-provider-aws/issues/34232))
+* **New Resource:** `aws_imagebuilder_workflow` ([#35097](https://github.com/hashicorp/terraform-provider-aws/issues/35097))
 * **New Resource:** `aws_ssoadmin_application_access_scope` ([#34811](https://github.com/hashicorp/terraform-provider-aws/issues/34811))
 
 ENHANCEMENTS:
 
 * data-source/aws_batch_compute_environment: Add `update_policy` attribute ([#34353](https://github.com/hashicorp/terraform-provider-aws/issues/34353))
 * data-source/aws_ecr_image: Add `image_uri` attribute ([#24526](https://github.com/hashicorp/terraform-provider-aws/issues/24526))
+* data-source/aws_efs_file_system: Add `lifecycle_policy.transition_to_archive` attribute ([#35096](https://github.com/hashicorp/terraform-provider-aws/issues/35096))
+* data-source/aws_efs_file_system: Add `protection` attribute ([#35029](https://github.com/hashicorp/terraform-provider-aws/issues/35029))
 * data-source/aws_lambda_function: Add `logging_config` attribute ([#35050](https://github.com/hashicorp/terraform-provider-aws/issues/35050))
 * data-source/aws_lb_target_group: Add `load_balancing_anomaly_mitigation` attribute ([#35083](https://github.com/hashicorp/terraform-provider-aws/issues/35083))
 * data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.tls_inspection_configuration_arn` attribute ([#35094](https://github.com/hashicorp/terraform-provider-aws/issues/35094))
 * data-source/aws_prometheus_workspace: Add `kms_key_arn` attribute ([#35062](https://github.com/hashicorp/terraform-provider-aws/issues/35062))
+* data-source/aws_route53_resolver_endpoint: Add `protocols` attribute ([#35098](https://github.com/hashicorp/terraform-provider-aws/issues/35098))
 * resource/aws_autoscaling_group: Add `instance_refresh.preferences.max_healthy_percentage` attribute ([#34929](https://github.com/hashicorp/terraform-provider-aws/issues/34929))
 * resource/aws_autoscaling_group: Fix `ValidationError: The instance ... is not part of Auto Scaling group ...` errors on resource Delete when disabling scale-in protection for instances that are already fully terminated ([#35071](https://github.com/hashicorp/terraform-provider-aws/issues/35071))
 * resource/aws_batch_compute_environment: Add `update_policy` parameter ([#34353](https://github.com/hashicorp/terraform-provider-aws/issues/34353))
 * resource/aws_cloud9_environment_ec2: Add `amazonlinux-2023-x86_64` and `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64` as valid values for `image_id` ([#35020](https://github.com/hashicorp/terraform-provider-aws/issues/35020))
 * resource/aws_dms_replication_task: Allow `cdc_start_time` to use [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) formatted dates in addition to UNIX timestamps ([#31917](https://github.com/hashicorp/terraform-provider-aws/issues/31917))
 * resource/aws_dms_replication_task: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `replication_instance_arn`, allowing in-place migration between DMS instances ([#30721](https://github.com/hashicorp/terraform-provider-aws/issues/30721))
+* resource/aws_efs_file_system: Add `lifecycle_policy.transition_to_archive` argument ([#35096](https://github.com/hashicorp/terraform-provider-aws/issues/35096))
+* resource/aws_efs_file_system: Add `protection` configuration block ([#35029](https://github.com/hashicorp/terraform-provider-aws/issues/35029))
 * resource/aws_glue_classifier: Add `csv_classifier.serde` argument ([#34251](https://github.com/hashicorp/terraform-provider-aws/issues/34251))
 * resource/aws_kms_key: Add `xks_key_id` attribute ([#31216](https://github.com/hashicorp/terraform-provider-aws/issues/31216))
 * resource/aws_lambda_function: Add `logging_config` configuration block in support of [advanced logging controls](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced) ([#35050](https://github.com/hashicorp/terraform-provider-aws/issues/35050))
@@ -30,6 +36,7 @@ ENHANCEMENTS:
 * resource/aws_networkfirewall_firewall_policy: Add `firewall_policy.tls_inspection_configuration_arn` argument ([#35094](https://github.com/hashicorp/terraform-provider-aws/issues/35094))
 * resource/aws_prometheus_workspace: Add `kms_key_arn` argument, enabling encryption at-rest using AWS KMS Customer Managed Keys (CMK) ([#35062](https://github.com/hashicorp/terraform-provider-aws/issues/35062))
 * resource/aws_redshiftserverless_workgroup: Add `port` argument ([#34925](https://github.com/hashicorp/terraform-provider-aws/issues/34925))
+* resource/aws_route53_resolver_endpoint: Add `protocols` argument ([#35098](https://github.com/hashicorp/terraform-provider-aws/issues/35098))
 * resource/aws_s3_bucket: Modify resource Read to support third-party S3 API implementations. Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#35035](https://github.com/hashicorp/terraform-provider-aws/issues/35035))
 * resource/aws_s3_bucket: Modify server-side encryption configuration error handling, enabling support for NetApp StorageGRID ([#34890](https://github.com/hashicorp/terraform-provider-aws/issues/34890))
 * resource/aws_verifiedaccess_endpoint: Add `policy_document` argument ([#34264](https://github.com/hashicorp/terraform-provider-aws/issues/34264))
