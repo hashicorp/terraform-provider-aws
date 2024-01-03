@@ -13,3 +13,7 @@ data-source/aws_s3_bucket: Add hosted zone ID for `ca-west-1` AWS Region
 ```release-note:enhancement
 data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone ID for `il-central-1` AWS Region
 ```
+
+```release-note:enhancement
+provider: Support `ca-west-1` as a valid AWS Region
+```
