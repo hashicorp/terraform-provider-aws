@@ -1,0 +1,6 @@
+```release-note:new-data-source
+aws_quicksight_theme
+```
+```release-note:new-resource
+aws_quicksight_theme
+```

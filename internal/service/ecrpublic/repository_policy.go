@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecrpublic
 
 import (
@@ -61,7 +64,7 @@ const (
 
 func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -102,7 +105,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	output, err := FindRepositoryPolicyByName(ctx, conn, d.Id())
 
@@ -137,7 +140,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn()
+	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
 
 	_, err := conn.DeleteRepositoryPolicyWithContext(ctx, &ecrpublic.DeleteRepositoryPolicyInput{
 		RegistryId:     aws.String(d.Get("registry_id").(string)),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -6,9 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
@@ -25,7 +28,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +64,7 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +90,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,7 +145,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +181,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,7 +217,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +253,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -288,7 +291,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -325,7 +328,7 @@ func TestAccS3BucketLifecycleConfiguration_disableRule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -371,7 +374,7 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -393,11 +396,11 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
 						"days":          "30",
-						"storage_class": s3.StorageClassStandardIa,
+						"storage_class": string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
 						"days":          "60",
-						"storage_class": s3.StorageClassGlacier,
+						"storage_class": string(types.StorageClassGlacier),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"id":                "tmp",
@@ -426,12 +429,12 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules_noFilterOrPrefix(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rName, s3.ReplicationRuleStatusEnabled),
+				Config: testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rName, tfs3.LifecycleRuleStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
@@ -457,7 +460,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -487,7 +490,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -500,11 +503,11 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
 						"noncurrent_days": "30",
-						"storage_class":   s3.StorageClassStandardIa,
+						"storage_class":   string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
 						"noncurrent_days": "60",
-						"storage_class":   s3.StorageClassGlacier,
+						"storage_class":   string(types.StorageClassGlacier),
 					}),
 				),
 			},
@@ -525,7 +528,7 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -561,7 +564,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -598,7 +601,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -644,7 +647,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -674,7 +677,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -725,12 +728,12 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, s3.TransitionStorageClassStandardIa),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, string(types.TransitionStorageClassStandardIa)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -757,12 +760,12 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, s3.StorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, string(types.StorageClassIntelligentTiering)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -784,18 +787,18 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, s3.StorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, string(types.StorageClassIntelligentTiering)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.0.transition.*", map[string]string{
 						"days":          "0",
 						"date":          "",
-						"storage_class": s3.StorageClassIntelligentTiering,
+						"storage_class": string(types.StorageClassIntelligentTiering),
 					}),
 				),
 			},
@@ -816,12 +819,12 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, s3.StorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, string(types.StorageClassIntelligentTiering)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -845,18 +848,18 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, s3.StorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, string(types.StorageClassIntelligentTiering)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, s3.StorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, string(types.StorageClassIntelligentTiering)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -867,7 +870,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, s3.StorageClassIntelligentTiering),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, string(types.StorageClassIntelligentTiering)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
@@ -884,7 +887,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -911,7 +914,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_noChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -954,7 +957,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -997,7 +1000,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1026,9 +1029,27 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 	})
 }
 
+func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
@@ -1040,19 +1061,9 @@ func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resour
 				return err
 			}
 
-			input := &s3.GetBucketLifecycleConfigurationInput{
-				Bucket: aws.String(bucket),
-			}
+			_, err = tfs3.FindLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
 
-			if expectedBucketOwner != "" {
-				input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-			}
-
-			output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-				return conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
-			}, s3.ErrCodeNoSuchBucket)
-
-			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -1060,9 +1071,7 @@ func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resour
 				return err
 			}
 
-			if config, ok := output.(*s3.GetBucketLifecycleConfigurationOutput); ok && config != nil && len(config.Rules) != 0 {
-				return fmt.Errorf("S3 Lifecycle Configuration for bucket (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("S3 Bucket Lifecycle Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -1076,38 +1085,16 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketLifecycleConfigurationInput{
-			Bucket: aws.String(bucket),
-		}
+		_, err = tfs3.FindLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
 
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
-
-		output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-			return conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
-		}, tfs3.ErrCodeNoSuchLifecycleConfiguration)
-
-		if err != nil {
-			return err
-		}
-
-		if config, ok := output.(*s3.GetBucketLifecycleConfigurationOutput); !ok || config == nil {
-			return fmt.Errorf("S3 Bucket Replication Configuration for bucket (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1765,4 +1752,28 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketLifecycleConfigurationConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+  }
+}
+`, rName))
 }

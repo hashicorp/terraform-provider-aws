@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package tftypes provides a type system for Terraform configuration and state
 // values.
 //

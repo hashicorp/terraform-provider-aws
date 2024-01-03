@@ -186,6 +186,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 * `access_token` (Optional) - The credentials used to access protected Salesforce resources.
 * `client_credentials_arn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
+* `jwt_token` (Optional) - A JSON web token (JWT) that authorizes access to Salesforce records.
+* `oauth2_grant_type` (Optional) - The OAuth 2.0 grant type used when requesting an access token from Salesforce. Valid values are `CLIENT_CREDENTIALS`, `AUTHORIZATION_CODE`, and `JWT_BEARER`.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
 
@@ -311,19 +313,28 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `stage` (Required) - Name of the Amazon S3 stage that was created while setting up an Amazon S3 stage in the Snowflake account. This is written in the following format: `<Database>.<Schema>.<Stage Name>`.
 * `warehouse` (Required) - The name of the Snowflake warehouse.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the connector profile.
 * `credentials_arn` - ARN of the connector profile credentials.
 
 ## Import
 
-AppFlow Connector Profile can be imported using the connector profile `arn`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow Connector Profile using the connector profile `arn`. For example:
 
+```terraform
+import {
+  to = aws_appflow_connector_profile.profile
+  id = "arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile"
+}
 ```
-$ terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile
+
+Using `terraform import`, import AppFlow Connector Profile using the connector profile `arn`. For example:
+
+```console
+% terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile
 ```
 
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -66,7 +69,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 
 func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 

@@ -33,7 +33,7 @@ resource "aws_codepipeline_custom_action_type" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `category` - (Required) The category of the custom action. Valid values: `Source`, `Build`, `Deploy`, `Test`, `Invoke`, `Approval`
 * `configuration_property` - (Optional) The configuration properties for the custom action. Max 10 items.
@@ -75,9 +75,9 @@ The `settings` object supports the following:
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` - (Required) The version identifier of the custom action.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Composed of category, provider and version. For example, `Build:terraform:1`
 * `arn` - The action ARN.
@@ -86,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy CustomActionType can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy CustomActionType using the `id`. For example:
 
+```terraform
+import {
+  to = aws_codepipeline_custom_action_type.example
+  id = "Build:terraform:1"
+}
 ```
-$ terraform import aws_codepipeline_custom_action_type.example Build:terraform:1
+
+Using `terraform import`, import CodeDeploy CustomActionType using the `id`. For example:
+
+```console
+% terraform import aws_codepipeline_custom_action_type.example Build:terraform:1
 ```

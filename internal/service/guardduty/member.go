@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -76,7 +79,7 @@ func ResourceMember() *schema.Resource {
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
 
@@ -123,7 +126,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -171,7 +174,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
@@ -220,7 +223,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {

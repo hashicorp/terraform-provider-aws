@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
@@ -41,7 +44,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "priority", "20"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
 				),
 			},
 			{
@@ -168,7 +171,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, name string, rule *vpcl
 		serviceIdentifier := rs.Primary.Attributes["service_identifier"]
 		listenerIdentifier := rs.Primary.Attributes["listener_identifier"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
 			RuleIdentifier:     aws.String(rs.Primary.Attributes["arn"]),
 			ListenerIdentifier: aws.String(listenerIdentifier),
@@ -187,7 +190,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, name string, rule *vpcl
 
 func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_listener_rule" {

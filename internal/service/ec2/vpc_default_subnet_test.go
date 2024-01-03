@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -19,7 +22,7 @@ import (
 )
 
 func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -41,7 +44,7 @@ func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
 }
 
 func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -338,7 +341,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -361,7 +364,7 @@ func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCh
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -386,7 +389,7 @@ func testAccCheckDefaultSubnetDestroyNotFound(ctx context.Context) resource.Test
 }
 
 func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.DescribeAvailabilityZonesWithContext(ctx, &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.BuildAttributeFilterList(

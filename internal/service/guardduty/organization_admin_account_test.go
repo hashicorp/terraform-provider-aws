@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
@@ -22,6 +25,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +49,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 
 func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_organization_admin_account" {
@@ -80,7 +84,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		adminAccount, err := tfguardduty.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -63,7 +66,7 @@ func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
 
 func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	peerAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("peer_account_id"); ok {
@@ -95,7 +98,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 
 func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayPeeringAttachment, err := FindTransitGatewayPeeringAttachmentByID(ctx, conn, d.Id())
 
@@ -114,7 +117,7 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
 	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
-	SetTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
+	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 
 	return diags
 }
@@ -129,7 +132,7 @@ func resourceTransitGatewayPeeringAttachmentUpdate(ctx context.Context, d *schem
 
 func resourceTransitGatewayPeeringAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Peering Attachment: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayPeeringAttachmentWithContext(ctx, &ec2.DeleteTransitGatewayPeeringAttachmentInput{

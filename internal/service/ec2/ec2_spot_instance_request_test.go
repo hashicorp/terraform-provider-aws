@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -76,7 +79,7 @@ func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 
 func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sir ec2.SpotInstanceRequest
+	var sir1, sir2, sir3 ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,7 +92,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 			{
 				Config: testAccSpotInstanceRequestConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
+					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -103,7 +106,8 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 			{
 				Config: testAccSpotInstanceRequestConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
+					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir2),
+					testAccCheckSpotInstanceRequestIDsEqual(&sir2, &sir1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -112,7 +116,8 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 			{
 				Config: testAccSpotInstanceRequestConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
+					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir3),
+					testAccCheckSpotInstanceRequestIDsEqual(&sir3, &sir2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -496,7 +501,7 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "terminate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir2),
-					testAccCheckSpotInstanceRequestRecreated(&sir1, &sir2),
+					testAccCheckSpotInstanceRequestIDsNotEqual(&sir1, &sir2),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "terminate"),
 				),
 			},
@@ -544,7 +549,7 @@ func testAccSpotInstanceRequestTime(t *testing.T, duration string) string {
 
 func testAccCheckSpotInstanceRequestDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_instance_request" {
@@ -591,7 +596,7 @@ func testAccCheckSpotInstanceRequestExists(ctx context.Context, n string, v *ec2
 			return fmt.Errorf("No EC2 Spot Instance Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSpotInstanceRequestByID(ctx, conn, rs.Primary.ID)
 
@@ -646,7 +651,7 @@ func testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 
 func testAccCheckSpotInstanceRequest_InstanceAttributes(ctx context.Context, v *ec2.SpotInstanceRequest, sgName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		instance, err := tfec2.FindInstanceByID(ctx, conn, aws.StringValue(v.InstanceId))
 
@@ -693,10 +698,20 @@ func testAccCheckSpotInstanceRequestAttributesVPC(
 	}
 }
 
-func testAccCheckSpotInstanceRequestRecreated(before, after *ec2.SpotInstanceRequest) resource.TestCheckFunc {
+func testAccCheckSpotInstanceRequestIDsEqual(sir1, sir2 *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before == after {
-			return fmt.Errorf("Spot Instance (%s) not recreated", before)
+		if aws.StringValue(sir1.SpotInstanceRequestId) != aws.StringValue(sir2.SpotInstanceRequestId) {
+			return fmt.Errorf("Spot Instance Request IDs are not equal")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckSpotInstanceRequestIDsNotEqual(sir1, sir2 *ec2.SpotInstanceRequest) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(sir1.SpotInstanceRequestId) == aws.StringValue(sir2.SpotInstanceRequestId) {
+			return fmt.Errorf("Spot Instance Request IDs are equal")
 		}
 
 		return nil

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
@@ -101,7 +104,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -148,7 +151,7 @@ func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, n string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 

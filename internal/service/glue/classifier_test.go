@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -60,6 +63,46 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
+	ctx := acctest.Context(t)
+	var classifier glue.Classifier
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClassifierConfig_csvWithSerde(rName, false, "PRESENT", "|", false, "None"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassifierExists(ctx, resourceName, &classifier),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.serde", "None"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				Config: testAccClassifierConfig_csvWithSerde(rName, false, "PRESENT", ",", false, "OpenCSVSerDe"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassifierExists(ctx, resourceName, &classifier),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.serde", "OpenCSVSerDe"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -451,7 +494,7 @@ func testAccCheckClassifierExists(ctx context.Context, resourceName string, clas
 			return fmt.Errorf("No Glue Classifier ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := tfglue.FindClassifierByName(ctx, conn, rs.Primary.ID)
 
@@ -471,7 +514,7 @@ func testAccCheckClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			_, err := tfglue.FindClassifierByName(ctx, conn, rs.Primary.ID)
 
@@ -504,6 +547,23 @@ resource "aws_glue_classifier" "test" {
   }
 }
 `, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
+}
+
+func testAccClassifierConfig_csvWithSerde(rName string, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool, serde string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_classifier" "test" {
+  name = %[1]q
+
+  csv_classifier {
+    allow_single_column    = %[2]t
+    contains_header        = %[3]q
+    delimiter              = %[4]q
+    disable_value_trimming = %[5]t
+    serde                  = %[6]q
+    header                 = ["header_column1", "header_column2"]
+  }
+}
+`, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming, serde)
 }
 
 func testAccClassifierConfig_csvQuoteSymbol(rName, symbol string) string {

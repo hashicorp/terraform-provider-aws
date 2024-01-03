@@ -34,15 +34,15 @@ data "aws_connect_vocabulary" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `vocabulary_id` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Vocabulary by name
 * `vocabulary_id` - (Optional) Returns information on a specific Vocabulary by Vocabulary id
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Vocabulary.
 * `content` - The content of the custom vocabulary in plain-text format with a table of values. Each row in the table represents a word or a phrase, described with Phrase, IPA, SoundsLike, and DisplayAs fields. Separate the fields with TAB characters. For more information, see [Create a custom vocabulary using a table](https://docs.aws.amazon.com/transcribe/latest/dg/custom-vocabulary.html#create-vocabulary-table).

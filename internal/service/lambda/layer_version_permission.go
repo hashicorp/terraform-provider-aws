@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -6,10 +9,10 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -37,7 +40,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 			"layer_name": {
 				Type: schema.TypeString,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
 					verify.ValidARN,
 				),
 				Required: true,
@@ -88,7 +91,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 
 func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName := d.Get("layer_name").(string)
 	versionNumber := d.Get("version_number").(int)
@@ -117,7 +120,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 
 func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
@@ -208,7 +211,7 @@ func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.Resourc
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -70,8 +73,8 @@ func ResourceConformancePack() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters")),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters")),
 			},
 			"template_body": {
 				Type:             schema.TypeString,
@@ -88,7 +91,7 @@ func ResourceConformancePack() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 				AtLeastOneOf: []string{"template_s3_uri", "template_body"},
 			},
@@ -98,7 +101,7 @@ func ResourceConformancePack() *schema.Resource {
 
 func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -142,7 +145,7 @@ func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	pack, err := DescribeConformancePack(ctx, conn, d.Id())
 
@@ -180,7 +183,7 @@ func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.DeleteConformancePackInput{
 		ConformancePackName: aws.String(d.Id()),

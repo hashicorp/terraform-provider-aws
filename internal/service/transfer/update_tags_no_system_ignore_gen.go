@@ -8,16 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/transfer/transferiface"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// UpdateTagsNoIgnoreSystem updates transfer service tags.
+// updateTagsNoIgnoreSystem updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	if len(removedTags) > 0 {
@@ -48,10 +51,4 @@ func UpdateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAP
 	}
 
 	return nil
-}
-
-// UpdateTagsNoIgnoreSystem updates transfer service tags.
-// It is called from outside this package.
-func (p *servicePackage) UpdateTagsNoIgnoreSystem(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTagsNoIgnoreSystem(ctx, meta.(*conns.AWSClient).TransferConn(), identifier, oldTags, newTags)
 }

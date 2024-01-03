@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver_test
 
 import (
@@ -158,7 +161,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_endpoint" {
@@ -193,7 +196,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string, v *route53resolve
 			return fmt.Errorf("No Route53 Resolver Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		output, err := tfroute53resolver.FindResolverEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -208,7 +211,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string, v *route53resolve
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.ListResolverEndpointsInput{}
 

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexache.MustCompile(`token/github`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -41,7 +44,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexache.MustCompile(`token/github_enterprise`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB_ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -72,7 +75,7 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexache.MustCompile(`token/bitbucket`)),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
@@ -122,7 +125,7 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 
 func testAccCheckSourceCredentialDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codebuild_source_credential" {
@@ -152,7 +155,7 @@ func testAccCheckSourceCredentialExists(ctx context.Context, name string, source
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		output, err := tfcodebuild.FindSourceCredentialByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {

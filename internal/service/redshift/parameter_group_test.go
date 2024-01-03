@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -190,7 +193,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_parameter_group" {
@@ -225,7 +228,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		output, err := tfredshift.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
 

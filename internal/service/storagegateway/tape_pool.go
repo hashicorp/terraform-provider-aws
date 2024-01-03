@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -69,14 +72,14 @@ func ResourceTapePool() *schema.Resource {
 
 func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.CreateTapePoolInput{
 		PoolName:                aws.String(d.Get("pool_name").(string)),
 		StorageClass:            aws.String(d.Get("storage_class").(string)),
 		RetentionLockType:       aws.String(d.Get("retention_lock_type").(string)),
 		RetentionLockTimeInDays: aws.Int64(int64(d.Get("retention_lock_time_in_days").(int))),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %s", input)
@@ -92,7 +95,7 @@ func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.ListTapePoolsInput{
 		PoolARNs: []*string{aws.String(d.Id())},
@@ -133,7 +136,7 @@ func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),

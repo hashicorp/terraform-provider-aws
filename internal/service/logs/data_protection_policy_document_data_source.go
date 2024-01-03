@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
@@ -153,6 +157,8 @@ const (
 )
 
 func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	document := DataProtectionPolicyDocument{
 		Description: d.Get("description").(string),
 		Name:        d.Get("name").(string),
@@ -248,17 +254,17 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	// The schema requires exactly 2 elements, which is assumed here.
 
 	if op := document.Statements[0].Operation; op.Audit == nil || op.Deidentify != nil {
-		return diag.Errorf("the first policy statement must contain only the audit operation")
+		return sdkdiag.AppendErrorf(diags, "the first policy statement must contain only the audit operation")
 	}
 
 	if op := document.Statements[1].Operation; op.Audit != nil || op.Deidentify == nil {
-		return diag.Errorf("the second policy statement must contain only the deidentify operation")
+		return sdkdiag.AppendErrorf(diags, "the second policy statement must contain only the deidentify operation")
 	}
 
 	jsonBytes, err := json.MarshalIndent(document, "", "  ")
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	jsonString := string(jsonBytes)
@@ -266,7 +272,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	d.Set("json", jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
-	return nil
+	return diags
 }
 
 type DataProtectionPolicyDocument struct {

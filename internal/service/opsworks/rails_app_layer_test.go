@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -32,7 +35,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),

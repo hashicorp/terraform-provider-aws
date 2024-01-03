@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -121,6 +124,10 @@ func TestValidParamGroupName(t *testing.T) {
 		Value    string
 		ErrCount int
 	}{
+		{
+			Value:    "default.postgres9.6",
+			ErrCount: 0,
+		},
 		{
 			Value:    "tEsting123",
 			ErrCount: 1,

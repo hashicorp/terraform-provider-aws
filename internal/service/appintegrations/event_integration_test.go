@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations_test
 
 import (
@@ -194,7 +197,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 
 func testAccCheckEventIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appintegrations_event_integration" {
 				continue
@@ -225,7 +228,7 @@ func testAccCheckEventIntegrationExists(ctx context.Context, name string, eventI
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn(ctx)
 		input := &appintegrationsservice.GetEventIntegrationInput{
 			Name: aws.String(rs.Primary.ID),
 		}

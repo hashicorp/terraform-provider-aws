@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive_test
 
 import (
@@ -231,7 +234,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 
 func testAccCheckMultiplexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_multiplex" {
@@ -264,7 +267,7 @@ func testAccCheckMultiplexExists(ctx context.Context, name string, multiplex *me
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplex, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindMultiplexByID(ctx, conn, rs.Primary.ID)
 
@@ -279,7 +282,7 @@ func testAccCheckMultiplexExists(ctx context.Context, name string, multiplex *me
 }
 
 func testAccMultiplexesPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 	input := &medialive.ListMultiplexesInput{}
 	_, err := conn.ListMultiplexes(ctx, input)

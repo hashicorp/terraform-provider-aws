@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk_test
 
 import (
@@ -112,7 +115,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 
 func testAccCheckApplicationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastic_beanstalk_application_version" {
@@ -151,7 +154,7 @@ func testAccCheckApplicationVersionExists(ctx context.Context, n string, app *el
 			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
 			VersionLabels:   []*string{aws.String(rs.Primary.ID)},

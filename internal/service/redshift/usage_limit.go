@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -82,7 +85,7 @@ func ResourceUsageLimit() *schema.Resource {
 
 func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterId := d.Get("cluster_identifier").(string)
 	input := redshift.CreateUsageLimitInput{
@@ -90,7 +93,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClusterIdentifier: aws.String(clusterId),
 		FeatureType:       aws.String(d.Get("feature_type").(string)),
 		LimitType:         aws.String(d.Get("limit_type").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("breach_action"); ok {
@@ -114,7 +117,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindUsageLimitByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -143,14 +146,14 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("breach_action", out.BreachAction)
 	d.Set("cluster_identifier", out.ClusterIdentifier)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
 
 func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyUsageLimitInput{
@@ -176,7 +179,7 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	deleteInput := redshift.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),

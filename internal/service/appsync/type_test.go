@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func testAccType_basic(t *testing.T) {
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName, &typ),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile("apis/.+/types/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "format", "SDL"),
 					resource.TestCheckResourceAttr(resourceName, "name", "Mutation"),
@@ -73,7 +76,7 @@ func testAccType_disappears(t *testing.T) {
 
 func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_type" {
@@ -111,7 +114,7 @@ func testAccCheckTypeExists(ctx context.Context, resourceName string, typ *appsy
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		out, err := tfappsync.FindTypeByThreePartKey(ctx, conn, apiID, format, name)
 		if err != nil {
 			return err

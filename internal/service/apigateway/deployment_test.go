@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -36,8 +39,8 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(".+/")),
-					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
+					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
 					resource.TestCheckResourceAttrPair(resourceName, "rest_api_id", restApiResourceName, "id"),
 					resource.TestCheckNoResourceAttr(resourceName, "stage_description"),
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
@@ -216,16 +219,16 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					testAccCheckStageExists(ctx, resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", stageName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", stageName))),
-					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), stageName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(fmt.Sprintf(".+/%s", stageName))),
+					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), stageName))),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(".+/")),
-					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
+					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
 				),
 			},
 		},
@@ -314,7 +317,7 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.D
 			return fmt.Errorf("No API Gateway Deployment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
 
@@ -330,7 +333,7 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.D
 
 func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_deployment" {

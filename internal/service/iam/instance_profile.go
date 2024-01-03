@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -90,13 +93,13 @@ func ResourceInstanceProfile() *schema.Resource {
 
 func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateInstanceProfileWithContext(ctx, input)
@@ -131,7 +134,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := instanceProfileCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -149,7 +152,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	instanceProfile, err := FindInstanceProfileByName(ctx, conn, d.Id())
 
@@ -190,14 +193,14 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
 
-	SetTagsOut(ctx, instanceProfile.Tags)
+	setTagsOut(ctx, instanceProfile.Tags)
 
 	return diags
 }
 
 func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("role") {
 		o, n := d.GetChange("role")
@@ -239,7 +242,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if v, ok := d.GetOk("role"); ok {
 		err := instanceProfileRemoveRole(ctx, conn, d.Id(), v.(string))

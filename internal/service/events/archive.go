@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -69,7 +72,7 @@ func ResourceArchive() *schema.Resource {
 
 func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input, err := buildCreateArchiveInputStruct(d)
 
@@ -93,7 +96,7 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 	input := &eventbridge.DescribeArchiveInput{
 		ArchiveName: aws.String(d.Id()),
 	}
@@ -122,7 +125,7 @@ func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input, err := buildUpdateArchiveInputStruct(d)
 
@@ -141,7 +144,7 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.DeleteArchiveInput{
 		ArchiveName: aws.String(d.Get("name").(string)),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -51,7 +54,7 @@ func ResourceAuthenticationProfile() *schema.Resource {
 
 func resourceAuthenticationProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	authProfileName := d.Get("authentication_profile_name").(string)
 
@@ -73,7 +76,7 @@ func resourceAuthenticationProfileCreate(ctx context.Context, d *schema.Resource
 
 func resourceAuthenticationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindAuthenticationProfileByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -94,7 +97,7 @@ func resourceAuthenticationProfileRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAuthenticationProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.ModifyAuthenticationProfileInput{
 		AuthenticationProfileName:    aws.String(d.Id()),
@@ -112,7 +115,7 @@ func resourceAuthenticationProfileUpdate(ctx context.Context, d *schema.Resource
 
 func resourceAuthenticationProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	deleteInput := redshift.DeleteAuthenticationProfileInput{
 		AuthenticationProfileName: aws.String(d.Id()),

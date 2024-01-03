@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -95,7 +98,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 
 func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	naclID := d.Get("default_network_acl_id").(string)
 	nacl, err := FindNetworkACLByID(ctx, conn, naclID)
@@ -121,11 +124,11 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default Network ACL (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -135,7 +138,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Subnets *must* belong to a Network ACL. Subnets are not "removed" from
 	// Network ACLs, instead their association is replaced. In a normal

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -6,16 +9,15 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -26,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -160,7 +161,7 @@ func ResourceFunction() *schema.Resource {
 						"local_mount_path": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/mnt/[a-zA-Z0-9-_.]+$`), "must start with '/mnt/'"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/mnt/[0-9A-Za-z_.-]+$`), "must start with '/mnt/'"),
 						},
 					},
 				},
@@ -231,6 +232,39 @@ func ResourceFunction() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"logging_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"application_log_level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "",
+							ValidateDiagFunc: enum.Validate[types.ApplicationLogLevel](),
+						},
+						"log_format": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.LogFormat](),
+						},
+						"log_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validLogGroupName(),
+						},
+						"system_log_level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "",
+							ValidateDiagFunc: enum.Validate[types.SystemLogLevel](),
+						},
+					},
+				},
+			},
 			"memory_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -258,10 +292,14 @@ func ResourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"replace_security_groups_on_destroy": {
+				Deprecated: "AWS no longer supports this operation. This attribute now has " +
+					"no effect and will be removed in a future major version.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"replacement_security_group_ids": {
+				Deprecated: "AWS no longer supports this operation. This attribute now has " +
+					"no effect and will be removed in a future major version.",
 				Type:         schema.TypeSet,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
@@ -378,6 +416,11 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -398,15 +441,16 @@ func ResourceFunction() *schema.Resource {
 				// Suppress diffs if the VPC configuration is provided, but empty
 				// which is a valid Lambda function configuration. e.g.
 				//   vpc_config {
-				//     security_group_ids = []
-				//     subnet_ids         = []
+				//     ipv6_allowed_for_dual_stack = false
+				//     security_group_ids          = []
+				//     subnet_ids                  = []
 				//   }
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Id() == "" || old == "1" || new == "0" {
 						return false
 					}
 
-					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 						return false
 					}
 
@@ -429,7 +473,7 @@ const (
 
 func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
 	packageType := types.PackageType(d.Get("package_type").(string))
@@ -441,7 +485,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		PackageType:  packageType,
 		Publish:      d.Get("publish").(bool),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get("timeout").(int))),
 	}
 
@@ -513,6 +557,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ImageConfig = expandImageConfigs(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 {
+		input.LoggingConfig = expandLoggingConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKeyArn = aws.String(v.(string))
 	}
@@ -534,8 +582,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input.VpcConfig = &types.VpcConfig{
-			SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-			SubnetIds:        flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
+			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+			SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 		}
 	}
 
@@ -577,7 +626,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Id()),
@@ -639,6 +688,9 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
 	}
+	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("package_type", function.PackageType)
 	if output.Concurrency != nil {
@@ -689,7 +741,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
 		d.Set("version", latest.Version)
 
-		SetTagsOut(ctx, output.Tags)
+		setTagsOut(ctx, output.Tags)
 	}
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
@@ -723,7 +775,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -822,6 +874,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Layers = flex.ExpandStringValueList(d.Get("layers").([]interface{}))
 		}
 
+		if d.HasChange("logging_config") {
+			input.LoggingConfig = expandLoggingConfig(d.Get("logging_config").([]interface{}))
+		}
+
 		if d.HasChange("memory_size") {
 			input.MemorySize = aws.Int32(int32(d.Get("memory_size").(int)))
 		}
@@ -850,17 +906,19 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				input.VpcConfig = &types.VpcConfig{
-					SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-					SubnetIds:        flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
+					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+					SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 				}
 			} else {
 				input.VpcConfig = &types.VpcConfig{
-					SecurityGroupIds: []string{},
-					SubnetIds:        []string{},
+					Ipv6AllowedForDualStack: aws.Bool(false),
+					SecurityGroupIds:        []string{},
+					SubnetIds:               []string{},
 				}
 			}
 		}
@@ -997,7 +1055,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient()
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Function: %s", d.Id())
@@ -1017,12 +1075,6 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s): %s", d.Id(), err)
-	}
-
-	if _, ok := d.GetOk("replace_security_groups_on_destroy"); ok {
-		if err := replaceSecurityGroups(ctx, d, meta); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
 	}
 
 	return diags
@@ -1081,56 +1133,6 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 	}
 
 	return output, nil
-}
-
-// replaceSecurityGroups will replace the security groups on orphaned lambda ENI's
-//
-// If the replacement_security_group_ids attribute is set, those values will be used as
-// replacements. Otherwise, the default security group is used.
-func replaceSecurityGroups(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	ec2Conn := meta.(*conns.AWSClient).EC2Conn()
-
-	var sgIDs []string
-	var vpcID string
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
-		sgIDs = flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set))
-		vpcID = tfMap["vpc_id"].(string)
-	} else { // empty VPC config, nothing to do
-		return nil
-	}
-
-	if len(sgIDs) == 0 { // no security groups, nothing to do
-		return nil
-	}
-
-	var replacmentSGIDs []*string
-	if v, ok := d.GetOk("replacement_security_group_ids"); ok {
-		replacmentSGIDs = flex.ExpandStringSet(v.(*schema.Set))
-	} else {
-		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
-		if err != nil || defaultSG == nil {
-			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
-		}
-		replacmentSGIDs = []*string{defaultSG.GroupId}
-	}
-
-	networkInterfaces, err := tfec2.FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx, ec2Conn, sgIDs, d.Id())
-	if err != nil {
-		return fmt.Errorf("finding Lambda Function (%s) network interfaces: %s", d.Id(), err)
-	}
-
-	for _, ni := range networkInterfaces {
-		_, err := ec2Conn.ModifyNetworkInterfaceAttributeWithContext(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
-			NetworkInterfaceId: ni.NetworkInterfaceId,
-			Groups:             replacmentSGIDs,
-		})
-		if err != nil {
-			return fmt.Errorf("modifying Lambda Function (%s) network interfaces: %s", d.Id(), err)
-		}
-	}
-
-	return nil
 }
 
 func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
@@ -1299,6 +1301,7 @@ func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
 		d.HasChange("image_config") ||
+		d.HasChange("logging_config") ||
 		d.HasChange("memory_size") ||
 		d.HasChange("role") ||
 		d.HasChange("timeout") ||
@@ -1307,6 +1310,7 @@ func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
+		d.HasChange("vpc_config.0.ipv6_allowed_for_dual_stack") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
@@ -1346,6 +1350,7 @@ func SignerServiceIsAvailable(region string) bool {
 		endpoints.UsWest1RegionID:      {},
 		endpoints.UsWest2RegionID:      {},
 		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApEast1RegionID:      {},
 		endpoints.ApSouth1RegionID:     {},
 		endpoints.ApNortheast2RegionID: {},
 		endpoints.ApSoutheast1RegionID: {},
@@ -1432,6 +1437,40 @@ func expandImageConfigs(imageConfigMaps []interface{}) *types.ImageConfig {
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}
 	return imageConfig
+}
+
+func expandLoggingConfig(tfList []interface{}) *types.LoggingConfig {
+	loggingConfig := &types.LoggingConfig{}
+	if len(tfList) == 1 && tfList[0] != nil {
+		config := tfList[0].(map[string]interface{})
+		if v := config["application_log_level"].(string); len(v) > 0 {
+			loggingConfig.ApplicationLogLevel = types.ApplicationLogLevel(v)
+		}
+		if v := config["log_format"].(string); len(v) > 0 {
+			loggingConfig.LogFormat = types.LogFormat(v)
+		}
+		if v := config["log_group"].(string); len(v) > 0 {
+			loggingConfig.LogGroup = aws.String(v)
+		}
+		if v := config["system_log_level"].(string); len(v) > 0 {
+			loggingConfig.SystemLogLevel = types.SystemLogLevel(v)
+		}
+	}
+	return loggingConfig
+}
+
+func flattenLoggingConfig(apiObject *types.LoggingConfig) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	m := map[string]interface{}{
+		"application_log_level": apiObject.ApplicationLogLevel,
+		"log_format":            apiObject.LogFormat,
+		"log_group":             aws.ToString(apiObject.LogGroup),
+		"system_log_level":      apiObject.SystemLogLevel,
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func flattenEphemeralStorage(response *types.EphemeralStorage) []map[string]interface{} {

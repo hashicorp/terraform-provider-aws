@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -54,7 +57,7 @@ func ResourceAPIMapping() *schema.Resource {
 
 func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	input := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -79,7 +82,7 @@ func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	output, err := FindAPIMappingByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
 
@@ -102,7 +105,7 @@ func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	input := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -129,7 +132,7 @@ func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API Mapping (%s)", d.Id())
 	_, err := conn.DeleteApiMappingWithContext(ctx, &apigatewayv2.DeleteApiMappingInput{

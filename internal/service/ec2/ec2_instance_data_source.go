@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -225,6 +228,10 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"http_protocol_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -392,7 +399,7 @@ func DataSourceInstance() *schema.Resource {
 // dataSourceInstanceRead performs the instanceID lookup
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Build up search parameters

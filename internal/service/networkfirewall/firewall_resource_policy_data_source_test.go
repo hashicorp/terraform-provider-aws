@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,7 +27,7 @@ func TestAccNetworkFirewallFirewallResourcePolicyDataSource_basic(t *testing.T) 
 			{
 				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Action":\["network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", "arn"),
 				),
 			},

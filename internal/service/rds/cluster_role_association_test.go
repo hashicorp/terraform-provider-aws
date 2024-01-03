@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -135,7 +138,7 @@ func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		role, err := tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(ctx, conn, dbClusterID, roleARN)
 		if err != nil {
@@ -150,7 +153,7 @@ func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName 
 
 func testAccCheckClusterRoleAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_cluster_role_association" {

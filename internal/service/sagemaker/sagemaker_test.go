@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -45,17 +48,26 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
+			"jupyterLabAppSettings":                                  testAccDomain_jupyterLabAppSettings,
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
 			"canvas":                                                 testAccDomain_canvasAppSettings,
 			"modelRegisterSettings":                                  testAccDomain_modelRegisterSettings,
+			"identityProviderOauthSettings":                          testAccDomain_identityProviderOAuthSettings,
+			"directDeploySettings":                                   testAccDomain_directDeploySettings,
+			"kendraSettings":                                         testAccDomain_kendraSettings,
+			"workspaceSettings":                                      testAccDomain_workspaceSettings,
 			"domainSettings":                                         testAccDomain_domainSettings,
 			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
 			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
+			"efs":                                                    testAccDomain_efs,
+			"posix":                                                  testAccDomain_posix,
+			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,

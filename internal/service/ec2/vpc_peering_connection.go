@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -100,7 +103,7 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 
 func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
@@ -152,7 +155,7 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
@@ -197,14 +200,14 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		d.Set("requester", nil)
 	}
 
-	SetTagsOut(ctx, vpcPeeringConnection.Tags)
+	setTagsOut(ctx, vpcPeeringConnection.Tags)
 
 	return diags
 }
 
 func resourceVPCPeeringConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
@@ -231,7 +234,7 @@ func resourceVPCPeeringConnectionUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceVPCPeeringConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", d.Id())
 	_, err := conn.DeleteVpcPeeringConnectionWithContext(ctx, &ec2.DeleteVpcPeeringConnectionInput{
@@ -321,7 +324,7 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.EC2, d *sc
 
 	// Retry reading back the modified options to deal with eventual consistency.
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
-	err := retry.RetryContext(ctx, VPCPeeringConnectionOptionsPropagationTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
+	err := retry.RetryContext(ctx, ec2PropagationTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
 		if err != nil {

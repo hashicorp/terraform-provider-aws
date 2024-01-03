@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
@@ -92,7 +95,7 @@ func ResourceGameSessionQueue() *schema.Resource {
 
 func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &gamelift.CreateGameSessionQueueInput{
@@ -100,7 +103,7 @@ func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData,
 		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("custom_event_data"); ok {
@@ -124,7 +127,7 @@ func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	sessionQueue, err := FindGameSessionQueueByName(ctx, conn, d.Id())
 
@@ -156,7 +159,7 @@ func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &gamelift.UpdateGameSessionQueueInput{
@@ -186,7 +189,7 @@ func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Session Queue: %s", d.Id())
 	_, err := conn.DeleteGameSessionQueueWithContext(ctx, &gamelift.DeleteGameSessionQueueInput{

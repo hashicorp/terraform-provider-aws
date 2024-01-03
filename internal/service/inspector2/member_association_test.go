@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2_test
 
 import (
@@ -23,7 +26,7 @@ func testAccMemberAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
@@ -58,7 +61,7 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
@@ -89,7 +92,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("No Inspector2 Member Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -99,7 +102,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 
 func testAccCheckMemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_member_association" {

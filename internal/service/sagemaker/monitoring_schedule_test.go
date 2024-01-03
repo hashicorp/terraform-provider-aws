@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -165,7 +168,7 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 
 func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_monitoring_schedule" {
@@ -199,7 +202,7 @@ func testAccCheckMonitoringScheduleExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("no SageMaker Monitoring Schedule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		_, err := tfsagemaker.FindMonitoringScheduleByName(ctx, conn, rs.Primary.ID)
 
 		return err

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -144,7 +147,7 @@ func ResourceStream() *schema.Resource {
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kinesis.CreateStreamInput{
@@ -241,7 +244,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if err := createTags(ctx, conn, name, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, name, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Kinesis Stream (%s) tags: %s", name, err)
 	}
 
@@ -250,7 +253,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	name := d.Get("name").(string)
 	stream, err := FindStreamByName(ctx, conn, name)
@@ -300,7 +303,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 	name := d.Get("name").(string)
 
 	if d.HasChange("stream_mode_details.0.stream_mode") {
@@ -495,7 +498,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Stream: (%s)", name)
@@ -522,7 +525,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	output, err := FindStreamByName(ctx, conn, d.Id())
 

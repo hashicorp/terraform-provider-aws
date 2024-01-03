@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,7 +42,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexp.MustCompile(`fs-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", region),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
 					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, "arn"),
@@ -112,7 +115,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.availability_zone_name", "data.aws_availability_zones.available", "names.0"),
-					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexp.MustCompile(`fs-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, "key_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", alternateRegion),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
@@ -137,7 +140,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 			return fmt.Errorf("No EFS Replication Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		_, err := tfefs.FindReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -147,7 +150,7 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 
 func testAccCheckReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_replication_configuration" {

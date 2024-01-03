@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -47,7 +50,7 @@ func DataSourceCiphertext() *schema.Resource {
 
 func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	req := &kms.EncryptInput{

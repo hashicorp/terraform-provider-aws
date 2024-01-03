@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
@@ -622,7 +625,7 @@ func testAccCheckWebACLLoggingConfigurationDestroy(ctx context.Context) resource
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 			_, err := tfwafv2.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
@@ -652,7 +655,7 @@ func testAccCheckWebACLLoggingConfigurationExists(ctx context.Context, n string,
 			return fmt.Errorf("No WAFv2 WebACL Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 		output, err := tfwafv2.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -96,11 +99,11 @@ const (
 )
 
 func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateContactListInput{
 		ContactListName: aws.String(d.Get("contact_list_name").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -126,7 +129,7 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindContactListByID(ctx, conn, d.Id())
 
@@ -162,7 +165,7 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.UpdateContactListInput{
 		ContactListName: aws.String(d.Id()),
@@ -182,7 +185,7 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ContactList %s", d.Id())
 

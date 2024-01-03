@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -130,7 +133,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		_, err := conn.ModifyVpcPeeringConnectionOptionsWithContext(ctx, &ec2.ModifyVpcPeeringConnectionOptionsInput{
@@ -235,7 +238,7 @@ func TestAccVPCPeeringConnection_failedState(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPeeringConnectionConfig_failedState(rName),
-				ExpectError: regexp.MustCompile(`unexpected state 'failed'`),
+				ExpectError: regexache.MustCompile(`unexpected state 'failed'`),
 			},
 		},
 	})
@@ -256,7 +259,7 @@ func TestAccVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPeeringConnectionConfig_alternateRegionAutoAccept(rName, true),
-				ExpectError: regexp.MustCompile("`peer_region` cannot be set whilst `auto_accept` is `true` when creating an EC2 VPC Peering Connection"),
+				ExpectError: regexache.MustCompile("`peer_region` cannot be set whilst `auto_accept` is `true` when creating an EC2 VPC Peering Connection"),
 			},
 		},
 	})
@@ -372,7 +375,7 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPeeringConnectionConfig_accepterRequesterOptionsNoAutoAccept(rName),
-				ExpectError: regexp.MustCompile(`is not active`),
+				ExpectError: regexache.MustCompile(`is not active`),
 			},
 		},
 	})
@@ -380,7 +383,7 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 
 func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_peering_connection" {
@@ -419,7 +422,7 @@ func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n s
 			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPCPeeringConnectionByID(ctx, conn, rs.Primary.ID)
 

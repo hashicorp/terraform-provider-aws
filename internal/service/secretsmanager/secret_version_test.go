@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
@@ -137,7 +140,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 
 func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret_version" {
@@ -197,7 +200,7 @@ func testAccCheckSecretVersionExists(ctx context.Context, resourceName string, v
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		input := &secretsmanager.GetSecretValueInput{
 			SecretId:  aws.String(secretID),

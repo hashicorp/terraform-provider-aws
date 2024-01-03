@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -112,7 +115,7 @@ func DataSourceReportPlan() *schema.Resource {
 
 func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -138,7 +141,7 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(reportPlan.ReportPlanArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(reportPlan.ReportPlanArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)

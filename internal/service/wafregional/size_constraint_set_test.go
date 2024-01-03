@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
@@ -218,7 +221,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 
 func testAccCheckSizeConstraintSetDisappears(ctx context.Context, constraints *waf.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := tfwafregional.NewRetryer(conn, region)
@@ -269,7 +272,7 @@ func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, constrai
 			return fmt.Errorf("No WAF SizeConstraintSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		resp, err := conn.GetSizeConstraintSetWithContext(ctx, &waf.GetSizeConstraintSetInput{
 			SizeConstraintSetId: aws.String(rs.Primary.ID),
 		})
@@ -294,7 +297,7 @@ func testAccCheckSizeConstraintSetDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 			resp, err := conn.GetSizeConstraintSetWithContext(ctx, &waf.GetSizeConstraintSetInput{
 				SizeConstraintSetId: aws.String(rs.Primary.ID),
 			})

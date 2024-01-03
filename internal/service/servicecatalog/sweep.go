@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
 
@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_servicecatalog_budget_resource_association", &resource.Sweeper{
 		Name:         "aws_servicecatalog_budget_resource_association",
 		Dependencies: []string{},
@@ -84,13 +84,13 @@ func init() {
 
 func sweepBudgetResourceAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -182,11 +182,11 @@ func sweepBudgetResourceAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Product) Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Budget Resource Associations for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Budget Resource Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -196,13 +196,13 @@ func sweepBudgetResourceAssociations(region string) error {
 
 func sweepConstraints(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -252,11 +252,11 @@ func sweepConstraints(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Constraints for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Constraints for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Constraints sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -266,13 +266,13 @@ func sweepConstraints(region string) error {
 
 func sweepPrincipalPortfolioAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -304,7 +304,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 
 					r := ResourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(PrincipalPortfolioAssociationID(AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
+					d.SetId(PrincipalPortfolioAssociationCreateResourceID(AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id), aws.StringValue(principal.PrincipalType)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -325,11 +325,11 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Principal Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -339,13 +339,13 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 
 func sweepProductPortfolioAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -418,11 +418,11 @@ func sweepProductPortfolioAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Product Portfolio Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -432,13 +432,13 @@ func sweepProductPortfolioAssociations(region string) error {
 
 func sweepProducts(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -470,11 +470,11 @@ func sweepProducts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Products for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Products sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -484,13 +484,13 @@ func sweepProducts(region string) error {
 
 func sweepProvisionedProducts(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -514,6 +514,7 @@ func sweepProvisionedProducts(region string) error {
 			r := ResourceProvisionedProduct()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(detail.Id))
+			d.Set("ignore_errors", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -525,11 +526,11 @@ func sweepProvisionedProducts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Provisioned Products sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -539,13 +540,13 @@ func sweepProvisionedProducts(region string) error {
 
 func sweepProvisioningArtifacts(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -572,9 +573,7 @@ func sweepProvisioningArtifacts(region string) error {
 				output, err := conn.ListProvisioningArtifactsWithContext(ctx, artInput)
 
 				if err != nil {
-					err := fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err)
-					log.Printf("[ERROR] %s", err)
-					errs = multierror.Append(errs, err)
+					errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err))
 					break
 				}
 
@@ -582,8 +581,7 @@ func sweepProvisioningArtifacts(region string) error {
 					r := ResourceProvisioningArtifact()
 					d := r.Data(nil)
 
-					d.SetId(aws.StringValue(pad.Id))
-					d.Set("product_id", productID)
+					d.SetId(ProvisioningArtifactID(aws.StringValue(pad.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -607,11 +605,11 @@ func sweepProvisioningArtifacts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioning Artifacts for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioning Artifacts for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Provisioning Artifacts sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -621,13 +619,13 @@ func sweepProvisioningArtifacts(region string) error {
 
 func sweepServiceActions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -659,11 +657,11 @@ func sweepServiceActions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Service Actions for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Service Actions for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Service Actions sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -673,13 +671,13 @@ func sweepServiceActions(region string) error {
 
 func sweepTagOptionResourceAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -731,11 +729,11 @@ func sweepTagOptionResourceAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -745,13 +743,13 @@ func sweepTagOptionResourceAssociations(region string) error {
 
 func sweepTagOptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn()
+	conn := client.ServiceCatalogConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -787,11 +785,11 @@ func sweepTagOptions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Options for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Options for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, errs)
 		return nil
 	}

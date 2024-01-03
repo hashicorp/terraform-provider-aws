@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler_test
 
 import (
@@ -8,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
@@ -42,7 +46,7 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 				Config: testAccScheduleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexp.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
 					resource.TestCheckResourceAttrWith(resourceName, "creation_date", func(actual string) error {
 						expect := scheduleGroup.CreationDate.Format(time.RFC3339)
 						if actual != expect {
@@ -225,7 +229,7 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 
 func testAccCheckScheduleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_scheduler_schedule_group" {
@@ -261,7 +265,7 @@ func testAccCheckScheduleGroupExists(ctx context.Context, name string, scheduleg
 			return create.Error(names.Scheduler, create.ErrActionCheckingExistence, tfscheduler.ResNameScheduleGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient(ctx)
 
 		resp, err := conn.GetScheduleGroup(ctx, &scheduler.GetScheduleGroupInput{
 			Name: aws.String(rs.Primary.ID),
@@ -278,7 +282,7 @@ func testAccCheckScheduleGroupExists(ctx context.Context, name string, scheduleg
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient(ctx)
 
 	input := &scheduler.ListScheduleGroupsInput{}
 	_, err := conn.ListScheduleGroups(ctx, input)

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,7 +37,7 @@ func TestAccSESV2ConfigurationSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`configuration-set/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexache.MustCompile(`configuration-set/.+`)),
 				),
 			},
 			{
@@ -338,7 +341,7 @@ func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 
 func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_configuration_set" {
@@ -373,7 +376,7 @@ func testAccCheckConfigurationSetExists(ctx context.Context, name string) resour
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSet, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindConfigurationSetByID(ctx, conn, rs.Primary.ID)
 

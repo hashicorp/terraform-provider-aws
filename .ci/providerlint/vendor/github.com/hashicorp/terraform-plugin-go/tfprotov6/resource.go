@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfprotov6
 
 import (
@@ -5,6 +8,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
+
+// ResourceMetadata describes metadata for a managed resource in the GetMetadata
+// RPC.
+type ResourceMetadata struct {
+	// TypeName is the name of the managed resource.
+	TypeName string
+}
 
 // ResourceServer is an interface containing the methods a resource
 // implementation needs to fill.

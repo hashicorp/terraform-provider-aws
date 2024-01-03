@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -202,7 +205,7 @@ func testAccCheckCodeSigningExistsConfig(ctx context.Context, n string, mapping 
 			return fmt.Errorf("Code Signing Config ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		params := &lambda.GetCodeSigningConfigInput{
 			CodeSigningConfigArn: aws.String(rs.Primary.ID),
@@ -221,7 +224,7 @@ func testAccCheckCodeSigningExistsConfig(ctx context.Context, n string, mapping 
 
 func testAccCheckCodeSigningConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_code_signing_config" {

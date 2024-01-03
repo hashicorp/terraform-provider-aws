@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,7 +35,7 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 				Config: testAccTaskSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(fmt.Sprintf("task-set/%[1]s/%[1]s/ecs-svc/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(fmt.Sprintf("task-set/%[1]s/%[1]s/ecs-svc/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
 				),
@@ -393,7 +396,7 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
 
@@ -423,7 +426,7 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 
 func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_task_set" {

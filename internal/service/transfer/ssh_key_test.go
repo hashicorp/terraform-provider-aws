@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer_test
 
 import (
@@ -63,7 +66,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 		serverID, userName, sshKeyID, err := tftransfer.DecodeSSHKeyID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
@@ -91,7 +94,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 
 func testAccCheckSSHKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_ssh_key" {

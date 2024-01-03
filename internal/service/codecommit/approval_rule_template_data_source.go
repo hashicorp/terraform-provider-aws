@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -58,7 +61,7 @@ func DataSourceApprovalRuleTemplate() *schema.Resource {
 
 func dataSourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	templateName := d.Get("name").(string)
 	input := &codecommit.GetApprovalRuleTemplateInput{

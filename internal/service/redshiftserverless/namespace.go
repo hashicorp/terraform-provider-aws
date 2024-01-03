@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -105,12 +108,12 @@ func ResourceNamespace() *schema.Resource {
 
 func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	name := d.Get("namespace_name").(string)
 	input := &redshiftserverless.CreateNamespaceInput{
 		NamespaceName: aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_password"); ok {
@@ -154,7 +157,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	output, err := FindNamespaceByName(ctx, conn, d.Id())
 
@@ -184,7 +187,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateNamespaceInput{
@@ -228,7 +231,7 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 10*time.Minute,
@@ -256,7 +259,7 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 var (
-	reIAMRole = regexp.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
+	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
 )
 
 func flattenNamespaceIAMRoles(iamRoles []*string) []string {

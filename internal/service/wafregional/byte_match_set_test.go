@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
@@ -264,7 +267,7 @@ func TestAccWAFRegionalByteMatchSet_disappears(t *testing.T) {
 
 func testAccCheckByteMatchSetDisappears(ctx context.Context, v *waf.ByteMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := tfwafregional.NewRetryer(conn, region)
@@ -319,7 +322,7 @@ func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *waf.ByteMa
 			return fmt.Errorf("No WAF ByteMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		resp, err := conn.GetByteMatchSetWithContext(ctx, &waf.GetByteMatchSetInput{
 			ByteMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -344,7 +347,7 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 			resp, err := conn.GetByteMatchSetWithContext(ctx, &waf.GetByteMatchSetInput{
 				ByteMatchSetId: aws.String(rs.Primary.ID),
 			})

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -165,7 +168,7 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 
 func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_provider" {
@@ -206,7 +209,7 @@ func testAccCheckIdentityProviderExists(ctx context.Context, resourceName string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		input := &cognitoidentityprovider.DescribeIdentityProviderInput{
 			ProviderName: aws.String(providerName),

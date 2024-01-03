@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
@@ -291,7 +294,7 @@ func TestAccShieldProtection_route53(t *testing.T) {
 
 func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_protection" {
@@ -328,7 +331,7 @@ func testAccCheckProtectionExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(rs.Primary.ID),
@@ -341,7 +344,7 @@ func testAccCheckProtectionExists(ctx context.Context, name string) resource.Tes
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.ListProtectionsInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -9,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -1791,7 +1795,7 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.Sp
 			return errors.New("No EC2 Spot Fleet Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
 
@@ -1807,7 +1811,7 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.Sp
 
 func testAccCheckSpotFleetRequestDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_fleet_request" {
@@ -1881,7 +1885,7 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 }
 
 func testAccPreCheckSpotFleetRequest(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	_, err := tfec2.FindSpotFleetRequests(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{})
 
@@ -1907,7 +1911,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`, acctest.Partition()))
+		re := regexache.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[0-9A-Za-z@-_+=,.].*`, acctest.Partition())) // regex seems suspicious, @-_ is a range
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}

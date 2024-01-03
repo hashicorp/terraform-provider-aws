@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -61,7 +64,7 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 
 func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -110,7 +113,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 
 func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTableAssociationParseResourceID(d.Id())
 
@@ -140,7 +143,7 @@ func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *sch
 
 func resourceTransitGatewayRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTableAssociationParseResourceID(d.Id())
 

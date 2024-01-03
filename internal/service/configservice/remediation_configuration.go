@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -144,7 +147,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 
 func resourceRemediationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("config_rule_name").(string)
 	input := configservice.RemediationConfiguration{
@@ -186,7 +189,7 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", inputs)
 	_, err := conn.PutRemediationConfigurationsWithContext(ctx, &inputs)
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
 	}
 
 	d.SetId(name)
@@ -198,7 +201,7 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 
 func resourceRemediationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	out, err := conn.DescribeRemediationConfigurationsWithContext(ctx, &configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
@@ -210,7 +213,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
@@ -221,7 +224,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
@@ -239,11 +242,11 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
 
 	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return diags
@@ -251,7 +254,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("config_rule_name").(string)
 
@@ -283,7 +286,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return diags
@@ -395,8 +398,16 @@ func flattenRemediationParameterValues(parameters map[string]*configservice.Reme
 		items = append(items, item)
 	}
 
-	slices.SortFunc(items, func(a, b interface{}) bool {
-		return a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string)
+	slices.SortFunc(items, func(a, b interface{}) int {
+		if a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string) {
+			return -1
+		}
+
+		if a.(map[string]interface{})["name"].(string) > b.(map[string]interface{})["name"].(string) {
+			return 1
+		}
+
+		return 0
 	})
 
 	return items

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2_test
 
 import (
@@ -81,7 +84,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
 
@@ -99,7 +102,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 
 func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_organization_admin_account" {

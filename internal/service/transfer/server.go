@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -162,13 +165,13 @@ func ResourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"pre_authentication_login_banner": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"protocol_details": {
 				Type:     schema.TypeList,
@@ -223,6 +226,15 @@ func ResourceServer() *schema.Resource {
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
+			},
+			"structured_log_destinations": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+				Description: "This is a set of arns of destinations that will receive structured logs from the transfer server",
+				Optional:    true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -283,10 +295,10 @@ func ResourceServer() *schema.Resource {
 
 func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.CreateServerInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate"); ok {
@@ -368,6 +380,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.SecurityPolicyName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("structured_log_destinations"); ok && v.(*schema.Set).Len() > 0 {
+		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("url"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
@@ -419,7 +435,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	output, err := FindServerByID(ctx, conn, d.Id())
 
@@ -448,7 +464,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		// Security Group IDs are not returned for VPC endpoints.
 		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Conn(), vpcEndpointID)
+			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), vpcEndpointID)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
@@ -486,6 +502,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
+	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
@@ -495,14 +512,14 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var newEndpointTypeVpc bool
@@ -575,7 +592,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			// You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC.
 			// To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
 			if d.HasChange("endpoint_details.0.security_group_ids") && newEndpointTypeVpc && oldEndpointTypeVpc {
-				conn := meta.(*conns.AWSClient).EC2Conn()
+				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 				vpcEndpointID := d.Get("endpoint_details.0.vpc_endpoint_id").(string)
 				input := &ec2.ModifyVpcEndpointInput{
@@ -663,6 +680,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
 
+		// Per the docs it does not matter if this field has changed,
+		// if the update passes this as empty the structured logging will be turned off,
+		// so we need to always pass the new.
+		input.StructuredLogDestinations = flex.ExpandStringSet(d.Get("structured_log_destinations").(*schema.Set))
+
 		if d.HasChange("workflow_details") {
 			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))
 		}
@@ -715,7 +737,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
 		input := &transfer.ListUsersInput{

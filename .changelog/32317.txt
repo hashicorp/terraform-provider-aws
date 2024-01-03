@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket: Fix `InvalidArgument: Invalid attribute name specified` errors when listing S3 Bucket objects, caused by an [AWS SDK for Go regression](https://github.com/aws/aws-sdk-go/issues/4897)
+```

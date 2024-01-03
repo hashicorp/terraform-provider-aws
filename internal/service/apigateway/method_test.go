@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -250,7 +253,7 @@ func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.Metho
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
 
@@ -266,7 +269,7 @@ func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.Metho
 
 func testAccCheckMethodDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method" {

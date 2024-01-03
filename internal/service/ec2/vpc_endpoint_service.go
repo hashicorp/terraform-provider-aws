@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -148,7 +151,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 
 func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
@@ -200,7 +203,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	svcCfg, err := FindVPCEndpointServiceConfigurationByID(ctx, conn, d.Id())
 
@@ -246,7 +249,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("state", svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", aws.StringValueSlice(svcCfg.SupportedIpAddressTypes))
 
-	SetTagsOut(ctx, svcCfg.Tags)
+	setTagsOut(ctx, svcCfg.Tags)
 
 	allowedPrincipals, err := FindVPCEndpointServicePermissionsByServiceID(ctx, conn, d.Id())
 
@@ -261,7 +264,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name", "supported_ip_address_types") {
 		input := &ec2.ModifyVpcEndpointServiceConfigurationInput{
@@ -310,7 +313,7 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPC Endpoint Service: %s", d.Id())
 	output, err := conn.DeleteVpcEndpointServiceConfigurationsWithContext(ctx, &ec2.DeleteVpcEndpointServiceConfigurationsInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9_test
 
 import (
@@ -118,7 +121,7 @@ func testAccCheckEnvironmentMemberExists(ctx context.Context, n string, res *clo
 			return fmt.Errorf("No Cloud9 Environment Member ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn(ctx)
 
 		envId, userArn, err := tfcloud9.DecodeEnviornmentMemberId(rs.Primary.ID)
 		if err != nil {
@@ -138,7 +141,7 @@ func testAccCheckEnvironmentMemberExists(ctx context.Context, n string, res *clo
 
 func testAccCheckEnvironmentMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloud9_environment_membership" {

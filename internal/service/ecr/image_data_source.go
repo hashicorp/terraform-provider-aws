@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -46,6 +50,10 @@ func DataSourceImage() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"most_recent": {
 				Type:          schema.TypeBool,
 				Optional:      true,
@@ -68,7 +76,7 @@ func DataSourceImage() *schema.Resource {
 
 func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -94,6 +102,18 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	if v, ok := d.Get("most_recent").(bool); ok && v {
+		if len(input.ImageIds) == 0 {
+			input.ImageIds = []*ecr.ImageIdentifier{
+				{
+					ImageTag: aws.String("latest"),
+				},
+			}
+		} else {
+			input.ImageIds[0].ImageTag = aws.String("latest")
+		}
+	}
+
 	if v, ok := d.GetOk("registry_id"); ok {
 		input.RegistryId = aws.String(v.(string))
 	}
@@ -113,17 +133,37 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.")
 		}
 
-		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) bool {
-			return aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt))
+		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) int {
+			if aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt)) {
+				return -1
+			}
+			if aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt)) {
+				return 1
+			}
+			return 0
 		})
 	}
 
 	imageDetail := imageDetails[0]
+
+	repositoryName := aws.StringValue(imageDetail.RepositoryName)
+	repositoryInput := &ecr.DescribeRepositoriesInput{
+		RepositoryNames: aws.StringSlice([]string{repositoryName}),
+		RegistryId:      imageDetail.RegistryId,
+	}
+
+	repository, err := FindRepository(ctx, conn, repositoryInput)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
+	}
+
 	d.SetId(aws.StringValue(imageDetail.ImageDigest))
 	d.Set("image_digest", imageDetail.ImageDigest)
 	d.Set("image_pushed_at", imageDetail.ImagePushedAt.Unix())
 	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
 	d.Set("image_tags", aws.StringValueSlice(imageDetail.ImageTags))
+	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.StringValue(repository.RepositoryUri), aws.StringValue(imageDetail.ImageDigest)))
 	d.Set("registry_id", imageDetail.RegistryId)
 	d.Set("repository_name", imageDetail.RepositoryName)
 

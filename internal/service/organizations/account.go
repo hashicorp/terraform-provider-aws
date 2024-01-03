@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -55,7 +58,7 @@ func ResourceAccount() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(6, 64),
-					validation.StringMatch(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+					validation.StringMatch(regexache.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
 				),
 			},
 			"govcloud_id": {
@@ -86,13 +89,13 @@ func ResourceAccount() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
 			},
 			"role_name": {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -108,7 +111,7 @@ func ResourceAccount() *schema.Resource {
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	var iamUserAccessToBilling *string
 
@@ -127,7 +130,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.Get("email").(string),
 		iamUserAccessToBilling,
 		roleName,
-		GetTagsIn(ctx),
+		getTagsIn(ctx),
 		d.Get("create_govcloud").(bool),
 	)
 
@@ -170,7 +173,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	account, err := FindAccountByID(ctx, conn, d.Id())
 
@@ -203,7 +206,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -224,7 +227,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	close := d.Get("close_on_deletion").(bool)
 	var err error

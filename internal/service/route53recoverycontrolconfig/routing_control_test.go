@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig_test
 
 import (
@@ -99,7 +102,7 @@ func testAccCheckRoutingControlExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(rs.Primary.ID),
@@ -113,7 +116,7 @@ func testAccCheckRoutingControlExists(ctx context.Context, name string) resource
 
 func testAccCheckRoutingControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoverycontrolconfig_routing_control" {

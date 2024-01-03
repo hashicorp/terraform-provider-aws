@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -27,7 +30,7 @@ func DataSourceDomainIdentity() *schema.Resource {
 			"domain": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 			"verification_token": {
 				Type:     schema.TypeString,
@@ -39,7 +42,7 @@ func DataSourceDomainIdentity() *schema.Resource {
 
 func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Get("domain").(string)
 	d.SetId(domainName)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -187,7 +190,7 @@ func TestAccAuditManagerAssessmentDelegation_multiple(t *testing.T) {
 
 func testAccCheckAssessmentDelegationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_assessment_delegation" {
@@ -221,7 +224,7 @@ func testAccCheckAssessmentDelegationExists(ctx context.Context, name string, de
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentDelegation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		resp, err := tfauditmanager.FindAssessmentDelegationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentDelegation, rs.Primary.ID, err)
@@ -240,11 +243,6 @@ data "aws_caller_identity" "current" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 data "aws_iam_policy_document" "test" {

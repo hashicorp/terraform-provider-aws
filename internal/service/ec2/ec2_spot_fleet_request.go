@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -18,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -869,7 +872,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 
 func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 
@@ -993,7 +996,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotFleetWithContext(ctx, input)
 		},
@@ -1021,7 +1024,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := FindSpotFleetRequestByID(ctx, conn, d.Id())
 
@@ -1068,7 +1071,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	if err := d.Set("launch_template_config", flattenLaunchTemplateConfigs(config.LaunchTemplateConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template_config: %s", err)
@@ -1108,7 +1111,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifySpotFleetRequestInput{
@@ -1144,7 +1147,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 	// If terminate_instances_on_delete is not null, its value is used.
@@ -1200,7 +1203,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	opts := &ec2.SpotFleetLaunchSpecification{
 		ImageId:      aws.String(d["ami"].(string)),

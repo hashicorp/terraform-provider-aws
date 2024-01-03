@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package finspace_test
 
 import (
@@ -36,7 +39,7 @@ func TestAccFinSpaceKxDatabase_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy,
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_basic(rName),
@@ -71,7 +74,7 @@ func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy,
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_basic(rName),
@@ -102,7 +105,7 @@ func TestAccFinSpaceKxDatabase_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy,
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_description(rName, "description 1"),
@@ -139,7 +142,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDatabaseDestroy,
+		CheckDestroy:             testAccCheckKxDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDatabaseConfig_tags1(rName, "key1", "value1"),
@@ -170,32 +173,33 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKxDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
-	ctx := context.Background()
+func testAccCheckKxDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_finspace_kx_database" {
-			continue
-		}
-
-		input := &finspace.GetKxDatabaseInput{
-			DatabaseName:  aws.String(rs.Primary.Attributes["name"]),
-			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
-		}
-		_, err := conn.GetKxDatabase(ctx, input)
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_finspace_kx_database" {
+				continue
 			}
-			return err
+
+			input := &finspace.GetKxDatabaseInput{
+				DatabaseName:  aws.String(rs.Primary.Attributes["name"]),
+				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
+			}
+			_, err := conn.GetKxDatabase(ctx, input)
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxDatabase, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.FinSpace, create.ErrActionCheckingDestroyed, tffinspace.ResNameKxDatabase, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckKxDatabaseExists(ctx context.Context, name string, kxdatabase *finspace.GetKxDatabaseOutput) resource.TestCheckFunc {
@@ -209,7 +213,7 @@ func testAccCheckKxDatabaseExists(ctx context.Context, name string, kxdatabase *
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDatabase, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxDatabase(ctx, &finspace.GetKxDatabaseInput{
 			DatabaseName:  aws.String(rs.Primary.Attributes["name"]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),

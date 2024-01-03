@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -65,7 +68,7 @@ func ResourceTrafficSourceAttachment() *schema.Resource {
 
 func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	asgName := d.Get("autoscaling_group_name").(string)
 	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
@@ -89,12 +92,12 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Traffic Source Attachment (%s) create: %s", id, err)
 	}
 
-	return resourceTrafficSourceAttachmentRead(ctx, d, meta)
+	return append(diags, resourceTrafficSourceAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
 
@@ -119,7 +122,7 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 
 func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
 
@@ -141,7 +144,7 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Traffic Source Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const trafficSourceAttachmentIDSeparator = ","

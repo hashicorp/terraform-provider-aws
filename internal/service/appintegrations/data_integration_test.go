@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations_test
 
 import (
@@ -223,7 +226,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 
 func testAccCheckDataIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appintegrations_data_integration" {
@@ -255,7 +258,7 @@ func testAccCheckDataIntegrationExists(ctx context.Context, name string, dataInt
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn(ctx)
 		input := &appintegrationsservice.GetDataIntegrationInput{
 			Identifier: aws.String(rs.Primary.ID),
 		}

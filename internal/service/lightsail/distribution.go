@@ -1,21 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,7 +75,7 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "The cache behavior for the specified path.",
-							ValidateFunc: validation.StringInSlice(lightsail.BehaviorEnum_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
 						"path": {
 							Type:        schema.TypeString,
@@ -91,13 +96,13 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "The HTTP methods that are processed and forwarded to the distribution's origin.",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
 						},
 						"cached_http_methods": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "The HTTP method responses that are cached by your distribution.",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
 						},
 						"default_ttl": {
 							Type:        schema.TypeInt,
@@ -121,7 +126,7 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Description:  "Specifies which cookies to forward to the distribution's origin for a cache behavior: all, none, or allow-list to forward only the cookies specified in the cookiesAllowList parameter.",
-										ValidateFunc: validation.StringInSlice(lightsail.ForwardValues_Values(), false),
+										ValidateFunc: validation.StringInSlice(flattenForwardValuesValues(types.ForwardValues("").Values()), false),
 									},
 								},
 							},
@@ -139,14 +144,14 @@ func ResourceDistribution() *schema.Resource {
 										Description: "The specific headers to forward to your distribution's origin.",
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice(lightsail.HeaderEnum_Values(), false),
+											ValidateFunc: validation.StringInSlice(flattenHeaderEnumValues(types.HeaderEnum("").Values()), false),
 										},
 									},
 									"option": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Description:  "The headers that you want your distribution to forward to your origin and base caching on.",
-										ValidateFunc: validation.StringInSlice([]string{"default", lightsail.ForwardValuesAllowList, lightsail.ForwardValuesAll}, false),
+										ValidateFunc: validation.StringInSlice(enum.Slice("default", types.ForwardValuesAllowList, types.ForwardValuesAll), false),
 									},
 								},
 							},
@@ -189,7 +194,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -207,7 +212,7 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "The cache behavior of the distribution.",
-							ValidateFunc: validation.StringInSlice(lightsail.BehaviorEnum_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
 					},
 				},
@@ -221,7 +226,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The IP address type of the distribution.",
-				ValidateFunc: validation.StringInSlice(lightsail.IpAddressType_Values(), false),
+				ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
 				Default:      "dualstack",
 			},
 			"location": {
@@ -234,7 +239,7 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "The Availability Zone.",
-							ValidateFunc: validation.StringInSlice(lightsail.BehaviorEnum_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
 						"region_name": {
 							Type:        schema.TypeString,
@@ -254,7 +259,7 @@ func ResourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "The name of the distribution.",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
 			},
 			"origin": {
 				Type:        schema.TypeList,
@@ -266,13 +271,13 @@ func ResourceDistribution() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
 							Description:  "The name of the origin resource.",
 						},
 						"protocol_policy": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(lightsail.OriginProtocolPolicyEnum_Values(), false),
+							ValidateFunc: validation.StringInSlice(flattenOriginProtocolPolicyEnumValues(types.OriginProtocolPolicyEnum("").Values()), false),
 							Description:  "The protocol that your Amazon Lightsail distribution uses when establishing a connection with your origin to pull content.",
 						},
 						"region_name": {
@@ -322,14 +327,16 @@ const (
 )
 
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := &lightsail.CreateDistributionInput{
 		BundleId:             aws.String(d.Get("bundle_id").(string)),
 		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
 		DistributionName:     aws.String(d.Get("name").(string)),
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -341,22 +348,22 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
-		in.IpAddressType = aws.String(v.(string))
+		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
-	out, err := conn.CreateDistributionWithContext(ctx, in)
+	out, err := conn.CreateDistribution(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Distribution == nil {
-		return create.DiagError(names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	id := aws.StringValue(out.Distribution.Name)
+	id := aws.ToString(out.Distribution.Name)
 
-	diag := expandOperation(ctx, conn, out.Operation, lightsail.OperationTypeCreateDistribution, ResNameDistribution, id)
+	diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeCreateDistribution, ResNameDistribution, id)
 
 	if diag != nil {
 		return diag
@@ -371,47 +378,49 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 			DistributionName: aws.String(id),
 			IsEnabled:        aws.Bool(isEnabled),
 		}
-		updateOut, err := conn.UpdateDistributionWithContext(ctx, updateIn)
+		updateOut, err := conn.UpdateDistribution(ctx, updateIn)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 
-		diagUpdate := expandOperation(ctx, conn, updateOut.Operation, lightsail.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
+		diagUpdate := expandOperation(ctx, conn, *updateOut.Operation, types.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
 
 		if diagUpdate != nil {
 			return diagUpdate
 		}
 	}
 
-	return resourceDistributionRead(ctx, d, meta)
+	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDistributionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lightsail Distribution (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	d.Set("alternative_domain_names", out.AlternativeDomainNames)
 	d.Set("arn", out.Arn)
 	d.Set("bundle_id", out.BundleId)
 	if err := d.Set("cache_behavior", flattenCacheBehaviorsPerPath(out.CacheBehaviors)); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 
 	if out.CacheBehaviorSettings != nil {
 		if err := d.Set("cache_behavior_settings", []interface{}{flattenCacheSettings(out.CacheBehaviorSettings)}); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 		}
 	} else {
 		d.Set("cache_behavior_settings", nil)
@@ -421,14 +430,14 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set("domain_name", out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set("name", out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
@@ -436,13 +445,15 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("status", out.Status)
 	d.Set("support_code", out.SupportCode)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	update := false
 	bundleUpdate := false
@@ -486,17 +497,17 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("ip_address_type") {
-		out, err := conn.SetIpAddressTypeWithContext(ctx, &lightsail.SetIpAddressTypeInput{
+		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
-			ResourceType:  aws.String("Distribution"),
-			IpAddressType: aws.String(d.Get("ip_address_type").(string)),
+			ResourceType:  types.ResourceTypeDistribution,
+			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeSetIpAddressType, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetIpAddressType), ResNameDistribution, d.Id(), err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeSetIpAddressType, ResNameDistribution, d.Id())
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetIpAddressType, ResNameDistribution, d.Id())
 
 		if diag != nil {
 			return diag
@@ -505,12 +516,12 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if update {
 		log.Printf("[DEBUG] Updating Lightsail Distribution (%s): %#v", d.Id(), in)
-		out, err := conn.UpdateDistributionWithContext(ctx, in)
+		out, err := conn.UpdateDistribution(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 
-		diag := expandOperation(ctx, conn, out.Operation, lightsail.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
+		diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
 
 		if diag != nil {
 			return diag
@@ -519,53 +530,55 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if bundleUpdate {
 		log.Printf("[DEBUG] Updating Lightsail Distribution Bundle (%s): %#v", d.Id(), in)
-		out, err := conn.UpdateDistributionBundleWithContext(ctx, bundleIn)
+		out, err := conn.UpdateDistributionBundle(ctx, bundleIn)
 		if err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 
-		diag := expandOperation(ctx, conn, out.Operation, lightsail.OperationTypeUpdateDistributionBundle, ResNameDistribution, d.Id())
+		diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeUpdateDistributionBundle, ResNameDistribution, d.Id())
 
 		if diag != nil {
 			return diag
 		}
 	}
 
-	return resourceDistributionRead(ctx, d, meta)
+	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
 func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	log.Printf("[INFO] Deleting Lightsail Distribution %s", d.Id())
 
-	out, err := conn.DeleteDistributionWithContext(ctx, &lightsail.DeleteDistributionInput{
+	out, err := conn.DeleteDistribution(ctx, &lightsail.DeleteDistributionInput{
 		DistributionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) || tfawserr.ErrMessageContains(err, lightsail.ErrCodeInvalidInputException, "Requested resource not found") {
-		return nil
+	if IsANotFoundError(err) || errs.IsA[*types.InvalidInputException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
 	}
 
-	diag := expandOperation(ctx, conn, out.Operation, lightsail.OperationTypeDeleteDistribution, ResNameDistribution, d.Id())
+	diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeDeleteDistribution, ResNameDistribution, d.Id())
 
 	if diag != nil {
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
-func FindDistributionByID(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.LightsailDistribution, error) {
+func FindDistributionByID(ctx context.Context, conn *lightsail.Client, id string) (*types.LightsailDistribution, error) {
 	in := &lightsail.GetDistributionsInput{
 		DistributionName: aws.String(id),
 	}
-	out, err := conn.GetDistributionsWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) || tfawserr.ErrMessageContains(err, lightsail.ErrCodeInvalidInputException, "Requested resource not found") {
+	out, err := conn.GetDistributions(ctx, in)
+	if IsANotFoundError(err) || errs.IsA[*types.InvalidInputException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -580,10 +593,10 @@ func FindDistributionByID(ctx context.Context, conn *lightsail.Lightsail, id str
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.Distributions[0], nil
+	return &out.Distributions[0], nil
 }
 
-func flattenCookieObject(apiObject *lightsail.CookieObject) map[string]interface{} {
+func flattenCookieObject(apiObject *types.CookieObject) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -594,14 +607,14 @@ func flattenCookieObject(apiObject *lightsail.CookieObject) map[string]interface
 		m["cookies_allow_list"] = v
 	}
 
-	if v := apiObject.Option; v != nil {
-		m["option"] = aws.StringValue(v)
+	if v := apiObject.Option; v != "" {
+		m["option"] = v
 	}
 
 	return m
 }
 
-func flattenHeaderObject(apiObject *lightsail.HeaderObject) map[string]interface{} {
+func flattenHeaderObject(apiObject *types.HeaderObject) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -612,14 +625,14 @@ func flattenHeaderObject(apiObject *lightsail.HeaderObject) map[string]interface
 		m["headers_allow_list"] = v
 	}
 
-	if v := apiObject.Option; v != nil {
-		m["option"] = aws.StringValue(v)
+	if v := apiObject.Option; v != "" {
+		m["option"] = v
 	}
 
 	return m
 }
 
-func flattenQueryStringObject(apiObject *lightsail.QueryStringObject) map[string]interface{} {
+func flattenQueryStringObject(apiObject *types.QueryStringObject) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -631,13 +644,13 @@ func flattenQueryStringObject(apiObject *lightsail.QueryStringObject) map[string
 	}
 
 	if v := apiObject.Option; v != nil {
-		m["option"] = aws.BoolValue(v)
+		m["option"] = aws.ToBool(v)
 	}
 
 	return m
 }
 
-func flattenCacheSettings(apiObject *lightsail.CacheSettings) map[string]interface{} {
+func flattenCacheSettings(apiObject *types.CacheSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -645,15 +658,15 @@ func flattenCacheSettings(apiObject *lightsail.CacheSettings) map[string]interfa
 	m := map[string]interface{}{}
 
 	if v := apiObject.AllowedHTTPMethods; v != nil {
-		m["allowed_http_methods"] = aws.StringValue(v)
+		m["allowed_http_methods"] = aws.ToString(v)
 	}
 
 	if v := apiObject.CachedHTTPMethods; v != nil {
-		m["cached_http_methods"] = aws.StringValue(v)
+		m["cached_http_methods"] = aws.ToString(v)
 	}
 
 	if v := apiObject.DefaultTTL; v != nil {
-		m["default_ttl"] = int(aws.Int64Value(v))
+		m["default_ttl"] = int(aws.ToInt64(v))
 	}
 
 	if v := apiObject.ForwardedCookies; v != nil {
@@ -669,35 +682,35 @@ func flattenCacheSettings(apiObject *lightsail.CacheSettings) map[string]interfa
 	}
 
 	if v := apiObject.MaximumTTL; v != nil {
-		m["maximum_ttl"] = int(aws.Int64Value(v))
+		m["maximum_ttl"] = int(aws.ToInt64(v))
 	}
 
 	if v := apiObject.MinimumTTL; v != nil {
-		m["minimum_ttl"] = int(aws.Int64Value(v))
+		m["minimum_ttl"] = int(aws.ToInt64(v))
 	}
 
 	return m
 }
 
-func flattenCacheBehaviorPerPath(apiObject *lightsail.CacheBehaviorPerPath) map[string]interface{} {
-	if apiObject == nil {
+func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[string]interface{} {
+	if apiObject == (types.CacheBehaviorPerPath{}) {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.Behavior; v != nil {
-		m["behavior"] = aws.StringValue(v)
+	if v := apiObject.Behavior; v != "" {
+		m["behavior"] = v
 	}
 
 	if v := apiObject.Path; v != nil {
-		m["path"] = aws.StringValue(v)
+		m["path"] = aws.ToString(v)
 	}
 
 	return m
 }
 
-func flattenCacheBehaviorsPerPath(apiObjects []*lightsail.CacheBehaviorPerPath) []interface{} {
+func flattenCacheBehaviorsPerPath(apiObjects []types.CacheBehaviorPerPath) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -705,7 +718,7 @@ func flattenCacheBehaviorsPerPath(apiObjects []*lightsail.CacheBehaviorPerPath) 
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if apiObject == (types.CacheBehaviorPerPath{}) {
 			continue
 		}
 
@@ -715,21 +728,21 @@ func flattenCacheBehaviorsPerPath(apiObjects []*lightsail.CacheBehaviorPerPath) 
 	return l
 }
 
-func flattenCacheBehavior(apiObject *lightsail.CacheBehavior) map[string]interface{} {
+func flattenCacheBehavior(apiObject *types.CacheBehavior) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.Behavior; v != nil {
-		m["behavior"] = aws.StringValue(v)
+	if v := apiObject.Behavior; v != "" {
+		m["behavior"] = v
 	}
 
 	return m
 }
 
-func flattenOrigin(apiObject *lightsail.Origin) map[string]interface{} {
+func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -737,55 +750,55 @@ func flattenOrigin(apiObject *lightsail.Origin) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		m["name"] = aws.StringValue(v)
+		m["name"] = aws.ToString(v)
 	}
 
-	if v := apiObject.ProtocolPolicy; v != nil {
-		m["protocol_policy"] = aws.StringValue(v)
+	if v := apiObject.ProtocolPolicy; v != "" {
+		m["protocol_policy"] = v
 	}
 
-	if v := apiObject.RegionName; v != nil {
-		m["region_name"] = aws.StringValue(v)
+	if v := apiObject.RegionName; v != "" {
+		m["region_name"] = v
 	}
 
-	if v := apiObject.ResourceType; v != nil {
-		m["resource_type"] = aws.StringValue(v)
+	if v := apiObject.ResourceType; v != "" {
+		m["resource_type"] = v
 	}
 
 	return m
 }
 
-func expandInputOrigin(tfMap map[string]interface{}) *lightsail.InputOrigin {
+func expandInputOrigin(tfMap map[string]interface{}) *types.InputOrigin {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &lightsail.InputOrigin{}
+	a := &types.InputOrigin{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		a.Name = aws.String(v)
 	}
 
 	if v, ok := tfMap["protocol_policy"].(string); ok && v != "" {
-		a.ProtocolPolicy = aws.String(v)
+		a.ProtocolPolicy = types.OriginProtocolPolicyEnum(v)
 	}
 
 	if v, ok := tfMap["region_name"].(string); ok && v != "" {
-		a.RegionName = aws.String(v)
+		a.RegionName = types.RegionName(v)
 	}
 
 	return a
 }
 
-func expandCacheBehaviorPerPath(tfMap map[string]interface{}) *lightsail.CacheBehaviorPerPath {
+func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehaviorPerPath {
 	if tfMap == nil {
-		return nil
+		return types.CacheBehaviorPerPath{}
 	}
 
-	a := &lightsail.CacheBehaviorPerPath{}
+	a := types.CacheBehaviorPerPath{}
 
 	if v, ok := tfMap["behavior"].(string); ok && v != "" {
-		a.Behavior = aws.String(v)
+		a.Behavior = types.BehaviorEnum(v)
 	}
 
 	if v, ok := tfMap["path"].(string); ok && v != "" {
@@ -795,12 +808,12 @@ func expandCacheBehaviorPerPath(tfMap map[string]interface{}) *lightsail.CacheBe
 	return a
 }
 
-func expandCacheBehaviorsPerPath(tfList []interface{}) []*lightsail.CacheBehaviorPerPath {
+func expandCacheBehaviorsPerPath(tfList []interface{}) []types.CacheBehaviorPerPath {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []*lightsail.CacheBehaviorPerPath
+	var s []types.CacheBehaviorPerPath
 
 	for _, r := range tfList {
 		m, ok := r.(map[string]interface{})
@@ -811,7 +824,7 @@ func expandCacheBehaviorsPerPath(tfList []interface{}) []*lightsail.CacheBehavio
 
 		a := expandCacheBehaviorPerPath(m)
 
-		if a == nil {
+		if a == (types.CacheBehaviorPerPath{}) {
 			continue
 		}
 
@@ -821,12 +834,12 @@ func expandCacheBehaviorsPerPath(tfList []interface{}) []*lightsail.CacheBehavio
 	return s
 }
 
-func expandAllowList(tfList []interface{}) []*string {
+func expandAllowList(tfList []interface{}) []string {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []*string
+	var s []string
 
 	for _, r := range tfList {
 		m, ok := r.(string)
@@ -835,54 +848,73 @@ func expandAllowList(tfList []interface{}) []*string {
 			continue
 		}
 
-		s = append(s, aws.String(m))
+		s = append(s, m)
 	}
 
 	return s
 }
 
-func expandCookieObject(tfMap map[string]interface{}) *lightsail.CookieObject {
+func expandHeaderEnumList(tfList []interface{}) []types.HeaderEnum {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []types.HeaderEnum
+
+	for _, r := range tfList {
+		m, ok := r.(string)
+
+		if !ok {
+			continue
+		}
+
+		s = append(s, types.HeaderEnum(m))
+	}
+
+	return s
+}
+func expandCookieObject(tfMap map[string]interface{}) *types.CookieObject {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &lightsail.CookieObject{}
+	a := &types.CookieObject{}
 
 	if v, ok := tfMap["cookies_allow_list"]; ok && len(v.(*schema.Set).List()) > 0 {
 		a.CookiesAllowList = expandAllowList(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["option"].(string); ok && v != "" {
-		a.Option = aws.String(v)
+		a.Option = types.ForwardValues(v)
 	}
 
 	return a
 }
 
-func expandHeaderObject(tfMap map[string]interface{}) *lightsail.HeaderObject {
+func expandHeaderObject(tfMap map[string]interface{}) *types.HeaderObject {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &lightsail.HeaderObject{}
+	a := &types.HeaderObject{}
 
 	if v, ok := tfMap["headers_allow_list"]; ok && len(v.(*schema.Set).List()) > 0 {
-		a.HeadersAllowList = expandAllowList(v.(*schema.Set).List())
+		a.HeadersAllowList = expandHeaderEnumList(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["option"].(string); ok && v != "" {
-		a.Option = aws.String(v)
+		a.Option = types.ForwardValues(v)
 	}
 
 	return a
 }
 
-func expandQueryStringObject(tfMap map[string]interface{}) *lightsail.QueryStringObject {
+func expandQueryStringObject(tfMap map[string]interface{}) *types.QueryStringObject {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &lightsail.QueryStringObject{}
+	a := &types.QueryStringObject{}
 
 	if v, ok := tfMap["query_strings_allowed_list"]; ok && len(v.(*schema.Set).List()) > 0 {
 		a.QueryStringsAllowList = expandAllowList(v.(*schema.Set).List())
@@ -895,12 +927,12 @@ func expandQueryStringObject(tfMap map[string]interface{}) *lightsail.QueryStrin
 	return a
 }
 
-func expandCacheSettings(tfMap map[string]interface{}) *lightsail.CacheSettings {
+func expandCacheSettings(tfMap map[string]interface{}) *types.CacheSettings {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &lightsail.CacheSettings{}
+	a := &types.CacheSettings{}
 
 	if v, ok := tfMap["allowed_http_methods"].(string); ok && v != "" {
 		a.AllowedHTTPMethods = aws.String(v)
@@ -937,16 +969,66 @@ func expandCacheSettings(tfMap map[string]interface{}) *lightsail.CacheSettings 
 	return a
 }
 
-func expandCacheBehavior(tfMap map[string]interface{}) *lightsail.CacheBehavior {
+func expandCacheBehavior(tfMap map[string]interface{}) *types.CacheBehavior {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &lightsail.CacheBehavior{}
+	a := &types.CacheBehavior{}
 
 	if v, ok := tfMap["behavior"].(string); ok && v != "" {
-		a.Behavior = aws.String(v)
+		a.Behavior = types.BehaviorEnum(v)
 	}
 
 	return a
+}
+
+func flattenForwardValuesValues(t []types.ForwardValues) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
+}
+
+func flattenHeaderEnumValues(t []types.HeaderEnum) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
+}
+
+func flattenIPAddressTypeValues(t []types.IpAddressType) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
+}
+
+func flattenBehaviorEnumValues(t []types.BehaviorEnum) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
+}
+
+func flattenOriginProtocolPolicyEnumValues(t []types.OriginProtocolPolicyEnum) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }

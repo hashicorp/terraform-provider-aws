@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -42,7 +45,7 @@ func ResourceNetworkACLAssociation() *schema.Resource {
 
 func resourceNetworkACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	associationID, err := networkACLAssociationCreate(ctx, conn, d.Get("network_acl_id").(string), d.Get("subnet_id").(string))
 
@@ -57,9 +60,9 @@ func resourceNetworkACLAssociationCreate(ctx context.Context, d *schema.Resource
 
 func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkACLAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -83,7 +86,7 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNetworkAclsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -126,7 +129,7 @@ func networkACLAssociationCreate(ctx context.Context, conn *ec2.EC2, naclID, sub
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.ReplaceNetworkAclAssociationWithContext(ctx, input)
 	}, errCodeInvalidAssociationIDNotFound)
 
@@ -178,7 +181,7 @@ func networkACLAssociationDelete(ctx context.Context, conn *ec2.EC2, association
 	return nil
 }
 
-// networkACLAssociationDelete deletes the specified NACL associations for the specified subnets.
+// networkACLAssociationsDelete deletes the specified NACL associations for the specified subnets.
 // Each subnet's current association is replaced by an association with the specified VPC's default NACL.
 func networkACLAssociationsDelete(ctx context.Context, conn *ec2.EC2, vpcID string, subnetIDs []interface{}) error {
 	defaultNACL, err := FindVPCDefaultNetworkACL(ctx, conn, vpcID)

@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,7 +33,7 @@ func numericFormatConfigurationSchema() *schema.Schema {
 							"prefix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
 							"separator_configuration":         separatorConfigurationSchema(),
 							"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
-							"symbol":                          stringSchema(false, validation.StringMatch(regexp.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
+							"symbol":                          stringSchema(false, validation.StringMatch(regexache.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
 						},
 					},
 				},
@@ -225,11 +227,10 @@ func fontConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"font_color":      stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"font_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"font_decoration": stringSchema(false, validation.StringInSlice(quicksight.FontDecoration_Values(), false)),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
-					MinItems: 1,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -241,7 +242,6 @@ func fontConfigurationSchema() *schema.Schema {
 				"font_style": stringSchema(false, validation.StringInSlice(quicksight.FontStyle_Values(), false)),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
-					MinItems: 1,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -354,6 +354,12 @@ func expandNumericFormatConfiguration(tfList []interface{}) *quicksight.NumericF
 
 	if v, ok := tfMap["currency_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.CurrencyDisplayFormatConfiguration = expandCurrencyDisplayFormatConfiguration(v)
+	}
+	if v, ok := tfMap["number_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.NumberDisplayFormatConfiguration = expandNumberDisplayFormatConfiguration(v)
+	}
+	if v, ok := tfMap["percentage_display_format_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.PercentageDisplayFormatConfiguration = expandPercentageDisplayFormatConfiguration(v)
 	}
 
 	return config
@@ -559,13 +565,13 @@ func expandFontConfiguration(tfList []interface{}) *quicksight.FontConfiguration
 
 	config := &quicksight.FontConfiguration{}
 
-	if v, ok := tfMap["font_color"].(string); ok {
+	if v, ok := tfMap["font_color"].(string); ok && v != "" {
 		config.FontColor = aws.String(v)
 	}
-	if v, ok := tfMap["font_decoration"].(string); ok {
+	if v, ok := tfMap["font_decoration"].(string); ok && v != "" {
 		config.FontDecoration = aws.String(v)
 	}
-	if v, ok := tfMap["font_style"].(string); ok {
+	if v, ok := tfMap["font_style"].(string); ok && v != "" {
 		config.FontStyle = aws.String(v)
 	}
 	if v, ok := tfMap["font_size"].([]interface{}); ok && len(v) > 0 {
@@ -650,13 +656,13 @@ func expandNumberDisplayFormatConfiguration(tfList []interface{}) *quicksight.Nu
 
 	config := &quicksight.NumberDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["number_scale"].(string); ok {
+	if v, ok := tfMap["number_scale"].(string); ok && v != "" {
 		config.NumberScale = aws.String(v)
 	}
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["suffix"].(string); ok {
+	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		config.Suffix = aws.String(v)
 	}
 	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -687,10 +693,10 @@ func expandPercentageDisplayFormatConfiguration(tfList []interface{}) *quicksigh
 
 	config := &quicksight.PercentageDisplayFormatConfiguration{}
 
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
-	if v, ok := tfMap["suffix"].(string); ok {
+	if v, ok := tfMap["suffix"].(string); ok && v != "" {
 		config.Suffix = aws.String(v)
 	}
 	if v, ok := tfMap["decimal_places_configuration"].([]interface{}); ok && len(v) > 0 {

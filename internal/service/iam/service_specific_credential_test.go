@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -169,7 +172,7 @@ func testAccCheckServiceSpecificCredentialExists(ctx context.Context, n string, 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Server Cert ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		serviceName, userName, credId, err := tfiam.DecodeServiceSpecificCredentialId(rs.Primary.ID)
 		if err != nil {
@@ -189,7 +192,7 @@ func testAccCheckServiceSpecificCredentialExists(ctx context.Context, n string, 
 
 func testAccCheckServiceSpecificCredentialDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_service_specific_credential" {

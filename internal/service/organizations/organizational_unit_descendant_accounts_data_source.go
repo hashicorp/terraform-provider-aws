@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -55,7 +58,7 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 
 func dataSourceOrganizationalUnitDescendantAccountsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	parentID := d.Get("parent_id").(string)
 	accounts, err := findAllAccountsForParentAndBelow(ctx, conn, parentID)
@@ -85,7 +88,7 @@ func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.O
 
 	output = append(output, accounts...)
 
-	ous, err := findOUsForParent(ctx, conn, id)
+	ous, err := findOrganizationalUnitsForParentByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err

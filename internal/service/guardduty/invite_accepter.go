@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -50,7 +53,7 @@ func ResourceInviteAccepter() *schema.Resource {
 
 func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	invitationID := ""
@@ -117,7 +120,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := &guardduty.GetMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
@@ -148,7 +151,7 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := &guardduty.DisassociateFromMasterAccountInput{
 		DetectorId: aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh_test
 
 import (
@@ -919,7 +922,7 @@ func testAccVirtualGateway_Tags(t *testing.T) {
 
 func testAccCheckVirtualGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_virtual_gateway" {
@@ -945,7 +948,7 @@ func testAccCheckVirtualGatewayDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccCheckVirtualGatewayExists(ctx context.Context, n string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

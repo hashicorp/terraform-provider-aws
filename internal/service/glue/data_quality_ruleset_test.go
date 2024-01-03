@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -127,7 +130,7 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccGlueDataQualityRuleset_targetTable(t *testing.T) {
+func TestAccGlueDataQualityRuleset_targetTableRequired(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -148,6 +151,42 @@ func TestAccGlueDataQualityRuleset_targetTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_table.0.catalog_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
+	resourceName := "aws_glue_data_quality_ruleset.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccDataQualityRulesetConfig_targetTableFull(rName, rName2, rName3, ruleset),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", "catalog_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
 				),
@@ -248,7 +287,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		resp, err := tfglue.FindDataQualityRulesetByName(ctx, conn, rs.Primary.ID)
 
@@ -271,7 +310,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 
 func testAccCheckDataQualityRulesetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_data_quality_ruleset" {
@@ -335,6 +374,23 @@ resource "aws_glue_data_quality_ruleset" "test" {
   ruleset = %[2]q
 
   target_table {
+    database_name = aws_glue_catalog_database.test.name
+    table_name    = aws_glue_catalog_table.test.name
+  }
+}
+`, rName, ruleset))
+}
+
+func testAccDataQualityRulesetConfig_targetTableFull(rName, rName2, rName3, ruleset string) string {
+	return acctest.ConfigCompose(
+		testAccDataQualityRulesetConfigTargetTableConfigBasic(rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_glue_data_quality_ruleset" "test" {
+  name    = %[1]q
+  ruleset = %[2]q
+
+  target_table {
+    catalog_id    = aws_glue_catalog_table.test.catalog_id
     database_name = aws_glue_catalog_database.test.name
     table_name    = aws_glue_catalog_table.test.name
   }

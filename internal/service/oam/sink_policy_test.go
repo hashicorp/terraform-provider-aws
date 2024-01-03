@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/oam/types"
@@ -38,13 +41,13 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSinkPolicyDestroy,
+		CheckDestroy:             testAccCheckSinkPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSinkPolicyExists(resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
+					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
@@ -97,13 +100,13 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSinkPolicyDestroy,
+		CheckDestroy:             testAccCheckSinkPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSinkPolicyExists(resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
+					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
@@ -133,7 +136,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 			{
 				Config: testAccSinkPolicyConfigUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSinkPolicyExists(resourceName, &sinkPolicy),
+					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
 					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
@@ -165,34 +168,35 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckSinkPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
-	ctx := context.Background()
+func testAccCheckSinkPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_oam_sink_policy" {
-			continue
-		}
-
-		input := &oam.GetSinkPolicyInput{
-			SinkIdentifier: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.GetSinkPolicy(ctx, input)
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_oam_sink_policy" {
+				continue
 			}
-			return err
+
+			input := &oam.GetSinkPolicyInput{
+				SinkIdentifier: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.GetSinkPolicy(ctx, input)
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingDestroyed, tfoam.ResNameSinkPolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingDestroyed, tfoam.ResNameSinkPolicy, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSinkPolicyExists(name string, sinkPolicy *oam.GetSinkPolicyOutput) resource.TestCheckFunc {
+func testAccCheckSinkPolicyExists(ctx context.Context, name string, sinkPolicy *oam.GetSinkPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -203,8 +207,8 @@ func testAccCheckSinkPolicyExists(name string, sinkPolicy *oam.GetSinkPolicyOutp
 			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSinkPolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
+
 		resp, err := conn.GetSinkPolicy(ctx, &oam.GetSinkPolicyInput{
 			SinkIdentifier: aws.String(rs.Primary.ID),
 		})

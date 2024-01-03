@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -156,12 +159,12 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	clusterName := d.Get("name").(string)
 	input := &ecs.CreateClusterInput{
 		ClusterName: aws.String(clusterName),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
@@ -198,7 +201,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -216,7 +219,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, clusterReadTimeout, func() (interface{}, error) {
 		return FindClusterByNameOrARN(ctx, conn, d.Id())
@@ -251,13 +254,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
-	SetTagsOut(ctx, cluster.Tags)
+	setTagsOut(ctx, cluster.Tags)
 
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChanges("configuration", "service_connect_defaults", "setting") {
 		input := &ecs.UpdateClusterInput{
@@ -279,15 +284,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateClusterWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating ECS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ECS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for ECS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string) (*ecs.Cluster, error) {
@@ -394,7 +399,7 @@ func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cl
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECS Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterDeleteTimeout, func() (interface{}, error) {

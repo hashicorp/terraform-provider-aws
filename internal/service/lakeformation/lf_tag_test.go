@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
@@ -240,7 +243,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 
 func testAccCheckLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_lf_tag" {
@@ -295,7 +298,7 @@ func testAccCheckLFTagExists(ctx context.Context, name string) resource.TestChec
 			TagKey:    aws.String(tagKey),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 		_, err = conn.GetLFTagWithContext(ctx, input)
 
 		return err
@@ -323,7 +326,7 @@ func testAccCheckLFTagValuesLen(ctx context.Context, name string, expectedLength
 			TagKey:    aws.String(tagKey),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 		output, err := conn.GetLFTagWithContext(ctx, input)
 
 		if len(output.TagValues) != expectedLength {

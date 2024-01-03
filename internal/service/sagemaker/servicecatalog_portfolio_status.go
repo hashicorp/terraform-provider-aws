@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -34,7 +37,7 @@ func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 
 func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	status := d.Get("status").(string)
 	var err error
@@ -55,7 +58,7 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 
 func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	resp, err := conn.GetSagemakerServicecatalogPortfolioStatusWithContext(ctx, &sagemaker.GetSagemakerServicecatalogPortfolioStatusInput{})
 	if err != nil {

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +26,7 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_missing,
-				ExpectError: regexp.MustCompile(`no matching EC2 DHCP Options Set found`),
+				ExpectError: regexache.MustCompile(`no matching EC2 DHCP Options Set found`),
 			},
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_id,
@@ -79,7 +82,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 			},
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 2),
-				ExpectError: regexp.MustCompile(`multiple EC2 DHCP Options Sets matched`),
+				ExpectError: regexache.MustCompile(`multiple EC2 DHCP Options Sets matched`),
 			},
 			{
 				// We have one last empty step here because otherwise we'll leave the

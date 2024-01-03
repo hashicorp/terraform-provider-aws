@@ -43,9 +43,9 @@ The following arguments are optional:
 
 * `resource_arn` - (Required) The ARN of the resource to be added to the group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `resource_type` - The resource type of a resource, such as `AWS::EC2::Instance`.
 

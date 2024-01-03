@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -226,6 +229,66 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.QuickSight, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Analysis); ok {
 		if status, apiErrors := aws.StringValue(out.Status), out.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitThemeCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Theme, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusTheme(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Theme); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitThemeUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Theme, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusTheme(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Theme); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errors *multierror.Error
 
 			for _, apiError := range apiErrors {

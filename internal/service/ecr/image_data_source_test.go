@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
@@ -28,9 +31,11 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceByTag, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByTag, "image_size_in_bytes"),
 					resource.TestCheckTypeSetElemAttr(resourceByTag, "image_tags.*", tag),
+					resource.TestCheckResourceAttrSet(resourceByTag, "image_uri"),
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_size_in_bytes"),
 					resource.TestCheckTypeSetElemAttr(resourceByDigest, "image_tags.*", tag),
+					resource.TestCheckResourceAttrSet(resourceByDigest, "image_uri"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_size_in_bytes"),
 					resource.TestCheckTypeSetElemAttr(resourceByMostRecent, "image_tags.*", tag),

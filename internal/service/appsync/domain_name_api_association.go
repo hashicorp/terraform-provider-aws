@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -40,7 +43,7 @@ func ResourceDomainNameAPIAssociation() *schema.Resource {
 
 func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -63,7 +66,7 @@ func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.Resou
 
 func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	association, err := FindDomainNameAPIAssociationByID(ctx, conn, d.Id())
 	if association == nil && !d.IsNewResource() {
@@ -84,7 +87,7 @@ func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.Resourc
 
 func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -105,7 +108,7 @@ func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.Resou
 
 func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.DisassociateApiInput{
 		DomainName: aws.String(d.Id()),

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -44,7 +47,7 @@ func TestAccAuditManagerAssessment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_accounts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_services.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexp.MustCompile(`assessment/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexache.MustCompile(`assessment/+.`)),
 				),
 			},
 			{
@@ -180,7 +183,7 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 
 func testAccCheckAssessmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_assessment" {
@@ -214,7 +217,7 @@ func testAccCheckAssessmentExists(ctx context.Context, name string, assessment *
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessment, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		resp, err := tfauditmanager.FindAssessmentByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessment, rs.Primary.ID, err)

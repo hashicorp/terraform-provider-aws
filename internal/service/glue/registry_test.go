@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -156,7 +159,7 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 }
 
 func testAccPreCheckRegistry(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 	_, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
 
@@ -181,7 +184,7 @@ func testAccCheckRegistryExists(ctx context.Context, resourceName string, regist
 			return fmt.Errorf("No Glue Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 		output, err := tfglue.FindRegistryByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -207,7 +210,7 @@ func testAccCheckRegistryDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 			output, err := tfglue.FindRegistryByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {

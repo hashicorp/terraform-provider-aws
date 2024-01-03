@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -131,7 +134,7 @@ func TestAccAuditManagerAssessmentReport_optional(t *testing.T) {
 
 func testAccCheckAssessmentReportDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_assessment_report" {
@@ -165,7 +168,7 @@ func testAccCheckAssessmentReportExists(ctx context.Context, name string, assess
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentReport, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		resp, err := tfauditmanager.FindAssessmentReportByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAssessmentReport, rs.Primary.ID, err)
@@ -184,11 +187,6 @@ data "aws_caller_identity" "current" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {

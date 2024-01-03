@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -99,15 +102,15 @@ func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMaintenanceWindowTargetConfig_basic2(name, "Bäd Name!@#$%^", "good description"),
-				ExpectError: regexp.MustCompile(`Only alphanumeric characters, hyphens, dots & underscores allowed`),
+				ExpectError: regexache.MustCompile(`Only alphanumeric characters, hyphens, dots & underscores allowed`),
 			},
 			{
 				Config:      testAccMaintenanceWindowTargetConfig_basic2(name, "goodname", "bd"),
-				ExpectError: regexp.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
+				ExpectError: regexache.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
 			},
 			{
 				Config:      testAccMaintenanceWindowTargetConfig_basic2(name, "goodname", "This description is tooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo long"),
-				ExpectError: regexp.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
+				ExpectError: regexache.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
 			},
 		},
 	})
@@ -263,7 +266,7 @@ func testAccCheckMaintenanceWindowTargetExists(ctx context.Context, n string, mW
 			return fmt.Errorf("No SSM Maintenance Window Target Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		resp, err := conn.DescribeMaintenanceWindowTargetsWithContext(ctx, &ssm.DescribeMaintenanceWindowTargetsInput{
 			WindowId: aws.String(rs.Primary.Attributes["window_id"]),
@@ -291,7 +294,7 @@ func testAccCheckMaintenanceWindowTargetExists(ctx context.Context, n string, mW
 
 func testAccCheckMaintenanceWindowTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_maintenance_window_target" {

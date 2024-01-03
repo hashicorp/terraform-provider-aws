@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package finspace
 
 import (
@@ -78,22 +81,22 @@ const (
 
 func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).FinSpaceClient()
+	client := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxUserInput{
 		UserName:      aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		IamRole:       aws.String(d.Get("iam_role").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	out, err := client.CreateKxUser(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	idParts := []string{
@@ -102,7 +105,7 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	id, err := flex.FlattenResourceId(idParts, kxUserIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get("name").(string), err)
 	}
 	d.SetId(id)
 
@@ -111,7 +114,7 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxUserByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -121,7 +124,7 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)
 	}
 
 	d.Set("arn", out.UserArn)
@@ -134,7 +137,7 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	if d.HasChange("iam_role") {
 		in := &finspace.UpdateKxUserInput{
@@ -145,7 +148,7 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		_, err := conn.UpdateKxUser(ctx, in)
 		if err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)
 		}
 	}
 
@@ -154,7 +157,7 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace KxUser %s", d.Id())
 
@@ -166,10 +169,10 @@ func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)
 	}
 
 	return diags

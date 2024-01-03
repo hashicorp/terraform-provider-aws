@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -107,7 +110,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 
 func testAccCheckEventDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_configuration_set" {
@@ -146,7 +149,7 @@ func testAccCheckEventDestinationExists(ctx context.Context, n string, v *ses.Ev
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		response, err := conn.DescribeConfigurationSetWithContext(ctx, &ses.DescribeConfigurationSetInput{
 			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),
@@ -171,11 +174,6 @@ func testAccEventDestinationConfig_basic(rName1, rName2, rName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[2]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {
@@ -207,9 +205,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[2]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.test.arn
     bucket_arn = aws_s3_bucket.test.arn
   }

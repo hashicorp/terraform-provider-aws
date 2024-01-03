@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -253,7 +255,7 @@ func tableBorderOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color":     stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"color":     stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"style":     stringSchema(false, validation.StringInSlice(quicksight.TableBorderStyle_Values(), false)),
 				"thickness": intSchema(false, validation.IntBetween(1, 4)),
 			},
@@ -269,7 +271,7 @@ func tableCellStyleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"background_color": stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"background_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GlobalTableBorderOptions.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -377,7 +379,7 @@ func rowAlternateColorOptionsSchema() *schema.Schema {
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
-					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")},
+					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")},
 				},
 				"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 			},
@@ -1292,7 +1294,7 @@ func flattenPivotTableAggregatedFieldWells(apiObject *quicksight.PivotTableAggre
 		tfMap["columns"] = flattenDimensionFields(apiObject.Columns)
 	}
 	if apiObject.Rows != nil {
-		tfMap["row"] = flattenDimensionFields(apiObject.Rows)
+		tfMap["rows"] = flattenDimensionFields(apiObject.Rows)
 	}
 	if apiObject.Values != nil {
 		tfMap["values"] = flattenMeasureFields(apiObject.Values)
@@ -1668,7 +1670,7 @@ func flattenPivotTableFieldOption(apiObject []*quicksight.PivotTableFieldOption)
 			tfMap["custom_label"] = aws.StringValue(config.CustomLabel)
 		}
 		if config.Visibility != nil {
-			tfMap["visbility"] = aws.StringValue(config.Visibility)
+			tfMap["visibility"] = aws.StringValue(config.Visibility)
 		}
 
 		tfList = append(tfList, tfMap)

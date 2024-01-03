@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -50,7 +53,7 @@ func TestAccAppStreamImageBuilder_withIAMRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.medium"
-	imageName := "AppStream-WinServer2019-07-12-2022"
+	imageName := "AppStream-WinServer2019-06-12-2023"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -199,7 +202,7 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	// imageName selected from the available AWS Managed AppStream 2.0 Base Images
 	// Reference: https://docs.aws.amazon.com/appstream2/latest/developerguide/base-image-version-history.html
-	imageName := "AppStream-WinServer2019-07-12-2022"
+	imageName := "AppStream-WinServer2019-06-12-2023"
 	instanceType := "stream.standard.small"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -236,7 +239,7 @@ func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No AppStream ImageBuilder ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
 
@@ -246,7 +249,7 @@ func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.Test
 
 func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_image_builder" {
@@ -273,7 +276,7 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 func testAccImageBuilderConfig_basic(instanceType, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2019-07-12-2022"
+  image_name    = "AppStream-WinServer2019-06-12-2023"
   instance_type = %[1]q
   name          = %[2]q
 }
@@ -283,7 +286,7 @@ resource "aws_appstream_image_builder" "test" {
 func testAccImageBuilderConfig_complete(rName, description, instanceType string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name                     = "AppStream-WinServer2019-07-12-2022"
+  image_name                     = "AppStream-WinServer2019-06-12-2023"
   name                           = %[1]q
   description                    = %[2]q
   enable_default_internet_access = false
@@ -298,7 +301,7 @@ resource "aws_appstream_image_builder" "test" {
 func testAccImageBuilderConfig_tags1(instanceType, rName, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2019-07-12-2022"
+  image_name    = "AppStream-WinServer2019-06-12-2023"
   instance_type = %[1]q
   name          = %[2]q
 
@@ -312,7 +315,7 @@ resource "aws_appstream_image_builder" "test" {
 func testAccImageBuilderConfig_tags2(instanceType, rName, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
-  image_name    = "AppStream-WinServer2019-07-12-2022"
+  image_name    = "AppStream-WinServer2019-06-12-2023"
   instance_type = %[1]q
   name          = %[2]q
 

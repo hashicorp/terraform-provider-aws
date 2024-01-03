@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -7,6 +10,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -186,7 +190,7 @@ func testAccSSMDefaultPatchBaseline_wrongOperatingSystem(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDefaultPatchBaselineConfig_wrongOperatingSystem(rName, types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu))),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", types.OperatingSystemAmazonLinux2022, types.OperatingSystemUbuntu))),
 			},
 		},
 	})
@@ -332,7 +336,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 
 func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_default_patch_baseline" {
@@ -375,7 +379,7 @@ func testAccCheckDefaultPatchBaselineExists(ctx context.Context, name string, de
 			return create.Error(names.SSM, create.ErrActionCheckingExistence, tfssm.ResNameDefaultPatchBaseline, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		resp, err := tfssm.FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(rs.Primary.ID))
 		if err != nil {

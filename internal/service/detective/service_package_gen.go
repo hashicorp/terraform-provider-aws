@@ -5,6 +5,10 @@ package detective
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,6 +45,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceMember,
 			TypeName: "aws_detective_member",
 		},
+		{
+			Factory:  ResourceOrganizationAdminAccount,
+			TypeName: "aws_detective_organization_admin_account",
+		},
+		{
+			Factory:  ResourceOrganizationConfiguration,
+			TypeName: "aws_detective_organization_configuration",
+		},
 	}
 }
 
@@ -48,4 +60,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Detective
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*detective_sdkv1.Detective, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return detective_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

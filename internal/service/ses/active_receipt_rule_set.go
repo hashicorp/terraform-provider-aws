@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -24,6 +27,10 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 		ReadWithoutTimeout:   resourceActiveReceiptRuleSetRead,
 		DeleteWithoutTimeout: resourceActiveReceiptRuleSetDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceActiveReceiptRuleSetImport,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -40,7 +47,7 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 
 func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -60,7 +67,7 @@ func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
 
@@ -96,7 +103,7 @@ func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	deleteOpts := &ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: nil,
@@ -108,4 +115,36 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
+}
+
+func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
+
+	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
+
+	response, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, describeOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Metadata == nil {
+		return nil, fmt.Errorf("no active Receipt Rule Set found")
+	}
+
+	if aws.StringValue(response.Metadata.Name) != d.Id() {
+		return nil, fmt.Errorf("SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found", d.Id())
+	}
+
+	d.Set("rule_set_name", response.Metadata.Name)
+
+	arnValue := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ses",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
+	}.String()
+	d.Set("arn", arnValue)
+
+	return []*schema.ResourceData{d}, nil
 }

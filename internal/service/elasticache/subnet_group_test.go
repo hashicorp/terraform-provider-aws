@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache_test
 
 import (
@@ -166,7 +169,7 @@ func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_subnet_group" {
@@ -201,7 +204,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *elasticache
 			return fmt.Errorf("No ElastiCache Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		output, err := tfelasticache.FindCacheSubnetGroupByName(ctx, conn, rs.Primary.ID)
 

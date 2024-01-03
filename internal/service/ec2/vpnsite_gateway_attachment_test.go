@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -72,7 +75,7 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *ec
 			return fmt.Errorf("No EC2 VPN Gateway Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPNGatewayVPCAttachment(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
 
@@ -88,7 +91,7 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *ec
 
 func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_gateway_attachment" {

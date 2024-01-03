@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose_test
 
 import (
@@ -97,11 +100,6 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

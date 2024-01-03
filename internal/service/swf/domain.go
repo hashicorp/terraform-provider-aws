@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package swf
 
 import (
@@ -82,12 +85,12 @@ func resourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SWFClient()
+	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
-		Tags:                                   GetTagsIn(ctx),
+		Tags:                                   getTagsIn(ctx),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
 	}
 
@@ -108,7 +111,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SWFClient()
+	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
 	output, err := findDomainByName(ctx, conn, d.Id())
 
@@ -139,7 +142,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SWFClient()
+	conn := meta.(*conns.AWSClient).SWFClient(ctx)
 
 	_, err := conn.DeprecateDomain(ctx, &swf.DeprecateDomainInput{
 		Name: aws.String(d.Get("name").(string)),

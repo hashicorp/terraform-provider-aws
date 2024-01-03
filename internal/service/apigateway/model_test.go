@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -83,7 +86,7 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.Model)
 			return fmt.Errorf("No API Gateway Model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["rest_api_id"])
 
@@ -99,7 +102,7 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.Model)
 
 func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_model" {

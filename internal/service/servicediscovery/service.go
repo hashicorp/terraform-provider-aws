@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery
 
 import (
@@ -151,13 +154,13 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreateServiceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -196,7 +199,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	service, err := FindServiceByID(ctx, conn, d.Id())
 
@@ -242,7 +245,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicediscovery.UpdateServiceInput{
@@ -277,7 +280,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		var deletionErrs *multierror.Error

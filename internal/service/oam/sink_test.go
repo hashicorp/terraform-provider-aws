@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/oam/types"
@@ -44,7 +47,7 @@ func TestAccObservabilityAccessManagerSink_basic(t *testing.T) {
 				Config: testAccSinkConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, resourceName, &sink),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexp.MustCompile(`sink/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -147,7 +150,7 @@ func TestAccObservabilityAccessManagerSink_tags(t *testing.T) {
 
 func testAccCheckSinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_oam_sink" {
@@ -184,7 +187,7 @@ func testAccCheckSinkExists(ctx context.Context, name string, sink *oam.GetSinkO
 			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSink, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 		resp, err := conn.GetSink(ctx, &oam.GetSinkInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -201,7 +204,7 @@ func testAccCheckSinkExists(ctx context.Context, name string, sink *oam.GetSinkO
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	input := &oam.ListSinksInput{}
 	_, err := conn.ListSinks(ctx, input)

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -65,6 +68,25 @@ func TestAccIAMPolicyDocumentDataSource_multipleConditionKeys(t *testing.T) {
 				Config: testAccPolicyDocumentDataSourceConfig_multipleConditionKeys,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_duplicateConditionKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_iam_policy_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_duplicateConditionKeys,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_duplicateConditionKeys_ExpectedJSON),
 				),
 			},
 		},
@@ -167,7 +189,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_listConflicting,
-				ExpectError: regexp.MustCompile(`duplicate Sid (.*?)`),
+				ExpectError: regexache.MustCompile(`duplicate Sid (.*?)`),
 			},
 		},
 	})
@@ -258,7 +280,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_duplicateSid,
-				ExpectError: regexp.MustCompile(`duplicate Sid`),
+				ExpectError: regexache.MustCompile(`duplicate Sid`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_duplicateBlankSid,
@@ -281,7 +303,7 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_invalidJSON,
-				ExpectError: regexp.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+				ExpectError: regexache.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_emptyString,
@@ -304,7 +326,7 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON,
-				ExpectError: regexp.MustCompile(`"override_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+				ExpectError: regexache.MustCompile(`"override_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString,
@@ -386,23 +408,23 @@ func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionCondition,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotPrincipals,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotRe,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionPrincipal,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionRe,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_version20081017,
@@ -652,6 +674,57 @@ var testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON = `{
         "StringEquals": {
           "s3:x-amz-acl": "bucket-owner-full-control",
           "aws:SourceArn": "some-other-value"
+        }
+      }
+    }
+  ]
+}
+`
+
+const testAccPolicyDocumentDataSourceConfig_duplicateConditionKeys = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "DuplicateConditionTest"
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject"]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+      values   = ["one/", "two/"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+      values   = ["three/"]
+    }
+  }
+}
+`
+
+const testAccPolicyDocumentConfig_duplicateConditionKeys_ExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DuplicateConditionTest",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": ["one/", "two/", "three/"]
         }
       }
     }
@@ -1406,12 +1479,8 @@ func testAccPolicyDocumentConditionWithBoolValueExpectedJSON() string {
                     "aws:ResourceTag/SpecialTag": "false"
                 },
                 "StringLike": {
-                    "aws:ResourceAccount": [
-                        "123456"
-                    ],
-                    "aws:PrincipalArn": [
-						"arn:%[1]s:iam::*:role/AWSAFTExecution"
-					]
+                    "aws:ResourceAccount": "123456",
+                    "aws:PrincipalArn": "arn:%[1]s:iam::*:role/AWSAFTExecution"
                 }
             }
         }

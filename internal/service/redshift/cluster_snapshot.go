@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -69,12 +72,12 @@ func ResourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := redshift.CreateClusterSnapshotInput{
 		SnapshotIdentifier: aws.String(d.Get("snapshot_identifier").(string)),
 		ClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("manual_snapshot_retention_period"); ok {
@@ -98,7 +101,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -125,14 +128,14 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("owner_account", snapshot.OwnerAccount)
 	d.Set("snapshot_identifier", snapshot.SnapshotIdentifier)
 
-	SetTagsOut(ctx, snapshot.Tags)
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }
 
 func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyClusterSnapshotInput{
@@ -152,7 +155,7 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster Snapshot: %s", d.Id())
 	_, err := conn.DeleteClusterSnapshotWithContext(ctx, &redshift.DeleteClusterSnapshotInput{

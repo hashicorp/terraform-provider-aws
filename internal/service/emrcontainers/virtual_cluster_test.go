@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrcontainers_test
 
 import (
@@ -167,7 +170,7 @@ func testAccCheckVirtualClusterExists(ctx context.Context, n string, v *emrconta
 			return fmt.Errorf("No EMR Containers Virtual Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn(ctx)
 
 		output, err := tfemrcontainers.FindVirtualClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -183,7 +186,7 @@ func testAccCheckVirtualClusterExists(ctx context.Context, n string, v *emrconta
 
 func testAccCheckVirtualClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrcontainers_virtual_cluster" {

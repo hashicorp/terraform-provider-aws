@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `alias` - A unique and identifiable alias of the contact or escalation plan.
 * `type` - The type of contact engaged. A single contact is type `PERSONAL` and an escalation plan is type `ESCALATION`.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
@@ -34,7 +37,7 @@ func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -72,8 +75,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -106,7 +108,7 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -150,7 +152,7 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -181,7 +183,7 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 
 func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_identitystore_group_membership" {
@@ -218,7 +220,7 @@ func testAccCheckGroupMembershipExists(ctx context.Context, name string, groupMe
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroupMembership, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		resp, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
 			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),

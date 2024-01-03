@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
@@ -168,7 +171,7 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 		privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey, fmt.Sprintf("%s.example.com", rName))
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 		output, err := conn.ImportCertificate(ctx, &acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
@@ -190,7 +193,7 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 
 func testAccCheckAPIMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_api_mapping" {
@@ -225,7 +228,7 @@ func testAccCheckAPIMappingExists(ctx context.Context, n string, vDomainName *st
 			return fmt.Errorf("No API Gateway v2 API Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		domainName := rs.Primary.Attributes["domain_name"]
 		output, err := tfapigatewayv2.FindAPIMappingByTwoPartKey(ctx, conn, rs.Primary.ID, domainName)

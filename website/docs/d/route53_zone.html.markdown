@@ -44,7 +44,7 @@ Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `p
 * `vpc_id` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
 * `tags` - (Optional) Used with `name` field. A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes are also exported as
 result attributes. This data source will complete the data by populating

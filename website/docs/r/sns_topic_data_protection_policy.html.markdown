@@ -46,19 +46,28 @@ resource "aws_sns_topic_data_protection_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `arn` - (Required) The ARN of the SNS topic
 * `policy` - (Required) The fully-formed AWS policy as JSON. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 
-SNS Data Protection Topic Policy can be imported using the topic ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Data Protection Topic Policy using the topic ARN. For example:
 
+```terraform
+import {
+  to = aws_sns_topic_data_protection_policy.example
+  id = "arn:aws:sns:us-west-2:0123456789012:example"
+}
 ```
-$ terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:0123456789012:example
+
+Using `terraform import`, import SNS Data Protection Topic Policy using the topic ARN. For example:
+
+```console
+% terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:0123456789012:example
 ```

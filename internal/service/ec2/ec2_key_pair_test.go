@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +41,7 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
-					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexp.MustCompile(`[a-f0-9]{2}(:[a-f0-9]{2}){15}`)),
+					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey),
@@ -205,7 +208,7 @@ func TestAccEC2KeyPair_disappears(t *testing.T) {
 
 func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_key_pair" {
@@ -240,7 +243,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string, v *ec2.KeyPairInfo
 			return fmt.Errorf("No EC2 Key Pair ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindKeyPairByName(ctx, conn, rs.Primary.ID)
 

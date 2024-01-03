@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -291,7 +294,7 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 
 func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_scheduled_action" {
@@ -326,7 +329,7 @@ func testAccCheckScheduledActionExists(ctx context.Context, n string, v *redshif
 			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		output, err := tfredshift.FindScheduledActionByName(ctx, conn, rs.Primary.ID)
 
@@ -485,7 +488,7 @@ resource "aws_redshift_scheduled_action" "test" {
 func TestAccRedshiftScheduledAction_validScheduleName(t *testing.T) {
 	t.Parallel()
 
-	var f = validation.StringMatch(regexp.MustCompile(`^[a-z0-9-]{1,63}$`), "")
+	var f = validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), "")
 
 	validIds := []string{
 		"tf-test-schedule-action-1",

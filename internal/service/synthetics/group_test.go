@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccSyntheticsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`group:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`group:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -127,7 +130,7 @@ func testAccCheckGroupExists(ctx context.Context, name string, group *synthetics
 			return fmt.Errorf("no Synthetics Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 		output, err := tfsynthetics.FindGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -142,7 +145,7 @@ func testAccCheckGroupExists(ctx context.Context, name string, group *synthetics
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_group" {

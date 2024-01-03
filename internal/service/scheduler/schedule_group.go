@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
@@ -63,7 +66,7 @@ func ResourceScheduleGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
 			"name_prefix": {
@@ -74,7 +77,7 @@ func ResourceScheduleGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
 			"state": {
@@ -92,13 +95,13 @@ const (
 )
 
 func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	in := &scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateScheduleGroup(ctx, in)
@@ -120,7 +123,7 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	out, err := findScheduleGroupByName(ctx, conn, d.Id())
 
@@ -150,7 +153,7 @@ func resourceScheduleGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Scheduler ScheduleGroup %s", d.Id())
 

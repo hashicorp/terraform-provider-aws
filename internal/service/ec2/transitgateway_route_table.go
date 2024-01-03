@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -62,7 +65,7 @@ func ResourceTransitGatewayRouteTable() *schema.Resource {
 
 func resourceTransitGatewayRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTransitGatewayRouteTableInput{
 		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
@@ -87,7 +90,7 @@ func resourceTransitGatewayRouteTableCreate(ctx context.Context, d *schema.Resou
 
 func resourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTable, err := FindTransitGatewayRouteTableByID(ctx, conn, d.Id())
 
@@ -113,7 +116,7 @@ func resourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
 
-	SetTagsOut(ctx, transitGatewayRouteTable.Tags)
+	setTagsOut(ctx, transitGatewayRouteTable.Tags)
 
 	return diags
 }
@@ -128,7 +131,7 @@ func resourceTransitGatewayRouteTableUpdate(ctx context.Context, d *schema.Resou
 
 func resourceTransitGatewayRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayRouteTableWithContext(ctx, &ec2.DeleteTransitGatewayRouteTableInput{

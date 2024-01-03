@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package xray
 
 import (
@@ -47,7 +50,7 @@ func resourceEncryptionConfig() *schema.Resource {
 
 func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	input := &xray.PutEncryptionConfigInput{
 		Type: types.EncryptionType(d.Get("type").(string)),
@@ -74,7 +77,7 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 
 func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).XRayClient()
+	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	config, err := findEncryptionConfig(ctx, conn)
 

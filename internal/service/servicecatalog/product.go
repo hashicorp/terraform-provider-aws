@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
 	"context"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,7 +35,7 @@ func ResourceProduct() *schema.Resource {
 		DeleteWithoutTimeout: resourceProductDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceProductImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -160,9 +164,43 @@ func ResourceProduct() *schema.Resource {
 	}
 }
 
+func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+
+	productData, err := findProductByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return []*schema.ResourceData{d}, err
+	}
+
+	// import the last entry in the summary
+	if len(productData.ProvisioningArtifactSummaries) > 0 {
+		sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
+			return aws.TimeValue(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
+		})
+
+		provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
+		in := &servicecatalog.DescribeProvisioningArtifactInput{
+			ProductId:              aws.String(d.Id()),
+			ProvisioningArtifactId: provisioningArtifact.Id,
+		}
+
+		// Find additional artifact details.
+		artifactData, err := conn.DescribeProvisioningArtifactWithContext(ctx, in)
+
+		if err != nil {
+			return []*schema.ResourceData{d}, err
+		}
+
+		d.Set("provisioning_artifact_parameters", flattenProvisioningArtifactParameters(artifactData))
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
@@ -172,7 +210,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
 			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
 		),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -248,7 +286,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -283,14 +321,14 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
@@ -365,7 +403,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DeleteProductInput{
 		Id: aws.String(d.Id()),
@@ -429,4 +467,29 @@ func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *service
 	}
 
 	return apiObject
+}
+
+func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribeProvisioningArtifactOutput) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"description":                 aws.StringValue(apiObject.ProvisioningArtifactDetail.Description),
+		"disable_template_validation": false, // set default because it cannot be read
+		"name":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Name),
+		"type":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Type),
+	}
+
+	if apiObject.Info != nil {
+		if v, ok := apiObject.Info["TemplateUrl"]; ok {
+			m["template_url"] = aws.StringValue(v)
+		}
+
+		if v, ok := apiObject.Info["PhysicalId"]; ok {
+			m["template_physical_id"] = aws.StringValue(v)
+		}
+	}
+
+	return []interface{}{m}
 }

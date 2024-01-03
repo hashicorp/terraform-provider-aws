@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -425,7 +428,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, function *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeUserInput{
 			UserId:     aws.String(userID),
@@ -450,7 +453,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, userID, err := tfconnect.UserParseID(rs.Primary.ID)
 

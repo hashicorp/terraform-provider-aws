@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager
 
 import (
@@ -16,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -113,7 +116,7 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 }
 
 func (d *dataSourceControl) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().AuditManagerClient()
+	conn := d.Meta().AuditManagerClient(ctx)
 
 	var data dataSourceControlData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

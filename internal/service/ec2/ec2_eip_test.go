@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -513,8 +516,8 @@ func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 				Config: testAccEIPConfig_customerOwnedIPv4Pool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexp.MustCompile(`^ipv4pool-coip-.+$`)),
-					resource.TestMatchResourceAttr(resourceName, "customer_owned_ip", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexache.MustCompile(`^ipv4pool-coip-.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ip", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 				),
 			},
 			{
@@ -685,7 +688,7 @@ func testAccCheckEIPExists(ctx context.Context, n string, v *ec2.Address) resour
 			return fmt.Errorf("No EC2 EIP ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
 
@@ -701,7 +704,7 @@ func testAccCheckEIPExists(ctx context.Context, n string, v *ec2.Address) resour
 
 func testAccCheckEIPDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eip" {

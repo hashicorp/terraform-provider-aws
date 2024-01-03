@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce_test
 
 import (
@@ -70,7 +73,7 @@ func testAccCheckCostAllocationTagExists(ctx context.Context, resourceName strin
 			return create.Error(names.CE, create.ErrActionCheckingExistence, tfce.ResNameCostAllocationTag, resourceName, errors.New("not found in state"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 		costAllocTag, err := tfce.FindCostAllocationTagByKey(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

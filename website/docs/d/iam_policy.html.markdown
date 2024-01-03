@@ -39,9 +39,9 @@ data "aws_iam_policy" "example" {
   Defaults to a slash (`/`).
   Conflicts with `arn`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the policy.
 * `path` - Path to the policy.

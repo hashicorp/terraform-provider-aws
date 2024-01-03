@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,7 +37,7 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/usageplans/+.`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/usageplans/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "api_stages.%", "0"),
@@ -565,7 +568,7 @@ func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.Us
 			return fmt.Errorf("No API Gateway Usage Plan ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindUsagePlanByID(ctx, conn, rs.Primary.ID)
 
@@ -581,7 +584,7 @@ func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.Us
 
 func testAccCheckUsagePlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_usage_plan" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -40,29 +43,6 @@ func FindAccountByID(ctx context.Context, conn *organizations.Organizations, id 
 	}
 
 	return output.Account, nil
-}
-
-func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
-	input := &organizations.DescribeOrganizationInput{}
-
-	output, err := conn.DescribeOrganizationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Organization, nil
 }
 
 func FindPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Organizations, targetID, policyID string) (*organizations.PolicyTargetSummary, error) {

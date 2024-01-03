@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -43,6 +46,25 @@ func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string)
 		}
 
 		return table, aws.StringValue(table.TableStatus), nil
+	}
+}
+
+func statusImport(ctx context.Context, conn *dynamodb.DynamoDB, importArn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		describeImportInput := &dynamodb.DescribeImportInput{
+			ImportArn: &importArn,
+		}
+		output, err := conn.DescribeImportWithContext(ctx, describeImportInput)
+
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ImportTableDescription.ImportStatus), nil
 	}
 }
 

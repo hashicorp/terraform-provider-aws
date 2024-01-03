@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -69,7 +72,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 
 func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
@@ -85,8 +88,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Client VPN Route: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateClientVpnRouteWithContext(ctx, input)
 	}, errCodeInvalidClientVPNActiveAssociationNotFound)
 
@@ -105,7 +107,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 
@@ -137,7 +139,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 

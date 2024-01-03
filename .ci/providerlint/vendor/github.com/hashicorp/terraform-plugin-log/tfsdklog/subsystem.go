@@ -58,6 +58,13 @@ func NewSubsystem(ctx context.Context, subsystem string, options ...logging.Opti
 		subLogger = hclog.New(subLoggerOptions)
 	}
 
+	// Cache subsystem logger level outside context for performance reasons.
+	subsystemLevelsMutex.Lock()
+
+	subsystemLevels[subsystem] = subLoggerTFLoggerOpts.Level
+
+	subsystemLevelsMutex.Unlock()
+
 	// Set the configured log level
 	if subLoggerTFLoggerOpts.Level != hclog.NoLevel {
 		subLogger.SetLevel(subLoggerTFLoggerOpts.Level)
@@ -97,6 +104,10 @@ func SubsystemSetField(ctx context.Context, subsystem, key string, value interfa
 // subsystem logger, e.g. by the `SubsystemSetField()` function, and across
 // multiple maps.
 func SubsystemTrace(ctx context.Context, subsystem, msg string, additionalFields ...map[string]interface{}) {
+	if !subsystemWouldLog(subsystem, hclog.Trace) {
+		return
+	}
+
 	logger := logging.GetSDKSubsystemLogger(ctx, subsystem)
 	if logger == nil {
 		if logging.GetSDKRootLogger(ctx) == nil {
@@ -122,6 +133,10 @@ func SubsystemTrace(ctx context.Context, subsystem, msg string, additionalFields
 // subsystem logger, e.g. by the `SubsystemSetField()` function, and across
 // multiple maps.
 func SubsystemDebug(ctx context.Context, subsystem, msg string, additionalFields ...map[string]interface{}) {
+	if !subsystemWouldLog(subsystem, hclog.Debug) {
+		return
+	}
+
 	logger := logging.GetSDKSubsystemLogger(ctx, subsystem)
 	if logger == nil {
 		if logging.GetSDKRootLogger(ctx) == nil {
@@ -147,6 +162,10 @@ func SubsystemDebug(ctx context.Context, subsystem, msg string, additionalFields
 // subsystem logger, e.g. by the `SubsystemSetField()` function, and across
 // multiple maps.
 func SubsystemInfo(ctx context.Context, subsystem, msg string, additionalFields ...map[string]interface{}) {
+	if !subsystemWouldLog(subsystem, hclog.Info) {
+		return
+	}
+
 	logger := logging.GetSDKSubsystemLogger(ctx, subsystem)
 	if logger == nil {
 		if logging.GetSDKRootLogger(ctx) == nil {
@@ -172,6 +191,10 @@ func SubsystemInfo(ctx context.Context, subsystem, msg string, additionalFields 
 // subsystem logger, e.g. by the `SubsystemSetField()` function, and across
 // multiple maps.
 func SubsystemWarn(ctx context.Context, subsystem, msg string, additionalFields ...map[string]interface{}) {
+	if !subsystemWouldLog(subsystem, hclog.Warn) {
+		return
+	}
+
 	logger := logging.GetSDKSubsystemLogger(ctx, subsystem)
 	if logger == nil {
 		if logging.GetSDKRootLogger(ctx) == nil {
@@ -197,6 +220,10 @@ func SubsystemWarn(ctx context.Context, subsystem, msg string, additionalFields 
 // subsystem logger, e.g. by the `SubsystemSetField()` function, and across
 // multiple maps.
 func SubsystemError(ctx context.Context, subsystem, msg string, additionalFields ...map[string]interface{}) {
+	if !subsystemWouldLog(subsystem, hclog.Error) {
+		return
+	}
+
 	logger := logging.GetSDKSubsystemLogger(ctx, subsystem)
 	if logger == nil {
 		if logging.GetSDKRootLogger(ctx) == nil {

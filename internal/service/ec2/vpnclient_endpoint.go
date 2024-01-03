@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -176,6 +179,10 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:      ec2.SelfServicePortalDisabled,
 				ValidateFunc: validation.StringInSlice(ec2.SelfServicePortal_Values(), false),
 			},
+			"self_service_portal_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"server_certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -221,7 +228,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 
 func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
@@ -286,7 +293,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ep, err := FindClientVPNEndpointByID(ctx, conn, d.Id())
 
@@ -342,6 +349,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
 	}
+	d.Set("self_service_portal_url", ep.SelfServicePortalUrl)
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
@@ -349,14 +357,14 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vpc_id", ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	SetTagsOut(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }
 
 func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var waitForClientConnectResponseOptionsUpdate bool
@@ -446,7 +454,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
 	_, err := conn.DeleteClientVpnEndpointWithContext(ctx, &ec2.DeleteClientVpnEndpointInput{

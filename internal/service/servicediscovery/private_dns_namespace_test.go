@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +38,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexache.MustCompile(`namespace/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -94,10 +97,17 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrivateDNSNamespaceConfig_description(rName, "test"),
+				Config: testAccPrivateDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+				),
+			},
+			{
+				Config: testAccPrivateDNSNamespaceConfig_description(rName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
 				),
 			},
 		},
@@ -123,7 +133,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPrivateDNSNamespaceConfig_overlapping(rName),
-				ExpectError: regexp.MustCompile(`ConflictingDomainExists`),
+				ExpectError: regexache.MustCompile(`ConflictingDomainExists`),
 			},
 		},
 	})
@@ -181,7 +191,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 
 func testAccCheckPrivateDNSNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_service_discovery_private_dns_namespace" {
@@ -216,7 +226,7 @@ func testAccCheckPrivateDNSNamespaceExists(ctx context.Context, n string) resour
 			return fmt.Errorf("No Service Discovery Private DNS Namespace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 		_, err := tfservicediscovery.FindNamespaceByID(ctx, conn, rs.Primary.ID)
 
@@ -225,7 +235,7 @@ func testAccCheckPrivateDNSNamespaceExists(ctx context.Context, n string) resour
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	input := &servicediscovery.ListNamespacesInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -124,7 +127,7 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 
 func testAccCheckUDFDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_user_defined_function" {
@@ -171,7 +174,7 @@ func testAccCheckUserDefinedFunctionExists(ctx context.Context, name string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 		out, err := conn.GetUserDefinedFunctionWithContext(ctx, &glue.GetUserDefinedFunctionInput{
 			CatalogId:    aws.String(catalogId),
 			DatabaseName: aws.String(dbName),

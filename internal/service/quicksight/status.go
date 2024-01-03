@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -76,5 +79,21 @@ func statusAnalysis(ctx context.Context, conn *quicksight.QuickSight, id string)
 		}
 
 		return out, *out.Status, nil
+	}
+}
+
+// Fetch Theme status
+func statusTheme(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindThemeByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, *out.Version.Status, nil
 	}
 }

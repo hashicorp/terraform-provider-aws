@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package synthetics
 
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_synthetics_canary", &resource.Sweeper{
 		Name: "aws_synthetics_canary",
 		F:    sweepCanaries,
@@ -29,11 +29,11 @@ func init() {
 
 func sweepCanaries(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SyntheticsConn()
+	conn := client.SyntheticsConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -41,7 +41,7 @@ func sweepCanaries(region string) error {
 	input := &synthetics.DescribeCanariesInput{}
 	for {
 		output, err := conn.DescribeCanariesWithContext(ctx, input)
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Synthetics Canary sweep for %s: %s", region, err)
 			return nil
 		}
@@ -66,7 +66,7 @@ func sweepCanaries(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Synthetics Canaries: %w", err))
 	}
 

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -283,8 +286,8 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Config: testAccMetricStreamConfig_arns(rName, "S1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S1$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S1$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S1$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S1$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -297,8 +300,8 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Config: testAccMetricStreamConfig_arns(rName, "S2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S2$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S2$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S2$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S2$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -306,8 +309,8 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Config: testAccMetricStreamConfig_arnsWithTag(rName, "S3", "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S3$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S3$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S3$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S3$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -316,8 +319,8 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Config: testAccMetricStreamConfig_arnsWithTag(rName, "S4", "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S4$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S4$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S4$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S4$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -326,8 +329,8 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Config: testAccMetricStreamConfig_arnsWithTag(rName, "S4", "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexp.MustCompile(`deliverystream/S4$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/S4$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S4$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S4$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),
@@ -394,27 +397,27 @@ func TestAccCloudWatchMetricStream_additional_statistics(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p0"),
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p100"),
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p"),
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "tm"),
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "tc()"),
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p99.12345678901"),
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+				ExpectError: regexache.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
 				Config: testAccMetricStreamConfig_additionalStatistics(rName, "IQM"),
@@ -492,7 +495,7 @@ func testAccCheckMetricStreamExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No CloudWatch Metric Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		_, err := tfcloudwatch.FindMetricStreamByName(ctx, conn, rs.Primary.ID)
 
@@ -502,7 +505,7 @@ func testAccCheckMetricStreamExists(ctx context.Context, n string) resource.Test
 
 func testAccCheckMetricStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_metric_stream" {
@@ -572,7 +575,8 @@ EOF
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_iam_role" "firehose_to_s3" {
@@ -623,9 +627,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
   name        = %[1]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_to_s3.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }

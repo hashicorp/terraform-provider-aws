@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -115,7 +118,7 @@ func TestAccRoute53HostedZoneDNSSEC_signingStatus(t *testing.T) {
 
 func testAccCheckHostedZoneDNSSECDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_hosted_zone_dnssec" {
@@ -157,7 +160,7 @@ func testAccHostedZoneDNSSECExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(ctx, conn, rs.Primary.ID)
 

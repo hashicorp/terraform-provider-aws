@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +40,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -73,8 +76,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexache.MustCompile("eni-.*")),
 				),
 			},
 			{
@@ -197,7 +199,7 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 
 func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_traffic_mirror_target" {
@@ -232,7 +234,7 @@ func testAccCheckTrafficMirrorTargetExists(ctx context.Context, n string, v *ec2
 			return fmt.Errorf("No EC2 Traffic Mirror Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindTrafficMirrorTargetByID(ctx, conn, rs.Primary.ID)
 
@@ -282,6 +284,10 @@ resource "aws_instance" "test" {
 resource "aws_ec2_traffic_mirror_target" "test" {
   description          = %[2]q
   network_interface_id = aws_instance.test.primary_network_interface_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, description))
 }
@@ -336,14 +342,18 @@ func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string 
 		testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_target" "test" {
-  description                       = %[1]q
+  description                       = %[2]q
   gateway_load_balancer_endpoint_id = aws_vpc_endpoint.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, description))
+`, rName, description))
 }
 
 func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	_, err := conn.DescribeTrafficMirrorTargetsWithContext(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -48,7 +51,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 
 func testAccCheckEncryptionByDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		response, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {
@@ -74,7 +77,7 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, n string, enabled b
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		response, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {

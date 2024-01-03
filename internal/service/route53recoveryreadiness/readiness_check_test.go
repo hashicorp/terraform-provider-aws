@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -41,7 +44,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 				Config: testAccReadinessCheckConfig_basic(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -160,7 +163,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 				Config: testAccReadinessCheckConfig_timeout(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -175,7 +178,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 
 func testAccCheckReadinessCheckDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoveryreadiness_readiness_check" {
@@ -203,7 +206,7 @@ func testAccCheckReadinessCheckExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 		input := &route53recoveryreadiness.GetReadinessCheckInput{
 			ReadinessCheckName: aws.String(rs.Primary.ID),

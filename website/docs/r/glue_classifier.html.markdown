@@ -71,7 +71,7 @@ resource "aws_glue_classifier" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `csv_classifier` - (Optional) A classifier for Csv content. Defined below.
 * `grok_classifier` – (Optional) A classifier that uses grok patterns. Defined below.
@@ -83,7 +83,7 @@ The following arguments are supported:
 
 * `allow_single_column` - (Optional) Enables the processing of files that contain only one column.
 * `contains_header` - (Optional) Indicates whether the CSV file contains a header. This can be one of "ABSENT", "PRESENT", or "UNKNOWN".
-* `custom_datatype_configured` - (Optional) A custom symbol to denote what combines content into a single column value. It must be different from the column delimiter.
+* `custom_datatype_configured` - (Optional) Enables the custom datatype to be configured.
 * `custom_datatypes` - (Optional) A list of supported custom datatypes. Valid values are `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INT`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`.
 * `delimiter` - (Optional) The delimiter used in the Csv to separate columns.
 * `disable_value_trimming` - (Optional) Specifies whether to trim column values.
@@ -105,16 +105,25 @@ The following arguments are supported:
 * `classification` - (Required) An identifier of the data format that the classifier matches.
 * `row_tag` - (Required) The XML tag designating the element that contains each record in an XML document being parsed. Note that this cannot identify a self-closing element (closed by `/>`). An empty row element that contains only attributes can be parsed as long as it ends with a closing tag (for example, `<row item_a="A" item_b="B"></row>` is okay, but `<row item_a="A" item_b="B" />` is not).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the classifier
 
 ## Import
 
-Glue Classifiers can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Classifiers using their name. For example:
 
+```terraform
+import {
+  to = aws_glue_classifier.MyClassifier
+  id = "MyClassifier"
+}
 ```
-$ terraform import aws_glue_classifier.MyClassifier MyClassifier
+
+Using `terraform import`, import Glue Classifiers using their name. For example:
+
+```console
+% terraform import aws_glue_classifier.MyClassifier MyClassifier
 ```

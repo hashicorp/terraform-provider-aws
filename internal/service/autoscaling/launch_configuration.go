@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
@@ -315,8 +318,8 @@ func ResourceLaunchConfiguration() *schema.Resource {
 
 func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
-	ec2conn := meta.(*conns.AWSClient).EC2Conn()
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
@@ -430,8 +433,8 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
-	ec2conn := meta.(*conns.AWSClient).EC2Conn()
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	lc, err := FindLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
@@ -517,7 +520,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,

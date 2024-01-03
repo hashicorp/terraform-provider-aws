@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint_test
 
 import (
@@ -159,7 +162,7 @@ func testAccCheckEmailChannelExists(ctx context.Context, n string, channel *pinp
 			return fmt.Errorf("No Pinpoint Email Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		// Check if the app exists
 		params := &pinpoint.GetEmailChannelInput{
@@ -320,7 +323,7 @@ resource "aws_ses_domain_identity" "test" {
 
 func testAccCheckEmailChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_email_channel" {

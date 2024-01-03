@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -85,7 +88,7 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 
 func testAccCheckPatchGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_patch_group" {
@@ -128,7 +131,7 @@ func testAccCheckPatchGroupExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		group, err := tfssm.FindPatchGroup(ctx, conn, patchGroup, baselineId)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity_test
 
 import (
@@ -134,7 +137,7 @@ func testAccCheckPoolProviderPrincipalTagsExists(ctx context.Context, n string) 
 			return errors.New("No Cognito Identity Princpal Tags is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 		_, err := conn.GetPrincipalTagAttributeMapWithContext(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
 			IdentityPoolId:       aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -147,7 +150,7 @@ func testAccCheckPoolProviderPrincipalTagsExists(ctx context.Context, n string) 
 
 func testAccCheckPoolProviderPrincipalTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool_provider_principal_tag" {

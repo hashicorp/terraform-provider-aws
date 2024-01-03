@@ -77,7 +77,7 @@ resource "aws_athena_data_catalog" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `name` - (Required) Name of the data catalog. The catalog name must be unique for the AWS account and can use a maximum of 128 alphanumeric, underscore, at sign, or hyphen characters.
 - `type` - (Required) Type of data catalog: `LAMBDA` for a federated catalog, `GLUE` for AWS Glue Catalog, or `HIVE` for an external hive metastore.
@@ -85,9 +85,9 @@ The following arguments are supported:
 - `description` - (Required) Description of the data catalog.
 - `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `id` - Name of the data catalog.
 - `arn` - ARN of the data catalog.
@@ -95,8 +95,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Data catalogs can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import data catalogs using their `name`. For example:
 
+```terraform
+import {
+  to = aws_athena_data_catalog.example
+  id = "example-data-catalog"
+}
 ```
-$ terraform import aws_athena_data_catalog.example example-data-catalog
+
+Using `terraform import`, import data catalogs using their `name`. For example:
+
+```console
+% terraform import aws_athena_data_catalog.example example-data-catalog
 ```

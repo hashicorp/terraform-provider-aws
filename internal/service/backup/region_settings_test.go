@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -104,7 +107,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 
 func testAccCheckRegionSettingsExists(ctx context.Context, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 		output, err := conn.DescribeRegionSettingsWithContext(ctx, &backup.DescribeRegionSettingsInput{})
 

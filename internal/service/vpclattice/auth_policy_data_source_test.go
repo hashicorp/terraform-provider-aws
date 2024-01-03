@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -34,7 +37,7 @@ func TestAccVPCLatticeAuthPolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "policy", regexp.MustCompile(`"Action":"*"`)),
+					resource.TestMatchResourceAttr(dataSourceName, "policy", regexache.MustCompile(`"Action":"*"`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_identifier", "aws_vpclattice_service.test", "arn"),
 				),
 			},

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +34,7 @@ func TestAccRedshiftHSMClientCertificate_basic(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`hsmclientcertificate:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`hsmclientcertificate:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_client_certificate_identifier", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "hsm_client_certificate_public_key"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -115,7 +118,7 @@ func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
 
 func testAccCheckHSMClientCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_hsm_client_certificate" {
@@ -150,7 +153,7 @@ func testAccCheckHSMClientCertificateExists(ctx context.Context, name string) re
 			return fmt.Errorf("Snapshot Copy Grant ID (HsmClientCertificateName) is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		_, err := tfredshift.FindHSMClientCertificateByID(ctx, conn, rs.Primary.ID)
 

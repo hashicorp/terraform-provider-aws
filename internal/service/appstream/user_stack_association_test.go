@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -123,7 +126,7 @@ func testAccCheckUserStackAssociationExists(ctx context.Context, resourceName st
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
 		if err != nil {
@@ -150,7 +153,7 @@ func testAccCheckUserStackAssociationExists(ctx context.Context, resourceName st
 
 func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_user_stack_association" {

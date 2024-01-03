@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +34,7 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 				Config: testAccDNSSECConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSECConfigExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexp.MustCompile(`resolver-dnssec-config/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexache.MustCompile(`resolver-dnssec-config/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -72,7 +75,7 @@ func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 
 func testAccCheckDNSSECConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_dnssec_config" {
@@ -107,7 +110,7 @@ func testAccCheckDNSSECConfigExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No Route53 Resolver DNSSEC Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		_, err := tfroute53resolver.FindResolverDNSSECConfigByID(ctx, conn, rs.Primary.ID)
 

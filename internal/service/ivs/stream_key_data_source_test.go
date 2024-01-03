@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +30,7 @@ func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
 					testAccCheckStreamKeyDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "channel_arn", channelResourceName, "id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "value"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ivs", regexp.MustCompile(`stream-key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ivs", regexache.MustCompile(`stream-key/.+`)),
 				),
 			},
 		},

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq_test
 
 import (
@@ -64,68 +67,11 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 }
 
 func testAccBrokerDataSourceConfig_base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count          = 2
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_security_group" "test" {
-  count = 2
-
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccBrokerConfig_baseCustomVPC(rName), fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.12"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -146,7 +92,7 @@ resource "aws_mq_broker" "test" {
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.12"
+  engine_version     = "5.17.6"
   host_instance_type = "mq.t2.micro"
 
   maintenance_window_start_time {
@@ -173,7 +119,7 @@ resource "aws_mq_broker" "test" {
 
   depends_on = [aws_internet_gateway.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccBrokerDataSourceConfig_byID(rName string) string {

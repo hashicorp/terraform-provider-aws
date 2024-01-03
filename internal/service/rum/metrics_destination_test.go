@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rum_test
 
 import (
@@ -96,7 +99,7 @@ func TestAccRUMMetricsDestination_disappears_appMonitor(t *testing.T) {
 
 func testAccCheckMetricsDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rum_metrics_destination" {
@@ -130,7 +133,7 @@ func testAccCheckMetricsDestinationExists(ctx context.Context, n string, v *clou
 			return fmt.Errorf("No CloudWatch RUM Metrics Destination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn(ctx)
 
 		output, err := tfcloudwatchrum.FindMetricsDestinationByName(ctx, conn, rs.Primary.ID)
 

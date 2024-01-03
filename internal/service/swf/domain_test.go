@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package swf_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -46,7 +49,7 @@ func TestAccSWFDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexache.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
@@ -229,7 +232,7 @@ func TestAccSWFDomain_description(t *testing.T) {
 
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_swf_domain" {
@@ -259,7 +262,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No SWF Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFClient(ctx)
 
 		_, err := tfswf.FindDomainByName(ctx, conn, rs.Primary.ID)
 

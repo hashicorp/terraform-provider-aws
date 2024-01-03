@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -77,7 +80,7 @@ func ResourceTrafficPolicy() *schema.Resource {
 }
 
 func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53.CreateTrafficPolicyInput{
@@ -104,7 +107,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	trafficPolicy, err := FindTrafficPolicyByID(ctx, conn, d.Id())
 
@@ -128,7 +131,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.UpdateTrafficPolicyCommentInput{
 		Id:      aws.String(d.Id()),
@@ -150,7 +153,7 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.ListTrafficPolicyVersionsInput{
 		Id: aws.String(d.Id()),

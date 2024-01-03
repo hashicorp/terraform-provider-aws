@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -10,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccOrganizationsPolicyDataSource_UnattachedPolicy(t *testing.T) {
+func testAccPolicyDataSource_UnattachedPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -42,7 +45,7 @@ func testAccPolicyDataSourceConfig_unattachedPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   feature_set          = "ALL"
-  enabled_policy_types = "ALL"
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY", "BACKUP_POLICY", "AISERVICES_OPT_OUT_POLICY"]
 }
 
 resource "aws_organizations_policy" "test" {

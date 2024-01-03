@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -60,7 +63,7 @@ func ResourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 
 func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmTransitVirtualInterfaceInput{
@@ -88,7 +91,7 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := createTags(ctx, conn, arn, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Direct Connect hosted transit virtual interface (%s) tags: %s", arn, err)
 	}
 
@@ -97,7 +100,7 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 
 func resourceHostedTransitVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -139,7 +142,7 @@ func resourceHostedTransitVirtualInterfaceAccepterDelete(ctx context.Context, d 
 }
 
 func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

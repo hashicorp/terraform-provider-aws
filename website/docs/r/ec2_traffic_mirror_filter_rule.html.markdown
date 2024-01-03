@@ -55,7 +55,7 @@ resource "aws_ec2_traffic_mirror_filter_rule" "rulein" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the traffic mirror filter rule.
 * `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to which this rule should be added
@@ -73,17 +73,26 @@ Traffic mirror port range support following attributes:
 * `from_port` - (Optional) Starting port of the range
 * `to_port` - (Optional) Ending port of the range
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the traffic mirror filter rule.
 * `id` - Name of the traffic mirror filter rule.
 
 ## Import
 
-Traffic mirror rules can be imported using the `traffic_mirror_filter_id` and `id` separated by `:` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import traffic mirror rules using the `traffic_mirror_filter_id` and `id` separated by `:`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_filter_rule.rule
+  id = "tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee
+
+Using `terraform import`, import traffic mirror rules using the `traffic_mirror_filter_id` and `id` separated by `:`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee
 ```

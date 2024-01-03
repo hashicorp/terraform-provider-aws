@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -91,8 +95,8 @@ func ResourceInstance() *schema.Resource {
 				AtLeastOneOf: []string{"directory_id", "instance_alias"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric or hyphen characters"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
+					validation.StringMatch(regexache.MustCompile(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`), "must contain only alphanumeric or hyphen characters"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
 				),
 			},
 			"multi_party_conference_enabled": {
@@ -123,7 +127,9 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	input := &connect.CreateInstanceInput{
 		ClientToken:            aws.String(id.UniqueId()),
@@ -143,37 +149,39 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Instance: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
 	if _, err := waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Connect Instance (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Connect Instance (%s) create: %s", d.Id(), err)
 	}
 
 	for attributeType, key := range InstanceAttributeMapping() {
 		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceInstanceRead(ctx, d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Connect Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(instance.Id))
@@ -197,23 +205,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		output, err := conn.DescribeInstanceAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("reading Connect Instance (%s) attribute (%s): %s", d.Id(), attributeType, err)
+			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s) attribute (%s): %s", d.Id(), attributeType, err)
 		}
 
 		v, err := strconv.ParseBool(aws.StringValue(output.Attribute.Value))
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		d.Set(key, v)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	for attributeType, key := range InstanceAttributeMapping() {
 		if !d.HasChange(key) {
@@ -221,15 +231,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if err := updateInstanceAttribute(ctx, conn, d.Id(), attributeType, strconv.FormatBool(d.Get(key).(bool))); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Connect Instance: %s", d.Id())
 	_, err := conn.DeleteInstanceWithContext(ctx, &connect.DeleteInstanceInput{
@@ -237,18 +249,18 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Connect Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Instance (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Connect Instance (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Connect Instance (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func updateInstanceAttribute(ctx context.Context, conn *connect.Connect, instanceID, attributeType, value string) error {

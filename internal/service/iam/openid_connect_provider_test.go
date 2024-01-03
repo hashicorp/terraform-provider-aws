@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -83,10 +86,9 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccOpenIDConnectProviderConfig_tags2(rString, "key1", "value1updated", "key2", "value2"),
@@ -163,7 +165,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 
 func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_openid_connect_provider" {
@@ -198,7 +200,7 @@ func testAccCheckOpenIDConnectProviderExists(ctx context.Context, n string) reso
 			return fmt.Errorf("No IAM OIDC Provider ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		_, err := tfiam.FindOpenIDConnectProviderByARN(ctx, conn, rs.Primary.ID)
 

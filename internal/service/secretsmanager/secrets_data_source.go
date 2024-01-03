@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
@@ -34,7 +37,7 @@ func DataSourceSecrets() *schema.Resource {
 
 func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	input := &secretsmanager.ListSecretsInput{}
 

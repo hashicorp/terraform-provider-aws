@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisvideo
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +67,7 @@ func ResourceStream() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 
@@ -98,12 +101,12 @@ func ResourceStream() *schema.Resource {
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	input := &kinesisvideo.CreateStreamInput{
 		StreamName:           aws.String(d.Get("name").(string)),
 		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("device_name"); ok {
@@ -144,7 +147,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	descOpts := &kinesisvideo.DescribeStreamInput{
 		StreamARN: aws.String(d.Id()),
@@ -176,7 +179,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
@@ -213,7 +216,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	if _, err := conn.DeleteStreamWithContext(ctx, &kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),

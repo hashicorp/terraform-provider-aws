@@ -38,7 +38,9 @@ resource "kubernetes_pod" "agent" {
 
 * `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Jobs`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `endpoint_address` - Endpoint based on `endpoint_type`:
     * No `endpoint_type`: Either `iot:Data` or `iot:Data-ATS` [depending on region](https://aws.amazon.com/blogs/iot/aws-iot-core-ats-endpoints/)

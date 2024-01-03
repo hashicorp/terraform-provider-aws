@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -106,14 +109,14 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        aws.String(d.Get("direction").(string)),
 		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -136,7 +139,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ep, err := FindResolverEndpointByID(ctx, conn, d.Id())
 
@@ -171,7 +174,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChange("name") {
 		_, err := conn.UpdateResolverEndpointWithContext(ctx, &route53resolver.UpdateResolverEndpointInput{
@@ -231,7 +234,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Endpoint: %s", d.Id())
 	_, err := conn.DeleteResolverEndpointWithContext(ctx, &route53resolver.DeleteResolverEndpointInput{

@@ -715,7 +715,7 @@ The instance fleet configuration is available only in Amazon EMR versions 4.8.0 
 
 The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
 
-* `allocation_strategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Currently, the only option is `capacity-optimized` (the default), which launches instances from Spot instance pools with optimal capacity for the number of instances that are launching.
+* `allocation_strategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Valid values include `capacity-optimized`, `diversified`, `lowest-price`, `price-capacity-optimized`. See the [AWS documentation](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html#emr-instance-fleet-allocation-strategy) for details on each strategy type.
 * `block_duration_minutes` - (Optional) Defined duration for Spot instances (also known as Spot blocks) in minutes. When specified, the Spot instance does not terminate before the defined duration expires, and defined duration pricing for Spot instances applies. Valid values are 60, 120, 180, 240, 300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
 * `timeout_action` - (Required) Action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `TERMINATE_CLUSTER` and `SWITCH_TO_ON_DEMAND`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
 * `timeout_duration_minutes` - (Required) Spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster is first created.
@@ -813,9 +813,9 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 * `instance_role` - (Required) Role of the instance in the cluster. Valid Values: `MASTER`, `CORE`, `TASK`.
 * `placement_strategy` - (Optional) EC2 Placement Group strategy associated with instance role. Valid Values: `SPREAD`, `PARTITION`, `CLUSTER`, `NONE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `applications` - Applications installed on this cluster.
 * `arn`- ARN of the cluster.
@@ -835,13 +835,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR clusters can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR clusters using the `id`. For example:
 
-```
-$ terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```terraform
+import {
+  to = aws_emr_cluster.cluster
+  id = "j-123456ABCDEF"
+}
 ```
 
-Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) available to all Terraform resources to prevent perpetual differences, e.g.,
+Using `terraform import`, import EMR clusters using the `id`. For example:
+
+```console
+% terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```
+
+Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) available to all Terraform resources to prevent perpetual differences. For example:
 
 ```terraform
 resource "aws_emr_cluster" "example" {

@@ -1,9 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
 	"context"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_alb_target_group")
@@ -42,7 +44,7 @@ func DataSourceTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 			"deregistration_delay": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"health_check": {
@@ -169,7 +171,7 @@ func DataSourceTargetGroup() *schema.Resource {
 
 func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -181,7 +183,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	results, err := FindTargetGroups(ctx, conn, input)
+	results, err := findTargetGroups(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Groups: %s", err)
@@ -192,7 +194,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 		for _, targetGroup := range results {
 			arn := aws.StringValue(targetGroup.TargetGroupArn)
-			tags, err := ListTags(ctx, conn, arn)
+			tags, err := listTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 				continue
@@ -217,94 +219,43 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	targetGroup := results[0]
-
 	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
-
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("name", targetGroup.TargetGroupName)
-	d.Set("target_type", targetGroup.TargetType)
-
-	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
+	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
+	d.Set("name", targetGroup.TargetGroupName)
+	targetType := aws.StringValue(targetGroup.TargetType)
+	d.Set("target_type", targetType)
 
-	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
-		d.Set("vpc_id", targetGroup.VpcId)
+	var protocol string
+	if targetType != elbv2.TargetTypeEnumLambda {
 		d.Set("port", targetGroup.Port)
-		d.Set("protocol", targetGroup.Protocol)
+		protocol = aws.StringValue(targetGroup.Protocol)
+		d.Set("protocol", protocol)
+		d.Set("vpc_id", targetGroup.VpcId)
 	}
-	switch d.Get("protocol").(string) {
+	switch protocol {
 	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
-	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
-		TargetGroupArn: aws.String(d.Id()),
-	})
+	attributes, err := findTargetGroupAttributesByARN(ctx, conn, d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving Target Group Attributes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
-	for _, attr := range attrResp.Attributes {
-		switch aws.StringValue(attr.Key) {
-		case "deregistration_delay.connection_termination.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("connection_termination", enabled)
-		case "deregistration_delay.timeout_seconds":
-			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting deregistration_delay.timeout_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("deregistration_delay", timeout)
-		case "lambda.multi_value_headers.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("lambda_multi_value_headers_enabled", enabled)
-		case "proxy_protocol_v2.enabled":
-			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("proxy_protocol_v2", enabled)
-		case "slow_start.duration_seconds":
-			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("slow_start", slowStart)
-		case "load_balancing.algorithm.type":
-			loadBalancingAlgorithm := aws.StringValue(attr.Value)
-			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
-		case "load_balancing.cross_zone.enabled":
-			loadBalancingCrossZoneEnabled := aws.StringValue(attr.Value)
-			d.Set("load_balancing_cross_zone_enabled", loadBalancingCrossZoneEnabled)
-		case "preserve_client_ip.enabled":
-			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("preserve_client_ip", attr.Value)
-		}
-	}
-
-	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening stickiness: %s", err)
-	}
-
-	if err := d.Set("stickiness", stickinessAttr); err != nil {
+	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	targetGroupAttributes.flatten(d, targetType, attributes)
 
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	tags, err := listTags(ctx, conn, d.Id())
+
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
 		return diags
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -38,6 +41,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource1Name, "dns_servers.#", resourceName, "dns_servers.#"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "self_service_portal", resourceName, "self_service_portal"),
+					resource.TestCheckResourceAttrPair(datasource1Name, "self_service_portal_url", resourceName, "self_service_portal_url"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "server_certificate_arn", resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "session_timeout_hours", resourceName, "session_timeout_hours"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "split_tunnel", resourceName, "split_tunnel"),
@@ -57,6 +61,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource2Name, "dns_name", resourceName, "dns_name"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "dns_servers.#", resourceName, "dns_servers.#"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasource2Name, "self_service_portal_url", resourceName, "self_service_portal_url"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "self_service_portal", resourceName, "self_service_portal"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "server_certificate_arn", resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "session_timeout_hours", resourceName, "session_timeout_hours"),
@@ -77,6 +82,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource3Name, "dns_name", resourceName, "dns_name"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "dns_servers.#", resourceName, "dns_servers.#"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasource2Name, "self_service_portal_url", resourceName, "self_service_portal_url"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "self_service_portal", resourceName, "self_service_portal"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "server_certificate_arn", resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "session_timeout_hours", resourceName, "session_timeout_hours"),

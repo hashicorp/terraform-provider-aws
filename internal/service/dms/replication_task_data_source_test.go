@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -34,9 +37,7 @@ func TestAccDMSReplicationTaskDataSource_basic(t *testing.T) {
 }
 
 func testAccReplicationTaskDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		replicationTaskConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_task" "test" {
   migration_type            = "full-load"
   replication_instance_arn  = aws_dms_replication_instance.test.replication_instance_arn
