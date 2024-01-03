@@ -351,7 +351,9 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", ""),
 				),
 			},
 			{
@@ -367,6 +369,8 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
 				),
 			},
@@ -387,8 +391,12 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_primary_storage_class", ""),
 				),
 			},
 			{
@@ -401,8 +409,12 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_archive", efs.TransitionToArchiveRulesAfter60Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_primary_storage_class", ""),
 				),
 			},
 		},
@@ -439,9 +451,6 @@ func testAccCheckFileSystem(ctx context.Context, n string, v *efs.FileSystemDesc
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EFS file system ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)

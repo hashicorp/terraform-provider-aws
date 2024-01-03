@@ -88,6 +88,11 @@ func ResourceFileSystem() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"transition_to_archive": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(efs.TransitionToArchiveRules_Values(), false),
+						},
 						"transition_to_ia": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -97,11 +102,6 @@ func ResourceFileSystem() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(efs.TransitionToPrimaryStorageClassRules_Values(), false),
-						},
-						"transition_to_archive": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(efs.TransitionToArchiveRules_Values(), false),
 						},
 					},
 				},
@@ -480,16 +480,16 @@ func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []int
 
 		tfMap := make(map[string]interface{})
 
+		if apiObject.TransitionToArchive != nil {
+			tfMap["transition_to_archive"] = aws.StringValue(apiObject.TransitionToArchive)
+		}
+
 		if apiObject.TransitionToIA != nil {
 			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
 		}
 
 		if apiObject.TransitionToPrimaryStorageClass != nil {
 			tfMap["transition_to_primary_storage_class"] = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
-		}
-
-		if apiObject.TransitionToArchive != nil {
-			tfMap["transition_to_archive"] = aws.StringValue(apiObject.TransitionToArchive)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -510,16 +510,16 @@ func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePol
 
 		apiObject := &efs.LifecyclePolicy{}
 
+		if v, ok := tfMap["transition_to_archive"].(string); ok && v != "" {
+			apiObject.TransitionToArchive = aws.String(v)
+		}
+
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
 			apiObject.TransitionToIA = aws.String(v)
 		}
 
 		if v, ok := tfMap["transition_to_primary_storage_class"].(string); ok && v != "" {
 			apiObject.TransitionToPrimaryStorageClass = aws.String(v)
-		}
-
-		if v, ok := tfMap["transition_to_archive"].(string); ok && v != "" {
-			apiObject.TransitionToArchive = aws.String(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
