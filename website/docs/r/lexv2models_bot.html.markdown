@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot using the `id`. For example:
 
 ```terraform
 import {
@@ -83,7 +83,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Lex V2 Models Bot using the `example_id_arg`. For example:
+Using `terraform import`, import Lex V2 Models Bot using the `id`. For example:
 
 ```console
 % terraform import aws_lexv2models_bot.example bot-id-12345678

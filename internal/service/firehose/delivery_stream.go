@@ -1297,7 +1297,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 		}
 		if v := v.MSKSourceDescription; v != nil {
 			if err := d.Set("msk_source_configuration", []interface{}{flattenMSKSourceDescription(v)}); err != nil {
-				return diag.Errorf("setting msk_source_configuration: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting msk_source_configuration: %s", err)
 			}
 		}
 	}

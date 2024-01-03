@@ -18,6 +18,8 @@ For more information, see [How S3 versioning works](https://docs.aws.amazon.com/
 
 ~> **NOTE:** If you are enabling versioning on the bucket for the first time, AWS recommends that you wait for 15 minutes after enabling versioning before issuing write operations (PUT or DELETE) on objects in the bucket.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With Versioning Enabled
@@ -193,4 +195,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3f84c98fe9b700bccf273478828122f05fe2e305acb212ed114e7d70a9c33251 -->
+<!-- cache-key: cdktf-0.19.0 input-f387859e1c4ace75d718b32236f2b55857b5ddbb6588f6fc4186285c2f0e2659 -->

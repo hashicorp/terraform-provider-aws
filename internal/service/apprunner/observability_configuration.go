@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,6 +82,8 @@ func resourceObservabilityConfiguration() *schema.Resource {
 }
 
 func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("observability_configuration_name").(string)
@@ -96,19 +99,21 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 	output, err := conn.CreateObservabilityConfiguration(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner Observability Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner Observability Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.ObservabilityConfiguration.ObservabilityConfigurationArn))
 
 	if _, err := waitObservabilityConfigurationCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner Observability Configuration (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Observability Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceObservabilityConfigurationRead(ctx, d, meta)
+	return append(diags, resourceObservabilityConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	config, err := findObservabilityConfigurationByARN(ctx, conn, d.Id())
@@ -116,11 +121,11 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner Observability Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", config.ObservabilityConfigurationArn)
@@ -129,10 +134,10 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("observability_configuration_revision", config.ObservabilityConfigurationRevision)
 	d.Set("status", config.Status)
 	if err := d.Set("trace_configuration", flattenTraceConfiguration(config.TraceConfiguration)); err != nil {
-		return diag.Errorf("setting trace_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting trace_configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -141,6 +146,8 @@ func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner Observability Configuration: %s", d.Id())
@@ -149,18 +156,18 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner Observability Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitObservabilityConfigurationDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for App Runner Observability Configuration (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Observability Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.ObservabilityConfiguration, error) {

@@ -12,6 +12,8 @@ description: |-
 
 Provides a resource to manage S3 Bucket Ownership Controls. For more information, see the [S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/about-object-ownership.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```typescript
@@ -91,4 +93,4 @@ Using `terraform import`, import S3 Bucket Ownership Controls using S3 Bucket na
 % terraform import aws_s3_bucket_ownership_controls.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-efb4f4321500cf116368caed3eeb4a2c9b6076d8246ed5f36076a0ed3015eaff -->
+<!-- cache-key: cdktf-0.19.0 input-1815e6949e67a720f4b115be9bf7db12d26eaec6cd93db780cd1bd71fccb4ed2 -->

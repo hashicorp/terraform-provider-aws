@@ -50,6 +50,7 @@ func dataSourceNamedQuery() *schema.Resource {
 
 func dataSourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	input := &athena.ListNamedQueriesInput{
@@ -81,7 +82,7 @@ func dataSourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("querystring", query.QueryString)
 	d.Set("workgroup", query.WorkGroup)
 
-	return nil
+	return diags
 }
 
 func findNamedQueryByName(ctx context.Context, conn *athena.Client, queryIDs []string, name string) (*types.NamedQuery, error) {

@@ -185,6 +185,8 @@ var (
 )
 
 func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -204,14 +206,14 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateSecurityGroupWithContext(ctx, inputC)
 
 	if err != nil {
-		return diag.Errorf("creating Security Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.GroupId))
 
 	// Wait for the security group to truly exist
 	if _, err := WaitSecurityGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Security Group (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) create: %s", d.Id(), err)
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
@@ -233,7 +235,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, inputR); err != nil {
-		return diag.Errorf("revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
 	}
 
 	inputR = &ec2.RevokeSecurityGroupEgressInput{
@@ -255,14 +257,16 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, inputR); err != nil {
 		// If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6 enabled SG.
 		if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
-			return diag.Errorf("revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSecurityGroupUpdate(ctx, d, meta)
+	return append(diags, resourceSecurityGroupUpdate(ctx, d, meta)...)
 }
 
 func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	sg, err := FindSecurityGroupByID(ctx, conn, d.Id())
@@ -270,11 +274,11 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
 	remoteIngressRules := SecurityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
@@ -304,40 +308,42 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
-		return diag.Errorf("setting ingress: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
 	if err := d.Set("egress", egressRules); err != nil {
-		return diag.Errorf("setting egress: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting egress: %s", err)
 	}
 
 	setTagsOut(ctx, sg.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	group, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("reading Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
 	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeIngress, group)
 
 	if err != nil {
-		return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeIngress, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeIngress, err)
 	}
 
 	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeEgress, group)
 
 	if err != nil {
-		return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeEgress, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeEgress, err)
 	}
 
-	return resourceSecurityGroupRead(ctx, d, meta)
+	return append(diags, resourceSecurityGroupRead(ctx, d, meta)...)
 }
 
 func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -14,6 +14,8 @@ Provides an S3 bucket request payment configuration resource. For more informati
 
 ~> **NOTE:** Destroying an `aws_s3_bucket_request_payment_configuration` resource resets the bucket's `payer` to the S3 default: the bucket owner.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```python
@@ -88,4 +90,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_request_payment_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-924fef526db0a2463aa429766935ae82fbffff4fc791593d59efff4dfb0debed -->
+<!-- cache-key: cdktf-0.19.0 input-62f7785977df6bbe78bff83612517614bf09a5146fc4d611baf0af9750555f41 -->

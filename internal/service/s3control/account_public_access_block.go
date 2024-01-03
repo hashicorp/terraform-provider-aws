@@ -8,6 +8,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
@@ -219,8 +220,8 @@ func waitPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, acc
 		Target:                    []string{strconv.FormatBool(true)},
 		Refresh:                   statusPublicAccessBlockEqual(ctx, conn, accountID, target),
 		Timeout:                   propagationTimeout,
-		MinTimeout:                propagationMinTimeout,
-		ContinuousTargetOccurence: propagationContinuousTargetOccurence,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

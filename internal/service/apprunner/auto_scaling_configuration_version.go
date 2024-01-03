@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -97,6 +98,8 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 }
 
 func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	name := d.Get("auto_scaling_configuration_name").(string)
@@ -120,19 +123,21 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 	output, err := conn.CreateAutoScalingConfiguration(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating App Runner AutoScaling Configuration Version (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner AutoScaling Configuration Version (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.AutoScalingConfiguration.AutoScalingConfigurationArn))
 
 	if _, err := waitAutoScalingConfigurationCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for AutoScaling Configuration Version (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for AutoScaling Configuration Version (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceAutoScalingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceAutoScalingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	config, err := findAutoScalingConfigurationByARN(ctx, conn, d.Id())
@@ -140,11 +145,11 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Runner AutoScaling Configuration Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading App Runner AutoScaling Configuration Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading App Runner AutoScaling Configuration Version (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", config.AutoScalingConfigurationArn)
@@ -158,7 +163,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 	d.Set("min_size", config.MinSize)
 	d.Set("status", config.Status)
 
-	return nil
+	return diags
 }
 
 func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -167,6 +172,8 @@ func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version: %s", d.Id())
@@ -175,18 +182,18 @@ func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.Resou
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting App Runner AutoScaling Configuration Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner AutoScaling Configuration Version (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAutoScalingConfigurationDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for AutoScaling Configuration Version (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for AutoScaling Configuration Version (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findAutoScalingConfigurationByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.AutoScalingConfiguration, error) {

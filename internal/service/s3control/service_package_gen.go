@@ -19,7 +19,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAccessGrantResource,
+			Name:    "Access Grant",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newAccessGrantsInstanceResource,
+			Name:    "Access Grants Instance",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newAccessGrantsInstanceResourcePolicyResource,
+			Name:    "Access Grants Instance Resource Policy",
+		},
+		{
+			Factory: newAccessGrantsLocationResource,
+			Name:    "Access Grants Location",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

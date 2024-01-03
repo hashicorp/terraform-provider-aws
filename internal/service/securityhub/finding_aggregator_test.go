@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccFindingAggregator_basic(t *testing.T) {
@@ -24,7 +24,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,38 +90,26 @@ func testAccCheckFindingAggregatorExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Hub finding aggregator ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetFindingAggregatorWithContext(ctx, &securityhub.GetFindingAggregatorInput{
-			FindingAggregatorArn: &rs.Primary.ID,
-		})
-
-		if err != nil {
-			return fmt.Errorf("Failed to get finding aggregator: %s", err)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_finding_aggregator" {
 				continue
 			}
 
-			_, err := conn.GetFindingAggregatorWithContext(ctx, &securityhub.GetFindingAggregatorInput{
-				FindingAggregatorArn: &rs.Primary.ID,
-			})
+			_, err := tfsecurityhub.FindFindingAggregatorByARN(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -129,7 +117,7 @@ func testAccCheckFindingAggregatorDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("Security Hub Finding Aggregator %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Security Hub Finding Aggregator (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -27,6 +27,7 @@ rules:
       - pattern-not: tfkafkaconnect.$API()
       - pattern-not: conn.Handlers.$X(...)
       - pattern-not: conn.Handlers.$X.$Y(...)
+      - pattern-not: conn.Options()
     severity: ERROR
   - id: context-todo
     languages: [go]
