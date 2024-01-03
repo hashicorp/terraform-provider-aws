@@ -222,6 +222,7 @@ provider "aws" {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
   <li><code>polly</code></li>

@@ -150,6 +150,7 @@ val services = mapOf(
     "organizations" to ServiceSpec("Organizations"),
     "osis" to ServiceSpec("OpenSearch Ingestion"),
     "outposts" to ServiceSpec("Outposts"),
+    "pcaconnectorad" to ServiceSpec("Private CA Connector for Active Directory"),
     "pinpoint" to ServiceSpec("Pinpoint"),
     "pipes" to ServiceSpec("EventBridge Pipes"),
     "polly" to ServiceSpec("Polly"),

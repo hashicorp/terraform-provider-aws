@@ -60,6 +60,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
@@ -142,6 +143,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -155,7 +157,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pcaconnectorad"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
@@ -279,6 +283,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		computeoptimizer.ServicePackage(ctx),
 		configservice.ServicePackage(ctx),
 		connect.ServicePackage(ctx),
+		connectcases.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
 		customerprofiles.ServicePackage(ctx),
@@ -361,6 +366,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mediaconvert.ServicePackage(ctx),
 		medialive.ServicePackage(ctx),
 		mediapackage.ServicePackage(ctx),
+		mediapackagev2.ServicePackage(ctx),
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),
@@ -374,7 +380,9 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		opensearchserverless.ServicePackage(ctx),
 		opsworks.ServicePackage(ctx),
 		organizations.ServicePackage(ctx),
+		osis.ServicePackage(ctx),
 		outposts.ServicePackage(ctx),
+		pcaconnectorad.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
