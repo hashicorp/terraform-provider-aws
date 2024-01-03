@@ -22,65 +22,6 @@ const (
 	workspaceTimeout = 5 * time.Minute
 )
 
-func waitAlertManagerDefinitionCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeCreating},
-		Target:  []string{prometheusservice.AlertManagerDefinitionStatusCodeActive},
-		Refresh: statusAlertManagerDefinition(ctx, conn, id),
-		Timeout: workspaceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
-		if statusCode := aws.StringValue(output.Status.StatusCode); statusCode == prometheusservice.AlertManagerDefinitionStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.StatusReason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeUpdating},
-		Target:  []string{prometheusservice.AlertManagerDefinitionStatusCodeActive},
-		Refresh: statusAlertManagerDefinition(ctx, conn, id),
-		Timeout: workspaceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
-		if statusCode := aws.StringValue(output.Status.StatusCode); statusCode == prometheusservice.AlertManagerDefinitionStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.StatusReason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitAlertManagerDefinitionDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeDeleting},
-		Target:  []string{},
-		Refresh: statusAlertManagerDefinition(ctx, conn, id),
-		Timeout: workspaceTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeDeleting},

@@ -46,8 +46,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAlertManagerDefinition,
+			Factory:  resourceAlertManagerDefinition,
 			TypeName: "aws_prometheus_alert_manager_definition",
+			Name:     "Alert Manager Definition",
 		},
 		{
 			Factory:  ResourceRuleGroupNamespace,

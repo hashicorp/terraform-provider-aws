@@ -18,31 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAlertManagerDefinitionByID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	input := &prometheusservice.DescribeAlertManagerDefinitionInput{
-		WorkspaceId: aws.String(id),
-	}
-
-	output, err := conn.DescribeAlertManagerDefinitionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AlertManagerDefinition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AlertManagerDefinition, nil
-}
-
 func nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn string) (string, string, error) {
 	parts := strings.Split(arn, "/")
 	if len(parts) != 3 {

@@ -5,7 +5,8 @@ package amp
 
 // Exports for use in tests only.
 var (
-	ResourceScraper = newResourceScraper
+	ResourceAlertManagerDefinition = resourceAlertManagerDefinition
+	ResourceScraper                = newResourceScraper
 
-	// FindScraperByID = findScraperByID
+	FindAlertManagerDefinitionByID = findAlertManagerDefinitionByID
 )
