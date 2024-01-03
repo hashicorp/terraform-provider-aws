@@ -15,11 +15,250 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 )
+
+func TestAccAMPScraper_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_required(rName, eksClusterVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckNoResourceAttr(resourceName, "alias"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_required(rName, eksClusterVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_tags1(rName, eksClusterVersion, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_alias(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_alias(rName, eksClusterVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_security_groups(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	eksClusterVersion := "1.28"
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_security_groups(rName, eksClusterVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_prometheus_scraper" {
+				continue
+			}
+
+			_, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Prometheus Scraper %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+
+		output, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+
+	input := &amp.ListScrapersInput{}
+
+	_, err := conn.ListScrapers(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
 
 var scrapeConfigBlob = `
 global:
@@ -77,246 +316,6 @@ scrape_configs:
       regex: (.+?)(\\:\\d+)?
       replacement: $1:10249
 `
-
-func TestAccAMPScraper_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
-	resourceName := "aws_prometheus_scraper.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_required(rName, eksClusterVersion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckNoResourceAttr(resourceName, "alias"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAMPScraper_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper.test"
-	eksClusterVersion := "1.28"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_required(rName, eksClusterVersion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAMPScraper_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
-	resourceName := "aws_prometheus_scraper.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_tags1(rName, eksClusterVersion, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAMPScraper_alias(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var v types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper.test"
-
-	eksClusterVersion := "1.28"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_alias(rName, eksClusterVersion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAMPScraper_security_groups(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var v types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper.test"
-
-	eksClusterVersion := "1.28"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_security_groups(rName, eksClusterVersion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_prometheus_scraper" {
-				continue
-			}
-
-			_, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Amazon Prometheus Scraper %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckScraperExists(ctx context.Context, name string, v *types.ScraperDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Amazon Prometheus Scraper ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
-		output, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
-
-	input := &amp.ListScrapersInput{}
-
-	_, err := conn.ListScrapers(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
 
 func testAccScraperConfig_required(rName, eksClusterVersion string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
