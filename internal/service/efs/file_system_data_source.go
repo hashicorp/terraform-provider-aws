@@ -65,6 +65,10 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"transition_to_archive": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"transition_to_ia": {
 							Type:     schema.TypeString,
 							Computed: true,

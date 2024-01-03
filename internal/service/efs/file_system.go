@@ -88,6 +88,11 @@ func ResourceFileSystem() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"transition_to_archive": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(efs.TransitionToArchiveRules_Values(), false),
+						},
 						"transition_to_ia": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -475,6 +480,10 @@ func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []int
 
 		tfMap := make(map[string]interface{})
 
+		if apiObject.TransitionToArchive != nil {
+			tfMap["transition_to_archive"] = aws.StringValue(apiObject.TransitionToArchive)
+		}
+
 		if apiObject.TransitionToIA != nil {
 			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
 		}
@@ -500,6 +509,10 @@ func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePol
 		}
 
 		apiObject := &efs.LifecyclePolicy{}
+
+		if v, ok := tfMap["transition_to_archive"].(string); ok && v != "" {
+			apiObject.TransitionToArchive = aws.String(v)
+		}
 
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
 			apiObject.TransitionToIA = aws.String(v)
