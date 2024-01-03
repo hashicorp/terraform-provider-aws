@@ -7,10 +7,11 @@ package amp
 var (
 	ResourceAlertManagerDefinition = resourceAlertManagerDefinition
 	ResourceRuleGroupNamespace     = resourceRuleGroupNamespace
-	ResourceScraper                = newResourceScraper
+	ResourceScraper                = newScraperResource
 	ResourceWorkspace              = resourceWorkspace
 
 	FindAlertManagerDefinitionByID = findAlertManagerDefinitionByID
 	FindRuleGroupNamespaceByARN    = findRuleGroupNamespaceByARN
+	FindScraperByID                = findScraperByID
 	FindWorkspaceByID              = findWorkspaceByID
 )
