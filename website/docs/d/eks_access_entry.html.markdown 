@@ -3,12 +3,12 @@ subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_access_entry"
 description: |-
-  Access Entry Configurations for the EKS Cluster.
+  Access Entry Configurations for an EKS Cluster.
 ---
 
 # Data Source: aws_eks_access_entry
 
-Access Entry Configurations for the EKS Cluster.
+Access Entry Configurations for an EKS Cluster.
 
 ## Example Usage
 

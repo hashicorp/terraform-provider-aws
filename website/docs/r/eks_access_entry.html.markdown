@@ -3,17 +3,17 @@ subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_access_entry"
 description: |-
-  Access Entry Configurations for the EKS Cluster.
+  Access Entry Configurations for an EKS Cluster.
 ---
 
 # Resource: aws_eks_access_entry
 
-Access Entry Configurations for the EKS Cluster.
+Access Entry Configurations for an EKS Cluster.
 
 ## Example Usage
 
 ```terraform
-resource "aws_eks_access_enttry" "example" {
+resource "aws_eks_access_entry" "example" {
   cluster_name     = aws_eks_cluster.example.name
   principal_arn    = aws_iam_role.example.arn
   kubernetes_group = ["group-1", "group-2"]

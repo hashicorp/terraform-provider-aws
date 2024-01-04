@@ -226,7 +226,7 @@ The following arguments are optional:
 The `access_config` configuration block supports the following arguments:
 
 * `authentication_mode` - (Optional) The authentication mode for the cluster. Valid values are CONFIGMAP, API or APIANDCONFIGMAP
-* `bootstrap_cluster_creator_admin_permissions` - (Optional) Weather to bootstrap the access confif values to the cluster. Default is `true`.
+* `bootstrap_cluster_creator_admin_permissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `true`.
 
 ### encryption_config
 
