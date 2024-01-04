@@ -5,10 +5,9 @@ package securitylake
 
 // Exports for use in tests only.
 var (
-	ResourceDataLake  = newDataLakeResource
-	ResourceLogSource = newAWSLogSourceResource
+	ResourceAWSLogSource = newAWSLogSourceResource
+	ResourceDataLake     = newDataLakeResource
 
-	FindDataLakeByARN             = findDataLakeByARN
-	FindLogSourceById             = findLogSourceById
-	ExtractLogSourceConfiguration = extractLogSourceConfiguration
+	FindAWSLogSourceBySourceName = findAWSLogSourceBySourceName
+	FindDataLakeByARN            = findDataLakeByARN
 )
