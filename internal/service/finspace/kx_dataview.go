@@ -137,7 +137,8 @@ func (r *resourceKxDataview) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"created_timestamp": schema.StringAttribute{
 				Computed: true,
 			},
