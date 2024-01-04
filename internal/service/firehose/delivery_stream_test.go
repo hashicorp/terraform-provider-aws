@@ -65,7 +65,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_name", "LambdaArn"),
 					resource.TestCheckResourceAttrSet(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_value"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_name", "BufferSizeInMBs"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_value", "1.1"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_name", "BufferIntervalInSeconds"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_value", "70"),
 					resource.TestCheckResourceAttrSet(resourceName, "extended_s3_configuration.0.role_arn"),
@@ -1778,7 +1778,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_name", "LambdaArn"),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_value"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_name", "BufferSizeInMBs"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_value", "1.1"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_name", "BufferIntervalInSeconds"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_value", "70"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.retry_duration", "300"),
@@ -2603,7 +2603,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3095,7 +3095,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3142,7 +3142,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3210,7 +3210,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3354,7 +3354,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3430,12 +3430,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = 1
+          parameter_value = "1.1"
         }
 
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
-          parameter_value = 120
+          parameter_value = "70"
         }
       }
     }
@@ -3568,12 +3568,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = 1
+          parameter_value = "1.1"
         }
 
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
-          parameter_value = 120
+          parameter_value = "70"
         }
       }
     }
@@ -3809,7 +3809,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3861,7 +3861,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -3930,7 +3930,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -4135,7 +4135,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -4232,7 +4232,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -4283,7 +4283,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
@@ -4396,7 +4396,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
         parameters {
           parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
+          parameter_value = "1.1"
         }
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
