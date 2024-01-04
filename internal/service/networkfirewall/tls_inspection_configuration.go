@@ -456,14 +456,15 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	
 	state.LastModifiedTime = flex.StringValueToFramework(ctx, out.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
 	state.NumberOfAssociations = flex.Int64ToFramework(ctx, out.TLSInspectionConfigurationResponse.NumberOfAssociations)
+	state.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
 	state.Status = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
 
 	// Complex types
-	encryptionConfiguration, d := flattenEncryptionConfiguration(ctx, out.TLSInspectionConfigurationResponse.EncryptionConfiguration)
+	encryptionConfiguration, d := flattenTLSEncryptionConfiguration(ctx, out.TLSInspectionConfigurationResponse.EncryptionConfiguration)
 	resp.Diagnostics.Append(d...)
 	state.EncryptionConfiguration = encryptionConfiguration
 	
-	certificateAuthority, d := flattenCertificateAuthority(ctx, out.TLSInspectionConfigurationResponse.CertificateAuthority)
+	certificateAuthority, d := flattenTLSCertificate(ctx, out.TLSInspectionConfigurationResponse.CertificateAuthority)
 	resp.Diagnostics.Append(d...)
 	state.CertificateAuthority = certificateAuthority
 	
@@ -803,6 +804,180 @@ func flattenComplexArgument(ctx context.Context, apiObject *awstypes.ComplexArgu
 	return listVal, diags
 }
 
+
+func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: certificateAttrTypes}
+
+	if len(certificateList) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, certificate := range certificateList {
+		if certificate == nil {
+			continue
+		}
+		flattenedCertificate, d := flattenTLSCertificate(ctx, certificate)
+		diags.Append(d...)
+		elems = append(elems, flattenedCertificate)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
+func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: certificateAttrTypes}
+
+	if certificate == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"certificate_arn": flex.StringToFramework(ctx, certificate.CertificateArn),
+		"certificate_serial": flex.StringToFramework(ctx, certificate.CertificateSerial),
+		"status": flex.StringToFramework(ctx, certificate.Status),
+		"status_message": flex.StringToFramework(ctx, certificate.StatusMessage),
+	}
+	objVal, d := types.ObjectValue(certificateAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+
+func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertificateScope)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: scopeAttrTypes}
+
+	if len(scopes) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, scope := range scopes {
+		if scope == nil {
+			continue
+		}
+
+		destinationPorts, d := flattenPortRange(ctx, scope.DestinationPorts)
+		destinations, d := flattenSourceDestinations(ctx, scope.Destinations)
+		sourcePorts, d := flattenPortRange(ctx, scope.SourcePorts)
+		sources, d := flattenSourceDestinations(ctx, scope.Sources)
+
+
+		obj := map[string]attr.Value{
+			"destination_ports": destinationPorts,
+			"destinations": destinations,
+			// "protocols": flex.
+			"source_ports": sourcePorts,
+			"sources": sources,
+		}
+		objVal, d := types.ObjectValue(scopeAttrTypes, obj)
+		diags.Append(d...)
+
+		elems = append(elems, objVal)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+
+func flattenSourceDestinations(ctx context.Context, destinations []*networkfirewall.Address) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: sourceDestinationAttrTypes}
+
+	if len(destinations) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, destination := range destinations {
+		if destination == nil {
+			continue
+		}
+
+		obj := map[string]attr.Value{
+			"address_definition": flex.StringToFramework(ctx, destination.AddressDefinition),
+		}
+		objVal, d := types.ObjectValue(sourceDestinationAttrTypes, obj)
+		diags.Append(d...)
+
+		elems = append(elems, objVal)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
+func flattenPortRange(ctx context.Context, ranges []*networkfirewall.PortRange) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: portRangeAttrTypes}
+
+	if len(ranges) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, portRange := range ranges {
+		if portRange == nil {
+			continue
+		}
+
+		obj := map[string]attr.Value{
+			"from_port": flex.Int64ToFramework(ctx, portRange.FromPort),
+			"to_port": flex.Int64ToFramework(ctx, portRange.ToPort),
+		}
+		objVal, d := types.ObjectValue(portRangeAttrTypes, obj)
+		diags.Append(d...)
+
+		elems = append(elems, objVal)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
+func flattenCheckCertificateRevocationStatus(){}
+
+func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfiguration *networkfirewall.EncryptionConfiguration) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: encryptionConfigurationAttrTypes}
+
+	if encryptionConfiguration == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"key_id": flex.StringToFramework(ctx, encryptionConfiguration.KeyId),
+		"type": flex.StringToFramework(ctx, encryptionConfiguration.Type),
+	}
+	objVal, d := types.ObjectValue(encryptionConfigurationAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
 // TIP: Often the AWS API will return a slice of structures in response to a
 // request for information. Sometimes you will have set criteria (e.g., the ID)
 // that means you'll get back a one-length slice. This plural function works
@@ -910,39 +1085,49 @@ func expandComplexArguments(tfList []complexArgumentData) []*networkfirewall.Com
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTLSInspectionConfigurationData struct {
-	ARN             types.String   `tfsdk:"arn"`
-	EncryptionConfiguration types.List `tfsdk:"encryption_configuration"`
-	Certificates types.List `tfsdk:"certificates"`
-	CertificateAuthority types.List `tfsdk:"certificate_authority"`
-	ComplexArgument types.List     `tfsdk:"complex_argument"`
-	Description     types.String   `tfsdk:"description"`
-	ID              types.String   `tfsdk:"id"`
-	LastModifiedTime types.String   `tfsdk:"last_modified_time"`
-	Name            types.String   `tfsdk:"name"`
-	NumberOfAssociations types.Int64   `tfsdk:"number_of_associations"`
-	Status          types.String   `tfsdk:"status"`
-	TLSInspectionConfiguration types.List `tfsdk:"tls_inspection_configuration"`
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-	Type            types.String   `tfsdk:"type"`
-	UpdateToken     types.String   `tfsdk:"update_token"`
+	ARN                        types.String   `tfsdk:"arn"`
+	EncryptionConfiguration    types.List     `tfsdk:"encryption_configuration"`
+	Certificates               types.List     `tfsdk:"certificates"`
+	CertificateAuthority       types.List     `tfsdk:"certificate_authority"`
+	// ComplexArgument            types.List     `tfsdk:"complex_argument"`
+	Description                types.String   `tfsdk:"description"`
+	ID                         types.String   `tfsdk:"id"`
+	LastModifiedTime           types.String   `tfsdk:"last_modified_time"`
+	Name                       types.String   `tfsdk:"name"`
+	NumberOfAssociations       types.Int64    `tfsdk:"number_of_associations"`
+	Status                     types.String   `tfsdk:"status"`
+	TLSInspectionConfiguration types.List     `tfsdk:"tls_inspection_configuration"`
+	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
+	Type                       types.String   `tfsdk:"type"`
+	UpdateToken                types.String   `tfsdk:"update_token"`
 }
 
+type encryptionConfigurationData struct {
+	Type  types.String `tfsdk:"type"`
+	KeyId types.String `tfsdk:"key_id"`
+}
 
-// "last_modified_time": schema.StringAttribute{
-// 	Computed: true,
-// },
-// "number_of_associations": schema.Int64Attribute{
-// 	Computed: true,
-// },
-// "status": schema.StringAttribute{
-// 	Computed: true,
-// },
-// "update_token": schema.StringAttribute{
-// 	Computed: true,
+type certificatesData struct {
+	CertificateArn types.String `tfsdk:"certificate_arn"`
+	CertificateSerial types.String `tfsdk:"certificate_serial"`
+	Status types.String `tfsdk:"status"`
+	StatusMessage types.String `tfsdk:"status_message"`
+}
+
+type tlsInspectionConfiguration struct {
+	ServerCertificateConfiguration types.List `tfsdk:"server_certificate_configuration"`
+}
 
 type complexArgumentData struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
+var certificateAttrTypes = map[string]attr.Type{
+	"certificate_arn": types.StringType,
+	"certificate_serial": types.StringType,
+	"status": types.StringType,
+	"status_message": types.StringType,
 }
 
 var complexArgumentAttrTypes = map[string]attr.Type{
@@ -953,4 +1138,20 @@ var complexArgumentAttrTypes = map[string]attr.Type{
 var encryptionConfigurationAttrTypes = map[string]attr.Type{
 	"type": types.StringType,
 	"key_id": types.StringType,
+}
+
+var scopeAttrTypes = map[string]attr.Type{
+	"destination_ports": types.ListType{ElemType: types.ObjectType{AttrTypes: portRangeAttrTypes}},
+	"destinations": types.ListType{ElemType: types.ObjectType{AttrTypes: sourceDestinationAttrTypes}},
+	"source_ports": types.ListType{ElemType: types.ObjectType{AttrTypes: portRangeAttrTypes}},
+	"sources": types.ListType{ElemType: types.ObjectType{AttrTypes: sourceDestinationAttrTypes}},
+}
+
+var sourceDestinationAttrTypes = map[string]attr.Type{
+	"address_definition": types.StringType,
+}
+
+var portRangeAttrTypes = map[string]attr.Type{
+	"fromt_port": types.Int64Type,
+	"to_port": types.Int64Type,
 }
