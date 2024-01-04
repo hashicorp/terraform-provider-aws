@@ -197,7 +197,7 @@ func processingConfigurationSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"parameters": {
-								Type:     schema.TypeSet,
+								Type:     schema.TypeList,
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -648,8 +648,17 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		return []map[string]interface{}{}
 	}
 
-	defaultLambdaParams := defaultProcessorParameters(roleArn)
 	processingConfiguration := make([]map[string]interface{}, 1)
+
+	// It is necessary to explicitly filter this out
+	// to prevent diffs during routine use and retain the ability
+	// to show diffs if any field has drifted
+	defaultLambdaParams := map[string]string{
+		"NumberOfRetries":         "3",
+		"RoleArn":                 roleArn,
+		"BufferSizeInMBs":         "3",
+		"BufferIntervalInSeconds": "60",
+	}
 
 	processors := make([]interface{}, len(pc.Processors))
 	for i, p := range pc.Processors {
@@ -1659,10 +1668,10 @@ func expandS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationConfi
 
 func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3DestinationConfiguration {
 	s3 := d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{})
-	roleArn := s3["role_arn"].(string)
+
 	configuration := &firehose.ExtendedS3DestinationConfiguration{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(roleArn),
+		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
 			IntervalInSeconds: aws.Int64(int64(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64(int64(s3["buffer_size"].(int))),
@@ -1674,8 +1683,7 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 	}
 
 	if _, ok := s3["processing_configuration"]; ok {
-		processingConfiguration := extractProcessingConfiguration(s3, defaultProcessorParameters(roleArn))
-		configuration.ProcessingConfiguration = processingConfiguration
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(s3)
 	}
 
 	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
@@ -1754,15 +1762,9 @@ func updateS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationUpdat
 func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3DestinationUpdate {
 	s3 := d.Get("extended_s3_configuration").([]interface{})[0].(map[string]interface{})
 
-	roleArn := s3["role_arn"].(string)
-
-	defaultParams := defaultProcessorParameters(roleArn)
-
-	processingConfiguration := extractProcessingConfiguration(s3, defaultParams)
-
 	configuration := &firehose.ExtendedS3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(roleArn),
+		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
@@ -1773,7 +1775,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		EncryptionConfiguration:           extractEncryptionConfiguration(s3),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
 		CloudWatchLoggingOptions:          extractCloudWatchLoggingConfiguration(s3),
-		ProcessingConfiguration:           processingConfiguration,
+		ProcessingConfiguration:           extractProcessingConfiguration(s3),
 	}
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
@@ -1990,8 +1992,8 @@ func extractDynamicPartitioningConfiguration(s3 map[string]interface{}) *firehos
 	return DynamicPartitioningConfiguration
 }
 
-func extractProcessingConfiguration(configMap map[string]interface{}, defaultParams map[string]string) *firehose.ProcessingConfiguration {
-	config := configMap["processing_configuration"].([]interface{})
+func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
+	config := s3["processing_configuration"].([]interface{})
 	if len(config) == 0 || config[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
@@ -2005,17 +2007,16 @@ func extractProcessingConfiguration(configMap map[string]interface{}, defaultPar
 
 	return &firehose.ProcessingConfiguration{
 		Enabled:    aws.Bool(processingConfiguration["enabled"].(bool)),
-		Processors: extractProcessors(processingConfiguration["processors"].([]interface{}), defaultParams),
+		Processors: extractProcessors(processingConfiguration["processors"].([]interface{})),
 	}
 }
 
-func extractProcessors(processingConfigurationProcessors []interface{}, defaultParams map[string]string) []*firehose.Processor {
+func extractProcessors(processingConfigurationProcessors []interface{}) []*firehose.Processor {
 	processors := []*firehose.Processor{}
 
 	for _, processor := range processingConfigurationProcessors {
 		extractedProcessor := extractProcessor(processor.(map[string]interface{}))
 		if extractedProcessor != nil {
-			extractedProcessor = mergeDefaultProcessingParameters(extractedProcessor, defaultParams)
 			processors = append(processors, extractedProcessor)
 		}
 	}
@@ -2029,7 +2030,7 @@ func extractProcessor(processingConfigurationProcessor map[string]interface{}) *
 	if processorType != "" {
 		processor = &firehose.Processor{
 			Type:       aws.String(processorType),
-			Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].(*schema.Set).List()),
+			Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
 		}
 	}
 	return processor
@@ -2123,13 +2124,12 @@ func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3Destinati
 
 	redshift := rl[0].(map[string]interface{})
 
-	roleArn := redshift["role_arn"].(string)
 	configuration := &firehose.RedshiftDestinationConfiguration{
 		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:    extractRedshiftRetryOptions(redshift),
 		Password:        aws.String(redshift["password"].(string)),
 		Username:        aws.String(redshift["username"].(string)),
-		RoleARN:         aws.String(roleArn),
+		RoleARN:         aws.String(redshift["role_arn"].(string)),
 		CopyCommand:     extractCopyCommandConfiguration(redshift),
 		S3Configuration: s3Config,
 	}
@@ -2138,7 +2138,7 @@ func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3Destinati
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(redshift)
 	}
 	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = extractProcessingConfiguration(redshift, defaultProcessorParameters(roleArn))
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(redshift)
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
@@ -2157,13 +2157,12 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 
 	redshift := rl[0].(map[string]interface{})
 
-	roleArn := redshift["role_arn"].(string)
 	configuration := &firehose.RedshiftDestinationUpdate{
 		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:   extractRedshiftRetryOptions(redshift),
 		Password:       aws.String(redshift["password"].(string)),
 		Username:       aws.String(redshift["username"].(string)),
-		RoleARN:        aws.String(roleArn),
+		RoleARN:        aws.String(redshift["role_arn"].(string)),
 		CopyCommand:    extractCopyCommandConfiguration(redshift),
 		S3Update:       s3Update,
 	}
@@ -2172,7 +2171,7 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(redshift)
 	}
 	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = extractProcessingConfiguration(redshift, defaultProcessorParameters(roleArn))
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(redshift)
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
@@ -2197,12 +2196,11 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 
 	es := esList[0].(map[string]interface{})
 
-	roleArn := es["role_arn"].(string)
 	config := &firehose.ElasticsearchDestinationConfiguration{
 		BufferingHints:  extractBufferingHints(es),
 		IndexName:       aws.String(es["index_name"].(string)),
 		RetryOptions:    extractElasticsearchRetryOptions(es),
-		RoleARN:         aws.String(roleArn),
+		RoleARN:         aws.String(es["role_arn"].(string)),
 		TypeName:        aws.String(es["type_name"].(string)),
 		S3Configuration: s3Config,
 	}
@@ -2220,7 +2218,7 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 	}
 
 	if _, ok := es["processing_configuration"]; ok {
-		config.ProcessingConfiguration = extractProcessingConfiguration(es, defaultProcessorParameters(roleArn))
+		config.ProcessingConfiguration = extractProcessingConfiguration(es)
 	}
 
 	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
@@ -2246,12 +2244,11 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 
 	es := esList[0].(map[string]interface{})
 
-	roleArn := es["role_arn"].(string)
 	update := &firehose.ElasticsearchDestinationUpdate{
 		BufferingHints: extractBufferingHints(es),
 		IndexName:      aws.String(es["index_name"].(string)),
 		RetryOptions:   extractElasticsearchRetryOptions(es),
-		RoleARN:        aws.String(roleArn),
+		RoleARN:        aws.String(es["role_arn"].(string)),
 		TypeName:       aws.String(es["type_name"].(string)),
 		S3Update:       s3Update,
 	}
@@ -2269,7 +2266,7 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 	}
 
 	if _, ok := es["processing_configuration"]; ok {
-		update.ProcessingConfiguration = extractProcessingConfiguration(es, defaultProcessorParameters(roleArn))
+		update.ProcessingConfiguration = extractProcessingConfiguration(es)
 	}
 
 	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
@@ -2298,7 +2295,7 @@ func createSplunkConfig(d *schema.ResourceData, s3Config *firehose.S3Destination
 	}
 
 	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = extractProcessingConfiguration(splunk, defaultProcessorParameters(""))
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(splunk)
 	}
 
 	if _, ok := splunk["cloudwatch_logging_options"]; ok {
@@ -2330,7 +2327,7 @@ func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3Destination
 	}
 
 	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = extractProcessingConfiguration(splunk, defaultProcessorParameters(""))
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(splunk)
 	}
 
 	if _, ok := splunk["cloudwatch_logging_options"]; ok {
@@ -2352,10 +2349,9 @@ func createHTTPEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 
 	HttpEndpoint := sl[0].(map[string]interface{})
 
-	roleArn := HttpEndpoint["role_arn"].(string)
 	configuration := &firehose.HttpEndpointDestinationConfiguration{
 		RetryOptions:    extractHTTPEndpointRetryOptions(HttpEndpoint),
-		RoleARN:         aws.String(roleArn),
+		RoleARN:         aws.String(HttpEndpoint["role_arn"].(string)),
 		S3Configuration: s3Config,
 	}
 
@@ -2372,7 +2368,7 @@ func createHTTPEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 	configuration.BufferingHints = bufferingHints
 
 	if _, ok := HttpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint, defaultProcessorParameters(roleArn))
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint)
 	}
 
 	if _, ok := HttpEndpoint["request_configuration"]; ok {
@@ -2398,10 +2394,9 @@ func updateHTTPEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 
 	HttpEndpoint := sl[0].(map[string]interface{})
 
-	roleArn := HttpEndpoint["role_arn"].(string)
 	configuration := &firehose.HttpEndpointDestinationUpdate{
 		RetryOptions: extractHTTPEndpointRetryOptions(HttpEndpoint),
-		RoleARN:      aws.String(roleArn),
+		RoleARN:      aws.String(HttpEndpoint["role_arn"].(string)),
 		S3Update:     s3Update,
 	}
 
@@ -2418,7 +2413,7 @@ func updateHTTPEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 	configuration.BufferingHints = bufferingHints
 
 	if _, ok := HttpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint, defaultProcessorParameters(roleArn))
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint)
 	}
 
 	if _, ok := HttpEndpoint["request_configuration"]; ok {
@@ -2969,42 +2964,4 @@ func expandDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *fir
 	}
 
 	return apiObject
-}
-
-func defaultProcessorParameters(roleArn string) map[string]string {
-	defaultParams := map[string]string{
-		"NumberOfRetries":         "3",
-		"BufferSizeInMBs":         "3",
-		"BufferIntervalInSeconds": "60",
-	}
-	if roleArn != "" {
-		defaultParams["RoleArn"] = roleArn
-	}
-	return defaultParams
-}
-
-func mergeDefaultProcessingParameters(processor *firehose.Processor, toMerge map[string]string) *firehose.Processor {
-	if aws.StringValue(processor.Type) != firehose.ProcessorTypeLambda {
-		return processor
-	}
-	params := processor.Parameters
-	for key, value := range toMerge {
-		found := false
-		for _, param := range processor.Parameters {
-			if key == aws.StringValue(param.ParameterName) {
-				found = true
-				continue
-			}
-		}
-		if !found {
-			params = append(params, &firehose.ProcessorParameter{
-				ParameterName:  aws.String(key),
-				ParameterValue: aws.String(value),
-			})
-		}
-	}
-	return &firehose.Processor{
-		Type:       processor.Type,
-		Parameters: params,
-	}
 }
