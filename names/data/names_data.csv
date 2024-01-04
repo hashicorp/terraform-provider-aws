@@ -221,7 +221,7 @@ lex-runtime,lexruntime,lexruntimeservice,lexruntimeservice,,lexruntime,,lexrunti
 lexv2-runtime,lexv2runtime,lexruntimev2,lexruntimev2,,lexruntimev2,,lexv2runtime,LexRuntimeV2,LexRuntimeV2,,1,,,aws_lexruntimev2_,,lexruntimev2_,Lex Runtime V2,Amazon,,x,,,,,Lex Runtime V2,,,
 license-manager,licensemanager,licensemanager,licensemanager,,licensemanager,,,LicenseManager,LicenseManager,,1,,,aws_licensemanager_,,licensemanager_,License Manager,AWS,,,,,,,License Manager,,,
 lightsail,lightsail,lightsail,lightsail,,lightsail,,,Lightsail,Lightsail,x,,2,,aws_lightsail_,,lightsail_,Lightsail,Amazon,,,,,,,Lightsail,GetInstances,,
-location,location,locationservice,location,,location,,locationservice,Location,LocationService,,1,,,aws_location_,,location_,Location,Amazon,,,,,,,Location,,,
+location,location,locationservice,location,,location,,locationservice,Location,LocationService,,1,2,,aws_location_,,location_,Location,Amazon,,,,,,,Location,,,
 lookoutequipment,lookoutequipment,lookoutequipment,lookoutequipment,,lookoutequipment,,,LookoutEquipment,LookoutEquipment,,1,,,aws_lookoutequipment_,,lookoutequipment_,Lookout for Equipment,Amazon,,x,,,,,LookoutEquipment,,,
 lookoutmetrics,lookoutmetrics,lookoutmetrics,lookoutmetrics,,lookoutmetrics,,,LookoutMetrics,LookoutMetrics,,,2,,aws_lookoutmetrics_,,lookoutmetrics_,Lookout for Metrics,Amazon,,,,,,,LookoutMetrics,ListMetricSets,,
 lookoutvision,lookoutvision,lookoutforvision,lookoutvision,,lookoutvision,,lookoutforvision,LookoutVision,LookoutForVision,,1,,,aws_lookoutvision_,,lookoutvision_,Lookout for Vision,Amazon,,x,,,,,LookoutVision,,,

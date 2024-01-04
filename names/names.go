@@ -66,6 +66,7 @@ const (
 	KeyspacesEndpointID                  = "keyspaces"
 	KinesisEndpointID                    = "kinesis"
 	LambdaEndpointID                     = "lambda"
+	LocationEndpointID                   = "geo"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	MediaLiveEndpointID                  = "medialive"
 	MQEndpointID                         = "mq"
