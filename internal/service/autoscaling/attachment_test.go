@@ -216,7 +216,7 @@ resource "aws_autoscaling_group" "test" {
 
 func testAccAttachmentConfig_targetGroupBase(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
@@ -231,7 +231,7 @@ resource "aws_lb_target_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 

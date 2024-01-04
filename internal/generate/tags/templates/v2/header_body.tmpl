@@ -41,8 +41,8 @@ import (
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	{{- end }}
-	{{- if .InternalTypesPkg }}
-    "github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- if .InternalOptionPkg }}
+    "github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	{{- end }}
 	{{- if .NamesPkg }}
     "github.com/hashicorp/terraform-provider-aws/names"

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,12 +54,7 @@ func ResourceSecretRotation() *schema.Resource {
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								_, exists := d.GetOk("rotation_rules.0.schedule_expression")
-								return exists
-							},
-							DiffSuppressOnRefresh: true,
-							ValidateFunc:          validation.IntBetween(1, 1000),
+							ValidateFunc:  validation.IntBetween(1, 1000),
 						},
 						"duration": {
 							Type:         schema.TypeString,
@@ -90,8 +86,9 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.RotateSecretInput{
-		RotationRules: expandRotationRules(d.Get("rotation_rules").([]interface{})),
-		SecretId:      aws.String(secretID),
+		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
+		SecretId:           aws.String(secretID),
 	}
 
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok {
@@ -154,8 +151,9 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
 		input := &secretsmanager.RotateSecretInput{
-			RotationRules: expandRotationRules(d.Get("rotation_rules").([]interface{})),
-			SecretId:      aws.String(secretID),
+			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
+			SecretId:           aws.String(secretID),
 		}
 
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok {
