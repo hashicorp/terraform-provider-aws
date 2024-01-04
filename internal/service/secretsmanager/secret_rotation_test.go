@@ -421,7 +421,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 resource "aws_secretsmanager_secret_rotation" "test" {
   secret_id           = aws_secretsmanager_secret.test.id
   rotation_lambda_arn = aws_lambda_function.test.arn
-  rotate_immediately  = false 
+  rotate_immediately  = false
 
   rotation_rules {
     automatically_after_days = %[2]d
