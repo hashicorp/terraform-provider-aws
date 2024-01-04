@@ -3175,7 +3175,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 	defaultLambdaParams := map[string]string{
 		"NumberOfRetries":         "3",
 		"RoleArn":                 roleArn,
-		"BufferSizeInMBs":         "3",
+		"BufferSizeInMBs":         "1",
 		"BufferIntervalInSeconds": "60",
 	}
 
