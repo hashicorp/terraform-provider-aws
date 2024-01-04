@@ -3171,7 +3171,8 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 
 	// It is necessary to explicitly filter this out
 	// to prevent diffs during routine use and retain the ability
-	// to show diffs if any field has drifted
+	// to show diffs if any field has drifted.
+	// https://docs.aws.amazon.com/firehose/latest/dev/data-transformation.html.
 	defaultLambdaParams := map[string]string{
 		"NumberOfRetries":         "3",
 		"RoleArn":                 roleArn,
