@@ -6,6 +6,8 @@ package finspace
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/finspace/types"
@@ -32,7 +34,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"time"
 )
 
 // @FrameworkResource(name="Kx Dataview")
@@ -335,8 +336,7 @@ const (
 
 func (r *resourceKxDataview) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var state resourceKxDataviewData
-	conn := TempFinspaceClient()
-	//conn := r.Meta().FinSpaceClient(ctx)
+	conn := r.Meta().FinSpaceClient(ctx)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -443,8 +443,7 @@ func (r *resourceKxDataview) Create(ctx context.Context, req resource.CreateRequ
 
 func (r *resourceKxDataview) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state resourceKxDataviewData
-	conn := TempFinspaceClient()
-	//conn := r.Meta().FinSpaceClient(ctx)
+	conn := r.Meta().FinSpaceClient(ctx)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -515,8 +514,7 @@ func (r *resourceKxDataview) Read(ctx context.Context, req resource.ReadRequest,
 
 func (r *resourceKxDataview) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state resourceKxDataviewData
-	conn := TempFinspaceClient()
-	//conn := r.Meta().FinSpaceClient(ctx)
+	conn := r.Meta().FinSpaceClient(ctx)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -589,8 +587,7 @@ func (r *resourceKxDataview) Update(ctx context.Context, req resource.UpdateRequ
 
 func (r *resourceKxDataview) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourceKxDataviewData
-	conn := TempFinspaceClient()
-	//conn := r.Meta().FinSpaceClient(ctx)
+	conn := r.Meta().FinSpaceClient(ctx)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
