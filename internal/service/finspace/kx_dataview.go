@@ -64,30 +64,41 @@ func (r *resourceKxDataview) ImportState(ctx context.Context, req resource.Impor
 func (r *resourceKxDataview) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
 			"arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			"auto_update": schema.BoolAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(3, 63),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"environment_id": schema.StringAttribute{
+			"availability_zone_id": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 32),
+				},
+			},
+			"az_mode": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(3, 63),
+					stringvalidator.OneOf(string(awstypes.KxAzModeSingle), string(awstypes.KxAzModeMulti)),
 				},
+			},
+			"changeset_id": schema.StringAttribute{
+				Optional: true,
+			},
+			"created_timestamp": schema.StringAttribute{
+				Computed: true,
 			},
 			"database_name": schema.StringAttribute{
 				Required: true,
@@ -104,31 +115,26 @@ func (r *resourceKxDataview) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"auto_update": schema.BoolAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
-			},
-			"changeset_id": schema.StringAttribute{
-				Optional: true,
-			},
-			"az_mode": schema.StringAttribute{
+			"environment_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(string(awstypes.KxAzModeSingle), string(awstypes.KxAzModeMulti)),
+					stringvalidator.LengthBetween(3, 63),
 				},
 			},
-			"availability_zone_id": schema.StringAttribute{
-				Optional: true,
+			"id": framework.IDAttribute(),
+			"last_modified_timestamp": schema.StringAttribute{
+				Computed: true,
+			},
+			"name": schema.StringAttribute{
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 32),
+					stringvalidator.LengthBetween(3, 63),
 				},
 			},
 			"status": schema.StringAttribute{
@@ -139,23 +145,17 @@ func (r *resourceKxDataview) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"created_timestamp": schema.StringAttribute{
-				Computed: true,
-			},
-			"last_modified_timestamp": schema.StringAttribute{
-				Computed: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"segment_configurations": schema.SetNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"volume_name": schema.StringAttribute{
-							Required: true,
-						},
 						"db_paths": schema.ListAttribute{
 							ElementType: types.StringType,
 							Required:    true,
+						},
+						"volume_name": schema.StringAttribute{
+							Required: true,
 						},
 					},
 				},
