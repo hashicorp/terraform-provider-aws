@@ -10,16 +10,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
-	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,6 +45,7 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Terraform acceptance test"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "verifiedpermissions", regexp.MustCompile(`policy-store/+.`)),
 				),
 			},
@@ -55,18 +54,40 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccPolicyStoreConfig_basicWithSchema("STRICT", "{\"CHANGED\":{\"actions\":{},\"entityTypes\":{}}}"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "STRICT"),
-					resource.TestCheckResourceAttr(resourceName, "schema.0.cedar_json", "{\"CHANGED\":{\"actions\":{},\"entityTypes\":{}}}"),
-				),
-			},
+		},
+	})
+}
+
+func TestAccVerifiedPermissionsPolicyStore_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policystore verifiedpermissions.GetPolicyStoreOutput
+	resourceName := "aws_verifiedpermissions_policy_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissions)
+			testAccPolicyStoresPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissions),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreConfig_basic("OFF"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
-					resource.TestCheckNoResourceAttr(resourceName, "schema.0.cedar_json"),
+				),
+			},
+			{
+				Config: testAccPolicyStoreConfig_basic("STRICT"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "STRICT"),
 				),
 			},
 		},
@@ -96,7 +117,7 @@ func TestAccVerifiedPermissionsPolicyStore_disappears(t *testing.T) {
 				Config: testAccPolicyStoreConfig_basic("OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicyStore(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicyStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,13 +134,12 @@ func testAccCheckPolicyStoreDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			input := &verifiedpermissions.GetPolicyStoreInput{
-				PolicyStoreId: aws.String(rs.Primary.ID),
+			_, err := tfverifiedpermissions.FindPolicyStoreByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			_, err := conn.GetPolicyStore(ctx, input)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
+
 			if err != nil {
 				return err
 			}
@@ -143,9 +163,7 @@ func testAccCheckPolicyStoreExists(ctx context.Context, name string, policystore
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
-		resp, err := conn.GetPolicyStore(ctx, &verifiedpermissions.GetPolicyStoreInput{
-			PolicyStoreId: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfverifiedpermissions.FindPolicyStoreByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNamePolicyStore, rs.Primary.ID, err)
@@ -174,20 +192,9 @@ func testAccPolicyStoresPreCheck(ctx context.Context, t *testing.T) {
 func testAccPolicyStoreConfig_basic(mode string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedpermissions_policy_store" "test" {
+  description = "Terraform acceptance test"
   validation_settings {
     mode = %[1]q
   }
 }`, mode)
-}
-
-func testAccPolicyStoreConfig_basicWithSchema(mode, schema string) string {
-	return fmt.Sprintf(`
-resource "aws_verifiedpermissions_policy_store" "test" {
-  validation_settings {
-    mode = %[1]q
-  }
-  schema {
-    cedar_json = %[2]q
-  }
-}`, mode, schema)
 }

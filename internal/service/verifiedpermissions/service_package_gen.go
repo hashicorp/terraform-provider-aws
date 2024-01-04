@@ -19,7 +19,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourcePolicyStore,
+			Name:    "Policy Store",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -27,13 +32,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  ResourcePolicyStore,
-			TypeName: "aws_verifiedpermissions_policy_store",
-			Name:     "Policy Store",
-		},
-	}
+	return []*types.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {
