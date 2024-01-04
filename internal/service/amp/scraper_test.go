@@ -39,7 +39,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_required(rName, eksClusterVersion),
+				Config: testAccScraperConfig_basic(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, "alias"),
@@ -80,7 +80,7 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_required(rName, eksClusterVersion),
+				Config: testAccScraperConfig_basic(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
@@ -122,6 +122,23 @@ func TestAccAMPScraper_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccScraperConfig_tags2(rName, eksClusterVersion, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccScraperConfig_tags1(rName, eksClusterVersion, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
@@ -149,7 +166,6 @@ func TestAccAMPScraper_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -161,7 +177,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 	})
 }
 
-func TestAccAMPScraper_security_groups(t *testing.T) {
+func TestAccAMPScraper_securityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -180,12 +196,10 @@ func TestAccAMPScraper_security_groups(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_security_groups(rName, eksClusterVersion),
+				Config: testAccScraperConfig_securityGroups(rName, eksClusterVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -317,148 +331,195 @@ scrape_configs:
       replacement: $1:10249
 `
 
-func testAccScraperConfig_required(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_base(rName, eksClusterVersion string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+
+resource "aws_prometheus_workspace" "test" {
+  alias = %[1]q
+
+  tags = {
+    AMPAgentlessScraper = ""
+  }
+}
+`, rName, eksClusterVersion))
+}
+
+func testAccScraperConfig_basic(rName, eksClusterVersion string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-	source {
-		eks {
-			cluster_arn = aws_eks_cluster.test.arn
-			subnet_ids = aws_subnet.test[*].id
-		}
-	}
-	scrape_configuration = %[1]q
-	destination {
-		amp {
-			workspace_arn = aws_prometheus_workspace.test.arn
-		}
-	}
+  scrape_configuration = %[1]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
 }
 `, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_tags1(rName, eksClusterVersion, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-	source {
-		eks {
-			cluster_arn = aws_eks_cluster.test.arn
-			subnet_ids = aws_subnet.test[*].id
-		}
-	}
-	destination {
-		amp {
-			workspace_arn = aws_prometheus_workspace.test.arn
-		}
-	}
-	scrape_configuration = %[3]q
-	tags = {
-		%[1]q = %[2]q
-	}
+  scrape_configuration = %[3]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
 }
 `, tagKey1, tagValue1, scrapeConfigBlob))
 }
 
+func testAccScraperConfig_tags2(rName, eksClusterVersion, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+  scrape_configuration = %[5]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2, scrapeConfigBlob))
+}
+
 func testAccScraperConfig_alias(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-	alias = %[1]q
-	source {
-		eks {
-			cluster_arn = aws_eks_cluster.test.arn
-			subnet_ids = aws_subnet.test[*].id
-		}
-	}
-	scrape_configuration = %[2]q
-	destination {
-		amp {
-			workspace_arn = aws_prometheus_workspace.test.arn
-		}
-	}
+  alias                = %[1]q
+  scrape_configuration = %[2]q
+
+  source {
+    eks {
+      cluster_arn = aws_eks_cluster.test.arn
+      subnet_ids  = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
 }
 `, rName, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_security_groups(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_basic(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_securityGroups(rName, eksClusterVersion string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
-	alias = %[1]q
-	source {
-		eks {
-			cluster_arn = aws_eks_cluster.test.arn
-			subnet_ids = aws_subnet.test[*].id
-			security_group_ids = [aws_eks_cluster.test.vpc_config[0].cluster_security_group_id]
-		}
-	}
-	scrape_configuration = %[2]q
-	destination {
-		amp {
-			workspace_arn = aws_prometheus_workspace.test.arn
-		}
-	}
-}
+  alias                = %[1]q
+  scrape_configuration = %[2]q
 
+  source {
+    eks {
+      cluster_arn        = aws_eks_cluster.test.arn
+      subnet_ids         = aws_subnet.test[*].id
+      security_group_ids = [aws_eks_cluster.test.vpc_config[0].cluster_security_group_id]
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+}
 `, rName, scrapeConfigBlob))
-}
-
-func testAccScraperConfig_basic(eksClusterName, eksClusterVersion string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_availability_zones" "available" {
-	state = "available"
-}
-resource "aws_prometheus_workspace" "test" {
-	alias = %[1]q
-	tags = {
-		AMPAgentlessScraper = ""
-	}
-}
-resource "aws_eks_cluster" "test" {
-	name     = %[1]q
-	role_arn = aws_iam_role.test.arn
-	vpc_config {
-	  subnet_ids = aws_subnet.test[*].id
-	}
-	depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
-}
-resource "aws_iam_role" "test" {
-  name = %[1]q
-  assume_role_policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [
-	{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "eks.${data.aws_partition.current.dns_suffix}"
-		},
-		"Action": "sts:AssumeRole"
-	}]
-}
-POLICY
-}
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.test.name
-}
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-  tags = {
-	Name                          = %[1]q
-	"kubernetes.io/cluster/%[1]s" = "shared"
-  }
-}
-resource "aws_subnet" "test" {
-  count = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
-  assign_ipv6_address_on_creation = true
-  tags = {
-	Name                          = %[1]q
-	"kubernetes.io/cluster/%[1]s" = "shared"
-  }
-}
-`, eksClusterName, eksClusterVersion)
 }
