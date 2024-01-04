@@ -70,22 +70,6 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
-			//"schema": schema.ListNestedBlock{
-			//	CustomType: fwtypes.NewListNestedObjectTypeOf[schemaData](ctx),
-			//	Validators: []validator.List{
-			//		listvalidator.SizeAtMost(1),
-			//	},
-			//	NestedObject: schema.NestedBlockObject{
-			//		Attributes: map[string]schema.Attribute{
-			//			"cedar_json": schema.StringAttribute{
-			//				Required: true,
-			//				Validators: []validator.String{
-			//					fwvalidators.JSON(),
-			//				},
-			//			},
-			//		},
-			//	},
-			//},
 			"validation_settings": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[validationSettings](ctx),
 				Validators: []validator.List{

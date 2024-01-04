@@ -93,6 +93,7 @@ const (
 	SWFEndpointID                        = "swf"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
+	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"
 )

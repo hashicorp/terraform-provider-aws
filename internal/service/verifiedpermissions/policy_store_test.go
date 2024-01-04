@@ -33,10 +33,10 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissions)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissions),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,10 +70,10 @@ func TestAccVerifiedPermissionsPolicyStore_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissions)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissions),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,10 +106,10 @@ func TestAccVerifiedPermissionsPolicyStore_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissions)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissions),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
