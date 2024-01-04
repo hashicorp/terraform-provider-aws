@@ -45,6 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.20.0
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.23.5
