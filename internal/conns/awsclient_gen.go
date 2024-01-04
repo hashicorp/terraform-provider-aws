@@ -39,6 +39,7 @@ import (
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
+	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
@@ -162,7 +163,6 @@ import (
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
-	firehose_sdkv1 "github.com/aws/aws-sdk-go/service/firehose"
 	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
@@ -634,8 +634,8 @@ func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
 	return errs.Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace, make(map[string]any)))
 }
 
-func (c *AWSClient) FirehoseConn(ctx context.Context) *firehose_sdkv1.Firehose {
-	return errs.Must(conn[*firehose_sdkv1.Firehose](ctx, c, names.Firehose, make(map[string]any)))
+func (c *AWSClient) FirehoseClient(ctx context.Context) *firehose_sdkv2.Client {
+	return errs.Must(client[*firehose_sdkv2.Client](ctx, c, names.Firehose, make(map[string]any)))
 }
 
 func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
