@@ -22,11 +22,10 @@ Read more in the [Amazon Managed Service for Prometheus user guide](https://docs
 
 ```terraform
 resource "aws_prometheus_scraper" "example" {
-
   source {
     eks {
-      cluster_arn       = data.aws_eks_cluster.example.arn
-      subnet_ids            = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
     }
   }
 
@@ -36,7 +35,7 @@ resource "aws_prometheus_scraper" "example" {
     }
   }
 
-	scrape_configuration = <<EOT
+  scrape_configuration = <<EOT
 global:
   scrape_interval: 30s
 scrape_configs:
@@ -109,16 +108,15 @@ data "aws_eks_cluster" "this" {
 
 resource "aws_prometheus_workspace" "example" {
   tags = {
-		AMPAgentlessScraper = ""
-	}
+    AMPAgentlessScraper = ""
+  }
 }
 
 resource "aws_prometheus_scraper" "example" {
-
   source {
     eks {
-      cluster_arn       = data.aws_eks_cluster.example.arn
-      subnet_ids            = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
     }
   }
 
