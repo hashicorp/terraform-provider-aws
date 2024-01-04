@@ -1,21 +1,21 @@
 ---
 subcategory: "Security Lake"
 layout: "aws"
-page_title: "AWS: aws_securitylake_log_source"
+page_title: "AWS: aws_securitylake_aws_log_source"
 description: |-
-  Terraform resource for managing an AWS Security Lake Aws Log Source.
+  Terraform resource for managing an Amazon Security Lake AWS Log Source.
 ---
 
-# Resource: aws_securitylake_log_source
+# Resource: aws_securitylake_aws_log_source
 
-Terraform resource for managing an AWS Security Lake Aws Log Source.
+Terraform resource for managing an Amazon Security Lake AWS Log Source.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_securitylake_log_source" "test" {
+resource "aws_securitylake_aws_log_source" "test" {
   sources {
     accounts       = ["1234567890"]
     regions        = ["eu-west-1"]
@@ -35,7 +35,7 @@ Sources support the following:
 
 * `accounts` - (Optional) Specify the AWS account information where you want to enable Security Lake.
 * `regions` - (Required) Specify the Regions where you want to enable Security Lake.
-* `source_name` - (Required) The name for a AWS source. This must be a Regionally unique value.Valid Values: ROUTE53 | VPC_FLOW | SH_FINDINGS | CLOUD_TRAIL_MGMT | LAMBDA_EXECUTION | S3_DATA
+* `source_name` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`.
 * `source_version` - (Required) The version for a AWS source. This must be a Regionally unique value.
 
 ## Attribute Reference
@@ -56,7 +56,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_securitylake_log_source.example
+  to = aws_securitylake_aws_log_source.example
   id = "ROUTE53/1.0"
 }
 ```
@@ -64,5 +64,5 @@ import {
 Using `terraform import`, import Security Hub standards subscriptions using the standards subscription ARN. For example:
 
 ```console
-% terraform import aws_securitylake_log_source.example ROUTE53/1.0
+% terraform import aws_securitylake_aws_log_source.example ROUTE53/1.0
 ```

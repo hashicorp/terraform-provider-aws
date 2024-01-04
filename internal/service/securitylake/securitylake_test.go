@@ -22,9 +22,9 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"replication":     testAccDataLake_replication,
 		},
 		"LogSource": {
-			"basic":       testAccLogSource_basic,
-			"disappears":  testAccLogSource_disappears,
-			"multiRegion": testAccLogSource_multiRegion,
+			"basic":       testAccAWSLogSource_basic,
+			"disappears":  testAccAWSLogSource_disappears,
+			"multiRegion": testAccAWSLogSource_multiRegion,
 		},
 	}
 
