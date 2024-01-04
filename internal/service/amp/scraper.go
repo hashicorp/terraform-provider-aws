@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -83,6 +81,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 		},
 		Blocks: map[string]schema.Block{
 			"destination": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -93,6 +92,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"amp": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[scraperAMPDestinationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
@@ -116,6 +116,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"source": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperSourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -126,6 +127,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"eks": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[scraperEKSSourceModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
@@ -143,6 +145,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 										},
 									},
 									"security_group_ids": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
 										Computed:    true,
@@ -152,6 +155,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 										},
 									},
 									"subnet_ids": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Required:    true,
 										Validators: []validator.Set{
@@ -184,10 +188,48 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
+
+	destinationData, diags := data.Destination.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	ampDestinationData, diags := destinationData.AMP.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	destination := &awstypes.DestinationMemberAmpConfiguration{}
+	resp.Diagnostics.Append(flex.Expand(ctx, ampDestinationData, &destination.Value)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	sourceData, diags := data.Source.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	eksSourceData, diags := sourceData.EKS.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	source := &awstypes.SourceMemberEksConfiguration{}
+	resp.Diagnostics.Append(flex.Expand(ctx, eksSourceData, &source.Value)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &amp.CreateScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		Source:      expandSource(ctx, data.Source, resp.Diagnostics),
-		Destination: expandDestination(ctx, data.Destination, resp.Diagnostics),
+		Destination: destination,
+		Source:      source,
 		ScrapeConfiguration: &awstypes.ScrapeConfigurationMemberConfigurationBlob{
 			Value: []byte(data.ScrapeConfiguration.ValueString()),
 		},
@@ -212,7 +254,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
 	data.ID = flex.StringToFramework(ctx, output.ScraperId)
 
-	_, err = waitScraperCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	scraper, err := waitScraperCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -222,8 +264,16 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	readOut, _ := findScraperByID(ctx, conn, *output.ScraperId)
-	data.refreshFromOutput(ctx, readOut, resp.Diagnostics)
+	if v, ok := scraper.Source.(*awstypes.SourceMemberEksConfiguration); ok {
+		resp.Diagnostics.Append(flex.Flatten(ctx, &v.Value, eksSourceData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	// Set values for unknowns after creation is complete.
+	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtr(ctx, eksSourceData)
+	data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, sourceData)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -252,7 +302,36 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	data.refreshFromOutput(ctx, scraper, resp.Diagnostics)
+	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
+	data.ARN = flex.StringToFramework(ctx, scraper.Arn)
+	data.Alias = flex.StringToFramework(ctx, scraper.Alias)
+	if v, ok := scraper.Destination.(*awstypes.DestinationMemberAmpConfiguration); ok {
+		var ampDestinationData scraperAMPDestinationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, &v.Value, &ampDestinationData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		data.Destination = fwtypes.NewListNestedObjectValueOfPtr(ctx, &scraperDestinationModel{
+			AMP: fwtypes.NewListNestedObjectValueOfPtr(ctx, &ampDestinationData),
+		})
+	}
+	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
+		data.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(v.Value))
+	}
+	if v, ok := scraper.Source.(*awstypes.SourceMemberEksConfiguration); ok {
+		var eksSourceData scraperEKSSourceModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, &v.Value, &eksSourceData)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, &scraperSourceModel{
+			EKS: fwtypes.NewListNestedObjectValueOfPtr(ctx, &eksSourceData),
+		})
+	}
+
+	setTagsOut(ctx, scraper.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -306,6 +385,36 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 func (r *scraperResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, req, resp)
+}
+
+type scraperResourceModel struct {
+	Alias               types.String                                             `tfsdk:"alias"`
+	ARN                 types.String                                             `tfsdk:"arn"`
+	Destination         fwtypes.ListNestedObjectValueOf[scraperDestinationModel] `tfsdk:"destination"`
+	ID                  types.String                                             `tfsdk:"id"`
+	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
+	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
+	Tags                types.Map                                                `tfsdk:"tags"`
+	TagsAll             types.Map                                                `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                           `tfsdk:"timeouts"`
+}
+
+type scraperDestinationModel struct {
+	AMP fwtypes.ListNestedObjectValueOf[scraperAMPDestinationModel] `tfsdk:"amp"`
+}
+
+type scraperAMPDestinationModel struct {
+	WorkspaceARN fwtypes.ARN `tfsdk:"workspace_arn"`
+}
+
+type scraperSourceModel struct {
+	EKS fwtypes.ListNestedObjectValueOf[scraperEKSSourceModel] `tfsdk:"eks"`
+}
+
+type scraperEKSSourceModel struct {
+	ClusterARN       fwtypes.ARN                      `tfsdk:"cluster_arn"`
+	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
 }
 
 func findScraperByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.ScraperDescription, error) {
@@ -381,213 +490,4 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 	}
 
 	return nil, err
-}
-
-func flattenDestination(ctx context.Context, apiObject awstypes.Destination, diags diag.Diagnostics) types.List {
-	elemType := types.ObjectType{AttrTypes: destinationModelAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType)
-	}
-
-	ampDestination, ok := apiObject.(*awstypes.DestinationMemberAmpConfiguration)
-	if !ok {
-		return types.ListNull(elemType)
-	}
-
-	attrs := map[string]attr.Value{
-		"amp": flattenDestinationAMPConfig(ctx, ampDestination.Value, diags),
-	}
-	objVal, d := types.ObjectValue(destinationModelAttrTypes, attrs)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal
-}
-
-func flattenDestinationAMPConfig(ctx context.Context, apiObject awstypes.AmpConfiguration, diags diag.Diagnostics) types.List {
-	elemType := types.ObjectType{AttrTypes: ampDestinationModelAttrTypes}
-
-	attrs := map[string]attr.Value{
-		"workspace_arn": fwtypes.ARNValue(*apiObject.WorkspaceArn),
-	}
-	objVal, d := types.ObjectValue(ampDestinationModelAttrTypes, attrs)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal
-}
-
-func flattenSource(ctx context.Context, apiObject awstypes.Source, diags diag.Diagnostics) types.List {
-	elemType := types.ObjectType{AttrTypes: sourceModelAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType)
-	}
-
-	eksSource, ok := apiObject.(*awstypes.SourceMemberEksConfiguration)
-	if !ok {
-		return types.ListNull(elemType)
-	}
-
-	attrs := map[string]attr.Value{
-		"eks": flattenSourceEKSConfig(ctx, eksSource.Value, diags),
-	}
-	objVal, d := types.ObjectValue(sourceModelAttrTypes, attrs)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal
-}
-
-func flattenSourceEKSConfig(ctx context.Context, apiObject awstypes.EksConfiguration, diags diag.Diagnostics) types.List {
-	elemType := types.ObjectType{AttrTypes: eksSourceModelAttrTypes}
-
-	attrs := map[string]attr.Value{
-		"cluster_arn":        fwtypes.ARNValue(*apiObject.ClusterArn),
-		"subnet_ids":         flex.FlattenFrameworkStringValueSet(ctx, apiObject.SubnetIds),
-		"security_group_ids": flex.FlattenFrameworkStringValueSet(ctx, apiObject.SecurityGroupIds),
-	}
-	objVal, d := types.ObjectValue(eksSourceModelAttrTypes, attrs)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal
-}
-
-func expandDestination(ctx context.Context, dst types.List, diags diag.Diagnostics) awstypes.Destination {
-
-	var tfList []destinationModel
-	diags.Append(dst.ElementsAs(ctx, &tfList, false)...)
-
-	if len(tfList) == 0 {
-		return nil
-	}
-	tfObj := tfList[0]
-
-	var ampDestination []ampDestinationModel
-	diags.Append(tfObj.AMP.ElementsAs(ctx, &ampDestination, false)...)
-	if diags.HasError() {
-		return nil
-	}
-
-	return &awstypes.DestinationMemberAmpConfiguration{Value: expandAMPDestination(ampDestination)}
-}
-
-func expandAMPDestination(tfList []ampDestinationModel) awstypes.AmpConfiguration {
-	if len(tfList) == 0 {
-		return awstypes.AmpConfiguration{}
-	}
-
-	tfObj := tfList[0]
-	ampConfig := awstypes.AmpConfiguration{
-		WorkspaceArn: tfObj.AWSPrometheusWorkspaceARN.ValueStringPointer(),
-	}
-
-	return ampConfig
-}
-func expandSource(ctx context.Context, src types.List, diags diag.Diagnostics) awstypes.Source {
-
-	var tfList []sourceModel
-	diags.Append(src.ElementsAs(ctx, &tfList, false)...)
-
-	if len(tfList) == 0 {
-		return nil
-	}
-	tfObj := tfList[0]
-
-	var eksSource []eksSourceModel
-	diags.Append(tfObj.EKS.ElementsAs(ctx, &eksSource, false)...)
-	if diags.HasError() {
-		return nil
-	}
-
-	return &awstypes.SourceMemberEksConfiguration{Value: expandEKSSource(ctx, eksSource)}
-}
-
-func expandEKSSource(ctx context.Context, tfList []eksSourceModel) awstypes.EksConfiguration {
-
-	if len(tfList) == 0 {
-		return awstypes.EksConfiguration{}
-	}
-
-	tfObj := tfList[0]
-	eksSource := awstypes.EksConfiguration{
-		ClusterArn: tfObj.EKSClusterARN.ValueStringPointer(),
-		SubnetIds:  flex.ExpandFrameworkStringValueSet(ctx, tfObj.SubnetIds),
-	}
-
-	if !tfObj.SecurityGroupIds.IsNull() {
-		eksSource.SecurityGroupIds = flex.ExpandFrameworkStringValueSet(ctx, tfObj.SecurityGroupIds)
-	}
-
-	return eksSource
-}
-
-type scraperResourceModel struct {
-	Alias               types.String   `tfsdk:"alias"`
-	ARN                 types.String   `tfsdk:"arn"`
-	Destination         types.List     `tfsdk:"destination"`
-	ID                  types.String   `tfsdk:"id"`
-	ScrapeConfiguration types.String   `tfsdk:"scrape_configuration"`
-	Source              types.List     `tfsdk:"source"`
-	Tags                types.Map      `tfsdk:"tags"`
-	TagsAll             types.Map      `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value `tfsdk:"timeouts"`
-}
-
-type destinationModel struct {
-	AMP types.List `tfsdk:"amp"`
-}
-
-type ampDestinationModel struct {
-	AWSPrometheusWorkspaceARN fwtypes.ARN `tfsdk:"workspace_arn"`
-}
-
-type sourceModel struct {
-	EKS types.List `tfsdk:"eks"`
-}
-
-type eksSourceModel struct {
-	EKSClusterARN    fwtypes.ARN `tfsdk:"cluster_arn"`
-	SubnetIds        types.Set   `tfsdk:"subnet_ids"`
-	SecurityGroupIds types.Set   `tfsdk:"security_group_ids"`
-}
-
-var destinationModelAttrTypes = map[string]attr.Type{
-	"amp": types.ListType{ElemType: types.ObjectType{AttrTypes: ampDestinationModelAttrTypes}},
-}
-var ampDestinationModelAttrTypes = map[string]attr.Type{
-	"workspace_arn": fwtypes.ARNType,
-}
-
-var sourceModelAttrTypes = map[string]attr.Type{
-	"eks": types.ListType{ElemType: types.ObjectType{AttrTypes: eksSourceModelAttrTypes}},
-}
-var eksSourceModelAttrTypes = map[string]attr.Type{
-	"cluster_arn":        fwtypes.ARNType,
-	"subnet_ids":         types.SetType{ElemType: types.StringType},
-	"security_group_ids": types.SetType{ElemType: types.StringType},
-}
-
-func (state *scraperResourceModel) refreshFromOutput(ctx context.Context, out *awstypes.ScraperDescription, diags diag.Diagnostics) {
-
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.ID = flex.StringToFramework(ctx, out.ScraperId)
-	state.Alias = flex.StringToFramework(ctx, out.Alias)
-	if scrapeCfg, ok := out.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
-		state.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(scrapeCfg.Value))
-	}
-
-	setTagsOut(ctx, out.Tags)
-	state.Destination = flattenDestination(ctx, out.Destination, diags)
-	state.Source = flattenSource(ctx, out.Source, diags)
 }
