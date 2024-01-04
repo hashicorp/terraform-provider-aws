@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -152,6 +153,8 @@ func ResourceDeliveryStream() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"parameters": {
+											// See AWS::KinesisFirehose::DeliveryStream CloudFormation resource schema.
+											// uniqueItems is true and insertionOrder is true.
 											Type:     schema.TypeList,
 											Optional: true,
 											Elem: &schema.Resource{
@@ -1578,9 +1581,10 @@ func expandS3DestinationConfigurationBackup(d map[string]interface{}) *firehose.
 }
 
 func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *firehose.ExtendedS3DestinationConfiguration {
+	roleARN := s3["role_arn"].(string)
 	configuration := &firehose.ExtendedS3DestinationConfiguration{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(s3["role_arn"].(string)),
+		RoleARN:   aws.String(roleARN),
 		BufferingHints: &firehose.BufferingHints{
 			IntervalInSeconds: aws.Int64(int64(s3["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int64(int64(s3["buffering_size"].(int))),
@@ -1592,7 +1596,7 @@ func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *fireho
 	}
 
 	if _, ok := s3["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(s3)
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN)
 	}
 
 	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
@@ -1668,9 +1672,10 @@ func expandS3DestinationUpdateBackup(d map[string]interface{}) *firehose.S3Desti
 }
 
 func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *firehose.ExtendedS3DestinationUpdate {
+	roleARN := s3["role_arn"].(string)
 	configuration := &firehose.ExtendedS3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
-		RoleARN:   aws.String(s3["role_arn"].(string)),
+		RoleARN:   aws.String(roleARN),
 		BufferingHints: &firehose.BufferingHints{
 			IntervalInSeconds: aws.Int64((int64)(s3["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffering_size"].(int))),
@@ -1681,7 +1686,7 @@ func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *firehose.Exte
 		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
 		CloudWatchLoggingOptions:          expandCloudWatchLoggingOptions(s3),
-		ProcessingConfiguration:           expandProcessingConfiguration(s3),
+		ProcessingConfiguration:           expandProcessingConfiguration(s3, destinationTypeExtendedS3, roleARN),
 	}
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
@@ -1898,8 +1903,8 @@ func expandDynamicPartitioningConfiguration(s3 map[string]interface{}) *firehose
 	return DynamicPartitioningConfiguration
 }
 
-func expandProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
-	config := s3["processing_configuration"].([]interface{})
+func expandProcessingConfiguration(tfMap map[string]interface{}, destinationType, roleARN string) *firehose.ProcessingConfiguration {
+	config := tfMap["processing_configuration"].([]interface{})
 	if len(config) == 0 || config[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
@@ -1913,16 +1918,25 @@ func expandProcessingConfiguration(s3 map[string]interface{}) *firehose.Processi
 
 	return &firehose.ProcessingConfiguration{
 		Enabled:    aws.Bool(processingConfiguration["enabled"].(bool)),
-		Processors: expandProcessors(processingConfiguration["processors"].([]interface{})),
+		Processors: expandProcessors(processingConfiguration["processors"].([]interface{}), destinationType, roleARN),
 	}
 }
 
-func expandProcessors(processingConfigurationProcessors []interface{}) []*firehose.Processor {
+func expandProcessors(processingConfigurationProcessors []interface{}, destinationType, roleARN string) []*firehose.Processor {
 	processors := []*firehose.Processor{}
 
 	for _, processor := range processingConfigurationProcessors {
 		extractedProcessor := expandProcessor(processor.(map[string]interface{}))
 		if extractedProcessor != nil {
+			// Merge in defaults.
+			for name, value := range defaultProcessorParameters(destinationType, aws.StringValue(extractedProcessor.Type), roleARN) {
+				if !slices.ContainsFunc(extractedProcessor.Parameters, func(param *firehose.ProcessorParameter) bool { return name == aws.StringValue(param.ParameterName) }) {
+					extractedProcessor.Parameters = append(extractedProcessor.Parameters, &firehose.ProcessorParameter{
+						ParameterName:  aws.String(name),
+						ParameterValue: aws.String(value),
+					})
+				}
+			}
 			processors = append(processors, extractedProcessor)
 		}
 	}
@@ -2021,12 +2035,13 @@ func expandPrefix(s3 map[string]interface{}) *string {
 }
 
 func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *firehose.RedshiftDestinationConfiguration {
+	roleARN := redshift["role_arn"].(string)
 	configuration := &firehose.RedshiftDestinationConfiguration{
 		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:    expandRedshiftRetryOptions(redshift),
 		Password:        aws.String(redshift["password"].(string)),
 		Username:        aws.String(redshift["username"].(string)),
-		RoleARN:         aws.String(redshift["role_arn"].(string)),
+		RoleARN:         aws.String(roleARN),
 		CopyCommand:     expandCopyCommand(redshift),
 		S3Configuration: expandS3DestinationConfiguration(redshift["s3_configuration"].([]interface{})),
 	}
@@ -2035,7 +2050,7 @@ func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *fi
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(redshift)
 	}
 	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift)
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift, destinationTypeRedshift, roleARN)
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
@@ -2046,12 +2061,13 @@ func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *fi
 }
 
 func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *firehose.RedshiftDestinationUpdate {
+	roleARN := redshift["role_arn"].(string)
 	configuration := &firehose.RedshiftDestinationUpdate{
 		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:   expandRedshiftRetryOptions(redshift),
 		Password:       aws.String(redshift["password"].(string)),
 		Username:       aws.String(redshift["username"].(string)),
-		RoleARN:        aws.String(redshift["role_arn"].(string)),
+		RoleARN:        aws.String(roleARN),
 		CopyCommand:    expandCopyCommand(redshift),
 	}
 
@@ -2066,7 +2082,7 @@ func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *firehose.
 		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(redshift)
 	}
 	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift)
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift, destinationTypeRedshift, roleARN)
 	}
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
@@ -2083,11 +2099,12 @@ func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *firehose.
 }
 
 func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *firehose.ElasticsearchDestinationConfiguration {
+	roleARN := es["role_arn"].(string)
 	config := &firehose.ElasticsearchDestinationConfiguration{
 		BufferingHints:  expandElasticsearchBufferingHints(es),
 		IndexName:       aws.String(es["index_name"].(string)),
 		RetryOptions:    expandElasticsearchRetryOptions(es),
-		RoleARN:         aws.String(es["role_arn"].(string)),
+		RoleARN:         aws.String(roleARN),
 		TypeName:        aws.String(es["type_name"].(string)),
 		S3Configuration: expandS3DestinationConfiguration(es["s3_configuration"].([]interface{})),
 	}
@@ -2105,7 +2122,7 @@ func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *fir
 	}
 
 	if _, ok := es["processing_configuration"]; ok {
-		config.ProcessingConfiguration = expandProcessingConfiguration(es)
+		config.ProcessingConfiguration = expandProcessingConfiguration(es, destinationTypeElasticsearch, roleARN)
 	}
 
 	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
@@ -2123,11 +2140,12 @@ func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *fir
 }
 
 func expandElasticsearchDestinationUpdate(es map[string]interface{}) *firehose.ElasticsearchDestinationUpdate {
+	roleARN := es["role_arn"].(string)
 	update := &firehose.ElasticsearchDestinationUpdate{
 		BufferingHints: expandElasticsearchBufferingHints(es),
 		IndexName:      aws.String(es["index_name"].(string)),
 		RetryOptions:   expandElasticsearchRetryOptions(es),
-		RoleARN:        aws.String(es["role_arn"].(string)),
+		RoleARN:        aws.String(roleARN),
 		TypeName:       aws.String(es["type_name"].(string)),
 		S3Update:       expandS3DestinationUpdate(es["s3_configuration"].([]interface{})),
 	}
@@ -2145,7 +2163,7 @@ func expandElasticsearchDestinationUpdate(es map[string]interface{}) *firehose.E
 	}
 
 	if _, ok := es["processing_configuration"]; ok {
-		update.ProcessingConfiguration = expandProcessingConfiguration(es)
+		update.ProcessingConfiguration = expandProcessingConfiguration(es, destinationTypeElasticsearch, roleARN)
 	}
 
 	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
@@ -2155,129 +2173,133 @@ func expandElasticsearchDestinationUpdate(es map[string]interface{}) *firehose.E
 	return update
 }
 
-func expandAmazonopensearchserviceDestinationConfiguration(es map[string]interface{}) *firehose.AmazonopensearchserviceDestinationConfiguration {
+func expandAmazonopensearchserviceDestinationConfiguration(os map[string]interface{}) *firehose.AmazonopensearchserviceDestinationConfiguration {
+	roleARN := os["role_arn"].(string)
 	config := &firehose.AmazonopensearchserviceDestinationConfiguration{
-		BufferingHints:  expandAmazonopensearchserviceBufferingHints(es),
-		IndexName:       aws.String(es["index_name"].(string)),
-		RetryOptions:    expandAmazonopensearchserviceRetryOptions(es),
-		RoleARN:         aws.String(es["role_arn"].(string)),
-		TypeName:        aws.String(es["type_name"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(es["s3_configuration"].([]interface{})),
+		BufferingHints:  expandAmazonopensearchserviceBufferingHints(os),
+		IndexName:       aws.String(os["index_name"].(string)),
+		RetryOptions:    expandAmazonopensearchserviceRetryOptions(os),
+		RoleARN:         aws.String(roleARN),
+		TypeName:        aws.String(os["type_name"].(string)),
+		S3Configuration: expandS3DestinationConfiguration(os["s3_configuration"].([]interface{})),
 	}
 
-	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
+	if v, ok := os["domain_arn"]; ok && v.(string) != "" {
 		config.DomainARN = aws.String(v.(string))
 	}
 
-	if v, ok := es["cluster_endpoint"]; ok && v.(string) != "" {
+	if v, ok := os["cluster_endpoint"]; ok && v.(string) != "" {
 		config.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es["cloudwatch_logging_options"]; ok {
-		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
+	if _, ok := os["cloudwatch_logging_options"]; ok {
+		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(os)
 	}
 
-	if _, ok := es["processing_configuration"]; ok {
-		config.ProcessingConfiguration = expandProcessingConfiguration(es)
+	if _, ok := os["processing_configuration"]; ok {
+		config.ProcessingConfiguration = expandProcessingConfiguration(os, destinationTypeOpenSearch, roleARN)
 	}
 
-	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
+	if indexRotationPeriod, ok := os["index_rotation_period"]; ok {
 		config.IndexRotationPeriod = aws.String(indexRotationPeriod.(string))
 	}
-	if s3BackupMode, ok := es["s3_backup_mode"]; ok {
+	if s3BackupMode, ok := os["s3_backup_mode"]; ok {
 		config.S3BackupMode = aws.String(s3BackupMode.(string))
 	}
 
-	if _, ok := es["vpc_config"]; ok {
-		config.VpcConfiguration = expandVPCConfiguration(es)
+	if _, ok := os["vpc_config"]; ok {
+		config.VpcConfiguration = expandVPCConfiguration(os)
 	}
 
 	return config
 }
 
-func expandAmazonopensearchserviceDestinationUpdate(es map[string]interface{}) *firehose.AmazonopensearchserviceDestinationUpdate {
+func expandAmazonopensearchserviceDestinationUpdate(os map[string]interface{}) *firehose.AmazonopensearchserviceDestinationUpdate {
+	roleARN := os["role_arn"].(string)
 	update := &firehose.AmazonopensearchserviceDestinationUpdate{
-		BufferingHints: expandAmazonopensearchserviceBufferingHints(es),
-		IndexName:      aws.String(es["index_name"].(string)),
-		RetryOptions:   expandAmazonopensearchserviceRetryOptions(es),
-		RoleARN:        aws.String(es["role_arn"].(string)),
-		TypeName:       aws.String(es["type_name"].(string)),
-		S3Update:       expandS3DestinationUpdate(es["s3_configuration"].([]interface{})),
+		BufferingHints: expandAmazonopensearchserviceBufferingHints(os),
+		IndexName:      aws.String(os["index_name"].(string)),
+		RetryOptions:   expandAmazonopensearchserviceRetryOptions(os),
+		RoleARN:        aws.String(roleARN),
+		TypeName:       aws.String(os["type_name"].(string)),
+		S3Update:       expandS3DestinationUpdate(os["s3_configuration"].([]interface{})),
 	}
 
-	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
+	if v, ok := os["domain_arn"]; ok && v.(string) != "" {
 		update.DomainARN = aws.String(v.(string))
 	}
 
-	if v, ok := es["cluster_endpoint"]; ok && v.(string) != "" {
+	if v, ok := os["cluster_endpoint"]; ok && v.(string) != "" {
 		update.ClusterEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es["cloudwatch_logging_options"]; ok {
-		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
+	if _, ok := os["cloudwatch_logging_options"]; ok {
+		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(os)
 	}
 
-	if _, ok := es["processing_configuration"]; ok {
-		update.ProcessingConfiguration = expandProcessingConfiguration(es)
+	if _, ok := os["processing_configuration"]; ok {
+		update.ProcessingConfiguration = expandProcessingConfiguration(os, destinationTypeOpenSearch, roleARN)
 	}
 
-	if indexRotationPeriod, ok := es["index_rotation_period"]; ok {
+	if indexRotationPeriod, ok := os["index_rotation_period"]; ok {
 		update.IndexRotationPeriod = aws.String(indexRotationPeriod.(string))
 	}
 
 	return update
 }
 
-func expandAmazonOpenSearchServerlessDestinationConfiguration(es map[string]interface{}) *firehose.AmazonOpenSearchServerlessDestinationConfiguration {
+func expandAmazonOpenSearchServerlessDestinationConfiguration(oss map[string]interface{}) *firehose.AmazonOpenSearchServerlessDestinationConfiguration {
+	roleARN := oss["role_arn"].(string)
 	config := &firehose.AmazonOpenSearchServerlessDestinationConfiguration{
-		BufferingHints:  expandAmazonOpenSearchServerlessBufferingHints(es),
-		IndexName:       aws.String(es["index_name"].(string)),
-		RetryOptions:    expandAmazonOpenSearchServerlessRetryOptions(es),
-		RoleARN:         aws.String(es["role_arn"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(es["s3_configuration"].([]interface{})),
+		BufferingHints:  expandAmazonOpenSearchServerlessBufferingHints(oss),
+		IndexName:       aws.String(oss["index_name"].(string)),
+		RetryOptions:    expandAmazonOpenSearchServerlessRetryOptions(oss),
+		RoleARN:         aws.String(roleARN),
+		S3Configuration: expandS3DestinationConfiguration(oss["s3_configuration"].([]interface{})),
 	}
 
-	if v, ok := es["collection_endpoint"]; ok && v.(string) != "" {
+	if v, ok := oss["collection_endpoint"]; ok && v.(string) != "" {
 		config.CollectionEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es["cloudwatch_logging_options"]; ok {
-		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
+	if _, ok := oss["cloudwatch_logging_options"]; ok {
+		config.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(oss)
 	}
 
-	if _, ok := es["processing_configuration"]; ok {
-		config.ProcessingConfiguration = expandProcessingConfiguration(es)
+	if _, ok := oss["processing_configuration"]; ok {
+		config.ProcessingConfiguration = expandProcessingConfiguration(oss, destinationTypeOpenSearchServerless, roleARN)
 	}
 
-	if s3BackupMode, ok := es["s3_backup_mode"]; ok {
+	if s3BackupMode, ok := oss["s3_backup_mode"]; ok {
 		config.S3BackupMode = aws.String(s3BackupMode.(string))
 	}
 
-	if _, ok := es["vpc_config"]; ok {
-		config.VpcConfiguration = expandVPCConfiguration(es)
+	if _, ok := oss["vpc_config"]; ok {
+		config.VpcConfiguration = expandVPCConfiguration(oss)
 	}
 
 	return config
 }
 
-func expandAmazonOpenSearchServerlessDestinationUpdate(es map[string]interface{}) *firehose.AmazonOpenSearchServerlessDestinationUpdate {
+func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]interface{}) *firehose.AmazonOpenSearchServerlessDestinationUpdate {
+	roleARN := oss["role_arn"].(string)
 	update := &firehose.AmazonOpenSearchServerlessDestinationUpdate{
-		BufferingHints: expandAmazonOpenSearchServerlessBufferingHints(es),
-		IndexName:      aws.String(es["index_name"].(string)),
-		RetryOptions:   expandAmazonOpenSearchServerlessRetryOptions(es),
-		RoleARN:        aws.String(es["role_arn"].(string)),
-		S3Update:       expandS3DestinationUpdate(es["s3_configuration"].([]interface{})),
+		BufferingHints: expandAmazonOpenSearchServerlessBufferingHints(oss),
+		IndexName:      aws.String(oss["index_name"].(string)),
+		RetryOptions:   expandAmazonOpenSearchServerlessRetryOptions(oss),
+		RoleARN:        aws.String(roleARN),
+		S3Update:       expandS3DestinationUpdate(oss["s3_configuration"].([]interface{})),
 	}
-	if v, ok := es["collection_endpoint"]; ok && v.(string) != "" {
+	if v, ok := oss["collection_endpoint"]; ok && v.(string) != "" {
 		update.CollectionEndpoint = aws.String(v.(string))
 	}
 
-	if _, ok := es["cloudwatch_logging_options"]; ok {
-		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(es)
+	if _, ok := oss["cloudwatch_logging_options"]; ok {
+		update.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(oss)
 	}
 
-	if _, ok := es["processing_configuration"]; ok {
-		update.ProcessingConfiguration = expandProcessingConfiguration(es)
+	if _, ok := oss["processing_configuration"]; ok {
+		update.ProcessingConfiguration = expandProcessingConfiguration(oss, destinationTypeOpenSearchServerless, roleARN)
 	}
 
 	return update
@@ -2294,7 +2316,7 @@ func expandSplunkDestinationConfiguration(splunk map[string]interface{}) *fireho
 	}
 
 	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk)
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
 	}
 
 	if _, ok := splunk["cloudwatch_logging_options"]; ok {
@@ -2318,7 +2340,7 @@ func expandSplunkDestinationUpdate(splunk map[string]interface{}) *firehose.Splu
 	}
 
 	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk)
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
 	}
 
 	if _, ok := splunk["cloudwatch_logging_options"]; ok {
@@ -2331,75 +2353,77 @@ func expandSplunkDestinationUpdate(splunk map[string]interface{}) *firehose.Splu
 	return configuration
 }
 
-func expandHTTPEndpointDestinationConfiguration(HttpEndpoint map[string]interface{}) *firehose.HttpEndpointDestinationConfiguration {
+func expandHTTPEndpointDestinationConfiguration(httpEndpoint map[string]interface{}) *firehose.HttpEndpointDestinationConfiguration {
+	roleARN := httpEndpoint["role_arn"].(string)
 	configuration := &firehose.HttpEndpointDestinationConfiguration{
-		RetryOptions:    expandHTTPEndpointRetryOptions(HttpEndpoint),
-		RoleARN:         aws.String(HttpEndpoint["role_arn"].(string)),
-		S3Configuration: expandS3DestinationConfiguration(HttpEndpoint["s3_configuration"].([]interface{})),
+		RetryOptions:    expandHTTPEndpointRetryOptions(httpEndpoint),
+		RoleARN:         aws.String(roleARN),
+		S3Configuration: expandS3DestinationConfiguration(httpEndpoint["s3_configuration"].([]interface{})),
 	}
 
-	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(HttpEndpoint)
+	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(httpEndpoint)
 
 	bufferingHints := &firehose.HttpEndpointBufferingHints{}
 
-	if bufferingInterval, ok := HttpEndpoint["buffering_interval"].(int); ok {
+	if bufferingInterval, ok := httpEndpoint["buffering_interval"].(int); ok {
 		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
 	}
-	if bufferingSize, ok := HttpEndpoint["buffering_size"].(int); ok {
+	if bufferingSize, ok := httpEndpoint["buffering_size"].(int); ok {
 		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
 	}
 	configuration.BufferingHints = bufferingHints
 
-	if _, ok := HttpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(HttpEndpoint)
+	if _, ok := httpEndpoint["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(httpEndpoint, destinationTypeHTTPEndpoint, roleARN)
 	}
 
-	if _, ok := HttpEndpoint["request_configuration"]; ok {
-		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(HttpEndpoint)
+	if _, ok := httpEndpoint["request_configuration"]; ok {
+		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(httpEndpoint)
 	}
 
-	if _, ok := HttpEndpoint["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(HttpEndpoint)
+	if _, ok := httpEndpoint["cloudwatch_logging_options"]; ok {
+		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(httpEndpoint)
 	}
-	if s3BackupMode, ok := HttpEndpoint["s3_backup_mode"]; ok {
+	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 	}
 
 	return configuration
 }
 
-func expandHTTPEndpointDestinationUpdate(HttpEndpoint map[string]interface{}) *firehose.HttpEndpointDestinationUpdate {
+func expandHTTPEndpointDestinationUpdate(httpEndpoint map[string]interface{}) *firehose.HttpEndpointDestinationUpdate {
+	roleARN := httpEndpoint["role_arn"].(string)
 	configuration := &firehose.HttpEndpointDestinationUpdate{
-		RetryOptions: expandHTTPEndpointRetryOptions(HttpEndpoint),
-		RoleARN:      aws.String(HttpEndpoint["role_arn"].(string)),
-		S3Update:     expandS3DestinationUpdate(HttpEndpoint["s3_configuration"].([]interface{})),
+		RetryOptions: expandHTTPEndpointRetryOptions(httpEndpoint),
+		RoleARN:      aws.String(roleARN),
+		S3Update:     expandS3DestinationUpdate(httpEndpoint["s3_configuration"].([]interface{})),
 	}
 
-	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(HttpEndpoint)
+	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(httpEndpoint)
 
 	bufferingHints := &firehose.HttpEndpointBufferingHints{}
 
-	if bufferingInterval, ok := HttpEndpoint["buffering_interval"].(int); ok {
+	if bufferingInterval, ok := httpEndpoint["buffering_interval"].(int); ok {
 		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
 	}
-	if bufferingSize, ok := HttpEndpoint["buffering_size"].(int); ok {
+	if bufferingSize, ok := httpEndpoint["buffering_size"].(int); ok {
 		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
 	}
 	configuration.BufferingHints = bufferingHints
 
-	if _, ok := HttpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(HttpEndpoint)
+	if _, ok := httpEndpoint["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = expandProcessingConfiguration(httpEndpoint, destinationTypeHTTPEndpoint, roleARN)
 	}
 
-	if _, ok := HttpEndpoint["request_configuration"]; ok {
-		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(HttpEndpoint)
+	if _, ok := httpEndpoint["request_configuration"]; ok {
+		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(httpEndpoint)
 	}
 
-	if _, ok := HttpEndpoint["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(HttpEndpoint)
+	if _, ok := httpEndpoint["cloudwatch_logging_options"]; ok {
+		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(httpEndpoint)
 	}
 
-	if s3BackupMode, ok := HttpEndpoint["s3_backup_mode"]; ok {
+	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 	}
 
@@ -2704,7 +2728,7 @@ func flattenElasticsearchDestinationDescription(description *firehose.Elasticsea
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
 		"vpc_config":                 flattenVPCConfigurationDescription(description.VpcConfigurationDescription),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeElasticsearch, aws.StringValue(description.RoleARN)),
 	}
 
 	if description.DomainARN != nil {
@@ -2741,7 +2765,7 @@ func flattenAmazonopensearchserviceDestinationDescription(description *firehose.
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
 		"vpc_config":                 flattenVPCConfigurationDescription(description.VpcConfigurationDescription),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeOpenSearch, aws.StringValue(description.RoleARN)),
 	}
 
 	if description.DomainARN != nil {
@@ -2776,7 +2800,7 @@ func flattenAmazonOpenSearchServerlessDestinationDescription(description *fireho
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
 		"vpc_config":                 flattenVPCConfigurationDescription(description.VpcConfigurationDescription),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeOpenSearchServerless, aws.StringValue(description.RoleARN)),
 	}
 
 	if description.CollectionEndpoint != nil {
@@ -2822,7 +2846,7 @@ func flattenExtendedS3DestinationDescription(description *firehose.ExtendedS3Des
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
 		"error_output_prefix":                  aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                               aws.StringValue(description.Prefix),
-		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeExtendedS3, aws.StringValue(description.RoleARN)),
 		"dynamic_partitioning_configuration":   flattenDynamicPartitioningConfiguration(description.DynamicPartitioningConfiguration),
 		"role_arn":                             aws.StringValue(description.RoleARN),
 		"s3_backup_configuration":              flattenS3DestinationDescription(description.S3BackupDescription),
@@ -2850,7 +2874,7 @@ func flattenRedshiftDestinationDescription(description *firehose.RedshiftDestina
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":            aws.StringValue(description.ClusterJDBCURL),
 		"password":                   configuredPassword,
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeRedshift, aws.StringValue(description.RoleARN)),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_configuration":    flattenS3DestinationDescription(description.S3BackupDescription),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
@@ -2881,7 +2905,7 @@ func flattenSplunkDestinationDescription(description *firehose.SplunkDestination
 		"hec_endpoint_type":          aws.StringValue(description.HECEndpointType),
 		"hec_endpoint":               aws.StringValue(description.HECEndpoint),
 		"hec_token":                  aws.StringValue(description.HECToken),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, ""),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeSplunk, ""),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
 	}
@@ -3162,38 +3186,30 @@ func flattenHTTPEndpointRequestConfiguration(rc *firehose.HttpEndpointRequestCon
 	return requestConfiguration
 }
 
-func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleArn string) []map[string]interface{} {
+func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, destinationType, roleARN string) []map[string]interface{} {
 	if pc == nil {
 		return []map[string]interface{}{}
 	}
 
 	processingConfiguration := make([]map[string]interface{}, 1)
 
-	// It is necessary to explicitly filter this out
-	// to prevent diffs during routine use and retain the ability
-	// to show diffs if any field has drifted.
-	// https://docs.aws.amazon.com/firehose/latest/dev/data-transformation.html.
-	defaultLambdaParams := map[string]string{
-		"NumberOfRetries":         "3",
-		"RoleArn":                 roleArn,
-		"BufferSizeInMBs":         "1",
-		"BufferIntervalInSeconds": "60",
-	}
-
 	processors := make([]interface{}, len(pc.Processors))
 	for i, p := range pc.Processors {
 		t := aws.StringValue(p.Type)
 		parameters := make([]interface{}, 0)
 
+		// It is necessary to explicitly filter this out
+		// to prevent diffs during routine use and retain the ability
+		// to show diffs if any field has drifted.
+		defaultProcessorParameters := defaultProcessorParameters(destinationType, t, roleARN)
+
 		for _, params := range p.Parameters {
 			name := aws.StringValue(params.ParameterName)
 			value := aws.StringValue(params.ParameterValue)
 
-			if t == firehose.ProcessorTypeLambda {
-				// Ignore defaults
-				if v, ok := defaultLambdaParams[name]; ok && v == value {
-					continue
-				}
+			// Ignore defaults.
+			if v, ok := defaultProcessorParameters[name]; ok && v == value {
+				continue
 			}
 
 			parameters = append(parameters, map[string]interface{}{
@@ -3258,7 +3274,7 @@ func flattenHTTPEndpointDestinationDescription(description *firehose.HttpEndpoin
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
 		"request_configuration":      flattenHTTPEndpointRequestConfiguration(description.RequestConfiguration),
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.StringValue(description.RoleARN)),
 	}
 
 	if description.RetryOptions != nil {
@@ -3287,4 +3303,27 @@ func isDeliveryStreamOptionDisabled(v interface{}) bool {
 	}
 
 	return !enabled
+}
+
+// See https://docs.aws.amazon.com/firehose/latest/dev/data-transformation.html.
+func defaultProcessorParameters(destinationType, processorType, roleARN string) map[string]string {
+	switch processorType {
+	case firehose.ProcessorTypeLambda:
+		params := map[string]string{
+			firehose.ProcessorParameterNameNumberOfRetries:         "3",
+			firehose.ProcessorParameterNameBufferIntervalInSeconds: "60",
+		}
+		if roleARN != "" {
+			params[firehose.ProcessorParameterNameRoleArn] = roleARN
+		}
+		switch destinationType {
+		case destinationTypeSplunk:
+			params[firehose.ProcessorParameterNameBufferSizeInMbs] = "0.25"
+		default:
+			params[firehose.ProcessorParameterNameBufferSizeInMbs] = "1"
+		}
+		return params
+	default:
+		return make(map[string]string)
+	}
 }
