@@ -4,9 +4,9 @@
 package ec2_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -67,7 +67,7 @@ func TestAccVPCPrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCPrefixListDataSourceConfig_nameDoesNotOverrideFilter,
-				ExpectError: regexp.MustCompile(`no matching EC2 Prefix List found`),
+				ExpectError: regexache.MustCompile(`no matching EC2 Prefix List found`),
 			},
 		},
 	})

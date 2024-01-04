@@ -214,9 +214,9 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `type` - (Required) The type of this configuration.  For Self Managed Kafka you will need to supply blocks for type `VPC_SUBNET` and `VPC_SECURITY_GROUP`.
 * `uri` - (Required) The URI for this configuration.  For type `VPC_SUBNET` the value should be `subnet:subnet_id` where `subnet_id` is the value you would find in an aws_subnet resource's id attribute.  For type `VPC_SECURITY_GROUP` the value should be `security_group:security_group_id` where `security_group_id` is the value you would find in an aws_security_group resource's id attribute.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
 * `last_modified` - The date this resource was last modified.
@@ -230,8 +230,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda event source mappings can be imported using the `UUID` (event source mapping identifier), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
 
+```terraform
+import {
+  to = aws_lambda_event_source_mapping.event_source_mapping
+  id = "12345kxodurf3443"
+}
 ```
-$ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
+
+Using `terraform import`, import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
+
+```console
+% terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```

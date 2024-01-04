@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +40,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -76,8 +76,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexache.MustCompile("eni-.*")),
 				),
 			},
 			{
@@ -270,10 +269,10 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 func testAccVPCTrafficMirrorTargetConfig_eni(rName, description string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test[0].id
 
@@ -285,6 +284,10 @@ resource "aws_instance" "test" {
 resource "aws_ec2_traffic_mirror_target" "test" {
   description          = %[2]q
   network_interface_id = aws_instance.test.primary_network_interface_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, description))
 }
@@ -339,10 +342,14 @@ func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string 
 		testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_target" "test" {
-  description                       = %[1]q
+  description                       = %[2]q
   gateway_load_balancer_endpoint_id = aws_vpc_endpoint.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, description))
+`, rName, description))
 }
 
 func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {

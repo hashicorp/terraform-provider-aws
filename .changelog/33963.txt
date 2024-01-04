@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_iam_role: Fix refreshing `permission_boundary` when deleted outside of Terraform
+```
+
+```release-note:bug
+resource/aws_iam_user: Fix refreshing `permission_boundary` when deleted outside of Terraform
+```

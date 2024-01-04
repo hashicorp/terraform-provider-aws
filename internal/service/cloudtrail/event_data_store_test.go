@@ -6,9 +6,9 @@ package cloudtrail_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -42,7 +42,7 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 						"field":    "eventCategory",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "Default management events"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexp.MustCompile(`eventdatastore/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
@@ -76,7 +76,7 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 				Config: testAccEventDataStoreConfig_kmsKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexp.MustCompile(`eventdatastore/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),

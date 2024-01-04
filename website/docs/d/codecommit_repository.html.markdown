@@ -20,13 +20,13 @@ data "aws_codecommit_repository" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `repository_name` - (Required) Name for the repository. This needs to be less than 100 characters.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `repository_id` - ID of the repository
 * `arn` - ARN of the repository

@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Collection",
 		},
 		{
+			Factory: newDataSourceLifecyclePolicy,
+			Name:    "Lifecycle Policy",
+		},
+		{
 			Factory: newDataSourceSecurityConfig,
 			Name:    "Security Config",
 		},
@@ -42,6 +46,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory: newResourceLifecyclePolicy,
+			Name:    "Lifecycle Policy",
 		},
 		{
 			Factory: newResourceSecurityConfig,
@@ -82,7 +90,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return opensearchserverless_sdkv2.NewFromConfig(cfg, func(o *opensearchserverless_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = opensearchserverless_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

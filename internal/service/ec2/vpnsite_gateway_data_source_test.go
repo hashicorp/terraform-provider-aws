@@ -5,9 +5,9 @@ package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -59,7 +59,7 @@ func TestAccSiteVPNGatewayDataSource_attached(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", "aws_vpn_gateway.test", "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "attached_vpc_id", "aws_vpc.test", "id"),
-					resource.TestMatchResourceAttr(dataSourceName, "state", regexp.MustCompile("(?i)available")),
+					resource.TestMatchResourceAttr(dataSourceName, "state", regexache.MustCompile("(?i)available")),
 				),
 			},
 		},

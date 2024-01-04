@@ -6,10 +6,10 @@ package worklink_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -184,7 +184,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 			},
 			{
 				Config:      testAccFleetConfig_basic(rName),
-				ExpectError: regexp.MustCompile(`Company Network Configuration cannot be removed`),
+				ExpectError: regexache.MustCompile(`Company Network Configuration cannot be removed`),
 			},
 		},
 	})
@@ -205,7 +205,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 				Config: testAccFleetConfig_deviceCaCertificate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 			{
@@ -251,7 +251,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 			},
 			{
 				Config:      testAccFleetConfig_basic(rName),
-				ExpectError: regexp.MustCompile(`Identity Provider Configuration cannot be removed`),
+				ExpectError: regexache.MustCompile(`Identity Provider Configuration cannot be removed`),
 			},
 		},
 	})

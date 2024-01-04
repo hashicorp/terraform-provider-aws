@@ -24,7 +24,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 	thingName := sdkacctest.RandomWithPrefix("tf-acc")
 	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

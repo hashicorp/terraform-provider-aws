@@ -5,11 +5,11 @@ package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -182,7 +182,7 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
-					resource.TestMatchResourceAttr(resourceName, "source_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "source_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
@@ -412,7 +412,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rName),
-				ExpectError: regexp.MustCompile(`expected type to be one of \[egress ingress\]`),
+				ExpectError: regexache.MustCompile(`expected type to be one of \[egress ingress\]`),
 			},
 		},
 	})
@@ -430,11 +430,11 @@ func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rName),
-				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv6CIDR(rName),
-				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
 	})
@@ -692,7 +692,7 @@ func TestAccVPCSecurityGroupRule_prefixListEmptyString(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_prefixListEmptyString(rName),
-				ExpectError: regexp.MustCompile(`prefix_list_ids.0 must not be empty`),
+				ExpectError: regexache.MustCompile(`prefix_list_ids.0 must not be empty`),
 			},
 		},
 	})

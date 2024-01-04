@@ -77,8 +77,6 @@ func testAccRoutingProfile_basic(t *testing.T) {
 }
 
 func testAccRoutingProfile_disappears(t *testing.T) {
-	t.Skip("Routing Profiles do not support deletion today")
-
 	ctx := acctest.Context(t)
 
 	var v connect.DescribeRoutingProfileOutput

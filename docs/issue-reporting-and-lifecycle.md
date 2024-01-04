@@ -49,7 +49,8 @@ We encourage opening new issues rather than commenting on closed issues if a pro
 
 ## Issue Lifecycle
 
-**Note:** For detailed information on how issues are prioritized, see the [prioritization guide](prioritization.md).
+!!! tip
+    For detailed information on how issues are prioritized, see the [prioritization guide](prioritization.md).
 
 1. The issue is reported.
 

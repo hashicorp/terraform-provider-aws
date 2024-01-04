@@ -14,9 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_db_snapshot")
+// @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
+// @Tags
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
@@ -31,18 +35,16 @@ func DataSourceSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			"db_instance_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_instance_identifier", "db_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"db_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"db_snapshot_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_instance_identifier", "db_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"encrypted": {
 				Type:     schema.TypeBool,
@@ -115,6 +117,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -144,25 +147,32 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
+	f := tfslices.PredicateTrue[*rds.DBSnapshot]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		f = func(v *rds.DBSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
+	}
+
+	snapshots, err := findDBSnapshots(ctx, conn, input, f)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
 	}
 
-	if len(output.DBSnapshots) < 1 {
+	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBSnapshot
-	if len(output.DBSnapshots) > 1 {
+	if len(snapshots) > 1 {
 		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentDBSnapshot(output.DBSnapshots)
+			snapshot = mostRecentDBSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = output.DBSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
@@ -188,6 +198,8 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("status", snapshot.Status)
 	d.Set("storage_type", snapshot.StorageType)
 	d.Set("vpc_id", snapshot.VpcId)
+
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

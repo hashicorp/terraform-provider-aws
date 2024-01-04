@@ -4,9 +4,9 @@
 package pipes
 
 import (
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,7 +17,7 @@ import (
 )
 
 func sourceParametersSchema() *schema.Schema {
-	verifySecretsManagerARN := validation.StringMatch(regexp.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}):(\d{12}):secret:.+)$`), "")
+	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}):(\d{12}):secret:.+)$`), "")
 
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -73,7 +73,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 1000),
-									validation.StringMatch(regexp.MustCompile(`^[\s\S]*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[\s\S]*$`), ""),
 								),
 							},
 						},
@@ -285,7 +285,7 @@ func sourceParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 200),
-									validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
 								),
 							},
 							"credentials": {
@@ -325,7 +325,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 249),
-									validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
 								),
 							},
 						},
@@ -378,7 +378,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 1000),
-									validation.StringMatch(regexp.MustCompile(`^[\s\S]*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[\s\S]*$`), ""),
 								),
 							},
 							"virtual_host": {
@@ -387,7 +387,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 200),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-\/*:_+=.@-]*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\/*:+=.@-]*$`), ""),
 								),
 							},
 						},
@@ -417,7 +417,7 @@ func sourceParametersSchema() *schema.Schema {
 									Type: schema.TypeString,
 									ValidateFunc: validation.All(
 										validation.StringLenBetween(1, 300),
-										validation.StringMatch(regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]):[0-9]{1,5}$`), ""),
+										validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}$`), ""),
 									),
 								},
 							},
@@ -433,7 +433,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 200),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-\/*:_+=.@-]*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\/*:+=.@-]*$`), ""),
 								),
 							},
 							"credentials": {
@@ -488,7 +488,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 249),
-									validation.StringMatch(regexp.MustCompile(`^[^.]([a-zA-Z0-9\-_.]+)$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
 								),
 							},
 							"vpc": {
@@ -505,7 +505,7 @@ func sourceParametersSchema() *schema.Schema {
 												Type: schema.TypeString,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(1, 1024),
-													validation.StringMatch(regexp.MustCompile(`^sg-[0-9a-zA-Z]*$`), ""),
+													validation.StringMatch(regexache.MustCompile(`^sg-[0-9A-Za-z]*$`), ""),
 												),
 											},
 										},
@@ -517,7 +517,7 @@ func sourceParametersSchema() *schema.Schema {
 												Type: schema.TypeString,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(1, 1024),
-													validation.StringMatch(regexp.MustCompile(`^subnet-[0-9a-z]*$`), ""),
+													validation.StringMatch(regexache.MustCompile(`^subnet-[0-9a-z]*$`), ""),
 												),
 											},
 										},
@@ -735,7 +735,7 @@ func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}
 
 	apiObject := &types.UpdatePipeSourceActiveMQBrokerParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -815,7 +815,7 @@ func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}
 
 	apiObject := &types.UpdatePipeSourceDynamoDBStreamParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -841,7 +841,7 @@ func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}
 		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
 	}
 
-	if v, ok := tfMap["parallelization_factor"].(int); ok {
+	if v, ok := tfMap["parallelization_factor"].(int); ok && v != 0 {
 		apiObject.ParallelizationFactor = aws.Int32(int32(v))
 	}
 
@@ -917,7 +917,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 
 	apiObject := &types.UpdatePipeSourceKinesisStreamParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -931,7 +931,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok {
+	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok && v != 0 {
 		apiObject.MaximumRecordAgeInSeconds = aws.Int32(int32(v))
 	}
 
@@ -943,7 +943,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
 	}
 
-	if v, ok := tfMap["parallelization_factor"].(int); ok {
+	if v, ok := tfMap["parallelization_factor"].(int); ok && v != 0 {
 		apiObject.ParallelizationFactor = aws.Int32(int32(v))
 	}
 
@@ -991,7 +991,7 @@ func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]inte
 
 	apiObject := &types.UpdatePipeSourceManagedStreamingKafkaParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -1067,7 +1067,7 @@ func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}
 
 	apiObject := &types.UpdatePipeSourceRabbitMQBrokerParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -1243,7 +1243,7 @@ func expandUpdatePipeSourceSQSQueueParameters(tfMap map[string]interface{}) *typ
 
 	apiObject := &types.UpdatePipeSourceSqsQueueParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 

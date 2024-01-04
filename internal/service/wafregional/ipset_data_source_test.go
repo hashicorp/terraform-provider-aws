@@ -5,9 +5,9 @@ package wafregional_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -27,7 +27,7 @@ func TestAccWAFRegionalIPSetDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIPSetDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`WAF Regional IP Set not found`),
+				ExpectError: regexache.MustCompile(`WAF Regional IP Set not found`),
 			},
 			{
 				Config: testAccIPSetDataSourceConfig_name(name),

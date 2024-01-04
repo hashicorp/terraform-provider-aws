@@ -6,10 +6,10 @@ package workspaces_test
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -80,7 +80,7 @@ func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBundleDataSourceConfig_idAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
-				ExpectError: regexp.MustCompile("\"bundle_id\": conflicts with owner"),
+				ExpectError: regexache.MustCompile("\"bundle_id\": conflicts with owner"),
 			},
 		},
 	})

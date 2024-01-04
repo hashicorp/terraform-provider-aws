@@ -24,14 +24,14 @@ data "aws_lambda_function_url" "existing" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `function_name` - (Required) he name (or ARN) of the Lambda function.
+* `function_name` - (Required) The name (or ARN) of the Lambda function.
 * `qualifier` - (Optional) Alias name or `"$LATEST"`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `authorization_type` - Type of authentication that the function URL uses.
 * `cors` - The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. See the [`aws_lambda_function_url` resource](/docs/providers/aws/r/lambda_function_url.html) documentation for more details.

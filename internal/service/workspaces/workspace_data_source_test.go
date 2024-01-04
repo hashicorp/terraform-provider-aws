@@ -4,10 +4,10 @@
 package workspaces_test
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -94,7 +94,7 @@ func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceDataSourceConfig_idAndDirectoryIDConflict(),
-				ExpectError: regexp.MustCompile("\"workspace_id\": conflicts with directory_id"),
+				ExpectError: regexache.MustCompile("\"workspace_id\": conflicts with directory_id"),
 			},
 		},
 	})

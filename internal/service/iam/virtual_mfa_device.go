@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -75,7 +75,7 @@ func ResourceVirtualMFADevice() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[\w+=,.@-]+`),
+					regexache.MustCompile(`[\w+=,.@-]+`),
 					"must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-",
 				),
 			},
@@ -270,7 +270,7 @@ func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
 		return "", "", err
 	}
 
-	re := regexp.MustCompile(`^mfa(/|/[\x{0021}-\x{007E}]+/)([-A-Za-z0-9_+=,.@]+)$`)
+	re := regexache.MustCompile(`^mfa(/|/[\x{0021}-\x{007E}]+/)([0-9A-Za-z_+=,.@-]+)$`)
 	matches := re.FindStringSubmatch(arn.Resource)
 	if len(matches) != 3 {
 		return "", "", fmt.Errorf("IAM Virtual MFA Device ARN: invalid resource section (%s)", arn.Resource)

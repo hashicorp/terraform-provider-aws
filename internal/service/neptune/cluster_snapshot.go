@@ -186,8 +186,48 @@ func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Neptune, id stri
 	input := &neptune.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
+	output, err := findClusterSnapshot(ctx, conn, input)
 
-	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBClusterSnapshotIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findClusterSnapshot(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterSnapshotsInput) (*neptune.DBClusterSnapshot, error) {
+	output, err := findClusterSnapshots(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findClusterSnapshots(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterSnapshotsInput) ([]*neptune.DBClusterSnapshot, error) {
+	var output []*neptune.DBClusterSnapshot
+
+	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusterSnapshots {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -200,20 +240,7 @@ func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Neptune, id stri
 		return nil, err
 	}
 
-	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbClusterSnapshot := output.DBClusterSnapshots[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbClusterSnapshot, nil
+	return output, nil
 }
 
 func statusClusterSnapshot(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
@@ -234,8 +261,8 @@ func statusClusterSnapshot(ctx context.Context, conn *neptune.Neptune, id string
 
 func waitClusterSnapshotCreated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBClusterSnapshot, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"available"},
+		Pending:    []string{clusterSnapshotStatusCreating},
+		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusClusterSnapshot(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,

@@ -31,7 +31,7 @@ data "aws_ebs_snapshot_ids" "ebs_volumes" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
 
@@ -41,7 +41,9 @@ The following arguments are supported:
 several valid keys, for a full reference, check out
 [describe-volumes in the AWS CLI reference][1].
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of EBS snapshot IDs, sorted by creation time in descending order.

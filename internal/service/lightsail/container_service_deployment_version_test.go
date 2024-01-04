@@ -6,10 +6,10 @@ package lightsail_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -462,7 +462,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_enableService(t
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccContainerServiceDeploymentVersionConfig_Container_withDisabledService(rName, containerName, true),
-				ExpectError: regexp.MustCompile(`disabled and cannot be deployed to`),
+				ExpectError: regexache.MustCompile(`disabled and cannot be deployed to`),
 			},
 			{
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_withDisabledService(rName, containerName, false),

@@ -34,6 +34,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
+			Name:     "DB Cluster Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceEventCategories,
@@ -42,6 +44,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceInstance,
 			TypeName: "aws_db_instance",
+			Name:     "DB Instance",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceInstances,
@@ -54,6 +58,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSnapshot,
 			TypeName: "aws_db_snapshot",
+			Name:     "DB Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceSubnetGroup,
@@ -91,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
-			Name:     "Cluster Snapshot",
+			Name:     "DB Cluster Snapshot",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "db_cluster_snapshot_arn",
 			},
@@ -225,6 +231,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_role_association",
 		},
 		{
+			Factory:  ResourceCustomDBEngineVersion,
+			TypeName: "aws_rds_custom_db_engine_version",
+			Name:     "Custom DB Engine Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 		},
@@ -256,7 +270,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = rds_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

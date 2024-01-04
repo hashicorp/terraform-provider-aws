@@ -60,7 +60,9 @@ resource "aws_s3_bucket_policy" "allow_cloudtrail_logging" {
 * `region` - (Optional) Name of the region whose AWS CloudTrail account ID is desired.
 Defaults to the region from the AWS provider configuration.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the AWS CloudTrail service account in the selected region.
 * `arn` - ARN of the AWS CloudTrail service account in the selected region.

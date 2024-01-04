@@ -14,4 +14,9 @@ type ServerCapabilities struct {
 	// opt-in to prevent unexpected errors or panics since the
 	// ProposedNewState in PlanResourceChangeRequest will be a null value.
 	PlanDestroy bool
+
+	// GetProviderSchemaOptional signals that this provider does not require
+	// having the GetProviderSchema RPC called first to operate normally. This
+	// means the caller can use a cached copy of the provider's schema instead.
+	GetProviderSchemaOptional bool
 }

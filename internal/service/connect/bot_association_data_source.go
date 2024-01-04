@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_connect_bot_association")
@@ -46,6 +47,8 @@ func DataSourceBotAssociation() *schema.Resource {
 }
 
 func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
@@ -59,19 +62,19 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
 	if err != nil {
-		return diag.Errorf("finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
+		return sdkdiag.AppendErrorf(diags, "finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
 	}
 
 	if lexBot == nil {
-		return diag.Errorf("finding Connect Bot Association (%s,%s) : not found", instanceID, name)
+		return sdkdiag.AppendErrorf(diags, "finding Connect Bot Association (%s,%s) : not found", instanceID, name)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("instance_id", instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
-		return diag.Errorf("setting lex_bot: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)
 	}
 
-	return nil
+	return diags
 }

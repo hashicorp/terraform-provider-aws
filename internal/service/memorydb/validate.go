@@ -4,8 +4,7 @@
 package memorydb
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -30,7 +29,7 @@ func validateResourceName(maxLength int) schema.SchemaValidateFunc {
 	return validation.All(
 		validateResourceNamePrefix(maxLength),
 		validation.StringDoesNotMatch(
-			regexp.MustCompile(`[-]$`),
+			regexache.MustCompile(`[-]$`),
 			"The name may not end with a hyphen."),
 	)
 }
@@ -39,10 +38,10 @@ func validateResourceNamePrefix(maxLength int) schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(1, maxLength),
 		validation.StringDoesNotMatch(
-			regexp.MustCompile(`[-][-]`),
+			regexache.MustCompile(`[-][-]`),
 			"The name may not contain two consecutive hyphens."),
 		validation.StringMatch(
-			regexp.MustCompile(`^[a-z0-9-]+$`),
+			regexache.MustCompile(`^[0-9a-z-]+$`),
 			"Only lowercase alphanumeric characters and hyphens are allowed."),
 	)
 }

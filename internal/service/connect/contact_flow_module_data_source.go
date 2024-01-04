@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -62,6 +63,8 @@ func DataSourceContactFlowModule() *schema.Resource {
 }
 
 func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -78,11 +81,11 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 		contactFlowModuleSummary, err := dataSourceGetContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("finding Connect Contact Flow Module Summary by name (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Module Summary by name (%s): %s", name, err)
 		}
 
 		if contactFlowModuleSummary == nil {
-			return diag.Errorf("finding Connect Contact Flow Module Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Module Summary by name (%s): not found", name)
 		}
 
 		input.ContactFlowModuleId = contactFlowModuleSummary.Id
@@ -91,11 +94,11 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	resp, err := conn.DescribeContactFlowModuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect Contact Flow Module: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow Module: %s", err)
 	}
 
 	if resp == nil || resp.ContactFlowModule == nil {
-		return diag.Errorf("getting Connect Contact Flow Module: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow Module: empty response")
 	}
 
 	contactFlowModule := resp.ContactFlowModule
@@ -109,12 +112,12 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	d.Set("status", contactFlowModule.Status)
 
 	if err := d.Set("tags", KeyValueTags(ctx, contactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlowModule.Id)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {

@@ -56,23 +56,32 @@ resource "aws_glacier_vault_lock" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `complete_lock` - (Required) Boolean whether to permanently apply this Glacier Lock Policy. Once completed, this cannot be undone. If set to `false`, the Glacier Lock Policy remains in a testing mode for 24 hours. After that time, the Glacier Lock Policy is automatically removed by Glacier and the Terraform resource will show as needing recreation. Changing this from `false` to `true` will show as resource recreation, which is expected. Changing this from `true` to `false` is not possible unless the Glacier Vault is recreated at the same time.
 * `policy` - (Required) JSON string containing the IAM policy to apply as the Glacier Vault Lock policy.
 * `vault_name` - (Required) The name of the Glacier Vault.
 * `ignore_deletion_error` - (Optional) Allow Terraform to ignore the error returned when attempting to delete the Glacier Lock Policy. This can be used to delete or recreate the Glacier Vault via Terraform, for example, if the Glacier Vault Lock policy permits that action. This should only be used in conjunction with `complete_lock` being set to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Glacier Vault name.
 
 ## Import
 
-Glacier Vault Locks can be imported using the Glacier Vault name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glacier Vault Locks using the Glacier Vault name. For example:
 
+```terraform
+import {
+  to = aws_glacier_vault_lock.example
+  id = "example-vault"
+}
 ```
-$ terraform import aws_glacier_vault_lock.example example-vault
+
+Using `terraform import`, import Glacier Vault Locks using the Glacier Vault name. For example:
+
+```console
+% terraform import aws_glacier_vault_lock.example example-vault
 ```

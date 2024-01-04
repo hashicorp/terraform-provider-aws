@@ -24,14 +24,14 @@ resource "aws_ec2_carrier_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_id` - (Required) The ID of the VPC to associate with the carrier gateway.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the carrier gateway.
 * `id` - The ID of the carrier gateway.
@@ -40,9 +40,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_carrier_gateway` can be imported using the carrier gateway's ID,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_carrier_gateway` using the carrier gateway's ID. For example:
 
+```terraform
+import {
+  to = aws_ec2_carrier_gateway.example
+  id = "cgw-12345"
+}
 ```
-$ terraform import aws_ec2_carrier_gateway.example cgw-12345
+
+Using `terraform import`, import `aws_ec2_carrier_gateway` using the carrier gateway's ID. For example:
+
+```console
+% terraform import aws_ec2_carrier_gateway.example cgw-12345
 ```

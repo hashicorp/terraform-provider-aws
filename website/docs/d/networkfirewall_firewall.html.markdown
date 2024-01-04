@@ -44,9 +44,9 @@ One or more of the following arguments are required:
 * `arn` - ARN of the firewall.
 * `name` - Descriptive name of the firewall.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the firewall.
 * `delete_protection` - Boolean flag indicating whether it is possible to delete the firewall.

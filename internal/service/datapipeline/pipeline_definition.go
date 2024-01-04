@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -133,6 +134,8 @@ func ResourcePipelineDefinition() *schema.Resource {
 }
 
 func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
@@ -175,11 +178,11 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if aws.BoolValue(output.Errored) {
-		return diag.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
+		return sdkdiag.AppendErrorf(diags, "validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
 	}
 
 	// Activate pipeline if enabled
@@ -189,15 +192,17 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 
 	_, err = conn.ActivatePipelineWithContext(ctx, input2)
 	if err != nil {
-		return diag.Errorf("activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	d.SetId(pipelineID)
 
-	return resourcePipelineDefinitionRead(ctx, d, meta)
+	return append(diags, resourcePipelineDefinitionRead(ctx, d, meta)...)
 }
 
 func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
@@ -209,25 +214,25 @@ func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData,
 		tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 		log.Printf("[WARN] DataPipeline Pipeline Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("parameter_object", flattenPipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("parameter_value", flattenPipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("pipeline_object", flattenPipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	d.Set("pipeline_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func expandPipelineDefinitionParameterObject(tfMap map[string]interface{}) *datapipeline.ParameterObject {

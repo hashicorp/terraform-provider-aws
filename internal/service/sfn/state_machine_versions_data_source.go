@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_sfn_state_machine_versions")
@@ -19,52 +21,50 @@ func DataSourceStateMachineVersions() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStateMachineVersionsRead,
 
 		Schema: map[string]*schema.Schema{
+			"statemachine_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"statemachine_versions": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"statemachine_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 		},
 	}
 }
 
-const (
-	DSNameStateMachineVersions = "StateMachine versions Data Source"
-)
-
 func dataSourceStateMachineVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	in := &sfn.ListStateMachineVersionsInput{
-		StateMachineArn: aws.String(d.Get("statemachine_arn").(string)),
+	smARN := d.Get("statemachine_arn").(string)
+	input := &sfn.ListStateMachineVersionsInput{
+		StateMachineArn: aws.String(smARN),
+	}
+	var smvARNs []string
+
+	err := listStateMachineVersionsPages(ctx, conn, input, func(page *sfn.ListStateMachineVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.StateMachineVersions {
+			if v != nil {
+				smvARNs = append(smvARNs, aws.StringValue(v.StateMachineVersionArn))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", smARN, err)
 	}
 
-	var statemachine_version_arns []string
+	d.SetId(smARN)
+	d.Set("statemachine_versions", smvARNs)
 
-	for {
-		output, err := conn.ListStateMachineVersionsWithContext(ctx, in)
-		if err != nil {
-			return diag.Errorf("listing Step Functions State Machine versions: %s", err)
-		}
-		for _, in := range output.StateMachineVersions {
-			statemachine_version_arns = append(statemachine_version_arns, *in.StateMachineVersionArn)
-		}
-		if output.NextToken == nil {
-			break
-		}
-		in.NextToken = output.NextToken
-	}
-
-	if n := len(statemachine_version_arns); n == 0 {
-		return diag.Errorf("no Step Functions State Machine versions matched")
-	}
-
-	d.SetId(d.Get("statemachine_arn").(string))
-	d.Set("statemachine_versions", statemachine_version_arns)
-
-	return nil
+	return diags
 }

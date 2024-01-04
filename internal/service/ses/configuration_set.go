@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -81,7 +81,7 @@ func ResourceConfigurationSet() *schema.Resource {
 						"custom_redirect_domain": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 						},
 					},
 				},
@@ -168,7 +168,9 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		ConfigurationSetName: aws.String(d.Id()),
 		ConfigurationSetAttributeNames: aws.StringSlice([]string{
 			ses.ConfigurationSetAttributeDeliveryOptions,
-			ses.ConfigurationSetAttributeReputationOptions}),
+			ses.ConfigurationSetAttributeReputationOptions,
+			ses.ConfigurationSetAttributeTrackingOptions,
+		}),
 	}
 
 	response, err := conn.DescribeConfigurationSetWithContext(ctx, configSetInput)
