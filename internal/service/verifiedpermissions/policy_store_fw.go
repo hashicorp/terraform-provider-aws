@@ -32,9 +32,6 @@ import (
 // @FrameworkResource(name="Policy Store")
 func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyStore{}
-	//r.SetDefaultCreateTimeout(30 * time.Minute)
-	//r.SetDefaultUpdateTimeout(30 * time.Minute)
-	//r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -46,14 +43,12 @@ const (
 
 type resourcePolicyStore struct {
 	framework.ResourceWithConfigure
-	// framework.WithTimeouts
 }
 
 func (r *resourcePolicyStore) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_verifiedpermissions_policy_store"
 }
 
-// Schema returns the schema for this resource.
 func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -87,15 +82,6 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 			},
 		},
 	}
-
-	//if s.Blocks == nil {
-	//	s.Blocks = make(map[string]schema.Block)
-	//}
-	//s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
-	//	Create: true,
-	//	Update: true,
-	//	Delete: true,
-	//})
 
 	response.Schema = s
 }
