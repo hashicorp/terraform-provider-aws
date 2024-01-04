@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_ebs_snapshot_lock
+```
+```release-note:new-data-source
+aws_ebs_snapshot_lock
+```
