@@ -614,7 +614,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 	})
 }
 
-func TestAccFSxLustreFileSystem_deploymentTypePersistent1_perunitstoragethroughput(t *testing.T) {
+func TestAccFSxLustreFileSystem_deploymentTypePersistent1_perUnitStorageThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -688,7 +688,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 	})
 }
 
-func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perunitstoragethroughput(t *testing.T) {
+func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perUnitStorageThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
