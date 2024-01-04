@@ -225,7 +225,11 @@ func testAccReplicationConfigurationConfig_existingDestination(region string) st
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "source" {}
 
-resource "aws_efs_file_system" "destination" {}
+resource "aws_efs_file_system" "destination" {
+  protection {
+    replication_overwrite = "DISABLED"
+  }
+}
 
 resource "aws_efs_replication_configuration" "test" {
   source_file_system_id = aws_efs_file_system.source.id
