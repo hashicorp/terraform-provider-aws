@@ -146,7 +146,7 @@ func TestAccKinesisStream_encryptionWithoutKMSKeyThrowsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStreamConfig_encryptionAndNoKMSKey(rName),
-				ExpectError: regexache.MustCompile("KMS Key Id required when setting encryption_type is not set as NONE"),
+				ExpectError: regexache.MustCompile("KMS Key ID required when setting encryption_type is not set as NONE"),
 			},
 		},
 	})
