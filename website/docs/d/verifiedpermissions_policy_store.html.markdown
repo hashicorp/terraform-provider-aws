@@ -15,7 +15,7 @@ Terraform data source for managing an AWS Verified Permissions Policy Store.
 ### Basic Usage
 
 ```terraform
-data "aws_verifiedpermissions_policy_store" "example" { 
+data "aws_verifiedpermissions_policy_store" "example" {
   id = "example"
 }
 ```
