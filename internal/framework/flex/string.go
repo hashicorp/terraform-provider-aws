@@ -90,3 +90,11 @@ func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
 
 	return aws.String(s)
 }
+
+func StringToFrameworkJSON(ctx context.Context, v *string) fwtypes.JSON {
+	var output fwtypes.JSON
+
+	panicOnError(Flatten(ctx, v, &output))
+
+	return output
+}
