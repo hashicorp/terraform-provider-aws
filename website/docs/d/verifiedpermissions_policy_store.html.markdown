@@ -15,8 +15,8 @@ Terraform data source for managing an AWS Verified Permissions Policy Store.
 ### Basic Usage
 
 ```terraform
-data "aws_verifiedpermissions_policy_store" "example" {
-    id = "example"
+data "aws_verifiedpermissions_policy_store" "example" { 
+  id = "example"
 }
 ```
 
@@ -34,4 +34,3 @@ This data source exports the following attributes in addition to the arguments a
 * `created_date` - The date the Policy Store was created.
 * `last_updated_date` - The date the Policy Store was last updated.
 * `validation_settings` - Validation settings for the policy store.
-
