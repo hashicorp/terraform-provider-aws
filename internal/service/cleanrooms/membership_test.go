@@ -340,6 +340,7 @@ const TEST_KEY_PREFIX = "test"
 // into effect immediately.
 func testAccMembershipConfig_initResources(rName string) string {
 	return acctest.ConfigCompose(
+		testAccMembershipConfig_awsPartition(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_s3Bucket(rName),
 	)
@@ -347,6 +348,7 @@ func testAccMembershipConfig_initResources(rName string) string {
 
 func testAccMembershipConfig_initDoubledResources(rName string, rNameSecond string) string {
 	return acctest.ConfigCompose(
+		testAccMembershipConfig_awsPartition(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_iamResources(rNameSecond),
 		testAccMembershipConfig_s3Bucket(rName),
@@ -357,6 +359,7 @@ func testAccMembershipConfig_initDoubledResources(rName string, rNameSecond stri
 func testAccMembershipConfig_basic(rName string) string {
 	defaultResultConfiguration := testAccMembershipConfig_defaultOutputConfiguration(rName, true, TEST_RESULT_FORMAT, TEST_KEY_PREFIX)
 	return acctest.ConfigCompose(
+		testAccMembershipConfig_awsPartition(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_s3Bucket(rName),
 		testAccMembershipConfig_base(rName, TEST_CREATOR_DISPLAY_NAME, TEST_MEMBERSHIP_CREATOR_MEMBER_ABILITIES, TEST_MEMBERSHIP_MEMBER_ABILITIES, TEST_QUERY_LOG_STATUS, defaultResultConfiguration, TEST_TAG),
@@ -367,6 +370,7 @@ func testAccMembershipConfig_basic(rName string) string {
 func testAccMembershipConfig_mutableProperties(rName string, rNameSecond string, rNameToPointTo string, queryLogStatus string, resultFormat string, keyPrefix string, tagValue string) string {
 	defaultResultConfiguration := testAccMembershipConfig_defaultOutputConfiguration(rNameToPointTo, true, resultFormat, keyPrefix)
 	return acctest.ConfigCompose(
+		testAccMembershipConfig_awsPartition(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_iamResources(rNameSecond),
 		testAccMembershipConfig_s3Bucket(rName),
@@ -394,70 +398,75 @@ func testAccMembershipConfig_defaultOutputConfiguration(rName string, includeRol
 	}
 
 	return fmt.Sprintf(`
-	default_result_configuration {
+  default_result_configuration {
 		
-		%[1]s
+	%[1]s
 
-		output_configuration {
-			s3 {
-				bucket        = aws_s3_bucket.test_%[2]s.bucket
-				result_format = %[3]q
+    output_configuration {
+	  s3 {
+	    bucket        = aws_s3_bucket.test_%[2]s.bucket
+        result_format = %[3]q
 				
-				%[4]s
+        %[4]s
 
-			}
-		}
-	}`, roleArnEntry, rName, resultFormat, keyPrefixEntry)
+      }
+    }
+  }`, roleArnEntry, rName, resultFormat, keyPrefixEntry)
+}
+
+func testAccMembershipConfig_awsPartition() string {
+	return `
+data "aws_partition" "current" {}`
 }
 
 func testAccMembershipConfig_iamResources(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test_assume_role_policy_%[1]s" {
-	statement {
-		actions = ["sts:AssumeRole"]
+  statement {
+    actions = ["sts:AssumeRole"]
 
-		principals {
-			type        = "Service"
-			identifiers = ["cleanrooms.amazonaws.com"]
-		}
-	}
+    principals {
+      type        = "Service"
+      identifiers = ["cleanrooms.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
 }
 
 data "aws_iam_policy_document" "test_s3_policy_%[1]s" {
-	statement {
-		actions = [
-			"s3:GetBucketLocation", 
-			"s3:ListBucket",
-		]
-		resources = ["arn:aws:s3:::%[1]s"]
-	}
+  statement {
+    actions = [
+      "s3:GetBucketLocation", 
+      "s3:ListBucket",
+    ]
+    resources = ["arn:${data.aws_partition.current.partition}:s3:::%[1]s"]
+  }
 
-	statement {
-		actions   = ["s3:PutObject"]
-		resources = ["arn:aws:s3:::%[1]s/*"]
-	}
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = ["arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"]
+  }
 }
 
 resource "aws_iam_policy" "test_%[1]s" {
-	name   = %[1]q
-	policy = data.aws_iam_policy_document.test_s3_policy_%[1]s.json
+  name   = %[1]q
+  policy = data.aws_iam_policy_document.test_s3_policy_%[1]s.json
 }
 
 resource "aws_iam_role" "test_%[1]s" {
-	name = %[1]q
-	assume_role_policy = data.aws_iam_policy_document.test_assume_role_policy_%[1]s.json
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume_role_policy_%[1]s.json
 }
 
 resource "aws_iam_role_policy_attachment" "test_%[1]s" {
-	role       = aws_iam_role.test_%[1]s.id
-	policy_arn = aws_iam_policy.test_%[1]s.arn
+  role       = aws_iam_role.test_%[1]s.id
+  policy_arn = aws_iam_policy.test_%[1]s.arn
 }`, rName)
 }
 
 func testAccMembershipConfig_s3Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test_%[1]s" {
-	bucket = %[1]q
+  bucket = %[1]q
 }`, rName)
 }
 
@@ -467,30 +476,30 @@ func testAccMembershipConfig_base(rName string, creatorDisplayName string, creat
 data "aws_caller_identity" "test" {}
 
 resource "aws_cleanrooms_collaboration" "test" {
-	name                     = %[1]q
-	description              = "test"
-	creator_display_name     = %[2]q
-	creator_member_abilities = %[3]s
-	query_log_status         = "ENABLED"
+  name                     = %[1]q
+  description              = "test"
+  creator_display_name     = %[2]q
+  creator_member_abilities = %[3]s
+  query_log_status         = "ENABLED"
 
-	member {
-		account_id       = data.aws_caller_identity.test.account_id
-		display_name     = "Other member"
-		member_abilities = %[4]s
-	}
+  member {
+    account_id       = data.aws_caller_identity.test.account_id
+    display_name     = "Other member"
+    member_abilities = %[4]s
+  }
 
-	provider = awsalternate
+  provider = awsalternate
 }
 
 resource "aws_cleanrooms_membership" "test" {
-	collaboration_id = aws_cleanrooms_collaboration.test.id
-	query_log_status = %[5]q
+  collaboration_id = aws_cleanrooms_collaboration.test.id
+  query_log_status = %[5]q
 
-	%[6]s
+  %[6]s
 
-	tags = {
-		Project = %[7]q
-	}
+  tags = {
+    Project = %[7]q
+  }
 }
 	`, rName, creatorDisplayName, creatorMemberAbilities, memberAbilities, queryLogStatus, defaultResultConfiguration, tagValue)
 }
