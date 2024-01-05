@@ -46,22 +46,19 @@ In addition to all arguments above, the following attributes are exported:
 
 * `policy_store_id` - The ID of the Policy Store.
 * `arn` - The ARN of the Policy Store.
-* `created_date` - The date the Policy Store was created.
-* `last_updated_date` - The date the Policy Store was last updated.
-* `schema_created_date` - The date the Policy Store Schema was created.
-* `schema_last_updated_date` - The date the Policy Store Schema was last updated.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
 
 ## Import
 
-Verified Permissions Policy Store can be imported using the policy_store_id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Verified Permissions Policy Store using the `policy_store_id`. For example:
+
+```terraform
+import {
+  to = aws_verifiedpermissions_policy_store.example
+  id = "DxQg2j8xvXJQ1tQCYNWj9T"
+}
+```
+
+Using `terraform import`, import Verified Permissions Policy Store using the `policy_store_id`. For example:
 
 ```
 $ terraform import aws_verifiedpermissions_policy_store.example DxQg2j8xvXJQ1tQCYNWj9T
