@@ -43,6 +43,11 @@ func ResourceResource() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"with_federation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -60,6 +65,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.RoleArn = aws.String(v.(string))
 	} else {
 		input.UseServiceLinkedRole = aws.Bool(true)
+	}
+
+	if v, ok := d.GetOk("with_federation"); ok {
+		input.WithFederation = aws.Bool(v.(bool))
 	}
 
 	_, err := conn.RegisterResourceWithContext(ctx, input)
