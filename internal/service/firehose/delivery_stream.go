@@ -2115,7 +2115,7 @@ func expandProcessors(processingConfigurationProcessors []interface{}, destinati
 			for name, value := range defaultProcessorParameters(destinationType, extractedProcessor.Type, roleARN) {
 				if !slices.ContainsFunc(extractedProcessor.Parameters, func(param types.ProcessorParameter) bool { return name == param.ParameterName }) {
 					extractedProcessor.Parameters = append(extractedProcessor.Parameters, types.ProcessorParameter{
-						ParameterName:  types.ProcessorParameterName(name),
+						ParameterName:  name,
 						ParameterValue: aws.String(value),
 					})
 				}
