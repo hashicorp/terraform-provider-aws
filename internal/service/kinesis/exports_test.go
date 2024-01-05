@@ -5,7 +5,9 @@ package kinesis
 
 // Exports for use in tests only.
 var (
+	ResourceStream         = resourceStream
 	ResourceStreamConsumer = resourceStreamConsumer
 
+	FindStreamByName        = findStreamByName
 	FindStreamConsumerByARN = findStreamConsumerByARN
 )
