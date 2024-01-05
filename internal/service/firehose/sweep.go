@@ -37,7 +37,7 @@ func sweepDeliveryStreams(region string) error {
 		}
 
 		for _, v := range page.DeliveryStreamNames {
-			r := ResourceDeliveryStream()
+			r := resourceDeliveryStream()
 			d := r.Data(nil)
 			name := v
 			arn := arn.ARN{

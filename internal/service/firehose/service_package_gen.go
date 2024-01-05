@@ -34,7 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDeliveryStream,
+			Factory:  resourceDeliveryStream,
 			TypeName: "aws_kinesis_firehose_delivery_stream",
 			Name:     "Delivery Stream",
 			Tags: &types.ServicePackageResourceTags{

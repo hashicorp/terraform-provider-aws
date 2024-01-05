@@ -58,7 +58,7 @@ func (destinationType) Values() []destinationType {
 
 // @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 // @Tags(identifierAttribute="name")
-func ResourceDeliveryStream() *schema.Resource {
+func resourceDeliveryStream() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryStreamCreate,

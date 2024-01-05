@@ -5,5 +5,7 @@ package firehose
 
 // Exports for use in tests only.
 var (
+	ResourceDeliveryStream = resourceDeliveryStream
+
 	FindDeliveryStreamByName = findDeliveryStreamByName
 )
