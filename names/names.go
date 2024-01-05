@@ -29,6 +29,7 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
+	AMPEndpointID                        = "aps"
 	AppFlowEndpointID                    = "appflow"
 	AppRunnerEndpointID                  = "apprunner"
 	AthenaEndpointID                     = "athena"
@@ -93,6 +94,7 @@ const (
 	SWFEndpointID                        = "swf"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
+	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"
 )
