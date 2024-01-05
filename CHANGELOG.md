@@ -6,6 +6,7 @@ FEATURES:
 * **New Resource:** `aws_elasticache_serverless_cache` ([#34951](https://github.com/hashicorp/terraform-provider-aws/issues/34951))
 * **New Resource:** `aws_imagebuilder_workflow` ([#35097](https://github.com/hashicorp/terraform-provider-aws/issues/35097))
 * **New Resource:** `aws_prometheus_scraper` ([#34749](https://github.com/hashicorp/terraform-provider-aws/issues/34749))
+* **New Resource:** `aws_securitylake_aws_log_source` ([#34974](https://github.com/hashicorp/terraform-provider-aws/issues/34974))
 * **New Resource:** `aws_ssoadmin_application_access_scope` ([#34811](https://github.com/hashicorp/terraform-provider-aws/issues/34811))
 
 ENHANCEMENTS:
@@ -61,6 +62,7 @@ BUG FIXES:
 * data-source/aws_lb_target_group: Change `deregistration_delay` from `TypeInt` to `TypeString` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
 * resource/aws_cloud9_environment_ec2: `image_id` is Required ([#35020](https://github.com/hashicorp/terraform-provider-aws/issues/35020))
 * resource/aws_codebuild_project: Prevent erroneous diffs on `build_timeout` and `queued_timeout` for Lambda compute types ([#35043](https://github.com/hashicorp/terraform-provider-aws/issues/35043))
+* resource/aws_datasync_agent: Fix import of agents created with `activation_key` by removing requirement for one of `ip_address` or `activation_key` to be set ([#35150](https://github.com/hashicorp/terraform-provider-aws/issues/35150))
 * resource/aws_dms_replication_config: Prevent erroneous diffs on `replication_settings` ([#34356](https://github.com/hashicorp/terraform-provider-aws/issues/34356))
 * resource/aws_dms_replication_task: Prevent erroneous diffs on `replication_task_settings` ([#34356](https://github.com/hashicorp/terraform-provider-aws/issues/34356))
 * resource/aws_dynamodb_table: Fix error when waiting for snapshot to be created ([#34848](https://github.com/hashicorp/terraform-provider-aws/issues/34848))
