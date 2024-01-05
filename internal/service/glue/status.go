@@ -74,9 +74,9 @@ func statusSchema(ctx context.Context, conn *glue.Glue, id string) retry.StateRe
 }
 
 // statusSchemaVersion fetches the Schema Version and its Status
-func statusSchemaVersion(ctx context.Context, conn *glue.Glue, id string) retry.StateRefreshFunc {
+func statusSchemaVersion(ctx context.Context, conn *glue.Glue, id string, versionNumber *int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSchemaVersionByID(ctx, conn, id)
+		output, err := FindSchemaVersionByIDAndVersion(ctx, conn, id, versionNumber)
 		if err != nil {
 			return nil, schemaVersionStatusUnknown, err
 		}

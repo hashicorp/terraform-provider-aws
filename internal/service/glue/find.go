@@ -154,12 +154,29 @@ func FindSchemaByID(ctx context.Context, conn *glue.Glue, id string) (*glue.GetS
 	return output, nil
 }
 
-// FindSchemaVersionByID returns the Schema corresponding to the specified ID.
+// FindSchemaVersionByID returns the latest available Schema corresponding to the specified ID.
 func FindSchemaVersionByID(ctx context.Context, conn *glue.Glue, id string) (*glue.GetSchemaVersionOutput, error) {
 	input := &glue.GetSchemaVersionInput{
 		SchemaId: createSchemaID(id),
 		SchemaVersionNumber: &glue.SchemaVersionNumber{
 			LatestVersion: aws.Bool(true),
+		},
+	}
+
+	output, err := conn.GetSchemaVersionWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// FindSchemaVersionByIDAndVersion returns the Schema corresponding to the specified ID and version number.
+func FindSchemaVersionByIDAndVersion(ctx context.Context, conn *glue.Glue, id string, versionNumber *int64) (*glue.GetSchemaVersionOutput, error) {
+	input := &glue.GetSchemaVersionInput{
+		SchemaId: createSchemaID(id),
+		SchemaVersionNumber: &glue.SchemaVersionNumber{
+			VersionNumber: versionNumber,
 		},
 	}
 
