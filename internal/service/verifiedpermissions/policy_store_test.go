@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -46,7 +46,7 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Terraform acceptance test"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "verifiedpermissions", regexp.MustCompile(`policy-store/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "verifiedpermissions", regexache.MustCompile(`policy-store/+.`)),
 				),
 			},
 			{
