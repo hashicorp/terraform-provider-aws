@@ -47,9 +47,10 @@ func TestAccVerifiedPermissionsSchema_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"definition.value"}, // JSON is semantically correct but can be set in state in a different order
 			},
 		},
 	})
