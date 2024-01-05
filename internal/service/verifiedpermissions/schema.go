@@ -5,6 +5,7 @@ package verifiedpermissions
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
@@ -53,7 +54,7 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": framework.IDAttribute(),
-			"namespaces": schema.ListAttribute{
+			"namespaces": schema.SetAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -113,7 +114,7 @@ func (r *resourceSchema) Create(ctx context.Context, request resource.CreateRequ
 	state := plan
 	state.ID = flex.StringToFramework(ctx, output.PolicyStoreId)
 
-	state.Namespaces = flex.FlattenFrameworkStringValueList(ctx, output.Namespaces)
+	state.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, output.Namespaces)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -144,8 +145,12 @@ func (r *resourceSchema) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	state.PolicyStoreID = flex.StringToFramework(ctx, output.PolicyStoreId)
-	state.Namespaces = flex.FlattenFrameworkStringValueList(ctx, output.Namespaces)
-	state.Definition = flattenDefinition(ctx, output)
+	state.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, output.Namespaces)
+	state.Definition = flattenDefinition(ctx, output, &response.Diagnostics)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -176,7 +181,7 @@ func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		output, err := conn.PutSchema(ctx, input)
+		_, err := conn.PutSchema(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -186,7 +191,17 @@ func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		plan.Namespaces = flex.FlattenFrameworkStringValueList(ctx, output.Namespaces)
+		out, err := findSchemaByPolicyStoreID(ctx, conn, state.ID.ValueString())
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicyStoreSchema, state.PolicyStoreID.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		plan.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, out.Namespaces)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -231,7 +246,7 @@ func (r *resourceSchema) ImportState(ctx context.Context, request resource.Impor
 type resourceSchemaData struct {
 	ID            types.String `tfsdk:"id"`
 	Definition    types.Object `tfsdk:"definition"`
-	Namespaces    types.List   `tfsdk:"namespaces"`
+	Namespaces    types.Set    `tfsdk:"namespaces"`
 	PolicyStoreID types.String `tfsdk:"policy_store_id"`
 }
 
@@ -276,14 +291,33 @@ func expandDefinition(ctx context.Context, object types.Object, diags *diag.Diag
 	return out
 }
 
-func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchemaOutput) types.Object {
+func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchemaOutput, diags *diag.Diagnostics) types.Object {
 	if input == nil {
+		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
+	}
+
+	var data any
+	err := json.Unmarshal([]byte(aws.ToString(input.Schema)), &data)
+	if err != nil {
+		diags.AddError(
+			"unable to unmarshal schema",
+			err.Error(),
+		)
+		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
+	}
+
+	val, err := json.Marshal(data)
+	if err != nil {
+		diags.AddError(
+			"unable to marshal schema",
+			err.Error(),
+		)
 		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
 	}
 
 	attributeTypes := fwtypes.AttributeTypesMust[definition](ctx)
 	attrs := map[string]attr.Value{}
-	attrs["value"] = flex.StringToFramework(ctx, input.Schema)
+	attrs["value"] = flex.StringValueToFramework(ctx, string(val))
 
 	return types.ObjectValueMust(attributeTypes, attrs)
 }
