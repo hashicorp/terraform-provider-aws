@@ -5,7 +5,6 @@ package verifiedpermissions
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
@@ -26,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,10 +67,8 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 				Attributes: map[string]schema.Attribute{
 					"value": schema.StringAttribute{
-						Required: true,
-						Validators: []validator.String{
-							fwvalidators.JSON(),
-						},
+						CustomType: fwtypes.JSONType,
+						Required:   true,
 					},
 				},
 			},
@@ -251,7 +247,7 @@ type resourceSchemaData struct {
 }
 
 type definition struct {
-	Value types.String `tfsdk:"value"`
+	Value fwtypes.JSON `tfsdk:"value"`
 }
 
 func findSchemaByPolicyStoreID(ctx context.Context, conn *verifiedpermissions.Client, id string) (*verifiedpermissions.GetSchemaOutput, error) {
@@ -296,28 +292,9 @@ func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchema
 		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
 	}
 
-	var data any
-	err := json.Unmarshal([]byte(aws.ToString(input.Schema)), &data)
-	if err != nil {
-		diags.AddError(
-			"unable to unmarshal schema",
-			err.Error(),
-		)
-		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
-	}
-
-	val, err := json.Marshal(data)
-	if err != nil {
-		diags.AddError(
-			"unable to marshal schema",
-			err.Error(),
-		)
-		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
-	}
-
 	attributeTypes := fwtypes.AttributeTypesMust[definition](ctx)
 	attrs := map[string]attr.Value{}
-	attrs["value"] = flex.StringValueToFramework(ctx, string(val))
+	attrs["value"] = flex.StringToFrameworkJSON(ctx, input.Schema)
 
 	return types.ObjectValueMust(attributeTypes, attrs)
 }
