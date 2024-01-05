@@ -33,9 +33,9 @@ The following arguments are optional:
 
 * `description` - (Optional) A description of the Policy Store.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `policy_store_id` - The ID of the Policy Store.
 * `arn` - The ARN of the Policy Store.
