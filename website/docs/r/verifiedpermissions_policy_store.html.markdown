@@ -19,15 +19,6 @@ resource "aws_verifiedpermissions_policy_store" "example" {
   validation_settings {
     mode = "STRICT"
   }
-
-  schema {
-    cedar_json = jsonencode({
-      "Namespace" : {
-        "entityTypes" : {},
-        "actions" : {}
-      }
-    })
-  }
 }
 ```
 
@@ -37,8 +28,10 @@ The following arguments are required:
 
 * `validation_settings` - (Required) Validation settings for the policy store.
     * `mode` - (Required) The mode for the validation settings. Valid values: `OFF`, `STRICT`.
-* `schema` - (Required) Schema for the policy store.
-    * `cedar_json` - (Required) The cedar json schema.
+
+The following arguments are optional:
+
+* `description` - (Optional) A description of the Policy Store.
 
 ## Attributes Reference
 
@@ -60,6 +53,6 @@ import {
 
 Using `terraform import`, import Verified Permissions Policy Store using the `policy_store_id`. For example:
 
-```
-$ terraform import aws_verifiedpermissions_policy_store.example DxQg2j8xvXJQ1tQCYNWj9T
+```console
+ % terraform import aws_verifiedpermissions_policy_store.example DxQg2j8xvXJQ1tQCYNWj9T
 ```
