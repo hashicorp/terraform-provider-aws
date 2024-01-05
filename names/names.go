@@ -53,6 +53,7 @@ const (
 	EMREndpointID                        = "elasticmapreduce"
 	EMRServerlessEndpointID              = "emrserverless"
 	EvidentlyEndpointID                  = "evidently"
+	FirehoseEndpointID                   = "firehose"
 	GlacierEndpointID                    = "glacier"
 	GroundStationEndpointID              = "groundstation"
 	IdentityStoreEndpointID              = "identitystore"
