@@ -46,8 +46,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStreamConsumer,
+			Factory:  resourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
+			Name:     "Stream Consumer",
 		},
 	}
 }
