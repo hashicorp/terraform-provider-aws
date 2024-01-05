@@ -35,8 +35,8 @@ resource "aws_cleanrooms_collaboration" "test_collab" {
 }
 
 resource "aws_cleanrooms_membership" "test_membership" {
-  collaboration_id  = aws_cleanrooms_collaboration.test_collab.id
-  query_log_status  = "DISABLED"
+  collaboration_id = aws_cleanrooms_collaboration.test_collab.id
+  query_log_status = "DISABLED"
 
   default_result_configuration {
     role_arn = "arn:aws:iam::123456789012:role/role-name"
