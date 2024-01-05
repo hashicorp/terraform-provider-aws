@@ -338,7 +338,7 @@ func expandDefaultResultConfiguration(data map[string]interface{}) (*types.Membe
 	defaultResultConfiguration := &types.MembershipProtectedQueryResultConfiguration{}
 	defaultResultConfiguration.RoleArn = aws.String(data["role_arn"].(string))
 
-	if *defaultResultConfiguration.RoleArn == "" {
+	if aws.ToString(defaultResultConfiguration.RoleArn) == "" {
 		defaultResultConfiguration.RoleArn = nil
 	}
 
@@ -386,7 +386,7 @@ func flattenDefaultResultConfiguration(defaultResultConfiguration *types.Members
 	m := map[string]interface{}{}
 
 	if defaultResultConfiguration.RoleArn != nil {
-		m["role_arn"] = *defaultResultConfiguration.RoleArn
+		m["role_arn"] = aws.ToString(defaultResultConfiguration.RoleArn)
 	}
 
 	switch v := defaultResultConfiguration.OutputConfiguration.(type) {
