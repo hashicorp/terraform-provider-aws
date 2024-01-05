@@ -232,10 +232,9 @@ func resourceDeliveryStream() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"buffering_interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntAtLeast(60),
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  300,
 						},
 						"buffering_size": {
 							Type:         schema.TypeInt,
@@ -320,7 +319,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      300,
-								ValidateFunc: validation.IntBetween(60, 900),
+								ValidateFunc: validation.IntBetween(0, 900),
 							},
 							"buffering_size": {
 								Type:         schema.TypeInt,
@@ -729,7 +728,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      300,
-								ValidateFunc: validation.IntBetween(60, 900),
+								ValidateFunc: validation.IntBetween(0, 900),
 							},
 							"buffering_size": {
 								Type:         schema.TypeInt,
@@ -859,7 +858,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      300,
-								ValidateFunc: validation.IntBetween(60, 900),
+								ValidateFunc: validation.IntBetween(0, 900),
 							},
 							"buffering_size": {
 								Type:         schema.TypeInt,
@@ -973,7 +972,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      300,
-								ValidateFunc: validation.IntBetween(60, 900),
+								ValidateFunc: validation.IntBetween(0, 900),
 							},
 							"buffering_size": {
 								Type:         schema.TypeInt,
