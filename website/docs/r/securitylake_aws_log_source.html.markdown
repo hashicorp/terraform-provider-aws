@@ -44,17 +44,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS log sources using the source name and source version. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS log sources using the source name. For example:
 
 ```terraform
 import {
   to = aws_securitylake_aws_log_source.example
-  id = "ROUTE53/1.0"
+  id = "ROUTE53"
 }
 ```
 
-Using `terraform import`, import AWS log sources using the source name and source version. For example:
+Using `terraform import`, import AWS log sources using the source name. For example:
 
 ```console
-% terraform import aws_securitylake_aws_log_source.example ROUTE53/1.0
+% terraform import aws_securitylake_aws_log_source.example ROUTE53
 ```
