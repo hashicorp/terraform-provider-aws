@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types
 
 import (
@@ -108,7 +111,7 @@ func (j jsonType) Validate(ctx context.Context, in tftypes.Value, path path.Path
 		diags.AddAttributeError(
 			path,
 			"JSON Type Validation Error",
-			fmt.Sprint("Cannot convert value to JSON: Please provide a valid JSON string"),
+			fmt.Sprint("Value must be valid JSON"),
 		)
 		return diags
 	}
