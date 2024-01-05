@@ -1009,6 +1009,10 @@ func TestAccFirehoseDeliveryStream_splunkUpdates(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	updatedSplunkConfig := &types.SplunkDestinationDescription{
+		BufferingHints: &types.SplunkBufferingHints{
+			IntervalInSeconds: aws.Int32(45),
+			SizeInMBs:         aws.Int32(3),
+		},
 		HECEndpointType:                   types.HECEndpointTypeEvent,
 		HECAcknowledgmentTimeoutInSeconds: aws.Int32(600),
 		S3BackupMode:                      types.SplunkS3BackupModeFailedEventsOnly,
@@ -2056,9 +2060,12 @@ func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescriptio
 			if splunkConfig != nil {
 				s := splunkConfig.(*types.SplunkDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching Splunk destination
-				var matchHECEndpointType, matchHECAcknowledgmentTimeoutInSeconds, matchS3BackupMode, processingConfigMatch bool
+				var match, matchHECEndpointType, matchHECAcknowledgmentTimeoutInSeconds, matchS3BackupMode, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.SplunkDestinationDescription != nil {
+						if *d.SplunkDestinationDescription.BufferingHints.SizeInMBs == *s.BufferingHints.SizeInMBs {
+							match = true
+						}
 						if d.SplunkDestinationDescription.HECEndpointType == s.HECEndpointType {
 							matchHECEndpointType = true
 						}
@@ -2073,8 +2080,8 @@ func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescriptio
 						}
 					}
 				}
-				if !matchHECEndpointType || !matchHECAcknowledgmentTimeoutInSeconds || !matchS3BackupMode {
-					return fmt.Errorf("Mismatch Splunk HECEndpointType or HECAcknowledgmentTimeoutInSeconds or S3BackupMode, expected: %v, got: %v", s, stream.Destinations)
+				if !match || !matchHECEndpointType || !matchHECAcknowledgmentTimeoutInSeconds || !matchS3BackupMode {
+					return fmt.Errorf("Mismatch Splunk BufferingHints.SizeInMBs or HECEndpointType or HECAcknowledgmentTimeoutInSeconds or S3BackupMode, expected: %v, got: %v", s, stream.Destinations)
 				}
 				if !processingConfigMatch {
 					return fmt.Errorf("Mismatch extended splunk ProcessingConfiguration.Processors count, expected: %v, got: %v", s, stream.Destinations)
@@ -3475,6 +3482,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "splunk"
 
   splunk_configuration {
+    buffering_interval         = 45
+    buffering_size             = 3
     hec_endpoint               = "https://input-test.com:443"
     hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
     hec_acknowledgment_timeout = 600

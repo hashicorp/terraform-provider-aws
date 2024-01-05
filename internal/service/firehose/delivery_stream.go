@@ -1134,6 +1134,18 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      60,
+								ValidateFunc: validation.IntBetween(0, 60),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 5),
+							},
 							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 							"hec_acknowledgment_timeout": {
 								Type:         schema.TypeInt,
@@ -2494,6 +2506,16 @@ func expandSplunkDestinationConfiguration(splunk map[string]interface{}) *types.
 		S3Configuration:                   expandS3DestinationConfiguration(splunk["s3_configuration"].([]interface{})),
 	}
 
+	bufferingHints := &types.SplunkBufferingHints{}
+
+	if bufferingInterval, ok := splunk["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	}
+	if bufferingSize, ok := splunk["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	}
+	configuration.BufferingHints = bufferingHints
+
 	if _, ok := splunk["processing_configuration"]; ok {
 		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
 	}
@@ -2517,6 +2539,16 @@ func expandSplunkDestinationUpdate(splunk map[string]interface{}) *types.SplunkD
 		RetryOptions:                      expandSplunkRetryOptions(splunk),
 		S3Update:                          expandS3DestinationUpdate(splunk["s3_configuration"].([]interface{})),
 	}
+
+	bufferingHints := &types.SplunkBufferingHints{}
+
+	if bufferingInterval, ok := splunk["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	}
+	if bufferingSize, ok := splunk["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	}
+	configuration.BufferingHints = bufferingHints
 
 	if _, ok := splunk["processing_configuration"]; ok {
 		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
@@ -3089,6 +3121,11 @@ func flattenSplunkDestinationDescription(description *types.SplunkDestinationDes
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeSplunk, ""),
 		"s3_backup_mode":             description.S3BackupMode,
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
+	}
+
+	if description.BufferingHints != nil {
+		m["buffering_interval"] = int(aws.ToInt32(description.BufferingHints.IntervalInSeconds))
+		m["buffering_size"] = int(aws.ToInt32(description.BufferingHints.SizeInMBs))
 	}
 
 	if description.RetryOptions != nil {
