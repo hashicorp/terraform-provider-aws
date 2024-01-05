@@ -21,7 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	// "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	// "github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -203,7 +203,7 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 											},
 										},
 									},
-									"scopes": schema.ListNestedBlock{
+									"scope": schema.ListNestedBlock{
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"protocols": schema.ListAttribute{
@@ -1105,7 +1105,7 @@ func expandServerCertificateConfigurations(tfList []serverCertificateConfigurati
 			var certificateRevocationStatus []checkCertificateRevocationStatusData
 			conf.CheckCertificateRevocationStatus = expandCheckCertificateRevocationStatus(certificateRevocationStatus)
 		}
-		if !item.Scopes.IsNull() {
+		if !item.Scope.IsNull() {
 			var scopesList []scopeData
 			conf.Scopes = expandScopes(scopesList)
 		}
@@ -1291,7 +1291,7 @@ type tlsInspectionConfigurationData struct {
 type serverCertificateConfigurationsData struct {
 	CertificateAuthorityArn types.String `tfsdk:"certificate_authority_arn"`
 	CheckCertificateRevocationsStatus types.List `tfsdk:"check_certificate_revocations_status"`
-	Scopes types.List `tfsdk:"scopes"`
+	Scope types.List `tfsdk:"scope"`
 	ServerCertificates types.List `tfsdk:"server_certificates"`
 }
 
@@ -1352,7 +1352,7 @@ var tlsInspectionConfigurationAttrTypes = map[string]attr.Type{
 var	serverCertificateConfigurationAttrTypes = map[string]attr.Type{
 	"certificate_authority_arn": types.StringType,
 	"check_certificate_revocations_status": types.ListType{ElemType: types.ObjectType{AttrTypes: checkCertificateRevocationStatusAttrTypes}},
-	"scopes": types.ListType{ElemType: types.ObjectType{AttrTypes: scopeAttrTypes}},
+	"scope": types.ListType{ElemType: types.ObjectType{AttrTypes: scopeAttrTypes}},
 	"server_certificates": types.ListType{ElemType: types.ObjectType{AttrTypes: serverCertificatesAttrTypes}},
 }
 

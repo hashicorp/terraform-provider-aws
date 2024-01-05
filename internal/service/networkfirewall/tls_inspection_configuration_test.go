@@ -2,22 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
 	// TIP: ==== IMPORTS ====
@@ -37,10 +21,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -148,17 +131,17 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationResponse
+	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.NetworkFirewallEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,15 +149,15 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &tlsinspectionconfiguration),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "networkfirewall", regexache.MustCompile(`tlsinspectionconfiguration:+.`)),
+					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					// 	"console_access": "false",
+					// 	"groups.#":       "0",
+					// 	"username":       "Test",
+					// 	"password":       "TestTest1234",
+					// }),
+					// acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "networkfirewall", regexache.MustCompile(`tlsinspectionconfiguration:+.`)),
 				),
 			},
 			{
@@ -240,11 +223,11 @@ func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource
 			_, err := conn.DescribeTLSInspectionConfiguration(ctx, &networkfirewall.DescribeTLSInspectionConfigurationInput{
 				TLSInspectionConfigurationId: aws.String(rs.Primary.ID),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameTLSInspectionConfiguration, rs.Primary.ID, err)
+				return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameTLSInspectionConfiguration, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameTLSInspectionConfiguration, rs.Primary.ID, errors.New("not destroyed"))
@@ -254,7 +237,7 @@ func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name string, tlsinspectionconfiguration *networkfirewall.DescribeTLSInspectionConfigurationResponse) resource.TestCheckFunc {
+func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name string, tlsinspectionconfiguration *networkfirewall.DescribeTLSInspectionConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -265,9 +248,9 @@ func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name stri
 			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameTLSInspectionConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
-		resp, err := conn.DescribeTLSInspectionConfiguration(ctx, &networkfirewall.DescribeTLSInspectionConfigurationInput{
-			TLSInspectionConfigurationId: aws.String(rs.Primary.ID),
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+		resp, err := conn.DescribeTLSInspectionConfigurationWithContext(ctx, &networkfirewall.DescribeTLSInspectionConfigurationInput{
+			TLSInspectionConfigurationArn: aws.String(rs.Primary.Attributes["arn"]),
 		})
 
 		if err != nil {
@@ -280,19 +263,19 @@ func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name stri
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+// func testAccPreCheck(ctx context.Context, t *testing.T) {
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	input := &networkfirewall.ListTLSInspectionConfigurationsInput{}
-	_, err := conn.ListTLSInspectionConfigurations(ctx, input)
+// 	input := &networkfirewall.ListTLSInspectionConfigurationsInput{}
+// 	_, err := conn.ListTLSInspectionConfigurationsWithContext(ctx, input)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
+// 	if acctest.PreCheckSkipError(err) {
+// 		t.Skipf("skipping acceptance testing: %s", err)
+// 	}
+// 	if err != nil {
+// 		t.Fatalf("unexpected PreCheck error: %s", err)
+// 	}
+// }
 
 func testAccCheckTLSInspectionConfigurationNotRecreated(before, after *networkfirewall.DescribeTLSInspectionConfigurationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -304,29 +287,84 @@ func testAccCheckTLSInspectionConfigurationNotRecreated(before, after *networkfi
 	}
 }
 
-func testAccTLSInspectionConfigurationConfig_basic(rName, version string) string {
+func testAccTLSInspectionConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name = %[1]q
+  tls_inspection_configuration {
+    server_certificate_configurations {
+	  certificate_authority_arn =
+			check_certificate_revocation_status {
+				revoked_status_action = "PASS"
+				unknown_status_action = "PASS"
+			}
+			server_certificates {
+				resource_arn =
+			}
+			scopes {
+				protocols = [ 6 ]
+				destination_ports {
+						from_port = 443
+						to_port = 443
+				}
+				destinations {
+					address_definition = "0.0.0.0/0"
+				}	
+				source_ports {
+					from_port = 0
+					to_port = 65535
+				}
+				sources {
+					address_definition = "0.0.0.0/0"
+				}
+			}
+		}
+	}
 }
+`, rName)
+}
+
+func testAccTLSInspectionConfigurationConfig_withEncryptionConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+	description             = "test"
+	deletion_window_in_days = 10
+  }
 
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-  tls_inspection_configuration_name             = %[1]q
-  engine_type             = "ActiveNetworkFirewall"
-  engine_version          = %[2]q
-  host_instance_type      = "networkfirewall.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+	name = %[1]q
+	description = "test"
+	encryption_configuration {
+		key_id = aws_kms_key.test.key_id
+		type = "CUSTOMER_KMS"
+	}
+	tls_inspection_configuration {
+		server_certificate_configurations {
+			certificate_authority_arn =
+			check_certificate_revocation_status {
+				revoked_status_action = "PASS"
+				unknown_status_action = "PASS"
+			}
+			server_certificates {
+				resource_arn =
+			}
+			scopes {
+				protocols = [ 6 ]
+				destination_ports {
+					from_port = 443
+					to_port = 443
+				}
+				destinations {
+					address_definition = "0.0.0.0/0"
+				}	
+				source_ports {
+					from_port = 0
+					to_port = 65535
+				}
+				sources {
+					address_definition = "0.0.0.0/0"
+				}
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
 }
-`, rName, version)
+`, rName)
 }
