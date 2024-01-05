@@ -51,7 +51,7 @@ func TestAccKinesisResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_kinesis_resource_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
